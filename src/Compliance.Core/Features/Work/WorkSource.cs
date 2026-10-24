@@ -33,6 +33,8 @@ static class WorkSource
     /// <summary>Loads open work; <paramref name="workItemId" /> narrows the result to one item.</summary>
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
         IAggregateReader reader, FindingReader? findings, ControlOperationsReader? operatingReader,
+        ControlMappingReader? mappingReader, ApplicabilityReader? applicabilityReader,
+        ControlEvaluationReader? evaluationReader,
         Uuid tenantId, Uuid programId, DateOnly today, DateOnly horizon, DateTimeOffset now,
         Uuid? workItemId, IBoundaryDirectoryReader? boundaries,
         IReadOnlySet<string> projectedKinds,
@@ -192,9 +194,9 @@ static class WorkSource
         }
         if (!projectedKinds.Contains(ControlEvaluationReview))
         {
-            var evaluations = await reader.HydrateAsync(
-                new ControlEvaluationLedger(tenantId, programId), ct).ConfigureAwait(false);
-            foreach (var evaluation in evaluations.ReadAwaitingReview())
+            var evaluations = await EvaluationsOf(evaluationReader).ReadProgramAsync(tenantId, programId, ct)
+                .ConfigureAwait(false);
+            foreach (var evaluation in evaluations.AwaitingReview())
             {
                 var submission = evaluation.Submissions[^1];
                 var candidate = ControlEvaluationReviewCandidate(tenantId, programId,
@@ -208,9 +210,9 @@ static class WorkSource
         }
         if (!projectedKinds.Contains(ControlCriterionMappingReview))
         {
-            var mappings = await reader.HydrateAsync(new ControlCriterionMappingLedger(tenantId,
-                programId), ct).ConfigureAwait(false);
-            foreach (var mapping in mappings.ReadAll().Where(static mapping =>
+            var mappings = await MappingsOf(mappingReader).ReadProgramAsync(tenantId, programId, ct)
+                .ConfigureAwait(false);
+            foreach (var mapping in mappings.Mappings.Where(static mapping =>
                          mapping.Status == "pending" && mapping.Versions.Count > 0 &&
                          mapping.Versions[^1].Status == "proposed"))
             {
@@ -218,7 +220,7 @@ static class WorkSource
                 var proposerMemberId = Uuid.Parse(proposal.ProposedBy.Id,
                     CultureInfo.InvariantCulture);
                 var candidate = ControlCriterionMappingReviewCandidate(tenantId, programId,
-                    mapping.ControlId, mapping.MappingId, mapping.CriterionIdentifier,
+                    mapping.ControlId, proposal.MappingId, mapping.CriterionIdentifier,
                     proposerMemberId, proposal.VersionNumber, proposal.ProposedAt);
                 if (workItemId is { } wantedMapping && candidate.WorkItemId != wantedMapping)
                     continue;
@@ -227,9 +229,9 @@ static class WorkSource
         }
         if (!projectedKinds.Contains(CriterionApplicabilityReview))
         {
-            var applicability = await reader.HydrateAsync(new CriterionApplicabilityLedger(tenantId,
-                programId), ct).ConfigureAwait(false);
-            foreach (var decision in applicability.ReadAll().Where(static decision =>
+            var applicability = await ApplicabilityOf(applicabilityReader).ReadProgramAsync(tenantId, programId, ct)
+                .ConfigureAwait(false);
+            foreach (var decision in applicability.Decisions.Where(static decision =>
                          decision.Status == "pending" && decision.Versions.Count > 0 &&
                          decision.Versions[^1].Status == "proposed"))
             {
@@ -237,7 +239,7 @@ static class WorkSource
                 var proposerMemberId = Uuid.Parse(proposal.ProposedBy.Id,
                     CultureInfo.InvariantCulture);
                 var candidate = CriterionApplicabilityReviewCandidate(tenantId, programId,
-                    decision.DecisionId, decision.CriterionIdentifier,
+                    proposal.DecisionId, decision.CriterionIdentifier,
                     proposerMemberId, proposal.VersionNumber, proposal.ProposedAt);
                 if (workItemId is { } wantedApplicability &&
                     candidate.WorkItemId != wantedApplicability)
@@ -279,6 +281,18 @@ static class WorkSource
         }
         return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
     }
+
+    static ControlMappingReader MappingsOf(ControlMappingReader? mappingReader) =>
+        mappingReader ?? throw new InvalidOperationException(
+            "Mapping review work requires read access to the control mapping streams.");
+
+    static ApplicabilityReader ApplicabilityOf(ApplicabilityReader? applicabilityReader) =>
+        applicabilityReader ?? throw new InvalidOperationException(
+            "Applicability review work requires read access to the criterion applicability streams.");
+
+    static ControlEvaluationReader EvaluationsOf(ControlEvaluationReader? evaluationReader) =>
+        evaluationReader ?? throw new InvalidOperationException(
+            "Evaluation review work requires read access to the control evaluation streams.");
 
     static ControlOperationsReader ControlOperations(ControlOperationsReader? operatingReader) =>
         operatingReader ?? throw new InvalidOperationException(

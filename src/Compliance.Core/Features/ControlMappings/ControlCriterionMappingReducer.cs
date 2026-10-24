@@ -3,8 +3,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.ControlMappings;
 
 /// <summary>
-///     Folds one mapping event into the mapping's public view. The coverage projection uses it so
-///     projected views match <see cref="ControlCriterionMappingLedger" /> reads exactly.
+///     Folds one mapping fact into the mapping line's public view. The owner, its readers and the coverage projection
+///     use it, so projected views match owner reads exactly.
 /// </summary>
 static class ControlCriterionMappingReducer
 {
@@ -19,7 +19,7 @@ static class ControlCriterionMappingReducer
             {
                 Revision = proposed.Revision,
                 Versions = [.. current?.Versions ?? [], new ControlCriterionMappingVersionView(
-                proposed.VersionNumber, proposed.ControlVersionId, "proposed",
+                proposed.VersionNumber, proposed.MappingId, proposed.ControlVersionId, "proposed",
                 proposed.Rationale, proposed.ApplicabilityExplanation, proposed.Actor,
                 proposed.ProposedAt, null, null, null, null, null, null, null, null)],
             }),

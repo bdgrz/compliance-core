@@ -1,7 +1,14 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evaluations;
 
-[Discriminator("bdgrz.control.evaluation.submitted", 1)]
-public sealed record ControlEvaluationSubmitted(Uuid TenantId, Uuid ProgramId, Uuid ControlId,
-    Uuid EvaluationId, long Revision, EvaluationSubmissionView Submission) : DomainEvent;
+/// <summary>
+///     One submitted round of one evaluation. The complete submission, with the exact step results and deviations it
+///     rests on, is verified immutable content.
+/// </summary>
+[Discriminator("bdgrz.control.evaluation.submitted", 2)]
+public sealed record ControlEvaluationSubmitted(Uuid TenantId, Uuid ProgramId, Uuid ControlId, Uuid EvaluationId,
+    long Revision, ImmutableContentRef SubmissionContent, OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

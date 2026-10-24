@@ -356,9 +356,9 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<DefineControlEvaluationPlan>()
         .AddMcpTool<GetControlEvaluationPlanVersion>(tool => tool.ReadOnly())
         .AddMcpTool<ListControlEvaluationPlanVersions>(tool => tool.ReadOnly())
-        .AddMcpTool<StartControlEvaluation>()
-        .AddMcpTool<RecordControlEvaluationStep>()
-        .AddMcpTool<DisposeControlEvaluationDeviation>()
+        .AddMcpTool<StartControlEvaluation>(tool => tool.Idempotent())
+        .AddMcpTool<RecordControlEvaluationStep>(tool => tool.Idempotent())
+        .AddMcpTool<DisposeControlEvaluationDeviation>(tool => tool.Idempotent())
         .AddMcpTool<GetControlEvaluation>(tool => tool.ReadOnly())
         .AddMcpTool<ListControlEvaluations>(tool => tool.ReadOnly())
         .AddMcpTool<RaiseFinding>()
@@ -832,7 +832,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
     app.MapPortiaPut<SetCriteriaTextOverlay, CriteriaTextOverlayRegistration>(
-            "/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}/overlay")
+            "/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/overlays/set-criteria-text-overlay/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Criteria");
     app.MapPortiaPut<SelectProgramCriteriaEdition>(
@@ -922,16 +922,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     // Mapping writes, including review, are human decisions and stay HTTP-only.
-    app.MapPortiaPost<ProposeControlCriterionMapping, ControlCriterionMappingRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings")
+    app.MapPortiaPut<ProposeControlCriterionMapping, ControlCriterionMappingRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control mappings");
-    app.MapPortiaPost<ReviewControlCriterionMapping>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/reviews")
+    app.MapPortiaPut<ReviewControlCriterionMapping>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/reviews/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control mappings");
-    app.MapPortiaPost<RetireControlCriterionMapping>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/retirements")
+    app.MapPortiaPut<RetireControlCriterionMapping>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/retirements/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control mappings");
     app.MapPortiaGet<GetControlCriterionMapping, ControlCriterionMappingView>(
@@ -977,16 +977,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     // Criterion applicability decisions are human decisions; writes stay HTTP-only.
-    app.MapPortiaPost<ProposeCriterionNotApplicable, CriterionApplicabilityRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability")
+    app.MapPortiaPut<ProposeCriterionNotApplicable, CriterionApplicabilityRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control mappings");
-    app.MapPortiaPost<ReviewCriterionApplicability>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/reviews")
+    app.MapPortiaPut<ReviewCriterionApplicability>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/reviews/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control mappings");
-    app.MapPortiaPost<WithdrawCriterionNotApplicable>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/withdrawals")
+    app.MapPortiaPut<WithdrawCriterionNotApplicable>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/withdrawals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control mappings");
     app.MapPortiaGet<GetCriterionApplicability, CriterionApplicabilityView>(
@@ -1404,8 +1404,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
-    app.MapPortiaPost<StartControlEvaluation, ControlEvaluationView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations")
+    app.MapPortiaPut<StartControlEvaluation, ControlEvaluationView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
     app.MapPortiaPost<DefineControlEvaluationPlan, ControlEvaluationPlanVersionView>(
@@ -1429,20 +1429,20 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
-    app.MapPortiaPost<RecordControlEvaluationStep, ControlEvaluationView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results")
+    app.MapPortiaPut<RecordControlEvaluationStep, ControlEvaluationView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
-    app.MapPortiaPost<DisposeControlEvaluationDeviation, ControlEvaluationView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions")
+    app.MapPortiaPut<DisposeControlEvaluationDeviation, ControlEvaluationView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
-    app.MapPortiaPost<SubmitControlEvaluation, ControlEvaluationView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions")
+    app.MapPortiaPut<SubmitControlEvaluation, ControlEvaluationView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
-    app.MapPortiaPost<ReviewControlEvaluation, ControlEvaluationView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews")
+    app.MapPortiaPut<ReviewControlEvaluation, ControlEvaluationView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
     app.MapPortiaPost<OpenEvidenceRequest, EvidenceRequestView>(

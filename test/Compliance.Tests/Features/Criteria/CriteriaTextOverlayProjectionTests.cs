@@ -1,5 +1,9 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 
@@ -8,21 +12,23 @@ namespace Bdgrz.Compliance.Tests.Features.Criteria;
 public sealed class CriteriaTextOverlayProjectionTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 3, 12, 0, 0, TimeSpan.Zero);
+    readonly IImmutableContentStore _content = new FitzKvImmutableContentStore(
+        new PersistenceKvClient(new InMemoryKvClient()));
 
     [Fact]
     public async Task ShouldProjectLatestRevisionAndIsolateTenantsGivenOverlayEvents()
     {
         // Arrange
-        var directory = new FitzCriteriaTextOverlayDirectory(new InMemoryKvClient());
+        var directory = new FitzCriteriaTextOverlayDirectory(new InMemoryKvClient(), _content);
         var tenantId = Uuid.CreateVersion4();
         var otherTenantId = Uuid.CreateVersion4();
         var editionId = Uuid.CreateVersion4();
         const string identifier = "CC6.1";
         var actorId = Uuid.CreateVersion4();
-        var first = Revised(tenantId, editionId, identifier, 1, "Original", actorId);
-        var second = Revised(tenantId, editionId, identifier, 2, "Updated", actorId,
+        var first = await RevisedAsync(tenantId, editionId, identifier, 1, "Original", actorId);
+        var second = await RevisedAsync(tenantId, editionId, identifier, 2, "Updated", actorId,
             Now.AddMinutes(1));
-        var otherTenant = Revised(otherTenantId, editionId, identifier, 1, "Other tenant",
+        var otherTenant = await RevisedAsync(otherTenantId, editionId, identifier, 1, "Other tenant",
             Uuid.CreateVersion4());
         await ProjectAsync(directory, tenantId, first, second);
         await ProjectAsync(directory, otherTenantId, otherTenant);
@@ -46,10 +52,10 @@ public sealed class CriteriaTextOverlayProjectionTests
     public async Task ShouldRejectRevisionGapGivenOverlayEvent()
     {
         // Arrange
-        var directory = new FitzCriteriaTextOverlayDirectory(new InMemoryKvClient());
+        var directory = new FitzCriteriaTextOverlayDirectory(new InMemoryKvClient(), _content);
         var tenantId = Uuid.CreateVersion4();
         var editionId = Uuid.CreateVersion4();
-        var revised = Revised(tenantId, editionId, "CC6.1", 2, "Skipped revision",
+        var revised = await RevisedAsync(tenantId, editionId, "CC6.1", 2, "Skipped revision",
             Uuid.CreateVersion4());
 
         // Act
@@ -65,10 +71,10 @@ public sealed class CriteriaTextOverlayProjectionTests
     public async Task ShouldApplyCurrentUsePolicyGivenProjectedOverlay()
     {
         // Arrange
-        var directory = new FitzCriteriaTextOverlayDirectory(new InMemoryKvClient());
+        var directory = new FitzCriteriaTextOverlayDirectory(new InMemoryKvClient(), _content);
         var tenantId = Uuid.CreateVersion4();
         var editionId = Uuid.CreateVersion4();
-        var revised = Revised(tenantId, editionId, "CC6.1", 1, "Licensed supplied wording",
+        var revised = await RevisedAsync(tenantId, editionId, "CC6.1", 1, "Licensed supplied wording",
             Uuid.CreateVersion4(), usageFlags: new CriteriaOverlayUsageFlags(Display: true,
                 Export: false));
         await ProjectAsync(directory, tenantId, revised);
@@ -96,7 +102,7 @@ public sealed class CriteriaTextOverlayProjectionTests
     public async Task ShouldReturnTransientConflictGivenUnprojectedOverlayEvent()
     {
         // Arrange
-        var directory = new FitzCriteriaTextOverlayDirectory(new InMemoryKvClient());
+        var directory = new FitzCriteriaTextOverlayDirectory(new InMemoryKvClient(), _content);
         var reader = new FitzCriteriaTextOverlayReader(directory,
             new CriteriaTextOverlayReadConsistency(directory, new PendingEventReader()));
         var entry = new Criterion(Uuid.CreateVersion4(), "CC6.1", "CC6.1", "security",
@@ -111,13 +117,19 @@ public sealed class CriteriaTextOverlayProjectionTests
         Assert.True(result.Error?.IsTransient);
     }
 
-    static CriteriaTextOverlayEntryRevised Revised(Uuid tenantId, Uuid editionId,
+    async Task<CriteriaTextOverlayEntryRevised> RevisedAsync(Uuid tenantId, Uuid editionId,
         string identifier, long revision, string text, Uuid actorId,
-        DateTimeOffset? recordedAt = null, CriteriaOverlayUsageFlags? usageFlags = null) =>
-        new(tenantId, editionId, identifier, Uuid.CreateVersion4(), revision,
+        DateTimeOffset? recordedAt = null, CriteriaOverlayUsageFlags? usageFlags = null)
+    {
+        var overlay = await NativeContent.WriteAsync(_content, tenantId, CriteriaTextOverlay.ContentSchema,
             new CriteriaTextOverlayContent(text, "supplier", "license-reference",
-                usageFlags ?? new CriteriaOverlayUsageFlags(Display: true, Export: true)),
-            ActorReference.ForMember(actorId, "Overlay editor"), recordedAt ?? Now);
+                usageFlags ?? new CriteriaOverlayUsageFlags(Display: true, Export: true)));
+        var stream = new CriteriaTextOverlay(tenantId, editionId, identifier).Stream;
+        return new CriteriaTextOverlayEntryRevised(tenantId, editionId, identifier, revision, overlay,
+            RootOperation.Provenance(Uuid.CreateVersion4(), "SetCriteriaTextOverlay", stream,
+                ActorReference.ForMember(actorId, "Overlay editor"), revision - 1, new string('c', 64),
+                recordedAt ?? Now), NativeFacts.Ref(), NativeFacts.Ref());
+    }
 
     static async Task ProjectAsync(FitzCriteriaTextOverlayDirectory directory, Uuid tenantId,
         params CriteriaTextOverlayEntryRevised[] events)
@@ -131,7 +143,7 @@ public sealed class CriteriaTextOverlayProjectionTests
 
     static CheckpointIdentity Identity(Uuid tenantId) => new(
         FitzCriteriaTextOverlayDirectory.ProjectorName,
-        EventStreamPattern.ForPattern(tenantId.ToString(), CriteriaTextOverlayLedger.Area));
+        EventStreamPattern.ForPattern(tenantId.ToString(), CriteriaTextOverlay.Area));
 
     sealed class EmptyEventReader : IDomainEventReader
     {

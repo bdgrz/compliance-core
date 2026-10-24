@@ -6,7 +6,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Evidence;
 
 /// <summary>Verifies a support link against current source-of-truth aggregate revisions.</summary>
-sealed class EvidenceSupportTargetSource(IAggregateReader reader, ControlOperationsReader operations)
+sealed class EvidenceSupportTargetSource(IAggregateReader reader, ControlOperationsReader operations,
+    ControlEvaluationReader evaluations)
 {
     public ValueTask<Result> RequireExactAsync(LinkEvidenceSupport request, CancellationToken ct) =>
         request.SupportedRecordType?.Trim().ToLowerInvariant() switch
@@ -66,9 +67,8 @@ sealed class EvidenceSupportTargetSource(IAggregateReader reader, ControlOperati
     async ValueTask<Result> RequireEvaluationAsync(LinkEvidenceSupport request,
         CancellationToken ct)
     {
-        var ledger = await reader.HydrateAsync(new ControlEvaluationLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
-        var evaluation = ledger.Read(request.SupportedRecordId);
+        var (_, evaluation) = await evaluations.ReadAsync(request.TenantId, request.SupportedRecordId, default, ct)
+            .ConfigureAwait(false);
         if (evaluation is null || evaluation.TenantId != request.TenantId ||
             evaluation.ProgramId != request.ProgramId)
             return Missing();

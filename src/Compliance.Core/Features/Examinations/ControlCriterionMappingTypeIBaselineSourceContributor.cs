@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Captures control-to-criterion mapping history known on the Type I date.</summary>
 public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
-    IAggregateReader reader, CriteriaCoverageReadConsistency consistency, ICriteriaCatalog catalog)
+    ControlMappingReader mappingReader, CriteriaCoverageReadConsistency consistency, ICriteriaCatalog catalog)
     : ITypeIBaselineSourceContributor
 {
     const string DigestDomain = "bdgrz.snapshot.source.control_criterion_mapping_version.v1\0";
@@ -59,8 +59,8 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
                 return SourceConflict();
         }
 
-        var initialSource = await reader.HydrateAsync(new ControlCriterionMappingLedger(
-            engagement.TenantId, engagement.ProgramId), ct).ConfigureAwait(false);
+        var initialSource = await mappingReader.ReadProgramAsync(engagement.TenantId, engagement.ProgramId, ct)
+            .ConfigureAwait(false);
         var projected = await consistency.ReadMappingsAsync(engagement.TenantId,
             engagement.ProgramId, ct).ConfigureAwait(false);
         if (!projected.IsSuccess)
@@ -69,12 +69,11 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
             engagement.ProgramId, ct).ConfigureAwait(false);
         if (!projectedConfirmation.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(projectedConfirmation.Error);
-        var confirmedSource = await reader.HydrateAsync(new ControlCriterionMappingLedger(
-            engagement.TenantId, engagement.ProgramId), ct).ConfigureAwait(false);
-        if (initialSource.Id != engagement.ProgramId || confirmedSource.Id != engagement.ProgramId ||
-            initialSource.CommittedStreamPosition != confirmedSource.CommittedStreamPosition ||
-            !MappingsMatch(initialSource.ReadAll(), projected.Value) ||
-            !MappingsMatch(confirmedSource.ReadAll(), projectedConfirmation.Value) ||
+        var confirmedSource = await mappingReader.ReadProgramAsync(engagement.TenantId, engagement.ProgramId, ct)
+            .ConfigureAwait(false);
+        if (initialSource.Fence != confirmedSource.Fence ||
+            !MappingsMatch(initialSource.Mappings, projected.Value) ||
+            !MappingsMatch(confirmedSource.Mappings, projectedConfirmation.Value) ||
             !MappingsMatch(projected.Value, projectedConfirmation.Value))
             return SourceConflict();
 
@@ -85,7 +84,7 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
         var sources = new List<TypeIBaselineSourceReference>();
         var blockers = new List<string>();
         var scopeDifferences = new List<string>();
-        foreach (var mapping in confirmedSource.ReadAll())
+        foreach (var mapping in confirmedSource.Mappings)
         {
             if (mapping.EditionId != editionId)
                 continue;
@@ -190,11 +189,10 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
         if (mapping.TenantId != engagement.TenantId || mapping.ProgramId != engagement.ProgramId ||
             mapping.MappingId == Uuid.Empty || mapping.ControlId == Uuid.Empty ||
             mapping.EditionId == Uuid.Empty ||
-            mapping.MappingId != ControlCriterionMappingLedger.MappingIdFor(mapping.ProgramId,
-                mapping.ControlId, mapping.EditionId, mapping.CriterionIdentifier) ||
             string.IsNullOrWhiteSpace(mapping.CriterionIdentifier) ||
             string.IsNullOrWhiteSpace(mapping.CriterionKind) || mapping.Revision < 1 ||
-            mapping.Versions is null || mapping.Versions.Count == 0)
+            mapping.Versions is null || mapping.Versions.Count == 0 ||
+            mapping.MappingId != mapping.Versions[0].MappingId)
             return false;
 
         var reviewedCount = 0;
@@ -206,7 +204,7 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
         for (var index = 0; index < mapping.Versions.Count; index++)
         {
             var version = mapping.Versions[index];
-            if (version is null || version.VersionNumber != index + 1 ||
+            if (version is null || version.VersionNumber != index + 1 || version.MappingId == Uuid.Empty ||
                 version.ControlVersionId == Uuid.Empty || !ValidText(version.Rationale, 4000) ||
                 !ValidText(version.ApplicabilityExplanation, 4000) ||
                 !ValidActor(version.ProposedBy) || version.ProposedAt == default)

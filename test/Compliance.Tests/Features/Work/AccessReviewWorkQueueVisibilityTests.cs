@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Applications;
@@ -230,7 +232,10 @@ public sealed class AccessReviewWorkQueueVisibilityTests
         WorkQueueReader CreateQueue() => new(aggregateReader,
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [source], accessReviewQueueEligibility: eligibility,
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         return new QueueScenario(fixture, scope, CreateQueue, source, grants, permissions,
             systemInstanceId, aggregateReader);
     }

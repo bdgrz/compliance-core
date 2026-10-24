@@ -284,7 +284,10 @@ public sealed class WorkQueueReadConsistencyTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [evidence],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -327,7 +330,10 @@ public sealed class WorkQueueReadConsistencyTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [correctiveActions],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -380,7 +386,10 @@ public sealed class WorkQueueReadConsistencyTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [riskWork],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actorContext = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -423,7 +432,10 @@ public sealed class WorkQueueReadConsistencyTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [evaluationWork],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.LeadUserId, fixture.LeadMemberId, "Lead");
 
         // Act
@@ -467,7 +479,10 @@ public sealed class WorkQueueReadConsistencyTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [applicabilityWork],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.LeadUserId, fixture.LeadMemberId, "Lead");
 
         // Act
@@ -504,7 +519,10 @@ public sealed class WorkQueueReadConsistencyTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [mappingWork],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.LeadUserId, fixture.LeadMemberId, "Lead");
 
         // Act
@@ -586,7 +604,10 @@ public sealed class WorkQueueReadConsistencyTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [occurrenceWork],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -621,7 +642,10 @@ public sealed class WorkQueueReadConsistencyTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [planWork],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 
@@ -649,35 +673,18 @@ public sealed class WorkQueueReadConsistencyTests
     static async Task<ControlEvaluationView> SubmitControlEvaluationAsync(OperationsFixture fixture)
     {
         var plan = await fixture.GetOrDefineEvaluationPlanAsync();
-        var evaluationId = Uuid.CreateVersion4();
-        var startedAt = DateTimeOffset.UtcNow;
-        ControlEvaluationView? submitted = null;
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ControlEvaluationLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Start(fixture.ControlId, evaluationId, plan.ControlVersionId,
-                    plan.PlanVersionId, plan.Version, plan.Steps, null, fixture.OwnerMemberId,
-                    "Owner", startedAt));
-                var current = ledger.Read(fixture.ControlId, evaluationId)!;
-                foreach (var step in current.Steps)
-                {
-                    Assert.Null(ledger.RecordStep(fixture.ControlId, evaluationId, step.StepId,
-                        current.Revision, ControlEvaluationLedger.Met,
-                        "Inspected the exact items.", step.InspectedItems, null, null,
-                        fixture.OwnerMemberId, "Owner", startedAt.AddMinutes(1)));
-                    current = ledger.Read(fixture.ControlId, evaluationId)!;
-                }
-                Assert.Null(ledger.Submit(fixture.ControlId, evaluationId, current.Revision,
-                    [new("design", ControlEvaluationLedger.Effective, "Design is effective."),
-                        new("implementation", ControlEvaluationLedger.Effective,
-                            "Implementation is effective."),
-                        new("evidence_sufficiency", ControlEvaluationLedger.Effective,
-                            "Evidence is sufficient.")], fixture.OwnerMemberId, "Owner",
-                    startedAt.AddMinutes(2)));
-                submitted = ledger.Read(fixture.ControlId, evaluationId);
-                return Result.Success;
-            });
-        return Assert.IsType<ControlEvaluationView>(submitted);
+        var evaluation = await fixture.AsAsync(fixture.OwnerUserId, new StartControlEvaluation(Uuid.CreateVersion4(),
+            fixture.TenantId, fixture.ProgramId, fixture.ControlId, plan.PlanVersionId));
+        foreach (var step in evaluation.Steps)
+            evaluation = await fixture.AsAsync(fixture.OwnerUserId, new RecordControlEvaluationStep(
+                Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId, evaluation.EvaluationId,
+                step.StepId, evaluation.Revision, ControlEvaluationStates.Met, "Inspected the exact items.",
+                step.InspectedItems));
+        return await fixture.AsAsync(fixture.OwnerUserId, new SubmitControlEvaluation(Uuid.CreateVersion4(),
+            fixture.TenantId, fixture.ProgramId, fixture.ControlId, evaluation.EvaluationId, evaluation.Revision,
+            [new("design", ControlEvaluationStates.Effective, "Design is effective."),
+                new("implementation", ControlEvaluationStates.Effective, "Implementation is effective."),
+                new("evidence_sufficiency", ControlEvaluationStates.Effective, "Evidence is sufficient.")]));
     }
 
     static async Task<(Uuid DecisionId, DateTimeOffset ProposedAt)>
@@ -685,18 +692,9 @@ public sealed class WorkQueueReadConsistencyTests
     {
         var editionId = Uuid.CreateVersion4();
         var proposedAt = DateTimeOffset.UtcNow;
-        var decisionId = CriterionApplicabilityLedger.DecisionIdFor(fixture.ProgramId, editionId,
-            "AC-2.4");
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new CriterionApplicabilityLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Propose(editionId, "AC-2.4", 0,
-                    "The organization has no in-scope system for this criterion.",
-                    fixture.OwnerMemberId,
-                    ActorReference.ForMember(fixture.OwnerMemberId, "Owner"), proposedAt,
-                    out _));
-                return Result.Success;
-            });
+        var decisionId = await MappingSeeds.ProposeNotApplicableAsync(fixture.Provider, fixture.TenantId,
+            fixture.ProgramId, editionId, "AC-2.4", 0, "The organization has no in-scope system for this criterion.",
+            fixture.OwnerMemberId, "Owner", proposedAt);
         return (decisionId, proposedAt);
     }
 
@@ -705,17 +703,9 @@ public sealed class WorkQueueReadConsistencyTests
     {
         var editionId = Uuid.CreateVersion4();
         var proposedAt = DateTimeOffset.UtcNow;
-        var mappingId = ControlCriterionMappingLedger.MappingIdFor(fixture.ProgramId,
-            fixture.ControlId, editionId, "AC-2.4");
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ControlCriterionMappingLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Propose(fixture.ControlId, fixture.ControlVersionId, editionId,
-                    "AC-2.4", "security", 0, "The control addresses this criterion.",
-                    "The control covers the in-scope environment.", fixture.OwnerMemberId,
-                    "Owner", proposedAt, out _));
-                return Result.Success;
-            });
+        var mappingId = await MappingSeeds.ProposeMappingAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId,
+            fixture.ControlId, fixture.ControlVersionId, editionId, "AC-2.4", 0, "The control addresses this criterion.",
+            "The control covers the in-scope environment.", fixture.OwnerMemberId, "Owner", proposedAt, "security");
         return (mappingId, proposedAt);
     }
 

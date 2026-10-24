@@ -10,10 +10,13 @@ static class ControlCriterionMappingWorkItemDirectorySchema
             static revision => revision.ProjectorName,
             static projectorName => [projectorName], []);
 
+    public static readonly KvDirectoryIndex<ControlCriterionMappingWorkState> StatesByProgram = new(
+        "by_program", 1, static state => [state.ProgramId.ToString(), state.LineId.ToString()]);
+
     public static readonly KvDirectory<ControlCriterionMappingWorkState, string> Mappings = new(
         "mappings", ComplianceCoreJsonContext.Default.ControlCriterionMappingWorkState,
-        static state => MappingKey(state.ProgramId, state.MappingId),
-        static key => [key], []);
+        static state => MappingKey(state.ProgramId, state.LineId),
+        static key => [key], [StatesByProgram]);
 
     public static readonly KvDirectoryIndex<AccountableWorkItemView> ByProgram = new(
         "by_program", 1, static item =>
@@ -24,6 +27,6 @@ static class ControlCriterionMappingWorkItemDirectorySchema
         static item => item.WorkItemId,
         static workItemId => [workItemId.ToString()], [ByProgram]);
 
-    public static string MappingKey(Uuid programId, Uuid mappingId) =>
-        $"{programId}\n{mappingId}";
+    public static string MappingKey(Uuid programId, Uuid lineId) =>
+        $"{programId}\n{lineId}";
 }

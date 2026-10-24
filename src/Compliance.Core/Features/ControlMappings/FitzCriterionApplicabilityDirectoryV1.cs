@@ -21,16 +21,19 @@ sealed class FitzCriterionApplicabilityDirectoryV1(IKvClient client)
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
-        var decisionId = domainEvent switch
+        var lineId = domainEvent switch
         {
-            CriterionNotApplicableProposed proposed => proposed.DecisionId,
-            CriterionApplicabilityReviewed reviewed => reviewed.DecisionId,
-            CriterionNotApplicableWithdrawn withdrawn => withdrawn.DecisionId,
+            CriterionNotApplicableProposed proposed => CriterionApplicability.IdentityOf(proposed.TenantId,
+                proposed.ProgramId, proposed.EditionId, proposed.CriterionIdentifier),
+            CriterionApplicabilityReviewed reviewed => CriterionApplicability.IdentityOf(reviewed.TenantId,
+                reviewed.ProgramId, reviewed.EditionId, reviewed.CriterionIdentifier),
+            CriterionNotApplicableWithdrawn withdrawn => CriterionApplicability.IdentityOf(withdrawn.TenantId,
+                withdrawn.ProgramId, withdrawn.EditionId, withdrawn.CriterionIdentifier),
             _ => throw new ArgumentException("The event is not a criterion applicability event.",
                 nameof(domainEvent)),
         };
         var current = await ControlCoverageDirectorySchema.Decisions.GetAsync(Transaction,
-            decisionId, ct).ConfigureAwait(false);
+            lineId, ct).ConfigureAwait(false);
         var next = CriterionApplicabilityReducer.Apply(current, domainEvent);
         if (next.Revision != (current?.Revision ?? 0) + 1)
             throw new InvalidOperationException(

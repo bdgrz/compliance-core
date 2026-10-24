@@ -5,10 +5,10 @@ namespace Bdgrz.Compliance.Features.Controls;
 
 /// <summary>
 ///     Reports the program's active and pending criterion mappings that name the Control. The
-///     program mapping ledger is the authoritative, lag-free source. Approval never remaps them:
+///     mapping lines are the authoritative, lag-free source. Approval never remaps them:
 ///     a mapping to a superseded or retired version must be remapped or retired explicitly.
 /// </summary>
-public sealed class MappingControlImpactContributor(IAggregateReader reader)
+public sealed class MappingControlImpactContributor(ControlMappingReader mappings)
     : IControlImpactContributor
 {
     public string Context => "mappings";
@@ -17,10 +17,10 @@ public sealed class MappingControlImpactContributor(IAggregateReader reader)
         ControlDraft subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(subject);
-        var ledger = await reader.HydrateAsync(new ControlCriterionMappingLedger(
-            subject.TenantId, subject.ProgramId), ct).ConfigureAwait(false);
+        var snapshot = await mappings.ReadProgramAsync(subject.TenantId, subject.ProgramId, ct)
+            .ConfigureAwait(false);
         var retirement = !subject.HasOpenDraft;
-        var records = ledger.ReadAll()
+        var records = snapshot.Mappings
             .Where(mapping => mapping.ControlId == subject.Id &&
                 mapping.Status is "active" or "pending")
             .Select(mapping => new ControlAffectedRecord(subject.TenantId, Context,

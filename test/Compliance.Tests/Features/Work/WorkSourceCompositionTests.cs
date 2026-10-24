@@ -596,25 +596,11 @@ public sealed class WorkSourceCompositionTests
     {
         var editionId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow.AddMinutes(-2);
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ControlCriterionMappingLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Propose(fixture.ControlId, fixture.ControlVersionId,
-                    editionId, "CC6.1", "criterion", 0,
-                    "The control addresses access review.",
-                    "Applies to production systems.", fixture.LeadMemberId, "Lead", now,
-                    out _));
-                return Result.Success;
-            });
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new CriterionApplicabilityLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Propose(editionId, "CC6.2", 0,
-                    "The requirement does not apply to this organization.",
-                    fixture.LeadMemberId, ActorReference.ForMember(fixture.LeadMemberId,
-                        "Lead"), now, out _));
-                return Result.Success;
-            });
+        await MappingSeeds.ProposeMappingAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId,
+            fixture.ControlId, fixture.ControlVersionId, editionId, "CC6.1", 0,
+            "The control addresses access review.", "Applies to production systems.", fixture.LeadMemberId, "Lead", now);
+        await MappingSeeds.ProposeNotApplicableAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, editionId,
+            "CC6.2", 0, "The requirement does not apply to this organization.", fixture.LeadMemberId, "Lead", now);
     }
 
     static async Task SeedControlEvaluationWorkAsync(OperationsFixture fixture)
@@ -633,16 +619,16 @@ public sealed class WorkSourceCompositionTests
         ];
         var plan = await fixture.GetOrDefineEvaluationPlanAsync(steps);
         var evaluation = await fixture.AsAsync(fixture.OwnerUserId,
-            new StartControlEvaluation(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            new StartControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 plan.PlanVersionId));
         for (var index = 0; index < evaluation.Steps.Count; index++)
             evaluation = await fixture.AsAsync(fixture.OwnerUserId,
-                new RecordControlEvaluationStep(fixture.TenantId, fixture.ProgramId,
+                new RecordControlEvaluationStep(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                     fixture.ControlId, evaluation.EvaluationId, evaluation.Steps[index].StepId,
                     evaluation.Revision, "met", "Inspected the exact items.",
                     evaluation.Steps[index].InspectedItems));
         await fixture.AsAsync(fixture.OwnerUserId,
-            new SubmitControlEvaluation(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            new SubmitControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 evaluation.EvaluationId, evaluation.Revision,
                 [new("design", "effective", "Design meets the objective."),
                     new("implementation", "effective", "Operates as designed."),

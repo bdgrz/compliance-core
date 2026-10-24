@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
@@ -11,4 +12,8 @@ static class EmptyOperations
 {
     public static ControlOperationsReader Reader(IAggregateReader reader, IDomainEventReader events) => new(reader,
         events, new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient())));
+
+    /// <summary>An evaluation reader over an empty immutable content store, for tests that never read evaluations.</summary>
+    public static ControlEvaluationReader Evaluations(IAggregateReader reader, IDomainEventReader events) => new(
+        reader, events, new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient())));
 }

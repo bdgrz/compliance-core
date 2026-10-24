@@ -59,7 +59,7 @@ public sealed class AttestManagementWriteWallTests
                 1, "performed", Now, null, null, null, null, []), Actor)).Error,
             "review" => (await bus.SendAsync(new ReviewControlOccurrence(Uuid.CreateVersion4(), Tenant, Program, control, occurrence,
                 1, Uuid.CreateVersion4(), "accept", "Review rationale"), Actor)).Error,
-            "evaluation" => (await bus.SendAsync(new StartControlEvaluation(Tenant, Program, control,
+            "evaluation" => (await bus.SendAsync(new StartControlEvaluation(Uuid.CreateVersion4(), Tenant, Program, control,
                 Uuid.CreateVersion4()), Actor)).Error,
             "corrective" => (await bus.SendAsync(new CompleteCorrectiveAction(Uuid.CreateVersion4(), Tenant, Program,
                 Uuid.CreateVersion4(), 1, Uuid.CreateVersion4(), "Completed work", []), Actor)).Error,

@@ -13,8 +13,12 @@ static class ControlCoverageDirectorySchema
 
     public static readonly KvDirectory<ControlCriterionMappingView, Uuid> Mappings = new(
         "control_mappings_v1", ComplianceCoreJsonContext.Default.ControlCriterionMappingView,
-        static mapping => mapping.MappingId,
-        static mappingId => [mappingId.ToString()], [MappingsByProgram]);
+        static mapping => LineKey(mapping),
+        static lineId => [lineId.ToString()], [MappingsByProgram]);
+
+    /// <summary>The key of a mapping line: the identity of its owner stream.</summary>
+    public static Uuid LineKey(ControlCriterionMappingView mapping) => ControlCriterionMapping.IdentityOf(
+        mapping.TenantId, mapping.ProgramId, mapping.ControlId, mapping.EditionId, mapping.CriterionIdentifier);
 
     public static readonly KvDirectoryIndex<CriterionApplicabilityView> DecisionsByProgram = new(
         "by_program_criterion", 1, static decision =>
@@ -26,6 +30,10 @@ static class ControlCoverageDirectorySchema
     public static readonly KvDirectory<CriterionApplicabilityView, Uuid> Decisions = new(
         "criterion_applicability_v1",
         ComplianceCoreJsonContext.Default.CriterionApplicabilityView,
-        static decision => decision.DecisionId,
-        static decisionId => [decisionId.ToString()], [DecisionsByProgram]);
+        static decision => LineKey(decision),
+        static lineId => [lineId.ToString()], [DecisionsByProgram]);
+
+    /// <summary>The key of an applicability line: the identity of its owner stream.</summary>
+    public static Uuid LineKey(CriterionApplicabilityView decision) => CriterionApplicability.IdentityOf(
+        decision.TenantId, decision.ProgramId, decision.EditionId, decision.CriterionIdentifier);
 }

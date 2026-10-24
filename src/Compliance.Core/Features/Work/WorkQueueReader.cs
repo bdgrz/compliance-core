@@ -1,7 +1,9 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Remediation;
@@ -36,7 +38,10 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
     AccessReviewQueueEligibility? accessReviewQueueEligibility = null,
     ControlOperationsReader? operatingReader = null,
     FindingReader? findings = null,
-    CampaignSource? campaignSource = null)
+    CampaignSource? campaignSource = null,
+    ControlMappingReader? mappingReader = null,
+    ApplicabilityReader? applicabilityReader = null,
+    ControlEvaluationReader? evaluationReader = null)
 {
     public const int SystemEscalationDays = 7;
     public const int DefaultHorizonDays = 30;
@@ -88,7 +93,7 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
         var today = todayOverride ?? DateOnly.FromDateTime(now.UtcDateTime);
         var projectedKinds = _accountableWorkItems.SelectMany(static reader =>
                 reader.ProjectedKinds).ToHashSet(StringComparer.Ordinal);
-        var work = await WorkSource.LoadAsync(reader, findings, operatingReader, tenantId, programId, today,
+        var work = await WorkSource.LoadAsync(reader, findings, operatingReader, mappingReader, applicabilityReader, evaluationReader, tenantId, programId, today,
             today.AddDays(horizonDays), now, workItemId, boundaries,
             projectedKinds, ct)
             .ConfigureAwait(false);

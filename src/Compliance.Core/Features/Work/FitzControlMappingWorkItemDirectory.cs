@@ -47,7 +47,7 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
                 "A control mapping event must have a complete tenant and mapping scope.");
 
         var key = ControlCriterionMappingWorkItemDirectorySchema.MappingKey(scope.ProgramId,
-            scope.MappingId);
+            scope.LineId);
         var current = await ControlCriterionMappingWorkItemDirectorySchema.Mappings.GetAsync(
             Transaction, key, ct).ConfigureAwait(false);
         ControlCriterionMappingWorkState next;
@@ -84,8 +84,20 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
         Uuid programId, CancellationToken ct = default)
     {
         var candidates = new List<WorkCandidate>();
-        string? cursor = null;
         await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+        var pending = new Dictionary<Uuid, ControlCriterionMappingWorkState>();
+        string? stateCursor = null;
+        do
+        {
+            var states = await ControlCriterionMappingWorkItemDirectorySchema.Mappings.QueryAsync(tx,
+                ControlCriterionMappingWorkItemDirectorySchema.StatesByProgram.Query()
+                    .WithPrefix(programId.ToString()).Take(200).After(stateCursor), ct).ConfigureAwait(false);
+            foreach (var state in states.Items.Where(static state => state.PendingMappingId is not null))
+                pending[state.PendingMappingId!.Value] = state;
+            stateCursor = states.NextCursor;
+        } while (stateCursor is not null);
+
+        string? cursor = null;
         do
         {
             var page = await ControlCriterionMappingWorkItemDirectorySchema.WorkItems.QueryAsync(tx,
@@ -94,18 +106,16 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
                 .ConfigureAwait(false);
             foreach (var item in page.Items)
             {
-                var state = await ControlCriterionMappingWorkItemDirectorySchema.Mappings.GetAsync(tx,
-                    ControlCriterionMappingWorkItemDirectorySchema.MappingKey(programId,
-                        item.SourceId), ct).ConfigureAwait(false);
+                pending.TryGetValue(item.SourceId, out var state);
                 if (item.TenantId != tenantId || item.ProgramId != programId ||
                     item.Kind != WorkSource.ControlCriterionMappingReview ||
                     item.ControlId != state?.ControlId || item.FindingId is not null ||
                     item.RiskId is not null || state is null || state.TenantId != tenantId ||
-                    state.ProgramId != programId || state.MappingId != item.SourceId ||
-                    state.State != Pending || state.PendingVersionNumber is not { } pending ||
+                    state.ProgramId != programId || state.PendingMappingId != item.SourceId ||
+                    state.State != Pending || state.PendingVersionNumber is not { } pendingVersion ||
                     state.ProposerMemberId is not { } proposer || !item.Excluded.Contains(proposer) ||
                     state.ProposedAt != item.CreatedAt ||
-                    item.WorkItemId != WorkItemIdFor(state.MappingId, pending))
+                    item.WorkItemId != WorkItemIdFor(item.SourceId, pendingVersion))
                     return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
                 candidates.Add(item.ToCandidate());
             }
@@ -117,7 +127,7 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
 
     async ValueTask<ControlCriterionMappingWorkState> ProposeAsync(
         ControlCriterionMappingWorkState? current, ControlCriterionMappingProposed proposed,
-        (Uuid TenantId, Uuid ProgramId, Uuid MappingId, long Revision) scope,
+        MappingScope scope,
         CancellationToken ct)
     {
         if (proposed.ControlId == Uuid.Empty || proposed.ControlVersionId == Uuid.Empty ||
@@ -125,8 +135,7 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
             !HasMemberActor(proposed.Actor, proposed.ActorMemberId) ||
             string.IsNullOrWhiteSpace(proposed.CriterionIdentifier) ||
             string.IsNullOrWhiteSpace(proposed.CriterionKind) ||
-            proposed.MappingId != ControlCriterionMappingLedger.MappingIdFor(proposed.ProgramId,
-                proposed.ControlId, proposed.EditionId, proposed.CriterionIdentifier))
+            proposed.Operation.LogicalId != proposed.MappingId)
             throw new InvalidOperationException(
                 "A control mapping proposal must preserve its canonical program, control, edition, and criterion identity.");
 
@@ -157,16 +166,16 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
             proposed.ProposedAt);
         await AddWorkItemAsync(proposed.TenantId, proposed.ProgramId, candidate, ct)
             .ConfigureAwait(false);
-        return new ControlCriterionMappingWorkState(proposed.TenantId, proposed.ProgramId,
-            proposed.MappingId, proposed.ControlId, proposed.ControlVersionId, proposed.EditionId,
+        return new ControlCriterionMappingWorkState(proposed.TenantId, proposed.ProgramId, scope.LineId,
+            proposed.ControlId, proposed.ControlVersionId, proposed.EditionId,
             proposed.CriterionIdentifier, proposed.CriterionKind, proposed.Revision,
-            proposed.VersionNumber, current?.ActiveVersionNumber, proposed.VersionNumber,
+            proposed.VersionNumber, current?.ActiveVersionNumber, proposed.VersionNumber, proposed.MappingId,
             proposed.ActorMemberId, proposed.ProposedAt, Pending);
     }
 
     async ValueTask<ControlCriterionMappingWorkState> ReviewAsync(
         ControlCriterionMappingWorkState? current, ControlCriterionMappingReviewed reviewed,
-        (Uuid TenantId, Uuid ProgramId, Uuid MappingId, long Revision) scope,
+        MappingScope scope,
         CancellationToken ct)
     {
         if (current is null)
@@ -174,7 +183,7 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
                 "A control mapping cannot be reviewed before its proposal is projected.");
         ValidateNextRevision(current, scope);
         if (current.State != Pending || current.PendingVersionNumber != reviewed.VersionNumber ||
-            reviewed.DecisionId == Uuid.Empty || reviewed.ActorMemberId == Uuid.Empty ||
+            current.PendingMappingId != reviewed.MappingId || reviewed.DecisionId == Uuid.Empty || reviewed.ActorMemberId == Uuid.Empty ||
             !HasMemberActor(reviewed.Actor, reviewed.ActorMemberId) ||
             reviewed.Outcome is not ("accept" or "reject"))
             throw new InvalidOperationException(
@@ -188,6 +197,7 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
                 ? reviewed.VersionNumber
                 : current.ActiveVersionNumber,
             PendingVersionNumber = null,
+            PendingMappingId = null,
             State = reviewed.Outcome == "accept" || current.ActiveVersionNumber is not null
                 ? Active
                 : Rejected,
@@ -196,7 +206,7 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
 
     static ControlCriterionMappingWorkState RetireAsync(ControlCriterionMappingWorkState? current,
         ControlCriterionMappingRetired retired,
-        (Uuid TenantId, Uuid ProgramId, Uuid MappingId, long Revision) scope)
+        MappingScope scope)
     {
         if (current is null)
             throw new InvalidOperationException(
@@ -267,11 +277,10 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
     }
 
     static void ValidateNextRevision(ControlCriterionMappingWorkState current,
-        (Uuid TenantId, Uuid ProgramId, Uuid MappingId, long Revision) scope)
+        MappingScope scope)
     {
         if (current.TenantId != scope.TenantId || current.ProgramId != scope.ProgramId ||
-            current.MappingId != scope.MappingId ||
-            scope.Revision != checked(current.Revision + 1))
+            current.LineId != scope.LineId || scope.Revision != checked(current.Revision + 1))
             throw new InvalidOperationException(
                 "A control mapping event must advance its existing source revision and scope.");
     }
@@ -283,18 +292,22 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
     static Uuid WorkItemIdFor(Uuid mappingId, int versionNumber) =>
         WorkSource.ControlCriterionMappingReviewWorkItemId(mappingId, versionNumber);
 
-    static (Uuid TenantId, Uuid ProgramId, Uuid MappingId, long Revision) ScopeFor(
-        DomainEvent domainEvent) => domainEvent switch
-        {
-            ControlCriterionMappingProposed ev =>
-                (ev.TenantId, ev.ProgramId, ev.MappingId, ev.Revision),
-            ControlCriterionMappingReviewed ev =>
-                (ev.TenantId, ev.ProgramId, ev.MappingId, ev.Revision),
-            ControlCriterionMappingRetired ev =>
-                (ev.TenantId, ev.ProgramId, ev.MappingId, ev.Revision),
-            _ => throw new InvalidOperationException(
-                $"The control mapping projector cannot apply {domainEvent.GetType().Name}.")
-        };
+    static MappingScope ScopeFor(DomainEvent domainEvent) => domainEvent switch
+    {
+        ControlCriterionMappingProposed ev => new MappingScope(ev.TenantId, ev.ProgramId, ev.MappingId,
+            ControlCriterionMapping.IdentityOf(ev.TenantId, ev.ProgramId, ev.ControlId, ev.EditionId,
+                ev.CriterionIdentifier), ev.Revision),
+        ControlCriterionMappingReviewed ev => new MappingScope(ev.TenantId, ev.ProgramId, ev.MappingId,
+            ControlCriterionMapping.IdentityOf(ev.TenantId, ev.ProgramId, ev.ControlId, ev.EditionId,
+                ev.CriterionIdentifier), ev.Revision),
+        ControlCriterionMappingRetired ev => new MappingScope(ev.TenantId, ev.ProgramId, ev.MappingId,
+            ControlCriterionMapping.IdentityOf(ev.TenantId, ev.ProgramId, ev.ControlId, ev.EditionId,
+                ev.CriterionIdentifier), ev.Revision),
+        _ => throw new InvalidOperationException(
+            $"The control mapping projector cannot apply {domainEvent.GetType().Name}.")
+    };
+
+    sealed record MappingScope(Uuid TenantId, Uuid ProgramId, Uuid MappingId, Uuid LineId, long Revision);
 
     static RequestError InvalidScope() => new(RequestErrorKind.Conflict,
         "The control mapping work projection has an invalid tenant or program scope.");

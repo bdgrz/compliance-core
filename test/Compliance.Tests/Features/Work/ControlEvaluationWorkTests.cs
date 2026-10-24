@@ -47,7 +47,7 @@ public sealed class ControlEvaluationWorkTests
         var evaluation = await SubmitAsync(fixture);
 
         // Act
-        await fixture.AsAsync(fixture.LeadUserId, new ReviewControlEvaluation(fixture.TenantId,
+        await fixture.AsAsync(fixture.LeadUserId, new ReviewControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, fixture.ControlId, evaluation.EvaluationId, evaluation.Revision,
             decision, "Reviewed independently."));
         var queue = await fixture.AsAsync(fixture.LeadUserId,
@@ -68,7 +68,7 @@ public sealed class ControlEvaluationWorkTests
             new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
         var firstWork = Assert.Single(firstQueue.Items);
         var returned = await fixture.AsAsync(fixture.LeadUserId,
-            new ReviewControlEvaluation(fixture.TenantId, fixture.ProgramId,
+            new ReviewControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, evaluation.EvaluationId, evaluation.Revision,
                 "changes_requested", "Clarify the inspected population."));
 
@@ -130,7 +130,7 @@ public sealed class ControlEvaluationWorkTests
     {
         var plan = await fixture.GetOrDefineEvaluationPlanAsync(Procedure);
         var evaluation = await fixture.AsAsync(fixture.OwnerUserId,
-            new StartControlEvaluation(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            new StartControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 plan.PlanVersionId));
         return await SubmitRoundAsync(fixture, evaluation);
     }
@@ -140,12 +140,12 @@ public sealed class ControlEvaluationWorkTests
     {
         for (var index = 0; index < evaluation.Steps.Count; index++)
             evaluation = await fixture.AsAsync(fixture.OwnerUserId,
-                new RecordControlEvaluationStep(fixture.TenantId, fixture.ProgramId,
+                new RecordControlEvaluationStep(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                     fixture.ControlId, evaluation.EvaluationId, evaluation.Steps[index].StepId,
                     evaluation.Revision, "met", "Inspected the exact items.",
                     evaluation.Steps[index].InspectedItems));
         return await fixture.AsAsync(fixture.OwnerUserId,
-            new SubmitControlEvaluation(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            new SubmitControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 evaluation.EvaluationId, evaluation.Revision,
                 [new("design", "effective", "Design meets the objective."),
                     new("implementation", "effective", "Operates as designed."),

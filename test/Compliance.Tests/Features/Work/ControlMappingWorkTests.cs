@@ -135,21 +135,12 @@ public sealed class ControlMappingWorkTests
         var before = await fixture.AsAsync(fixture.ApproverUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
         var now = DateTimeOffset.UtcNow;
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ControlCriterionMappingLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Review(decisions.MappingId, 1, Uuid.CreateVersion4(), "accept",
-                    "The mapping applies.", fixture.ApproverMemberId, "Approver", now));
-                return Result.Success;
-            });
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new CriterionApplicabilityLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Review(decisions.ApplicabilityId, 1, Uuid.CreateVersion4(),
-                    "reject", "The criterion applies.", fixture.ApproverMemberId,
-                    ActorReference.ForMember(fixture.ApproverMemberId, "Approver"), now));
-                return Result.Success;
-            });
+        await MappingSeeds.ReviewMappingAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            decisions.EditionId, "CC6.1", decisions.MappingId, 1, "accept", "The mapping applies.",
+            fixture.ApproverMemberId, "Approver", now);
+        await MappingSeeds.ReviewNotApplicableAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId,
+            decisions.EditionId, "CC6.2", decisions.ApplicabilityId, 1, "reject", "The criterion applies.",
+            fixture.ApproverMemberId, "Approver", now);
 
         // Act
         var after = await fixture.AsAsync(fixture.ApproverUserId,
@@ -175,30 +166,19 @@ public sealed class ControlMappingWorkTests
         var firstApplicability = Assert.Single(firstQueue.Items,
             item => item.Kind == "criterion_applicability_review");
         var now = DateTimeOffset.UtcNow;
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ControlCriterionMappingLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Review(decisions.MappingId, 1, Uuid.CreateVersion4(), "reject",
-                    "Revise the applicability rationale.", fixture.ApproverMemberId, "Approver",
-                    now));
-                Assert.Null(ledger.Propose(fixture.ControlId, fixture.ControlVersionId,
-                    decisions.EditionId, "CC6.1", "criterion", 2, "Revised mapping rationale.",
-                    "Applies to production systems.", fixture.LeadMemberId, "Lead",
-                    now.AddMinutes(1), out _));
-                return Result.Success;
-            });
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new CriterionApplicabilityLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Review(decisions.ApplicabilityId, 1, Uuid.CreateVersion4(),
-                    "reject", "Revise the rationale.", fixture.ApproverMemberId,
-                    ActorReference.ForMember(fixture.ApproverMemberId, "Approver"), now));
-                Assert.Null(ledger.Propose(decisions.EditionId, "CC6.2", 2,
-                    "Revised not-applicable rationale.", fixture.LeadMemberId,
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now.AddMinutes(1),
-                    out _));
-                return Result.Success;
-            });
+        await MappingSeeds.ReviewMappingAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            decisions.EditionId, "CC6.1", decisions.MappingId, 1, "reject", "Revise the applicability rationale.",
+            fixture.ApproverMemberId, "Approver", now);
+        await MappingSeeds.ProposeMappingAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId,
+            fixture.ControlId, fixture.ControlVersionId, decisions.EditionId, "CC6.1", 2,
+            "Revised mapping rationale.", "Applies to production systems.", fixture.LeadMemberId, "Lead",
+            now.AddMinutes(1));
+        await MappingSeeds.ReviewNotApplicableAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId,
+            decisions.EditionId, "CC6.2", decisions.ApplicabilityId, 1, "reject", "Revise the rationale.",
+            fixture.ApproverMemberId, "Approver", now);
+        await MappingSeeds.ProposeNotApplicableAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId,
+            decisions.EditionId, "CC6.2", 2, "Revised not-applicable rationale.", fixture.LeadMemberId, "Lead",
+            now.AddMinutes(1));
 
         // Act
         var resubmittedQueue = await fixture.AsAsync(fixture.ApproverUserId,
@@ -216,28 +196,14 @@ public sealed class ControlMappingWorkTests
     static async Task<PendingDecisions> SeedPendingDecisionsAsync(OperationsFixture fixture)
     {
         var editionId = Uuid.CreateVersion4();
-        var mappingId = ControlCriterionMappingLedger.MappingIdFor(fixture.ProgramId,
-            fixture.ControlId, editionId, "CC6.1");
-        var applicabilityId = CriterionApplicabilityLedger.DecisionIdFor(fixture.ProgramId,
-            editionId, "CC6.2");
         var now = DateTimeOffset.UtcNow;
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ControlCriterionMappingLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Propose(fixture.ControlId, fixture.ControlVersionId, editionId,
-                    "CC6.1", "criterion", 0, "The control addresses access review.",
-                    "Applies to production systems.", fixture.LeadMemberId, "Lead", now,
-                    out _));
-                return Result.Success;
-            });
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new CriterionApplicabilityLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Propose(editionId, "CC6.2", 0,
-                    "The requirement does not apply to this organization.", fixture.LeadMemberId,
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now, out _));
-                return Result.Success;
-            });
+        var mappingId = await MappingSeeds.ProposeMappingAsync(fixture.Provider, fixture.TenantId,
+            fixture.ProgramId, fixture.ControlId, fixture.ControlVersionId, editionId, "CC6.1", 0,
+            "The control addresses access review.", "Applies to production systems.", fixture.LeadMemberId, "Lead",
+            now);
+        var applicabilityId = await MappingSeeds.ProposeNotApplicableAsync(fixture.Provider, fixture.TenantId,
+            fixture.ProgramId, editionId, "CC6.2", 0, "The requirement does not apply to this organization.",
+            fixture.LeadMemberId, "Lead", now);
         return new PendingDecisions(editionId, mappingId, applicabilityId);
     }
 

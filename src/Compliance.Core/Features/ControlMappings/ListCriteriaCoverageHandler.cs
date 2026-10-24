@@ -60,7 +60,8 @@ public sealed class ListCriteriaCoverageHandler(IAggregateReader reader, ICriter
             .Where(decision => decision.EditionId == editionId &&
                 decision.Status == "not_applicable")
             .ToDictionary(static decision => decision.CriterionIdentifier,
-                static decision => decision.DecisionId, StringComparer.Ordinal);
+                static decision => decision.Versions[decision.ActiveVersionNumber!.Value - 1].DecisionId,
+                StringComparer.Ordinal);
         var entries = catalog.ListEntries(editionId, request.Category, request.Kind, null);
         var projectedEntries = await overlays.ApplyPageAsync(request.TenantId, entries, false, ct)
             .ConfigureAwait(false);
@@ -86,9 +87,10 @@ public sealed class ListCriteriaCoverageHandler(IAggregateReader reader, ICriter
             .OrderBy(static mapping => mapping.MappingId.ToString(), StringComparer.Ordinal)
             .GroupBy(static mapping => mapping.ControlId)
             .Select(static group => group.First())
-            .Select(mapping => new MappedControlReference(mapping.MappingId,
+            .Select(mapping => new MappedControlReference(
+                mapping.Versions[mapping.ActiveVersionNumber!.Value - 1].MappingId,
                 mapping.ControlId, mapping.ActiveControlVersionId!.Value,
-                mapping.ActiveVersionNumber!.Value,
+                mapping.ActiveVersionNumber.Value,
                 mapping.Versions[mapping.ActiveVersionNumber.Value - 1].ApplicabilityExplanation)
             {
                 RemapRequired = currentVersions.GetValueOrDefault(mapping.ControlId) !=

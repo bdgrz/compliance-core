@@ -191,7 +191,7 @@ public sealed class LinkEvidenceSupportHandlerTests
         }
 
         public LinkEvidenceSupportHandler Handler() => new(Access,
-            new EvidenceArtifactMetadataRead(Reader, Events), new EvidenceSupportTargetSource(Reader, EmptyOperations.Reader(Reader, Events)),
+            new EvidenceArtifactMetadataRead(Reader, Events), new EvidenceSupportTargetSource(Reader, EmptyOperations.Reader(Reader, Events), EmptyOperations.Evaluations(Reader, Events)),
             _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), TimeProvider.System);
 
         public LinkEvidenceSupport Request(Uuid artifactId, Uuid controlId, long revision) =>

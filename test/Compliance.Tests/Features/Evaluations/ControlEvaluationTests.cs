@@ -29,14 +29,25 @@ public sealed class ControlEvaluationTests
         Uuid? userId = null, Uuid? retestOf = null, Uuid? planVersionId = null)
     {
         var plan = await fixture.GetOrDefineEvaluationPlanAsync();
-        return await fixture.AsAsync(userId ?? fixture.OwnerUserId, new StartControlEvaluation(
+        return await fixture.AsAsync(userId ?? fixture.OwnerUserId, new StartControlEvaluation(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, fixture.ControlId,
             planVersionId ?? plan.PlanVersionId, retestOf));
     }
 
-    static RecordControlEvaluationStep Record(OperationsFixture fixture,
+    internal static IReadOnlyList<EvaluationAssertionConclusion> AllEffectiveConclusions => AllEffective;
+
+    internal static async Task<ControlEvaluationView> RecordAllAsyncFrom(OperationsFixture fixture,
+        ControlEvaluationView evaluation, int firstIndex, Uuid? userId = null)
+    {
+        var user = userId ?? fixture.OwnerUserId;
+        for (var index = firstIndex; index < evaluation.Steps.Count; index++)
+            evaluation = await fixture.AsAsync(user, Record(fixture, evaluation, index));
+        return evaluation;
+    }
+
+    internal static RecordControlEvaluationStep Record(OperationsFixture fixture,
         ControlEvaluationView evaluation, int index, string result = "met",
-        string? classification = null) => new(fixture.TenantId, fixture.ProgramId,
+        string? classification = null) => new(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
         fixture.ControlId, evaluation.EvaluationId, evaluation.Steps[index].StepId,
         evaluation.Revision, result, "Inspected the exact items.",
         evaluation.Steps[index].InspectedItems, classification,
@@ -55,13 +66,13 @@ public sealed class ControlEvaluationTests
 
     internal static SubmitControlEvaluation Submit(OperationsFixture fixture,
         ControlEvaluationView evaluation,
-        IReadOnlyList<EvaluationAssertionConclusion>? conclusions = null) => new(fixture.TenantId,
+        IReadOnlyList<EvaluationAssertionConclusion>? conclusions = null) => new(Uuid.CreateVersion4(), fixture.TenantId,
         fixture.ProgramId, fixture.ControlId, evaluation.EvaluationId, evaluation.Revision,
         conclusions ?? AllEffective);
 
     internal static ReviewControlEvaluation Review(OperationsFixture fixture,
         ControlEvaluationView evaluation, string decision, Uuid? waiverId = null) => new(
-        fixture.TenantId, fixture.ProgramId, fixture.ControlId, evaluation.EvaluationId,
+        Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId, evaluation.EvaluationId,
         evaluation.Revision, decision, "Reviewed independently.", waiverId);
 
     internal static async Task<ControlEvaluationView> SubmittedAsync(OperationsFixture fixture)
@@ -102,7 +113,7 @@ public sealed class ControlEvaluationTests
 
         await fixture.Scenario(fixture.OutsiderUserId)
             // Act
-            .When(new StartControlEvaluation(fixture.TenantId, fixture.ProgramId,
+            .When(new StartControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, plan.PlanVersionId))
             // Assert
             .ExpectFailure(RequestErrorKind.Forbidden);
@@ -198,7 +209,7 @@ public sealed class ControlEvaluationTests
 
         // Act
         var disposed = await fixture.AsAsync(fixture.OwnerUserId,
-            new DisposeControlEvaluationDeviation(fixture.TenantId, fixture.ProgramId,
+            new DisposeControlEvaluationDeviation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, evaluation.EvaluationId, deviation.DeviationId,
                 evaluation.Revision, "corrected", "Access removed the same day."));
         var submitted = await fixture.AsAsync(fixture.OwnerUserId, Submit(fixture, disposed,
@@ -360,7 +371,7 @@ public sealed class ControlEvaluationTests
 
         await fixture.Scenario(fixture.OwnerUserId)
             // Act
-            .When(new StartControlEvaluation(fixture.TenantId, fixture.ProgramId,
+            .When(new StartControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, plan.PlanVersionId, accepted.EvaluationId))
             // Assert
             .ExpectFailure(RequestErrorKind.Conflict);
@@ -417,7 +428,7 @@ public sealed class ControlEvaluationTests
         var scoped = await fixture.ApprovedWaiverAsync(new SeparationOfDutiesWaiverScope(
             SeparationOfDutiesRecordTypes.ControlEvaluation, evaluation.EvaluationId,
             deviation.DeviationId, 1, SeparationOfDutiesActions.Approve), fixture.OwnerMemberId);
-        DisposeControlEvaluationDeviation Dispose(Uuid waiverId) => new(fixture.TenantId,
+        DisposeControlEvaluationDeviation Dispose(Uuid waiverId) => new(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, fixture.ControlId, evaluation.EvaluationId, deviation.DeviationId,
             evaluation.Revision, "accepted_with_waiver", "Accepted for this period.", waiverId);
 

@@ -99,7 +99,7 @@ public sealed class ControlEvaluationPlanHandlerTests
         var first = await fixture.DefineEvaluationPlanAsync(0, "Evaluate access review.", Steps);
 
         // Act
-        var started = await fixture.AsAsync(fixture.OwnerUserId, new StartControlEvaluation(
+        var started = await fixture.AsAsync(fixture.OwnerUserId, new StartControlEvaluation(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, fixture.ControlId, first.PlanVersionId));
         var second = await fixture.DefineEvaluationPlanAsync(first.Version,
             "Evaluate privileged access review.", Steps);
@@ -123,7 +123,7 @@ public sealed class ControlEvaluationPlanHandlerTests
         }
         Assert.Equal(2, second.Version);
         await fixture.Scenario(fixture.OwnerUserId)
-            .When(new StartControlEvaluation(fixture.TenantId, fixture.ProgramId,
+            .When(new StartControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, first.PlanVersionId))
             .ExpectFailure(RequestErrorKind.Conflict);
     }
@@ -138,11 +138,11 @@ public sealed class ControlEvaluationPlanHandlerTests
 
         // Act
         await fixture.Scenario(fixture.OwnerUserId)
-            .When(new StartControlEvaluation(fixture.TenantId, fixture.ProgramId,
+            .When(new StartControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, plan.PlanVersionId))
             .ExpectFailure(RequestErrorKind.Forbidden);
         var startedByManager = await fixture.AsAsync(fixture.LeadUserId,
-            new StartControlEvaluation(fixture.TenantId, fixture.ProgramId,
+            new StartControlEvaluation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, plan.PlanVersionId));
 
         // Assert

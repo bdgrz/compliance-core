@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Fitz;
@@ -5,7 +6,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
 
-sealed class FitzControlEvaluationWorkItemDirectory(IKvClient client)
+sealed class FitzControlEvaluationWorkItemDirectory(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client,
         "kv://bdgrz/accountable-work-items/control-evaluations-v1", ProjectorName),
       IAccountableWorkItemDirectoryReader, IControlEvaluationWorkItemProjection
@@ -71,7 +72,7 @@ sealed class FitzControlEvaluationWorkItemDirectory(IKvClient client)
 
             var next = domainEvent switch
             {
-                ControlEvaluationStepRecorded step => ApplyStep(current, step),
+                ControlEvaluationStepRecorded step => await ApplyStepAsync(current, step, ct).ConfigureAwait(false),
                 ControlEvaluationDeviationDisposed disposed => ApplyDisposition(current, disposed),
                 ControlEvaluationSubmitted submitted => await SubmitAsync(current, submitted, ct)
                     .ConfigureAwait(false),
@@ -120,10 +121,12 @@ sealed class FitzControlEvaluationWorkItemDirectory(IKvClient client)
         return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
     }
 
-    static ControlEvaluationWorkState ApplyStep(ControlEvaluationWorkState current,
-        ControlEvaluationStepRecorded step)
+    async ValueTask<ControlEvaluationWorkState> ApplyStepAsync(ControlEvaluationWorkState current,
+        ControlEvaluationStepRecorded step, CancellationToken ct)
     {
-        if (current.State != InProgress || step.Result.Round != current.Round)
+        var result = await content.ReadJsonAsync<EvaluationStepResultView>(step.TenantId.ToString(),
+            step.ResultContent, ct).ConfigureAwait(false);
+        if (current.State != InProgress || result.Round != current.Round)
             throw new InvalidOperationException(
                 "A control evaluation step must belong to its current open round.");
         return current with { Revision = step.Revision };
@@ -141,32 +144,36 @@ sealed class FitzControlEvaluationWorkItemDirectory(IKvClient client)
     async ValueTask<ControlEvaluationWorkState> SubmitAsync(ControlEvaluationWorkState current,
         ControlEvaluationSubmitted submitted, CancellationToken ct)
     {
-        if (current.State != InProgress || submitted.Submission.Round != current.Round)
+        var submission = await content.ReadJsonAsync<EvaluationSubmissionView>(submitted.TenantId.ToString(),
+            submitted.SubmissionContent, ct).ConfigureAwait(false);
+        if (current.State != InProgress || submission.Round != current.Round)
             throw new InvalidOperationException(
                 "A control evaluation submission must belong to its current open round.");
         var candidate = ReviewCandidate(submitted.TenantId, submitted.ProgramId,
             submitted.ControlId, submitted.EvaluationId, current.EvaluatorMemberId,
-            current.Round, submitted.Submission.SubmittedAt);
+            current.Round, submission.SubmittedAt);
         await AddWorkItemAsync(submitted.TenantId, submitted.ProgramId, candidate, ct)
             .ConfigureAwait(false);
         return current with
         {
             Revision = submitted.Revision,
             State = Submitted,
-            SubmittedAt = submitted.Submission.SubmittedAt,
+            SubmittedAt = submission.SubmittedAt,
         };
     }
 
     async ValueTask<ControlEvaluationWorkState> ReviewAsync(ControlEvaluationWorkState current,
         ControlEvaluationReviewed reviewed, CancellationToken ct)
     {
-        if (current.State != Submitted || reviewed.Review.Round != current.Round ||
-            reviewed.Review.Decision is not (Accepted or Rejected or ChangesRequested))
+        var review = await content.ReadJsonAsync<ControlEvaluationReviewView>(reviewed.TenantId.ToString(),
+            reviewed.ReviewContent, ct).ConfigureAwait(false);
+        if (current.State != Submitted || review.Round != current.Round ||
+            reviewed.Decision != review.Decision || reviewed.Decision is not (Accepted or Rejected or ChangesRequested))
             throw new InvalidOperationException(
                 "A control evaluation review must resolve the currently submitted round.");
         await RemoveWorkItemAsync(reviewed.TenantId, reviewed.ProgramId,
             reviewed.EvaluationId, current.Round, ct).ConfigureAwait(false);
-        var accepted = reviewed.Review.Decision == Accepted;
+        var accepted = reviewed.Decision == Accepted;
         return current with
         {
             Revision = reviewed.Revision,

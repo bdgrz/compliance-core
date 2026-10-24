@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.ControlMappings;
+using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Programs;
@@ -41,6 +43,9 @@ static class ProgramManagementServices
         collection.AddScoped<NativeOperationExecutor>();
         collection.AddScoped<ControlOperationsReader>();
         collection.AddScoped<ProviderSource>();
+        collection.AddScoped<ControlMappingReader>();
+        collection.AddScoped<ApplicabilityReader>();
+        collection.AddScoped<ControlEvaluationReader>();
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });

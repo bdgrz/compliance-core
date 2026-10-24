@@ -1,8 +1,7 @@
 using System.Security.Claims;
-using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Criteria;
-using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Tests.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -10,6 +9,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Criteria;
 
+/// <summary>
+///     The per-criterion overlay revision line: required command id and expected revision, exact retries that return
+///     the original registration, changed intent that conflicts, independent criteria and complete immutable content.
+/// </summary>
 public sealed class SetCriteriaTextOverlayHandlerTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 3, 12, 0, 0, TimeSpan.Zero);
@@ -21,17 +24,15 @@ public sealed class SetCriteriaTextOverlayHandlerTests
     {
         // Arrange
         await using var scenario = await Scenario.CreateAsync();
-        var firstRequestId = Uuid.CreateVersion4();
-        var firstRequest = scenario.Request(firstRequestId, expectedRevision: null, Content);
-        var first = await scenario.Handler.HandleAsync(firstRequest, CancellationToken.None);
+        var firstRequest = scenario.Request(Uuid.CreateVersion4(), expectedRevision: 0, Content);
+        var first = await scenario.HandleAsync(firstRequest);
         Assert.True(first.IsSuccess);
-        var second = await scenario.Handler.HandleAsync(scenario.Request(Uuid.CreateVersion4(),
-            expectedRevision: 1, Content with { Text = "Revised synthetic text" }),
-            CancellationToken.None);
+        var second = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), expectedRevision: 1,
+            Content with { Text = "Revised synthetic text" }));
         Assert.True(second.IsSuccess);
 
         // Act
-        var retry = await scenario.Handler.HandleAsync(firstRequest, CancellationToken.None);
+        var retry = await scenario.HandleAsync(firstRequest);
         var events = await scenario.ReadEventsAsync();
 
         // Assert
@@ -46,94 +47,199 @@ public sealed class SetCriteriaTextOverlayHandlerTests
     {
         // Arrange
         await using var scenario = await Scenario.CreateAsync();
-        var first = await scenario.Handler.HandleAsync(scenario.Request(Uuid.CreateVersion4(),
-            expectedRevision: null, Content), CancellationToken.None);
-        Assert.True(first.IsSuccess);
-        var second = await scenario.Handler.HandleAsync(scenario.Request(Uuid.CreateVersion4(),
-            expectedRevision: 1, Content with { Text = "Revised synthetic text" }),
-            CancellationToken.None);
-        Assert.True(second.IsSuccess);
+        Assert.True((await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 0, Content))).IsSuccess);
+        Assert.True((await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 1,
+            Content with { Text = "Revised synthetic text" }))).IsSuccess);
 
         // Act
-        var stale = await scenario.Handler.HandleAsync(scenario.Request(Uuid.CreateVersion4(),
-            expectedRevision: 1, Content with { Text = "Stale synthetic text" }),
-            CancellationToken.None);
+        var stale = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 1,
+            Content with { Text = "Stale synthetic text" }));
+        var firstAgain = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 0, Content));
         var events = await scenario.ReadEventsAsync();
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, stale.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, firstAgain.Error?.Kind);
         Assert.Equal(2, events.Count);
     }
 
     [Fact]
-    public async Task ShouldNotWriteGivenUnknownCriterion()
+    public async Task ShouldNotWriteGivenUnknownCriterionOrWrongEdition()
     {
         // Arrange
         await using var scenario = await Scenario.CreateAsync();
 
         // Act
-        var result = await scenario.Handler.HandleAsync(scenario.Request(Uuid.CreateVersion4(),
-            expectedRevision: null, Content, identifier: "UNKNOWN"), CancellationToken.None);
+        var unknown = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 0, Content,
+            identifier: "UNKNOWN"));
+        var wrongEdition = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 0, Content,
+            edition: Uuid.CreateVersion4()));
         var events = await scenario.ReadEventsAsync();
 
         // Assert
-        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, unknown.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, wrongEdition.Error?.Kind);
+        Assert.Empty(events);
+    }
+
+    [Fact]
+    public async Task ShouldConflictGivenSameCommandWithChangedIntentOrRevision()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var commandId = Uuid.CreateVersion4();
+        var request = scenario.Request(commandId, 0, Content);
+        Assert.True((await scenario.HandleAsync(request)).IsSuccess);
+
+        // Act
+        var changedText = await scenario.HandleAsync(scenario.Request(commandId, 0,
+            Content with { Text = "Different intent" }));
+        var changedRevision = await scenario.HandleAsync(scenario.Request(commandId, 1, Content));
+        var changedFlags = await scenario.HandleAsync(scenario.Request(commandId, 0,
+            Content with { UsageFlags = new CriteriaOverlayUsageFlags(false, false) }));
+        var events = await scenario.ReadEventsAsync();
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, changedText.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, changedRevision.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, changedFlags.Error?.Kind);
+        Assert.Single(events);
+    }
+
+    [Fact]
+    public async Task ShouldKeepCriteriaIndependentGivenDifferentIdentifiersAtTheSameRevision()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+
+        // Act
+        var access = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 0, Content));
+        var accounts = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 0, Content,
+            identifier: "CC6.2"));
+        var accessAgain = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 1,
+            Content with { Text = "Revised" }));
+
+        // Assert
+        Assert.Equal(1, access.Value?.Revision);
+        Assert.Equal(1, accounts.Value?.Revision);
+        Assert.Equal(2, accessAgain.Value?.Revision);
+        Assert.Equal(2, (await scenario.ReadEventsAsync()).Count);
+        Assert.Single(await scenario.ReadEventsAsync("CC6.2"));
+        Assert.NotEqual(scenario.StreamOf("CC6.1"), scenario.StreamOf("CC6.2"));
+    }
+
+    [Fact]
+    public async Task ShouldAppendExactlyOneRevisionGivenTwoWritersAtTheSameExpectedRevision()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var left = scenario.Request(Uuid.CreateVersion4(), 0, Content with { Text = "Left writer" });
+        var right = scenario.Request(Uuid.CreateVersion4(), 0, Content with { Text = "Right writer" });
+
+        // Act
+        var results = await Task.WhenAll(scenario.HandleAsync(left), scenario.HandleAsync(right));
+        var loser = results[0].IsSuccess ? right : left;
+        var recovered = await scenario.HandleAsync(scenario.Request(loser.Request.CommandId, 1, loser.Request.Content));
+
+        // Assert
+        Assert.Single(results, static result => result.IsSuccess);
+        Assert.Single(results, static result => result.Error?.Kind == RequestErrorKind.Conflict);
+        Assert.Equal(2, recovered.Value?.Revision);
+        Assert.Equal(2, (await scenario.ReadEventsAsync()).Count);
+    }
+
+    [Fact]
+    public async Task ShouldKeepCompleteMaximumUnicodeTextInImmutableContentGivenBoundaryRevision()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var text = string.Concat(Enumerable.Repeat("日本語", 5333)) + "é";
+        Assert.Equal(CriteriaTextOverlayRules.MaximumTextLength, text.Length);
+
+        // Act
+        var result = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 0, Content with { Text = text }));
+        var tooLong = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 1,
+            Content with { Text = text + "x" }));
+        var fact = Assert.IsType<CriteriaTextOverlayEntryRevised>(Assert.Single(await scenario.ReadEventsAsync()).Event);
+        var stored = await scenario.ReadContentAsync(fact.OverlayContent);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Validation, tooLong.Error?.Kind);
+        Assert.Equal(text, stored.Text);
+        Assert.Equal(Content.Supplier, stored.Supplier);
+    }
+
+    [Theory]
+    [InlineData("", "Supplier", "License")]
+    [InlineData("Text", "", "License")]
+    [InlineData("Text", "Supplier", "")]
+    [InlineData("Text", "Supplier\u0001", "License")]
+    public async Task ShouldRejectOverlayWithoutWritingGivenMissingOrInvalidSourceFacts(string text, string supplier,
+        string license)
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+
+        // Act
+        var result = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), 0,
+            new CriteriaTextOverlayContent(text, supplier, license, new CriteriaOverlayUsageFlags(false, false))));
+        var events = await scenario.ReadEventsAsync();
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
         Assert.Empty(events);
     }
 
     sealed class Scenario : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
-        readonly AsyncServiceScope _scope;
         readonly Uuid _userId = Uuid.CreateVersion4();
 
-        Scenario(ServiceProvider provider, Uuid tenantId)
+        Scenario(ServiceProvider provider) => _provider = provider;
+
+        public Uuid TenantId { get; } = Uuid.CreateVersion4();
+
+        public static Task<Scenario> CreateAsync() => Task.FromResult(new Scenario(ProgramManagementServices.Build(
+            new RecordingPermissionAuthorizer(allowed: true), static _ => { },
+            static services => services.AddSingleton<ICriteriaCatalog>(CriteriaCatalog.Platform))));
+
+        public FixedRequestContext Request(Uuid commandId, long expectedRevision, CriteriaTextOverlayContent content,
+            string identifier = "CC6.1", Uuid? edition = null) =>
+            new(new SetCriteriaTextOverlay(commandId, TenantId, edition ?? CriteriaCatalog.Platform.Edition.EditionId,
+                identifier, expectedRevision, content), Actor(_userId), commandId);
+
+        public async Task<Result<CriteriaTextOverlayRegistration>> HandleAsync(FixedRequestContext context)
         {
-            _provider = provider;
-            _scope = provider.CreateAsyncScope();
-            TenantId = tenantId;
+            await using var scope = _provider.CreateAsyncScope();
+            var services = scope.ServiceProvider;
+            var handler = new SetCriteriaTextOverlayHandler(services.GetRequiredService<NativeOperationExecutor>(),
+                services.GetRequiredService<IAggregateReader>(), CriteriaCatalog.Platform,
+                services.GetRequiredService<IImmutableContentStore>(), new FixedTimeProvider(Now));
+            return await handler.HandleAsync(context, CancellationToken.None);
         }
 
-        public Uuid TenantId { get; }
-        public SetCriteriaTextOverlayHandler Handler => new(
-            _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), CriteriaCatalog.Platform,
-            new FixedTimeProvider(Now));
+        public EventStreamAddress StreamOf(string identifier) => new CriteriaTextOverlay(TenantId,
+            CriteriaCatalog.Platform.Edition.EditionId, identifier).Stream;
 
-        public FixedRequestContext Request(Uuid requestId, long? expectedRevision,
-            CriteriaTextOverlayContent content, string identifier = "CC6.1") =>
-            new(new SetCriteriaTextOverlay(TenantId, CriteriaCatalog.Platform.Edition.EditionId,
-                    identifier, expectedRevision, content), Actor(_userId), requestId);
-
-        public static Task<Scenario> CreateAsync()
-        {
-            var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
-            services.AddPortia();
-            return Task.FromResult(new Scenario(services.BuildServiceProvider(
-                new ServiceProviderOptions { ValidateScopes = true }), Uuid.CreateVersion4()));
-        }
-
-        public async Task<List<DomainEventRecord>> ReadEventsAsync()
+        public async Task<List<DomainEventRecord>> ReadEventsAsync(string identifier = "CC6.1")
         {
             var records = new List<DomainEventRecord>();
-            await foreach (var record in _scope.ServiceProvider.GetRequiredService<IEventStore>()
-                               .ReadAsync(new EventStreamAddress(TenantId.ToString(),
-                                   CriteriaTextOverlayLedger.Area,
-                                   CriteriaCatalog.Platform.Edition.EditionId.ToString()), 0,
-                                   CancellationToken.None))
+            await foreach (var record in _provider.GetRequiredService<IEventStore>().ReadAsync(StreamOf(identifier), 0,
+                               CancellationToken.None))
                 records.Add(record);
             return records;
         }
 
-        public async ValueTask DisposeAsync()
-        {
-            await _scope.DisposeAsync();
-            await _provider.DisposeAsync();
-        }
+        public Task<CriteriaTextOverlayContent> ReadContentAsync(Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference) =>
+            NativeContent.ReadAsync<CriteriaTextOverlayContent>(_provider.GetRequiredService<IImmutableContentStore>(),
+                TenantId, reference);
+
+        public ValueTask DisposeAsync() => _provider.DisposeAsync();
     }
 
-    sealed class FixedRequestContext(SetCriteriaTextOverlay request, ClaimsPrincipal actor,
-        Uuid requestId) : IRequestContext<SetCriteriaTextOverlay>
+    sealed class FixedRequestContext(SetCriteriaTextOverlay request, ClaimsPrincipal actor, Uuid requestId)
+        : IRequestContext<SetCriteriaTextOverlay>
     {
         public SetCriteriaTextOverlay Request => request;
         public ClaimsPrincipal Actor => actor;

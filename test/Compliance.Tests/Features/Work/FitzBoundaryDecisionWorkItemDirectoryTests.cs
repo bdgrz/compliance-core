@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Operations;
@@ -123,7 +125,10 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
             queueScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
             queueScope.ServiceProvider.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
             consistency, boundaries: fixture.Boundaries, accountableWorkItems: [directory],
-            operatingReader: queueScope.ServiceProvider.GetRequiredService<ControlOperationsReader>());
+            operatingReader: queueScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: queueScope.ServiceProvider.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: queueScope.ServiceProvider.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: queueScope.ServiceProvider.GetRequiredService<ControlEvaluationReader>());
         var queueResult = await queueReader.ReadAsync(fixture.TenantId, fixture.ProgramId,
             new OperationsActor(fixture.ReviewerUserId, fixture.ReviewerMemberId, "Reviewer"), 30,
             CancellationToken.None);

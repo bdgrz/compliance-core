@@ -3,8 +3,10 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.ControlMappings;
 
 /// <summary>
-///     A mapping between a control and an immutable catalog entry, keyed by
-///     (edition_id, criterion_identifier). Status is pending, active, rejected, or retired.
+///     The mapping line of one control and one immutable catalog entry, keyed by
+///     (control, edition_id, criterion_identifier). <c>MappingId</c> is the id of the line's first proposal; each
+///     version carries the id of its own proposal. <c>Revision</c> counts the facts of this line.
+///     Status is pending, active, rejected, or retired.
 ///     A mapping records a claimed relationship; it never asserts that a criterion is satisfied.
 /// </summary>
 public sealed record ControlCriterionMappingView(Uuid TenantId, Uuid ProgramId,
