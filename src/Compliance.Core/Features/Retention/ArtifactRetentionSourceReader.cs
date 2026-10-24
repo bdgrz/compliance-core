@@ -9,7 +9,7 @@ static class ArtifactRetentionSourceReader
     public static async ValueTask<Result<ArtifactRetentionSourceSnapshot>> LoadAsync(IAggregateReader reader,
         Uuid tenantId, string kind, Uuid id, CancellationToken ct)
     {
-        if (tenantId == Uuid.Empty || id == Uuid.Empty || !ArtifactRetention.IsSupportedSource(kind))
+        if (tenantId == Uuid.Empty || id == Uuid.Empty || !ArtifactRetentionRules.IsSupportedSource(kind))
             return Result<ArtifactRetentionSourceSnapshot>.Failure(new RequestError(RequestErrorKind.Validation,
                 "Retention requires a supported tenant source."));
         ArtifactRetentionSourceSnapshot? snapshot = null;

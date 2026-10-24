@@ -12,6 +12,23 @@
       ],
       "evidence": "Installed Portia one-stream append does not provide the accepted realm-wide binding assertion. Per-first-owner admission can proceed; bare-operation routes and cross-route deduplication remain disabled.",
       "nextWork": "Implement remaining owner and receiver slices independently."
+    },
+    {
+      "id": "s31-persisted-combined-retention-history-migration",
+      "scope": "Existing persisted artifact_retention streams",
+      "status": "qualification_blocked",
+      "externalDependency": false,
+      "evidence": "The accepted owner protocol requires exact content basis and independent hold history; the current source stores both on one combined source owner. No selected trusted import/cutover command or native provenance mapping is supplied in the accepted catalogs.",
+      "implementedFence": "ArtifactRetentionLegacyGuard refuses affected reads and new native decisions; no data is removed and disposition remains disabled.",
+      "requiredNextWork": "Select and implement a verified migration preserving every original hold placement/release, attribution, exact content/source position and basis period before a persisted-data rollout; quiesce legacy writers and prove complete migration.",
+      "independentWorkContinued": "Prepared native retention basis/legal-hold owners, handlers, readers and focused tests on fresh owner streams. Protected download/crypto remains a separate next slice."
+    },
+    {
+      "id": "web-smoke-qualification",
+      "status": "qualification_failed",
+      "externalDependency": false,
+      "evidence": "ComplianceWebTests:17passed/11failed. Eight failures require configured HTTPS digest origin/scoped client route in test factory; remaining failures reference old manual-application/advisor-handoff routes and apply snake_case query validation to X-Bdgrz-Upload header. TRX /tmp/compliance-s31-web-results/web.trx. Backend acceptance full5453passed.",
+      "nextWork": "Repair web test host configuration and stale contract assertions after current backend owner slices; no new GitHub issue."
     }
   ],
   "remainingSlices": [
@@ -23,7 +40,9 @@
     "S35"
   ],
   "triageArtifacts": [
-    "implementation-file-reviews.json"
+    "implementation-file-reviews.json",
+    "retention-file-reviews.json",
+    "retention-file-triage.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -37,7 +56,7 @@
     {
       "id": "retention-owner-split",
       "slice": "S31",
-      "status": "patch_preparation"
+      "status": "validated_awaiting_merge"
     },
     {
       "id": "versioned-replay",

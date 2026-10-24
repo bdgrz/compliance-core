@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "6f2d50265ca93ef043a2f3a1d681710f6e7d5d06",
+  "sourceCommit": "453961cb0a0ff4b652bc9e937637b2e78dddfe7e",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 508,
-    "factsWithReducer": 486,
-    "factsWithAggregateEmitter": 484,
+    "factsWithReducer": 485,
+    "factsWithAggregateEmitter": 483,
     "auditFactsWithoutReducer": 2,
-    "factsWithoutReducerOrEmitter": 20,
+    "factsWithoutReducerOrEmitter": 21,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 129,
-    "aggregateTypesWithCommandPath": 127,
+    "aggregateTypes": 130,
+    "aggregateTypesWithCommandPath": 126,
     "requestContracts": 781,
     "commonRequestContracts": 779,
     "requestClassificationCounts": {
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 722,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 30,
+    "unwiredAggregateProducerOperations": 33,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 17
+      "no_registered_request_route": 20
     },
     "factReplayGuardRows": 0
   },
@@ -1393,15 +1393,15 @@
       "contract": "src/Compliance.Common/Features/Retention/ArtifactLegalHoldPlaced.cs",
       "reducers": [
         {
-          "aggregate": "ArtifactRetention",
-          "source": "src/Compliance.Core/Features/Retention/ArtifactRetention.cs"
+          "aggregate": "ArtifactLegalHold",
+          "source": "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Retention/ArtifactRetention.cs"
+        "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs"
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -1411,14 +1411,16 @@
       "contract": "src/Compliance.Common/Features/Retention/ArtifactLegalHoldReleased.cs",
       "reducers": [
         {
-          "aggregate": "ArtifactRetention",
-          "source": "src/Compliance.Core/Features/Retention/ArtifactRetention.cs"
+          "aggregate": "ArtifactLegalHold",
+          "source": "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Retention/ArtifactRetention.cs"
+        "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -1427,34 +1429,30 @@
       "contract": "src/Compliance.Common/Features/Retention/ArtifactRetentionBasisRecorded.cs",
       "reducers": [
         {
-          "aggregate": "ArtifactRetention",
-          "source": "src/Compliance.Core/Features/Retention/ArtifactRetention.cs"
+          "aggregate": "ArtifactRetentionBasis",
+          "source": "src/Compliance.Core/Features/Retention/ArtifactRetentionBasis.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Retention/ArtifactRetention.cs"
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionBasis.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
     {
       "fact": "ArtifactRetentionBound",
       "contract": "src/Compliance.Common/Features/Retention/ArtifactRetentionBound.cs",
-      "reducers": [
-        {
-          "aggregate": "ArtifactRetention",
-          "source": "src/Compliance.Core/Features/Retention/ArtifactRetention.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Retention/ArtifactRetention.cs"
-      ],
+      "reducers": [],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs"
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "confirmed_gap",
+      "note": "Confirmed source gap: no current aggregate reducer or emitter. Keep unresolved in the local delivery ledger; no implemented path is claimed."
     },
     {
       "fact": "AssignmentIndependenceReevaluated",
@@ -9541,28 +9539,40 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "ArtifactRetention",
-      "source": "src/Compliance.Core/Features/Retention/ArtifactRetention.cs",
+      "aggregate": "ArtifactLegalHold",
+      "source": "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs",
       "appliedFacts": [
         "ArtifactLegalHoldPlaced",
-        "ArtifactLegalHoldReleased",
-        "ArtifactRetentionBasisRecorded",
-        "ArtifactRetentionBound"
+        "ArtifactLegalHoldReleased"
       ],
-      "commandRequests": [
-        "GenerateAuditPopulationExport",
-        "PlaceArtifactLegalHold",
-        "RecordArtifactRetentionBasis",
-        "ReleaseArtifactLegalHold"
+      "commandRequests": [],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionTests.cs"
       ],
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1052,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
+    },
+    {
+      "aggregate": "ArtifactRetentionBasis",
+      "source": "src/Compliance.Core/Features/Retention/ArtifactRetentionBasis.cs",
+      "appliedFacts": [
+        "ArtifactRetentionBasisRecorded"
+      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPopulations/GenerateAuditPopulationExportHandlerTests.cs",
         "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs",
         "test/Compliance.Tests/Features/Retention/ArtifactRetentionTests.cs",
         "test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1052,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "AuditObservation",
@@ -18124,12 +18134,11 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ArtifactRetention",
+        "ArtifactRetentionBasis",
         "AuditPopulation",
         "EvidenceArtifact"
       ],
       "aggregateTargets": [
-        "ArtifactRetention",
         "AuditPopulation",
         "EvidenceArtifact"
       ],
@@ -18487,9 +18496,7 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [
-        "ArtifactRetentionRead"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs"
       ],
@@ -18531,12 +18538,12 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [
-        "ArtifactRetentionRead"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Retention/ArtifactDisclosureHandlerTests.cs",
         "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionSplitRegressionTests.cs",
         "test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -21571,9 +21578,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ArtifactRetention"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -24269,14 +24274,12 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "ArtifactRetention"
-      ],
-      "helperServices": [
-        "ArtifactRetentionMutation"
-      ],
+      "aggregateTargets": [],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionSplitRegressionTests.cs",
         "test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs"
       ],
       "note": ""
@@ -25781,14 +25784,11 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "ArtifactRetention"
-      ],
-      "helperServices": [
-        "ArtifactRetentionMutation"
-      ],
+      "aggregateTargets": [],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs",
         "test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs"
       ],
       "note": ""
@@ -27622,14 +27622,11 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "ArtifactRetention"
-      ],
-      "helperServices": [
-        "ArtifactRetentionMutation"
-      ],
+      "aggregateTargets": [],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs",
         "test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs"
       ],
       "note": ""
@@ -31186,6 +31183,39 @@
       "ownerIssue": 285,
       "callerSources": [],
       "methodArgumentCount": 4,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ArtifactLegalHoldPlaced",
+      "aggregate": "ArtifactLegalHold",
+      "method": "Place",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1052,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ArtifactLegalHoldReleased",
+      "aggregate": "ArtifactLegalHold",
+      "method": "ReleaseHold",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1052,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ArtifactRetentionBasisRecorded",
+      "aggregate": "ArtifactRetentionBasis",
+      "method": "Record",
+      "methodArgumentCount": 7,
+      "source": "src/Compliance.Core/Features/Retention/ArtifactRetentionBasis.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1052,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

@@ -206,7 +206,7 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | ArtifactDisclosure | Retention | retain | ASSURE-10 (pending) | 0.17 | [source](../../../../src/Compliance.Core/Features/Retention/ArtifactDisclosure.cs) |
 | ArtifactDisposition | Retention | process | ASSURE-15 (pending) | 0.81 | [source](../../../../src/Compliance.Core/Features/Retention/ArtifactDisposition.cs) |
 | ArtifactEngagementHold | Retention | retain | ASSURE-10 (pending) | 0.15 | [source](../../../../src/Compliance.Core/Features/Retention/ArtifactEngagementHold.cs) |
-| ArtifactRetention | Retention | split | ASSURE-12 (pending) | 0.88 | [source](../../../../src/Compliance.Core/Features/Retention/ArtifactRetention.cs) |
+| ArtifactRetention | Retention | split | ASSURE-12 (pending) | 0.88 | [source](https://github.com/bdgrz/compliance-core/blob/b7a2bd02cc90c6734c94391399a55c0da1621521/src/Compliance.Core/Features/Retention/ArtifactRetention.cs) |
 | EvidenceHandlingPolicy | Retention | narrow | ASSURE-05 (pending), ASSURE-10 (pending) | 0.67 | [source](../../../../src/Compliance.Core/Features/Retention/EvidenceHandlingPolicy.cs) |
 | RiskDraft | Risks | retain | OPS-14 (not in active ledger), OPS-15 (pending) | 0.24 | [source](../../../../src/Compliance.Core/Features/Risks/RiskDraft.cs) |
 | RiskEvaluation | Risks | narrow | OPS-11 (pending), OPS-13 (pending), OPS-16 (pending) | 0.78 | [source](../../../../src/Compliance.Core/Features/Risks/RiskEvaluation.cs) |

@@ -12,7 +12,7 @@ public sealed class ArtifactDisposition : Aggregate
     const int MaximumFailureCodeLength = 128;
     static readonly HashSet<string> RetentionPolicies = new(StringComparer.Ordinal)
     {
-        ArtifactRetention.Policy
+        ArtifactRetentionRules.Policy
     };
     static readonly HashSet<string> HandlingClasses = new(StringComparer.Ordinal)
     {

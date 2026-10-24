@@ -36,24 +36,24 @@ public sealed class AttestRetentionManagementWriteWallTests
             Assert.True(initial.IsSuccess, initial.Error?.Message);
         }
         var before = await ProgramManagementServices.HydrateAsync(provider,
-            new ArtifactRetention(Tenant, "evidence_artifact", id));
+            new ArtifactRetentionBasis(new(Tenant, "evidence_artifact", id, Sha)));
         await AttestAssignmentHistoryFixture.SeedAsync(provider, Tenant, User, revoked: true);
 
         // Act
         var result = operation switch
         {
-            "basis" => await bus.DispatchAsync(new RecordArtifactRetentionBasis(Tenant, "evidence_artifact",
+            "basis" => await bus.DispatchAsync(new RecordArtifactRetentionBasis(Uuid.CreateVersion4(), Tenant, "evidence_artifact",
                 id, Sha, 0, "Native evidence period"), Http(), CancellationToken.None),
             "place" => await bus.DispatchAsync(new PlaceArtifactLegalHold(Tenant, "evidence_artifact", id,
                 Sha, hold, 0, "Preserve original source"), Http(), CancellationToken.None),
-            _ => await bus.DispatchAsync(new ReleaseArtifactLegalHold(Tenant, "evidence_artifact", id,
-                Sha, hold, before.Revision, "Client hold release"), Http(), CancellationToken.None)
+            _ => await bus.DispatchAsync(new ReleaseArtifactLegalHold(Uuid.CreateVersion4(), Tenant, "evidence_artifact", id,
+                Sha, hold, 1, "Client hold release"), Http(), CancellationToken.None)
         };
         var read = await bus.DispatchAsync(new GetArtifactRetention(Tenant, "evidence_artifact", id),
             new RequestDispatchContext(ProgramManagementServices.Actor(User), new McpInvocation("synthetic.retention.read")),
             CancellationToken.None);
         var retained = await ProgramManagementServices.HydrateAsync(provider,
-            new ArtifactRetention(Tenant, "evidence_artifact", id));
+            new ArtifactRetentionBasis(new(Tenant, "evidence_artifact", id, Sha)));
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
@@ -77,16 +77,16 @@ public sealed class AttestRetentionManagementWriteWallTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            new RecordArtifactRetentionBasis(Tenant, "evidence_artifact", id, Sha, 0, "Native evidence period"),
+            new RecordArtifactRetentionBasis(Uuid.CreateVersion4(), Tenant, "evidence_artifact", id, Sha, 0, "Native evidence period"),
             Http(), CancellationToken.None);
         var read = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
             new GetArtifactRetention(Tenant, "evidence_artifact", id), Http(), CancellationToken.None);
         var retained = await ProgramManagementServices.HydrateAsync(provider,
-            new ArtifactRetention(Tenant, "evidence_artifact", id));
+            new ArtifactRetentionBasis(new(Tenant, "evidence_artifact", id, Sha)));
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(2, retained.Revision);
+        Assert.Equal(1, retained.Revision);
         Assert.NotNull(retained.Basis);
         Assert.Equal(new DateOnly(2019, 1, 1), retained.Basis.PeriodStart);
         Assert.Equal(new DateOnly(2019, 12, 31), retained.Basis.PeriodEnd);
@@ -110,10 +110,10 @@ public sealed class AttestRetentionManagementWriteWallTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            new RecordArtifactRetentionBasis(Tenant, "evidence_artifact", id, Sha, 0, "Native period"),
+            new RecordArtifactRetentionBasis(Uuid.CreateVersion4(), Tenant, "evidence_artifact", id, Sha, 0, "Native period"),
             context, CancellationToken.None);
         var retained = await ProgramManagementServices.HydrateAsync(provider,
-            new ArtifactRetention(Tenant, "evidence_artifact", id));
+            new ArtifactRetentionBasis(new(Tenant, "evidence_artifact", id, Sha)));
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
