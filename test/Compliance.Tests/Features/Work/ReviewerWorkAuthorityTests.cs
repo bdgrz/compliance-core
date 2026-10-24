@@ -293,7 +293,7 @@ public sealed class ReviewerWorkAuthorityTests
                     if (projected)
                     {
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                            new FitzCommitmentDecisionWorkItemDirectory(client, provider.GetRequiredService<IAggregateReader>()));
+                            new FitzCommitmentDecisionWorkItemDirectory(client, provider.GetRequiredService<CommitmentReader>()));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzPolicyDecisionWorkItemDirectory(client, provider.GetRequiredService<PolicyReader>(), TimeProvider.System));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
@@ -350,9 +350,9 @@ public sealed class ReviewerWorkAuthorityTests
             }
             if (kind == "commitment")
             {
-                var draftId = Uuid.CreateVersion4();
+                var draftId = CommitmentDraft.IdFor(Operations.TenantId, Operations.ProgramId, "service_commitment", "SC-GUEST");
                 await ProgramManagementServices.SeedAsync(Operations.Provider,
-                    new CommitmentDraft(Operations.TenantId, draftId), draft => draft.Create(Operations.ProgramId,
+                    new CommitmentRules(Operations.TenantId, draftId), draft => draft.Create(Operations.ProgramId,
                         Uuid.CreateVersion4(), Uuid.CreateVersion4(), "service_commitment", "SC-GUEST",
                         "Protect customer data", "Security commitment", "MSA 4.1", Operations.LeadMemberId,
                         "Lead", DateTimeOffset.UtcNow));
@@ -540,7 +540,7 @@ public sealed class ReviewerWorkAuthorityTests
         async Task RefreshCommitmentAsync(Uuid draftId)
         {
             var draft = await ProgramManagementServices.HydrateAsync(Operations.Provider,
-                new CommitmentDraft(Operations.TenantId, draftId));
+                new CommitmentRules(Operations.TenantId, draftId));
             Operations.Commitments.Add(new CommitmentDraftView(Operations.TenantId, draft.ProgramId,
                 draft.Id, draft.ServiceId, draft.Kind!, draft.Identifier!, draft.Revision,
                 draft.AcceptedReviewDecisionId is null ? "draft" : "reviewed", "verified", "verified",

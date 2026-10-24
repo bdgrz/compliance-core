@@ -25,7 +25,7 @@ public sealed class CommitmentDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         await SeedDraftAsync(fixture, draftId);
 
         // Act
@@ -52,7 +52,7 @@ public sealed class CommitmentDecisionWorkTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         fixture.Permissions.Managers.Add(fixture.ReviewerMemberId);
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         await SeedDraftAsync(fixture, draftId);
         var reviewId = Uuid.CreateVersion4();
         await ApplyDraftAsync(fixture, draftId, draft =>
@@ -98,7 +98,7 @@ public sealed class CommitmentDecisionWorkTests
         var fixture = await OperationsFixture.CreateAsync();
         fixture.Permissions.Managers.Add(fixture.OwnerMemberId);
         fixture.Permissions.Managers.Add(fixture.ReviewerMemberId);
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         await SeedDraftAsync(fixture, draftId);
         await ApplyDraftAsync(fixture, draftId, draft =>
         {
@@ -131,7 +131,7 @@ public sealed class CommitmentDecisionWorkTests
         var fixture = await OperationsFixture.CreateAsync();
         fixture.Permissions.Managers.Add(fixture.OwnerMemberId);
         fixture.Permissions.Managers.Add(fixture.BackupMemberId);
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         await SeedDraftAsync(fixture, draftId);
         await ApplyDraftAsync(fixture, draftId, draft =>
         {
@@ -165,7 +165,7 @@ public sealed class CommitmentDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         await SeedDraftAsync(fixture, draftId);
         await ApplyDraftAsync(fixture, draftId, draft =>
         {
@@ -193,7 +193,7 @@ public sealed class CommitmentDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         await SeedDraftAsync(fixture, draftId);
         var assignmentId = Uuid.CreateVersion4();
         await ApplyDraftAsync(fixture, draftId, draft =>
@@ -224,7 +224,7 @@ public sealed class CommitmentDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         await SeedDraftAsync(fixture, draftId);
         var initial = Assert.Single((await QueueAsync(fixture, fixture.ApproverUserId)).Items);
         await ApplyDraftAsync(fixture, draftId, draft =>
@@ -261,7 +261,7 @@ public sealed class CommitmentDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        await SeedDraftAsync(fixture, Uuid.CreateVersion4());
+        await SeedDraftAsync(fixture, CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK"));
         fixture.Commitments.CheckpointAfterNextList = new ProjectionCheckpoint(
             new EventCursor("advanced"));
         await using var scope = fixture.Provider.CreateAsyncScope();
@@ -272,6 +272,7 @@ public sealed class CommitmentDecisionWorkTests
             new InMemoryEventStore());
         var queue = new WorkQueueReader(reader, services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(), authority, TimeProvider.System,
             services.GetRequiredService<WorkQueueReadConsistency>(),
+            commitmentSources: services.GetRequiredService<CommitmentReader>(),
             commitments: fixture.Commitments, commitmentConsistency: consistency,
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
@@ -297,7 +298,7 @@ public sealed class CommitmentDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         await SeedDraftAsync(fixture, draftId);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         fixture.Commitments.Checkpoint = await ReadCommitmentCheckpointAsync(events,
@@ -306,7 +307,7 @@ public sealed class CommitmentDecisionWorkTests
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var live = await CommitmentDecisionWork.LoadAsync(
-            services.GetRequiredService<IAggregateReader>(), fixture.Commitments, consistency,
+            services.GetRequiredService<CommitmentReader>(), fixture.Commitments, consistency,
             fixture.TenantId, fixture.ProgramId, DateTimeOffset.UtcNow, null,
             CancellationToken.None);
         var projection = new CommitmentDecisionWorkProjectionReader(
@@ -314,6 +315,7 @@ public sealed class CommitmentDecisionWorkTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
             new WorkQueueReadConsistency(events, [projection]),
+            commitmentSources: services.GetRequiredService<CommitmentReader>(),
             commitments: fixture.Commitments, commitmentConsistency: consistency,
             accountableWorkItems: [projection],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -341,7 +343,7 @@ public sealed class CommitmentDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         var reviewId = Uuid.CreateVersion4();
         await SeedDraftAsync(fixture, draftId);
         await ApplyDraftAsync(fixture, draftId, draft =>
@@ -407,7 +409,7 @@ public sealed class CommitmentDecisionWorkTests
         await RefreshDirectoryAsync(fixture, draftId);
     }
 
-    static void Assign(CommitmentDraft draft, OperationsFixture fixture, Uuid memberId,
+    static void Assign(CommitmentRules draft, OperationsFixture fixture, Uuid memberId,
         ResponsibilityType type)
     {
         var now = At(fixture.Today);
@@ -417,14 +419,14 @@ public sealed class CommitmentDecisionWorkTests
     }
 
     static async Task ApplyDraftAsync(OperationsFixture fixture, Uuid draftId,
-        Func<CommitmentDraft, Result> apply) =>
+        Func<CommitmentRules, Result> apply) =>
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new CommitmentDraft(fixture.TenantId, draftId), apply);
+            new CommitmentRules(fixture.TenantId, draftId), apply);
 
     static async Task RefreshDirectoryAsync(OperationsFixture fixture, Uuid draftId)
     {
         var draft = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new CommitmentDraft(fixture.TenantId, draftId));
+            new CommitmentRules(fixture.TenantId, draftId));
         fixture.Commitments.Add(new CommitmentDraftView(fixture.TenantId, draft.ProgramId,
             draft.Id, draft.ServiceId, draft.Kind!, draft.Identifier!, draft.Revision,
             draft.AcceptedReviewDecisionId is null ? "draft" : "reviewed", "verified",

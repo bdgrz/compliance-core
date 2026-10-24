@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Controls;
@@ -10,7 +11,7 @@ namespace Bdgrz.Compliance.Features.Responsibilities;
 [Discriminator("bdgrz.responsibility.revoked", 1)]
 public sealed record ResponsibilityRevoked(Uuid TenantId, Uuid AssignmentId,
     ResponsibilityScope Scope, Uuid RevokedByMemberId, DateTimeOffset RevokedAt, string Reason,
-    string RevokedByDisplay) : DomainEvent, IControlFact, IControlMutationContent
+    string RevokedByDisplay) : DomainEvent, IControlFact, IControlMutationContent, ICommitmentFact, ICommitmentMutationContent
 {
     /// <summary>The exact native acceptance and immutable original result.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -29,6 +30,10 @@ public sealed record ResponsibilityRevoked(Uuid TenantId, Uuid AssignmentId,
     public long NativeSequence { get; init; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ChangeCount { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public CommitmentAuthorityHeader? CommitmentHeader { get; init; }
+    CommitmentAuthorityHeader ICommitmentFact.Header => CommitmentHeader!;
 
     [JsonPropertyName("actor")]
     public ActorReference? StoredActor { get; init; }

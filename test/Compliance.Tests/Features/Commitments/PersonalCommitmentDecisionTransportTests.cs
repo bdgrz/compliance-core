@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Programs;
@@ -15,6 +16,41 @@ namespace Bdgrz.Compliance.Tests.Features.Commitments;
 
 public sealed class PersonalCommitmentDecisionTransportTests
 {
+    [Fact]
+    public async Task ShouldReplayOriginalRetirementGivenSameCommandAndLaterServerClock()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync(approval: true);
+        Assert.True((await fixture.DecideAsync(approval: true, "http")).IsSuccess);
+        var commandId = Uuid.CreateVersion4();
+        var request = new RetireCommitment(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program, fixture.DraftId, 1,
+            new DateOnly(2027, 1, 1), "The original accepted retirement.");
+        var first = await IdentifiedRetirementAsync(fixture.Provider, fixture.Approver, request, commandId);
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        var accepted = await fixture.ReadAsync();
+        fixture.Clock.Now = fixture.Clock.Now.AddMinutes(1);
+
+        // Act
+        var replay = await IdentifiedRetirementAsync(fixture.Provider, fixture.Approver, request, commandId);
+        var retained = await fixture.ReadAsync();
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(accepted.SourcePhysicalPosition, retained.SourcePhysicalPosition);
+        Assert.Equal(accepted.RetiredEffectiveOn, retained.RetiredEffectiveOn);
+        Assert.Equal(accepted.RetirementRationale, retained.RetirementRationale);
+    }
+
+    static async Task<Result> IdentifiedRetirementAsync(IServiceProvider provider, Uuid user, RetireCommitment request, Uuid commandId)
+    {
+        request = request with { CommandId = commandId };
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
+            new RequestDispatchContext(ProgramManagementServices.Actor(user),
+                new HttpInvocation("POST", "/synthetic/commitment/retirement", "/synthetic/commitment/retirement", "synthetic"),
+                new RequestMetadata(commandId, commandId)), CancellationToken.None);
+    }
+
     [Theory]
     [InlineData(false, "direct")]
     [InlineData(false, "mcp")]
@@ -33,7 +69,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
         Assert.Equal(before.Revision, after.Revision);
         Assert.Equal(before.AcceptedReviewDecisionId, after.AcceptedReviewDecisionId);
         Assert.Equal(before.EffectiveVersionCount, after.EffectiveVersionCount);
@@ -54,7 +90,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition + 1, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition + 1, after.SourcePhysicalPosition);
         var events = await fixture.ReadEventsAsync();
         Assert.Equal(approval ? 1 : 0, after.EffectiveVersionCount);
         if (approval)
@@ -68,7 +104,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
             var decision = Assert.IsType<CommitmentReviewed>(events[^1]);
             Assert.Equal(RbacIds.Member(fixture.Tenant, fixture.Reviewer).ToString(), decision.Actor.Id);
             Assert.Equal("verified", decision.SourceVerification);
-            Assert.Equal("MSA 4.1", decision.SourceVerifiedReference);
+            Assert.Equal("MSA 4.1", Assert.IsType<CommitmentReviewedContent>(Assert.Single((await fixture.ReadChangeAsync(decision)).Changes)).SourceVerifiedReference);
             Assert.Null(decision.Version);
         }
     }
@@ -90,7 +126,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Equal(message, result.Error!.Message);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     [Theory]
@@ -110,7 +146,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Equal(approval ? "Only an assigned approver of this exact revision can approve it." :
             "Only an assigned reviewer of this exact revision can review it.", result.Error!.Message);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     [Theory]
@@ -131,7 +167,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
         Assert.False(after.IsRetired);
     }
 
@@ -175,7 +211,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
         var after = await fixture.ReadAsync();
 
         // Assert
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
         Assert.Equal(before.EffectiveVersionCount, after.EffectiveVersionCount);
     }
 
@@ -195,12 +231,12 @@ public sealed class PersonalCommitmentDecisionTransportTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition + 1, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition + 1, after.SourcePhysicalPosition);
         Assert.True(after.IsRetired);
         Assert.Equal(new DateOnly(2027, 1, 1), after.RetiredEffectiveOn);
         var retired = Assert.IsType<CommitmentRetired>(events[^1]);
         Assert.Equal(RbacIds.Member(fixture.Tenant, fixture.Approver).ToString(), retired.Actor.Id);
-        Assert.Equal("The service commitment was superseded by the current engagement terms.", retired.Rationale);
+        Assert.Equal("The service commitment was superseded by the current engagement terms.", Assert.IsType<CommitmentRetiredContent>(Assert.Single((await fixture.ReadChangeAsync(retired)).Changes)).Rationale);
     }
 
     internal static async Task HttpAsync(IServiceProvider provider, Uuid user, IRequest request,
@@ -223,7 +259,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
     {
         public Uuid Tenant { get; } = Uuid.CreateVersion4();
         public Uuid Program { get; } = Uuid.CreateVersion4();
-        public Uuid DraftId { get; } = Uuid.CreateVersion4();
+        public Uuid DraftId => CommitmentDraft.IdFor(Tenant, Program, "service_commitment", "SC-TRANSPORT");
         public Uuid Author { get; } = Uuid.CreateVersion4();
         public Uuid Reviewer { get; } = Uuid.CreateVersion4();
         public Uuid Approver { get; } = Uuid.CreateVersion4();
@@ -231,7 +267,9 @@ public sealed class PersonalCommitmentDecisionTransportTests
         public Uuid ReviewId { get; } = Uuid.CreateVersion4();
         readonly ServiceProvider _provider;
         public ServiceProvider Provider => _provider;
+        public FixtureClock Clock { get; } = new();
         readonly FitzCommitmentDraftDirectory _directory;
+        readonly AsyncServiceScope _directoryScope;
         static readonly DateTimeOffset At = new(2026, 9, 1, 12, 0, 0, TimeSpan.Zero);
 
         Fixture()
@@ -244,16 +282,17 @@ public sealed class PersonalCommitmentDecisionTransportTests
             }).Build(), developerAuthentication: true);
             var events = new InMemoryEventStore();
             var client = new InMemoryKvClient();
-            _directory = new FitzCommitmentDraftDirectory(client);
             services.AddSingleton<IEventStore>(events);
             services.AddSingleton<IDomainEventReader>(events);
             services.AddSingleton<IKvClient>(client);
-            services.AddSingleton<ICommitmentDraftDirectoryReader>(_directory);
             services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(
                 new RecordingPermissionAuthorizer(allowed: true)));
             services.AddSingleton<ITenantActivity, ActiveTenant>();
             services.AddSingleton<ITenantMembershipDirectoryReader, AlwaysMemberDirectory>();
+            services.AddSingleton<TimeProvider>(Clock);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+            _directoryScope = _provider.CreateAsyncScope();
+            _directory = _directoryScope.ServiceProvider.GetRequiredService<FitzCommitmentDraftDirectory>();
         }
 
         public static async Task<Fixture> CreateAsync(bool approval, bool assigned = false)
@@ -265,7 +304,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
                     fixture.Author, "Client manager", At));
                 return Result.Success;
             });
-            await ProgramManagementServices.SeedAsync(fixture._provider, new CommitmentDraft(fixture.Tenant, fixture.DraftId), draft =>
+            await ProgramManagementServices.SeedAsync(fixture._provider, new CommitmentRules(fixture.Tenant, fixture.DraftId), draft =>
             {
                 Assert.True(draft.Create(fixture.Program, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
                     "service_commitment", "SC-TRANSPORT", "Protect customer data", "Contractual commitment", "MSA 4.1",
@@ -283,7 +322,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
             });
             var pattern = EventStreamPattern.ForPattern(fixture.Tenant.ToString(), "commitment-drafts");
             await using var batch = await fixture._directory.BeginAsync(new ProjectionBatchContext(
-                new CheckpointIdentity("CommitmentDraftDirectory", pattern), ProjectionCheckpoint.Start));
+                new CheckpointIdentity(FitzCommitmentDraftDirectory.ProjectorName, pattern), ProjectionCheckpoint.Start));
             var cursor = EventCursor.Start;
             await foreach (var record in fixture._provider.GetRequiredService<IDomainEventReader>().ReadAsync(pattern, cursor, CancellationToken.None))
             {
@@ -295,7 +334,12 @@ public sealed class PersonalCommitmentDecisionTransportTests
         }
 
         Uuid Member(Uuid user) => RbacIds.Member(Tenant, user);
-        public Task<CommitmentDraft> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new CommitmentDraft(Tenant, DraftId));
+        public Task<CommitmentRules> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new CommitmentRules(Tenant, DraftId));
+        public async Task<CommitmentMutationContent> ReadChangeAsync(ICommitmentFact fact)
+        {
+            await using var scope = _provider.CreateAsyncScope();
+            return await CommitmentFactContent.ReadChangeAsync(scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), fact);
+        }
         public async Task<IReadOnlyList<DomainEvent>> ReadEventsAsync()
         {
             var events = new List<DomainEvent>();
@@ -330,12 +374,22 @@ public sealed class PersonalCommitmentDecisionTransportTests
         {
             var draft = await ReadAsync();
             await using var scope = _provider.CreateAsyncScope();
-            var request = new RetireCommitment(Tenant, Program, DraftId, draft.Revision,
+            var request = new RetireCommitment(Uuid.CreateVersion4(), Tenant, Program, DraftId, draft.Revision,
                 new DateOnly(2027, 1, 1),
                 "The service commitment was superseded by the current engagement terms.");
             return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
                 Context(Approver, transport), CancellationToken.None);
         }
-        public ValueTask DisposeAsync() => _provider.DisposeAsync();
+        public sealed class FixtureClock : TimeProvider
+        {
+            public DateTimeOffset Now { get; set; } = new(2026, 9, 1, 13, 0, 0, TimeSpan.Zero);
+            public override DateTimeOffset GetUtcNow() => Now;
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await _directoryScope.DisposeAsync();
+            await _provider.DisposeAsync();
+        }
     }
 }

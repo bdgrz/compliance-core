@@ -2,6 +2,10 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Snapshots;
 using Bdgrz.Compliance.Tests.Testing;
@@ -28,7 +32,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     public async Task ShouldCaptureEffectiveApprovedCommitmentVersionGivenLaterSuccessor()
     {
         // Arrange
-        var fixture = await Fixture("user_entity_responsibility", includeSuccessor: true);
+        await using var fixture = await Fixture("user_entity_responsibility", includeSuccessor: true);
 
         // Act
         var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
@@ -51,7 +55,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     public async Task ShouldCaptureScheduledRetirementGivenRetirementRecordedByTypeIDate()
     {
         // Arrange
-        var fixture = await Fixture("service_commitment", retire: true);
+        await using var fixture = await Fixture("service_commitment", retire: true);
 
         // Act
         var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
@@ -70,7 +74,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     public async Task ShouldBlockCommitmentGivenNoApprovedVersionEffectiveOnTypeIDate()
     {
         // Arrange
-        var fixture = await Fixture("service_commitment", approve: false);
+        await using var fixture = await Fixture("service_commitment", approve: false);
 
         // Act
         var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
@@ -87,7 +91,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     public async Task ShouldRejectCommitmentHistoryGivenReviewAfterRetirement()
     {
         // Arrange
-        var fixture = await Fixture("service_commitment", retire: true,
+        await using var fixture = await Fixture("service_commitment", retire: true,
             reviewAfterRetirement: true);
 
         // Act
@@ -103,7 +107,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     public async Task ShouldRejectApprovalGivenAcceptedReviewFromSupersededRevision()
     {
         // Arrange
-        var fixture = await Fixture("service_commitment", approve: false,
+        await using var fixture = await Fixture("service_commitment", approve: false,
             staleApprovalAfterRevision: true);
 
         // Act
@@ -119,7 +123,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     public async Task ShouldLeaveSystemRequirementToItsOwnFamilyGivenCommitmentFamilyRead()
     {
         // Arrange
-        var fixture = await Fixture("system_requirement", includeService: false);
+        await using var fixture = await Fixture("system_requirement", includeService: false);
 
         // Act
         var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
@@ -135,7 +139,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     public async Task ShouldCaptureSystemRequirementVersionGivenItsOwnFamily()
     {
         // Arrange
-        var fixture = await Fixture("system_requirement", family: "system_requirements");
+        await using var fixture = await Fixture("system_requirement", family: "system_requirements");
 
         // Act
         var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
@@ -155,7 +159,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     public async Task ShouldResolveOnlyEffectiveApplicableCsocsForTheirProviderGivenCommitmentCapture()
     {
         // Arrange
-        var fixture = await Fixture("subservice_responsibility", providerId: ProviderId);
+        await using var fixture = await Fixture("subservice_responsibility", providerId: ProviderId);
         var captured = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
             CancellationToken.None);
         Assert.True(captured.IsSuccess, captured.Error?.Message);
@@ -180,7 +184,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     public async Task ShouldExcludeCsocGivenProviderCommitmentRetiredByTypeIDate()
     {
         // Arrange
-        var fixture = await Fixture("subservice_responsibility", retire: true,
+        await using var fixture = await Fixture("subservice_responsibility", retire: true,
             providerId: ProviderId, retirementEffectiveOn: new DateOnly(2026, 6, 1));
         var captured = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
             CancellationToken.None);
@@ -200,14 +204,65 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
         Assert.Empty(result.Value);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldClassifyNativeContentFailureGivenUnavailableOrCorruptChange(bool unavailable)
+    {
+        // Arrange
+        await using var fixture = await Fixture("service_commitment", unavailableContent: unavailable);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
+            CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.Equal(unavailable, result.Error.IsTransient);
+    }
+
+    [Fact]
+    public async Task ShouldRejectEffectiveApprovalGivenApprovalAfterFrozenReceiptCutoff()
+    {
+        // Arrange
+        await using var fixture = await Fixture("service_commitment");
+        var context = fixture.Context with { RecordedThrough = DayOne.AddDays(1) };
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.True(result.Error.IsTransient);
+    }
+
+    [Fact]
+    public async Task ShouldRejectEffectiveRetirementGivenRetirementAfterFrozenReceiptCutoff()
+    {
+        // Arrange
+        await using var fixture = await Fixture("service_commitment", retire: true,
+            retirementEffectiveOn: new DateOnly(2026, 6, 1));
+        var context = fixture.Context with { RecordedThrough = DayOne.AddDays(9) };
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.True(result.Error.IsTransient);
+    }
+
     static async Task<FixtureState> Fixture(string kind, bool includeSuccessor = false,
         bool retire = false, bool approve = true, bool reviewAfterRetirement = false,
         bool includeService = true, bool staleApprovalAfterRevision = false,
         string family = "commitments", Uuid? providerId = null,
-        DateOnly? retirementEffectiveOn = null)
+        DateOnly? retirementEffectiveOn = null, bool? unavailableContent = null)
     {
         var draftId = CommitmentDraft.IdFor(TenantId, ProgramId, kind, "SC-01");
-        var draft = new CommitmentDraft(TenantId, draftId);
+        var draft = new CommitmentRules(TenantId, draftId);
         Assert.True(draft.Create(ProgramId, Uuid.CreateVersion4(), ServiceId, kind, "SC-01",
             "Protect customer data", "Payroll service", "MSA v3, section 4.1", AuthorId,
             "Author", DayOne, providerId).IsSuccess);
@@ -233,42 +288,82 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
                 DayOne.AddDays(5)));
             Approve(draft, 2, new DateOnly(2026, 7, 1), "MSA v3, section 4.2");
         }
+        // Keep the authoritative native source valid. The malformed-history cases below
+        // replace only the history dependency at the same exact native source cut.
+        if (reviewAfterRetirement)
+            Assert.Null(draft.Revise(ProgramId, draft.Revision, "A later working draft",
+                "Payroll service", "MSA v3, section 4.2", AuthorId, "Author", DayOne.AddDays(8)));
+        if (staleApprovalAfterRevision)
+            Approve(draft, 2, VersionStart, "MSA v3, section 4.2");
         if (retire)
             Assert.Null(draft.Retire(ProgramId, draft.Revision,
                 retirementEffectiveOn ?? new DateOnly(2026, 7, 15),
                 "The commitment was superseded.", ApproverId, "Approver", DayOne.AddDays(10)));
 
-        var pending = new AggregateScenario<CommitmentDraft>(draft).PendingEvents;
-        var additionalEvents = new List<DomainEvent>();
-        if (reviewAfterRetirement)
-            additionalEvents.Add(new CommitmentReviewed(TenantId, ProgramId, draftId,
-                draft.Revision,
-                    Uuid.CreateVersion4(), "request_changes", null, null, null, null,
-                    "Late review after retirement", null, null, null, ReviewerId,
-                    "Reviewer", DayOne.AddDays(12)));
-        if (staleApprovalAfterRevision)
-            additionalEvents.Add(new CommitmentApproved(TenantId, ProgramId, draftId, 1,
-                Uuid.CreateVersion4(), staleReviewId!.Value, 1, VersionStart, "impact-digest",
-                "Approval after superseding revision", ApproverId, "Approver",
-                DayOne.AddDays(5))
+        var source = new CommitmentSourceFixture();
+        await source.SeedAsync(draft);
+        var facts = await source.FactsAsync(TenantId, draftId);
+        var events = source.Events;
+        if (reviewAfterRetirement || staleApprovalAfterRevision)
+        {
+            // Explicit immutable facts are deliberately not appended through the native
+            // owner. The baseline must reject a corrupt history dependency independently.
+            var history = facts.Take(3).ToList();
+            var historical = new CommitmentRules(TenantId, draftId);
+            foreach (var fact in history.Cast<ICommitmentFact>())
+                foreach (var change in (await CommitmentFactContent.ReadChangeAsync(source.Content,
+                             fact, CancellationToken.None)).Changes)
+                    historical.Apply(change);
+            if (reviewAfterRetirement)
             {
-                StoredActor = Bdgrz.Compliance.Features.AccessControl.ActorReference.ForMember(
-                    ApproverId, "Approver"),
-            });
-        var events = new InMemoryEventStore();
-        var stream = new EventStreamAddress(TenantId.ToString(), "commitment-drafts",
-            draftId.ToString());
-        var attached = pending.ToList();
-        var firstAdditionalPosition = (ulong)attached.Count;
-        attached.AddRange(additionalEvents.Select((domainEvent, index) => DomainEventSeed.Attach(
-            domainEvent, draftId, firstAdditionalPosition + (ulong)index + 1)));
-        await events.AppendAsync(stream, 0, attached);
+                await AddHistoryAsync(new CommitmentRetiredContent(TenantId, ProgramId, draftId,
+                    1, ApproverId, "Approver", new DateOnly(2026, 7, 15),
+                    "The commitment was superseded.", DayOne.AddDays(10)),
+                    nameof(RetireCommitment), ApproverId, "Approver", DayOne.AddDays(10), Uuid.CreateVersion4());
+                var decision = Uuid.CreateVersion4();
+                await AddHistoryAsync(new CommitmentReviewedContent(TenantId, ProgramId, draftId,
+                    1, decision, "request_changes", null, null, null, null,
+                    "Late review after retirement", null, null, null, ReviewerId, "Reviewer",
+                    DayOne.AddDays(12)), nameof(ReviewCommitmentDraft), ReviewerId, "Reviewer",
+                    DayOne.AddDays(12), decision);
+            }
+            else
+            {
+                var decision = Uuid.CreateVersion4();
+                await AddHistoryAsync(new CommitmentReviewedContent(TenantId, ProgramId, draftId,
+                    2, decision, "request_changes", null, null, null, null,
+                    "The new revision needs changes", null, null, null, ReviewerId, "Reviewer",
+                    DayOne.AddDays(4)), nameof(ReviewCommitmentDraft), ReviewerId, "Reviewer",
+                    DayOne.AddDays(4), decision);
+                var approval = Uuid.CreateVersion4();
+                await AddHistoryAsync(new CommitmentApprovedContent(TenantId, ProgramId, draftId,
+                    1, approval, staleReviewId!.Value, 1, VersionStart, "impact-digest",
+                    "Approval after superseding revision", ApproverId, "Approver", DayOne.AddDays(5)),
+                    nameof(ApproveCommitmentDraft), ApproverId, "Approver", DayOne.AddDays(5), approval);
+            }
+            events = new InMemoryEventStore();
+            await events.AppendAsync(new EventStreamAddress(TenantId.ToString(), CommitmentDraft.Area,
+                draftId.ToString()), 0, history);
+
+            async Task AddHistoryAsync(ICommitmentMutationContent change, string kind, Uuid member,
+                string display, DateTimeOffset at, Uuid command)
+            {
+                var gate = historical.Revision;
+                historical.Apply(change);
+                var operation = OwnerProvenance.For(new CommitmentDraft(TenantId, draftId), command,
+                    kind, ActorReference.ForMember(member, display), draftId.ToString(),
+                    unchecked((ulong)gate), AuthoredIntentDigest.Compute(change), at);
+                var fact = await CommitmentSeeds.FreezeAsync(source.Content, historical, [change],
+                    operation, history.Count + 1);
+                history.Add(DomainEventSeed.Attach(fact, draftId, (ulong)history.Count + 1));
+            }
+        }
         var checkpoint = await CheckpointAfterAsync(events);
-        var source = new AggregateScenario<CommitmentDraft>(new CommitmentDraft(TenantId, draftId))
-            .Given(attached.ToArray()).Aggregate;
-        var directory = new CommitmentDirectory(draftId, Versions(attached), checkpoint);
-        var aggregateReader = new CommitmentAggregateReader(source);
-        var versionConsistency = new CommitmentVersionReadConsistency(directory, aggregateReader);
+        var directory = new CommitmentDirectory(draftId, draft.ReadVersions(), checkpoint);
+        var content = unavailableContent is { } unavailable
+            ? new UnreadableChange(source.Content, unavailable) : source.Content;
+        var commitments = new CommitmentReader(source.Reader, source.Events, content);
+        var versionConsistency = new CommitmentVersionReadConsistency(directory, commitments);
         var commitmentConsistency = new CommitmentDraftListReadConsistency(directory, events);
         var entries = new List<BoundaryScopeEntry>();
         if (includeService)
@@ -284,7 +379,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
         var boundaries = new BoundaryDirectory(boundary, version, checkpoint);
         var boundaryConsistency = new ProgramSetupWorkReadConsistency(
             new ProgramDirectory(checkpoint), boundaries, events);
-        var sourceReader = new CommitmentTypeIBaselineSourceReader(aggregateReader, events,
+        var sourceReader = new CommitmentTypeIBaselineSourceReader(commitments, events, content,
             versionConsistency, commitmentConsistency, boundaries, boundaryConsistency);
         ITypeIBaselineSourceContributor contributor = family switch
         {
@@ -297,10 +392,10 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
             SnapshotContentIdentity.ApprovedBoundaryVersion(version));
         return new FixtureState(draftId, contributor,
             new TypeIBaselineSourceReadContext(Uuid.CreateVersion4(), [boundarySource]),
-            sourceReader);
+            sourceReader, source);
     }
 
-    static void Approve(CommitmentDraft draft, long revision, DateOnly effectiveFrom,
+    static void Approve(CommitmentRules draft, long revision, DateOnly effectiveFrom,
         string sourceReference)
     {
         var reviewId = Uuid.CreateVersion4();
@@ -311,52 +406,6 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
         Assert.Null(draft.Approve(ProgramId, revision, Uuid.CreateVersion4(), reviewId,
             effectiveFrom, "Approved for the engagement", "impact-digest", ApproverId,
             "Approver", DayOne.AddDays(revision + 1)));
-    }
-
-    static CommitmentVersionView[] Versions(List<DomainEvent> events)
-    {
-        var created = Assert.IsType<CommitmentDraftCreated>(events[0]);
-        var revisions = events.OfType<CommitmentDraftRevised>().ToDictionary(
-            static revision => revision.Revision);
-        return events.OfType<CommitmentApproved>().Select(approved =>
-        {
-            var reviewed = Assert.Single(events.OfType<CommitmentReviewed>(), review =>
-                review.DecisionId == approved.AcceptedReviewDecisionId);
-            var statement = approved.Revision == 1 ? created.Statement : revisions[approved.Revision].Statement;
-            var context = approved.Revision == 1 ? created.Context : revisions[approved.Revision].Context;
-            var sourceReference = approved.Revision == 1
-                ? created.SourceReference
-                : revisions[approved.Revision].SourceReference;
-            var decision = new CommitmentDecisionView(TenantId, ProgramId, created.DraftId,
-                reviewed.DecisionId, reviewed.Revision, reviewed.Outcome, reviewed.OwnerReference,
-                reviewed.Applicability, reviewed.Interpretation, reviewed.InterpretationNote,
-                reviewed.Rationale, reviewed.Version, reviewed.EffectiveFrom, reviewed.ImpactDigest,
-                reviewed.ActorMemberId, reviewed.ActorDisplay, reviewed.DecidedAt,
-                reviewed.SeparationOfDutiesWaiverId, "review", null,
-                reviewed.SourceVerification, reviewed.SourceVerifiedReference, reviewed.SourceEvidence)
-            {
-                Actor = reviewed.Actor,
-            };
-            var approval = new CommitmentDecisionView(TenantId, ProgramId, created.DraftId,
-                approved.DecisionId, approved.Revision, "approve", null, null, null, null,
-                approved.Rationale, approved.Version, approved.EffectiveFrom,
-                approved.ImpactDigest, approved.ActorMemberId, approved.ActorDisplay,
-                approved.DecidedAt, approved.SeparationOfDutiesWaiverId, "approval",
-                approved.AcceptedReviewDecisionId)
-            {
-                Actor = approved.Actor,
-            };
-            return new CommitmentVersionView(TenantId, ProgramId, created.DraftId,
-                created.ServiceId, created.Kind, created.Identifier, approved.Version,
-                approved.Revision, statement, context, sourceReference,
-                reviewed.OwnerReference!, reviewed.Applicability!, reviewed.Interpretation!,
-                reviewed.InterpretationNote, CommitmentDraft.PerformedBy(created.Kind),
-                CommitmentDraft.IsInternallyPerformed(created.Kind), approved.EffectiveFrom,
-                decision, "verified", reviewed.SourceEvidence, approval)
-            {
-                ProviderId = created.ProviderId,
-            };
-        }).ToArray();
     }
 
     static ExaminationEngagementView Engagement() => new(TenantId, ProgramId,
@@ -377,15 +426,26 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     sealed record FixtureState(Uuid DraftId,
         ITypeIBaselineSourceContributor Contributor,
         TypeIBaselineSourceReadContext Context,
-        CommitmentTypeIBaselineSourceReader SourceReader);
-
-    sealed class CommitmentAggregateReader(CommitmentDraft draft) : IAggregateReader
+        CommitmentTypeIBaselineSourceReader SourceReader,
+        CommitmentSourceFixture Source) : IAsyncDisposable
     {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(aggregate is CommitmentDraft
-                ? (TAggregate)(Aggregate)draft
-                : aggregate);
+        public ValueTask DisposeAsync() => Source.DisposeAsync();
+    }
+
+    sealed class UnreadableChange(IImmutableContentStore inner, bool unavailable) : IImmutableContentStore
+    {
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id, string schema,
+            string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
+            inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default)
+        {
+            if (reference.Schema != CommitmentFactContent.ChangeSchema)
+                return inner.ReadVerifiedAsync(realm, reference, ct);
+            throw unavailable
+                ? new ImmutableContentUnavailableException("The exact native change is not visible yet.")
+                : new ImmutableContentIntegrityException("The exact native change digest differs.");
+        }
     }
 
     sealed class CommitmentDirectory(Uuid draftId,

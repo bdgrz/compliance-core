@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Commitments;
 using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Controls;
@@ -34,6 +35,8 @@ public sealed class MemberAssignmentLagTests
         services.AddScoped<NativeOperationExecutor>();
         services.AddScoped<ControlReader>();
         services.AddScoped<ControlOperations>();
+        services.AddScoped<CommitmentReader>();
+        services.AddScoped<CommitmentOperations>();
         services.AddPortia();
         await using var provider = services.BuildServiceProvider();
         await using var scopeServices = provider.CreateAsyncScope();
@@ -54,7 +57,8 @@ public sealed class MemberAssignmentLagTests
         Assert.False((await membershipProjection.GetAsync(tenantId.ToString(), userId))!.IsSuspended);
         var handler = new AssignResponsibilityHandler(
             scopeServices.ServiceProvider.GetRequiredService<IAggregateExecutor>(), reader,
-            membershipProjection, new AllowScope(), scopeServices.ServiceProvider.GetRequiredService<ControlOperations>(), TimeProvider.System);
+            membershipProjection, new AllowScope(), scopeServices.ServiceProvider.GetRequiredService<ControlOperations>(),
+            scopeServices.ServiceProvider.GetRequiredService<CommitmentOperations>(), TimeProvider.System);
         var request = new AssignResponsibility(Uuid.CreateVersion4(), tenantId, userId,
             ResponsibilityType.ControlOwner, "boundary", boundaryId, versionId, 1,
             now, null, []);
@@ -105,6 +109,8 @@ public sealed class MemberAssignmentLagTests
         services.AddScoped<NativeOperationExecutor>();
         services.AddScoped<ControlReader>();
         services.AddScoped<ControlOperations>();
+        services.AddScoped<CommitmentReader>();
+        services.AddScoped<CommitmentOperations>();
         services.AddPortia();
         await using var provider = services.BuildServiceProvider();
         await using var scopeServices = provider.CreateAsyncScope();
@@ -133,7 +139,8 @@ public sealed class MemberAssignmentLagTests
             administratorMemberId, now);
         var handler = new AssignResponsibilityHandler(
             scopeServices.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
-            interleavingReader, new FixedMembershipDirectory(true), new AllowScope(), scopeServices.ServiceProvider.GetRequiredService<ControlOperations>(), TimeProvider.System);
+            interleavingReader, new FixedMembershipDirectory(true), new AllowScope(), scopeServices.ServiceProvider.GetRequiredService<ControlOperations>(),
+            scopeServices.ServiceProvider.GetRequiredService<CommitmentOperations>(), TimeProvider.System);
         var request = new AssignResponsibility(Uuid.CreateVersion4(), tenantId, userId,
             ResponsibilityType.AssignedReviewer, "boundary", boundaryId, versionId, 1,
             now, null, [waiverId]);

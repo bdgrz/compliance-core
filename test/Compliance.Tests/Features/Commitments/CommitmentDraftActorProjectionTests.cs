@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Commitments;
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Commitments;
@@ -19,8 +19,9 @@ public sealed class CommitmentDraftActorProjectionTests
     public async Task ShouldProjectMemberActorGivenLegacyCreatedEventInDraftDirectory()
     {
         // Arrange
-        var directory = new FitzCommitmentDraftDirectory(new InMemoryKvClient());
-        await ProjectAsync(directory, directory.ApplyAsync, "CommitmentDraftDirectory", LegacyCreated());
+        await using var native = new CommitmentProjectionScenario();
+        var directory = new FitzCommitmentDraftDirectory(native.Kv, native.Commitments);
+        await ProjectAsync(native, directory, directory.ApplyAsync, FitzCommitmentDraftDirectory.ProjectorName, LegacyCreated());
 
         // Act
         var view = await directory.GetAsync(TenantId, DraftId);
@@ -33,8 +34,9 @@ public sealed class CommitmentDraftActorProjectionTests
     public async Task ShouldProjectSnapshottedActorGivenSnapshottedCreatedEventInDraftDirectory()
     {
         // Arrange
-        var directory = new FitzCommitmentDraftDirectory(new InMemoryKvClient());
-        await ProjectAsync(directory, directory.ApplyAsync, "CommitmentDraftDirectory",
+        await using var native = new CommitmentProjectionScenario();
+        var directory = new FitzCommitmentDraftDirectory(native.Kv, native.Commitments);
+        await ProjectAsync(native, directory, directory.ApplyAsync, FitzCommitmentDraftDirectory.ProjectorName,
             LegacyCreated() with { StoredActor = Process });
 
         // Act
@@ -48,8 +50,9 @@ public sealed class CommitmentDraftActorProjectionTests
     public async Task ShouldProjectMemberActorGivenLegacyCreatedEventInHistoryDirectory()
     {
         // Arrange
-        var directory = new FitzCommitmentDraftHistoryDirectoryV1(new InMemoryKvClient());
-        await ProjectAsync(directory, directory.ApplyAsync, "CommitmentDraftHistoryDirectoryV1", LegacyCreated());
+        await using var native = new CommitmentProjectionScenario();
+        var directory = new FitzCommitmentDraftHistoryDirectoryV1(native.Kv, native.Commitments);
+        await ProjectAsync(native, directory, directory.ApplyAsync, FitzCommitmentDraftHistoryDirectoryV1.ProjectorName, LegacyCreated());
 
         // Act
         var view = await directory.GetRevisionAsync(TenantId, DraftId, 1);
@@ -62,8 +65,9 @@ public sealed class CommitmentDraftActorProjectionTests
     public async Task ShouldProjectSnapshottedActorGivenSnapshottedCreatedEventInHistoryDirectory()
     {
         // Arrange
-        var directory = new FitzCommitmentDraftHistoryDirectoryV1(new InMemoryKvClient());
-        await ProjectAsync(directory, directory.ApplyAsync, "CommitmentDraftHistoryDirectoryV1",
+        await using var native = new CommitmentProjectionScenario();
+        var directory = new FitzCommitmentDraftHistoryDirectoryV1(native.Kv, native.Commitments);
+        await ProjectAsync(native, directory, directory.ApplyAsync, FitzCommitmentDraftHistoryDirectoryV1.ProjectorName,
             LegacyCreated() with { StoredActor = Process });
 
         // Act
@@ -73,19 +77,18 @@ public sealed class CommitmentDraftActorProjectionTests
         Assert.Equal(Process, view?.Actor);
     }
 
-    static CommitmentDraftCreated LegacyCreated() => Assert.IsType<CommitmentDraftCreated>(
+    static CommitmentDraftCreatedContent LegacyCreated() => Assert.IsType<CommitmentDraftCreatedContent>(
         JsonSerializer.Deserialize($$"""
             {"tenant_id":"{{TenantId}}","program_id":"{{ProgramId}}","draft_id":"{{DraftId}}","create_request_id":"{{Uuid.CreateVersion4()}}","service_id":"{{Uuid.CreateVersion4()}}","kind":"service_commitment","identifier":"SC-01","statement":"First statement","context":"Draft context","source_reference":"Source A","actor_member_id":"{{MemberId}}","actor_display":"Legacy display","changed_at":"2026-09-23T12:00:00+00:00"}
-            """, ComplianceCoreJsonContext.Default.CommitmentDraftCreated));
+            """, ComplianceCoreJsonContext.Default.CommitmentDraftCreatedContent));
 
-    static async Task ProjectAsync(IProjectionStore store,
-        Func<DomainEvent, CancellationToken, ValueTask> apply, string name,
-        DomainEvent domainEvent)
+    static async Task ProjectAsync(CommitmentProjectionScenario native, IProjectionStore store,
+        Func<DomainEvent, CancellationToken, ValueTask> apply, string name, CommitmentDraftCreatedContent change)
     {
-        await using var batch = await store.BeginAsync(new ProjectionBatchContext(
-            new CheckpointIdentity(name, EventStreamPattern.ForPattern(TenantId.ToString(),
-                "commitment-drafts")), ProjectionCheckpoint.Start));
-        await apply(domainEvent, CancellationToken.None);
-        await batch.CommitAsync(ProjectionCheckpoint.Start);
+        var rules = new CommitmentRules(TenantId, DraftId);
+        rules.Apply(change);
+        var fact = await native.PublishExplicitAsync(rules, change, nameof(CreateCommitmentDraft), DraftId,
+            change.ActorMemberId, change.ActorDisplay, change.ChangedAt);
+        await native.ProjectAsync(store, apply, name, TenantId, [fact]);
     }
 }

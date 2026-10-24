@@ -754,14 +754,15 @@ public sealed class WorkSourceCompositionTests
     static Task SeedCommitmentAsync(OperationsFixture fixture, bool acceptReview,
         DateTimeOffset now)
     {
-        var draftId = Uuid.CreateVersion4();
+        var identifier = acceptReview ? "SC-MIXED-APPROVAL" : "SC-MIXED-REVIEW";
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", identifier);
         var scope = new ResponsibilityScope("commitment", draftId, draftId, 1);
         const string sourceReference = "MSA 4.1";
         return ProgramManagementServices.SeedAsync(fixture.Provider,
-            new CommitmentDraft(fixture.TenantId, draftId), draft =>
+            new CommitmentRules(fixture.TenantId, draftId), draft =>
             {
                 Assert.True(draft.Create(fixture.ProgramId, Uuid.CreateVersion4(),
-                    Uuid.CreateVersion4(), "service_commitment", "SC-MIXED",
+                    Uuid.CreateVersion4(), "service_commitment", identifier,
                     "The service protects customer data.", "Security commitment.",
                     sourceReference, fixture.LeadMemberId, "Lead", now).IsSuccess);
                 Assert.Null(draft.AssignResponsibility(scope, Uuid.CreateVersion4(),

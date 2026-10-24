@@ -262,6 +262,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IControlDraftHistoryDirectoryReader>(provider =>
             provider.GetRequiredService<FitzControlDraftHistoryDirectoryV1>());
         services.AddScoped<ControlDraftHistoryReadConsistency>();
+        services.AddScoped<CommitmentReader>();
+        services.AddScoped<CommitmentOperations>();
         services.AddScoped<FitzCommitmentDraftDirectory>();
         services.AddScoped<ICommitmentDraftDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzCommitmentDraftDirectory>());

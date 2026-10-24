@@ -1,0 +1,91 @@
+{
+  "reviewed": 70,
+  "blockedReviews": 0,
+  "signalsTriaged": 7,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Commitments/CommitmentOperations.Responsibilities.cs",
+      "sha256": "3221aec971729d93c2c7af6f729e6638c16bb180aa43dd8a00124367da08ebd1",
+      "signals": {
+        "authority_gap": 0.66,
+        "invariant_gap": 0.81,
+        "recovery_gap": 0.6,
+        "incomplete_path": 0.42
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Current caller authorization remains in the request pipeline before NativeOperationExecutor. Fresh assignment checks exact current owner scope, target membership projection and authoritative Member after proof preparation; deprovisioning clears IsRegistered. Exact accepted replay precedes mutable target preparation and appends nothing. Waivers resolve approved native facts for exact tenant/member/action/version/revision; owner repeats complete immutable authority transition under native and physical OCC."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Commitments/CommitmentResponses.cs",
+      "sha256": "a71f998f47b88df3b1e19b6e955e61ffcd7308727f089376ae541728ae1dbef6",
+      "signals": {
+        "authority_gap": 0.34,
+        "invariant_gap": 0.3,
+        "recovery_gap": 0.48,
+        "incomplete_path": 0.67
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Closed CommitmentFactFactory and owner validation admit only the seven selected root kinds. Create freezes original Registration200; the other six freeze Unit200. Matching production HTTP adapter replays verified exact standard bytes; complete actual-host create/revise/review/approval/retirement and retries pass. No pending response or protected body producer is claimed."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Commitments/CommitmentRules.cs",
+      "sha256": "834cd3a6ab346803888ca97bfe8498aa06df206f7c1333345b0825cf2f3efd1e",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.66,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.43
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "This is a transient pure business/read fold, not durable aggregate state. Runtime CommitmentDraft retains compact header/current-authority ref/native sequence and selected acceptance only. Full version/decision/responsibility histories live in verified immutable content/read composition; no lifetime count substitutes for the narrow owner. Existing invalid transition, actor independence, publication/version and responsibility behavior remains covered. Legal escaped16000+16000 fields pass; actual16001 field rejects without events."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Commitments/CommitmentWaiverProof.cs",
+      "sha256": "d26bb98a594f476d41f0b64136084b7338a848331e1cc9b48259d6a431654645",
+      "signals": {
+        "authority_gap": 0.67,
+        "invariant_gap": 0.41,
+        "recovery_gap": 0.26,
+        "incomplete_path": 0.15
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Public requests carry waiver IDs only. The injected authoritative resolver re-reads approved SeparationOfDutiesWaiver facts and verifies source locator/payload before this local exact tenant/member/action/version/revision/time guard. Real native waiver source/resolver tests prove original approval locator and exact replay after expiry; no manufactured approval or held-source permit claim."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Commitments/ReviewCommitmentDraftHandler.cs",
+      "sha256": "ebb6b7de4f44fca3caf1f38940402bf04e61b45c81a3274f3951a944583b94f4",
+      "signals": {
+        "authority_gap": 0.65,
+        "invariant_gap": 0.35,
+        "recovery_gap": 0.44,
+        "incomplete_path": 0.25
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Personal HTTP invocation and Bdgrz subject guard is preserved; ClientManagementMutationAuthorizer and ProgramManagementAuthorizer run before handler. Native executor resolves accepted retry before fresh proof/source reads. Current fresh review checks exact verified source and independent personal actor, with original proof frozen in accepted change. Production HTTP test uses separate independent sessions and verified source; direct/MCP refusals remain."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Providers/AssuranceReferences.cs",
+      "sha256": "5e87ea50836fec3a650ca99092466405ae44a7d88981bd5e6468c7cd32678091",
+      "signals": {
+        "authority_gap": 0.65,
+        "invariant_gap": 0.49,
+        "recovery_gap": 0.55,
+        "incomplete_path": 0.79
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Existing closed provider coverage kinds and service/provider bindings are preserved. Native CommitmentReader supplies verified scoped authority; exact version consistency proves the requested immutable source. Wrong source/service/provider returns NotFound, source lag/unavailability is transient and corruption is permanent. Other report/review/artifact source branches retain their existing guards; whole result catches immutable content failure."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/FitzCommitmentDecisionWorkItemDirectory.cs",
+      "sha256": "f5b096fcedcde79a2d36171ca15211b440c9eebe480015efec29ddf4922b7226",
+      "signals": {
+        "authority_gap": 0.6,
+        "invariant_gap": 0.62,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.51
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Fresh V2 work rows are scoped compact identity/decision summaries and derive from verified native source. Existing checkpoint/revision fences remain authoritative for query freshness; unsupported scope refuses results. Native no-change acceptance facts do not create new business work. Existing assignment/review/approval/work authority tests pass; no mutable content body is stored in work rows."
+    }
+  ]
+}

@@ -1,62 +1,42 @@
 using Bdgrz.Compliance.Features.Providers;
-using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Commitments;
 
-public sealed class CreateCommitmentDraftHandler(IAggregateExecutor executor,
-    IAggregateReader reader, ProviderSource providers, TimeProvider clock)
+public sealed class CreateCommitmentDraftHandler(CommitmentOperations operations, ProviderSource providers)
     : IRequestHandler<CreateCommitmentDraft, CommitmentDraftRegistration>
 {
-    public async ValueTask<Result<CommitmentDraftRegistration>> HandleAsync(
-        IRequestContext<CreateCommitmentDraft> context, CancellationToken ct)
+    public ValueTask<Result<CommitmentDraftRegistration>> HandleAsync(IRequestContext<CreateCommitmentDraft> context, CancellationToken ct)
     {
         var request = context.Request;
         var kind = CommitmentDraft.NormalizeKind(request.Kind);
         var identifier = CommitmentDraft.NormalizeIdentifier(request.Identifier);
-        var draftId = CommitmentDraft.IdFor(request.TenantId, request.ProgramId,
-            kind, identifier);
-        if (request.DraftId == Uuid.Empty || request.DraftId != draftId)
-            return Result<CommitmentDraftRegistration>.Failure(new RequestError(
-                RequestErrorKind.Validation, "DraftId must match the commitment kind and identifier."));
-        if (request.ProviderId == Uuid.Empty)
-            return Result<CommitmentDraftRegistration>.Failure(new RequestError(
-                RequestErrorKind.Validation, "A provider reference must be nonempty."));
-        if ((kind == "subservice_responsibility" && request.ProviderId is null) ||
-            (kind != "subservice_responsibility" && request.ProviderId is not null))
-            return Result<CommitmentDraftRegistration>.Failure(new RequestError(
-                RequestErrorKind.Validation,
-                "A CSOC requires a subservice provider; other commitment kinds cannot reference a provider."));
-        var draftSource = await reader.HydrateAsync(new CommitmentDraft(request.TenantId,
-            draftId), ct).ConfigureAwait(false);
-        if (!draftSource.IsCreated && request.ProviderId is { } providerId)
-        {
-            var provider = await providers.GetAsync(request.TenantId, providerId, ct).ConfigureAwait(false);
-            if (provider is null || !provider.Content.Subservice)
-                return Result<CommitmentDraftRegistration>.Failure(new RequestError(
-                    RequestErrorKind.NotFound,
-                    "The subservice provider was not found in this tenant."));
-        }
-        var service = await reader.HydrateAsync(new ClientService(request.TenantId,
-            request.ServiceId), ct).ConfigureAwait(false);
-        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
-            ? subject
-            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
-        return await executor.ExecuteAsync(new CommitmentDraft(request.TenantId, draftId),
-            draft =>
+        if (request.DraftId == Uuid.Empty || request.DraftId != CommitmentDraft.IdFor(request.TenantId, request.ProgramId, kind, identifier))
+            return ValueTask.FromResult(Result<CommitmentDraftRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+                "DraftId must match the commitment kind and identifier.")));
+        if (request.ProviderId == Uuid.Empty || kind == "subservice_responsibility" && request.ProviderId is null ||
+            kind != "subservice_responsibility" && request.ProviderId is not null)
+            return ValueTask.FromResult(Result<CommitmentDraftRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A CSOC requires a subservice provider; other commitment kinds cannot reference a provider.")));
+        return operations.ExecuteAsync<CreateCommitmentDraft, CommitmentDraftRegistration>(context, request.TenantId, request.ProgramId,
+            request.DraftId, request.DraftId, nameof(CreateCommitmentDraft), null,
+            async (_, _, _, token) =>
             {
-                if (!draft.IsCreated && (!service.IsActive ||
-                                         service.ProgramId != request.ProgramId))
-                    return AggregateOutcome.CommitOnSuccess(
-                        Result<CommitmentDraftRegistration>.Failure(new RequestError(
-                            RequestErrorKind.NotFound, "The program service was not found.")));
-                return AggregateOutcome.CommitOnSuccess(draft.Create(request.ProgramId,
-                    request.DraftId, request.ServiceId, kind, identifier, request.Statement,
-                    request.Context, request.SourceReference,
-                    RbacIds.Member(request.TenantId, userId),
-                    UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow(),
-                    request.ProviderId));
+                if (request.ProviderId is { } providerId)
+                {
+                    var provider = await providers.GetAsync(request.TenantId, providerId, token).ConfigureAwait(false);
+                    if (provider is null || !provider.Content.Subservice)
+                        return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The subservice provider was not found in this tenant."));
+                }
+                var service = await operations.Sources.HydrateAsync(new ClientService(request.TenantId, request.ServiceId), token).ConfigureAwait(false);
+                return service.IsActive && service.ProgramId == request.ProgramId ? Result.Success
+                    : Result.Failure(new RequestError(RequestErrorKind.NotFound, "The program service was not found."));
             },
-            context, ct).ConfigureAwait(false);
+            (rules, actor, at) =>
+            {
+                var result = rules.Create(request.ProgramId, request.DraftId, request.ServiceId, kind, identifier, request.Statement,
+                    request.Context, request.SourceReference, actor.MemberId, actor.Display, at, request.ProviderId);
+                return result.IsSuccess ? Result.Success : Result.Failure(result.Error!);
+            }, null, null, ct, authoredDigest: CommitmentCreateIntent.Digest(request));
     }
 }

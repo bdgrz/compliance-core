@@ -35,8 +35,10 @@ public sealed class CommitmentRetirementTests
             "Different retirement reason", ApproverId, "Approver", retiredAt);
         var revise = draft.Revise(ProgramId, draft.Revision, "Changed statement", "Context",
             "MSA 4.1", AuthorId, "Author", retiredAt.AddMinutes(1));
-        var events = new AggregateScenario<CommitmentDraft>(draft).PendingEvents.ToArray();
-        var replay = new AggregateScenario<CommitmentDraft>(NewDraft()).Given(events).Aggregate;
+        var events = draft.PendingChanges.ToArray();
+        var replay = NewDraft();
+        foreach (var change in events)
+            replay.Apply(change);
 
         // Assert
         Assert.Null(retired);
@@ -49,7 +51,7 @@ public sealed class CommitmentRetirementTests
             draft.RetirementRationale);
         Assert.True(replay.IsRetired);
         Assert.Equal(effectiveOn, replay.RetiredEffectiveOn);
-        Assert.IsType<CommitmentRetired>(events[^1]);
+        Assert.IsType<CommitmentRetiredContent>(events[^1]);
     }
 
     [Fact]
@@ -67,10 +69,10 @@ public sealed class CommitmentRetirementTests
         // Assert
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(failure).Code);
         Assert.False(draft.IsRetired);
-        Assert.Single(new AggregateScenario<CommitmentDraft>(draft).PendingEvents);
+        Assert.Single(draft.PendingChanges);
     }
 
-    static CommitmentDraft EffectiveDraft()
+    static CommitmentRules EffectiveDraft()
     {
         var draft = NewDraft();
         Assert.True(draft.Create(ProgramId, Uuid.CreateVersion4(), ServiceId, "service_commitment",
@@ -85,6 +87,6 @@ public sealed class CommitmentRetirementTests
         return draft;
     }
 
-    static CommitmentDraft NewDraft() => new(TenantId,
-        CommitmentDraft.IdFor(TenantId, ProgramId, "service_commitment", "SC-01"));
+    static CommitmentRules NewDraft() => new(TenantId,
+        CommitmentRules.IdFor(TenantId, ProgramId, "service_commitment", "SC-01"));
 }

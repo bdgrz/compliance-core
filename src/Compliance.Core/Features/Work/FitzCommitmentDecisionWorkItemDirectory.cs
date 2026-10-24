@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Cntryl.Fitz;
@@ -7,12 +8,12 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Work;
 
 sealed class FitzCommitmentDecisionWorkItemDirectory(IKvClient client,
-    IAggregateReader sourceReader)
+    CommitmentReader commitments)
     : FitzKvProjectionStore(client,
-        "kv://bdgrz/accountable-work-items/commitment-decisions-v1", ProjectorName),
+        "kv://bdgrz/accountable-work-items/commitment-decisions-v2", ProjectorName),
       IAccountableWorkItemDirectoryReader, ICommitmentDecisionWorkItemProjection
 {
-    public const string ProjectorName = "AccountableWorkItemCommitmentDecisionV1";
+    public const string ProjectorName = "AccountableWorkItemCommitmentDecisionV2";
     const string RevisionKey = ProjectorName;
 
     string IAccountableWorkItemDirectoryReader.ProjectorName => ProjectorName;
@@ -36,6 +37,8 @@ sealed class FitzCommitmentDecisionWorkItemDirectory(IKvClient client,
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
+        if (domainEvent is ICommitmentFact { ChangeCount: 0 })
+            return;
         var (tenantId, draftId) = ScopeFor(domainEvent);
         if (tenantId == Uuid.Empty || draftId == Uuid.Empty)
             throw new InvalidOperationException(
@@ -47,7 +50,7 @@ sealed class FitzCommitmentDecisionWorkItemDirectory(IKvClient client,
             throw new InvalidOperationException(
                 "A commitment work event cannot replace state outside its recorded scope.");
 
-        var draft = await sourceReader.HydrateAsync(new CommitmentDraft(tenantId, draftId), ct)
+        var draft = await commitments.ReadAsync(tenantId, draftId, ct)
             .ConfigureAwait(false);
         if (!draft.IsCreated || draft.ProgramId == Uuid.Empty || draft.Revision < 1 ||
             string.IsNullOrWhiteSpace(draft.Identifier))
@@ -93,31 +96,38 @@ sealed class FitzCommitmentDecisionWorkItemDirectory(IKvClient client,
         Uuid programId, DateTimeOffset now, DateOnly horizon, Uuid? workItemId,
         CancellationToken ct = default)
     {
-        _ = horizon;
-        var candidates = new List<WorkCandidate>();
-        string? cursor = null;
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        do
+        try
         {
-            var page = await CommitmentDecisionWorkItemDirectorySchema.Commitments.QueryAsync(tx,
-                CommitmentDecisionWorkItemDirectorySchema.ByProgram.Query()
-                    .WithPrefix(programId.ToString()).Take(200).After(cursor), ct)
-                .ConfigureAwait(false);
-            foreach (var state in page.Items)
+            _ = horizon;
+            var candidates = new List<WorkCandidate>();
+            string? cursor = null;
+            await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+            do
             {
-                if (state.TenantId != tenantId || state.ProgramId != programId ||
-                    state.DraftId == Uuid.Empty || state.SourceRevision < 1)
-                    return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
+                var page = await CommitmentDecisionWorkItemDirectorySchema.Commitments.QueryAsync(tx,
+                    CommitmentDecisionWorkItemDirectorySchema.ByProgram.Query()
+                        .WithPrefix(programId.ToString()).Take(200).After(cursor), ct)
+                    .ConfigureAwait(false);
+                foreach (var state in page.Items)
+                {
+                    if (state.TenantId != tenantId || state.ProgramId != programId ||
+                        state.DraftId == Uuid.Empty || state.SourceRevision < 1)
+                        return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
 
-                var work = CommitmentDecisionWork.Candidates(state, now, workItemId);
-                if (!work.IsSuccess)
-                    return Result<IReadOnlyList<WorkCandidate>>.Failure(work.Error);
-                candidates.AddRange(work.Value);
-            }
-            cursor = page.NextCursor;
-        } while (cursor is not null);
+                    var work = CommitmentDecisionWork.Candidates(state, now, workItemId);
+                    if (!work.IsSuccess)
+                        return Result<IReadOnlyList<WorkCandidate>>.Failure(work.Error);
+                    candidates.AddRange(work.Value);
+                }
+                cursor = page.NextCursor;
+            } while (cursor is not null);
 
-        return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
+            return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<IReadOnlyList<WorkCandidate>>.Failure(CommitmentReadFailure.Of(failure));
+        }
     }
 
     async ValueTask IncrementRevisionAsync(CancellationToken ct)

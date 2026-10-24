@@ -1,21 +1,28 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Commitments;
 
-sealed class CommitmentResponsibilityScopeValidator(IAggregateReader reader)
+sealed class CommitmentResponsibilityScopeValidator(CommitmentReader commitments)
 {
     public async ValueTask<Result> ValidateAsync(Uuid tenantId, ResponsibilityScope scope,
         CancellationToken ct = default)
     {
-        var draft = await reader.HydrateAsync(new CommitmentDraft(tenantId, scope.RecordId), ct)
-            .ConfigureAwait(false);
-        if (!draft.IsCreated)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The responsibility source record was not found."));
-        return draft.IsCurrentResponsibilityScope(scope)
-            ? Result.Success
-            : Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "Responsibilities must target the current exact pending commitment revision."));
+        try
+        {
+            var draft = await commitments.ReadAsync(tenantId, scope.RecordId, ct).ConfigureAwait(false);
+            if (!draft.IsCreated)
+                return Result.Failure(new RequestError(RequestErrorKind.NotFound,
+                    "The responsibility source record was not found."));
+            return draft.IsCurrentResponsibilityScope(scope)
+                ? Result.Success
+                : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "Responsibilities must target the current exact pending commitment revision."));
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result.Failure(CommitmentReadFailure.Of(failure));
+        }
     }
 }

@@ -8,7 +8,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Responsibilities;
 
 public sealed class RevokeResponsibilityHandler(IAggregateExecutor executor,
-    IResponsibilityScopeValidator scopeValidator, ControlOperations controls, TimeProvider clock)
+    IResponsibilityScopeValidator scopeValidator, ControlOperations controls, CommitmentOperations commitments, TimeProvider clock)
     : IRequestHandler<RevokeResponsibility>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<RevokeResponsibility> context,
@@ -17,6 +17,8 @@ public sealed class RevokeResponsibilityHandler(IAggregateExecutor executor,
         var request = context.Request;
         if (request.RecordType == SeparationOfDutiesRecordTypes.Control)
             return await controls.RevokeResponsibilityAsync(context, scopeValidator, ct).ConfigureAwait(false);
+        if (request.RecordType == SeparationOfDutiesRecordTypes.Commitment)
+            return await commitments.RevokeResponsibilityAsync(context, scopeValidator, ct).ConfigureAwait(false);
         var scopeResult = await scopeValidator.ValidateAsync(request.TenantId, request.Scope, ct)
             .ConfigureAwait(false);
         if (!scopeResult.IsSuccess)
@@ -25,13 +27,6 @@ public sealed class RevokeResponsibilityHandler(IAggregateExecutor executor,
             return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
                 "Responsibility management requires a Bdgrz user identity."));
         var actorMemberId = RbacIds.Member(request.TenantId, actorUserId);
-        if (request.RecordType == SeparationOfDutiesRecordTypes.Commitment)
-            return await executor.ExecuteAsync(new CommitmentDraft(request.TenantId,
-                request.Scope.RecordId), commitment => CommandFailureRequestAdapter.ToOutcome(
-                commitment.RevokeResponsibility(request.Scope, request.AssignmentId,
-                    actorMemberId, UserIdentityClaims.BdgrzDisplay(context.Actor, actorUserId),
-                    clock.GetUtcNow(), request.Reason)),
-                context, ct).ConfigureAwait(false);
         return await executor.ExecuteAsync(new SystemBoundary(request.TenantId, request.Scope.RecordId), boundary =>
         {
             var failure = boundary.RevokeResponsibility(request.Scope, request.AssignmentId,

@@ -21,8 +21,8 @@ public sealed class CommitmentDraftTests
     public void ShouldCreateDistinctDraftKindGivenSupportedKind(string kind)
     {
         // Arrange
-        var id = CommitmentDraft.IdFor(TenantId, ProgramId, kind, "SRC-01");
-        var draft = new CommitmentDraft(TenantId, id);
+        var id = CommitmentRules.IdFor(TenantId, ProgramId, kind, "SRC-01");
+        var draft = new CommitmentRules(TenantId, id);
 
         // Act
         var result = draft.Create(ProgramId, Uuid.CreateVersion4(), ServiceId, kind,
@@ -35,7 +35,7 @@ public sealed class CommitmentDraftTests
         Assert.Equal("SRC-01", result.Value.Identifier);
         Assert.Equal(id, result.Value.DraftId);
         Assert.Equal(1, draft.Revision);
-        Assert.Single(new AggregateScenario<CommitmentDraft>(draft).PendingEvents);
+        Assert.Single(draft.PendingChanges);
     }
 
     [Fact]
@@ -43,8 +43,8 @@ public sealed class CommitmentDraftTests
     {
         // Arrange
         var requestId = Uuid.CreateVersion4();
-        var id = CommitmentDraft.IdFor(TenantId, ProgramId, "service_commitment", "SC-01");
-        var draft = new CommitmentDraft(TenantId, id);
+        var id = CommitmentRules.IdFor(TenantId, ProgramId, "service_commitment", "SC-01");
+        var draft = new CommitmentRules(TenantId, id);
         Assert.True(draft.Create(ProgramId, requestId, ServiceId, "service_commitment",
             "SC-01", "First statement", "Context", "Source A", AuthorId,
             "First author", Now).IsSuccess);
@@ -70,10 +70,10 @@ public sealed class CommitmentDraftTests
         Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(stale).Code);
         Assert.Equal(CommandFailureCode.MissingRecord,
             Assert.IsType<CommandFailure>(wrongProgram).Code);
-        Assert.Collection(new AggregateScenario<CommitmentDraft>(draft).PendingEvents,
+        Assert.Collection(draft.PendingChanges,
             created =>
             {
-                Assert.Equal(typeof(CommitmentDraftCreated), created.GetType());
+                Assert.Equal(typeof(CommitmentDraftCreatedContent), created.GetType());
                 Assert.Equal("Source A", created.GetType()
                     .GetProperty("SourceReference")?.GetValue(created));
                 Assert.Equal("First author", created.GetType()
@@ -81,7 +81,7 @@ public sealed class CommitmentDraftTests
             },
             changed =>
             {
-                Assert.Equal(typeof(CommitmentDraftRevised), changed.GetType());
+                Assert.Equal(typeof(CommitmentDraftRevisedContent), changed.GetType());
                 Assert.Equal("Source B", changed.GetType()
                     .GetProperty("SourceReference")?.GetValue(changed));
                 Assert.Equal("Second author", changed.GetType()
@@ -95,7 +95,7 @@ public sealed class CommitmentDraftTests
     public void ShouldRejectUnsupportedOrUnboundedDraftWithoutEventGivenNewDraft()
     {
         // Arrange
-        var draft = new CommitmentDraft(TenantId, Uuid.CreateVersion4());
+        var draft = new CommitmentRules(TenantId, Uuid.CreateVersion4());
 
         // Act
         var unsupported = draft.Create(ProgramId, Uuid.CreateVersion4(), ServiceId,
@@ -107,7 +107,7 @@ public sealed class CommitmentDraftTests
             "service_commitment", "SC-01", "Statement", "", " ", AuthorId,
             "Author", Now);
         var oversized = draft.Create(ProgramId, Uuid.CreateVersion4(), ServiceId,
-            "service_commitment", "SC-01", new string('界', 16000),
+            "service_commitment", "SC-01", new string('界', 16001),
             new string('界', 16000), "Source", AuthorId, "Author", Now);
 
         // Assert
@@ -119,6 +119,6 @@ public sealed class CommitmentDraftTests
             Assert.IsType<RequestError>(unsourced.Error).Kind);
         Assert.Equal(RequestErrorKind.Validation,
             Assert.IsType<RequestError>(oversized.Error).Kind);
-        Assert.Empty(new AggregateScenario<CommitmentDraft>(draft).PendingEvents);
+        Assert.Empty(draft.PendingChanges);
     }
 }

@@ -1,0 +1,9 @@
+using Bdgrz.Compliance.Features.Proofs;
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.Commitments;
+
+public sealed record CommitmentAuthorityHeader(Uuid TenantId, Uuid ProgramId, Uuid DraftId, Uuid ServiceId,
+    Uuid? ProviderId, string Kind, string Identifier, long Revision, bool IsCreated, bool IsRetired,
+    string SourceReference, long EffectiveVersionCount, long? LatestEffectiveRevision, DateOnly? LatestEffectiveFrom,
+    Uuid? AcceptedReviewDecisionId, Uuid? AcceptedReviewerMemberId, DateOnly? RetiredEffectiveOn, ImmutableContentRef Content);

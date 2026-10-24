@@ -19,12 +19,12 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         var created = await SeedDraftAsync(fixture, draftId);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzCommitmentDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<CommitmentReader>());
         await ProjectAsync(directory, events, fixture.TenantId, created);
         var responsibilityScope = new ResponsibilityScope("commitment", draftId, draftId, 1);
         var reviewerAssignmentId = Uuid.CreateVersion4();
@@ -67,7 +67,7 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
         });
 
         // Act
-        await ProjectAsync(directory, events, fixture.TenantId, new CommitmentReviewed(
+        await ProjectAsync(directory, events, fixture.TenantId, new CommitmentReviewedContent(
             fixture.TenantId, fixture.ProgramId, draftId, 1, reviewId, "accept",
             "Security lead", "applicable", "supported", null, "Verified against source",
             null, null, null, fixture.ReviewerMemberId, "Reviewer", reviewedAt));
@@ -82,7 +82,7 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
                 "Approver", approvedAt));
             return Result.Success;
         });
-        await ProjectAsync(directory, events, fixture.TenantId, new CommitmentApproved(
+        await ProjectAsync(directory, events, fixture.TenantId, new CommitmentApprovedContent(
             fixture.TenantId, fixture.ProgramId, draftId, 1, approvalId, reviewId, 1,
             fixture.Today, "impact-digest", "Approved", fixture.ApproverMemberId,
             "Approver", approvedAt));
@@ -115,12 +115,12 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         var created = await SeedDraftAsync(fixture, draftId);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzCommitmentDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<CommitmentReader>());
         await ProjectAsync(directory, events, fixture.TenantId, created);
         var initial = Assert.Single((await directory.LoadProgramAsync(fixture.TenantId,
             fixture.ProgramId, created.ChangedAt, DateOnly.MaxValue, null)).Value);
@@ -135,7 +135,7 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
         });
 
         // Act
-        await ProjectAsync(directory, events, fixture.TenantId, new CommitmentReviewed(
+        await ProjectAsync(directory, events, fixture.TenantId, new CommitmentReviewedContent(
             fixture.TenantId, fixture.ProgramId, draftId, 1, reviewId, "request_changes",
             null, null, null, null, "Clarify the source mapping", null, null, null,
             fixture.ReviewerMemberId, "Reviewer", reviewedAt));
@@ -149,7 +149,7 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
                 fixture.LeadMemberId, "Lead", revisedAt));
             return Result.Success;
         });
-        await ProjectAsync(directory, events, fixture.TenantId, new CommitmentDraftRevised(
+        await ProjectAsync(directory, events, fixture.TenantId, new CommitmentDraftRevisedContent(
             fixture.TenantId, fixture.ProgramId, draftId, 2,
             "Updated commitment statement", "Updated context", SourceReference,
             fixture.LeadMemberId, "Lead", revisedAt));
@@ -169,12 +169,12 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         var created = await SeedDraftAsync(fixture, draftId);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzCommitmentDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<CommitmentReader>());
         await ProjectAsync(directory, events, fixture.TenantId, created);
         var assignmentId = Uuid.CreateVersion4();
         var now = created.ChangedAt.AddHours(2);
@@ -228,12 +228,12 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         var created = await SeedDraftAsync(fixture, draftId);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzCommitmentDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<CommitmentReader>());
         await ProjectAsync(directory, events, fixture.TenantId, created);
         var assignmentId = Uuid.CreateVersion4();
         var assignedAt = created.ChangedAt.AddHours(1);
@@ -273,12 +273,12 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var draftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(fixture.TenantId, fixture.ProgramId, "service_commitment", "SC-WORK");
         var created = await SeedDraftAsync(fixture, draftId);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzCommitmentDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<CommitmentReader>());
         var consistency = new WorkQueueReadConsistency(events, [directory]);
 
         // Act
@@ -298,16 +298,16 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
         Assert.True(confirmed.IsSuccess);
     }
 
-    static async Task<CommitmentDraftCreated> SeedDraftAsync(OperationsFixture fixture,
+    static async Task<CommitmentDraftCreatedContent> SeedDraftAsync(OperationsFixture fixture,
         Uuid draftId)
     {
         var createdAt = At(fixture.Today).AddMinutes(-1);
-        var created = new CommitmentDraftCreated(fixture.TenantId, fixture.ProgramId, draftId,
+        var created = new CommitmentDraftCreatedContent(fixture.TenantId, fixture.ProgramId, draftId,
             Uuid.CreateVersion4(), Uuid.CreateVersion4(), "service_commitment", "SC-WORK",
             "The service protects customer data.", "Security commitment.", SourceReference,
             fixture.LeadMemberId, "Lead", createdAt);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new CommitmentDraft(fixture.TenantId, draftId), draft =>
+            new CommitmentRules(fixture.TenantId, draftId), draft =>
             {
                 Assert.True(draft.Create(created.ProgramId, created.CreateRequestId,
                     created.ServiceId, created.Kind, created.Identifier, created.Statement,
@@ -319,12 +319,12 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
     }
 
     static async Task ApplyDraftAsync(OperationsFixture fixture, Uuid draftId,
-        Func<CommitmentDraft, Result> apply) =>
+        Func<CommitmentRules, Result> apply) =>
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new CommitmentDraft(fixture.TenantId, draftId), apply);
+            new CommitmentRules(fixture.TenantId, draftId), apply);
 
     static async Task ProjectAsync(FitzCommitmentDecisionWorkItemDirectory directory,
-        IDomainEventReader events, Uuid tenantId, DomainEvent domainEvent)
+        IDomainEventReader events, Uuid tenantId, ICommitmentMutationContent requested)
     {
         var pattern = EventStreamPattern.ForPattern(tenantId.ToString(), "commitment-drafts");
         var identity = new CheckpointIdentity(
@@ -333,7 +333,23 @@ public sealed class FitzCommitmentDecisionWorkItemDirectoryTests
         var source = await ReadCommitmentCheckpointAsync(events, tenantId);
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
             current));
-        await directory.ApplyAsync(domainEvent);
+        var matches = new List<DomainEvent>();
+        await foreach (var record in events.ReadAsync(pattern, EventCursor.Start, CancellationToken.None))
+        {
+            var selected = (requested, record.Event) switch
+            {
+                (CommitmentDraftCreatedContent expected, CommitmentDraftCreated actual) => expected.DraftId == actual.DraftId,
+                (CommitmentDraftRevisedContent expected, CommitmentDraftRevised actual) => expected.DraftId == actual.DraftId && expected.Revision == actual.Revision,
+                (CommitmentReviewedContent expected, CommitmentReviewed actual) => expected.DraftId == actual.DraftId && expected.DecisionId == actual.DecisionId,
+                (CommitmentApprovedContent expected, CommitmentApproved actual) => expected.DraftId == actual.DraftId && expected.DecisionId == actual.DecisionId,
+                (ResponsibilityAssigned expected, ResponsibilityAssigned actual) => expected.AssignmentId == actual.AssignmentId,
+                (ResponsibilityRevoked expected, ResponsibilityRevoked actual) => expected.AssignmentId == actual.AssignmentId,
+                _ => false,
+            };
+            if (selected)
+                matches.Add(record.Event);
+        }
+        await directory.ApplyAsync(Assert.Single(matches));
         await batch.CommitAsync(source);
     }
 

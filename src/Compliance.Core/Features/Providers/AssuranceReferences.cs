@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Commitments;
 using Cntryl.Portia;
@@ -7,10 +8,10 @@ namespace Bdgrz.Compliance.Features.Providers;
 /// <summary>Inspects the authoritative provider and governed artifacts an assurance record cites.</summary>
 public sealed class AssuranceReferences(IAggregateReader reader, ProviderSource providers, IAssuranceReader assurance,
     AssuranceReadConsistency assuranceConsistency,
-    CommitmentVersionReadConsistency commitmentConsistency)
+    CommitmentVersionReadConsistency commitmentConsistency, CommitmentReader commitments)
 {
     public AssuranceReferences(IAggregateReader reader, ProviderSource providers)
-        : this(reader, providers, null!, null!, null!)
+        : this(reader, providers, null!, null!, null!, null!)
     {
     }
 
@@ -52,79 +53,86 @@ public sealed class AssuranceReferences(IAggregateReader reader, ProviderSource 
         Uuid serviceId, string sourceKind, Uuid sourceId, long sourceRevision,
         CancellationToken ct)
     {
-        ArgumentNullException.ThrowIfNull(assurance);
-        ArgumentNullException.ThrowIfNull(assuranceConsistency);
-        ArgumentNullException.ThrowIfNull(commitmentConsistency);
-        if (ServiceError(provider, serviceId) is { } serviceError)
-            return Result.Failure(serviceError);
-        if (sourceRevision < 1 || sourceId == Uuid.Empty)
-            return SourceNotFound();
-
-        switch (sourceKind)
+        try
         {
-            case "assurance_report":
-                {
-                    var fence = await assuranceConsistency.CaptureFenceAsync(tenantId, ct)
-                        .ConfigureAwait(false);
-                    if (!fence.IsSuccess)
-                        return Result.Failure(fence.Error);
-                    var report = await assurance.GetReportRevisionAsync(tenantId, provider.ProviderId,
-                        sourceId, sourceRevision, ct).ConfigureAwait(false);
-                    var unchanged = await assuranceConsistency.ConfirmUnchangedAndCaughtUpAsync(
-                        tenantId, fence.Value, ct).ConfigureAwait(false);
-                    if (!unchanged.IsSuccess)
-                        return unchanged;
-                    return report is { } retained && retained.TenantId == tenantId &&
-                           retained.ProviderId == provider.ProviderId
-                        ? Result.Success
-                        : SourceNotFound();
-                }
-            case "provider_review":
-                {
+            ArgumentNullException.ThrowIfNull(assurance);
+            ArgumentNullException.ThrowIfNull(assuranceConsistency);
+            ArgumentNullException.ThrowIfNull(commitmentConsistency);
+            if (ServiceError(provider, serviceId) is { } serviceError)
+                return Result.Failure(serviceError);
+            if (sourceRevision < 1 || sourceId == Uuid.Empty)
+                return SourceNotFound();
+
+            switch (sourceKind)
+            {
+                case "assurance_report":
+                    {
+                        var fence = await assuranceConsistency.CaptureFenceAsync(tenantId, ct)
+                            .ConfigureAwait(false);
+                        if (!fence.IsSuccess)
+                            return Result.Failure(fence.Error);
+                        var report = await assurance.GetReportRevisionAsync(tenantId, provider.ProviderId,
+                            sourceId, sourceRevision, ct).ConfigureAwait(false);
+                        var unchanged = await assuranceConsistency.ConfirmUnchangedAndCaughtUpAsync(
+                            tenantId, fence.Value, ct).ConfigureAwait(false);
+                        if (!unchanged.IsSuccess)
+                            return unchanged;
+                        return report is { } retained && retained.TenantId == tenantId &&
+                               retained.ProviderId == provider.ProviderId
+                            ? Result.Success
+                            : SourceNotFound();
+                    }
+                case "provider_review":
+                    {
+                        if (sourceRevision != 1)
+                            return SourceNotFound();
+                        var fence = await assuranceConsistency.CaptureFenceAsync(tenantId, ct)
+                            .ConfigureAwait(false);
+                        if (!fence.IsSuccess)
+                            return Result.Failure(fence.Error);
+                        var review = await assurance.GetReviewAsync(tenantId, sourceId, ct).ConfigureAwait(false);
+                        var unchanged = await assuranceConsistency.ConfirmUnchangedAndCaughtUpAsync(
+                            tenantId, fence.Value, ct).ConfigureAwait(false);
+                        if (!unchanged.IsSuccess)
+                            return unchanged;
+                        return review is { } retained && retained.TenantId == tenantId &&
+                               retained.ProviderId == provider.ProviderId
+                            ? Result.Success
+                            : SourceNotFound();
+                    }
+                case "service_commitment" or "system_requirement" or "subservice_responsibility":
+                    {
+                        var draft = await commitments.ReadAsync(tenantId, sourceId, ct)
+                            .ConfigureAwait(false);
+                        if (!draft.IsCreated)
+                            return SourceNotFound();
+                        var version = await commitmentConsistency.GetAsync(tenantId, draft.ProgramId,
+                            sourceId, sourceRevision, ct).ConfigureAwait(false);
+                        return version.IsSuccess && version.Value.Kind == sourceKind &&
+                               version.Value.ServiceId == serviceId &&
+                               (sourceKind != "subservice_responsibility" ||
+                                version.Value.ProviderId == provider.ProviderId)
+                            ? Result.Success
+                            : version.IsSuccess ? SourceNotFound() : Result.Failure(version.Error);
+                    }
+                case "evidence_artifact":
                     if (sourceRevision != 1)
                         return SourceNotFound();
-                    var fence = await assuranceConsistency.CaptureFenceAsync(tenantId, ct)
+                    var artifact = await reader.HydrateAsync(new EvidenceArtifact(tenantId, sourceId), ct)
                         .ConfigureAwait(false);
-                    if (!fence.IsSuccess)
-                        return Result.Failure(fence.Error);
-                    var review = await assurance.GetReviewAsync(tenantId, sourceId, ct).ConfigureAwait(false);
-                    var unchanged = await assuranceConsistency.ConfirmUnchangedAndCaughtUpAsync(
-                        tenantId, fence.Value, ct).ConfigureAwait(false);
-                    if (!unchanged.IsSuccess)
-                        return unchanged;
-                    return review is { } retained && retained.TenantId == tenantId &&
-                           retained.ProviderId == provider.ProviderId
-                        ? Result.Success
-                        : SourceNotFound();
-                }
-            case "service_commitment" or "system_requirement" or "subservice_responsibility":
-                {
-                    var draft = await reader.HydrateAsync(new CommitmentDraft(tenantId, sourceId), ct)
-                        .ConfigureAwait(false);
-                    if (!draft.IsCreated)
+                    if (!artifact.IsCreated)
                         return SourceNotFound();
-                    var version = await commitmentConsistency.GetAsync(tenantId, draft.ProgramId,
-                        sourceId, sourceRevision, ct).ConfigureAwait(false);
-                    return version.IsSuccess && version.Value.Kind == sourceKind &&
-                           version.Value.ServiceId == serviceId &&
-                           (sourceKind != "subservice_responsibility" ||
-                            version.Value.ProviderId == provider.ProviderId)
+                    return artifact.State == EvidenceArtifactStates.Available
                         ? Result.Success
-                        : version.IsSuccess ? SourceNotFound() : Result.Failure(version.Error);
-                }
-            case "evidence_artifact":
-                if (sourceRevision != 1)
+                        : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "The provider coverage evidence artifact is not available for use."));
+                default:
                     return SourceNotFound();
-                var artifact = await reader.HydrateAsync(new EvidenceArtifact(tenantId, sourceId), ct)
-                    .ConfigureAwait(false);
-                if (!artifact.IsCreated)
-                    return SourceNotFound();
-                return artifact.State == EvidenceArtifactStates.Available
-                    ? Result.Success
-                    : Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                        "The provider coverage evidence artifact is not available for use."));
-            default:
-                return SourceNotFound();
+            }
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result.Failure(CommitmentReadFailure.Of(failure));
         }
     }
 

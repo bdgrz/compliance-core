@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "768a1794613dddaa6c50b6dd541384310a6163ab",
+  "sourceCommit": "96116e54b71f83c85c2811eb1e4bb6574e968031",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 487,
-    "factsWithAggregateEmitter": 457,
+    "factsWithAggregateEmitter": 452,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 30,
+    "legacyReducerOnlyFacts": 35,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 122,
+    "aggregateTypesWithCommandPath": 121,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -2593,19 +2593,13 @@
           "source": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Commitments/CommitmentApprovalTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentReviewTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentVersionProjectionTests.cs",
         "test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Examinations/CommitmentTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "CommitmentDraftCreated",
@@ -2616,21 +2610,14 @@
           "source": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/DraftActorSnapshotE2ETests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentDraftActorProjectionTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentDraftActorSnapshotTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentDraftHistoryReadTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentDraftTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentVersionProjectionTests.cs",
-        "test/Compliance.Tests/Features/Examinations/CommitmentTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "CommitmentDraftRevised",
@@ -2641,20 +2628,13 @@
           "source": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/DraftActorSnapshotE2ETests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentDraftActorSnapshotTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentDraftHistoryReadTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentDraftTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentVersionProjectionTests.cs",
-        "test/Compliance.Tests/Features/Examinations/CommitmentTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "CommitmentRetired",
@@ -2665,15 +2645,12 @@
           "source": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Commitments/CommitmentRetirementTests.cs",
         "test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "CommitmentReviewed",
@@ -2684,19 +2661,14 @@
           "source": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Commitments/CommitmentApprovalTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentReviewTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentVersionProjectionTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
         "test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Examinations/CommitmentTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ComplianceIncidentImpactAssessed",
@@ -6516,6 +6488,7 @@
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Hosting/Persistence/EventPersistenceFrameTests.cs",
+        "test/Compliance.Tests/Testing/CommitmentSeeds.cs",
         "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "disposition": "aggregate_fact",
@@ -6548,6 +6521,7 @@
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/CommitmentSeeds.cs",
         "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "disposition": "aggregate_fact",
@@ -9860,6 +9834,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ClientServiceActorE2ETests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentDraftReplayTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentHttpRoutesTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
         "test/Compliance.Tests/Features/Programs/ClientServiceTests.cs",
         "test/Compliance.Tests/Features/Programs/ProgramResourceScopeResolverTests.cs",
         "test/Compliance.Tests/Features/Programs/ProjectionFreshnessTests.cs",
@@ -9911,26 +9887,21 @@
         "ResponsibilityAssigned",
         "ResponsibilityRevoked"
       ],
-      "commandRequests": [
-        "ApproveCommitmentDraft",
-        "CreateCommitmentDraft",
-        "RetireCommitment",
-        "ReviewCommitmentDraft",
-        "ReviseCommitmentDraft",
-        "RevokeResponsibility"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentApprovalTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentDraftActorProjectionTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentDraftActorSnapshotTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentDraftHistoryReadTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentDraftReplayTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentDraftTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentRetirementTests.cs"
+        "test/Compliance.Tests/Features/Commitments/CommitmentHttpRoutesTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentNativeDirectoryReadTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentVersionProjectionTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "ComplianceIncident",
@@ -11653,8 +11624,8 @@
         "test/Compliance.Tests/Features/Applications/AccessReviewScopeDecisionTests.cs",
         "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentApprovalTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentReviewTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingProtocolTests.cs"
+        "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentReviewTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -13909,17 +13880,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "CommitmentDraft",
-        "SeparationOfDutiesWaiver"
-      ],
-      "aggregateTargets": [
-        "CommitmentDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/CommitmentDecisionWorkTests.cs"
+        "test/Compliance.Tests/Features/Examinations/CommitmentTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Work/CommitmentDecisionWorkTests.cs",
+        "test/Compliance.Tests/Testing/CommitmentSeeds.cs"
       ],
       "note": ""
     },
@@ -14353,7 +14321,6 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "CommitmentDraft",
         "Member",
         "SeparationOfDutiesWaiver",
         "SystemBoundary"
@@ -16812,16 +16779,17 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ClientService",
-        "CommitmentDraft"
+        "ClientService"
       ],
-      "aggregateTargets": [
-        "CommitmentDraft"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentDraftReplayTests.cs"
+        "test/Compliance.Tests/Features/Commitments/CommitmentDraftActorProjectionTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentDraftHistoryReadTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentDraftReplayTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
+        "test/Compliance.Tests/Testing/CommitmentSeeds.cs"
       ],
       "note": ""
     },
@@ -21985,7 +21953,9 @@
       ],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Commitments/CommitmentNativeDirectoryReadTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -28507,7 +28477,7 @@
     {
       "request": "RetireCommitment",
       "contract": "src/Compliance.Common/Features/Commitments/RetireCommitment.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28517,15 +28487,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "CommitmentDraft"
-      ],
-      "aggregateTargets": [
-        "CommitmentDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs"
+        "test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs",
+        "test/Compliance.Tests/Features/Examinations/CommitmentTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Testing/CommitmentSeeds.cs"
       ],
       "note": ""
     },
@@ -28717,18 +28685,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "CommitmentDraft",
-        "SeparationOfDutiesWaiver"
-      ],
-      "aggregateTargets": [
-        "CommitmentDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
         "test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs",
+        "test/Compliance.Tests/Features/Examinations/CommitmentTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/CommitmentDecisionWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/CommitmentSeeds.cs"
       ],
       "note": ""
     },
@@ -29285,14 +29251,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "CommitmentDraft"
-      ],
-      "aggregateTargets": [
-        "CommitmentDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Commitments/CommitmentDraftHistoryReadTests.cs",
+        "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
+        "test/Compliance.Tests/Testing/CommitmentSeeds.cs"
+      ],
       "note": ""
     },
     {
@@ -30048,11 +30014,9 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "CommitmentDraft",
         "SystemBoundary"
       ],
       "aggregateTargets": [
-        "CommitmentDraft",
         "SystemBoundary"
       ],
       "helperServices": [],
@@ -30062,6 +30026,7 @@
         "test/Compliance.Tests/Features/Work/CommitmentDecisionWorkTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/CommitmentSeeds.cs",
         "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""

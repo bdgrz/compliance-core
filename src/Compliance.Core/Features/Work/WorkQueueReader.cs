@@ -44,7 +44,8 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
     ApplicabilityReader? applicabilityReader = null,
     ControlEvaluationReader? evaluationReader = null,
     RiskGovernanceReader? riskGovernance = null,
-    EvidenceRequestReader? evidenceRequests = null)
+    EvidenceRequestReader? evidenceRequests = null,
+    CommitmentReader? commitmentSources = null)
 {
     public const int SystemEscalationDays = 7;
     public const int DefaultHorizonDays = 30;
@@ -140,7 +141,10 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
         if (commitments is not null &&
             !CommitmentDecisionWork.IsFullyProjected(projectedKinds))
         {
-            var decisions = await CommitmentDecisionWork.LoadAsync(reader, commitments,
+            if (commitmentSources is null)
+                return Result<WorkQueueSnapshot>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The authoritative commitment source reader is unavailable.", true));
+            var decisions = await CommitmentDecisionWork.LoadAsync(commitmentSources, commitments,
                 commitmentConsistency, tenantId, programId, now, workItemId, ct)
                 .ConfigureAwait(false);
             if (!decisions.IsSuccess)

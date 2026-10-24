@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Responsibilities;
@@ -18,29 +19,29 @@ public sealed class CommitmentApprovalTests
     static readonly DateTimeOffset Now = new(2026, 9, 20, 12, 0, 0, TimeSpan.Zero);
     static readonly DateOnly January = new(2027, 1, 1);
 
-    static CommitmentDraft Draft()
+    static CommitmentRules Draft()
     {
-        var id = CommitmentDraft.IdFor(TenantId, ProgramId, "service_commitment", "SC-01");
-        var draft = new CommitmentDraft(TenantId, id);
+        var id = CommitmentRules.IdFor(TenantId, ProgramId, "service_commitment", "SC-01");
+        var draft = new CommitmentRules(TenantId, id);
         Assert.True(draft.Create(ProgramId, Uuid.CreateVersion4(), ServiceId,
             "service_commitment", "SC-01", "Statement", "Context", "MSA 4.1", AuthorId,
             "Author", Now).IsSuccess);
         return draft;
     }
 
-    static CommandFailure? Review(CommitmentDraft draft, long revision, Uuid decisionId,
+    static CommandFailure? Review(CommitmentRules draft, long revision, Uuid decisionId,
         Uuid reviewer, string? verifiedReference = "MSA 4.1",
-        SeparationOfDutiesWaiver? waiver = null) =>
+        SeparationOfDutiesWaiverProof? waiver = null) =>
         draft.Review(ProgramId, revision, decisionId, "accept", "Security lead", "applicable",
             "supported", null, "Verified", reviewer, "Reviewer", Now.AddMinutes(5), waiver,
             verifiedReference, "Signed MSA v3, section 4.1");
 
-    static CommandFailure? Approve(CommitmentDraft draft, long revision, Uuid reviewId,
-        Uuid approver, SeparationOfDutiesWaiver? waiver = null) =>
+    static CommandFailure? Approve(CommitmentRules draft, long revision, Uuid reviewId,
+        Uuid approver, SeparationOfDutiesWaiverProof? waiver = null) =>
         draft.Approve(ProgramId, revision, Uuid.CreateVersion4(), reviewId, January,
             "Approved", "digest", approver, "Approver", Now.AddMinutes(10), waiver);
 
-    static ResponsibilityScope Scope(CommitmentDraft draft, long revision) =>
+    static ResponsibilityScope Scope(CommitmentRules draft, long revision) =>
         new(SeparationOfDutiesRecordTypes.Commitment, draft.Id, draft.Id, revision);
 
     [Fact]
@@ -75,8 +76,8 @@ public sealed class CommitmentApprovalTests
         // Assert
         Assert.Equal(CommandFailureCode.ActorProhibited, Assert.IsType<CommandFailure>(denied).Code);
         Assert.Null(waived);
-        Assert.Equal(waiver.Id, Assert.IsType<CommitmentApproved>(
-            new AggregateScenario<CommitmentDraft>(draft).PendingEvents[^1])
+        Assert.Equal(waiver.WaiverId, Assert.IsType<CommitmentApprovedContent>(
+            draft.PendingChanges[^1])
             .SeparationOfDutiesWaiverId);
     }
 
@@ -141,8 +142,8 @@ public sealed class CommitmentApprovalTests
 
         // Assert
         Assert.Null(failure);
-        var reviewed = Assert.IsType<CommitmentReviewed>(
-            new AggregateScenario<CommitmentDraft>(draft).PendingEvents[^1]);
+        var reviewed = Assert.IsType<CommitmentReviewedContent>(
+            draft.PendingChanges[^1]);
         Assert.Equal("verified", reviewed.SourceVerification);
         Assert.Equal("MSA 4.1", reviewed.SourceVerifiedReference);
         Assert.Equal("Signed MSA v3, section 4.1", reviewed.SourceEvidence);
@@ -205,13 +206,13 @@ public sealed class CommitmentApprovalTests
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(failure).Code);
     }
 
-    static SeparationOfDutiesWaiver CreateWaiver(SeparationOfDutiesWaiverScope scope,
+    static SeparationOfDutiesWaiverProof CreateWaiver(SeparationOfDutiesWaiverScope scope,
         Uuid beneficiary)
     {
         var waiver = new SeparationOfDutiesWaiver(TenantId, Uuid.CreateVersion4());
         Assert.Null(waiver.Record(scope, beneficiary, Uuid.CreateVersion4(), "Requester",
             "No other qualified approver is available.", Now, Now.AddDays(1)));
         Assert.Null(waiver.Approve(Uuid.CreateVersion4(), "Approver", Now.AddMinutes(1)));
-        return waiver;
+        return ControlTestWaivers.Proof(waiver);
     }
 }
