@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Bdgrz.Compliance;
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -79,7 +80,7 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                 while (DateTimeOffset.UtcNow < seedDeadline)
                 {
                     var roster = await reader.HydrateAsync(new PlatformOperatorRoster());
-                    if (roster.IsOperator(operatorId))
+                    if ((await PlatformOperatorRosterContent.ReadAsync(scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), roster)).Operators.Any(item => item.UserId == operatorId))
                     {
                         seeded = true;
                         break;
@@ -91,8 +92,9 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                     await using var apiScope = factory.Services.CreateAsyncScope();
                     var apiRoster = await apiScope.ServiceProvider.GetRequiredService<IAggregateReader>()
                         .HydrateAsync(new PlatformOperatorRoster());
+                    var apiAuthority = await PlatformOperatorRosterContent.ReadAsync(apiScope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), apiRoster);
                     Assert.Fail($"The worker did not read the operator seed; API initialized={apiRoster.IsInitialized}, " +
-                                $"API operator={apiRoster.IsOperator(operatorId)}.");
+                                $"API operator={apiAuthority.Operators.Any(item => item.UserId == operatorId)}.");
                 }
             }
             const string path = "/api/v1/platform/tenants";
@@ -207,7 +209,8 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                 await using var scope = worker.Services.CreateAsyncScope();
                 var roster = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
                     .HydrateAsync(new PlatformOperatorRoster());
-                Assert.True(roster.IsOperator(ordinaryId));
+                var authority = await PlatformOperatorRosterContent.ReadAsync(scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), roster);
+                Assert.Contains(authority.Operators, item => item.UserId == ordinaryId);
             }
             _ = await ordinaryMcp.When("bdgrz.platform.operator.list",
                 new Dictionary<string, object?>()).ExpectSuccess();

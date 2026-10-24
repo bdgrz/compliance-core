@@ -51,6 +51,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(new DeveloperUserRegistration(developerAuthentication));
         services.AddSingleton(PlatformOperatorAuthority.FromConfiguration(configuration, developerAuthentication));
         services.AddScoped<IPlatformOperatorAccess, EventSourcedPlatformOperatorAccess>();
+        services.AddScoped<PlatformOperatorRosterOperations>();
         var professionalAuthorityTrust = FirmProfessionalAuthorityTrustSettings.FromConfiguration(configuration);
         services.TryAddScoped<IFirmProfessionalDutyAssertionVerifier>(_ =>
             new SignedFirmProfessionalDutyAssertionVerifier(professionalAuthorityTrust));

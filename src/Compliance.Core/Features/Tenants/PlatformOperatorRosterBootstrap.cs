@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,7 +20,11 @@ public sealed class PlatformOperatorRosterBootstrap(IServiceScopeFactory scopes,
         var roster = await reader.HydrateAsync(new PlatformOperatorRoster(), cancellationToken)
             .ConfigureAwait(false);
         if (roster.IsInitialized)
+        {
+            await PlatformOperatorRosterContent.ReadAsync(services.GetRequiredService<IImmutableContentStore>(), roster, cancellationToken)
+                .ConfigureAwait(false);
             return;
+        }
         if (configuration.BootstrapUserIds.Count == 0)
             throw new InvalidOperationException(
                 "Configure PlatformOperators:UserIds to seed the initial operator roster.");

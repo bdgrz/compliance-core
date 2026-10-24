@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Bdgrz.Compliance.Tests.E2E;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Features.Providers;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -75,7 +76,8 @@ public sealed class PlatformOperatorTransportTests
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(next, owner.AssignmentId(target));
+        var authority = await PlatformOperatorRosterContent.ReadAsync(scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), owner);
+        Assert.Equal(next, Assert.Single(authority.Operators, item => item.UserId == target).AssignmentId);
         Assert.Equal(4UL, owner.Version);
         Assert.Equal(4UL, view!.Revision);
         Assert.Equal(next, Assert.Single(view.Operators, entry => entry.UserId == target).AssignmentId);
