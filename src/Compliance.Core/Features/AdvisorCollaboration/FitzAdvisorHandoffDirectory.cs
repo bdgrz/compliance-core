@@ -39,7 +39,8 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
         CancellationToken ct = default) => base.LoadCheckpointAsync(new CheckpointIdentity(
         ProjectorName, EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs")), ct);
 
-    public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
+    public async ValueTask ApplyAsync(DomainEvent domainEvent, IReadOnlyList<AdvisorRecordVersion>? selection,
+        CancellationToken ct = default)
     {
         EnsureTenant(domainEvent switch
         {
@@ -48,27 +49,24 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
             AdvisorHandoffReadiedForReview ev => ev.TenantId,
             AdvisorHandoffClosed ev => ev.TenantId,
             AdvisorHandoffRevoked ev => ev.TenantId,
-            AdvisorFeedbackRecorded ev => ev.TenantId,
-            AdvisorFeedbackCorrected ev => ev.TenantId,
-            AdvisorFeedbackResponded ev => ev.TenantId,
-            AdvisorFeedbackResolved ev => ev.TenantId,
+            AdvisorFeedbackAdmitted ev => TenantOf(ev),
             _ => throw InvalidEvent(),
         });
         switch (domainEvent)
         {
             case AdvisorHandoffCreated created:
-                await ApplyCreatedAsync(created, ct).ConfigureAwait(false);
+                await ApplyCreatedAsync(created, selection ?? throw InvalidEvent(), ct).ConfigureAwait(false);
                 break;
             case AdvisorHandoffSelectionRevised revised:
                 if (!ValidIdentity(revised.TenantId, revised.ProgramId, revised.HandoffId,
                         revised.RevisedAt) ||
-                    !ValidSelection(revised.RecordVersions) ||
+                    !ValidSelection(selection) ||
                     string.IsNullOrWhiteSpace(revised.ChangeReason) ||
                     revised.ChangeReason.Trim() != revised.ChangeReason || !ValidActor(revised.RevisedBy))
                     throw InvalidEvent();
                 await ApplyLifecycleAsync(revised, revised.TenantId, revised.ProgramId, revised.HandoffId,
                     revised.Revision, revised.RevisedAt, "draft", ["draft", "ready_for_review"],
-                    ct, revised.RecordVersions)
+                    ct, selection)
                     .ConfigureAwait(false);
                 break;
             case AdvisorHandoffReadiedForReview readied:
@@ -97,20 +95,16 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
                     revoked.Revision, revoked.RevokedAt, "revoked", ["draft", "ready_for_review"], ct)
                     .ConfigureAwait(false);
                 break;
-            case AdvisorFeedbackRecorded feedback:
-                await ApplyFeedbackRecordedAsync(feedback, ct).ConfigureAwait(false);
-                break;
-            case AdvisorFeedbackCorrected correction:
-                await ApplyFeedbackCorrectedAsync(correction, ct).ConfigureAwait(false);
-                break;
-            case AdvisorFeedbackResponded response:
-                await ApplyFeedbackRespondedAsync(response, ct).ConfigureAwait(false);
-                break;
-            case AdvisorFeedbackResolved resolution:
-                await ApplyFeedbackResolvedAsync(resolution, ct).ConfigureAwait(false);
+            case AdvisorFeedbackAdmitted admitted:
+                await ApplyFeedbackAdmittedAsync(admitted, ct).ConfigureAwait(false);
                 break;
         }
     }
+
+    static Uuid TenantOf(AdvisorFeedbackAdmitted ev) =>
+        Uuid.TryParse(ev.Owner.Realm, System.Globalization.CultureInfo.InvariantCulture, out var tenantId)
+            ? tenantId
+            : throw InvalidEvent();
 
     void EnsureTenant(Uuid tenantId)
     {
@@ -119,11 +113,12 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
                 "An advisor handoff event must belong to its tenant projection batch.");
     }
 
-    async ValueTask ApplyCreatedAsync(AdvisorHandoffCreated ev, CancellationToken ct)
+    async ValueTask ApplyCreatedAsync(AdvisorHandoffCreated ev, IReadOnlyList<AdvisorRecordVersion> selection,
+        CancellationToken ct)
     {
         if (!ValidIdentity(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.CreatedAt) ||
             string.IsNullOrWhiteSpace(ev.Purpose) || ev.Purpose.Trim() != ev.Purpose ||
-            !ValidSelection(ev.RecordVersions) ||
+            !ValidSelection(selection) ||
             (ev.ComparedToHandoffId is { } comparedTo &&
              (comparedTo == Uuid.Empty || comparedTo == ev.HandoffId)) ||
             ev.ExpiresOn < DateOnly.FromDateTime(ev.CreatedAt.UtcDateTime) || !ValidActor(ev.CreatedBy))
@@ -146,83 +141,35 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
         await AdvisorHandoffDirectorySchema.Handoffs.InsertAsync(Transaction,
             new AdvisorHandoffDirectoryEntry(ev.TenantId, ev.ProgramId, ev.HandoffId,
                 ev.Purpose, "draft", ev.CreatedAt, ev.ExpiresOn, 1,
-                ev.RecordVersions.ToArray(), [], metadata.EventId,
+                selection.ToArray(), [], metadata.EventId,
                 metadata.AggregateVersion, ev.ComparedToHandoffId), ct)
             .ConfigureAwait(false);
     }
 
-    async ValueTask ApplyFeedbackRecordedAsync(AdvisorFeedbackRecorded ev, CancellationToken ct)
+    async ValueTask ApplyFeedbackAdmittedAsync(AdvisorFeedbackAdmitted ev, CancellationToken ct)
     {
-        var source = ev.SelectedSource ?? new AdvisorRecordVersion(ev.RecordId, ev.RecordVersionId);
-        if (!ValidIdentity(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.CreatedAt) ||
-            ev.FeedbackId == Uuid.Empty || ev.RecordId == Uuid.Empty ||
-            source.RecordId != ev.RecordId || source.VersionId != ev.RecordVersionId ||
-            !source.HasValidIdentity || ev.Kind is not ("comment" or "change_request" or "validated") ||
-            string.IsNullOrWhiteSpace(ev.Body) || ev.Body.Trim() != ev.Body || !ValidActor(ev.Author))
+        var handoffId = Uuid.TryParse(ev.Owner.Resource, System.Globalization.CultureInfo.InvariantCulture,
+            out var parsed) ? parsed : throw InvalidEvent();
+        var feedbackId = ev.Operation.LogicalId;
+        if (ev.Owner.Area != AdvisorHandoff.Area || feedbackId == Uuid.Empty || handoffId == Uuid.Empty ||
+            ev.Operation.AcceptedAt == default)
             throw InvalidEvent();
-
-        var current = await GetCurrentAsync(ev.TenantId, ev.ProgramId, ev.HandoffId, ct)
-            .ConfigureAwait(false);
+        var current = await AdvisorHandoffDirectorySchema.Handoffs.GetAsync(Transaction, handoffId, ct)
+            .ConfigureAwait(false) ?? throw new InvalidOperationException(
+                "An advisor handoff event projected before creation.");
         if (IsAlreadyProjected(current, ev))
             return;
-        if (current.Status != "ready_for_review" ||
-            current.ExpiresOn < DateOnly.FromDateTime(ev.CreatedAt.UtcDateTime) ||
-            !current.Selection.Contains(source) ||
-            current.FeedbackIds.Contains(ev.FeedbackId))
+        if (current.Status != "ready_for_review" || ev.Revision != current.Revision + 1 ||
+            current.ExpiresOn < DateOnly.FromDateTime(ev.Operation.AcceptedAt.UtcDateTime) ||
+            current.FeedbackIds.Contains(feedbackId) || ev.Operation.AcceptedAt < current.UpdatedAt)
             throw InvalidEvent();
         var revised = current with
         {
-            UpdatedAt = ev.CreatedAt,
-            Revision = current.Revision + 1,
-            FeedbackIds = [.. current.FeedbackIds, ev.FeedbackId],
+            UpdatedAt = ev.Operation.AcceptedAt,
+            Revision = ev.Revision,
+            FeedbackIds = [.. current.FeedbackIds, feedbackId],
         };
         await ReplaceAsync(current, WithEventMetadata(revised, ev), ct).ConfigureAwait(false);
-    }
-
-    async ValueTask ApplyFeedbackCorrectedAsync(AdvisorFeedbackCorrected ev, CancellationToken ct)
-    {
-        if (!ValidIdentity(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.CorrectedAt) ||
-            ev.FeedbackId == Uuid.Empty || ev.CorrectionId == Uuid.Empty ||
-            string.IsNullOrWhiteSpace(ev.CorrectedBody) || ev.CorrectedBody.Trim() != ev.CorrectedBody ||
-            string.IsNullOrWhiteSpace(ev.CorrectionReason) || ev.CorrectionReason.Trim() != ev.CorrectionReason ||
-            !ValidActor(ev.CorrectedBy))
-            throw InvalidEvent();
-        var current = await GetCurrentAsync(ev.TenantId, ev.ProgramId, ev.HandoffId, ct)
-            .ConfigureAwait(false);
-        if (IsAlreadyProjected(current, ev))
-            return;
-        if (!current.FeedbackIds.Contains(ev.FeedbackId))
-            throw InvalidEvent();
-        await TouchAsync(current, ev.CorrectedAt, ev, ct).ConfigureAwait(false);
-    }
-
-    async ValueTask ApplyFeedbackRespondedAsync(AdvisorFeedbackResponded ev, CancellationToken ct)
-    {
-        if (!ValidIdentity(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.RespondedAt) ||
-            ev.FeedbackId == Uuid.Empty || string.IsNullOrWhiteSpace(ev.Response) ||
-            ev.Response.Trim() != ev.Response || !ValidActor(ev.RespondedBy))
-            throw InvalidEvent();
-        var current = await GetCurrentAsync(ev.TenantId, ev.ProgramId, ev.HandoffId, ct)
-            .ConfigureAwait(false);
-        if (IsAlreadyProjected(current, ev))
-            return;
-        if (!current.FeedbackIds.Contains(ev.FeedbackId))
-            throw InvalidEvent();
-        await TouchAsync(current, ev.RespondedAt, ev, ct).ConfigureAwait(false);
-    }
-
-    async ValueTask ApplyFeedbackResolvedAsync(AdvisorFeedbackResolved ev, CancellationToken ct)
-    {
-        if (!ValidIdentity(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.ResolvedAt) ||
-            ev.FeedbackId == Uuid.Empty || !ValidActor(ev.ResolvedBy))
-            throw InvalidEvent();
-        var current = await GetCurrentAsync(ev.TenantId, ev.ProgramId, ev.HandoffId, ct)
-            .ConfigureAwait(false);
-        if (IsAlreadyProjected(current, ev))
-            return;
-        if (!current.FeedbackIds.Contains(ev.FeedbackId))
-            throw InvalidEvent();
-        await TouchAsync(current, ev.ResolvedAt, ev, ct).ConfigureAwait(false);
     }
 
     async ValueTask ApplyLifecycleAsync(DomainEvent domainEvent, Uuid tenantId, Uuid programId, Uuid handoffId,
@@ -245,20 +192,6 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
             UpdatedAt = occurredAt,
             Revision = revision,
             Selection = selection?.ToArray() ?? current.Selection,
-        };
-        await ReplaceAsync(current, WithEventMetadata(revised, domainEvent), ct)
-            .ConfigureAwait(false);
-    }
-
-    async ValueTask TouchAsync(AdvisorHandoffDirectoryEntry current, DateTimeOffset occurredAt,
-        DomainEvent domainEvent, CancellationToken ct)
-    {
-        if (occurredAt < current.UpdatedAt)
-            throw InvalidEvent();
-        var revised = current with
-        {
-            UpdatedAt = occurredAt,
-            Revision = current.Revision + 1,
         };
         await ReplaceAsync(current, WithEventMetadata(revised, domainEvent), ct)
             .ConfigureAwait(false);

@@ -22,6 +22,9 @@ static class AccessReviewItemFold
         foreach (var fact in item.Facts)
             switch (fact)
             {
+                case AccessDecisionsRecorded decisions when !item.IsVisible(decisions):
+                    // A provisional bulk decision is hidden until the batch's publication settles it on this item.
+                    break;
                 case AccessDecisionsRecorded decisions:
                     state.Decisions.AddRange(await AccessReviewContent.ReadAsync<IReadOnlyList<AccessDecisionView>>(
                         content, tenantId, decisions.DecisionsManifest, ct).ConfigureAwait(false));

@@ -16,7 +16,7 @@ static class RiskAcceptanceWork
         projectedKinds.Contains(Kind);
 
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader, IRiskDraftDirectoryReader directory,
+        IAggregateReader reader, RiskGovernanceReader governanceReader, IRiskDraftDirectoryReader directory,
         RiskDraftListReadConsistency? consistency, Uuid tenantId, Uuid programId,
         DateTimeOffset now, Uuid? workItemId, CancellationToken ct)
     {
@@ -32,8 +32,7 @@ static class RiskAcceptanceWork
         var candidates = new List<WorkCandidate>();
         var methods = await reader.HydrateAsync(new RiskMethod(tenantId, programId), ct)
             .ConfigureAwait(false);
-        var governance = await reader.HydrateAsync(new RiskGovernanceLedger(tenantId, programId), ct)
-            .ConfigureAwait(false);
+        var governance = await governanceReader.ReadAsync(tenantId, programId, ct).ConfigureAwait(false);
         string? cursor = null;
         do
         {
@@ -67,7 +66,7 @@ static class RiskAcceptanceWork
     }
 
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProjectedAsync(
-        IAggregateReader reader, IRiskDraftDirectoryReader drafts,
+        IAggregateReader reader, RiskGovernanceReader governanceReader, IRiskDraftDirectoryReader drafts,
         RiskDraftListReadConsistency? riskConsistency,
         IRiskEvaluationDirectoryReader evaluations, Uuid tenantId, Uuid programId,
         DateTimeOffset now, Uuid? workItemId, CancellationToken ct)
@@ -85,8 +84,7 @@ static class RiskAcceptanceWork
         var candidates = new List<WorkCandidate>();
         var methods = await reader.HydrateAsync(new RiskMethod(tenantId, programId), ct)
             .ConfigureAwait(false);
-        var governance = await reader.HydrateAsync(new RiskGovernanceLedger(tenantId, programId), ct)
-            .ConfigureAwait(false);
+        var governance = await governanceReader.ReadAsync(tenantId, programId, ct).ConfigureAwait(false);
         string? cursor = null;
         do
         {
@@ -127,7 +125,7 @@ static class RiskAcceptanceWork
 
     static async ValueTask<Result<WorkCandidate?>> CandidateAsync(IAggregateReader reader,
         RiskDraftView draft, RiskEvaluationView source, RiskMethod methods,
-        RiskGovernanceLedger governance, Uuid tenantId, Uuid programId, DateTimeOffset now,
+        RiskGovernanceSnapshot governance, Uuid tenantId, Uuid programId, DateTimeOffset now,
         Uuid? workItemId, CancellationToken ct)
     {
         source = source with

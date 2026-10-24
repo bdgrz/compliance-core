@@ -228,3 +228,13 @@ test('ShouldDiscoverRegisteredDefinitionGivenCatalogProcessNameWithoutProcessSuf
         { reactorCatalog: catalog });
     assert.equal(result.status, 0);
 });
+
+
+test('ShouldDiscoverHandlersGivenFullyQualifiedRegistrations', t => {
+    const source = shippedChildVariant
+        .replace('AddRequestHandler<BeginExampleHandler>', 'AddRequestHandler<Example.Commands.BeginExampleHandler>')
+        .replace('AddRequestHandler<FinishExampleHandler>', 'AddRequestHandler<Example.Receivers.FinishExampleHandler>');
+    const result = checkFixture(t, source, false, [], { reactorCatalog: sharedChildCatalog(false) });
+    assert.equal(result.status, 0);
+    assert.equal(result.report.scanned.registeredHandlers, 2);
+});

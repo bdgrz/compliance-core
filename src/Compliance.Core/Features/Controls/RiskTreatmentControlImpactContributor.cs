@@ -5,10 +5,10 @@ namespace Bdgrz.Compliance.Features.Controls;
 
 /// <summary>
 ///     Reports proposed and accepted risk treatment assertions that name the Control. The
-///     program's risk governance ledger is the authoritative, lag-free source. An assertion names
+///     risk governance owners are the authoritative, lag-free source. An assertion names
 ///     an exact control version, so approval never silently carries it to a successor.
 /// </summary>
-public sealed class RiskTreatmentControlImpactContributor(IAggregateReader reader)
+public sealed class RiskTreatmentControlImpactContributor(RiskGovernanceReader governance)
     : IControlImpactContributor
 {
     public string Context => "risk_treatments";
@@ -17,8 +17,7 @@ public sealed class RiskTreatmentControlImpactContributor(IAggregateReader reade
         ControlDraft subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(subject);
-        var ledger = await reader.HydrateAsync(new RiskGovernanceLedger(subject.TenantId,
-            subject.ProgramId), ct).ConfigureAwait(false);
+        var ledger = await governance.ReadAsync(subject.TenantId, subject.ProgramId, ct).ConfigureAwait(false);
         var retirement = !subject.HasOpenDraft;
         var records = ledger.TreatmentsForControl(subject.Id)
             .Select(treatment => new ControlAffectedRecord(subject.TenantId, Context,

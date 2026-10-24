@@ -1,60 +1,77 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-/// <summary>Creates one attributed draft handoff for a program's compliance lead.</summary>
-public sealed class CreateAdvisorHandoffHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IAdvisorRecordVersionResolver recordVersions, TimeProvider clock)
+/// <summary>
+///     Creates one attributed draft handoff for a program's compliance lead. The handoff identity is the logical
+///     operation, so an exact retry replays the original result even after the handoff changed, and a different
+///     creation under the same identity conflicts. The complete exact selection is verified content.
+/// </summary>
+public sealed class CreateAdvisorHandoffHandler(AdvisorUnitOperation operation, AdvisorHandoffReader handoffs,
+    IAdvisorRecordVersionResolver recordVersions, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<CreateAdvisorHandoff>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<CreateAdvisorHandoff> context,
-        CancellationToken ct)
+    const string CommandKind = "CreateAdvisorHandoff";
+
+    public async ValueTask<Result> HandleAsync(IRequestContext<CreateAdvisorHandoff> context, CancellationToken ct)
     {
         var request = context.Request;
         if (!AdvisorHandoffCommandActor.TryGet(context, request.TenantId, out var actor))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Creating an advisor handoff requires a personal HTTP actor."));
+            return AdvisorHandoffRules.Forbidden("Creating an advisor handoff requires a personal HTTP actor.");
         if (request.ProgramId == Uuid.Empty || request.HandoffId == Uuid.Empty)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "An advisor handoff requires program and handoff identities."));
+            return AdvisorHandoffRules.Invalid("An advisor handoff requires program and handoff identities.");
+        if (string.IsNullOrWhiteSpace(request.Purpose) || !AdvisorHandoffRules.ValidSelection(request.RecordVersions) ||
+            !AdvisorHandoffRules.ValidActor(actor) || request.ComparedToHandoffId is { } compareId &&
+            (compareId == Uuid.Empty || compareId == request.HandoffId))
+            return AdvisorHandoffRules.Invalid(
+                "A handoff requires purpose, exact selected versions, an actor, and a valid expiry.");
 
-        var exactSources = await recordVersions.RequireCurrentAsync(request.TenantId,
-            request.ProgramId, request.RecordVersions, ct).ConfigureAwait(false);
-        if (!exactSources.IsSuccess)
-            return exactSources;
+        var now = clock.GetUtcNow();
+        var today = DateOnly.FromDateTime(now.UtcDateTime);
+        var canonical = request with { Purpose = request.Purpose.Trim() };
+        var owner = new AdvisorHandoff(request.TenantId, request.ProgramId, request.HandoffId).Stream;
+        var provenance = AdvisorContent.Provenance(request.HandoffId, CommandKind, owner, actor, null,
+            AuthoredIntentDigest.Compute(canonical), now);
+        ImmutableContentRef? manifest = null;
 
-        if (request.ComparedToHandoffId is { } comparedToId)
-        {
-            if (comparedToId == Uuid.Empty || comparedToId == request.HandoffId)
-                return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                    "A repeated handoff requires a distinct comparison handoff."));
-            var previous = await reader.HydrateAsync(new AdvisorHandoff(request.TenantId,
-                request.ProgramId, comparedToId), ct).ConfigureAwait(false);
-            if (!previous.IsCreated || previous.ProgramId != request.ProgramId)
-                return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                    "The comparison handoff was not found in the requested program."));
-            if (!previous.WasReadyForReview || previous.Status is not ("closed" or "revoked"))
-                return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "A repeated handoff can compare only with a shared handoff that has ended."));
-            if (request.RecordVersions.Any(selected =>
-                    AdvisorHandoffSelectionComparison.Classify(selected, previous.Selection) ==
-                    AdvisorHandoffSourceChange.Unchanged))
-                return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                    "A repeated handoff may include only new or changed source versions."));
-        }
+        return await operation.ExecuteAsync<AdvisorHandoff>(context, request.TenantId, provenance,
+            () => new AdvisorHandoff(request.TenantId, request.ProgramId, request.HandoffId, request.HandoffId),
+            handoff => handoff.Acceptance,
+            async (_, token) =>
+            {
+                if (request.ExpiresOn < today)
+                    return AdvisorHandoffRules.Invalid(
+                        "A handoff requires purpose, exact selected versions, an actor, and a valid expiry.");
+                var exactSources = await recordVersions.RequireCurrentAsync(request.TenantId, request.ProgramId,
+                    request.RecordVersions, token).ConfigureAwait(false);
+                if (!exactSources.IsSuccess)
+                    return exactSources;
+                if (request.ComparedToHandoffId is { } comparedToId)
+                {
+                    var previous = await handoffs.ReadAsync(request.TenantId, request.ProgramId, comparedToId, token)
+                        .ConfigureAwait(false);
+                    if (!previous.IsCreated || previous.ProgramId != request.ProgramId)
+                        return Result.Failure(new RequestError(RequestErrorKind.NotFound,
+                            "The comparison handoff was not found in the requested program."));
+                    if (!previous.WasReadyForReview || previous.Status is not (AdvisorHandoff.Closed or AdvisorHandoff.Revoked))
+                        return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "A repeated handoff can compare only with a shared handoff that has ended."));
+                    if (request.RecordVersions.Any(selected =>
+                            AdvisorHandoffSelectionComparison.Classify(selected, previous.Selection) ==
+                            AdvisorHandoffSourceChange.Unchanged))
+                        return AdvisorHandoffRules.Invalid(
+                            "A repeated handoff may include only new or changed source versions.");
+                }
 
-        return await executor.ExecuteAsync(new AdvisorHandoff(request.TenantId, request.ProgramId,
-                request.HandoffId), handoff =>
-        {
-            if (handoff.IsCreated && handoff.ProgramId != request.ProgramId)
-                return AggregateOutcome.CommitOnSuccess(Result.Failure(new RequestError(
-                    RequestErrorKind.NotFound,
-                    "The advisor handoff was not found in the requested program.")));
-
-            var result = handoff.Create(request.Purpose, request.RecordVersions,
-                request.ExpiresOn, actor, clock.GetUtcNow(), request.ComparedToHandoffId);
-            return AggregateOutcome.CommitOnSuccess(result.IsSuccess
-                ? Result.Success : Result.Failure(result.Error));
-        }, context, ct).ConfigureAwait(false);
+                manifest = await AdvisorContent.WriteSelectionAsync(content, request.TenantId,
+                    AdvisorContent.CreatedSelectionSchema, request.RecordVersions, token).ConfigureAwait(false);
+                return Result.Success;
+            },
+            handoff => handoff.PrepareCreate(),
+            (handoff, frozen, result) => handoff.Create(provenance, manifest!, canonical.Purpose, request.ExpiresOn,
+                actor, now, request.ComparedToHandoffId, frozen, result), ct).ConfigureAwait(false);
     }
 }

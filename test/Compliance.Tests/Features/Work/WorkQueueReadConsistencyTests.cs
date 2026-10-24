@@ -118,19 +118,10 @@ public sealed class WorkQueueReadConsistencyTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var now = DateTimeOffset.UtcNow;
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.AddTreatmentAction(Uuid.CreateVersion4(), 0,
-                    Uuid.CreateVersion4(), "mitigate", "Enforce MFA", "MFA is required",
-                    "Identity provider policy export.", fixture.Today.AddDays(5),
-                    fixture.OwnerMemberId, [],
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now));
-                return Result.Success;
-            });
+        await RiskSeeds.AddActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4(), Uuid.CreateVersion4(), "Enforce MFA", "MFA is required", "Identity provider policy export.", fixture.Today.AddDays(5), fixture.OwnerMemberId, [], ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var riskWork = new ProjectedWorkItems(ProjectionCheckpoint.Start,
-            area: "risk-governance", kind: WorkSource.RiskTreatmentAction,
+            area: RiskTreatmentAction.Area, kind: WorkSource.RiskTreatmentAction,
             projectorName: "TestRiskWorkItems", kinds:
             [
                 WorkSource.RiskTreatmentAction,
@@ -287,7 +278,9 @@ public sealed class WorkQueueReadConsistencyTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -333,7 +326,9 @@ public sealed class WorkQueueReadConsistencyTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -357,16 +352,9 @@ public sealed class WorkQueueReadConsistencyTests
         var actionId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var actor = ActorReference.ForMember(fixture.LeadMemberId, "Lead");
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.AddTreatmentAction(riskId, 0, actionId, "mitigate",
-                    "Enforce MFA", "MFA is required", "Identity provider policy export.",
-                    fixture.Today.AddDays(5), fixture.OwnerMemberId, [], actor, now));
-                return Result.Success;
-            });
+        await RiskSeeds.AddActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, actionId, "Enforce MFA", "MFA is required", "Identity provider policy export.", fixture.Today.AddDays(5), fixture.OwnerMemberId, [], actor, now);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
-        var checkpoint = await ReadCheckpointAsync(events, fixture.TenantId, "risk-governance");
+        var checkpoint = await ReadCheckpointAsync(events, fixture.TenantId, RiskTreatmentAction.Area);
         var candidate = new WorkCandidate(WorkSource.RiskTreatmentWorkItemId(fixture.ProgramId,
                 riskId, actionId, WorkSource.RiskTreatmentAction), WorkSource.RiskTreatmentAction,
             actionId,
@@ -376,7 +364,7 @@ public sealed class WorkQueueReadConsistencyTests
             $"risks/{riskId}/treatment-actions/{actionId}/completions",
             new OperatingHolder(OperatingAuthority.MemberHolder, fixture.OwnerMemberId), null,
             new HashSet<Uuid>(), now);
-        var riskWork = new ProjectedWorkItems(checkpoint, [candidate], "risk-governance",
+        var riskWork = new ProjectedWorkItems(checkpoint, [candidate], RiskTreatmentAction.Area,
             WorkSource.RiskTreatmentAction, "TestRiskWorkItems",
             [WorkSource.RiskTreatmentAction, WorkSource.RiskTreatmentActionReview,
                 WorkSource.RiskControlTreatmentReview]);
@@ -389,7 +377,9 @@ public sealed class WorkQueueReadConsistencyTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actorContext = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -435,7 +425,9 @@ public sealed class WorkQueueReadConsistencyTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.LeadUserId, fixture.LeadMemberId, "Lead");
 
         // Act
@@ -482,7 +474,9 @@ public sealed class WorkQueueReadConsistencyTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.LeadUserId, fixture.LeadMemberId, "Lead");
 
         // Act
@@ -522,7 +516,9 @@ public sealed class WorkQueueReadConsistencyTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.LeadUserId, fixture.LeadMemberId, "Lead");
 
         // Act
@@ -607,7 +603,9 @@ public sealed class WorkQueueReadConsistencyTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -645,7 +643,9 @@ public sealed class WorkQueueReadConsistencyTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 
@@ -712,15 +712,7 @@ public sealed class WorkQueueReadConsistencyTests
     static async Task SeedEvidenceRequestAsync(OperationsFixture fixture)
     {
         var openedAt = DateTimeOffset.UtcNow;
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new EvidenceRequestLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.OpenRequest(Uuid.CreateVersion4(), "Access export",
-                    "Upload the approved access export.", fixture.OwnerMemberId,
-                    fixture.Today.AddDays(5), null,
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"), openedAt));
-                return Result.Success;
-            });
+        await EvidenceSeeds.OpenAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4(), "Access export", "Upload the approved access export.", fixture.OwnerMemberId, fixture.Today.AddDays(5), null, ActorReference.ForMember(fixture.LeadMemberId, "Lead"), openedAt);
     }
 
     static async Task<ProjectionCheckpoint> ReadCheckpointAsync(

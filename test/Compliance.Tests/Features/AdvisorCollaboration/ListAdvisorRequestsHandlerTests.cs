@@ -4,7 +4,6 @@ using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.AdvisorCollaboration;
 
@@ -160,44 +159,16 @@ public sealed class ListAdvisorRequestsHandlerTests
 
     sealed class Fixture : IAsyncDisposable
     {
-        readonly ServiceProvider _provider;
-        readonly AsyncServiceScope _scope;
-        readonly IAggregateWriter _writer;
-        public Uuid TenantId { get; } = Uuid.CreateVersion4();
-        public Uuid ProgramId { get; } = Uuid.CreateVersion4();
-        public IDomainEventReader Events { get; }
+        readonly AdvisorHost _host = new();
 
-        public Fixture()
-        {
-            var services = new ServiceCollection();
-            var store = new InMemoryEventStore();
-            services.AddSingleton<IEventStore>(store);
-            services.AddSingleton<IDomainEventReader>(store);
-            services.AddPortia();
-            _provider = services.BuildServiceProvider(new ServiceProviderOptions
-            {
-                ValidateScopes = true,
-            });
-            _scope = _provider.CreateAsyncScope();
-            _writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
-            Events = _scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
-        }
+        public Uuid TenantId => _host.TenantId;
+        public Uuid ProgramId => _host.ProgramId;
+        public IDomainEventReader Events => _host.Events;
 
-        public async Task SeedHandoffAsync()
-        {
-            var createdAt = Now.AddMinutes(-1);
-            var handoff = new AdvisorHandoff(TenantId, ProgramId, Uuid.CreateVersion4());
-            Assert.True(handoff.Create("Review", [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())],
-                new DateOnly(2026, 12, 31), ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"),
-                createdAt).IsSuccess);
-            await _writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
-        }
+        public async Task SeedHandoffAsync() =>
+            Assert.True((await _host.CreateAsync(Uuid.CreateVersion4(), [AdvisorHost.NewSource()], "Review")).IsSuccess);
 
-        public async ValueTask DisposeAsync()
-        {
-            await _scope.DisposeAsync();
-            await _provider.DisposeAsync();
-        }
+        public ValueTask DisposeAsync() => _host.DisposeAsync();
     }
 
     sealed class FixedDirectory(Page<AdvisorRequestSummaryView> page,

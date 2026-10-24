@@ -2,6 +2,8 @@ using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -39,7 +41,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        await fixture.SeedTypeIEntryDecisionAsync(ReadinessLedger.Defer);
+        await fixture.SeedTypeIEntryDecisionAsync(ProgramReadiness.Defer);
         var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
             fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
             null, ["security", "availability"], fixture.BoundaryId);
@@ -60,7 +62,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        await fixture.SeedTypeIEntryDecisionAsync(ReadinessLedger.Approve);
+        await fixture.SeedTypeIEntryDecisionAsync(ProgramReadiness.Approve);
         var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
             fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
             null, ["security", "availability"], fixture.BoundaryId);
@@ -85,7 +87,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        await fixture.SeedTypeIEntryDecisionAsync(ReadinessLedger.Approve);
+        await fixture.SeedTypeIEntryDecisionAsync(ProgramReadiness.Approve);
         var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
             fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
             null, ["security", "availability"], fixture.BoundaryId);
@@ -108,7 +110,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        await fixture.SeedTypeIEntryDecisionAsync(ReadinessLedger.Approve);
+        await fixture.SeedTypeIEntryDecisionAsync(ProgramReadiness.Approve);
         var contactUserId = Uuid.CreateVersion4();
         var contactMemberId = RbacIds.Member(fixture.TenantId, contactUserId);
         await fixture.SeedMemberAsync(contactUserId, "client_personnel");
@@ -133,7 +135,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        await fixture.SeedTypeIEntryDecisionAsync(ReadinessLedger.Approve);
+        await fixture.SeedTypeIEntryDecisionAsync(ProgramReadiness.Approve);
         var contactUserId = Uuid.CreateVersion4();
         var contactMemberId = RbacIds.Member(fixture.TenantId, contactUserId);
         await fixture.SeedMemberAsync(contactUserId, "firm_staff");
@@ -380,6 +382,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
         public FitzExaminationEngagementDirectory Directory { get; }
+        public IImmutableContentStore Content { get; } = new FitzKvImmutableContentStore(new InMemoryKvClient());
         public TimeProvider Clock { get; } = new FixedTimeProvider(Now);
 
         ClaimsPrincipal Actor => new(new ClaimsIdentity(
@@ -399,7 +402,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public CreateExaminationEngagementHandler CreateHandler() => new(Reader, Executor, Clock);
+        public CreateExaminationEngagementHandler CreateHandler() => new(Reader, Executor, new ReadinessReader(Reader, Content), Clock);
 
         public ReviseExaminationEngagementHandler ReviseHandler() => new(Reader, Executor, Clock);
 
@@ -432,18 +435,15 @@ public sealed class ExaminationEngagementCommandHandlerTests
             var assessmentId = Uuid.CreateVersion4();
             var runnerMemberId = RbacIds.Member(TenantId, UserId);
             var approverMemberId = RbacIds.Member(TenantId, Uuid.CreateVersion4());
-            var ledger = new ReadinessLedger(TenantId, ProgramId);
-            Assert.Null(ledger.Record(0, assessmentId, Now, null,
-                new ReadinessEvaluation([], [], [], new string('a', 64)), runnerMemberId,
-                "Readiness runner", Now));
-            if (outcome != ReadinessLedger.Defer)
-                Assert.Null(ledger.Decide(assessmentId, ledger.Revision, Uuid.CreateVersion4(),
-                    ReadinessLedger.Proceed, "Management decided to proceed", approverMemberId,
-                    "Management approver", Now));
-            Assert.Null(ledger.DecideTypeIEntry(assessmentId, ledger.Revision,
-                Uuid.CreateVersion4(), outcome, "Type I entry decision", [], approverMemberId,
-                "Management approver", Now));
-            await Writer.SaveAsync(ledger, new RequestDispatchContext(RequestActor.System));
+            await ReadinessSeed.AdoptAsync(Reader, Executor, Content, TenantId, ProgramId, assessmentId,
+                new ReadinessEvaluation([], [], [], new string('a', 64)), Now, runnerMemberId, Now);
+            if (outcome != ProgramReadiness.Defer)
+                await ReadinessSeed.DecideAsync(Reader, Executor, Content, TenantId, ProgramId, assessmentId,
+                    ReadinessDecisionKind.Readiness, ProgramReadiness.Proceed, "Management decided to proceed",
+                    approverMemberId, Now);
+            await ReadinessSeed.DecideAsync(Reader, Executor, Content, TenantId, ProgramId, assessmentId,
+                ReadinessDecisionKind.TypeIEntry, outcome, "Type I entry decision", approverMemberId, Now);
+
         }
 
         public async Task SeedBaselineAsync()

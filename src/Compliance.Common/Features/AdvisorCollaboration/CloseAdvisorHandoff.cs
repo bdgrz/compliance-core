@@ -4,6 +4,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-/// <summary>Records the close advisor handoff intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.advisor-collaboration.close-advisor-handoff", 1)]
-public sealed record CloseAdvisorHandoff(Uuid TenantId, Uuid ProgramId, Uuid HandoffId, string Rationale) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Closes an open handoff at the expected handoff revision; feedback admitted earlier is never discarded.</summary>
+[Discriminator("bdgrz.advisor-collaboration.close-advisor-handoff", 2)]
+public sealed record CloseAdvisorHandoff(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid HandoffId,
+    string Rationale, long ExpectedRevision)
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

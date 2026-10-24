@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Risks;
@@ -27,7 +32,7 @@ public sealed class RiskTypeIBaselineSourceContributorTests
     public async Task ShouldCaptureRiskAtTypeIDateGivenLaterDraftRevision()
     {
         // Arrange
-        var fixture = await Fixture();
+        await using var fixture = await Fixture();
 
         // Act
         var result = await fixture.Contributor.ReadAsync(Engagement(), CancellationToken.None);
@@ -47,7 +52,7 @@ public sealed class RiskTypeIBaselineSourceContributorTests
     public async Task ShouldCaptureAssessmentMethodAndOwnerGivenCompleteRiskAtTypeIDate()
     {
         // Arrange
-        var fixture = await Fixture(includeAssessmentAndOwner: true);
+        await using var fixture = await Fixture(includeAssessmentAndOwner: true);
 
         // Act
         var result = await fixture.Contributor.ReadAsync(Engagement(), CancellationToken.None);
@@ -63,7 +68,7 @@ public sealed class RiskTypeIBaselineSourceContributorTests
     public async Task ShouldExcludeFutureDatedAssessmentGivenItWasRecordedBeforeTypeIDate()
     {
         // Arrange
-        var fixture = await Fixture(includeAssessmentAndOwner: true,
+        await using var fixture = await Fixture(includeAssessmentAndOwner: true,
             assessmentAt: RevisedAfterTypeI, assessmentRecordedAt: CreatedAt);
 
         // Act
@@ -79,7 +84,7 @@ public sealed class RiskTypeIBaselineSourceContributorTests
     public async Task ShouldExcludeBackdatedAssessmentGivenItWasRecordedAfterTypeIDate()
     {
         // Arrange
-        var fixture = await Fixture(includeAssessmentAndOwner: true,
+        await using var fixture = await Fixture(includeAssessmentAndOwner: true,
             assessmentAt: CreatedAt, assessmentRecordedAt: RevisedAfterTypeI);
 
         // Act
@@ -95,7 +100,7 @@ public sealed class RiskTypeIBaselineSourceContributorTests
     public async Task ShouldReturnTransientConflictGivenEvaluationDirectoryBehindEvents()
     {
         // Arrange
-        var fixture = await Fixture(includeAssessmentAndOwner: true,
+        await using var fixture = await Fixture(includeAssessmentAndOwner: true,
             evaluationDirectoryCaughtUp: false);
 
         // Act
@@ -111,7 +116,7 @@ public sealed class RiskTypeIBaselineSourceContributorTests
     public async Task ShouldRequireAcceptedControlTreatmentToMatchCapturedControlVersionGivenMitigate()
     {
         // Arrange
-        var fixture = await Fixture(includeAssessmentAndOwner: true,
+        await using var fixture = await Fixture(includeAssessmentAndOwner: true,
             includeAcceptedControlTreatment: true);
         var controlVersion = new TypeIBaselineSourceReference("control_version", ControlId,
             ControlVersionId, 1, new string('a', 64));
@@ -154,7 +159,6 @@ public sealed class RiskTypeIBaselineSourceContributorTests
 
         var method = new RiskMethod(TenantId, ProgramId);
         var evaluation = new RiskEvaluation(TenantId, RiskId);
-        var governance = new RiskGovernanceLedger(TenantId, ProgramId);
         if (includeAssessmentAndOwner)
         {
             var actor = ActorReference.ForMember(ActorMemberId, "Risk owner");
@@ -169,23 +173,33 @@ public sealed class RiskTypeIBaselineSourceContributorTests
                 Assert.Null(evaluation.ChooseTreatment(ProgramId, 1, "mitigate",
                     "Limit credential exposure.", ActorMemberId, "Risk owner",
                     CreatedAt.AddHours(1)));
-            Assert.Null(governance.AssignOwner(RiskId, 0, Uuid.CreateVersion4(), ActorMemberId,
-                "Risk owner is accountable for the mitigation.", actor, CreatedAt));
-            if (includeAcceptedControlTreatment)
-            {
-                var treatmentId = Uuid.CreateVersion4();
-                Assert.Null(governance.ProposeControlTreatment(RiskId, 1, treatmentId,
-                    "mitigate", ControlId, ControlVersionId,
-                    "The approved control addresses this credential risk.", ActorMemberId,
-                    actor, CreatedAt));
-                Assert.Null(governance.ReviewControlTreatment(RiskId, treatmentId, 2,
-                    Uuid.CreateVersion4(), "accept", "The control treatment is supported.",
-                    ReviewerMemberId, ActorReference.ForMember(ReviewerMemberId, "Reviewer"),
-                    CreatedAt.AddHours(2)));
-            }
         }
 
         var store = new InMemoryEventStore();
+        var services = new ServiceCollection();
+        services.AddSingleton<IEventStore>(store);
+        services.AddSingleton<IDomainEventReader>(store);
+        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(new InMemoryKvClient()));
+        services.AddPortia();
+        var provider = services.BuildServiceProvider();
+        var reader = provider.GetRequiredService<IAggregateReader>();
+        var content = provider.GetRequiredService<IImmutableContentStore>();
+        if (includeAssessmentAndOwner)
+        {
+            var actor = ActorReference.ForMember(ActorMemberId, "Risk owner");
+            await RiskSeeds.AssignOwnerAsync(provider, TenantId, ProgramId, RiskId, Uuid.CreateVersion4(),
+                ActorMemberId, "Risk owner is accountable for the mitigation.", actor, CreatedAt);
+            if (includeAcceptedControlTreatment)
+            {
+                var treatmentId = Uuid.CreateVersion4();
+                await RiskSeeds.ProposeTreatmentAsync(provider, TenantId, ProgramId, RiskId, treatmentId,
+                    ControlId, ControlVersionId, "The approved control addresses this credential risk.",
+                    ActorMemberId, actor, CreatedAt);
+                await RiskSeeds.ReviewTreatmentAsync(provider, TenantId, ProgramId, RiskId, ControlId,
+                    treatmentId, "accept", "The control treatment is supported.",
+                    ActorReference.ForMember(ReviewerMemberId, "Reviewer"), CreatedAt.AddHours(2));
+            }
+        }
         var stream = new EventStreamAddress(TenantId.ToString(), "risks", RiskId.ToString());
         await store.AppendAsync(stream, 0, new AggregateScenario<RiskDraft>(risk).PendingEvents
             .ToArray());
@@ -212,22 +226,14 @@ public sealed class RiskTypeIBaselineSourceContributorTests
             await store.AppendAsync(new EventStreamAddress(TenantId.ToString(), "risk-evaluations",
                 RiskId.ToString()), 0, evaluationEvents);
         }
-        if (governance.RevisionOf(RiskId) > 0)
-            await store.AppendAsync(new EventStreamAddress(TenantId.ToString(), "risk-governance",
-                ProgramId.ToString()), 0,
-                new AggregateScenario<RiskGovernanceLedger>(governance).PendingEvents.ToArray());
         var evaluationCheckpoint = evaluationDirectoryCaughtUp
             ? await CheckpointAfterAsync(store, EventStreamPattern.ForPattern(TenantId.ToString(),
                 "risk-evaluations"))
             : new ProjectionCheckpoint(EventCursor.Start);
         var evaluationDirectory = new RiskEvaluationDirectory(evaluationCheckpoint,
             evaluation.Revision > 0 ? evaluation.ToView() : null);
-        var governanceDirectory = new RiskGovernanceDirectory(
-            await CheckpointAfterAsync(store, EventStreamPattern.ForPattern(TenantId.ToString(),
-                "risk-governance")));
-        var reader = new AggregateReader(risk, evaluation, method, governance);
         return new FixtureState(new RiskTypeIBaselineSourceContributor(draftDirectory,
-            evaluationDirectory, [governanceDirectory], reader, store));
+            evaluationDirectory, new RiskGovernanceReader(reader, store, content), content, reader, store), provider);
     }
 
     static RiskDraftView Summary(RiskDraft risk) => new(TenantId, ProgramId, RiskId,
@@ -245,7 +251,10 @@ public sealed class RiskTypeIBaselineSourceContributorTests
         return new ProjectionCheckpoint(cursor);
     }
 
-    sealed record FixtureState(ITypeIBaselineSourceContributor Contributor);
+    sealed record FixtureState(ITypeIBaselineSourceContributor Contributor, ServiceProvider Provider) : IAsyncDisposable
+    {
+        public ValueTask DisposeAsync() => Provider.DisposeAsync();
+    }
 
     sealed class RiskDraftDirectory(RiskDraftView summary, ProjectionCheckpoint checkpoint)
         : IRiskDraftDirectoryReader
@@ -279,27 +288,4 @@ public sealed class RiskTypeIBaselineSourceContributorTests
             ValueTask.FromResult(new Page<RiskEvaluationHistoryEntryView>([], null));
     }
 
-    sealed class RiskGovernanceDirectory(ProjectionCheckpoint checkpoint)
-        : IAccountableWorkItemDirectoryReader
-    {
-        public string ProjectorName => "AccountableWorkItemRiskGovernanceV1";
-        public IReadOnlyCollection<string> ProjectedKinds => [];
-        public EventStreamPattern SourcePattern(Uuid tenantId) =>
-            EventStreamPattern.ForPattern(tenantId.ToString(), "risk-governance");
-
-        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-            CancellationToken ct = default) => ValueTask.FromResult(checkpoint);
-
-        public ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
-            Uuid programId, CancellationToken ct = default) =>
-            ValueTask.FromResult(Result<IReadOnlyList<WorkCandidate>>.Success([]));
-    }
-
-    sealed class AggregateReader(params Aggregate[] aggregates) : IAggregateReader
-    {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(aggregates.FirstOrDefault(item => item.Id == aggregate.Id &&
-                item.GetType() == typeof(TAggregate)) is TAggregate found ? found : aggregate);
-    }
 }

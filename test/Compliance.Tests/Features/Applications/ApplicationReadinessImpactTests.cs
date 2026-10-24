@@ -4,6 +4,8 @@ using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.Content;
+using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -46,9 +48,10 @@ public sealed class ApplicationReadinessImpactTests
                 "unresolved", false, null)],
         };
         var programs = new StubProgramDirectory([program]);
-        var readiness = new StubReadinessDirectory(programId, assessment);
+        var readiness = new SeededAssessment(programId, assessment);
         var events = new InMemoryEventStore();
-        var reader = Reader(programs, readiness, events);
+        await using var readinessHost = await CreateReaderAsync(programs, readiness, events);
+        var reader = readinessHost.Reader;
 
         // Act
         var result = await reader.ReadAsync(tenantId, applicationId, [systemInstanceId],
@@ -92,8 +95,9 @@ public sealed class ApplicationReadinessImpactTests
             [new ReadinessFindingView("CC1.1", "security", "Description", "mapping",
                 "rule_met", "Mapping was in force.", sources, null)], [], 1, 0, actor, now,
             null);
-        var reader = Reader(new StubProgramDirectory([program]),
-            new StubReadinessDirectory(programId, assessment), new InMemoryEventStore());
+        await using var readinessHost = await CreateReaderAsync(new StubProgramDirectory([program]),
+            new SeededAssessment(programId, assessment), new InMemoryEventStore());
+        var reader = readinessHost.Reader;
 
         // Act
         var result = await reader.ReadAsync(tenantId, applicationId, [],
@@ -114,8 +118,9 @@ public sealed class ApplicationReadinessImpactTests
         var programId = Uuid.CreateVersion4();
         var assessment = Assessment(tenantId, programId);
         var program = Program(tenantId, programId);
-        var reader = Reader(new StubProgramDirectory([program], "next"),
-            new StubReadinessDirectory(programId, assessment), new InMemoryEventStore());
+        await using var readinessHost = await CreateReaderAsync(new StubProgramDirectory([program], "next"),
+            new SeededAssessment(programId, assessment), new InMemoryEventStore());
+        var reader = readinessHost.Reader;
 
         // Act
         var result = await reader.ReadAsync(tenantId, Uuid.CreateVersion4(), [], true,
@@ -134,9 +139,10 @@ public sealed class ApplicationReadinessImpactTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var reader = Reader(new StubProgramDirectory([Program(tenantId, programId)]),
-            new StubReadinessDirectory(programId, Assessment(tenantId, programId)),
+        await using var readinessHost = await CreateReaderAsync(new StubProgramDirectory([Program(tenantId, programId)]),
+            new SeededAssessment(programId, Assessment(tenantId, programId)),
             new InMemoryEventStore());
+        var reader = readinessHost.Reader;
 
         // Act
         var result = await reader.ReadAsync(tenantId, Uuid.CreateVersion4(), [], true,
@@ -149,27 +155,17 @@ public sealed class ApplicationReadinessImpactTests
     }
 
     [Fact]
-    public async Task ShouldReturnTransientConflictGivenReadinessProjectionBehindSource()
+    public async Task ShouldReturnTransientConflictGivenReadinessContentUnavailable()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var events = new InMemoryEventStore();
-        var now = DateTimeOffset.UtcNow;
-        var actorId = Uuid.CreateVersion4();
-        var actor = ActorReference.ForMember(actorId, "Compliance Lead");
-        var sourceEvent = new ReadinessAssessmentRecorded(tenantId, programId, 1,
-            Uuid.CreateVersion4(), "readiness-rules/12", now, null, "fingerprint", [], [], [],
-            actorId, actor, now);
-        sourceEvent.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), tenantId, 1,
-            now));
-        await events.AppendAsync(new EventStreamAddress(tenantId.ToString(),
-            ReadinessLedger.Area, programId.ToString()), 0, [sourceEvent]);
-        var reader = Reader(new StubProgramDirectory([Program(tenantId, programId)]),
-            new StubReadinessDirectory(programId, Assessment(tenantId, programId)), events);
+        await using var readinessHost = await CreateReaderAsync(new StubProgramDirectory([Program(tenantId, programId)]),
+            new SeededAssessment(programId, Assessment(tenantId, programId), MissingContent: true),
+            new InMemoryEventStore());
 
         // Act
-        var result = await reader.ReadAsync(tenantId, Uuid.CreateVersion4(), [], true,
+        var result = await readinessHost.Reader.ReadAsync(tenantId, Uuid.CreateVersion4(), [], true,
             CancellationToken.None);
 
         // Assert
@@ -194,8 +190,9 @@ public sealed class ApplicationReadinessImpactTests
             now));
         await events.AppendAsync(new EventStreamAddress(tenantId.ToString(), "programs",
             programId.ToString()), 0, [sourceEvent]);
-        var reader = Reader(new StubProgramDirectory([Program(tenantId, programId)]),
-            new StubReadinessDirectory(programId, Assessment(tenantId, programId)), events);
+        await using var readinessHost = await CreateReaderAsync(new StubProgramDirectory([Program(tenantId, programId)]),
+            new SeededAssessment(programId, Assessment(tenantId, programId)), events);
+        var reader = readinessHost.Reader;
 
         // Act
         var result = await reader.ReadAsync(tenantId, Uuid.CreateVersion4(), [], true,
@@ -278,9 +275,10 @@ public sealed class ApplicationReadinessImpactTests
                 [new ReadinessSourceReference("application", applicationId, "1"),
                  new ReadinessSourceReference("system_instance", systemInstanceId, null)],
                 Uuid.CreateVersion4())], [], 0, 1, actor, now, null);
-        var readinessDirectory = new StubReadinessDirectory(programId, assessment);
-        var readinessImpactReader = Reader(new StubProgramDirectory([program]),
+        var readinessDirectory = new SeededAssessment(programId, assessment);
+        await using var readinessHost = await CreateReaderAsync(new StubProgramDirectory([program]),
             readinessDirectory, events);
+        var readinessImpactReader = readinessHost.Reader;
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var handler = new PreviewApplicationChangeHandler(sourceReader, applications,
@@ -302,13 +300,40 @@ public sealed class ApplicationReadinessImpactTests
         Assert.False(result.Value.Complete);
     }
 
-    static ApplicationReadinessImpactReader Reader(StubProgramDirectory programs,
-        StubReadinessDirectory readiness, InMemoryEventStore events)
+    static async Task<ReadinessHarness> CreateReaderAsync(StubProgramDirectory programs,
+        SeededAssessment readiness, InMemoryEventStore events)
     {
-        var readinessConsistency = new ReadinessProjectionReadConsistency(null!, null!, null!,
-            null!, null!, readiness, events);
-        return new ApplicationReadinessImpactReader(programs, readiness,
-            new ProgramDirectoryReadConsistency(programs, events), readinessConsistency);
+        var provider = ReadinessTestServices.Build();
+        var scope = provider.CreateAsyncScope();
+        var aggregateReader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+        var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var assessment = readiness.Assessment;
+        var runner = Uuid.Parse(assessment.RunBy.Id, System.Globalization.CultureInfo.InvariantCulture);
+        var evaluation = new ReadinessEvaluation(assessment.Inputs, assessment.Findings, assessment.Gaps,
+            assessment.InputFingerprint)
+        {
+            AccessReviewScopes = assessment.AccessReviewScopes,
+        };
+        await ReadinessSeed.AdoptAsync(aggregateReader, executor, content, assessment.TenantId, readiness.ProgramId,
+            assessment.AssessmentId, evaluation, assessment.AsOf, runner, assessment.RunAt, assessment.RuleVersion);
+        var retainedContent = readiness.MissingContent
+            ? new FitzKvImmutableContentStore(new InMemoryKvClient()) : content;
+        var reader = new ApplicationReadinessImpactReader(programs,
+            new ReadinessReader(aggregateReader, retainedContent), new ProgramDirectoryReadConsistency(programs, events));
+        return new ReadinessHarness(provider, scope, reader);
+    }
+
+    sealed class ReadinessHarness(ServiceProvider provider, AsyncServiceScope scope,
+        ApplicationReadinessImpactReader reader) : IAsyncDisposable
+    {
+        public ApplicationReadinessImpactReader Reader { get; } = reader;
+
+        public async ValueTask DisposeAsync()
+        {
+            await scope.DisposeAsync();
+            await provider.DisposeAsync();
+        }
     }
 
     static ProgramView Program(Uuid tenantId, Uuid programId)
@@ -363,45 +388,5 @@ public sealed class ApplicationReadinessImpactTests
             CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
     }
 
-    sealed class StubReadinessDirectory(Uuid programId, ReadinessAssessmentView assessment)
-        : IReadinessDirectoryReader
-    {
-        public ValueTask<Result<Uuid?>> GetLatestAssessmentIdAsync(Uuid tenantId,
-            Uuid requestedProgramId, CancellationToken ct = default) =>
-            ValueTask.FromResult(Result<Uuid?>.Success(requestedProgramId == programId &&
-                assessment.TenantId == tenantId ? assessment.AssessmentId : null));
-
-        public ValueTask<ReadinessAssessmentView?> GetAssessmentAsync(Uuid tenantId,
-            Uuid requestedProgramId, Uuid assessmentId, CancellationToken ct = default) =>
-            ValueTask.FromResult<ReadinessAssessmentView?>(requestedProgramId == programId &&
-                assessment.TenantId == tenantId && assessment.AssessmentId == assessmentId
-                    ? assessment : null);
-
-        public ValueTask<Result<Page<ReadinessAssessmentSummaryView>>> ListAssessmentsAsync(
-            Uuid tenantId, Uuid requestedProgramId, int? limit, string? cursor,
-            CancellationToken ct = default) => ValueTask.FromResult(
-            Result<Page<ReadinessAssessmentSummaryView>>.Success(new Page<ReadinessAssessmentSummaryView>(
-                requestedProgramId == programId && assessment.TenantId == tenantId
-                    ? [new ReadinessAssessmentSummaryView(assessment.AssessmentId,
-                        assessment.RuleVersion, assessment.AsOf, assessment.RuleMetCount,
-                        assessment.GapCount, assessment.RunBy, assessment.RunAt, null)]
-                    : [], null)));
-
-        public ValueTask<Result<Page<ReadinessGapView>>> ListGapsAsync(Uuid tenantId,
-            Uuid requestedProgramId, Uuid assessmentId, string? planState, int? limit,
-            string? cursor, Uuid? ownerMemberId, string? kind, string? ruleId,
-            string? subject, CancellationToken ct = default) => throw new NotSupportedException();
-
-        public ValueTask<Result<Page<ReadinessAnnotationView>>> ListAnnotationsAsync(
-            Uuid tenantId, Uuid requestedProgramId, Uuid assessmentId, int? limit,
-            string? cursor, CancellationToken ct = default) => throw new NotSupportedException();
-
-        public ValueTask<Result<Page<TypeIEntryDecisionView>>> ListTypeIEntryDecisionsAsync(
-            Uuid tenantId, Uuid requestedProgramId, int? limit, string? cursor,
-            CancellationToken ct = default) => throw new NotSupportedException();
-
-        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
-    }
-
+    sealed record SeededAssessment(Uuid ProgramId, ReadinessAssessmentView Assessment, bool MissingContent = false);
 }

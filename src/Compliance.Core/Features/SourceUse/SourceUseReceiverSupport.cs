@@ -18,7 +18,7 @@ public static class SourceUseReceiverSupport
         ArgumentNullException.ThrowIfNull(owner);
         return new OperationProvenance(commandId, header.RootOperationId, causationEventId, commandKind,
             header.OriginalActor, owner, header.Episode, header.OriginalExpectedRevision, header.AuthoredIntentSha256,
-            acceptedAt, owner, owner);
+            acceptedAt, owner, owner, header.FirstOwner);
     }
 
     /// <summary>The closed result of a receiver that proved its operation is a terminal no-op.</summary>

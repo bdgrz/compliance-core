@@ -1,9 +1,11 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Tests.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -55,38 +57,44 @@ public sealed class ReadinessAssessmentContractTests
     }
 
     [Fact]
-    public void ShouldReplayHistoricAssessmentWithoutAccessReviewScopesGivenV1EventPayload()
+    public async Task ShouldRetainCompleteScopeManifestGivenNativeFactRoundTripAndReplay()
     {
         // Arrange
+        await using var provider = ReadinessTestServices.Build();
+        await using var scope = provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+        var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var assessmentId = Uuid.CreateVersion4();
         var runnerId = Uuid.CreateVersion4();
-        var recorded = new ReadinessAssessmentRecorded(tenantId, programId, 1, assessmentId,
-            ReadinessRules.Version, AsOf, null, "fingerprint", [], [], [], runnerId,
-            ActorReference.ForMember(runnerId, "Avery Runner"), AsOf)
+        var snapshot = new ReadinessAccessReviewScopeView(Uuid.CreateVersion4(), "excluded", false, null);
+        var evaluation = new ReadinessEvaluation([], [], [], new string('a', 64))
         {
-            AccessReviewScopes =
-            [
-                new ReadinessAccessReviewScopeView(Uuid.CreateVersion4(), "excluded", false,
-                    null),
-            ],
+            AccessReviewScopes = [snapshot],
         };
-        var oldPayload = JsonSerializer.SerializeToNode(recorded,
-            ComplianceCoreJsonContext.Default.ReadinessAssessmentRecorded)!.AsObject();
-        oldPayload.Remove("access_review_scopes");
+        await ReadinessSeed.AdoptAsync(reader, executor, content, tenantId, programId, assessmentId, evaluation,
+            AsOf, runnerId, AsOf);
+        var owner = await reader.HydrateAsync(new ReadinessAssessment(tenantId, programId, assessmentId));
+        var recorded = Assert.IsType<ReadinessAssessmentRecorded>(owner.Recorded);
 
         // Act
-        var replayedEvent = oldPayload.Deserialize(
-            ComplianceCoreJsonContext.Default.ReadinessAssessmentRecorded)!;
-        var ledger = new ReadinessLedger(tenantId, programId);
-        new AggregateScenario<ReadinessLedger>(ledger).Given(
-            DomainEventSeed.Attach(replayedEvent, programId, 1));
-        var assessment = ledger.Read(assessmentId);
+        var json = JsonSerializer.Serialize(recorded, ComplianceCoreJsonContext.Default.ReadinessAssessmentRecorded);
+        var restored = JsonSerializer.Deserialize(json, ComplianceCoreJsonContext.Default.ReadinessAssessmentRecorded)!;
+        var replayed = new ReadinessAssessment(tenantId, programId, assessmentId);
+        new AggregateScenario<ReadinessAssessment>(replayed).Given(DomainEventSeed.Attach(restored,
+            ReadinessAssessment.IdentityOf(tenantId, programId, assessmentId), 1));
+        var scopes = await content.ReadJsonAsync<IReadOnlyList<ReadinessAccessReviewScopeView>>(tenantId.ToString(),
+            restored.AccessReviewScopesManifest);
 
         // Assert
-        Assert.NotNull(assessment);
-        Assert.Empty(assessment.AccessReviewScopes);
+        Assert.True(replayed.IsRecorded);
+        Assert.Equal(recorded.Operation, replayed.Recorded!.Operation);
+        Assert.Equal(recorded.Intent, restored.Intent);
+        Assert.Equal(recorded.InputFingerprint, restored.InputFingerprint);
+        Assert.Equal(snapshot, Assert.Single(scopes));
+        Assert.Equal(owner.Stream, restored.Operation.Owner);
     }
 
     static AccessReviewScopeDecisionView ScopeDecision(Uuid tenantId, Uuid applicationId,

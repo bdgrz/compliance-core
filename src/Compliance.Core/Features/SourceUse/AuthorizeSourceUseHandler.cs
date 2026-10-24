@@ -61,6 +61,8 @@ public abstract class AuthorizeSourceUseHandler<TOwner, TRequest>(IAggregateRead
                 var owner = await reader.HydrateAsync(Open(request, request.CommandId), ct).ConfigureAwait(false);
                 if (Decide(owner, binding, source.Key) is { } early)
                     return early;
+                if (FencedReason(owner, source.Key) is { } fenced)
+                    return SourceUseReceiverSupport.Superseded(fenced, null);
                 var pinned = await VerifyPinnedAsync(owner, source.Requirement, ct).ConfigureAwait(false);
                 if (!pinned.IsSuccess)
                     return pinned.Error!.IsTransient
@@ -71,6 +73,9 @@ public abstract class AuthorizeSourceUseHandler<TOwner, TRequest>(IAggregateRead
                 {
                     if (Decide(fresh, binding, source.Key) is { } decided)
                         return AggregateOutcome.Discard(Result<Step>.Success(new Decided(decided)));
+                    if (FencedReason(fresh, source.Key) is { } freshFenced)
+                        return AggregateOutcome.Discard(Result<Step>.Success(new Decided(
+                            SourceUseReceiverSupport.Superseded(freshFenced, null))));
                     if (!IsPinned(fresh, source.Requirement))
                         return AggregateOutcome.Discard(Result<Step>.Success(new Stale()));
                     var raised = grant(fresh, provenance, intent, request.Generation);
@@ -108,6 +113,12 @@ public abstract class AuthorizeSourceUseHandler<TOwner, TRequest>(IAggregateRead
     /// </summary>
     protected abstract ValueTask<Result> VerifyPinnedAsync(TOwner owner, SourceUseRequirement requirement,
         CancellationToken ct);
+
+    /// <summary>
+    ///     A reason when the owner itself already refuses this key before any grant (a cancellation fence the owner
+    ///     installed against the source operation), which ends the receiver as a terminal no-op. The default has none.
+    /// </summary>
+    protected virtual string? FencedReason(TOwner owner, ReservationKey key) => null;
 
     /// <summary>True when the owner's current state is still exactly the pinned content (revision and event).</summary>
     protected abstract bool IsPinned(TOwner owner, SourceUseRequirement requirement);

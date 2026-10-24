@@ -1,8 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.Risks;
-using Bdgrz.Compliance.Features.Work;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
@@ -11,17 +13,12 @@ namespace Bdgrz.Compliance.Features.Examinations;
 /// <summary>Captures program risk and governance history at the Type I cutoff.</summary>
 public sealed class RiskTypeIBaselineSourceContributor(
     IRiskDraftDirectoryReader drafts, IRiskEvaluationDirectoryReader evaluations,
-    IEnumerable<IAccountableWorkItemDirectoryReader> workItemDirectories,
+    RiskGovernanceReader governanceReader, IImmutableContentStore content,
     IAggregateReader reader, IDomainEventReader events) : ITypeIBaselineSourceContributor
 {
     const int PageSize = 200;
     const int MaximumEventsPerStream = 100_000;
-    const string GovernanceProjector = "AccountableWorkItemRiskGovernanceV1";
     const string DigestDomain = "bdgrz.snapshot.source.risk.v1\0";
-
-    readonly IAccountableWorkItemDirectoryReader? _governanceDirectory =
-        workItemDirectories.SingleOrDefault(static directory =>
-            directory.ProjectorName == GovernanceProjector);
 
     public string Family => "risks";
 
@@ -38,10 +35,6 @@ public sealed class RiskTypeIBaselineSourceContributor(
             engagement.PeriodStart == default)
             return Failure(RequestErrorKind.Validation,
                 "A risk baseline read requires its engagement and source context.");
-        if (_governanceDirectory is null)
-            return Failure(RequestErrorKind.Conflict,
-                "The risk governance projection is not registered.");
-
         var capturedControlVersions = new HashSet<(Uuid ControlId, Uuid VersionId)>();
         var capturedControlIds = new HashSet<Uuid>();
         foreach (var source in context.PreviouslyCapturedSources.Where(static source =>
@@ -56,15 +49,11 @@ public sealed class RiskTypeIBaselineSourceContributor(
             .ConfigureAwait(false);
         var evaluationFence = await evaluations.LoadCheckpointAsync(engagement.TenantId, ct)
             .ConfigureAwait(false);
-        var governanceFence = await _governanceDirectory.LoadCheckpointAsync(engagement.TenantId,
-            ct).ConfigureAwait(false);
         var draftPattern = EventStreamPattern.ForPattern(engagement.TenantId.ToString(), "risks");
         var evaluationPattern = EventStreamPattern.ForPattern(engagement.TenantId.ToString(),
             "risk-evaluations");
-        var governancePattern = _governanceDirectory.SourcePattern(engagement.TenantId);
         if (await HasPendingSourceAsync(draftPattern, draftFence, ct).ConfigureAwait(false) ||
-            await HasPendingSourceAsync(evaluationPattern, evaluationFence, ct).ConfigureAwait(false) ||
-            await HasPendingSourceAsync(governancePattern, governanceFence, ct).ConfigureAwait(false))
+            await HasPendingSourceAsync(evaluationPattern, evaluationFence, ct).ConfigureAwait(false))
             return BehindSource();
 
         var listed = await ListRisksAsync(engagement, ct).ConfigureAwait(false);
@@ -81,7 +70,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
         if (!methodHistory.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(methodHistory.Error);
         var governance = await ReadGovernanceHistoryAsync(engagement.TenantId,
-            engagement.ProgramId, through, knownRiskIds, seenEventIds, ct).ConfigureAwait(false);
+            engagement.ProgramId, through, knownRiskIds, ct).ConfigureAwait(false);
         if (!governance.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(governance.Error);
 
@@ -145,9 +134,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
         if (!await ConfirmFenceAsync(engagement.TenantId, draftPattern, draftFence,
                 drafts.LoadCheckpointAsync, ct).ConfigureAwait(false) ||
             !await ConfirmFenceAsync(engagement.TenantId, evaluationPattern, evaluationFence,
-                evaluations.LoadCheckpointAsync, ct).ConfigureAwait(false) ||
-            !await ConfirmFenceAsync(engagement.TenantId, governancePattern, governanceFence,
-                _governanceDirectory.LoadCheckpointAsync, ct).ConfigureAwait(false))
+                evaluations.LoadCheckpointAsync, ct).ConfigureAwait(false))
             return BehindSource();
 
         return Result<TypeIBaselineSourceContribution>.Success(
@@ -389,62 +376,50 @@ public sealed class RiskTypeIBaselineSourceContributor(
             asOfEvents.AsReadOnly()));
     }
 
-    async ValueTask<Result<GovernanceHistory>> ReadGovernanceHistoryAsync(Uuid tenantId,
-        Uuid programId, DateTimeOffset through, HashSet<Uuid> knownRiskIds,
-        HashSet<Uuid> seenEventIds, CancellationToken ct)
+    async ValueTask<Result<GovernanceHistory>> ReadGovernanceHistoryAsync(Uuid tenantId, Uuid programId,
+        DateTimeOffset through, HashSet<Uuid> knownRiskIds, CancellationToken ct)
     {
-        var stream = new EventStreamAddress(tenantId.ToString(), "risk-governance",
-            programId.ToString());
+        var discovered = await governanceReader.DiscoverAsync(tenantId, programId, null, ct).ConfigureAwait(false);
         var histories = new Dictionary<Uuid, GovernanceRiskHistory>();
-        var riskRevisions = new Dictionary<Uuid, long>();
-        var excludedRisks = new HashSet<Uuid>();
-        var expectedVersion = 1UL;
-        DateTimeOffset? priorRecordedAt = null;
-        var count = 0;
-        await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
+        try
         {
-            if (++count > MaximumEventsPerStream || record.Stream != stream ||
-                record.Event?.Metadata is not { } metadata ||
-                !ValidMetadata(metadata, programId, expectedVersion, seenEventIds) ||
-                priorRecordedAt is { } prior && metadata.OccurredOn < prior ||
-                !TryGovernanceEvent(record.Event, tenantId, programId, out var riskId,
-                    out var revision, out var occurredAt))
+            var owned = discovered.Governed.Concat(discovered.Lines.Select(static line => line.Risk))
+                .Concat(discovered.Actions.Select(static action => action.Risk)).Distinct();
+            if (owned.Any(riskId => !knownRiskIds.Contains(riskId)))
                 return InvalidHistory<GovernanceHistory>();
-            if (!knownRiskIds.Contains(riskId))
-                return InvalidHistory<GovernanceHistory>();
-            var expectedRiskRevision = riskRevisions.GetValueOrDefault(riskId) + 1;
-            if (revision != expectedRiskRevision)
-                return InvalidHistory<GovernanceHistory>();
-            riskRevisions[riskId] = revision;
-            if (!histories.TryGetValue(riskId, out var history))
+            foreach (var riskId in owned)
             {
-                history = new GovernanceRiskHistory();
+                var history = new GovernanceRiskHistory();
                 histories.Add(riskId, history);
-            }
-            var isAsOf = occurredAt <= through && metadata.OccurredOn <= through;
-            if (isAsOf && excludedRisks.Contains(riskId))
-                return InvalidHistory<GovernanceHistory>();
-            if (isAsOf)
-            {
-                var sourceEvent = SerializeEvent(record.Event!, "risk-governance", programId,
-                    metadata);
-                history.AsOfEvents.Add(sourceEvent);
-                if (!history.Apply(record.Event!))
+                var governance = await reader.HydrateAsync(new RiskGovernance(tenantId, programId, riskId), ct)
+                    .ConfigureAwait(false);
+                if (!await history.CaptureAsync(governance.Stream, governance.Facts, tenantId, content, through, ct)
+                        .ConfigureAwait(false))
                     return InvalidHistory<GovernanceHistory>();
+                foreach (var (_, controlId) in discovered.Lines.Where(line => line.Risk == riskId))
+                {
+                    var line = await reader.HydrateAsync(new RiskTreatmentAssertion(tenantId, programId, riskId,
+                        controlId), ct).ConfigureAwait(false);
+                    if (!await history.CaptureAsync(line.Stream, line.Facts, tenantId, content, through, ct)
+                            .ConfigureAwait(false))
+                        return InvalidHistory<GovernanceHistory>();
+                }
+
+                foreach (var (_, actionId) in discovered.Actions.Where(action => action.Risk == riskId))
+                {
+                    var action = await reader.HydrateAsync(new RiskTreatmentAction(tenantId, programId, riskId,
+                        actionId), ct).ConfigureAwait(false);
+                    if (!await history.CaptureAsync(action.Stream, action.Facts, tenantId, content, through, ct)
+                            .ConfigureAwait(false))
+                        return InvalidHistory<GovernanceHistory>();
+                }
             }
-            else
-            {
-                excludedRisks.Add(riskId);
-            }
-            priorRecordedAt = metadata.OccurredOn;
-            expectedVersion++;
+        }
+        catch (ImmutableContentIntegrityException)
+        {
+            return InvalidHistory<GovernanceHistory>();
         }
 
-        var source = await reader.HydrateAsync(new RiskGovernanceLedger(tenantId, programId), ct)
-            .ConfigureAwait(false);
-        foreach (var riskId in knownRiskIds)
-            if (source.RevisionOf(riskId) != riskRevisions.GetValueOrDefault(riskId))
-                return InvalidHistory<GovernanceHistory>();
         return Result<GovernanceHistory>.Success(new GovernanceHistory(histories));
     }
 
@@ -488,105 +463,6 @@ public sealed class RiskTypeIBaselineSourceContributor(
                     acceptance.ExpiresAt <= occurredAt.AddMonths(12) && occurredAt != default;
             default:
                 occurredAt = default;
-                return false;
-        }
-    }
-
-    static bool TryGovernanceEvent(DomainEvent domainEvent, Uuid tenantId, Uuid programId,
-        out Uuid riskId, out long revision, out DateTimeOffset occurredAt)
-    {
-        switch (domainEvent)
-        {
-            case RiskOwnerAssigned { Owner: { } owner } assigned:
-                (riskId, revision, occurredAt) = (assigned.RiskId, assigned.Revision,
-                    owner.AssignedAt);
-                return assigned.TenantId == tenantId && assigned.ProgramId == programId &&
-                    riskId != Uuid.Empty && revision > 0 && owner.PersonId != Uuid.Empty &&
-                    owner.CorrelatedMemberId != Uuid.Empty && ValidText(owner.Rationale, 4000) &&
-                    ValidMemberActor(owner.AssignedBy) && occurredAt != default;
-            case RiskControlTreatmentProposed { Treatment: { } treatment } proposed:
-                (riskId, revision, occurredAt) = (proposed.RiskId, proposed.Revision,
-                    treatment.ProposedAt);
-                return proposed.TenantId == tenantId && proposed.ProgramId == programId &&
-                    riskId != Uuid.Empty && revision > 0 && treatment.TreatmentId != Uuid.Empty &&
-                    treatment.RiskId == riskId && treatment.ControlId != Uuid.Empty &&
-                    treatment.ControlVersionId != Uuid.Empty && treatment.Status == "proposed" &&
-                    ValidText(treatment.Rationale, 4000) && ValidMemberActor(treatment.ProposedBy) &&
-                    proposed.ProposerMemberId != Uuid.Empty && occurredAt != default;
-            case RiskControlTreatmentReviewed reviewed:
-                (riskId, revision, occurredAt) = (reviewed.RiskId, reviewed.Revision,
-                    reviewed.ReviewedAt);
-                return reviewed.TenantId == tenantId && reviewed.ProgramId == programId &&
-                    riskId != Uuid.Empty && revision > 0 && reviewed.TreatmentId != Uuid.Empty &&
-                    reviewed.DecisionId != Uuid.Empty && reviewed.Outcome is "accept" or "reject" &&
-                    ValidText(reviewed.Rationale, 4000) && ValidMemberActor(reviewed.Reviewer) &&
-                    occurredAt != default;
-            case RiskControlTreatmentRetired retired:
-                (riskId, revision, occurredAt) = (retired.RiskId, retired.Revision,
-                    retired.RetiredAt);
-                return retired.TenantId == tenantId && retired.ProgramId == programId &&
-                    riskId != Uuid.Empty && revision > 0 && retired.TreatmentId != Uuid.Empty &&
-                    ValidText(retired.Rationale, 4000) && ValidMemberActor(retired.RetiredBy) &&
-                    occurredAt != default;
-            case RiskReassessmentTriggered { Trigger: { } trigger } triggered:
-                (riskId, revision, occurredAt) = (triggered.RiskId, triggered.Revision,
-                    trigger.RaisedAt);
-                return triggered.TenantId == tenantId && triggered.ProgramId == programId &&
-                    riskId != Uuid.Empty && revision > 0 && trigger.TriggerId != Uuid.Empty &&
-                    trigger.RiskId == riskId && trigger.TriggerKind is "method_changed" or
-                        "boundary_changed" &&
-                    !string.IsNullOrWhiteSpace(trigger.SourceReference) &&
-                    trigger.TriggerId == RiskGovernanceLedger.TriggerIdFor(programId,
-                        riskId, trigger.TriggerKind, trigger.SourceReference) &&
-                    occurredAt != default;
-            case RiskTreatmentActionAdded { Action: { } action } added:
-                (riskId, revision, occurredAt) = (added.RiskId, added.Revision, action.CreatedAt);
-                return added.TenantId == tenantId && added.ProgramId == programId &&
-                    riskId != Uuid.Empty && revision > 0 && action.ActionId != Uuid.Empty &&
-                    action.RiskId == riskId && ValidText(action.Title, 200) &&
-                    ValidText(action.TargetState, 4000) &&
-                    ValidText(action.ExpectedEvidence, 4000) && action.DueOn != default &&
-                    action.AccountableMemberId != Uuid.Empty && action.EvidenceRequestIds is not null &&
-                    action.Status == RiskGovernanceLedger.ActionOpen &&
-                    ValidMemberActor(action.CreatedBy) && occurredAt != default;
-            case RiskTreatmentActionCancelled cancelled:
-                (riskId, revision, occurredAt) = (cancelled.RiskId, cancelled.Revision,
-                    cancelled.CancelledAt);
-                return cancelled.TenantId == tenantId && cancelled.ProgramId == programId &&
-                    riskId != Uuid.Empty && revision > 0 && cancelled.ActionId != Uuid.Empty &&
-                    cancelled.CancellationId != Uuid.Empty && ValidText(cancelled.Rationale, 4000) &&
-                    ValidMemberActor(cancelled.CancelledBy) && occurredAt != default;
-            case RiskTreatmentActionRevised revised:
-                (riskId, revision, occurredAt) = (revised.RiskId, revised.Revision,
-                    revised.RevisedAt);
-                return revised.TenantId == tenantId && revised.ProgramId == programId &&
-                    riskId != Uuid.Empty && revision > 0 && revised.ActionId != Uuid.Empty &&
-                    revised.RequestId != Uuid.Empty && revised.ExpectedRevision > 0 &&
-                    ValidText(revised.Title, 200) && ValidText(revised.TargetState, 4000) &&
-                    ValidText(revised.ExpectedEvidence, 4000) && revised.DueOn != default &&
-                    revised.AccountableMemberId != Uuid.Empty &&
-                    revised.EvidenceRequestIds is not null &&
-                    ValidMemberActor(revised.RevisedBy) && occurredAt != default;
-            case RiskTreatmentActionCompletionSubmitted submitted:
-                (riskId, revision, occurredAt) = (submitted.RiskId, submitted.Revision,
-                    submitted.SubmittedAt);
-                return submitted.TenantId == tenantId && submitted.ProgramId == programId &&
-                    riskId != Uuid.Empty && revision > 0 && submitted.ActionId != Uuid.Empty &&
-                    submitted.SubmissionId != Uuid.Empty && ValidText(submitted.Summary, 4000) &&
-                    submitted.EvidenceRequestIds is { Count: > 0 } &&
-                    submitted.EvidenceRequestIds.All(static id => id != Uuid.Empty) &&
-                    submitted.SubmitterMemberId != Uuid.Empty &&
-                    ValidMemberActor(submitted.SubmittedBy) && occurredAt != default;
-            case RiskTreatmentActionCompletionReviewed reviewed:
-                (riskId, revision, occurredAt) = (reviewed.RiskId, reviewed.Revision,
-                    reviewed.ReviewedAt);
-                return reviewed.TenantId == tenantId && reviewed.ProgramId == programId &&
-                    riskId != Uuid.Empty && revision > 0 && reviewed.ActionId != Uuid.Empty &&
-                    reviewed.DecisionId != Uuid.Empty && reviewed.Outcome is "accept" or "reject" &&
-                    ValidText(reviewed.Rationale, 4000) && ValidMemberActor(reviewed.Reviewer) &&
-                    occurredAt != default;
-            default:
-                (riskId, revision, occurredAt) = (Uuid.Empty, 0, default);
                 return false;
         }
     }
@@ -746,6 +622,10 @@ public sealed class RiskTypeIBaselineSourceContributor(
                 JsonSerializer.SerializeToElement(ev, json.RiskTreatmentActionCompletionSubmitted)),
             RiskTreatmentActionCompletionReviewed ev => ("treatment_action_completion_reviewed",
                 JsonSerializer.SerializeToElement(ev, json.RiskTreatmentActionCompletionReviewed)),
+            RiskTreatmentActionCompletionReviewAccepted ev => ("treatment_action_completion_review_accepted",
+                JsonSerializer.SerializeToElement(ev, json.RiskTreatmentActionCompletionReviewAccepted)),
+            RiskTreatmentActionCompletionReviewCanceled ev => ("treatment_action_completion_review_canceled",
+                JsonSerializer.SerializeToElement(ev, json.RiskTreatmentActionCompletionReviewCanceled)),
             _ => throw new JsonException("The risk source stream contains an unknown event."),
         };
         return new RiskSourceEvent(area, aggregateId, metadata.EventId,
@@ -827,23 +707,55 @@ public sealed class RiskTypeIBaselineSourceContributor(
         public List<RiskReassessmentTriggerView> Triggers { get; } = [];
         public List<RiskSourceEvent> AsOfEvents { get; } = [];
 
-        public bool Apply(DomainEvent domainEvent)
+        /// <summary>
+        ///     Folds the facts of one governance, assertion line or action stream that are inside the cutoff. The
+        ///     inside facts must be a complete prefix of the stream; a fact after the cutoff followed by one inside is
+        ///     an invalid history.
+        /// </summary>
+        public async ValueTask<bool> CaptureAsync(EventStreamAddress stream, IReadOnlyList<DomainEvent> facts,
+            Uuid tenantId, IImmutableContentStore content, DateTimeOffset through, CancellationToken ct)
+        {
+            var excluded = false;
+            foreach (var fact in facts)
+            {
+                if (fact is not INativeOperationFact native || fact.Metadata is not { } metadata)
+                    return false;
+                var inside = native.Operation.AcceptedAt <= through && metadata.OccurredOn <= through;
+                if (!inside)
+                {
+                    excluded = true;
+                    continue;
+                }
+
+                if (excluded)
+                    return false;
+                AsOfEvents.Add(SerializeEvent(fact, stream.Area, metadata.AggregateId, metadata));
+                if (!await ApplyAsync(fact, tenantId, content, ct).ConfigureAwait(false))
+                    return false;
+            }
+
+            return true;
+        }
+
+        async ValueTask<bool> ApplyAsync(DomainEvent domainEvent, Uuid tenantId, IImmutableContentStore store,
+            CancellationToken ct)
         {
             switch (domainEvent)
             {
                 case RiskOwnerAssigned assigned:
-                    Owner = assigned.Owner;
+                    Owner = await FindingContent.ReadAsync<RiskOwnerView>(store, tenantId, assigned.OwnerContent, ct)
+                        .ConfigureAwait(false);
                     return true;
                 case RiskControlTreatmentProposed proposed:
-                    if (ControlTreatments.Any(treatment =>
-                            treatment.TreatmentId == proposed.Treatment.TreatmentId))
+                    var treatment = await FindingContent.ReadAsync<RiskControlTreatmentView>(store, tenantId,
+                        proposed.TreatmentContent, ct).ConfigureAwait(false);
+                    if (ControlTreatments.Any(item => item.TreatmentId == treatment.TreatmentId))
                         return false;
-                    ControlTreatments.Add(proposed.Treatment);
+                    ControlTreatments.Add(treatment);
                     return true;
                 case RiskControlTreatmentReviewed reviewed:
-                    var reviewIndex = ControlTreatments.FindIndex(treatment =>
-                        treatment.TreatmentId == reviewed.TreatmentId &&
-                        treatment.Status == "proposed");
+                    var reviewIndex = ControlTreatments.FindIndex(item =>
+                        item.TreatmentId == reviewed.TreatmentId && item.Status == "proposed");
                     if (reviewIndex < 0)
                         return false;
                     var current = ControlTreatments[reviewIndex];
@@ -863,9 +775,8 @@ public sealed class RiskTypeIBaselineSourceContributor(
                     };
                     return true;
                 case RiskControlTreatmentRetired retired:
-                    var retirementIndex = ControlTreatments.FindIndex(treatment =>
-                        treatment.TreatmentId == retired.TreatmentId &&
-                        treatment.Status == "accepted");
+                    var retirementIndex = ControlTreatments.FindIndex(item =>
+                        item.TreatmentId == retired.TreatmentId && item.Status == "accepted");
                     if (retirementIndex < 0)
                         return false;
                     ControlTreatments[retirementIndex] = ControlTreatments[retirementIndex] with
@@ -877,9 +788,11 @@ public sealed class RiskTypeIBaselineSourceContributor(
                     };
                     return true;
                 case RiskReassessmentTriggered triggered:
-                    if (Triggers.Any(trigger => trigger.TriggerId == triggered.Trigger.TriggerId))
+                    var trigger = await FindingContent.ReadAsync<RiskReassessmentTriggerView>(store, tenantId,
+                        triggered.TriggerContent, ct).ConfigureAwait(false);
+                    if (Triggers.Any(item => item.TriggerId == trigger.TriggerId))
                         return false;
-                    Triggers.Add(triggered.Trigger);
+                    Triggers.Add(trigger);
                     return true;
                 default:
                     return true;

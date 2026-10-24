@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 /// <summary>Checks the exact source version and program scope before a handoff can include it.</summary>
 sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates,
     EvidenceArtifactMetadataRead evidenceMetadata, EvidenceSupportTargetSource evidenceTargets,
-    IBoundaryDirectoryReader boundaries, IReadinessDirectoryReader readiness)
+    IBoundaryDirectoryReader boundaries, ReadinessReader readiness)
     : IAdvisorRecordVersionResolver
 {
     public async ValueTask<Result> RequireCurrentAsync(Uuid tenantId, Uuid programId,
@@ -142,14 +142,21 @@ sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates,
     async ValueTask<Result> RequireReadinessGapAsync(Uuid tenantId, Uuid programId,
         AdvisorRecordVersion selected, CancellationToken ct)
     {
-        var latest = await readiness.GetLatestAssessmentIdAsync(tenantId, programId, ct)
-            .ConfigureAwait(false);
-        if (!latest.IsSuccess)
-            return Result.Failure(latest.Error);
-        if (latest.Value != selected.AssessmentId)
-            return Stale();
-        var assessment = await readiness.GetAssessmentAsync(tenantId, programId,
-            selected.AssessmentId!.Value, ct).ConfigureAwait(false);
+        ReadinessAssessmentView? assessment;
+        try
+        {
+            if (await readiness.GetLatestAssessmentIdAsync(tenantId, programId, ct).ConfigureAwait(false) !=
+                selected.AssessmentId)
+                return Stale();
+            assessment = await readiness.ReadViewAsync(tenantId, programId, selected.AssessmentId!.Value, ct)
+                .ConfigureAwait(false);
+        }
+        catch (Content.ImmutableContentIntegrityException exception)
+        {
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The readiness content cannot be verified yet: {exception.Message}", true));
+        }
+
         if (assessment is null || assessment.TenantId != tenantId ||
             assessment.ProgramId != programId)
             return Missing();

@@ -12,8 +12,8 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     authoritative program streams. Unresolved textual support remains represented by its
 ///     canonical owning record; this preview does not verify artifact existence or content.
 /// </summary>
-public sealed class EvidenceControlImpactContributor(IAggregateReader reader, FindingReader findings,
-    ControlOperationsReader operatingReader, ControlEvaluationReader evaluationReader)
+public sealed class EvidenceControlImpactContributor(EvidenceRequestReader evidenceRequests,
+    FindingReader findings, ControlOperationsReader operatingReader, ControlEvaluationReader evaluationReader)
     : IControlImpactContributor
 {
     public string Context => "evidence";
@@ -22,8 +22,7 @@ public sealed class EvidenceControlImpactContributor(IAggregateReader reader, Fi
         ControlDraft subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(subject);
-        var ledger = await reader.HydrateAsync(new EvidenceRequestLedger(subject.TenantId,
-            subject.ProgramId), ct).ConfigureAwait(false);
+        var ledger = await evidenceRequests.ReadAsync(subject.TenantId, subject.ProgramId, ct).ConfigureAwait(false);
         var requests = ledger.ReadAll().Where(request => request.ControlId == subject.Id).ToArray();
         var records = requests.Select(request => new ControlAffectedRecord(subject.TenantId,
             Context, "evidence_request", request.EvidenceRequestId, null,

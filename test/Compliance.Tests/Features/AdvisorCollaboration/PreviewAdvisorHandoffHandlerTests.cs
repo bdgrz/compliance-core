@@ -1,20 +1,17 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.AdvisorCollaboration;
 
 public sealed class PreviewAdvisorHandoffHandlerTests
 {
-    static readonly DateTimeOffset CreatedAt = new(2026, 10, 17, 12, 0, 0, TimeSpan.Zero);
-
     [Fact]
     public async Task ShouldPreviewExactChangedAndNewContentAndListRemovedSourcesGivenEndedBaseline()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = new PreviewFixture();
         var controlId = Uuid.CreateVersion4();
         var oldControl = AdvisorRecordVersion.ControlDraft(controlId, Uuid.CreateVersion4(), 1);
         var newControl = AdvisorRecordVersion.ControlDraft(controlId, Uuid.CreateVersion4(), 2);
@@ -26,8 +23,8 @@ public sealed class PreviewAdvisorHandoffHandlerTests
         var sources = new RecordingSharedSourceReader();
 
         // Act
-        var result = await new PreviewAdvisorHandoffHandler(fixture.Reader,
-                new AcceptCurrentAdvisorRecordVersions(), sources, fixture.Clock)
+        var result = await new PreviewAdvisorHandoffHandler(fixture.Host.Handoffs,
+                new AcceptCurrentAdvisorRecordVersions(), sources, fixture.Host.Clock)
             .HandleAsync(Context(new PreviewAdvisorHandoff(fixture.TenantId, fixture.ProgramId,
                 previewId)), CancellationToken.None);
 
@@ -50,15 +47,15 @@ public sealed class PreviewAdvisorHandoffHandlerTests
     public async Task ShouldRejectPreviewGivenUnchangedVersionFromBaseline()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = new PreviewFixture();
         var source = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         var baselineId = await fixture.SeedEndedSharedHandoffAsync([source]);
         var previewId = await fixture.SeedDraftAsync([source], baselineId);
         var sources = new RecordingSharedSourceReader();
 
         // Act
-        var result = await new PreviewAdvisorHandoffHandler(fixture.Reader,
-                new AcceptCurrentAdvisorRecordVersions(), sources, fixture.Clock)
+        var result = await new PreviewAdvisorHandoffHandler(fixture.Host.Handoffs,
+                new AcceptCurrentAdvisorRecordVersions(), sources, fixture.Host.Clock)
             .HandleAsync(Context(new PreviewAdvisorHandoff(fixture.TenantId, fixture.ProgramId,
                 previewId)), CancellationToken.None);
 
@@ -71,14 +68,14 @@ public sealed class PreviewAdvisorHandoffHandlerTests
     public async Task ShouldNotPreviewSharedHandoffGivenNonDraftStatus()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = new PreviewFixture();
         var handoffId = await fixture.SeedEndedSharedHandoffAsync(
             [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())]);
         var sources = new RecordingSharedSourceReader();
 
         // Act
-        var result = await new PreviewAdvisorHandoffHandler(fixture.Reader,
-                new AcceptCurrentAdvisorRecordVersions(), sources, fixture.Clock)
+        var result = await new PreviewAdvisorHandoffHandler(fixture.Host.Handoffs,
+                new AcceptCurrentAdvisorRecordVersions(), sources, fixture.Host.Clock)
             .HandleAsync(Context(new PreviewAdvisorHandoff(fixture.TenantId, fixture.ProgramId,
                 handoffId)), CancellationToken.None);
 
@@ -91,14 +88,15 @@ public sealed class PreviewAdvisorHandoffHandlerTests
     public async Task ShouldRejectPreviewGivenExpiredDraft()
     {
         // Arrange
-        await using var fixture = new Fixture(CreatedAt.AddYears(1));
+        await using var fixture = new PreviewFixture();
         var previewId = await fixture.SeedDraftAsync(
             [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())]);
+        fixture.Host.Clock.Advance(TimeSpan.FromDays(400));
         var sources = new RecordingSharedSourceReader();
 
         // Act
-        var result = await new PreviewAdvisorHandoffHandler(fixture.Reader,
-                new AcceptCurrentAdvisorRecordVersions(), sources, fixture.Clock)
+        var result = await new PreviewAdvisorHandoffHandler(fixture.Host.Handoffs,
+                new AcceptCurrentAdvisorRecordVersions(), sources, fixture.Host.Clock)
             .HandleAsync(Context(new PreviewAdvisorHandoff(fixture.TenantId, fixture.ProgramId,
                 previewId)), CancellationToken.None);
 
@@ -111,23 +109,17 @@ public sealed class PreviewAdvisorHandoffHandlerTests
     public async Task ShouldRejectPreviewGivenDraftChangesWhileSourceContentIsRead()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = new PreviewFixture();
         var selected = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         var previewId = await fixture.SeedDraftAsync([selected]);
         var replacement = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var sources = new RecordingSharedSourceReader(async (tenantId, programId, handoffId, _) =>
-        {
-            var changed = await fixture.Reader.HydrateAsync(new AdvisorHandoff(tenantId,
-                programId, handoffId));
-            Assert.True(changed.ReviseSelection(1, [replacement], "Scope changed during preview",
-                fixture.Actor, CreatedAt.AddMinutes(1)).IsSuccess);
-            await fixture.Writer.SaveAsync(changed,
-                new RequestDispatchContext(RequestActor.System));
-        });
+        var sources = new RecordingSharedSourceReader(async (_, _, handoffId, _) =>
+            Assert.True((await fixture.Host.ReviseAsync(handoffId, 1, [replacement],
+                "Scope changed during preview")).IsSuccess));
 
         // Act
-        var result = await new PreviewAdvisorHandoffHandler(fixture.Reader,
-                new AcceptCurrentAdvisorRecordVersions(), sources, fixture.Clock)
+        var result = await new PreviewAdvisorHandoffHandler(fixture.Host.Handoffs,
+                new AcceptCurrentAdvisorRecordVersions(), sources, fixture.Host.Clock)
             .HandleAsync(Context(new PreviewAdvisorHandoff(fixture.TenantId, fixture.ProgramId,
                 previewId)), CancellationToken.None);
 
@@ -139,14 +131,14 @@ public sealed class PreviewAdvisorHandoffHandlerTests
     public async Task ShouldPropagateStaleSourceVersionGivenDraftPreview()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = new PreviewFixture();
         var previewId = await fixture.SeedDraftAsync(
             [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())]);
         var sources = new RecordingSharedSourceReader();
 
         // Act
-        var result = await new PreviewAdvisorHandoffHandler(fixture.Reader,
-                new RejectCurrentAdvisorRecordVersions(), sources, fixture.Clock)
+        var result = await new PreviewAdvisorHandoffHandler(fixture.Host.Handoffs,
+                new RejectCurrentAdvisorRecordVersions(), sources, fixture.Host.Clock)
             .HandleAsync(Context(new PreviewAdvisorHandoff(fixture.TenantId, fixture.ProgramId,
                 previewId)), CancellationToken.None);
 
@@ -158,47 +150,20 @@ public sealed class PreviewAdvisorHandoffHandlerTests
     static RequestContext<PreviewAdvisorHandoff> Context(PreviewAdvisorHandoff request) =>
         new(request, new ClaimsPrincipal());
 
-    sealed class Fixture : IAsyncDisposable
+    sealed class PreviewFixture : IAsyncDisposable
     {
-        readonly ServiceProvider _provider;
-        readonly AsyncServiceScope _scope;
+        public AdvisorHost Host { get; } = new();
 
-        public Uuid TenantId { get; } = Uuid.CreateVersion4();
-        public Uuid ProgramId { get; } = Uuid.CreateVersion4();
-        public Uuid UserId { get; } = Uuid.CreateVersion4();
-        public ActorReference Actor => ActorReference.ForMember(
-            RbacIds.Member(TenantId, UserId), "Compliance lead");
-        public IAggregateReader Reader { get; }
-        public IAggregateWriter Writer { get; }
+        public Uuid TenantId => Host.TenantId;
 
-        public TimeProvider Clock { get; }
+        public Uuid ProgramId => Host.ProgramId;
 
-        public Fixture(DateTimeOffset? now = null)
-        {
-            Clock = new FixedTimeProvider(now ?? CreatedAt.AddHours(1));
-            var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
-            services.AddPortia();
-            _provider = services.BuildServiceProvider(new ServiceProviderOptions
-            {
-                ValidateScopes = true,
-            });
-            _scope = _provider.CreateAsyncScope();
-            Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-            Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
-        }
-
-        public async Task<Uuid> SeedEndedSharedHandoffAsync(
-            IReadOnlyList<AdvisorRecordVersion> selection)
+        public async Task<Uuid> SeedEndedSharedHandoffAsync(IReadOnlyList<AdvisorRecordVersion> selection)
         {
             var handoffId = Uuid.CreateVersion4();
-            var handoff = new AdvisorHandoff(TenantId, ProgramId, handoffId);
-            Assert.True(handoff.Create("Prior review", selection, new DateOnly(2026, 12, 31),
-                Actor, CreatedAt).IsSuccess);
-            Assert.True(handoff.MarkReadyForReview(1, Actor, CreatedAt.AddMinutes(1)).IsSuccess);
-            Assert.True(handoff.Close("Prior review completed", Actor,
-                CreatedAt.AddMinutes(2)).IsSuccess);
-            await Writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
+            Assert.True((await Host.CreateAsync(handoffId, selection, "Prior review")).IsSuccess);
+            Assert.True((await Host.ReadyAsync(handoffId, 1)).IsSuccess);
+            Assert.True((await Host.EndAsync(handoffId, 2, revoke: false)).IsSuccess);
             return handoffId;
         }
 
@@ -206,18 +171,13 @@ public sealed class PreviewAdvisorHandoffHandlerTests
             Uuid? comparedToHandoffId = null)
         {
             var handoffId = Uuid.CreateVersion4();
-            var handoff = new AdvisorHandoff(TenantId, ProgramId, handoffId);
-            Assert.True(handoff.Create("Follow-up review", selection,
-                new DateOnly(2026, 12, 31), Actor, CreatedAt, comparedToHandoffId).IsSuccess);
-            await Writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
+            await AdvisorSeed.HandoffAsync(Host.Provider, TenantId, ProgramId, handoffId, selection, Host.Lead,
+                Host.Clock.GetUtcNow(), AdvisorHost.Expiry, ready: false, purpose: "Follow-up review",
+                comparedTo: comparedToHandoffId);
             return handoffId;
         }
 
-        public async ValueTask DisposeAsync()
-        {
-            await _scope.DisposeAsync();
-            await _provider.DisposeAsync();
-        }
+        public ValueTask DisposeAsync() => Host.DisposeAsync();
     }
 
     sealed class RecordingSharedSourceReader(
@@ -236,11 +196,6 @@ public sealed class PreviewAdvisorHandoffHandlerTests
             return Result<AdvisorSharedSourceView>.Success(new AdvisorSharedSourceView(tenantId,
                 programId, handoffId, selectedSource, null, null, null, null, null, null, null));
         }
-    }
-
-    sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 
     sealed class AcceptCurrentAdvisorRecordVersions : IAdvisorRecordVersionResolver

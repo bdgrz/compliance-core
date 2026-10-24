@@ -4,7 +4,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Risks;
 
 public sealed class RecordRiskAssessmentHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock)
+    IAggregateReader reader, RiskGovernanceReader governanceReader, TimeProvider clock)
     : IRequestHandler<RecordRiskAssessment, RiskAssessmentView>
 {
     public async ValueTask<Result<RiskAssessmentView>> HandleAsync(
@@ -21,8 +21,8 @@ public sealed class RecordRiskAssessmentHandler(IAggregateExecutor executor,
         if (methods.GetVersion(request.MethodVersion) is not { } method)
             return Result<RiskAssessmentView>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The risk method version was not found."));
-        var governance = await reader.HydrateAsync(new RiskGovernanceLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
+        var governance = await governanceReader.ReadRiskAsync(request.TenantId, request.ProgramId,
+            request.RiskId, ct).ConfigureAwait(false);
         var hasControlTreatment = governance.HasAcceptedControlTreatment(request.RiskId);
         var actor = RiskActor.From(context.Actor, request.TenantId);
         return await executor.ExecuteAsync(new RiskEvaluation(request.TenantId, request.RiskId),

@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Readiness;
 using Bdgrz.Compliance.Features.Versioning;
@@ -24,12 +26,13 @@ public sealed class ProgramStageProjectionTests
         // Arrange
         await using var fixture = new StoreFixture();
         var tenantId = Uuid.CreateVersion4();
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var approvedProgram = await CreateProgramAsync(fixture, tenantId);
         var deferredProgram = await CreateProgramAsync(fixture, tenantId);
-        await DeferAsync(fixture, tenantId, deferredProgram);
-        var approvedDecision = await ApproveWithExceptionsAsync(fixture, tenantId,
+        await DeferAsync(fixture, content, tenantId, deferredProgram);
+        var approvedDecision = await ApproveWithExceptionsAsync(fixture, content, tenantId,
             approvedProgram);
-        using var replay = BuildReplayWorker(fixture.Store, tenantId);
+        using var replay = BuildReplayWorker(fixture.Store, content, tenantId);
 
         // Act
         await replay.StartAsync();
@@ -79,72 +82,51 @@ public sealed class ProgramStageProjectionTests
     }
 
     static async Task<ReadinessAssessmentView> RecordAssessmentAsync(StoreFixture fixture,
-        Uuid tenantId, Uuid programId)
+        IImmutableContentStore content, Uuid tenantId, Uuid programId)
     {
         var assessmentId = Uuid.CreateVersion4();
         var asOf = DateTimeOffset.UtcNow.AddMinutes(-1);
         var evaluation = ReadinessRules.Evaluate(programId, asOf, null, [], [],
             new Dictionary<Uuid, ControlVersionView?>());
-        var ledger = await ExecuteAsync(fixture, tenantId, programId, item =>
-            item.Record(0, assessmentId, asOf, null, evaluation, Runner, "Runner",
-                DateTimeOffset.UtcNow));
-        return ledger.Read(assessmentId)!;
+        await ReadinessSeed.AdoptAsync(fixture.Repository, fixture.Repository, content, tenantId, programId,
+            assessmentId, evaluation, asOf, Runner, DateTimeOffset.UtcNow);
+        return (await new ReadinessReader(fixture.Repository, content).ReadViewAsync(tenantId, programId, assessmentId))!;
     }
 
-    static async Task DeferAsync(StoreFixture fixture, Uuid tenantId, Uuid programId)
+    static async Task DeferAsync(StoreFixture fixture, IImmutableContentStore content, Uuid tenantId, Uuid programId)
     {
-        var assessment = await RecordAssessmentAsync(fixture, tenantId, programId);
-        await ExecuteAsync(fixture, tenantId, programId, item =>
-            item.DecideTypeIEntry(assessment.AssessmentId, item.Revision, Uuid.CreateVersion4(),
-                ReadinessLedger.Defer, "Not yet.", [], Decider, "Decider",
-                DateTimeOffset.UtcNow));
+        var assessment = await RecordAssessmentAsync(fixture, content, tenantId, programId);
+        await ReadinessSeed.DecideAsync(fixture.Repository, fixture.Repository, content, tenantId, programId,
+            assessment.AssessmentId, ReadinessDecisionKind.TypeIEntry, ProgramReadiness.Defer, "Not yet.", Decider,
+            DateTimeOffset.UtcNow);
     }
 
-    static async Task<Uuid> ApproveWithExceptionsAsync(StoreFixture fixture, Uuid tenantId,
-        Uuid programId)
+    static async Task<Uuid> ApproveWithExceptionsAsync(StoreFixture fixture, IImmutableContentStore content,
+        Uuid tenantId, Uuid programId)
     {
-        var assessment = await RecordAssessmentAsync(fixture, tenantId, programId);
+        var assessment = await RecordAssessmentAsync(fixture, content, tenantId, programId);
         foreach (var gap in assessment.Gaps)
-            await ExecuteAsync(fixture, tenantId, programId, item =>
-                item.Plan(gap.GapId, item.Revision, Runner, new DateOnly(2027, 3, 31), "Close.",
-                    Runner, "Runner", DateTimeOffset.UtcNow));
-        await ExecuteAsync(fixture, tenantId, programId, item =>
-            item.Decide(assessment.AssessmentId, item.Revision, Uuid.CreateVersion4(),
-                ReadinessLedger.Proceed, "Owned.", Decider, "Decider", DateTimeOffset.UtcNow));
-        var decisionId = Uuid.CreateVersion4();
-        await ExecuteAsync(fixture, tenantId, programId, item =>
-            item.DecideTypeIEntry(assessment.AssessmentId, item.Revision, decisionId,
-                ReadinessLedger.ApproveWithExceptions, "Acknowledged.",
-                assessment.Gaps.Select(static gap => gap.GapId).ToArray(), Decider, "Decider",
-                DateTimeOffset.UtcNow));
-        return decisionId;
+            await ReadinessSeed.PlanAsync(fixture.Repository, fixture.Repository, content, tenantId, programId,
+                gap.GapId, Runner, new DateOnly(2027, 3, 31), "Close.", Runner, DateTimeOffset.UtcNow);
+        await ReadinessSeed.DecideAsync(fixture.Repository, fixture.Repository, content, tenantId, programId,
+            assessment.AssessmentId, ReadinessDecisionKind.Readiness, ProgramReadiness.Proceed, "Owned.", Decider,
+            DateTimeOffset.UtcNow);
+        var unresolved = assessment.Gaps.Select(gap => new TypeIEntryUnresolvedItemView(gap.GapId, gap.Kind,
+            gap.Subject, gap.RuleId, gap.Explanation, Runner, new DateOnly(2027, 3, 31), true))
+            .ToArray();
+        return await ReadinessSeed.DecideAsync(fixture.Repository, fixture.Repository, content, tenantId, programId,
+            assessment.AssessmentId, ReadinessDecisionKind.TypeIEntry, ProgramReadiness.ApproveWithExceptions,
+            "Acknowledged.", Decider, DateTimeOffset.UtcNow, unresolved);
     }
 
-    static async Task<ReadinessLedger> ExecuteAsync(StoreFixture fixture, Uuid tenantId,
-        Uuid programId, Func<ReadinessLedger, CommandFailure?> operation)
-    {
-        ReadinessLedger? ledger = null;
-        var result = await fixture.Repository.ExecuteAsync(new ReadinessLedger(tenantId, programId),
-            item =>
-            {
-                ledger = item;
-                var failure = operation(item);
-                return AggregateOutcome.Commit(failure is null
-                    ? Result.Success
-                    : Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                        failure.Message!)));
-            }, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(result.IsSuccess, result.IsSuccess ? null : result.Error?.Message);
-        return ledger!;
-    }
-
-    static IHost BuildReplayWorker(IDomainEventReader reader, Uuid tenant)
+    static IHost BuildReplayWorker(IDomainEventReader reader, IImmutableContentStore content, Uuid tenant)
     {
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {
             EnvironmentName = "Development",
         });
         builder.Services.AddSingleton(reader);
+        builder.Services.AddSingleton(content);
         builder.Services.AddSingleton<IKvClient, InMemoryKvClient>();
         builder.Services.AddSingleton<ITenantDirectory>(new StaticTenantDirectory(
             new TenantId(tenant.ToString())));

@@ -7,4 +7,5 @@ namespace Bdgrz.Compliance.Features.NativeOperations;
 public sealed record OperationProvenance(Uuid LogicalId, Uuid RootOperationId, Uuid? CausationEventId,
     string CommandKind, ActorReference Actor, EventStreamAddress Owner, string Episode,
     ulong? OriginalExpectedRevision, string AuthoredIntentSha256, DateTimeOffset AcceptedAt,
-    EventStreamAddress AffectedOwner, EventStreamAddress ExpectedRevisionOwner);
+    EventStreamAddress AffectedOwner, EventStreamAddress ExpectedRevisionOwner,
+    EventStreamAddress? FirstOwner = null);

@@ -4,10 +4,10 @@ namespace Bdgrz.Compliance.Features.Risks;
 
 /// <summary>
 ///     Reads the projected evaluation and evaluates status at read time, including open
-///     reassessment triggers from the program's risk governance ledger.
+///     reassessment triggers from the risk's governance owners.
 /// </summary>
 public sealed class GetRiskEvaluationHandler(RiskEvaluationReadConsistency consistency,
-    IAggregateReader reader, TimeProvider clock)
+    RiskGovernanceReader governanceReader, TimeProvider clock)
     : IRequestHandler<GetRiskEvaluation, RiskEvaluationView>
 {
     public async ValueTask<Result<RiskEvaluationView>> HandleAsync(
@@ -18,8 +18,8 @@ public sealed class GetRiskEvaluationHandler(RiskEvaluationReadConsistency consi
             request.RiskId, request.MinimumRevision, ct).ConfigureAwait(false);
         if (!view.IsSuccess)
             return view;
-        var governance = await reader.HydrateAsync(new RiskGovernanceLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
+        var governance = await governanceReader.ReadRiskAsync(request.TenantId, request.ProgramId,
+            request.RiskId, ct).ConfigureAwait(false);
         var triggers = governance.OpenTriggers(request.RiskId, view.Value.Assessments);
         return Result<RiskEvaluationView>.Success(RiskEvaluationStatus.AsOf(view.Value with
         {

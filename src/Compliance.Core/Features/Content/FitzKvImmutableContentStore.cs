@@ -102,7 +102,7 @@ sealed class FitzKvImmutableContentStore(IKvClient client) : IImmutableContentSt
             .ConfigureAwait(false);
         var found = await tx.GetAsync(ManifestKey(reference.ContentId), ct).ConfigureAwait(false);
         if (!found.Found)
-            throw new ImmutableContentIntegrityException($"Content {reference.ContentId} has no manifest.");
+            throw new ImmutableContentUnavailableException($"Content {reference.ContentId} has no manifest.");
         var manifest = Parse(found.Value!.Value.Span);
         var expectedChunks = (int)((reference.Bytes + ChunkBytes - 1) / ChunkBytes);
         if (manifest.ContentId != reference.ContentId || manifest.Bytes != reference.Bytes ||
@@ -118,9 +118,11 @@ sealed class FitzKvImmutableContentStore(IKvClient client) : IImmutableContentSt
         {
             var chunk = await tx.GetAsync(ChunkKey(reference.ContentId, index), ct).ConfigureAwait(false);
             var expected = Math.Min(ChunkBytes, buffer.Length - written);
-            if (!chunk.Found || chunk.Value!.Value.Length != expected)
+            if (!chunk.Found)
+                throw new ImmutableContentUnavailableException($"Content {reference.ContentId} chunk {index} is missing.");
+            if (chunk.Value!.Value.Length != expected)
                 throw new ImmutableContentIntegrityException(
-                    $"Content {reference.ContentId} chunk {index} is missing or has the wrong length.");
+                    $"Content {reference.ContentId} chunk {index} has the wrong length.");
             chunk.Value.Value.Span.CopyTo(buffer.AsSpan(written));
             written += expected;
         }

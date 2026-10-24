@@ -839,6 +839,11 @@
           "name": "DecisionBatchId",
           "type": "Uuid",
           "required": true
+        },
+        {
+          "name": "SourceRevision",
+          "type": "ulong",
+          "required": true
         }
       ],
       "guard": "Complete exact preview and current revision/reviewer; acquire every selected item canonically.",
@@ -5276,7 +5281,7 @@
         },
         {
           "name": "SourceRevision",
-          "type": "long",
+          "type": "ulong",
           "required": true
         },
         {
@@ -5629,7 +5634,7 @@
         },
         {
           "name": "SourceRevision",
-          "type": "long",
+          "type": "ulong",
           "required": true
         },
         {
@@ -6160,7 +6165,7 @@
         },
         {
           "name": "SourceRevision",
-          "type": "long",
+          "type": "ulong",
           "required": true
         },
         {

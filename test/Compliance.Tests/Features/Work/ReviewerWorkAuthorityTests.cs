@@ -82,7 +82,7 @@ public sealed class ReviewerWorkAuthorityTests
         await using var fixture = await Fixture.CreateAsync(projected);
         var pending = await fixture.SeedAsync("risk_completion");
         var operations = fixture.Operations;
-        var command = new ReviewRiskTreatmentActionCompletion(operations.TenantId, operations.ProgramId,
+        var command = new ReviewRiskTreatmentActionCompletion(Uuid.CreateVersion4(), operations.TenantId, operations.ProgramId,
             pending.ResourceId!.Value, pending.ActionId!.Value, pending.Revision, outcome, "Reviewed independently.");
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
@@ -292,7 +292,6 @@ public sealed class ReviewerWorkAuthorityTests
                     services.AddScoped<WorkQueueReadConsistency>();
                     if (projected)
                     {
-                        services.AddScoped<IAccountableWorkItemDirectoryReader>(provider => new FitzRiskGovernanceWorkItemDirectory(client));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzCommitmentDecisionWorkItemDirectory(client, provider.GetRequiredService<IAggregateReader>()));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
@@ -343,25 +342,10 @@ public sealed class ReviewerWorkAuthorityTests
                         Uuid.CreateVersion4(), "R-GUEST", new RiskDraftContent("Provider outage",
                             "Provider unavailable", "Requests fail", null), Operations.LeadMemberId,
                         "Lead", completionAt));
-                await ProgramManagementServices.SeedAsync(Operations.Provider,
-                    new EvidenceRequestLedger(Operations.TenantId, Operations.ProgramId), ledger =>
-                    {
-                        Assert.Null(ledger.OpenRequest(evidenceId, "MFA export", "Upload policy", Operations.OwnerMemberId,
-                            Operations.Today.AddDays(5), null, lead, completionAt));
-                        Assert.Null(ledger.Fulfil(evidenceId, 1, Uuid.CreateVersion4(), lead, completionAt));
-                        return Result.Success;
-                    });
-                await ProgramManagementServices.SeedAsync(Operations.Provider,
-                    new RiskGovernanceLedger(Operations.TenantId, Operations.ProgramId), ledger =>
-                    {
-                        Assert.Null(ledger.AddTreatmentAction(riskId, 0, actionId, "mitigate", "Enforce MFA",
-                            "MFA enforced", "Policy export", Operations.Today.AddDays(9), RiskConflictRole == "owner" ? GuestMemberId : Operations.OwnerMemberId,
-                            [evidenceId], lead, completionAt));
-                        Assert.Null(ledger.SubmitActionCompletion(riskId, actionId, 1, submissionId, "MFA enforced",
-                            [evidenceId], new HashSet<Uuid> { evidenceId }, RiskConflictRole == "submitter" ? GuestMemberId : Operations.LeadMemberId,
-                            RiskConflictRole == "submitter" ? ActorReference.ForMember(GuestMemberId, "Guest") : lead, completionAt));
-                        return Result.Success;
-                    });
+                await EvidenceSeeds.OpenAsync(Operations.Provider, Operations.TenantId, Operations.ProgramId, evidenceId, "MFA export", "Upload policy", Operations.OwnerMemberId, Operations.Today.AddDays(5), null, lead, completionAt);
+                await EvidenceSeeds.FulfilAsync(Operations.Provider, Operations.TenantId, Operations.ProgramId, evidenceId, Uuid.CreateVersion4(), lead, completionAt);
+                await RiskSeeds.AddActionAsync(Operations.Provider, Operations.TenantId, Operations.ProgramId, riskId, actionId, "Enforce MFA", "MFA enforced", "Policy export", Operations.Today.AddDays(9), RiskConflictRole == "owner" ? GuestMemberId : Operations.OwnerMemberId, [evidenceId], lead, completionAt);
+                await RiskSeeds.SubmitActionAsync(Operations.Provider, Operations.TenantId, Operations.ProgramId, riskId, actionId, submissionId, "MFA enforced", [evidenceId], RiskConflictRole == "submitter" ? GuestMemberId : Operations.LeadMemberId, RiskConflictRole == "submitter" ? ActorReference.ForMember(GuestMemberId, "Guest") : lead, completionAt);
                 return new Pending(submissionId, 2, riskId, actionId);
             }
             if (kind == "commitment")
@@ -384,15 +368,7 @@ public sealed class ReviewerWorkAuthorityTests
                         Uuid.CreateVersion4(), "R-GUEST", new RiskDraftContent("Provider outage",
                             "Provider unavailable", "Requests fail", null), Operations.LeadMemberId,
                         "Lead", DateTimeOffset.UtcNow));
-                await ProgramManagementServices.SeedAsync(Operations.Provider,
-                    new RiskGovernanceLedger(Operations.TenantId, Operations.ProgramId), ledger =>
-                    {
-                        Assert.Null(ledger.ProposeControlTreatment(riskId, 0, treatmentId, "mitigate",
-                            Operations.ControlId, Operations.ControlVersionId, "Control treats the risk.",
-                            Operations.LeadMemberId, ActorReference.ForMember(Operations.LeadMemberId, "Lead"),
-                            DateTimeOffset.UtcNow));
-                        return Result.Success;
-                    });
+                await RiskSeeds.ProposeTreatmentAsync(Operations.Provider, Operations.TenantId, Operations.ProgramId, riskId, treatmentId, Operations.ControlId, Operations.ControlVersionId, "Control treats the risk.", Operations.LeadMemberId, ActorReference.ForMember(Operations.LeadMemberId, "Lead"), DateTimeOffset.UtcNow);
                 return new Pending(treatmentId, 1, riskId);
             }
             if (kind == "policy")
@@ -487,7 +463,7 @@ public sealed class ReviewerWorkAuthorityTests
             if (kind == "risk_completion")
             {
                 await PersonalRiskSignoffTransportTests.HttpAsync(Provider, GuestUserId,
-                    new ReviewRiskTreatmentActionCompletion(Operations.TenantId,
+                    new ReviewRiskTreatmentActionCompletion(Uuid.CreateVersion4(), Operations.TenantId,
                     Operations.ProgramId, pending.ResourceId!.Value, pending.ActionId!.Value,
                     pending.Revision, "accept", "Reviewed independently."), error);
             }
@@ -502,7 +478,7 @@ public sealed class ReviewerWorkAuthorityTests
             else if (kind == "risk_control_treatment")
             {
                 await PersonalRiskSignoffTransportTests.HttpAsync(Provider, GuestUserId,
-                    new ReviewRiskControlTreatment(Operations.TenantId,
+                    new ReviewRiskControlTreatment(Uuid.CreateVersion4(), Operations.TenantId,
                     Operations.ProgramId, pending.ResourceId!.Value, pending.Id, pending.Revision,
                     "accept", "Reviewed independently."), error);
             }
@@ -588,7 +564,6 @@ public sealed class ReviewerWorkAuthorityTests
                     {
                         FitzFindingClosureWorkItemDirectory finding => finding.ApplyAsync(record.Event),
                         FitzPolicyDecisionWorkItemDirectory policy => policy.ApplyAsync(record.Event),
-                        FitzRiskGovernanceWorkItemDirectory risk => risk.ApplyAsync(record.Event),
                         FitzCommitmentDecisionWorkItemDirectory commitment => commitment.ApplyAsync(record.Event),
                         FitzControlDecisionWorkItemDirectory control => control.ApplyAsync(record.Event),
                         FitzControlEvaluationWorkItemDirectory evaluation => evaluation.ApplyAsync(record.Event),

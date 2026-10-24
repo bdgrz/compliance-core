@@ -128,7 +128,9 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
             operatingReader: queueScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(),
             mappingReader: queueScope.ServiceProvider.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: queueScope.ServiceProvider.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: queueScope.ServiceProvider.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: queueScope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: queueScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: queueScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var queueResult = await queueReader.ReadAsync(fixture.TenantId, fixture.ProgramId,
             new OperationsActor(fixture.ReviewerUserId, fixture.ReviewerMemberId, "Reviewer"), 30,
             CancellationToken.None);

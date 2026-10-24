@@ -3,7 +3,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>Builds a compliance-lead preview from an unshared draft and exact source versions.</summary>
-public sealed class PreviewAdvisorHandoffHandler(IAggregateReader aggregates,
+public sealed class PreviewAdvisorHandoffHandler(AdvisorHandoffReader aggregates,
     IAdvisorRecordVersionResolver recordVersions, IAdvisorSharedSourceReader sources,
     TimeProvider clock)
     : IRequestHandler<PreviewAdvisorHandoff, AdvisorHandoffPreviewView>
@@ -16,8 +16,8 @@ public sealed class PreviewAdvisorHandoffHandler(IAggregateReader aggregates,
             request.HandoffId == Uuid.Empty)
             return Invalid();
 
-        var handoff = await aggregates.HydrateAsync(new AdvisorHandoff(request.TenantId,
-            request.ProgramId, request.HandoffId), ct).ConfigureAwait(false);
+        var handoff = await aggregates.ReadAsync(request.TenantId,
+            request.ProgramId, request.HandoffId, ct).ConfigureAwait(false);
         if (!handoff.IsCreated || handoff.ProgramId != request.ProgramId)
             return Missing();
         if (handoff.Status != "draft")
@@ -42,8 +42,8 @@ public sealed class PreviewAdvisorHandoffHandler(IAggregateReader aggregates,
         IReadOnlyList<AdvisorRecordVersion> previousSelection = [];
         if (handoff.ComparedToHandoffId is { } comparedToId)
         {
-            var previous = await aggregates.HydrateAsync(new AdvisorHandoff(request.TenantId,
-                request.ProgramId, comparedToId), ct).ConfigureAwait(false);
+            var previous = await aggregates.ReadAsync(request.TenantId,
+            request.ProgramId, comparedToId, ct).ConfigureAwait(false);
             if (!previous.IsCreated || previous.ProgramId != request.ProgramId)
                 return Missing();
             if (!previous.WasReadyForReview || previous.Status is not ("closed" or "revoked"))
@@ -72,8 +72,8 @@ public sealed class PreviewAdvisorHandoffHandler(IAggregateReader aggregates,
             items.Add(new AdvisorHandoffPreviewItemView(source, change, compared, content.Value));
         }
 
-        var current = await aggregates.HydrateAsync(new AdvisorHandoff(request.TenantId,
-            request.ProgramId, request.HandoffId), ct).ConfigureAwait(false);
+        var current = await aggregates.ReadAsync(request.TenantId,
+            request.ProgramId, request.HandoffId, ct).ConfigureAwait(false);
         if (!current.IsCreated || current.ProgramId != request.ProgramId ||
             current.Status != "draft" || current.Revision != handoff.Revision ||
             current.ComparedToHandoffId != handoff.ComparedToHandoffId ||

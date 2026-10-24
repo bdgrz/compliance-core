@@ -12,6 +12,7 @@ sealed class MemberPermissions : IPermissionAuthorizer
 
     public void Allow(Uuid userId) => _allowed.Add(userId);
     public void Deny(Uuid userId, string permission) => _denied.Add((userId, permission));
+    public void Restore(Uuid userId, string permission) => _denied.Remove((userId, permission));
     public void AllowRestrictedRead(Uuid userId) => _restrictedReadAllowed.Add(userId);
     public void DenyRestrictedRead(Uuid userId) => _restrictedReadAllowed.Remove(userId);
 

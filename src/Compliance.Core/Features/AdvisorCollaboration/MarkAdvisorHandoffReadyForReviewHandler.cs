@@ -1,50 +1,53 @@
+using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-/// <summary>Opens exact selected handoff versions to the assigned advisor or scoped guest.</summary>
-public sealed class MarkAdvisorHandoffReadyForReviewHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IAdvisorRecordVersionResolver recordVersions, TimeProvider clock)
+/// <summary>
+///     Opens exact selected handoff versions to the assigned advisor or scoped guest at the expected handoff revision.
+///     Every selected source must still be current. The expected revision is a fact of the handoff stream, so the
+///     selection that was checked is exactly the selection that is shared.
+/// </summary>
+public sealed class MarkAdvisorHandoffReadyForReviewHandler(AdvisorUnitOperation operation,
+    AdvisorHandoffReader handoffs, IAdvisorRecordVersionResolver recordVersions, TimeProvider clock)
     : IRequestHandler<MarkAdvisorHandoffReadyForReview>
 {
-    public async ValueTask<Result> HandleAsync(
-        IRequestContext<MarkAdvisorHandoffReadyForReview> context, CancellationToken ct)
+    const string CommandKind = "MarkAdvisorHandoffReadyForReview";
+
+    public async ValueTask<Result> HandleAsync(IRequestContext<MarkAdvisorHandoffReadyForReview> context,
+        CancellationToken ct)
     {
         var request = context.Request;
         if (!AdvisorHandoffCommandActor.TryGet(context, request.TenantId, out var actor))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Sharing an advisor handoff requires a personal HTTP actor."));
-        if (request.ProgramId == Uuid.Empty || request.HandoffId == Uuid.Empty)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "Sharing an advisor handoff requires program and handoff identities."));
+            return AdvisorHandoffRules.Forbidden("Sharing an advisor handoff requires a personal HTTP actor.");
+        if (request.CommandId == Uuid.Empty || request.ProgramId == Uuid.Empty || request.HandoffId == Uuid.Empty ||
+            request.ExpectedRevision < 0)
+            return AdvisorHandoffRules.Invalid(
+                "Sharing an advisor handoff requires command, program and handoff identities and a non-negative expected revision.");
 
-        var selectedHandoff = await reader.HydrateAsync(new AdvisorHandoff(request.TenantId,
-            request.ProgramId, request.HandoffId), ct).ConfigureAwait(false);
-        if (!selectedHandoff.IsCreated || selectedHandoff.ProgramId != request.ProgramId)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The advisor handoff was not found in the requested program."));
-        var selection = selectedHandoff.Selection;
-        var exactSources = await recordVersions.RequireCurrentAsync(request.TenantId,
-            request.ProgramId, selection, ct).ConfigureAwait(false);
-        if (!exactSources.IsSuccess)
-            return exactSources;
+        var now = clock.GetUtcNow();
+        var owner = new AdvisorHandoff(request.TenantId, request.ProgramId, request.HandoffId).Stream;
+        var provenance = AdvisorContent.Provenance(request.CommandId, CommandKind, owner, actor,
+            (ulong)request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
 
-        return await executor.ExecuteAsync(new AdvisorHandoff(request.TenantId, request.ProgramId,
-                request.HandoffId), handoff =>
-        {
-            if (!handoff.IsCreated || handoff.ProgramId != request.ProgramId)
-                return AggregateOutcome.CommitOnSuccess(Result.Failure(new RequestError(
-                    RequestErrorKind.NotFound,
-                    "The advisor handoff was not found in the requested program.")));
-            if (!handoff.Selection.SequenceEqual(selection))
-                return AggregateOutcome.CommitOnSuccess(Result.Failure(new RequestError(
-                    RequestErrorKind.Conflict,
-                    "The handoff selection changed while its sources were being checked.")));
-
-            var result = handoff.MarkReadyForReview(request.ExpectedRevision, actor,
-                clock.GetUtcNow());
-            return AggregateOutcome.CommitOnSuccess(result.IsSuccess
-                ? Result.Success : Result.Failure(result.Error));
-        }, context, ct).ConfigureAwait(false);
+        return await operation.ExecuteAsync<AdvisorHandoff>(context, request.TenantId, provenance,
+            () => new AdvisorHandoff(request.TenantId, request.ProgramId, request.HandoffId, request.CommandId),
+            handoff => handoff.Acceptance,
+            async (hydrated, token) =>
+            {
+                if (!AdvisorHandoffRules.InProgram(hydrated, request.ProgramId))
+                    return AdvisorHandoffRules.NotFound();
+                // A stale revision or another state is reported by the owner guard.
+                if (hydrated.Revision != request.ExpectedRevision || !hydrated.IsOpen)
+                    return Result.Success;
+                var current = await handoffs.ReadAsync(hydrated, request.TenantId, token).ConfigureAwait(false);
+                return await recordVersions.RequireCurrentAsync(request.TenantId, request.ProgramId, current.Selection,
+                    token).ConfigureAwait(false);
+            },
+            handoff => AdvisorHandoffRules.InProgram(handoff, request.ProgramId)
+                ? handoff.PrepareReady(request.ExpectedRevision, DateOnly.FromDateTime(now.UtcDateTime))
+                : AdvisorHandoffRules.NotFound(),
+            (handoff, frozen, result) => handoff.MarkReady(provenance, actor, now, frozen, result), ct)
+            .ConfigureAwait(false);
     }
 }

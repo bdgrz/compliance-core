@@ -1,10 +1,17 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Risks;
 
-[Discriminator("bdgrz.risk.treatment_action.completion_reviewed", 1)]
-public sealed record RiskTreatmentActionCompletionReviewed(Uuid TenantId, Uuid ProgramId,
-    Uuid RiskId, long Revision, Uuid ActionId, Uuid DecisionId, string Outcome,
-    string Rationale, ActorReference Reviewer, DateTimeOffset ReviewedAt,
-    Uuid? SeparationOfDutiesWaiverId) : DomainEvent;
+/// <summary>
+///     The decision of a completion review, appended by <c>RiskActionCompletionReviewProcess</c> once every cited
+///     evidence request is held. <paramref name="Intent" /> is the frozen <see cref="RiskActionCompletionReviewIntent" />.
+/// </summary>
+[Discriminator("bdgrz.risk.treatment_action.completion_reviewed", 2)]
+public sealed record RiskTreatmentActionCompletionReviewed(Uuid TenantId, Uuid ProgramId, Uuid RiskId, long Revision,
+    Uuid ActionId, Uuid DecisionId, string Outcome, string Rationale, ActorReference Reviewer,
+    DateTimeOffset ReviewedAt, Uuid? SeparationOfDutiesWaiverId, OperationProvenance Operation,
+    ImmutableContentRef Intent, ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult)
+    : DomainEvent, INativeOperationFact;

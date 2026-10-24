@@ -98,8 +98,7 @@ public sealed class CompleteAccessReviewCampaignHandler(NativeOperationExecutor 
 
         var uses = await ManifestAsync(tenantId, AccessReviewContent.SourceUseItemSchema, [.. requirements.Values], ct)
             .ConfigureAwait(false);
-        var admitted = await ManifestAsync(tenantId, AccessReviewContent.AdmittedChildrenSchema, [], ct)
-            .ConfigureAwait(false);
+        var admitted = await DrainedBatchesAsync(tenantId, campaign.Campaign, ct).ConfigureAwait(false);
         var decisionContent = await AccessReviewContent.WriteAsync(content, tenantId,
             AccessReviewContent.CompletionDecisionSchema, new AccessReviewCompletionDecision(request.CommandId,
                 request.CampaignId, request.ExpectedRevision, request.Attestation.Trim()), ct).ConfigureAwait(false);
@@ -111,10 +110,34 @@ public sealed class CompleteAccessReviewCampaignHandler(NativeOperationExecutor 
                 (ulong)AccessReviewEffects.Generation, admitted, decisionContent, uses, null), ct).ConfigureAwait(false);
     }
 
-    async Task<ImmutableSelectionManifest> ManifestAsync(Uuid tenantId, string itemSchema,
-        SourceUseRequirement[] items, CancellationToken ct)
+    /// <summary>
+    ///     The complete set of bulk decision batches admitted before this seal, one entry per selected item. The
+    ///     completion holds an item only after every batch that selects it settled, so these drain first.
+    /// </summary>
+    async Task<ImmutableSelectionManifest> DrainedBatchesAsync(Uuid tenantId, AccessReviewCampaign campaign,
+        CancellationToken ct)
     {
-        var reference = await AccessReviewContent.WriteAsync<IReadOnlyList<SourceUseRequirement>>(content, tenantId,
+        var selections = new SortedDictionary<string, AccessReviewAdmittedBatchSelection>(StreamKeyOrder.Instance);
+        foreach (var admitted in campaign.AdmittedBatches)
+        {
+            var intent = await AccessReviewContent.ReadAsync<BulkAccessDecisionIntent>(content, tenantId,
+                admitted.Intent, ct).ConfigureAwait(false);
+            var items = await AccessReviewContent.ReadAsync<IReadOnlyList<BulkAccessDecisionItemIntent>>(content,
+                tenantId, intent.Items.Content, ct).ConfigureAwait(false);
+            foreach (var item in items)
+                selections.Add($"{item.ItemOwner.Resource}|{intent.DecisionBatchId}",
+                    new AccessReviewAdmittedBatchSelection(intent.DecisionBatchId, item.ItemId,
+                        NativeFactReference.Of(campaign.Stream, admitted)));
+        }
+
+        return await ManifestAsync(tenantId, AccessReviewContent.AdmittedChildrenSchema, [.. selections.Values], ct)
+            .ConfigureAwait(false);
+    }
+
+    async Task<ImmutableSelectionManifest> ManifestAsync<T>(Uuid tenantId, string itemSchema, T[] items,
+        CancellationToken ct) where T : notnull
+    {
+        var reference = await AccessReviewContent.WriteAsync<IReadOnlyList<T>>(content, tenantId,
             itemSchema, items, ct).ConfigureAwait(false);
         return new ImmutableSelectionManifest(reference, itemSchema, items.Length, SelectionOrder.CanonicalKey,
             reference.Sha256);

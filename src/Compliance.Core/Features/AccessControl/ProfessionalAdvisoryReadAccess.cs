@@ -7,8 +7,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Checks the existing accepted assignment path for advisory-note reads.</summary>
-sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, FirmStaffViews staffViews,
-    ServiceEngagementViews engagements, ITenantActivity tenants,
+sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, AdvisorHandoffReader handoffs,
+    FirmStaffViews staffViews, ServiceEngagementViews engagements, ITenantActivity tenants,
     IProgramResourceScopeResolver programScopes, TimeProvider clock,
     ITenantMembershipDirectoryReader memberships,
     IAccessGrantPermissionAuthorizer scopedPermissions)
@@ -98,8 +98,7 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, FirmStaffVi
         if (!await CanReadHandoffAsync(tenantId, programId, handoffId, userId, ct)
                 .ConfigureAwait(false))
             return false;
-        var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
-            handoffId), ct).ConfigureAwait(false);
+        var handoff = await handoffs.ReadAsync(tenantId, programId, handoffId, ct).ConfigureAwait(false);
         return handoff.Selection.Any(source => source.SourceFamily == sourceFamily &&
             source.RecordId == recordId && source.EntryId == entryId);
     }
@@ -112,8 +111,7 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, FirmStaffVi
             !await CanReadHandoffAsync(tenantId, programId, handoffId, userId, ct)
                 .ConfigureAwait(false))
             return false;
-        var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
-            handoffId), ct).ConfigureAwait(false);
+        var handoff = await handoffs.ReadAsync(tenantId, programId, handoffId, ct).ConfigureAwait(false);
         return handoff.Selection.Contains(sourceVersion);
     }
 
@@ -128,9 +126,12 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, FirmStaffVi
 
         var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
             handoffId), ct).ConfigureAwait(false);
-        return IsSharedHandoff(handoff, programId) && handoff.ReadFeedback().Any(feedback =>
-            feedback.FeedbackId == feedbackId && feedback.Author.Kind == "member" &&
-            feedback.Author.Id == RbacIds.Member(tenantId, userId).ToString());
+        if (!IsSharedHandoff(handoff, programId))
+            return false;
+        var thread = await reader.HydrateAsync(new AdvisorFeedbackThread(tenantId, programId, handoffId, feedbackId),
+            ct).ConfigureAwait(false);
+        return thread.Recorded is { Author: { Kind: "member" } author } &&
+               author.Id == RbacIds.Member(tenantId, userId).ToString();
     }
 
     /// <summary>An assigned Advisor may post only against an exact version in a shared handoff.</summary>
@@ -143,14 +144,13 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, FirmStaffVi
                 .ConfigureAwait(false))
             return false;
 
-        var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
-            handoffId), ct).ConfigureAwait(false);
-        return IsSharedHandoff(handoff, programId) &&
+        var handoff = await handoffs.ReadAsync(tenantId, programId, handoffId, ct).ConfigureAwait(false);
+        return IsSharedHandoff(handoff.Handoff, programId) &&
                handoff.Selection.Contains(sourceVersion);
     }
 
     bool IsSharedHandoff(AdvisorHandoff handoff, Uuid programId) => handoff.IsCreated &&
-        handoff.ProgramId == programId && handoff.Status == "ready_for_review" &&
+        handoff.ProgramId == programId && handoff.Status == AdvisorHandoff.ReadyForReview &&
         handoff.ExpiresOn >= DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
 
     async ValueTask<bool> CanReadGuestProgramAsync(Uuid tenantId, Uuid programId,

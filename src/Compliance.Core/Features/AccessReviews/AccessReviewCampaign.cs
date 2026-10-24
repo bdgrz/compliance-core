@@ -27,6 +27,7 @@ public sealed class AccessReviewCampaign : Aggregate
     readonly Uuid _tenantId;
     readonly List<DomainEvent> _facts = [];
     readonly Dictionary<Uuid, AccessReviewCampaignCompletionCanceled> _canceled = [];
+    readonly Dictionary<Uuid, AccessReviewDecisionBatchAdmitted> _admitted = [];
     AccessReviewCampaignLaunched? _launched;
     AccessReviewCampaignCompletionAccepted? _pending;
     AccessReviewCampaignCompleted? _completed;
@@ -57,6 +58,18 @@ public sealed class AccessReviewCampaign : Aggregate
                 throw new InvalidOperationException(
                     "A completion is admitted once at a time on a launched, uncompleted campaign.");
             _pending = ev;
+            _revision = ev.Revision;
+            _facts.Add(ev);
+        });
+        On<AccessReviewDecisionBatchAdmitted>(ev =>
+        {
+            Acceptance.Observe(ev);
+            if (_launched is null || _pending is not null || _completed is not null || ev.Owner != Stream ||
+                ev.Operation.Owner != Stream || ev.Revision != _revision + 1 || ev.FirstResponse is null ||
+                ev.Operation.RootOperationId != ev.Operation.LogicalId ||
+                !_admitted.TryAdd(ev.Operation.RootOperationId, ev))
+                throw new InvalidOperationException(
+                    "A bulk decision is admitted once, on a launched campaign that is not sealed by a completion.");
             _revision = ev.Revision;
             _facts.Add(ev);
         });
@@ -96,7 +109,7 @@ public sealed class AccessReviewCampaign : Aggregate
     /// <summary>True once the campaign was launched.</summary>
     public bool IsLaunched => _launched is not null;
 
-    /// <summary>The logical revision: 1 after launch, then one per admission, closure and cancellation.</summary>
+    /// <summary>The logical revision: 1 after launch, then one per completion or bulk admission, closure and cancellation.</summary>
     public long Revision => _revision;
 
     /// <summary>The admitted completion that is neither closed nor canceled, if any.</summary>
@@ -113,6 +126,14 @@ public sealed class AccessReviewCampaign : Aggregate
 
     /// <summary>Every fact of the campaign in order.</summary>
     public IReadOnlyList<DomainEvent> Facts => _facts;
+
+    /// <summary>The bulk decision batches admitted on this campaign, in admission order.</summary>
+    public IReadOnlyList<AccessReviewDecisionBatchAdmitted> AdmittedBatches =>
+        [.. _facts.OfType<AccessReviewDecisionBatchAdmitted>()];
+
+    /// <summary>The admission fact of a bulk decision batch, once recorded.</summary>
+    public AccessReviewDecisionBatchAdmitted? AdmittedFor(Uuid decisionBatchId) =>
+        _admitted.GetValueOrDefault(decisionBatchId);
 
     /// <summary>The accepted completion fact of a root operation, whatever became of it.</summary>
     public AccessReviewCampaignCompletionAccepted? AcceptedFor(Uuid rootOperationId) =>
@@ -180,6 +201,42 @@ public sealed class AccessReviewCampaign : Aggregate
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new AccessReviewCampaignCompletionAccepted(Stream, _revision + 1, AccessReviewEffects.Generation,
+            intent, null, operation, firstResponse, null));
+        return Result.Success;
+    }
+
+    /// <summary>Checks the bulk admission guards without raising anything.</summary>
+    public Result PrepareBulkAdmission(long expectedRevision)
+    {
+        if (_launched is null)
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The campaign was not found."));
+        if (_completed is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The campaign was already completed."));
+        if (_pending is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A completion of this campaign is in progress; no bulk decision is admitted until it ends."));
+        return expectedRevision == _revision
+            ? Result.Success
+            : Result.Failure(VersionedRecordRules.StaleRevision("access review campaign", _revision).ToRequestError());
+    }
+
+    /// <summary>
+    ///     Admits the complete bulk decision as the root native fact of its operation. The campaign revision advances;
+    ///     the batch it creates later starts at its own revision zero and is never compared with this one.
+    /// </summary>
+    public Result AdmitBulkDecision(OperationProvenance operation, ImmutableContentRef intent,
+        ImmutableContentRef firstResponse)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A bulk decision is a root operation of its own campaign with an expected revision."));
+        var prepared = PrepareBulkAdmission((long)expected);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new AccessReviewDecisionBatchAdmitted(Stream, _revision + 1, AccessReviewEffects.Generation,
             intent, null, operation, firstResponse, null));
         return Result.Success;
     }

@@ -3,7 +3,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>Returns one source's current content only through an unexpired open handoff.</summary>
-public sealed class GetAdvisorSharedSourceHandler(IAggregateReader aggregates,
+public sealed class GetAdvisorSharedSourceHandler(AdvisorHandoffReader aggregates,
     IAdvisorSharedSourceReader sources, TimeProvider clock)
     : IRequestHandler<GetAdvisorSharedSource, AdvisorSharedSourceView>
 {
@@ -23,8 +23,8 @@ public sealed class GetAdvisorSharedSourceHandler(IAggregateReader aggregates,
             request.EntryId == Uuid.Empty)
             return Invalid();
 
-        var handoff = await aggregates.HydrateAsync(new AdvisorHandoff(request.TenantId,
-            request.ProgramId, request.HandoffId), ct).ConfigureAwait(false);
+        var handoff = await aggregates.ReadAsync(request.TenantId,
+            request.ProgramId, request.HandoffId, ct).ConfigureAwait(false);
         if (!handoff.IsCreated || handoff.ProgramId != request.ProgramId ||
             handoff.Status != "ready_for_review" || handoff.ExpiresOn <
             DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime))
@@ -40,8 +40,8 @@ public sealed class GetAdvisorSharedSourceHandler(IAggregateReader aggregates,
         if (!source.IsSuccess)
             return source;
 
-        handoff = await aggregates.HydrateAsync(new AdvisorHandoff(request.TenantId,
-            request.ProgramId, request.HandoffId), ct).ConfigureAwait(false);
+        handoff = await aggregates.ReadAsync(request.TenantId,
+            request.ProgramId, request.HandoffId, ct).ConfigureAwait(false);
         return handoff.IsCreated && handoff.ProgramId == request.ProgramId &&
                handoff.Status == "ready_for_review" && handoff.ExpiresOn >=
                DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime) &&

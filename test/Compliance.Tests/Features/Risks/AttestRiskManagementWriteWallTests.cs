@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
@@ -32,7 +33,7 @@ public sealed class AttestRiskManagementWriteWallTests
         var context = Context(source.AssessorUserId);
 
         // Act
-        var result = await bus.DispatchAsync(new ProposeRiskControlTreatment(source.TenantId,
+        var result = await bus.DispatchAsync(new ProposeRiskControlTreatment(Uuid.CreateVersion4(), source.TenantId,
             source.ProgramId, source.RiskId, 0, source.ControlId, source.ControlVersionId,
             "Client treatment decision"), context, CancellationToken.None);
         var read = await bus.DispatchAsync(new GetRiskGovernance(source.TenantId, source.ProgramId,
@@ -85,7 +86,7 @@ public sealed class AttestRiskManagementWriteWallTests
         await using var provider = await ComposeAsync(source);
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
-        var proposed = await bus.DispatchAsync(new ProposeRiskControlTreatment(source.TenantId,
+        var proposed = await bus.DispatchAsync(new ProposeRiskControlTreatment(Uuid.CreateVersion4(), source.TenantId,
             source.ProgramId, source.RiskId, 0, source.ControlId, source.ControlVersionId,
             "Client treatment decision"), Context(source.AssessorUserId), CancellationToken.None);
         Assert.True(proposed.IsSuccess, proposed.Error?.Message);
@@ -160,6 +161,7 @@ public sealed class AttestRiskManagementWriteWallTests
         }).Build(), developerAuthentication: true);
         var events = source.Provider.GetRequiredService<IEventStore>();
         services.AddSingleton<IEventStore>(events);
+        services.AddSingleton<IImmutableContentStore>(source.Provider.GetRequiredService<IImmutableContentStore>());
         services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<ITenantActivity>(new ActiveTenant());

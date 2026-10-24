@@ -19,7 +19,7 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
     public IReadOnlyCollection<string> ProjectedKinds => [WorkSource.AdvisorFeedback];
 
     public EventStreamPattern SourcePattern(Uuid tenantId) => EventStreamPattern.ForPattern(
-        tenantId.ToString(), "advisor-handoffs");
+        tenantId.ToString(), AdvisorFeedbackThread.Area);
 
     public new ValueTask<IProjectionBatch> BeginAsync(ProjectionBatchContext context,
         CancellationToken ct = default) => BeginTenantBatchAsync(context, ct);
@@ -30,12 +30,12 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
     async ValueTask<IProjectionBatch> BeginTenantBatchAsync(ProjectionBatchContext context,
         CancellationToken ct)
     {
-        if (context.Identity.Pattern.Area != "advisor-handoffs" ||
+        if (context.Identity.Pattern.Area != AdvisorFeedbackThread.Area ||
             context.Identity.Pattern.Resource is not null ||
             !Uuid.TryParse(context.Identity.Pattern.Realm, null, out var tenantId) ||
             tenantId == Uuid.Empty)
             throw new InvalidOperationException(
-                "An advisor feedback work batch requires its tenant's handoff area.");
+                "An advisor feedback work batch requires its tenant's feedback thread area.");
         var batch = await base.BeginAsync(context, ct).ConfigureAwait(false);
         _batchTenantId = tenantId;
         return batch;
@@ -47,26 +47,26 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
-        var (tenantId, programId, handoffId) = Identity(domainEvent);
-        if (tenantId == Uuid.Empty || programId == Uuid.Empty || handoffId == Uuid.Empty)
+        var (tenantId, programId, handoffId, feedbackId) = Identity(domainEvent);
+        if (tenantId == Uuid.Empty || programId == Uuid.Empty || handoffId == Uuid.Empty || feedbackId == Uuid.Empty)
             throw InvalidEvent();
         EnsureTenant(tenantId);
         var metadata = domainEvent.Metadata;
-        if (metadata.EventId == Uuid.Empty || metadata.AggregateId != handoffId ||
-            metadata.AggregateVersion == 0)
+        if (metadata.EventId == Uuid.Empty || metadata.AggregateId != AdvisorFeedbackThread.IdentityOf(tenantId,
+                programId, handoffId, feedbackId) || metadata.AggregateVersion == 0)
             throw InvalidEvent();
 
-        var current = await AdvisorFeedbackWorkItemSchema.Handoffs.GetAsync(Transaction,
-            handoffId, ct).ConfigureAwait(false);
+        var current = await AdvisorFeedbackWorkItemSchema.Threads.GetAsync(Transaction,
+            feedbackId, ct).ConfigureAwait(false);
         if (current is null)
         {
-            if (domainEvent is not AdvisorHandoffCreated || metadata.AggregateVersion != 1)
+            if (domainEvent is not AdvisorFeedbackRecorded || metadata.AggregateVersion != 1)
                 throw InvalidEvent();
         }
         else
         {
             if (current.TenantId != tenantId || current.ProgramId != programId ||
-                current.HandoffId != handoffId)
+                current.HandoffId != handoffId || current.FeedbackId != feedbackId)
                 throw InvalidEvent();
             if (metadata.AggregateVersion == current.LastAggregateVersion &&
                 metadata.EventId == current.LastEventId)
@@ -92,13 +92,13 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
                 break;
         }
 
-        var next = new AdvisorFeedbackWorkItemProjectionState(tenantId, programId, handoffId,
+        var next = new AdvisorFeedbackWorkItemProjectionState(tenantId, programId, handoffId, feedbackId,
             metadata.EventId, metadata.AggregateVersion);
         if (current is null)
-            await AdvisorFeedbackWorkItemSchema.Handoffs.InsertAsync(Transaction, next, ct)
+            await AdvisorFeedbackWorkItemSchema.Threads.InsertAsync(Transaction, next, ct)
                 .ConfigureAwait(false);
         else
-            await AdvisorFeedbackWorkItemSchema.Handoffs.ReplaceAsync(Transaction, current, next, ct)
+            await AdvisorFeedbackWorkItemSchema.Threads.ReplaceAsync(Transaction, current, next, ct)
                 .ConfigureAwait(false);
     }
 
@@ -216,25 +216,21 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
             [], entry.CreatedAt);
     }
 
-    static (Uuid TenantId, Uuid ProgramId, Uuid HandoffId) Identity(DomainEvent domainEvent) => domainEvent switch
-    {
-        AdvisorHandoffCreated ev => (ev.TenantId, ev.ProgramId, ev.HandoffId),
-        AdvisorHandoffSelectionRevised ev => (ev.TenantId, ev.ProgramId, ev.HandoffId),
-        AdvisorHandoffReadiedForReview ev => (ev.TenantId, ev.ProgramId, ev.HandoffId),
-        AdvisorHandoffClosed ev => (ev.TenantId, ev.ProgramId, ev.HandoffId),
-        AdvisorHandoffRevoked ev => (ev.TenantId, ev.ProgramId, ev.HandoffId),
-        AdvisorFeedbackRecorded ev => (ev.TenantId, ev.ProgramId, ev.HandoffId),
-        AdvisorFeedbackCorrected ev => (ev.TenantId, ev.ProgramId, ev.HandoffId),
-        AdvisorFeedbackResponded ev => (ev.TenantId, ev.ProgramId, ev.HandoffId),
-        AdvisorFeedbackResolved ev => (ev.TenantId, ev.ProgramId, ev.HandoffId),
-        _ => throw InvalidEvent(),
-    };
+    static (Uuid TenantId, Uuid ProgramId, Uuid HandoffId, Uuid FeedbackId) Identity(DomainEvent domainEvent) =>
+        domainEvent switch
+        {
+            AdvisorFeedbackRecorded ev => (ev.TenantId, ev.ProgramId, ev.HandoffId, ev.FeedbackId),
+            AdvisorFeedbackCorrected ev => (ev.TenantId, ev.ProgramId, ev.HandoffId, ev.FeedbackId),
+            AdvisorFeedbackResponded ev => (ev.TenantId, ev.ProgramId, ev.HandoffId, ev.FeedbackId),
+            AdvisorFeedbackResolved ev => (ev.TenantId, ev.ProgramId, ev.HandoffId, ev.FeedbackId),
+            _ => throw InvalidEvent(),
+        };
 
     void EnsureTenant(Uuid tenantId)
     {
         if (_batchTenantId != tenantId)
             throw new InvalidOperationException(
-                "An advisor handoff event must belong to its tenant projection batch.");
+                "An advisor feedback event must belong to its tenant projection batch.");
     }
 
     static bool ValidActor(ActorReference? actor) => actor is not null &&

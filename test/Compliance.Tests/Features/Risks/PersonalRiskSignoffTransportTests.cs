@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +30,7 @@ public sealed class PersonalRiskSignoffTransportTests
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
         Assert.Equal(before.CommittedStreamPosition, retained.CommittedStreamPosition);
-        Assert.Equal(before.RevisionOf(fixture.Source.RiskId), retained.RevisionOf(fixture.Source.RiskId));
+        Assert.Equal(before.Revision, retained.Revision);
     }
 
     [Theory]
@@ -48,9 +49,10 @@ public sealed class PersonalRiskSignoffTransportTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition + 1, retained.CommittedStreamPosition);
-        Assert.Equal(before.RevisionOf(fixture.Source.RiskId) + 1, retained.RevisionOf(fixture.Source.RiskId));
-        var view = retained.View(fixture.Source.RiskId, [], DateOnly.FromDateTime(DateTime.UtcNow));
+        var expectedFacts = action == "completion" ? 2UL : 1UL;
+        Assert.Equal(before.CommittedStreamPosition + expectedFacts, retained.CommittedStreamPosition);
+        Assert.Equal(before.Revision + (long)expectedFacts, retained.Revision);
+        var view = retained.View;
         var expected = RbacIds.Member(fixture.Source.TenantId, fixture.Actor).ToString();
         if (action == "treatment")
         {
@@ -126,6 +128,11 @@ public sealed class PersonalRiskSignoffTransportTests
             Assert.Equal(kind, result.Error?.Kind);
         else
             Assert.True(result.IsSuccess, result.Error?.Message);
+        if (result.IsSuccess && request is ReviewRiskTreatmentActionCompletion review)
+        {
+            var process = await RiskActionProcesses.RunAsync(provider, review.TenantId, review.CommandId);
+            Assert.Equal(ProcessState.Completed, process.State);
+        }
         return result;
     }
 
@@ -136,7 +143,7 @@ public sealed class PersonalRiskSignoffTransportTests
         _ => new HttpInvocation("POST", "/synthetic/risk/signoff", "/synthetic/risk/signoff", "synthetic")
     };
 
-    sealed class Fixture(RiskGovernanceHandlerTests.Fixture source, ServiceProvider provider) : IAsyncDisposable
+    sealed class Fixture(RiskGovernanceHandlerTests.Fixture source, ServiceProvider provider, string actionKind) : IAsyncDisposable
     {
         public RiskGovernanceHandlerTests.Fixture Source { get; } = source;
         Uuid _id;
@@ -149,13 +156,13 @@ public sealed class PersonalRiskSignoffTransportTests
         public static async Task<Fixture> CreateAsync(string action)
         {
             var source = await RiskGovernanceHandlerTests.Fixture.CreateAsync("mitigate");
-            var fixture = new Fixture(source, await AttestRiskManagementWriteWallTests.ComposeAsync(source))
+            var fixture = new Fixture(source, await AttestRiskManagementWriteWallTests.ComposeAsync(source), action)
             {
                 Actor = action == "submit" ? source.AssessorUserId : source.ApproverUserId
             };
             if (action == "treatment")
             {
-                var proposal = await source.Scenario(source.AssessorUserId).When(new ProposeRiskControlTreatment(
+                var proposal = await source.Scenario(source.AssessorUserId).When(new ProposeRiskControlTreatment(Uuid.CreateVersion4(),
                     source.TenantId, source.ProgramId, source.RiskId, 0, source.ControlId, source.ControlVersionId,
                     "Current approved control mitigates risk.")).ExpectSuccess();
                 fixture._id = proposal.Value.TreatmentId;
@@ -196,13 +203,36 @@ public sealed class PersonalRiskSignoffTransportTests
                 var result = await bus.DispatchAsync(Source.Submit(_id, 1, [_evidence]), context, CancellationToken.None);
                 return result.IsSuccess ? Result.Success : Result.Failure(result.Error);
             }
-            return action == "treatment"
-                ? await bus.DispatchAsync(Source.ReviewTreatment(_id, "accept"), context, CancellationToken.None)
-                : await bus.DispatchAsync(Source.ReviewAction(_id, 2, "accept") with { SeparationOfDutiesWaiverId = _missingWaiver }, context, CancellationToken.None);
+            if (action == "treatment")
+                return await bus.DispatchAsync(Source.ReviewTreatment(_id, "accept"), context, CancellationToken.None);
+            var review = Source.ReviewAction(_id, 2, "accept") with { SeparationOfDutiesWaiverId = _missingWaiver };
+            var reviewed = await bus.DispatchAsync(review, context, CancellationToken.None);
+            if (!reviewed.IsSuccess)
+                return Result.Failure(reviewed.Error);
+            var process = await RiskActionProcesses.RunAsync(provider, Source.TenantId, review.CommandId);
+            Assert.Equal(ProcessState.Completed, process.State);
+            return Result.Success;
         }
 
-        public Task<RiskGovernanceLedger> ReadAsync() => ProgramManagementServices.HydrateAsync(provider,
-            new RiskGovernanceLedger(Source.TenantId, Source.ProgramId));
+        public async Task<SignoffSnapshot> ReadAsync()
+        {
+            await using var scope = provider.CreateAsyncScope();
+            var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+            var snapshot = await scope.ServiceProvider.GetRequiredService<RiskGovernanceReader>()
+                .ReadRiskAsync(Source.TenantId, Source.ProgramId, Source.RiskId);
+            var view = snapshot.View(Source.RiskId, [], DateOnly.FromDateTime(DateTime.UtcNow));
+            if (actionKind == "treatment")
+            {
+                var line = await reader.HydrateAsync(new RiskTreatmentAssertion(Source.TenantId, Source.ProgramId,
+                    Source.RiskId, Source.ControlId));
+                return new SignoffSnapshot(line.CommittedStreamPosition, line.Revision, view);
+            }
+            var action = await reader.HydrateAsync(new RiskTreatmentAction(Source.TenantId, Source.ProgramId,
+                Source.RiskId, _id));
+            return new SignoffSnapshot(action.CommittedStreamPosition, action.Revision, view);
+        }
+
+        public sealed record SignoffSnapshot(ulong CommittedStreamPosition, long Revision, RiskGovernanceView View);
 
         public async ValueTask DisposeAsync()
         {

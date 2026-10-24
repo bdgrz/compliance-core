@@ -14,7 +14,8 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     operation, so an exact retry replays the original registration even after the finding changed.
 /// </summary>
 public sealed class RaiseFindingHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    ControlOperationsReader operatingReader, IImmutableContentStore content, TimeProvider clock)
+    ControlOperationsReader operatingReader, Readiness.ReadinessReader readiness, IImmutableContentStore content,
+    TimeProvider clock)
     : IRequestHandler<RaiseFinding, FindingRegistration>
 {
     public async ValueTask<Result<FindingRegistration>> HandleAsync(IRequestContext<RaiseFinding> context,
@@ -82,9 +83,22 @@ public sealed class RaiseFindingHandler(NativeOperationExecutor operations, IAgg
             case "readiness_gap":
                 if (!Uuid.TryParse(source.Version, null, out var assessmentId))
                     return missing;
-                var readiness = await reader.HydrateAsync(new ReadinessLedger(request.TenantId, request.ProgramId), ct)
-                    .ConfigureAwait(false);
-                return readiness.ReadGaps(assessmentId)?.Any(gap => gap.GapId == recordId) == true ? null : missing;
+                try
+                {
+                    var program = await readiness.ReadProgramAsync(request.TenantId, request.ProgramId, ct)
+                        .ConfigureAwait(false);
+                    return program.AdoptionOf(assessmentId) is not null &&
+                           await readiness.ReadContentAsync(request.TenantId, request.ProgramId, assessmentId, ct)
+                               .ConfigureAwait(false) is { } loaded && loaded.Gaps.Any(gap => gap.GapId == recordId)
+                        ? null
+                        : missing;
+                }
+                catch (ImmutableContentIntegrityException exception)
+                {
+                    return new RequestError(RequestErrorKind.Conflict,
+                        $"The readiness content cannot be verified yet: {exception.Message}", true);
+                }
+
             case "control_occurrence" or "occurrence_review":
                 var snapshot = await operatingReader.ReadAsync(request.TenantId, request.ProgramId, ct)
                     .ConfigureAwait(false);

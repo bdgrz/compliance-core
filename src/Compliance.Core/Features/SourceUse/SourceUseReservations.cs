@@ -85,11 +85,13 @@ public sealed class SourceUseReservations(EventStreamAddress owner)
         if (fact.Owner != owner || fact.Operation.Owner != owner || fact.Generation < 0 ||
             fact.Operation.RootOperationId == Uuid.Empty)
             throw new InvalidOperationException("A source use fact belongs to its own owner stream and root operation.");
-        return new Slot(fact.Operation.RootOperationId, (ulong)fact.Generation, PurposeName(purpose));
+        return new Slot(fact.Operation.RootOperationId, fact.Operation.FirstOwner ?? fact.Operation.Owner,
+            (ulong)fact.Generation, PurposeName(purpose));
     }
 
-    readonly record struct Slot(Uuid Root, ulong SourceGeneration, string Purpose)
+    readonly record struct Slot(Uuid Root, EventStreamAddress FirstOwner, ulong SourceGeneration, string Purpose)
     {
-        public static Slot Of(ReservationKey key) => new(key.RootOperationId, key.SourceGeneration, key.Purpose);
+        public static Slot Of(ReservationKey key) =>
+            new(key.RootOperationId, key.FirstOwner, key.SourceGeneration, key.Purpose);
     }
 }

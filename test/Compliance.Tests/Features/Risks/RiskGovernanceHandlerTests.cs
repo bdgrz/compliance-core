@@ -1,5 +1,9 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.Independence;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Responsibilities;
@@ -9,6 +13,7 @@ using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Extensions;
+using Cntryl.Fitz;
 using Cntryl.Portia;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia.Testing;
@@ -27,7 +32,7 @@ public sealed class RiskGovernanceHandlerTests
             .When(fixture.Residual(2))
             .ExpectFailure(RequestErrorKind.Conflict);
         var proposed = await fixture.Scenario(fixture.AssessorUserId)
-            .When(new ProposeRiskControlTreatment(fixture.TenantId, fixture.ProgramId,
+            .When(new ProposeRiskControlTreatment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.RiskId, 0, fixture.ControlId, fixture.ControlVersionId,
                 "Quarterly access review lowers likelihood."))
             .ExpectSuccess();
@@ -45,7 +50,10 @@ public sealed class RiskGovernanceHandlerTests
         var treatment = Assert.Single(governance.ControlTreatments);
         Assert.Equal("accepted", treatment.Status);
         Assert.Equal(fixture.ControlVersionId, treatment.ControlVersionId);
-        Assert.Equal(2, governance.Revision);
+        Assert.Equal(0, governance.Revision);
+        var line = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new RiskTreatmentAssertion(fixture.TenantId, fixture.ProgramId, fixture.RiskId, fixture.ControlId));
+        Assert.Equal(2, line.Revision);
     }
 
     [Fact]
@@ -56,16 +64,16 @@ public sealed class RiskGovernanceHandlerTests
 
         await fixture.Scenario(fixture.AssessorUserId)
             // Act
-            .When(new ProposeRiskControlTreatment(fixture.TenantId, fixture.ProgramId,
+            .When(new ProposeRiskControlTreatment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.RiskId, 0, fixture.ControlId, Uuid.CreateVersion4(), "Wrong version."))
             // Assert
             .ExpectFailure(RequestErrorKind.Conflict);
         await fixture.Scenario(fixture.AssessorUserId)
-            .When(new ProposeRiskControlTreatment(fixture.TenantId, fixture.ProgramId,
+            .When(new ProposeRiskControlTreatment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.RiskId, 0, fixture.ControlId, fixture.ControlVersionId, "Not mitigate."))
             .ExpectFailure(RequestErrorKind.Conflict);
         await fixture.Scenario(fixture.AssessorUserId)
-            .When(new ProposeRiskControlTreatment(fixture.TenantId, fixture.ProgramId,
+            .When(new ProposeRiskControlTreatment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 Uuid.CreateVersion4(), 0, fixture.ControlId, fixture.ControlVersionId, "None."))
             .ExpectFailure(RequestErrorKind.NotFound);
         Assert.Empty((await fixture.GovernanceAsync()).ControlTreatments);
@@ -78,7 +86,7 @@ public sealed class RiskGovernanceHandlerTests
         var fixture = await Fixture.CreateAsync("accept");
         var personId = await fixture.SeedPersonAsync(fixture.ApproverUserId);
         await fixture.Scenario(fixture.AssessorUserId)
-            .When(new AssignRiskOwner(fixture.TenantId, fixture.ProgramId, fixture.RiskId, 0,
+            .When(new AssignRiskOwner(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.RiskId, 0,
                 personId, "Owns the provider relationship."))
             .ExpectSuccess();
         var residual = await fixture.Scenario(fixture.AssessorUserId)
@@ -104,8 +112,8 @@ public sealed class RiskGovernanceHandlerTests
         // Arrange
         var fixture = await Fixture.CreateAsync("accept");
         var source = Uuid.CreateVersion4().ToString();
-        var raise = new RaiseRiskReassessmentTriggers(fixture.TenantId, fixture.ProgramId,
-            "boundary_changed", source, DateTimeOffset.UtcNow, null);
+        var raise = new RaiseRiskReassessmentTriggers(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+            "boundary_changed", source, DateTimeOffset.UtcNow, null, fixture.RiskId);
         await fixture.Scenario(fixture.AssessorUserId)
             .When(raise)
             .ExpectFailure(RequestErrorKind.Forbidden);
@@ -116,9 +124,9 @@ public sealed class RiskGovernanceHandlerTests
         await RequestScenario.For(fixture.Provider).GivenActor(RequestActor.System)
             .When(raise).ExpectSuccess();
         await RequestScenario.For(fixture.Provider).GivenActor(RequestActor.System)
-            .When(new RaiseRiskReassessmentTriggers(fixture.TenantId, fixture.ProgramId,
+            .When(new RaiseRiskReassessmentTriggers(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 "method_changed", fixture.MethodVersionId.ToString(), DateTimeOffset.UtcNow,
-                fixture.MethodVersionId))
+                fixture.MethodVersionId, fixture.RiskId))
             .ExpectSuccess();
 
         // Assert
@@ -159,7 +167,8 @@ public sealed class RiskGovernanceHandlerTests
         Assert.Equal(submitted.Value.SubmissionId,
             Assert.Single(Assert.Single(done.TreatmentActions).Completions).SubmissionId);
         Assert.Equal("completed", done.TreatmentActionStatus);
-        Assert.Equal(3, done.Revision);
+        Assert.Equal(0, done.Revision);
+        Assert.Equal(4, (await fixture.ActionAsync(added.Value.ActionId)).Revision);
     }
 
     [Fact]
@@ -172,7 +181,7 @@ public sealed class RiskGovernanceHandlerTests
         var evidenceId = await fixture.SeedEvidenceAsync(fulfilled: false, revisedOwner);
         var added = await fixture.Scenario(fixture.AssessorUserId)
             .When(fixture.AddAction(originalOwner, [], 0)).ExpectSuccess();
-        var revise = new ReviseRiskTreatmentAction(fixture.TenantId, fixture.ProgramId,
+        var revise = new ReviseRiskTreatmentAction(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.RiskId, added.Value.ActionId, 1, "Enforce phishing-resistant MFA",
             "Every administrator uses a hardware key.",
             "Identity provider policy export.", DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30),
@@ -190,7 +199,8 @@ public sealed class RiskGovernanceHandlerTests
         Assert.Equal(revisedOwner.MemberId, action.AccountableMemberId);
         Assert.Equal([evidenceId], action.EvidenceRequestIds);
         Assert.Equal("open", action.Status);
-        Assert.Equal(2, governance.Revision);
+        Assert.Equal(0, governance.Revision);
+        Assert.Equal(2, (await fixture.ActionAsync(added.Value.ActionId)).Revision);
     }
 
     [Fact]
@@ -204,11 +214,11 @@ public sealed class RiskGovernanceHandlerTests
         var foreignEvidenceId = await other.SeedEvidenceAsync(fulfilled: false, otherOwner);
         var added = await fixture.Scenario(fixture.AssessorUserId)
             .When(fixture.AddAction(owner, [], 0)).ExpectSuccess();
-        var foreignEvidenceEdit = new ReviseRiskTreatmentAction(fixture.TenantId,
+        var foreignEvidenceEdit = new ReviseRiskTreatmentAction(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, fixture.RiskId, added.Value.ActionId, 1, "Updated action",
             "Updated state", "Updated evidence", DateOnly.FromDateTime(DateTime.UtcNow)
                 .AddDays(30), owner.MemberId, [foreignEvidenceId]);
-        var inactiveMemberEdit = new ReviseRiskTreatmentAction(fixture.TenantId,
+        var inactiveMemberEdit = new ReviseRiskTreatmentAction(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, fixture.RiskId, added.Value.ActionId, 1, "Updated action",
             "Updated state", "Updated evidence", DateOnly.FromDateTime(DateTime.UtcNow)
                 .AddDays(30), Uuid.CreateVersion4());
@@ -224,7 +234,8 @@ public sealed class RiskGovernanceHandlerTests
         var action = Assert.Single(governance.TreatmentActions);
         Assert.Equal("Enforce MFA", action.Title);
         Assert.Equal(owner.MemberId, action.AccountableMemberId);
-        Assert.Equal(1, governance.Revision);
+        Assert.Equal(0, governance.Revision);
+        Assert.Equal(1, (await fixture.ActionAsync(added.Value.ActionId)).Revision);
     }
 
     [Fact]
@@ -239,7 +250,7 @@ public sealed class RiskGovernanceHandlerTests
             .ExpectFailure(RequestErrorKind.Forbidden);
         await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.Submit(Uuid.CreateVersion4(), 1, [Uuid.CreateVersion4()]), RequestErrorKind.Forbidden);
         await fixture.Scenario(fixture.AssessorUserId)
-            .When(new ReviseRiskTreatmentAction(fixture.TenantId, fixture.ProgramId,
+            .When(new ReviseRiskTreatmentAction(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.RiskId, Uuid.CreateVersion4(), 0, "Updated action", "Updated state",
                 "Updated evidence", DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30),
                 Uuid.CreateVersion4()))
@@ -247,9 +258,8 @@ public sealed class RiskGovernanceHandlerTests
         await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(Uuid.CreateVersion4(), 1, "accept"), RequestErrorKind.Forbidden);
 
         // Assert
-        var ledger = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId));
-        Assert.Equal(0, ledger.RevisionOf(fixture.RiskId));
+        var governance = await fixture.GovernanceAsync();
+        Assert.Empty(governance.TreatmentActions);
     }
 
     [Fact]
@@ -287,7 +297,7 @@ public sealed class RiskGovernanceHandlerTests
         var worker = await fixture.SeedMemberAsync();
         var evidenceId = await fixture.SeedEvidenceAsync(fulfilled: true, worker);
         var addId = Uuid.CreateVersion4();
-        var add = fixture.AddAction(worker, [evidenceId], 0);
+        var add = fixture.AddAction(worker, [evidenceId], 0) with { ActionId = addId };
 
         // Act
         var first = await fixture.ReplayScenario(fixture.AssessorUserId, add, addId)
@@ -295,7 +305,7 @@ public sealed class RiskGovernanceHandlerTests
         var second = await fixture.ReplayScenario(fixture.AssessorUserId, add, addId)
             .ExpectSuccess();
         var submitId = Uuid.CreateVersion4();
-        var submit = fixture.Submit(addId, 1, [evidenceId]);
+        var submit = fixture.Submit(addId, 1, [evidenceId]) with { CommandId = submitId };
         await fixture.ReplaySubmitHttpAsync(submit, submitId);
         await fixture.ReplaySubmitHttpAsync(submit, submitId);
         await fixture.ReplayScenario(fixture.AssessorUserId, add with { Title = "Changed" },
@@ -304,20 +314,19 @@ public sealed class RiskGovernanceHandlerTests
         // Assert
         Assert.Equal(first.Value, second.Value);
         var governance = await fixture.GovernanceAsync();
-        Assert.Equal(2, governance.Revision);
+        Assert.Equal(0, governance.Revision);
+        Assert.Equal(2, (await fixture.ActionAsync(addId)).Revision);
         Assert.Single(Assert.Single(governance.TreatmentActions).Completions);
     }
 
     [Theory]
-    [InlineData(false, "accept")]
-    [InlineData(true, "accept")]
-    [InlineData(false, "reject")]
-    [InlineData(true, "reject")]
+    [InlineData("accept")]
+    [InlineData("reject")]
     public async Task ShouldReviewAndRemoveQueueWorkGivenReviewerAssignedThroughActualQueue(
-        bool projected, string outcome)
+        string outcome)
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync("mitigate", projected: projected);
+        var fixture = await Fixture.CreateAsync("mitigate");
         var worker = await fixture.SeedMemberAsync();
         var evidenceId = await fixture.SeedEvidenceAsync(fulfilled: true, worker);
         var added = await fixture.Scenario(fixture.AssessorUserId)
@@ -327,7 +336,6 @@ public sealed class RiskGovernanceHandlerTests
 
         // Act
         await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 2, outcome));
-        await fixture.CatchUpAsync();
         var after = await fixture.Scenario(fixture.ApproverUserId).When(new ListWork(
             fixture.TenantId, fixture.ProgramId, "mine")).ExpectSuccess();
         var governance = await fixture.GovernanceAsync();
@@ -340,13 +348,11 @@ public sealed class RiskGovernanceHandlerTests
         Assert.Equal(outcome, Assert.Single(Assert.Single(governance.TreatmentActions).Completions).ReviewOutcome);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ShouldDenyPreviousReviewerGivenActualQueueReassignment(bool projected)
+    [Fact]
+    public async Task ShouldDenyPreviousReviewerGivenActualQueueReassignment()
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync("mitigate", projected: projected);
+        var fixture = await Fixture.CreateAsync("mitigate");
         var worker = await fixture.SeedMemberAsync();
         var replacement = await fixture.SeedMemberAsync();
         var evidenceId = await fixture.SeedEvidenceAsync(fulfilled: true, worker);
@@ -368,13 +374,11 @@ public sealed class RiskGovernanceHandlerTests
         Assert.Equal("completed", (await fixture.GovernanceAsync()).TreatmentActionStatus);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ShouldRequireNewQueueAssignmentGivenRejectedCompletionResubmitted(bool projected)
+    [Fact]
+    public async Task ShouldRequireNewQueueAssignmentGivenRejectedCompletionResubmitted()
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync("mitigate", projected: projected);
+        var fixture = await Fixture.CreateAsync("mitigate");
         var worker = await fixture.SeedMemberAsync();
         var evidenceId = await fixture.SeedEvidenceAsync(fulfilled: true, worker);
         var added = await fixture.Scenario(fixture.AssessorUserId)
@@ -382,13 +386,13 @@ public sealed class RiskGovernanceHandlerTests
         var first = await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.Submit(added.Value.ActionId, 1, [evidenceId]));
         var firstItem = await fixture.AssignReviewAsync(first.Value.SubmissionId);
         await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 2, "reject"));
-        var second = await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.Submit(added.Value.ActionId, 3, [evidenceId]));
+        var second = await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.Submit(added.Value.ActionId, 4, [evidenceId]));
 
         // Act
-        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 4, "accept"), RequestErrorKind.Forbidden);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 5, "accept"), RequestErrorKind.Forbidden);
         var secondItem = await fixture.AssignReviewAsync(second.Value.SubmissionId);
-        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 3, "accept"), RequestErrorKind.Conflict);
-        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 4, "accept"));
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 4, "accept"), RequestErrorKind.Conflict);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 5, "accept"));
 
         // Assert
         Assert.NotEqual(first.Value.SubmissionId, second.Value.SubmissionId);
@@ -411,7 +415,7 @@ public sealed class RiskGovernanceHandlerTests
         public Uuid ControlVersionId => ControlVersionIds.Initial(ControlId);
         public Uuid MethodVersionId { get; private set; }
 
-        public static async Task<Fixture> CreateAsync(string treatment, bool allowed = true, bool projected = false)
+        public static async Task<Fixture> CreateAsync(string treatment, bool allowed = true)
         {
             var directory = new SingleRiskDirectory();
             var client = new InMemoryKvClient();
@@ -427,6 +431,14 @@ public sealed class RiskGovernanceHandlerTests
                     .AddRequestHandler<ReviseRiskTreatmentActionHandler>()
                     .AddRequestHandler<SubmitRiskTreatmentActionCompletionHandler>()
                     .AddRequestHandler<ReviewRiskTreatmentActionCompletionHandler>()
+                    .AddRequestHandler<CompleteRiskTreatmentActionReviewHandler>()
+                    .AddRequestHandler<AbortRiskTreatmentActionReviewHandler>()
+                    .AddRequestAuthorizer<RiskActionReceiverAuthorizer>()
+                    .AddRequestHandler<AuthorizeEvidenceRequestActionCompletionUseHandler>()
+                    .AddRequestHandler<SettleEvidenceRequestActionCompletionUseHandler>()
+                    .AddRequestAuthorizer<EvidenceRequestReceiverAuthorizer>()
+                    .AddRequestHandler<OpenEvidenceRequestHandler>()
+                    .AddRequestHandler<FulfilEvidenceRequestHandler>()
                     .AddRequestHandler<ListWorkHandler>()
                     .AddRequestHandler<GetWorkItemHandler>()
                     .AddRequestHandler<AssignWorkItemHandler>()
@@ -442,12 +454,16 @@ public sealed class RiskGovernanceHandlerTests
                         .AddSingleton<IDomainEventReader>(provider =>
                             (IDomainEventReader)provider.GetRequiredService<IEventStore>())
                         .AddSingleton<IRiskDraftDirectoryReader>(directory);
-                    if (projected)
-                    {
-                        services.AddScoped<FitzRiskGovernanceWorkItemDirectory>(provider => new(client));
-                        services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                            provider.GetRequiredService<FitzRiskGovernanceWorkItemDirectory>());
-                    }
+                    services.AddSingleton<IKvClient>(client);
+                    services.AddSingleton<IProcessRecordStore>(new FitzKvProcessRecordStore(client));
+                    services.AddSingleton(RiskActionCompletionReviewProcess.Definition());
+                    services.AddSingleton<ProcessCatalog>();
+                    services.AddScoped<ProcessDriver>();
+                    services.AddScoped<RiskActionReviewVerifier>();
+                    services.AddScoped<RiskActionReviewFences>();
+                    services.AddSingleton<ISourceFactResolver>(provider =>
+                        new EventStoreSourceFactResolver(provider.GetRequiredService<IDomainEventReader>()));
+                    services.AddScoped<ISeparationOfDutiesWaiverProofResolver, SeparationOfDutiesWaiverProofResolver>();
                 });
             var fixture = new Fixture { Provider = provider };
             directory.Fixture = fixture;
@@ -538,7 +554,6 @@ public sealed class RiskGovernanceHandlerTests
 
         public async Task<WorkQueueItemView> AssignReviewAsync(Uuid submissionId, Uuid? userId = null)
         {
-            await CatchUpAsync();
             var queue = await Scenario(AssessorUserId).When(new ListWork(TenantId, ProgramId, "all"))
                 .ExpectSuccess();
             var item = Assert.Single(queue.Value.Items, candidate => candidate.Kind ==
@@ -550,37 +565,17 @@ public sealed class RiskGovernanceHandlerTests
             return assigned.Value.Item;
         }
 
-        public async Task CatchUpAsync()
-        {
-            await using var scope = Provider.CreateAsyncScope();
-            var directory = scope.ServiceProvider.GetService<FitzRiskGovernanceWorkItemDirectory>();
-            if (directory is null)
-                return;
-            var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
-            var checkpoint = await directory.LoadCheckpointAsync(TenantId);
-            var pattern = directory.SourcePattern(TenantId);
-            await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
-                new CheckpointIdentity(FitzRiskGovernanceWorkItemDirectory.ProjectorName, pattern), checkpoint));
-            var cursor = checkpoint.Cursor;
-            await foreach (var record in events.ReadAsync(pattern, cursor, CancellationToken.None))
-            {
-                await directory.ApplyAsync(record.Event);
-                cursor = record.NextCursor;
-            }
-            await batch.CommitAsync(new ProjectionCheckpoint(cursor));
-        }
-
         public AddRiskTreatmentAction AddAction(Worker worker, IReadOnlyList<Uuid> evidence,
-            long revision) => new(TenantId, ProgramId, RiskId, revision, "Enforce MFA",
+            long revision) => new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId, revision, "Enforce MFA",
             "MFA is required for every administrator.", "Identity provider policy export.",
             DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30), worker.MemberId, evidence);
 
         public SubmitRiskTreatmentActionCompletion Submit(Uuid actionId, long revision,
-            IReadOnlyList<Uuid> evidence) => new(TenantId, ProgramId, RiskId, actionId, revision,
+            IReadOnlyList<Uuid> evidence) => new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId, actionId, revision,
             "MFA enforced on all administrators.", evidence);
 
         public ReviewRiskTreatmentActionCompletion ReviewAction(Uuid actionId, long revision,
-            string outcome) => new(TenantId, ProgramId, RiskId, actionId, revision, outcome,
+            string outcome) => new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId, actionId, revision, outcome,
             "Evidence matches the target state.");
 
         public async Task<Worker> SeedMemberAsync()
@@ -593,30 +588,38 @@ public sealed class RiskGovernanceHandlerTests
 
         public async Task<Uuid> SeedEvidenceAsync(bool fulfilled, Worker owner)
         {
-            var requestId = Uuid.CreateVersion4();
-            var admin = ActorReference.ForMember(Uuid.CreateVersion4(), "Admin");
-            var now = DateTimeOffset.UtcNow;
-            await ProgramManagementServices.SeedAsync(Provider,
-                new EvidenceRequestLedger(TenantId, ProgramId), ledger => Command(
-                    ledger.OpenRequest(requestId, "MFA export", "Export the policy.",
-                        owner.MemberId, DateOnly.FromDateTime(now.UtcDateTime).AddDays(7), null,
-                        admin, now)));
+            var request = new OpenEvidenceRequest(Uuid.CreateVersion4(), TenantId, ProgramId, "MFA export",
+                "Export the policy.", owner.MemberId, DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7));
+            await Scenario(AssessorUserId).When(request).ExpectSuccess();
             if (fulfilled)
-                await FulfilEvidenceAsync(requestId);
-            return requestId;
+                await FulfilEvidenceAsync(request.EvidenceRequestId);
+            return request.EvidenceRequestId;
         }
 
-        public Task FulfilEvidenceAsync(Uuid requestId) => ProgramManagementServices.SeedAsync(
-            Provider, new EvidenceRequestLedger(TenantId, ProgramId), ledger => Command(
-                ledger.Fulfil(requestId, 1, Uuid.CreateVersion4(),
-                    ActorReference.ForMember(Uuid.CreateVersion4(), "Owner"),
-                    DateTimeOffset.UtcNow)));
+        public async Task FulfilEvidenceAsync(Uuid requestId)
+        {
+            var artifactId = Uuid.CreateVersion4();
+            var now = DateTimeOffset.UtcNow;
+            var actor = ActorReference.ForMember(RbacIds.Member(TenantId, AssessorUserId), "Assessor");
+            await ProgramManagementServices.SeedAsync<EvidenceArtifact, EvidenceArtifactRegistration>(Provider,
+                new EvidenceArtifact(TenantId, artifactId), artifact => artifact.Register(
+                    new EvidenceArtifactContent("MFA export", null, "document", "manual", now,
+                        DateOnly.FromDateTime(now.UtcDateTime), DateOnly.FromDateTime(now.UtcDateTime), "internal"),
+                    new string('a', 64), 1, actor, now));
+            await ProgramManagementServices.SeedAsync(Provider, new EvidenceArtifact(TenantId, artifactId),
+                artifact => Command(artifact.RecordInspection(EvidenceInspectionOutcome.Clean, now)));
+            await Scenario(AssessorUserId).When(new FulfilEvidenceRequest(Uuid.CreateVersion4(), TenantId, ProgramId,
+                requestId, 1, artifactId)).ExpectSuccess();
+        }
+
+        public Task<RiskTreatmentAction> ActionAsync(Uuid actionId) => ProgramManagementServices.HydrateAsync(Provider,
+            new RiskTreatmentAction(TenantId, ProgramId, RiskId, actionId));
 
         public RecordRiskAssessment Residual(long revision) => new(TenantId, ProgramId, RiskId,
             revision, 1, "residual", 2, 2, "After treatment.");
 
         public ReviewRiskControlTreatment ReviewTreatment(Uuid treatmentId, string outcome) =>
-            new(TenantId, ProgramId, RiskId, treatmentId, 1, outcome, "Independently reviewed.");
+            new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId, treatmentId, 1, outcome, "Independently reviewed.");
 
         public AcceptRisk Accept(Uuid residualId, Uuid? waiverId) => new(TenantId, ProgramId,
             RiskId, 3, residualId, "executive", DateTimeOffset.UtcNow.AddMonths(6),

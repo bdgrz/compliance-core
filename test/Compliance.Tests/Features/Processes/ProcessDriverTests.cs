@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,6 +7,49 @@ namespace Bdgrz.Compliance.Tests.Features.Processes;
 
 public sealed class ProcessDriverTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldRetryUnavailableContentAndQuarantineCorruptContentGivenReceiverFactoryFailure(bool unavailable)
+    {
+        // Arrange
+        var attempts = 0;
+        var definition = new ProcessDefinition(ProcessTestHost.Process, ["ProbeAdmitted"], true,
+            [new ProcessStageDefinition("apply", ["ApplyA"])], [], (step, _, _) =>
+            {
+                if (attempts++ == 0)
+                    throw unavailable
+                        ? new ImmutableContentUnavailableException("The manifest is not readable yet.")
+                        : new ImmutableContentIntegrityException("The stored digest differs from the accepted manifest.");
+                return ValueTask.FromResult<IRequest<ReceiverOutcome>?>(new ProbeReceive(step.CommandId,
+                    step.Receiver, step.Target));
+            });
+        await using var host = new ProcessTestHost(definition: definition);
+        await host.StartAsync("t1");
+
+        // Act
+        var first = await host.RunAsync();
+        host.Clock.Advance(ProcessDriver.RetryDelay);
+        var resumed = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(unavailable ? ProcessState.Pending : ProcessState.Quarantined, first.State);
+        Assert.Equal(1, first.Attempts);
+        Assert.Null(first.Lease);
+        Assert.Contains("content cannot be verified", first.Note, StringComparison.Ordinal);
+        if (unavailable)
+        {
+            Assert.Equal(ProcessState.Completed, resumed.State);
+            Assert.Single(host.Recorder.Calls);
+        }
+        else
+        {
+            Assert.Equal(first, resumed);
+            Assert.Empty(host.Recorder.Calls);
+            Assert.Empty(await host.Store.ScanPendingAsync(ProcessTestHost.Process, host.Clock.GetUtcNow(), 10));
+        }
+    }
+
     [Fact]
     public async Task ShouldAcquireInCanonicalKeyOrderGivenReversedAuthoredManifest()
     {

@@ -171,13 +171,7 @@ public sealed class RiskAcceptanceWorkAuthorityTests
                 Assert.Null(person.CorrelateMembership(1, fixture.GuestUserId, actor, DateTimeOffset.UtcNow));
                 return Result.Success;
             });
-        await ProgramManagementServices.SeedAsync(fixture.Operations.Provider,
-            new RiskGovernanceLedger(fixture.Operations.TenantId, fixture.Operations.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.AssignOwner(pending.RiskId, 0, personId, fixture.GuestMemberId,
-                    "Recorded risk accountability", actor, DateTimeOffset.UtcNow));
-                return Result.Success;
-            });
+        await RiskSeeds.AssignOwnerAsync(fixture.Operations.Provider, fixture.Operations.TenantId, fixture.Operations.ProgramId, pending.RiskId, personId, fixture.GuestMemberId, "Recorded risk accountability", actor, DateTimeOffset.UtcNow);
 
         // Act
         await fixture.AcceptHttpAsync(fixture.Accept(pending, false), fixture.GuestUserId, RequestErrorKind.Forbidden);
@@ -249,8 +243,7 @@ public sealed class RiskAcceptanceWorkAuthorityTests
                 {
                     services.AddScoped<FitzRiskEvaluationDirectory>(_ => new(client));
                     services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                        new RiskAcceptanceWorkItemDirectory(provider.GetRequiredService<IAggregateReader>(),
-                            operations.Risks, null, provider.GetRequiredService<FitzRiskEvaluationDirectory>()));
+                        new RiskAcceptanceWorkItemDirectory(provider.GetRequiredService<IAggregateReader>(), provider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), operations.Risks, null, provider.GetRequiredService<FitzRiskEvaluationDirectory>()));
                 }
             }
             ServiceProvider provider;

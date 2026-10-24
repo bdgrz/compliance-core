@@ -53,7 +53,7 @@ public sealed class AttestManagementWriteWallTests
                 Content), Actor)).Error,
             "policy" => (await bus.SendAsync(new CreatePolicyDraft(Tenant, Program, "POL-1",
                 new PolicyContent("Policy", "Purpose", "core_security", null, 12, "Body", null, null, null)), Actor)).Error,
-            "evidence" => (await bus.SendAsync(new OpenEvidenceRequest(Tenant, Program, "Evidence", "Instructions",
+            "evidence" => (await bus.SendAsync(new OpenEvidenceRequest(Uuid.CreateVersion4(), Tenant, Program, "Evidence", "Instructions",
                 RbacIds.Member(Tenant, User), new DateOnly(2027, 1, 1)), Actor)).Error,
             "attest" => (await bus.SendAsync(new AttestControlOccurrence(Uuid.CreateVersion4(), Tenant, Program, control, occurrence,
                 1, "performed", Now, null, null, null, null, []), Actor)).Error,

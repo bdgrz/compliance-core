@@ -1,13 +1,27 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Readiness;
 
-/// <summary>Lists a program's assessments, newest first.</summary>
-public sealed class ListReadinessAssessmentsHandler(IReadinessReadModel readModel)
+/// <summary>Lists a program's adopted assessments, newest first.</summary>
+public sealed class ListReadinessAssessmentsHandler(ReadinessReader readiness)
     : IRequestHandler<ListReadinessAssessments, Page<ReadinessAssessmentSummaryView>>
 {
-    public ValueTask<Result<Page<ReadinessAssessmentSummaryView>>> HandleAsync(
-        IRequestContext<ListReadinessAssessments> context, CancellationToken ct) =>
-        readModel.ListAssessmentsAsync(context.Request, ct);
+    public async ValueTask<Result<Page<ReadinessAssessmentSummaryView>>> HandleAsync(
+        IRequestContext<ListReadinessAssessments> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        try
+        {
+            var program = await readiness.ReadProgramAsync(request.TenantId, request.ProgramId, ct).ConfigureAwait(false);
+            var summaries = await readiness.ReadSummariesAsync(request.TenantId, program, ct).ConfigureAwait(false);
+            return ControlActivationSource.Paginate(summaries, request.Limit, request.Cursor, "readiness assessments");
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<Page<ReadinessAssessmentSummaryView>>.Failure(GetReadinessAssessmentHandler.Unverified(exception));
+        }
+    }
 }

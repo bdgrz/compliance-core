@@ -1,0 +1,31 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "reservation_isolation": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "cancellation_recovery": {
+      "type": "noul",
+      "noul": 0.68
+    },
+    "visible_blocker": {
+      "type": "noul",
+      "noul": 0.21
+    },
+    "cleanup_choice": {
+      "type": "choice",
+      "choice": "prune_after_readback",
+      "confidence": 1.0,
+      "probabilities": {
+        "prune_after_readback": 1.0,
+        "keep_all_copies": 0.0,
+        "remerge_old_snapshots": 0.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 11537,
+    "output_tokens": 120
+  }
+}

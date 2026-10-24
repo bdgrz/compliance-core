@@ -74,7 +74,7 @@ public sealed class AttestProgramManagementWriteWallTests
             "finding" => (await bus.DispatchAsync(new RaiseFinding(Uuid.CreateVersion4(), Tenant, Program,
                 new FindingSource("manual", null, null, "Client source finding"), "Finding", "Description", "medium",
                 "Client scope", RbacIds.Member(Tenant, User), new DateOnly(2027, 1, 1)), context, CancellationToken.None)).Error,
-            "readiness" => (await bus.DispatchAsync(new RunReadinessAssessment(Tenant, Program, 0,
+            "readiness" => (await bus.DispatchAsync(new RunReadinessAssessment(Uuid.CreateVersion4(), Tenant, Program, 0,
                 Now), context, CancellationToken.None)).Error,
             "training" => (await bus.DispatchAsync(new DefineTrainingRequirement(TrainingRequirementIdentity.IdFor(Tenant, Program, "TR-1"), Tenant, Program, "TR-1",
                 new TrainingRequirementContent("Security training", "Training description", "core_security", null,

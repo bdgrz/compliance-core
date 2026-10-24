@@ -87,11 +87,6 @@ sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
             throw new InvalidOperationException(
                 "A campaign's frozen Program cannot change after launch.");
 
-        // A replay or an older event leaves newer work state alone; the closure fence completes the work at the
-        // revision the item stopped at.
-        if (current is not null && current.SourceRevision >= item.Revision && current.IsCompleted == item.IsClosed)
-            return;
-
         var frozen = await AccessReviewItemFold.FrozenItemAsync(item, content, tenantId, ct).ConfigureAwait(false);
         var folded = await AccessReviewItemFold.ReadAsync(item, frozen, remediationOwnerId, content, tenantId, ct)
             .ConfigureAwait(false);
@@ -104,6 +99,10 @@ sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
             frozen.Privileged, folded.CurrentDecision?.Decision, folded.Verification is not null,
             folded.Exception is not null, folded.Exception?.ExpiresAt, folded.CurrentReviewerMemberId,
             folded.CurrentRemediationOwnerMemberId, folded.Changes.Count > 0);
+        // The state is always folded from the authoritative item, so a replay or an older event reproduces the current
+        // state and changes nothing. A published bulk decision changes the state without advancing the revision.
+        if (current == next)
+            return;
         if (current is null)
             await AccessReviewCampaignWorkItemDirectorySchema.Items.InsertAsync(Transaction, next, ct)
                 .ConfigureAwait(false);
@@ -178,6 +177,7 @@ sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
             AccessRemediationExceptionRecorded ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
             AccessReviewResponsibilityReassigned ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
             AccessReviewItemCampaignCompletionUseSettled ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
+            AccessReviewItemDecisionSettled ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
             _ => (Uuid.Empty, Uuid.Empty, Uuid.Empty, 0),
         };
 

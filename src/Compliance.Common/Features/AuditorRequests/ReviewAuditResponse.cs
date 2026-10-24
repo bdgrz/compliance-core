@@ -1,9 +1,14 @@
-using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditorRequests;
 
-/// <summary>Records the review audit response intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.auditor-requests.review-audit-response", 1)]
-public sealed record ReviewAuditResponse(Uuid TenantId, Uuid ProgramId, Uuid RequestId, Uuid ResponseId, long Version, string Outcome, string Rationale) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Records the independent disclosure review of the exact submitted response version.</summary>
+[Discriminator("bdgrz.auditor-requests.review-audit-response", 2)]
+public sealed record ReviewAuditResponse(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid RequestId,
+    Uuid ResponseId, long Version, string Outcome, string Rationale, long ExpectedRevision)
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

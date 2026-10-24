@@ -62,6 +62,37 @@ public sealed class AccessReviewManifests(IImmutableContentStore content)
         return index;
     }
 
+    /// <summary>The frozen item intents of a bulk decision by the item stream resource of each selected item.</summary>
+    public async Task<IReadOnlyDictionary<string, BulkAccessDecisionItemIntent>> BulkItemsAsync(string realm,
+        ImmutableSelectionManifest manifest, CancellationToken ct = default)
+    {
+        var key = (realm, manifest.Content.ContentId, manifest.Content.Sha256);
+        if (_indexes.TryGetValue(key, out var cached))
+            return (IReadOnlyDictionary<string, BulkAccessDecisionItemIntent>)cached;
+        var items = await content.ReadJsonAsync<IReadOnlyList<BulkAccessDecisionItemIntent>>(realm, manifest.Content,
+            ct).ConfigureAwait(false);
+        IReadOnlyDictionary<string, BulkAccessDecisionItemIntent> index = items.ToDictionary(
+            static item => item.ItemOwner.Resource, StringComparer.Ordinal);
+        Remember(key, index);
+        return index;
+    }
+
+    /// <summary>The admitted bulk decision batches a completion drains, by the id of each selected item.</summary>
+    public async Task<IReadOnlyDictionary<Uuid, IReadOnlyList<AccessReviewAdmittedBatchSelection>>> DrainsAsync(
+        string realm, ImmutableSelectionManifest manifest, CancellationToken ct = default)
+    {
+        var key = (realm, manifest.Content.ContentId, manifest.Content.Sha256);
+        if (_indexes.TryGetValue(key, out var cached))
+            return (IReadOnlyDictionary<Uuid, IReadOnlyList<AccessReviewAdmittedBatchSelection>>)cached;
+        var selections = await content.ReadJsonAsync<IReadOnlyList<AccessReviewAdmittedBatchSelection>>(realm,
+            manifest.Content, ct).ConfigureAwait(false);
+        IReadOnlyDictionary<Uuid, IReadOnlyList<AccessReviewAdmittedBatchSelection>> index = selections
+            .GroupBy(static selection => selection.ItemId)
+            .ToDictionary(static group => group.Key, static group => (IReadOnlyList<AccessReviewAdmittedBatchSelection>)[.. group]);
+        Remember(key, index);
+        return index;
+    }
+
     /// <summary>
     ///     The canonical targets of a completion: every launched item that the completion pinned, ordered by the item
     ///     stream key. The caller compares the count with the pinned set to prove no item is omitted.

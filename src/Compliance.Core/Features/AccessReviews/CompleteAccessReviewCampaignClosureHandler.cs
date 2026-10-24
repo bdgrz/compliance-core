@@ -120,16 +120,21 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
                 owner.Uses.GrantOf(key) is not { } grant)
                 return new Built(null, null, SourceUseReceiverSupport.Transient(
                     $"The completion use of item {item.ItemId} is not held yet."));
-            if (owner.Latest is not { } latest || latest.Metadata!.EventId != requirement.ContentEvent.EventId ||
-                (ulong)owner.Revision != requirement.ResourceRevision)
+            if (owner.Uses.Find(key)?.GrantFact is not AccessReviewItemCampaignCompletionUseAuthorized held ||
+                held.Revision != owner.Revision ||
+                !owner.MatchesPin(requirement.ContentEvent.EventId, requirement.ResourceRevision))
                 return await AbortAsync(completion, command, $"Item {item.ItemId} changed under its completion hold.",
                     item.ItemId, context, ct).ConfigureAwait(false);
             var state = await AccessReviewItemFold.ReadAsync(owner, item, launched.RemediationOwnerMemberId, content,
                 tenant, ct).ConfigureAwait(false);
             if (state.CompletionBlocker(now) is { } blocker)
                 return await AbortAsync(completion, command, blocker, item.ItemId, context, ct).ConfigureAwait(false);
-            var facts = await AccessReviewContent.ReadAsync<AccessReviewItemCompletionFacts>(content, tenant,
-                requirement.RequiredFacts, ct).ConfigureAwait(false);
+            // An item a drained bulk decision moved past its admission pin proves the facts it holds now.
+            var facts = (ulong)owner.Revision == requirement.ResourceRevision
+                ? await AccessReviewContent.ReadAsync<AccessReviewItemCompletionFacts>(content, tenant,
+                    requirement.RequiredFacts, ct).ConfigureAwait(false)
+                : new AccessReviewItemCompletionFacts(item.ItemId, state.Revision, state.CurrentDecision!.DecisionId,
+                    state.CurrentDecision.Decision, state.RemediationStatus(now));
             states.Add(state);
             proofs.Add(new AccessReviewItemCompletionProof(item.ItemId, requirement, grant, facts));
         }

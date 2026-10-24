@@ -53,4 +53,8 @@ public enum SourceUsePurpose
     /// <summary>A professional duty designation is recorded against the source staff record.</summary>
     [JsonStringEnumMemberName("professional_duty_recording")]
     ProfessionalDutyRecording,
+
+    /// <summary>A bulk decision batch holds the source and applies a provisional decision to it.</summary>
+    [JsonStringEnumMemberName("bulk_decision")]
+    BulkDecision,
 }

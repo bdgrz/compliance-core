@@ -11,14 +11,18 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 /// <summary>
 ///     The item pair of the generic acquire receiver: it holds the exact head of the item that the completion pinned
 ///     at admission. An item that changed since, or that no longer satisfies the completion rules, rejects the
-///     completion and fences it. While the use is held the item refuses every change.
+///     completion and fences it. An item that an admitted bulk decision batch selects is held only after that batch
+///     settled on it (a wait, never a failure), and then at the head the batch left it at. While the use is held the
+///     item refuses every change.
 /// </summary>
 sealed class AuthorizeAccessReviewItemCampaignCompletionUseHandler(IAggregateReader reader,
     IAggregateExecutor executor, IImmutableContentStore content, TimeProvider clock, TimeProvider time,
-    AccessReviewCompletionVerifier verifier, AccessReviewCompletionFences fences)
+    AccessReviewCompletionVerifier verifier, AccessReviewCompletionFences fences, AccessReviewManifests manifests)
     : AuthorizeSourceUseHandler<AccessReviewItem, AuthorizeAccessReviewItemCampaignCompletionUse>(reader, executor,
         content, clock)
 {
+    readonly IAggregateReader _reader = reader;
+
     protected override AccessReviewItem Open(AuthorizeAccessReviewItemCampaignCompletionUse request,
         Uuid selectedCommandId) => new(Tenant(request.Target), request.CampaignId, request.SourceOwnerId, selectedCommandId);
 
@@ -39,12 +43,44 @@ sealed class AuthorizeAccessReviewItemCampaignCompletionUseHandler(IAggregateRea
             requirement.ResourceRevision != request.ExpectedContentRevision)
             return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The authorization differs from the frozen item use requirement.", false));
+        var drained = await DrainAsync(request, intent, ct).ConfigureAwait(false);
+        if (drained is not null)
+            return Result<SourceUseSource>.Failure(drained);
         var superseded = campaign.CanceledFor(request.OperationId) is not null ? "The completion was canceled."
             : campaign.ClosedFor(request.OperationId) is not null ? "The completion already closed the campaign."
             : null;
         return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, request.Intent,
             AccessReviewCompletionVerifier.UseKey(request.OperationId, campaign, requirement), requirement,
             nameof(AuthorizeAccessReviewItemCampaignCompletionUse), null, superseded));
+    }
+
+    /// <summary>
+    ///     A completion drains the bulk decision batches admitted before its seal: the item is held only once every one of
+    ///     them that selects it has settled (a settlement before any hold counts, it is the fence). Waiting is transient.
+    /// </summary>
+    async ValueTask<RequestError?> DrainAsync(AuthorizeAccessReviewItemCampaignCompletionUse request,
+        ClosureIntent intent, CancellationToken ct)
+    {
+        IReadOnlyDictionary<Uuid, IReadOnlyList<AccessReviewAdmittedBatchSelection>> drains;
+        try
+        {
+            drains = await manifests.DrainsAsync(request.Target.Realm, intent.AdmittedChildren, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return new RequestError(RequestErrorKind.Conflict,
+                $"The admitted bulk decisions cannot be verified yet: {exception.Message}", true);
+        }
+
+        if (!drains.TryGetValue(request.SourceOwnerId, out var selections))
+            return null;
+        var owner = await _reader.HydrateAsync(Open(request, Uuid.Empty), ct).ConfigureAwait(false);
+        foreach (var selection in selections)
+            if (owner.Uses.Find(owner.BulkKey(selection.DecisionBatchId)) is not { IsSettled: true })
+                return new RequestError(RequestErrorKind.Conflict,
+                    $"The admitted bulk decision {selection.DecisionBatchId} has not drained from item {request.SourceOwnerId} yet.",
+                    true);
+        return null;
     }
 
     protected override async ValueTask<Result> VerifyPinnedAsync(AccessReviewItem owner,
@@ -56,6 +92,9 @@ sealed class AuthorizeAccessReviewItemCampaignCompletionUseHandler(IAggregateRea
         if (!IsPinned(owner, requirement))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The item changed after the completion was admitted.", false));
+        if (owner.Uses.HasActiveUse)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Another operation holds this item; retry after it settles.", true));
         try
         {
             var frozen = await AccessReviewItemFold.FrozenItemAsync(owner, Content, Tenant(owner.Stream), ct)
@@ -74,8 +113,7 @@ sealed class AuthorizeAccessReviewItemCampaignCompletionUseHandler(IAggregateRea
     }
 
     protected override bool IsPinned(AccessReviewItem owner, SourceUseRequirement requirement) =>
-        owner.Latest is { } latest && latest.Metadata!.EventId == requirement.ContentEvent.EventId &&
-        (ulong)owner.Revision == requirement.ResourceRevision;
+        owner.MatchesPin(requirement.ContentEvent.EventId, requirement.ResourceRevision);
 
     protected override Func<AccessReviewItem, OperationProvenance, ImmutableContentRef, long, Result> GrantOperation() =>
         (AccessReviewItem item, OperationProvenance provenance, ImmutableContentRef intent, long generation) =>

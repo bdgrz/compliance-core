@@ -1,279 +1,225 @@
+using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.AuditorRequests;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditorRequests;
 
 public sealed class AuditorRequestTests
 {
-    static readonly Uuid TenantId = Uuid.CreateVersion4();
-    static readonly Uuid ProgramId = Uuid.CreateVersion4();
-    static readonly Uuid ExaminationId = Uuid.CreateVersion4();
-    static readonly Uuid RequestId = Uuid.CreateVersion4();
-    static readonly Uuid OwnerId = Uuid.CreateVersion4();
-    static readonly Uuid ResponderId = Uuid.CreateVersion4();
-    static readonly Uuid ReviewerId = Uuid.CreateVersion4();
-    static readonly DateTimeOffset Now = new(2026, 10, 17, 15, 0, 0, TimeSpan.Zero);
-
     [Fact]
-    public void ShouldRecordExactRequestAndAllowOnlyExactCreateRetryGivenCreate()
+    public async Task ShouldRecordExactRequestAndAllowOnlyExactCreateRetryGivenCreate()
     {
         // Arrange
-        var request = NewRequest();
-        var content = ValidContent();
+        await using var fixture = new AuditorRequestFixture();
+        await fixture.SeedMemberAsync(fixture.UserId);
+        var command = fixture.NewRecordCommand();
+        var handler = fixture.Handler<RecordAuditorRequestHandler>();
 
         // Act
-        var created = request.Create(content, OwnerId, "Owner", Now);
-        var exactRetry = request.Create(content, OwnerId, "Owner", Now);
-        var conflictingRetry = request.Create(content with { Wording = "Different request" },
-            OwnerId, "Owner", Now);
+        var created = await handler.HandleAsync(fixture.Context(command), CancellationToken.None);
+        var retry = await handler.HandleAsync(fixture.Context(command), CancellationToken.None);
+        var changed = await handler.HandleAsync(fixture.Context(command with { Wording = "Different request" }), CancellationToken.None);
+        var request = await fixture.RequestAsync(command.RequestId);
 
         // Assert
-        Assert.Null(created);
-        Assert.Null(exactRetry);
-        Assert.Equal(CommandFailureCode.StateConflict,
-            Assert.IsType<CommandFailure>(conflictingRetry).Code);
-        Assert.Equal("open", request.Current!.Status);
-        Assert.Equal(content.Wording, request.Current.Wording);
+        Assert.True(created.IsSuccess, created.Error?.Message);
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.True(request.IsOpen);
         Assert.Equal(1, request.Revision);
-        Assert.Single(new AggregateScenario<AuditorRequest>(request).PendingEvents);
+        Assert.Single(request.Facts);
+        Assert.Equal(command.Wording, (await fixture.TermsAsync(command.RequestId)).Wording);
     }
 
     [Fact]
-    public void ShouldRequireReviewBeforeDeliveryGivenRequiredReviewPolicy()
+    public async Task ShouldRequireReviewBeforeDeliveryGivenRequiredReviewPolicy()
     {
         // Arrange
-        var request = OpenRequest(requiresInternalReview: true);
+        await using var fixture = new AuditorRequestFixture();
+        var requestId = await fixture.SeedRequestAsync();
         var responseId = Uuid.CreateVersion4();
-        var evidenceId = Uuid.CreateVersion4();
-        Assert.Null(request.CreateResponseDraft(request.Revision, responseId,
-            "Evidence and explanation", [evidenceId], ResponderId, "Responder", Now.AddHours(1)));
-        Assert.Null(request.SubmitResponse(request.Revision, responseId, 1,
-            "Ready for review", ResponderId, "Responder", Now.AddHours(2)));
+        Assert.True((await fixture.DraftAsync(requestId, responseId)).IsSuccess);
+        Assert.Equal(ProcessState.Completed, (await fixture.MaterializeAsync(responseId)).State);
+        Assert.True((await fixture.SubmitAsync(requestId, responseId)).IsSuccess);
 
         // Act
-        var deliveryBeforeReview = request.DeliverResponse(request.Revision, responseId, 1,
-            "External auditor", "mail-001", ResponderId, "Responder", Now.AddHours(3));
-        var approvalByAuthor = request.ReviewResponse(request.Revision, responseId, 1,
-            "approved", "Complete", ResponderId, "Responder", Now.AddHours(3));
-        var approval = request.ReviewResponse(request.Revision, responseId, 1,
-            "approved", "Complete and scoped", ReviewerId, "Reviewer", Now.AddHours(4));
-        var delivered = request.DeliverResponse(request.Revision, responseId, 1,
-            "External auditor", "mail-001", ResponderId, "Responder", Now.AddHours(5));
+        var early = await fixture.DeliverAsync(requestId, responseId);
+        var authorReview = await fixture.ReviewAsync(requestId, responseId, actor: fixture.UserId);
+        var approved = await fixture.ReviewAsync(requestId, responseId);
+        var delivered = await fixture.DeliverAsync(requestId, responseId);
+        var response = await fixture.ResponseAsync(requestId, responseId);
 
         // Assert
-        Assert.Equal(CommandFailureCode.StateConflict,
-            Assert.IsType<CommandFailure>(deliveryBeforeReview).Code);
-        Assert.Equal(CommandFailureCode.StateConflict,
-            Assert.IsType<CommandFailure>(approvalByAuthor).Code);
-        Assert.Null(approval);
-        Assert.Null(delivered);
-        var response = Assert.Single(request.Current!.Responses);
+        Assert.Equal(RequestErrorKind.Conflict, early.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, authorReview.Error?.Kind);
+        Assert.True(approved.IsSuccess, approved.Error?.Message);
+        Assert.True(delivered.IsSuccess, delivered.Error?.Message);
         Assert.Equal("delivered", response.Status);
-        Assert.Equal(1, response.DeliveredVersion);
-        Assert.Equal([evidenceId], response.Versions[0].EvidenceArtifactIds);
-        Assert.Contains(new AggregateScenario<AuditorRequest>(request).PendingEvents,
-            item => item is AuditorResponseDelivered);
+        Assert.Equal(1, response.Delivery!.Version);
+        Assert.Contains(response.Facts, static fact => fact is AuditorResponseDelivered);
     }
 
     [Fact]
-    public void ShouldPreserveRejectedVersionAndDeliverRevisedVersionGivenResponseRevision()
+    public async Task ShouldPreserveRejectedVersionAndDeliverRevisedVersionGivenResponseRevision()
     {
         // Arrange
-        var request = OpenRequest(requiresInternalReview: true);
+        await using var fixture = new AuditorRequestFixture();
+        var requestId = await fixture.SeedRequestAsync();
         var responseId = Uuid.CreateVersion4();
-        Assert.Null(request.CreateResponseDraft(request.Revision, responseId, "First draft", [],
-            ResponderId, "Responder", Now.AddHours(1)));
-        Assert.Null(request.SubmitResponse(request.Revision, responseId, 1, "Submit v1",
-            ResponderId, "Responder", Now.AddHours(2)));
-        Assert.Null(request.ReviewResponse(request.Revision, responseId, 1, "rejected",
-            "Missing support", ReviewerId, "Reviewer", Now.AddHours(3)));
+        Assert.True((await fixture.DraftAsync(requestId, responseId, "First draft")).IsSuccess);
+        Assert.Equal(ProcessState.Completed, (await fixture.MaterializeAsync(responseId)).State);
+        Assert.True((await fixture.SubmitAsync(requestId, responseId)).IsSuccess);
+        Assert.True((await fixture.ReviewAsync(requestId, responseId, "rejected")).IsSuccess);
+        var revision = (await fixture.ResponseAsync(requestId, responseId)).Revision;
 
         // Act
-        var revision = request.ReviseResponseDraft(request.Revision, responseId, 1,
-            "Revised with explanation", [Uuid.CreateVersion4()], ResponderId, "Responder",
-            Now.AddHours(4));
-        var submitVersionTwo = request.SubmitResponse(request.Revision, responseId, 2,
-            "Submit v2", ResponderId, "Responder", Now.AddHours(5));
-        var approveVersionTwo = request.ReviewResponse(request.Revision, responseId, 2,
-            "approved", "Sufficient", ReviewerId, "Reviewer", Now.AddHours(6));
-        var deliverVersionTwo = request.DeliverResponse(request.Revision, responseId, 2,
-            "External auditor", "mail-002", ResponderId, "Responder", Now.AddHours(7));
+        var revised = await fixture.Handler<ReviseAuditResponseDraftHandler>().HandleAsync(fixture.Context(
+            new ReviseAuditResponseDraft(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, requestId,
+                responseId, revision, "Revised with explanation", [])), CancellationToken.None);
+        var submitted = await fixture.SubmitAsync(requestId, responseId);
+        var approved = await fixture.ReviewAsync(requestId, responseId);
+        var delivered = await fixture.DeliverAsync(requestId, responseId);
+        var response = await fixture.ResponseAsync(requestId, responseId);
 
         // Assert
-        Assert.Null(revision);
-        Assert.Null(submitVersionTwo);
-        Assert.Null(approveVersionTwo);
-        Assert.Null(deliverVersionTwo);
-        var response = Assert.Single(request.Current!.Responses);
-        Assert.Equal(2, response.CurrentVersion);
-        Assert.Equal(2, response.DeliveredVersion);
-        Assert.Equal("rejected", response.Versions[0].Review!.Outcome);
-        Assert.Equal("delivered", response.Versions[1].Status);
-        Assert.Equal(2, response.Versions.Count);
+        Assert.True(revised.IsSuccess, revised.Error?.Message);
+        Assert.True(submitted.IsSuccess, submitted.Error?.Message);
+        Assert.True(approved.IsSuccess, approved.Error?.Message);
+        Assert.True(delivered.IsSuccess, delivered.Error?.Message);
+        Assert.Equal(2, response.BusinessVersion);
+        Assert.Equal(2, response.Delivery!.Version);
+        var reviews = response.Facts.OfType<AuditorResponseDisclosureReviewed>().ToArray();
+        Assert.Equal("rejected", reviews[0].Outcome);
+        Assert.Equal(1, reviews[0].Version);
+        Assert.Equal("approved", reviews[1].Outcome);
+        Assert.Equal(2, reviews[1].Version);
     }
 
     [Fact]
-    public void ShouldBindSampleSelectionToFrozenPopulationAndKeepItImmutableGivenSelection()
+    public async Task ShouldBindSampleSelectionToFrozenPopulationAndKeepItImmutableGivenSelection()
     {
         // Arrange
-        var request = OpenRequest(requiresInternalReview: false);
-        var selectionId = Uuid.CreateVersion4();
-        var populationId = Uuid.CreateVersion4();
-        var rowIds = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() };
-        var manifestDigest = new string('a', 64);
+        await using var fixture = new AuditorRequestFixture();
+        var requestId = await fixture.SeedRequestAsync();
+        var (populationId, rowId, _, digest) = await fixture.SeedFrozenPopulationAsync();
+        var command = SampleSelectionCommandHandlerTests.RecordCommand(fixture, requestId, populationId, rowId);
+        var handler = fixture.Handler<RecordSampleSelectionHandler>();
 
         // Act
-        var created = request.RecordSampleSelection(request.Revision, selectionId, populationId,
-            1, manifestDigest, "random", rowIds, "external_email", "sample-001", OwnerId,
-            "Owner", Now.AddHours(1));
-        var exactRetry = request.RecordSampleSelection(request.Revision, selectionId, populationId,
-            1, manifestDigest, "random", rowIds, "external_email", "sample-001", OwnerId,
-            "Owner", Now.AddHours(2));
-        var changedRetry = request.RecordSampleSelection(request.Revision, selectionId, populationId,
-            1, new string('b', 64), "random", rowIds, "external_email", "sample-001", OwnerId,
-            "Owner", Now.AddHours(1));
-        var invalid = request.RecordSampleSelection(request.Revision, Uuid.CreateVersion4(), populationId,
-            1, "not-a-digest", "random", rowIds, "external_email", "sample-001", OwnerId,
-            "Owner", Now.AddHours(4));
+        var created = await handler.HandleAsync(fixture.Context(command), CancellationToken.None);
+        var materialized = await fixture.MaterializeAsync(command.SelectionId);
+        var retry = await handler.HandleAsync(fixture.Context(command), CancellationToken.None);
+        var changed = await handler.HandleAsync(fixture.Context(command with { ExternalReference = "changed-reference" }), CancellationToken.None);
+        var invalid = await handler.HandleAsync(fixture.Context(command with { SelectionId = Uuid.CreateVersion4(), ExpectedRequestRevision = 2, SelectionMethod = "unsupported" }), CancellationToken.None);
+        var selection = await SampleSelectionCommandHandlerTests.SelectionAsync(fixture, requestId, command.SelectionId);
 
         // Assert
-        Assert.Null(created);
-        Assert.Null(exactRetry);
-        Assert.Equal(CommandFailureCode.StateConflict,
-            Assert.IsType<CommandFailure>(changedRetry).Code);
-        Assert.Equal(CommandFailureCode.InvalidContent,
-            Assert.IsType<CommandFailure>(invalid).Code);
-        var selection = Assert.Single(request.Current!.SampleSelections);
-        Assert.Equal(populationId, selection.PopulationSnapshotId);
-        Assert.Equal(manifestDigest, selection.PopulationContentSha256);
-        Assert.Equal(rowIds.OrderBy(static id => id.ToString()), selection.SelectedRowIds);
-        Assert.Equal(Now.AddHours(1), selection.RecordedAt);
+        Assert.True(created.IsSuccess, created.Error?.Message);
+        Assert.Equal(ProcessState.Completed, materialized.State);
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, invalid.Error?.Kind);
+        Assert.Equal(populationId, selection.PopulationId);
+        Assert.Equal(digest, (await fixture.ReadAsync<AuditPopulationVersionView>(selection.PopulationContent)).ContentSha256);
+        Assert.Single((await fixture.RequestAsync(requestId)).Selections);
     }
 
     [Fact]
-    public void ShouldRetainExactPopulationVersionAndSourceProvenanceGivenSampleAndAmendment()
+    public async Task ShouldRetainExactPopulationVersionAndSourceProvenanceGivenSampleAndAmendment()
     {
         // Arrange
-        var request = OpenRequest(requiresInternalReview: false);
-        var firstSelectionId = Uuid.CreateVersion4();
-        var firstPopulationId = Uuid.CreateVersion4();
-        var firstRow = Uuid.CreateVersion4();
-        var firstDigest = new string('a', 64);
+        await using var fixture = new AuditorRequestFixture();
+        var requestId = await fixture.SeedRequestAsync();
+        var (populationId, rowId, _, firstDigest) = await fixture.SeedFrozenPopulationAsync();
+        var first = SampleSelectionCommandHandlerTests.RecordCommand(fixture, requestId, populationId, rowId);
+        Assert.True((await fixture.Handler<RecordSampleSelectionHandler>().HandleAsync(fixture.Context(first), CancellationToken.None)).IsSuccess);
+        Assert.Equal(ProcessState.Completed, (await fixture.MaterializeAsync(first.SelectionId)).State);
+        var secondDigest = await fixture.AmendPopulationAsync(populationId, rowId);
+        var command = new AmendSampleSelection(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId, requestId,
+            2, Uuid.CreateVersion4(), first.SelectionId, populationId, 2, [rowId], "targeted", "external_portal",
+            "portal-export-119", "The auditor selected additional rows from the amended population.");
 
         // Act
-        var first = request.RecordSampleSelection(request.Revision, firstSelectionId,
-            firstPopulationId, 2, firstDigest, "random", [firstRow], "external_email",
-            "sample-mail-004", OwnerId, "Owner", Now.AddHours(1));
-        var secondSelectionId = Uuid.CreateVersion4();
-        var secondPopulationId = firstPopulationId;
-        var secondRow = Uuid.CreateVersion4();
-        var secondDigest = new string('b', 64);
-        var sameVersionAmendment = request.AmendSampleSelection(request.Revision,
-            Uuid.CreateVersion4(), firstSelectionId, secondPopulationId, 2, secondDigest,
-            "targeted", [secondRow], "external_portal", "portal-export-118",
-            "The population has not advanced.", OwnerId, "Owner", Now.AddHours(2));
-        var amended = request.AmendSampleSelection(request.Revision, secondSelectionId,
-            firstSelectionId, secondPopulationId, 3, secondDigest, "targeted", [secondRow],
-            "external_portal", "portal-export-119", "The auditor selected additional rows from the amended population.",
-            OwnerId, "Owner", Now.AddHours(3));
+        var sameVersion = await fixture.Handler<AmendSampleSelectionHandler>().HandleAsync(fixture.Context(command with { PopulationVersion = 1 }), CancellationToken.None);
+        var amended = await fixture.Handler<AmendSampleSelectionHandler>().HandleAsync(fixture.Context(command), CancellationToken.None);
+        var materialized = await fixture.MaterializeAsync(command.SelectionId);
+        var original = await SampleSelectionCommandHandlerTests.SelectionAsync(fixture, requestId, first.SelectionId);
+        var successor = await SampleSelectionCommandHandlerTests.SelectionAsync(fixture, requestId, command.SelectionId);
 
         // Assert
-        Assert.Null(first);
-        Assert.Equal(CommandFailureCode.StateConflict,
-            Assert.IsType<CommandFailure>(sameVersionAmendment).Code);
-        Assert.Null(amended);
-        var selections = request.Current!.SampleSelections;
-        Assert.Equal(2, selections.Count);
-        Assert.Equal(2, selections[0].PopulationVersion);
-        Assert.Equal(firstDigest, selections[0].PopulationContentSha256);
-        Assert.Equal("external_email", selections[0].Source);
-        Assert.Equal("sample-mail-004", selections[0].ExternalReference);
-        Assert.Null(selections[0].SupersedesSelectionId);
-        Assert.Equal(3, selections[1].PopulationVersion);
-        Assert.Equal(secondDigest, selections[1].PopulationContentSha256);
-        Assert.Equal("external_portal", selections[1].Source);
-        Assert.Equal("portal-export-119", selections[1].ExternalReference);
-        Assert.Equal(firstSelectionId, selections[1].SupersedesSelectionId);
-        Assert.Equal("The auditor selected additional rows from the amended population.",
-            selections[1].AmendmentReason);
-        Assert.Equal(firstRow, Assert.Single(selections[0].SelectedRowIds));
-        Assert.Equal(secondRow, Assert.Single(selections[1].SelectedRowIds));
+        Assert.Equal(RequestErrorKind.Conflict, sameVersion.Error?.Kind);
+        Assert.True(amended.IsSuccess, amended.Error?.Message);
+        Assert.Equal(ProcessState.Completed, materialized.State);
+        Assert.Equal(firstDigest, (await fixture.ReadAsync<AuditPopulationVersionView>(original.PopulationContent)).ContentSha256);
+        Assert.Equal(secondDigest, (await fixture.ReadAsync<AuditPopulationVersionView>(successor.PopulationContent)).ContentSha256);
+        Assert.Equal("external_email", original.Source);
+        Assert.Equal("sample-mail-001", original.ExternalReference);
+        Assert.Null(original.SupersedesSelectionId);
+        Assert.Equal("external_portal", successor.Source);
+        Assert.Equal("portal-export-119", successor.ExternalReference);
+        Assert.Equal(first.SelectionId, successor.SupersedesSelectionId);
+        Assert.Equal(command.AmendmentReason, successor.AmendmentReason);
     }
 
     [Fact]
-    public void ShouldRetainRequestHistoryAcrossResolutionAndReopenGivenLifecycle()
+    public async Task ShouldRetainRequestHistoryAcrossResolutionAndReopenGivenLifecycle()
     {
         // Arrange
-        var request = OpenRequest(requiresInternalReview: false);
-        Assert.Null(request.RecordComment(request.Revision, "Need clarification", "internal",
-            OwnerId, "Owner", Now.AddHours(1)));
+        await using var fixture = new AuditorRequestFixture();
+        var requestId = await fixture.SeedRequestAsync();
+        var comment = new RecordAuditorRequestComment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+            requestId, "Need clarification", "internal", 1);
+        Assert.True((await fixture.Handler<RecordAuditorRequestCommentHandler>().HandleAsync(fixture.Context(comment), CancellationToken.None)).IsSuccess);
+        Assert.Equal(ProcessState.Completed, (await fixture.MaterializeAsync(comment.CommentId)).State);
         var responseId = Uuid.CreateVersion4();
-        Assert.Null(request.CreateResponseDraft(request.Revision, responseId, "Answer", [],
-            ResponderId, "Responder", Now.AddHours(2)));
-        Assert.Null(request.SubmitResponse(request.Revision, responseId, 1, "Submitted",
-            ResponderId, "Responder", Now.AddHours(3)));
-        Assert.Null(request.DeliverResponse(request.Revision, responseId, 1,
-            "External auditor", "mail-003", ResponderId, "Responder", Now.AddHours(4)));
-        Assert.Null(request.RecordResponseDisposition(request.Revision, responseId, 1,
-            "accepted", "receipt-003", OwnerId, "Owner", Now.AddHours(5)));
+        Assert.True((await fixture.DraftAsync(requestId, responseId)).IsSuccess);
+        Assert.Equal(ProcessState.Completed, (await fixture.MaterializeAsync(responseId)).State);
+        Assert.True((await fixture.SubmitAsync(requestId, responseId)).IsSuccess);
+        Assert.True((await fixture.ReviewAsync(requestId, responseId)).IsSuccess);
+        Assert.True((await fixture.DeliverAsync(requestId, responseId)).IsSuccess);
+        Assert.True((await fixture.AcceptAsync(requestId, responseId)).IsSuccess);
+        var (accepted, operationId) = await fixture.ResolveAsync(requestId);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+        Assert.Equal(ProcessState.Completed, (await fixture.FinishResolutionAsync(operationId)).State);
+        var resolved = await fixture.RequestAsync(requestId);
+        var command = new ReopenAuditorRequest(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, requestId,
+            "Auditor asked a follow-up", resolved.Revision);
 
         // Act
-        var resolved = request.Resolve(request.Revision, "Auditor accepted the response",
-            OwnerId, "Owner", Now.AddHours(6));
-        var staleReopen = request.Reopen(request.Revision - 1, "Auditor asked a follow-up",
-            OwnerId, "Owner", Now.AddHours(7));
-        var reopened = request.Reopen(request.Revision, "Auditor asked a follow-up",
-            OwnerId, "Owner", Now.AddHours(8));
+        var stale = await fixture.Handler<ReopenAuditorRequestHandler>().HandleAsync(fixture.Context(command with { ExpectedRevision = command.ExpectedRevision - 1 }), CancellationToken.None);
+        var reopened = await fixture.Handler<ReopenAuditorRequestHandler>().HandleAsync(fixture.Context(command), CancellationToken.None);
+        var saved = await fixture.RequestAsync(requestId);
 
         // Assert
-        Assert.Null(resolved);
-        Assert.Equal(CommandFailureCode.VersionConflict,
-            Assert.IsType<CommandFailure>(staleReopen).Code);
-        Assert.Null(reopened);
-        Assert.Equal("open", request.Current!.Status);
-        Assert.Single(request.Current.Comments);
-        Assert.Single(request.Current.Responses);
-        Assert.Equal("accepted", request.Current.Responses[0].Disposition!.Outcome);
-        Assert.Equal(8, request.Current.History.Count);
-        var events = new AggregateScenario<AuditorRequest>(request).PendingEvents.ToArray();
-        var replayed = new AggregateScenario<AuditorRequest>(NewRequest()).Given(events).Aggregate;
-        Assert.Equal(request.Current.Status, replayed.Current!.Status);
-        Assert.Equal(request.Current.Revision, replayed.Revision);
-        Assert.Equal(request.Current.History.Count, replayed.Current.History.Count);
-        Assert.Equal(request.Current.Responses[0].Disposition,
-            replayed.Current.Responses[0].Disposition);
+        Assert.Equal(RequestErrorKind.Conflict, stale.Error?.Kind);
+        Assert.True(reopened.IsSuccess, reopened.Error?.Message);
+        Assert.True(saved.IsOpen);
+        Assert.Equal(2, saved.Generation);
+        Assert.Single(saved.ResolutionHistory);
+        Assert.Single(saved.Comments);
+        Assert.Single(saved.Responses);
+        Assert.Null(saved.Resolved);
+        Assert.Equal("accepted", (await fixture.ResponseAsync(requestId, responseId)).Disposition!.Outcome);
     }
 
     [Fact]
-    public void ShouldExplainOverdueStateFromCurrentRequestAndDateGivenReadAsOf()
+    public async Task ShouldExplainOverdueStateFromCurrentRequestAndDateGivenReadAsOf()
     {
         // Arrange
-        var request = OpenRequest(requiresInternalReview: false);
+        await using var fixture = new AuditorRequestFixture();
+        var requestId = await fixture.SeedRequestAsync();
+        var terms = await fixture.TermsAsync(requestId);
+        var reader = new AuditorRequestWorkStatusReader(fixture.Reader, fixture.Content);
 
         // Act
-        var overdue = request.GetWorkStatus(new DateOnly(2026, 10, 18));
-        var due = request.GetWorkStatus(new DateOnly(2026, 10, 17));
+        var overdue = await reader.ReadAsync(fixture.TenantId, fixture.ProgramId, requestId, terms.DueOn.AddDays(1));
+        var due = await reader.ReadAsync(fixture.TenantId, fixture.ProgramId, requestId, terms.DueOn);
 
         // Assert
-        Assert.Equal("overdue", overdue);
-        Assert.Equal("open", due);
+        Assert.True(overdue.IsSuccess, overdue.Error?.Message);
+        Assert.True(due.IsSuccess, due.Error?.Message);
+        Assert.Equal("overdue", overdue.Value);
+        Assert.Equal("open", due.Value);
     }
-
-    static AuditorRequest NewRequest() => new(TenantId, ProgramId, RequestId);
-
-    static AuditorRequest OpenRequest(bool requiresInternalReview)
-    {
-        var request = NewRequest();
-        Assert.Null(request.Create(ValidContent() with
-        {
-            RequiresInternalReview = requiresInternalReview
-        }, OwnerId, "Owner", Now));
-        return request;
-    }
-
-    static AuditorRequestContent ValidContent() => new(ExaminationId, "external_email",
-        "firm-ticket-12", "Provide access review evidence", "production workforce access",
-        "high", OwnerId, new DateOnly(2026, 10, 17), true);
 }

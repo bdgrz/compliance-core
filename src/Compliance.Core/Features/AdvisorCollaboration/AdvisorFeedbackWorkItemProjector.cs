@@ -2,35 +2,16 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
+/// <summary>Projects each feedback thread's facts into the accountable work item read model.</summary>
 public sealed partial class AdvisorFeedbackWorkItemProjector(
     IAdvisorFeedbackWorkItemProjection projection)
-    : Projector(projection, EventStreamPattern.ForTenant("advisor-handoffs"),
+    : Projector(projection, EventStreamPattern.ForTenant(AdvisorFeedbackThread.Area),
         FitzAdvisorFeedbackWorkItemDirectory.ProjectorName),
-      IProjectorHandler<AdvisorHandoffCreated>,
-      IProjectorHandler<AdvisorHandoffSelectionRevised>,
-      IProjectorHandler<AdvisorHandoffReadiedForReview>,
-      IProjectorHandler<AdvisorHandoffClosed>,
-      IProjectorHandler<AdvisorHandoffRevoked>,
       IProjectorHandler<AdvisorFeedbackRecorded>,
       IProjectorHandler<AdvisorFeedbackCorrected>,
       IProjectorHandler<AdvisorFeedbackResponded>,
       IProjectorHandler<AdvisorFeedbackResolved>
 {
-    public ValueTask HandleAsync(AdvisorHandoffCreated ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(AdvisorHandoffSelectionRevised ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(AdvisorHandoffReadiedForReview ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(AdvisorHandoffClosed ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(AdvisorHandoffRevoked ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
     public ValueTask HandleAsync(AdvisorFeedbackRecorded ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
 

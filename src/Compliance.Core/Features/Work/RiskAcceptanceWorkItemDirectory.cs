@@ -4,7 +4,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Work;
 
 /// <summary>Builds risk acceptance work from the existing risk evaluation projection.</summary>
-sealed class RiskAcceptanceWorkItemDirectory(IAggregateReader reader,
+sealed class RiskAcceptanceWorkItemDirectory(IAggregateReader reader, RiskGovernanceReader governanceReader,
     IRiskDraftDirectoryReader risks, RiskDraftListReadConsistency? riskConsistency,
     IRiskEvaluationDirectoryReader evaluations) : IAccountableWorkItemDirectoryReader
 {
@@ -33,7 +33,7 @@ sealed class RiskAcceptanceWorkItemDirectory(IAggregateReader reader,
         CancellationToken ct = default)
     {
         _ = horizon;
-        return RiskAcceptanceWork.LoadProjectedAsync(reader, risks, riskConsistency, evaluations,
+        return RiskAcceptanceWork.LoadProjectedAsync(reader, governanceReader, risks, riskConsistency, evaluations,
             tenantId, programId, now, workItemId, ct);
     }
 }

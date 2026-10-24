@@ -1,35 +1,43 @@
+using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-/// <summary>Records a client member's response on the exact handoff that owns the feedback.</summary>
-public sealed class RespondToAdvisorFeedbackHandler(IAggregateExecutor executor,
+/// <summary>
+///     Records the client's response on a feedback thread at the expected thread revision. The thread, not the
+///     handoff, owns responses, so a response is accepted after the handoff was revoked or closed.
+/// </summary>
+public sealed class RespondToAdvisorFeedbackHandler(AdvisorUnitOperation operation, IAggregateReader reader,
     TimeProvider clock) : IRequestHandler<RespondToAdvisorFeedback>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<RespondToAdvisorFeedback> context,
-        CancellationToken ct)
+    const string CommandKind = "RespondToAdvisorFeedback";
+
+    public ValueTask<Result> HandleAsync(IRequestContext<RespondToAdvisorFeedback> context, CancellationToken ct)
     {
         var request = context.Request;
         if (!AdvisorHandoffCommandActor.TryGet(context, request.TenantId, out var actor))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Responding to advisor feedback requires a personal HTTP actor.")));
-        if (request.ProgramId == Uuid.Empty || request.HandoffId == Uuid.Empty ||
-            request.FeedbackId == Uuid.Empty || string.IsNullOrWhiteSpace(request.Response))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "An advisor feedback response requires its program, handoff, feedback, and response identities.")));
+            return ValueTask.FromResult(
+                AdvisorHandoffRules.Forbidden("Responding to advisor feedback requires a personal HTTP actor."));
+        if (request.CommandId == Uuid.Empty || request.ProgramId == Uuid.Empty || request.HandoffId == Uuid.Empty ||
+            request.FeedbackId == Uuid.Empty || request.ExpectedRevision < 0)
+            return ValueTask.FromResult(AdvisorHandoffRules.Invalid(
+                "Advisor feedback responses require command, program, handoff and feedback identities and a non-negative expected revision."));
+        if (string.IsNullOrWhiteSpace(request.Response))
+            return ValueTask.FromResult(AdvisorHandoffRules.Invalid("A feedback response requires content and an actor."));
 
-        return executor.ExecuteAsync(new AdvisorHandoff(request.TenantId, request.ProgramId,
-                request.HandoffId), handoff =>
-        {
-            if (!handoff.IsCreated || handoff.ProgramId != request.ProgramId)
-                return AggregateOutcome.CommitOnSuccess(Result.Failure(new RequestError(
-                    RequestErrorKind.NotFound,
-                    "The advisor handoff was not found in the requested program.")));
-
-            var result = handoff.RespondToFeedback(request.FeedbackId, request.Response, actor,
-                clock.GetUtcNow());
-            return AggregateOutcome.CommitOnSuccess(result.IsSuccess
-                ? Result.Success : Result.Failure(result.Error));
-        }, context, ct);
+        var now = clock.GetUtcNow();
+        var canonical = request with { Response = request.Response.Trim() };
+        var owner = new AdvisorFeedbackThread(request.TenantId, request.ProgramId, request.HandoffId,
+            request.FeedbackId).Stream;
+        var provenance = AdvisorContent.Provenance(request.CommandId, CommandKind, owner, actor,
+            (ulong)request.ExpectedRevision, AuthoredIntentDigest.Compute(canonical), now);
+        return operation.ExecuteAsync<AdvisorFeedbackThread>(context, request.TenantId, provenance,
+            () => new AdvisorFeedbackThread(request.TenantId, request.ProgramId, request.HandoffId,
+                request.FeedbackId, request.CommandId),
+            thread => thread.Acceptance,
+            (thread, token) => AdvisorFeedbackLookup.RequireMaterializedAsync(reader, thread, request.TenantId,
+                request.ProgramId, request.HandoffId, request.FeedbackId, token),
+            thread => thread.PrepareWrite(request.ExpectedRevision),
+            (thread, frozen, result) => thread.Respond(provenance, canonical.Response, actor, now, frozen, result), ct);
     }
 }

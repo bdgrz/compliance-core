@@ -6,6 +6,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
@@ -193,8 +194,8 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                         JsonSerializer.SerializeToElement(launch, ComplianceCoreJsonContext.Default.AccessReviewLaunch),
                         through);
                     break;
-                case AccessReviewCampaignCompletionAccepted or AccessReviewCampaignCompletionCanceled
-                    when expectedVersion > 1 && completion is null:
+                case AccessReviewCampaignCompletionAccepted or AccessReviewCampaignCompletionCanceled or
+                    AccessReviewDecisionBatchAdmitted when expectedVersion > 1 && completion is null:
                     break;
                 case AccessReviewCampaignCompleted completed when expectedVersion > 1 && completion is null:
                     completion = await AccessReviewContent.ReadAsync<AccessReviewCampaignCompletionView>(content,
@@ -265,8 +266,30 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                 priorRecordedAt = metadata.OccurredOn;
                 expectedVersion++;
                 if (domainEvent is AccessReviewItemCampaignCompletionUseAuthorized or
-                    AccessReviewItemCampaignCompletionUseSettled)
+                    AccessReviewItemCampaignCompletionUseSettled or AccessReviewItemDecisionAuthorized or
+                    AccessReviewItemDecisionCanceled)
                     continue;
+                if (domainEvent is AccessReviewItemDecisionSettled settledDecision)
+                {
+                    // A bulk decision becomes a source event only when its batch published and settled on the item.
+                    if (settledDecision.Disposition == SourceUseSettlementDisposition.IrreversibleDecision)
+                    {
+                        if (!state.Pending.Remove(settledDecision.Operation.RootOperationId, out var pending))
+                            return false;
+                        state.Decisions.Add(pending.Decision);
+                        Include(asOf, pending.Decision.DecidedAt, metadata, "decisions_recorded", stream,
+                            JsonSerializer.SerializeToElement(new AccessReviewItemDecisionsSource(frozen.ItemId,
+                                pending.Revision, [pending.Decision]),
+                                ComplianceCoreJsonContext.Default.AccessReviewItemDecisionsSource), through);
+                    }
+                    else
+                    {
+                        state.Pending.Remove(settledDecision.Operation.RootOperationId);
+                    }
+
+                    continue;
+                }
+
                 if (domainEvent is AccessReviewItemOpened itemOpened)
                 {
                     var intent = await AccessReviewContent.ReadAsync<AccessReviewItemCreationIntent>(content, tenantId,
@@ -283,7 +306,11 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
 
                 var (kind, at, payload) = await ApplyItemFactAsync(domainEvent, tenantId, campaignId, launch, state,
                     usedDecisionIds, usedReassignmentIds, ++expectedRevision, ct).ConfigureAwait(false);
-                if (!opened || kind is null || priorOccurredAt is { } earlierEvent && at < earlierEvent)
+                if (!opened || kind is null)
+                    return false;
+                if (kind == ProvisionalKind)
+                    continue;
+                if (priorOccurredAt is { } earlierEvent && at < earlierEvent)
                     return false;
                 priorOccurredAt = at;
                 Include(asOf, at, metadata, kind, stream, payload, through);
@@ -312,10 +339,20 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                         decisions.DecisionsManifest, ct).ConfigureAwait(false);
                     if (decisions.TenantId != tenantId || decisions.CampaignId != campaignId ||
                         decisions.ItemId != itemId || decisions.Revision != expectedRevision ||
-                        decisions.DecisionBatchId is not null || list.Any(decision => decision.ItemId != itemId) ||
+                        decisions.PublicationRequired != (decisions.DecisionBatchId is not null) ||
+                        list.Any(decision => decision.ItemId != itemId) ||
                         !ValidDecisions(list, launch, new Dictionary<Uuid, CampaignItemHistory> { [itemId] = state },
                             usedDecisionIds))
                         return invalid;
+                    if (decisions.DecisionBatchId is { } batchId)
+                    {
+                        // Hidden until the batch published: kept pending, counted in the item's revision.
+                        if (list.Count != 1 || !state.Pending.TryAdd(batchId, new PendingDecision(list[0],
+                                decisions.Revision)))
+                            return invalid;
+                        return (ProvisionalKind, list[0].DecidedAt, default);
+                    }
+
                     state.Decisions.Add(list[0]);
                     return ("decisions_recorded", list[0].DecidedAt, JsonSerializer.SerializeToElement(
                         new AccessReviewItemDecisionsSource(itemId, decisions.Revision, list),
@@ -757,11 +794,16 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
         public List<AccessDecisionView> Decisions { get; } = [];
         public List<AccessRemediationChangeView> Changes { get; } = [];
         public List<AccessReviewResponsibilityReassignmentView> Reassignments { get; } = [];
+        public Dictionary<Uuid, PendingDecision> Pending { get; } = [];
         public Uuid CurrentReviewerMemberId { get; set; } = item.ReviewerMemberId;
         public Uuid? CurrentRemediationOwnerMemberId { get; set; } = remediationOwnerMemberId;
         public AccessRemediationVerificationView? Verification { get; set; }
         public AccessRemediationExceptionView? Exception { get; set; }
     }
+
+    sealed record PendingDecision(AccessDecisionView Decision, long Revision);
+
+    const string ProvisionalKind = "provisional";
 
     sealed record AsOfEvent(DateTimeOffset At, EventStreamAddress Stream, AccessReviewCampaignSourceEvent Event);
 
