@@ -91,6 +91,7 @@ sealed class AccessReviewFixture : IAsyncDisposable
                 services.AddSingleton<IEventStore>(store);
                 services.AddSingleton<IDomainEventReader>(store);
                 services.AddScoped<PopulationSnapshotFreezer>();
+                services.AddScoped<AccessExpectationsReader>();
                 services.AddScoped<OperatingAuthority>();
                 services.AddScoped<AccessReviewQueueEligibility>();
                 services.AddScoped(provider => RestrictedApplicationVisibilityFixture.Create(
@@ -235,26 +236,38 @@ sealed class AccessReviewFixture : IAsyncDisposable
     {
         if (ApplicationRestricted)
             Permissions.AllowRestrictedRead(ManagerUserId);
-        var opened = await SendAsync(ManagerUserId, new OpenAccessPopulation(TenantId,
-            ApplicationId, InstanceId, 1, observedAt ?? Observed, "AWS console export, attested"));
-        var recorded = await SendAsync(ManagerUserId, new RecordAccessPopulationFacts(TenantId,
-            opened.PopulationId, 1, facts.Principals, facts.Entitlements, facts.GroupMembers,
-            facts.Assignments));
-        var accepted = await SendAsync(ManagerUserId, new AcceptAccessPopulation(TenantId,
+        var opened = await SendAsync(ManagerUserId, Open(observedAt ?? Observed, "AWS console export, attested"));
+        var recorded = await SendAsync(ManagerUserId, Record(opened.PopulationId, 1, facts));
+        var accepted = await SendAsync(ManagerUserId, new AcceptAccessPopulation(Uuid.CreateVersion4(), TenantId,
             opened.PopulationId, recorded.Revision, "I attest this is the observed population."));
         if (ApplicationRestricted)
             Permissions.DenyRestrictedRead(ManagerUserId);
         return (opened.PopulationId, accepted);
     }
 
+    public OpenAccessPopulation Open(DateTimeOffset observedAt, string source = "Manual export",
+        long systemInstanceRevision = 1, Uuid? populationId = null, Uuid? systemInstanceId = null) =>
+        new(populationId ?? Uuid.CreateVersion4(), TenantId, ApplicationId, systemInstanceId ?? InstanceId,
+            systemInstanceRevision, observedAt, source);
+
+    public RecordAccessPopulationFacts Record(Uuid populationId, long revision, AccessPopulationFacts facts,
+        Uuid? commandId = null) =>
+        new(commandId ?? Uuid.CreateVersion4(), TenantId, populationId, revision, facts.Principals,
+            facts.Entitlements, facts.GroupMembers, facts.Assignments);
+
     public void AllowManagerRestrictedRead() => Permissions.AllowRestrictedRead(ManagerUserId);
 
     public void DenyManagerRestrictedRead() => Permissions.DenyRestrictedRead(ManagerUserId);
 
+    public ClassifyAccessPrincipal Classify(Uuid populationId, string subject, string classification,
+        Uuid? personId = null, Uuid? serviceIdentityId = null, long revision = 0, Uuid? commandId = null) =>
+        new(commandId ?? Uuid.CreateVersion4(), TenantId, populationId, subject, revision, classification,
+            "Reviewed against the roster.", personId, serviceIdentityId);
+
     public Task<AccessPrincipalClassificationView> ClassifyAsync(Uuid populationId, string subject,
-        string classification, Uuid? personId = null, Uuid? serviceIdentityId = null, long count = 0) =>
-        SendAsync(ManagerUserId, new ClassifyAccessPrincipal(TenantId, populationId, subject, count,
-            classification, "Reviewed against the roster.", personId, serviceIdentityId));
+        string classification, Uuid? personId = null, Uuid? serviceIdentityId = null, long revision = 0) =>
+        SendAsync(ManagerUserId, Classify(populationId, subject, classification, personId, serviceIdentityId,
+            revision));
 
     /// <summary>Classifies every subject of the standard population.</summary>
     public async Task ClassifyStandardAsync(Uuid populationId)
@@ -262,19 +275,28 @@ sealed class AccessReviewFixture : IAsyncDisposable
         await ClassifyAsync(populationId, "ada", AccessReviewVocabulary.Human, AdaPersonId);
         await ClassifyAsync(populationId, "rae", AccessReviewVocabulary.Human, ReviewerPersonId);
         await ClassifyAsync(populationId, "bot", AccessReviewVocabulary.Nhi, serviceIdentityId: BotIdentityId);
-        await SendAsync(ManagerUserId, new ClassifyAccessPrincipal(TenantId, populationId, "legacy",
-            0, AccessReviewVocabulary.Shared, "Break-glass account.",
+        await SendAsync(ManagerUserId, new ClassifyAccessPrincipal(Uuid.CreateVersion4(), TenantId, populationId,
+            "legacy", 0, AccessReviewVocabulary.Shared, "Break-glass account.",
             AccountableOwnerPersonId: AdaPersonId, SharedJustification: "Emergency access."));
     }
 
-    public async Task<AccessExpectationView> ApprovedExpectationAsync(long revision, string ruleKind,
+    public ProposeAccessExpectation Propose(string ruleKind, AccessExpectationParameters parameters,
+        long revision = 0, Uuid? expectationId = null, Uuid? supersedes = null, string rationale = "Initial expectation.",
+        DateTimeOffset? effectiveFrom = null) =>
+        new(expectationId ?? Uuid.CreateVersion4(), TenantId, ApplicationId, InstanceId, revision, ruleKind,
+            parameters, rationale, effectiveFrom ?? Observed.AddDays(-30), SupersedesExpectationId: supersedes);
+
+    public ApproveAccessExpectation Approve(Uuid expectationId, long revision, Uuid? commandId = null,
+        Uuid? waiverId = null) =>
+        new(commandId ?? Uuid.CreateVersion4(), TenantId, InstanceId, expectationId, revision,
+            waiverId);
+
+    /// <summary>Proposes a root expectation on its own line and approves it independently.</summary>
+    public async Task<AccessExpectationView> ApprovedExpectationAsync(string ruleKind,
         AccessExpectationParameters parameters)
     {
-        var proposed = await SendAsync(ManagerUserId, new ProposeAccessExpectation(TenantId,
-            ApplicationId, InstanceId, revision, ruleKind, parameters, "Initial expectation.",
-            Observed.AddDays(-30)));
-        return await SendAsync(ApproverUserId, new ApproveAccessExpectation(TenantId, InstanceId,
-            proposed.ExpectationId, revision + 1));
+        var proposed = await SendAsync(ManagerUserId, Propose(ruleKind, parameters));
+        return await SendAsync(ApproverUserId, Approve(proposed.ExpectationId, proposed.Revision));
     }
 
     public Task<AccessReviewCampaignRegistration> LaunchAsync(Uuid populationId,

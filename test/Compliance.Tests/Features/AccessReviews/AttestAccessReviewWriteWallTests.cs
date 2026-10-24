@@ -191,7 +191,7 @@ public sealed class AttestAccessReviewWriteWallTests
             return new Fixture(source, services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true }));
         }
 
-        public OpenAccessPopulation Open() => new(Source.TenantId, Source.ApplicationId, Source.InstanceId, 1,
+        public OpenAccessPopulation Open() => new(Uuid.CreateVersion4(), Source.TenantId, Source.ApplicationId, Source.InstanceId, 1,
             AccessReviewFixture.Observed, "Synthetic observed export");
 
         public async Task<Result<T>> SendAsync<T>(Uuid userId, IRequest<T> request, bool mcp = false)

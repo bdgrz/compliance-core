@@ -2,8 +2,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
-/// <summary>A system instance's expectations, expectation exceptions, and population exceptions.</summary>
-public sealed record AccessExpectationsView(Uuid TenantId, Uuid SystemInstanceId, long Revision,
+/// <summary>
+///     A system instance's expectations, expectation exceptions, and population exceptions, composed from their
+///     independent owners. There is no system-wide revision: each expectation carries its own line revision.
+/// </summary>
+public sealed record AccessExpectationsView(Uuid TenantId, Uuid SystemInstanceId,
     IReadOnlyList<AccessExpectationView> Expectations,
     IReadOnlyList<AccessExpectationExceptionView> Exceptions,
     IReadOnlyList<AccessPopulationExceptionView> PopulationExceptions);

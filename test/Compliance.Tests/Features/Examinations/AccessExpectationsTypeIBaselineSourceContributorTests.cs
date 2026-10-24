@@ -1,6 +1,8 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -26,13 +28,15 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributorTests
         TimeSpan.Zero);
     static readonly ActorReference Proposer = ActorReference.ForMember(ProposerId, "Owner");
     static readonly ActorReference Approver = ActorReference.ForMember(ApproverId, "Approver");
+    static readonly EventStreamAddress LineStream = new(TenantId.ToString(), AccessExpectation.Area,
+        ExpectationId.ToString());
 
     [Fact]
     public async Task ShouldKeepAccessExpectationsStableGivenSuccessorAndExceptionsAfterTypeIDate()
     {
         // Arrange
-        var before = await Fixture(CreateBaseLedger(includeApproval: true));
-        var after = await Fixture(CreateLedgerWithLaterChanges());
+        var before = await Fixture(includeApproval: true);
+        var after = await Fixture(includeApproval: true, laterChanges: true);
 
         // Act
         var original = await before.Contributor.ReadAsync(Engagement(), before.Context,
@@ -59,11 +63,8 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributorTests
     public async Task ShouldKeepExpectationProposedGivenApprovalAfterTypeIDate()
     {
         // Arrange
-        var proposed = await Fixture(CreateBaseLedger(includeApproval: false));
-        var approvedLaterLedger = CreateBaseLedger(includeApproval: false);
-        Assert.True(approvedLaterLedger.Approve(ExpectationId, approvedLaterLedger.Revision,
-            ApproverId, Approver, AfterTypeIDate, null).IsSuccess);
-        var approvedLater = await Fixture(approvedLaterLedger);
+        var proposed = await Fixture(includeApproval: false);
+        var approvedLater = await Fixture(includeApproval: false, approvedAfterTypeIDate: true);
 
         // Act
         var before = await proposed.Contributor.ReadAsync(Engagement(), proposed.Context,
@@ -86,7 +87,7 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributorTests
     public async Task ShouldExcludeBackdatedExpectationGivenRecordedAfterTypeIDate()
     {
         // Arrange
-        var fixture = await Fixture(CreateBaseLedger(includeApproval: false), AfterTypeIDate);
+        var fixture = await Fixture(includeApproval: false, recordedAt: AfterTypeIDate);
 
         // Act
         var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
@@ -99,51 +100,140 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributorTests
             difference.Contains("no access expectation ledger recorded", StringComparison.Ordinal));
     }
 
-    static AccessReviewSystemLedger CreateBaseLedger(bool includeApproval)
+    [Fact]
+    public async Task ShouldReadIndependentLinesAndExceptionsGivenOneSystemWithSeveralOwners()
     {
-        var ledger = new AccessReviewSystemLedger(TenantId, SystemInstanceId);
-        Assert.True(ledger.Propose(0, ExpectationId,
-            AccessReviewVocabulary.ForbiddenPrincipalKind,
-            new AccessExpectationParameters(PrincipalKind: AccessReviewVocabulary.UserAccount),
-            "Human access must use federated roles.", new DateTimeOffset(2027, 1, 1, 0, 0, 0,
-                TimeSpan.Zero), null, null, ProposerId, Proposer,
-            new DateTimeOffset(2027, 1, 1, 12, 0, 0, TimeSpan.Zero)).IsSuccess);
-        if (!includeApproval)
-            return ledger;
+        // Arrange
+        var fixture = await Fixture(includeApproval: true, secondLine: true);
 
-        Assert.True(ledger.Approve(ExpectationId, ledger.Revision, ApproverId, Approver,
-            new DateTimeOffset(2027, 2, 1, 12, 0, 0, TimeSpan.Zero), null).IsSuccess);
-        Assert.True(ledger.RecordException(ExceptionId, ExpectationId, ledger.Revision,
-            "legacy-user-1", null, "Temporary migration exception",
-            new DateTimeOffset(2027, 4, 30, 0, 0, 0, TimeSpan.Zero), Approver,
-            new DateTimeOffset(2027, 3, 1, 12, 0, 0, TimeSpan.Zero)).IsSuccess);
-        Assert.True(ledger.RecordPopulationException(PopulationExceptionId, ledger.Revision,
-            "The accepted population is pending owner attestation.",
-            new DateTimeOffset(2027, 4, 15, 0, 0, 0, TimeSpan.Zero), Approver,
-            new DateTimeOffset(2027, 3, 2, 12, 0, 0, TimeSpan.Zero)).IsSuccess);
-        return ledger;
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(6, Assert.Single(result.Value.Sources).Revision);
+        Assert.Empty(result.Value.Blockers);
     }
 
-    static AccessReviewSystemLedger CreateLedgerWithLaterChanges()
+    static AccessExpectationView View(Uuid expectationId, long revision, DateTimeOffset proposedAt,
+        string ruleKind, AccessExpectationParameters parameters, Uuid? supersedes = null) => new(expectationId,
+        SystemInstanceId, supersedes, ruleKind, parameters, "Human access must use federated roles.",
+        new DateTimeOffset(2027, 1, 1, 0, 0, 0, TimeSpan.Zero), null, AccessExpectation.Proposed, Proposer,
+        proposedAt, null, null, null, revision);
+
+    static async Task<FixtureState> Fixture(bool includeApproval, bool laterChanges = false,
+        DateTimeOffset? recordedAt = null, bool approvedAfterTypeIDate = false, bool secondLine = false)
     {
-        var ledger = CreateBaseLedger(includeApproval: true);
-        Assert.True(ledger.Propose(ledger.Revision, SuccessorExpectationId,
-            AccessReviewVocabulary.PrivilegedEntitlement,
-            new AccessExpectationParameters(EntitlementKind: "admin_privilege"),
-            "Privileged entitlements require named review.",
-            new DateTimeOffset(2027, 4, 15, 0, 0, 0, TimeSpan.Zero), null, ExpectationId,
-            ProposerId, Proposer, AfterTypeIDate).IsSuccess);
-        Assert.True(ledger.Approve(SuccessorExpectationId, ledger.Revision, ApproverId,
-            Approver, AfterTypeIDate.AddMinutes(1), null).IsSuccess);
-        Assert.True(ledger.RecordException(FutureExceptionId, ExpectationId, ledger.Revision,
-            "legacy-user-2", null, "Later temporary exception",
-            new DateTimeOffset(2027, 8, 1, 0, 0, 0, TimeSpan.Zero), Approver,
-            AfterTypeIDate.AddMinutes(2)).IsSuccess);
-        Assert.True(ledger.RecordPopulationException(FuturePopulationExceptionId,
-            ledger.Revision, "Later export exception.",
-            new DateTimeOffset(2027, 8, 1, 0, 0, 0, TimeSpan.Zero), Approver,
-            AfterTypeIDate.AddMinutes(3)).IsSuccess);
-        return ledger;
+        var content = AccessReviewFacts.Content();
+        var events = new InMemoryEventStore();
+        var lines = new List<AccessExpectation>();
+        var facts = new List<DomainEvent>();
+        ulong version = 0;
+        long revision = 0;
+
+        async Task<ImmutableContentRef> Write<T>(string schema, T value) where T : notnull =>
+            await content.WriteJsonAsync(TenantId.ToString(), Uuid.CreateVersion4(), schema, value);
+
+        async Task Propose(EventStreamAddress stream, Uuid lineId, Uuid expectationId, DateTimeOffset proposedAt,
+            string ruleKind, AccessExpectationParameters parameters, Uuid? supersedes = null,
+            DateTimeOffset? occurredAt = null)
+        {
+            revision++;
+            version++;
+            var view = View(expectationId, revision, proposedAt, ruleKind, parameters, supersedes);
+            facts.Add(AccessReviewFacts.Attach(new AccessExpectationProposed(TenantId, SystemInstanceId, revision,
+                ProposerId, await Write("AccessExpectationProposed.ExpectationContent.v1", view),
+                AccessReviewFacts.Provenance(stream, "ProposeAccessExpectation", expectationId, Proposer, 0,
+                    proposedAt), AccessReviewFacts.Response(), AccessReviewFacts.Response()), lineId, version,
+                occurredAt ?? proposedAt));
+        }
+
+        void Approve(EventStreamAddress stream, Uuid lineId, Uuid expectationId, DateTimeOffset approvedAt,
+            DateTimeOffset? occurredAt = null)
+        {
+            revision++;
+            version++;
+            facts.Add(AccessReviewFacts.Attach(new AccessExpectationApproved(TenantId, SystemInstanceId, revision,
+                expectationId, Approver, approvedAt, null,
+                AccessReviewFacts.Provenance(stream, "ApproveAccessExpectation", Uuid.CreateVersion4(), Approver,
+                    (ulong)revision - 1, approvedAt), AccessReviewFacts.Response(), AccessReviewFacts.Response()),
+                lineId, version, occurredAt ?? approvedAt));
+        }
+
+        async Task Except(EventStreamAddress stream, Uuid lineId, Uuid exceptionId, Uuid expectationId,
+            string subject, DateTimeOffset expiresAt, DateTimeOffset approvedAt, DateTimeOffset? occurredAt = null)
+        {
+            revision++;
+            version++;
+            var view = new AccessExpectationExceptionView(exceptionId, expectationId, subject, null,
+                "Temporary migration exception", expiresAt, Approver, approvedAt);
+            facts.Add(AccessReviewFacts.Attach(new AccessExpectationExceptionRecorded(TenantId, SystemInstanceId,
+                revision, await Write("AccessExpectationExceptionRecorded.ExceptionContent.v1", view),
+                AccessReviewFacts.Provenance(stream, "ExemptAccessExpectation", exceptionId, Approver,
+                    (ulong)revision - 1, approvedAt), AccessReviewFacts.Response(), AccessReviewFacts.Response()),
+                lineId, version, occurredAt ?? approvedAt));
+        }
+
+        var forbidden = new AccessExpectationParameters(PrincipalKind: AccessReviewVocabulary.UserAccount);
+        await Propose(LineStream, ExpectationId, ExpectationId, new DateTimeOffset(2027, 1, 1, 12, 0, 0,
+            TimeSpan.Zero), AccessReviewVocabulary.ForbiddenPrincipalKind, forbidden,
+            occurredAt: recordedAt);
+        if (includeApproval)
+        {
+            Approve(LineStream, ExpectationId, ExpectationId, new DateTimeOffset(2027, 2, 1, 12, 0, 0,
+                TimeSpan.Zero), recordedAt);
+            await Except(LineStream, ExpectationId, ExceptionId, ExpectationId, "legacy-user-1",
+                new DateTimeOffset(2027, 4, 30, 0, 0, 0, TimeSpan.Zero),
+                new DateTimeOffset(2027, 3, 1, 12, 0, 0, TimeSpan.Zero), recordedAt);
+        }
+
+        if (approvedAfterTypeIDate)
+            Approve(LineStream, ExpectationId, ExpectationId, AfterTypeIDate);
+        if (laterChanges)
+        {
+            await Propose(LineStream, ExpectationId, SuccessorExpectationId, AfterTypeIDate,
+                AccessReviewVocabulary.PrivilegedEntitlement,
+                new AccessExpectationParameters(EntitlementKind: "admin_privilege"), ExpectationId);
+            Approve(LineStream, ExpectationId, SuccessorExpectationId, AfterTypeIDate.AddMinutes(1));
+            await Except(LineStream, ExpectationId, FutureExceptionId, ExpectationId, "legacy-user-2",
+                new DateTimeOffset(2027, 8, 1, 0, 0, 0, TimeSpan.Zero), AfterTypeIDate.AddMinutes(2));
+        }
+
+        var attached = facts.ToArray();
+        await events.AppendAsync(LineStream, 0, attached);
+        lines.Add(new AggregateScenario<AccessExpectation>(new AccessExpectation(TenantId, ExpectationId))
+            .Given(attached).Aggregate);
+
+        if (secondLine)
+        {
+            var lineId = Uuid.CreateVersion4();
+            var stream = new EventStreamAddress(TenantId.ToString(), AccessExpectation.Area, lineId.ToString());
+            facts.Clear();
+            version = 0;
+            revision = 0;
+            await Propose(stream, lineId, lineId, new DateTimeOffset(2027, 1, 2, 12, 0, 0, TimeSpan.Zero),
+                AccessReviewVocabulary.PrivilegedEntitlement,
+                new AccessExpectationParameters(EntitlementKind: "admin_privilege"));
+            Approve(stream, lineId, lineId, new DateTimeOffset(2027, 2, 2, 12, 0, 0, TimeSpan.Zero));
+            var second = facts.ToArray();
+            await events.AppendAsync(stream, 0, second);
+            lines.Add(new AggregateScenario<AccessExpectation>(new AccessExpectation(TenantId, lineId))
+                .Given(second).Aggregate);
+        }
+
+        if (includeApproval)
+            await AccessReviewFacts.AppendPopulationExceptionAsync(events, content, TenantId, SystemInstanceId,
+                PopulationExceptionId, "The accepted population is pending owner attestation.",
+                new DateTimeOffset(2027, 4, 15, 0, 0, 0, TimeSpan.Zero), Approver,
+                new DateTimeOffset(2027, 3, 2, 12, 0, 0, TimeSpan.Zero), recordedAt);
+        if (laterChanges)
+            await AccessReviewFacts.AppendPopulationExceptionAsync(events, content, TenantId, SystemInstanceId,
+                FuturePopulationExceptionId, "Later export exception.",
+                new DateTimeOffset(2027, 8, 1, 0, 0, 0, TimeSpan.Zero), Approver, AfterTypeIDate.AddMinutes(3));
+
+        var contributor = new AccessExpectationsTypeIBaselineSourceContributor(new LineReader(lines), events,
+            content);
+        return new FixtureState(contributor, Context());
     }
 
     static ExaminationEngagementView Engagement() => new(TenantId, ProgramId,
@@ -157,59 +247,16 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributorTests
             new string('a', 64)),
     ]);
 
-    static async Task<FixtureState> Fixture(AccessReviewSystemLedger ledger,
-        DateTimeOffset? recordedAt = null)
-    {
-        var pending = new AggregateScenario<AccessReviewSystemLedger>(ledger).PendingEvents;
-        var attached = pending.ToArray();
-        if (recordedAt is { } occurrence)
-            for (var index = 0; index < attached.Length; index++)
-            {
-                var original = attached[index];
-                attached[index] = original switch
-                {
-                    AccessExpectationProposed proposed => new AccessExpectationProposed(
-                        proposed.TenantId, proposed.SystemInstanceId, proposed.Revision,
-                        proposed.ProposerMemberId, proposed.Expectation),
-                    AccessExpectationApproved approved => new AccessExpectationApproved(
-                        approved.TenantId, approved.SystemInstanceId, approved.Revision,
-                        approved.ExpectationId, approved.ApprovedBy, approved.ApprovedAt,
-                        approved.SeparationOfDutiesWaiverId),
-                    AccessExpectationExceptionRecorded exceptionRecorded =>
-                        new AccessExpectationExceptionRecorded(exceptionRecorded.TenantId,
-                            exceptionRecorded.SystemInstanceId, exceptionRecorded.Revision,
-                            exceptionRecorded.Exception),
-                    AccessPopulationExceptionRecorded populationExceptionRecorded =>
-                        new AccessPopulationExceptionRecorded(populationExceptionRecorded.TenantId,
-                            populationExceptionRecorded.SystemInstanceId,
-                            populationExceptionRecorded.Revision,
-                            populationExceptionRecorded.Exception),
-                    _ => throw new InvalidOperationException(
-                        "The access expectation fixture produced an unknown event."),
-                };
-                attached[index].AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
-                    SystemInstanceId, (ulong)index + 1, occurrence));
-            }
-        var events = new InMemoryEventStore();
-        var stream = new EventStreamAddress(TenantId.ToString(), AccessReviewSystemLedger.Area,
-            SystemInstanceId.ToString());
-        await events.AppendAsync(stream, 0, attached);
-        var replayed = new AggregateScenario<AccessReviewSystemLedger>(
-            new AccessReviewSystemLedger(TenantId, SystemInstanceId)).Given(attached).Aggregate;
-        var contributor = new AccessExpectationsTypeIBaselineSourceContributor(
-            new AggregateReader(replayed), events);
-        return new FixtureState(contributor, Context());
-    }
-
     sealed record FixtureState(ITypeIBaselineSourceContributor Contributor,
         TypeIBaselineSourceReadContext Context);
 
-    sealed class AggregateReader(AccessReviewSystemLedger ledger) : IAggregateReader
+    sealed class LineReader(IReadOnlyList<AccessExpectation> lines) : IAggregateReader
     {
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
             CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(ledger.Id == aggregate.Id && ledger.GetType() == typeof(TAggregate)
-                ? (TAggregate)(Aggregate)ledger
+            ValueTask.FromResult(aggregate is AccessExpectation requested &&
+                                 lines.FirstOrDefault(line => line.Id == requested.Id) is { } line
+                ? (TAggregate)(Aggregate)line
                 : aggregate);
     }
 }

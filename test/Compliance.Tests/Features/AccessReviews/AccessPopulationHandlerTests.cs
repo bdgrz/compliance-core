@@ -33,7 +33,7 @@ public sealed class AccessPopulationHandlerTests
         Assert.True(snapshot.HasIntactContent);
         Assert.Equal(AccessPopulationContent.Kind, snapshot.Kind);
         Assert.Contains(snapshot.Rows, row => row.Key == "principal/ada");
-        await fixture.FailAsync(fixture.ManagerUserId, new RecordAccessPopulationFacts(
+        await fixture.FailAsync(fixture.ManagerUserId, new RecordAccessPopulationFacts(Uuid.CreateVersion4(),
             fixture.TenantId, populationId, view.Revision, [], [], [], []), RequestErrorKind.Conflict);
     }
 
@@ -42,10 +42,9 @@ public sealed class AccessPopulationHandlerTests
     {
         // Arrange
         await using var fixture = await AccessReviewFixture.CreateAsync();
-        var opened = await fixture.SendAsync(fixture.ManagerUserId, new OpenAccessPopulation(
-            fixture.TenantId, fixture.ApplicationId, fixture.InstanceId, 1,
-            AccessReviewFixture.Observed, "Manual export"));
-        await fixture.SendAsync(fixture.ManagerUserId, new RecordAccessPopulationFacts(
+        var opened = await fixture.SendAsync(fixture.ManagerUserId,
+            fixture.Open(AccessReviewFixture.Observed, "Manual export"));
+        await fixture.SendAsync(fixture.ManagerUserId, new RecordAccessPopulationFacts(Uuid.CreateVersion4(),
             fixture.TenantId, opened.PopulationId, 1, [new("ada", "user_account", "Ada", "active")],
             [], [], [new("ada", "missing")]));
 
@@ -53,7 +52,8 @@ public sealed class AccessPopulationHandlerTests
         var preview = await fixture.SendAsync(fixture.ManagerUserId,
             new PreviewAccessPopulation(fixture.TenantId, opened.PopulationId));
         var refused = await fixture.FailAsync(fixture.ManagerUserId, new AcceptAccessPopulation(
-            fixture.TenantId, opened.PopulationId, 2, "Attested."), RequestErrorKind.Validation);
+            Uuid.CreateVersion4(), fixture.TenantId, opened.PopulationId, 2, "Attested."),
+            RequestErrorKind.Validation);
 
         // Assert
         Assert.False(preview.CanAccept);
@@ -68,15 +68,14 @@ public sealed class AccessPopulationHandlerTests
         await using var fixture = await AccessReviewFixture.CreateAsync();
 
         // Act
-        var stale = await fixture.FailAsync(fixture.ManagerUserId, new OpenAccessPopulation(
-            fixture.TenantId, fixture.ApplicationId, fixture.InstanceId, 2,
-            AccessReviewFixture.Observed, "Export"), RequestErrorKind.Conflict);
-        var unknown = await fixture.FailAsync(fixture.ManagerUserId, new OpenAccessPopulation(
-            fixture.TenantId, fixture.ApplicationId, Uuid.CreateVersion4(), 1,
-            AccessReviewFixture.Observed, "Export"), RequestErrorKind.NotFound);
-        var future = await fixture.FailAsync(fixture.ManagerUserId, new OpenAccessPopulation(
-            fixture.TenantId, fixture.ApplicationId, fixture.InstanceId, 1,
-            DateTimeOffset.UtcNow.AddDays(1), "Export"), RequestErrorKind.Validation);
+        var stale = await fixture.FailAsync(fixture.ManagerUserId,
+            fixture.Open(AccessReviewFixture.Observed, "Export", systemInstanceRevision: 2),
+            RequestErrorKind.Conflict);
+        var unknown = await fixture.FailAsync(fixture.ManagerUserId,
+            fixture.Open(AccessReviewFixture.Observed, "Export", systemInstanceId: Uuid.CreateVersion4()),
+            RequestErrorKind.NotFound);
+        var future = await fixture.FailAsync(fixture.ManagerUserId,
+            fixture.Open(DateTimeOffset.UtcNow.AddDays(1), "Export"), RequestErrorKind.Validation);
 
         // Assert
         Assert.Contains("revision", stale.Message, StringComparison.Ordinal);
@@ -107,22 +106,19 @@ public sealed class AccessPopulationHandlerTests
     {
         // Arrange
         await using var fixture = await AccessReviewFixture.CreateAsync();
-        var opened = await fixture.SendAsync(fixture.ManagerUserId, new OpenAccessPopulation(
-            fixture.TenantId, fixture.ApplicationId, fixture.InstanceId, 1,
-            AccessReviewFixture.Observed, "Export"));
+        var opened = await fixture.SendAsync(fixture.ManagerUserId,
+            fixture.Open(AccessReviewFixture.Observed, "Export"));
         var facts = AccessReviewFixture.StandardFacts();
-        await fixture.SendAsync(fixture.ManagerUserId, new RecordAccessPopulationFacts(
-            fixture.TenantId, opened.PopulationId, 1, facts.Principals, facts.Entitlements,
-            facts.GroupMembers, facts.Assignments));
-        var accept = new AcceptAccessPopulation(fixture.TenantId, opened.PopulationId, 2, "Attested.");
-        var requestId = Uuid.CreateVersion4();
+        await fixture.SendAsync(fixture.ManagerUserId, fixture.Record(opened.PopulationId, 1, facts));
+        var accept = new AcceptAccessPopulation(Uuid.CreateVersion4(), fixture.TenantId, opened.PopulationId, 2,
+            "Attested.");
 
         // Act
         var first = await PersonalAccessReviewTransportTests.SendHttpAsync(fixture.Provider,
-            fixture.ManagerUserId, accept, new RequestMetadata(requestId, requestId, null));
+            fixture.ManagerUserId, accept);
         Assert.True(first.IsSuccess, first.Error?.Message);
         var second = await PersonalAccessReviewTransportTests.SendHttpAsync(fixture.Provider,
-            fixture.ManagerUserId, accept, new RequestMetadata(requestId, requestId, null));
+            fixture.ManagerUserId, accept);
         Assert.True(second.IsSuccess, second.Error?.Message);
 
         // Assert

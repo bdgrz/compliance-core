@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Fitz.Extensions;
@@ -11,7 +12,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     <c>shared_account</c>, <c>nhi_unowned</c>, <c>nhi_expired</c>, and <c>disabled_with_access</c>;
 ///     groups and roles report <c>nested_group</c> when they contain another access structure.
 /// </summary>
-public sealed class ListAccessPrincipalsHandler(IAggregateReader reader,
+public sealed class ListAccessPrincipalsHandler(IAggregateReader reader, IImmutableContentStore content,
     IAccessReviewSources sources, RestrictedApplicationVisibility visibility)
     : IRequestHandler<ListAccessPrincipals, Page<AccessPrincipalView>>
 {
@@ -32,7 +33,7 @@ public sealed class ListAccessPrincipalsHandler(IAggregateReader reader,
             .ConfigureAwait(false))
             return AccessReviewOutcome.Failure<Page<AccessPrincipalView>>(
                 RequestErrorKind.NotFound, "The population was not found.");
-        var loaded = await AcceptedAccessPopulation.LoadAsync(reader, request.TenantId,
+        var loaded = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId,
             request.PopulationId, ct).ConfigureAwait(false);
         if (!loaded.IsSuccess)
             return Result<Page<AccessPrincipalView>>.Failure(loaded.Error);
@@ -50,7 +51,7 @@ public sealed class ListAccessPrincipalsHandler(IAggregateReader reader,
             var structure = AccessReviewVocabulary.IsAccessStructure(principal.PrincipalKind);
             var access = accepted.EffectiveAccess.Count(row =>
                 row.ProviderSubjectId == principal.ProviderSubjectId);
-            var current = accepted.Population.CurrentClassification(principal.ProviderSubjectId);
+            var current = accepted.CurrentClassification(principal.ProviderSubjectId);
             var (proposal, ambiguous) = structure
                 ? (null, false)
                 : AccessPrincipalProposals.Propose(principal, people.Value);
@@ -79,7 +80,7 @@ public sealed class ListAccessPrincipalsHandler(IAggregateReader reader,
                 principal.PrincipalKind, principal.DisplayName, principal.Status, principal.Email,
                 structure, structure ? principal.PrincipalKind : current?.Classification ??
                     AccessReviewVocabulary.Unclassified, current,
-                accepted.Population.History(principal.ProviderSubjectId), proposal, gaps, access));
+                accepted.History(principal.ProviderSubjectId), proposal, gaps, access));
         }
         return ControlActivationSource.Paginate(views, request.Limit, request.Cursor,
             "access principal");

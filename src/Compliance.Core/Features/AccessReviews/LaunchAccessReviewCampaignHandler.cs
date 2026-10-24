@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Snapshots;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Workforce;
@@ -15,6 +16,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 /// </summary>
 public sealed class LaunchAccessReviewCampaignHandler(IAggregateReader reader,
     IAggregateExecutor executor, PopulationSnapshotFreezer freezer, IAccessReviewSources sources,
+    IImmutableContentStore content, AccessExpectationsReader expectations,
     TimeProvider clock, RestrictedApplicationVisibility visibility,
     AccessReviewQueueEligibility queueEligibility, OperatingAuthority authority)
     : IRequestHandler<LaunchAccessReviewCampaign, AccessReviewCampaignRegistration>
@@ -88,7 +90,7 @@ public sealed class LaunchAccessReviewCampaignHandler(IAggregateReader reader,
                 !await visibility.CanReadSystemInstanceAsync(request.TenantId, actor.UserId,
                     opened.ApplicationId, opened.SystemInstanceId, ct).ConfigureAwait(false))
                 return Failure(RequestErrorKind.NotFound, "The population was not found.");
-            var loaded = await AcceptedAccessPopulation.LoadAsync(reader, request.TenantId,
+            var loaded = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId,
                 assignment.PopulationId, ct).ConfigureAwait(false);
             if (!loaded.IsSuccess)
                 return Result<AccessReviewCampaignRegistration>.Failure(loaded.Error);
@@ -117,7 +119,7 @@ public sealed class LaunchAccessReviewCampaignHandler(IAggregateReader reader,
             reviewers.Add(new AccessReviewerView(accepted.Population.Id, accepted.Header.SystemInstanceId,
                 assignment.ReviewerMemberId, delegated, delegated ? assignment.DelegationReason!.Trim() : null));
 
-            var variance = await GetAccessVarianceHandler.EvaluateAsync(reader, request.TenantId,
+            var variance = await GetAccessVarianceHandler.EvaluateAsync(expectations, request.TenantId,
                 accepted, ct).ConfigureAwait(false);
             var principals = accepted.Facts.Principals.ToDictionary(static principal =>
                 principal.ProviderSubjectId, StringComparer.Ordinal);
@@ -127,7 +129,7 @@ public sealed class LaunchAccessReviewCampaignHandler(IAggregateReader reader,
             {
                 var principal = principals[row.ProviderSubjectId];
                 var entitlement = entitlements[row.ProviderEntitlementId];
-                var classification = accepted.Population.CurrentClassification(row.ProviderSubjectId);
+                var classification = accepted.CurrentClassification(row.ProviderSubjectId);
                 var personId = classification?.Classification == AccessReviewVocabulary.Human
                     ? classification.PersonId
                     : null;

@@ -1,9 +1,10 @@
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
+using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
-public sealed class PreviewAccessPopulationHandler(IAggregateReader reader,
+public sealed class PreviewAccessPopulationHandler(IAggregateReader reader, IImmutableContentStore content,
     RestrictedApplicationVisibility visibility)
     : IRequestHandler<PreviewAccessPopulation, AccessPopulationPreview>
 {
@@ -24,9 +25,11 @@ public sealed class PreviewAccessPopulationHandler(IAggregateReader reader,
             .ConfigureAwait(false))
             return AccessReviewOutcome.Failure<AccessPopulationPreview>(RequestErrorKind.NotFound,
                 "The population was not found.");
-        var issues = AccessPopulationAnalysis.Validate(population.Facts);
+        var facts = await AccessPopulationFactsContent.ReadAsync(content, request.TenantId, population, ct)
+            .ConfigureAwait(false);
+        var issues = AccessPopulationAnalysis.Validate(facts);
         return Result<AccessPopulationPreview>.Success(new AccessPopulationPreview(population.Id,
-            population.Revision, issues, AccessPopulationAnalysis.Derive(population.Facts),
+            population.Revision, issues, AccessPopulationAnalysis.Derive(facts),
             issues.Count == 0 && !population.IsAccepted));
     }
 }

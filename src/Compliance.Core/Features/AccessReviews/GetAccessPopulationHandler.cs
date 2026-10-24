@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
 /// <summary>Reads a draft from its stream, or an accepted population from its verified snapshot.</summary>
-public sealed class GetAccessPopulationHandler(IAggregateReader reader,
+public sealed class GetAccessPopulationHandler(IAggregateReader reader, IImmutableContentStore content,
     RestrictedApplicationVisibility visibility)
     : IRequestHandler<GetAccessPopulation, AccessPopulationView>
 {
@@ -23,14 +24,15 @@ public sealed class GetAccessPopulationHandler(IAggregateReader reader,
                 opened.ApplicationId, opened.SystemInstanceId, ct).ConfigureAwait(false))
             return AccessReviewOutcome.Failure<AccessPopulationView>(RequestErrorKind.NotFound,
                 "The population was not found.");
-        var facts = population.Facts;
+        var facts = await AccessPopulationFactsContent.ReadAsync(content, request.TenantId, population, ct)
+            .ConfigureAwait(false);
         IReadOnlyList<AccessPopulationIssue> issues;
         IReadOnlyList<EffectiveAccessView> effective;
         string? attestation = null;
         if (population.IsAccepted)
         {
-            var accepted = await AcceptedAccessPopulation.LoadAsync(reader, request.TenantId,
-                request.PopulationId, ct).ConfigureAwait(false);
+            var accepted = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId,
+                request.PopulationId, ct, withClassifications: false).ConfigureAwait(false);
             if (!accepted.IsSuccess)
                 return Result<AccessPopulationView>.Failure(accepted.Error);
             facts = accepted.Value.Facts;
@@ -43,7 +45,7 @@ public sealed class GetAccessPopulationHandler(IAggregateReader reader,
             issues = AccessPopulationAnalysis.Validate(facts);
             effective = AccessPopulationAnalysis.Derive(facts);
         }
-        var acceptance = population.Acceptance;
+        var acceptance = population.AcceptedFact;
         return Result<AccessPopulationView>.Success(new AccessPopulationView(request.TenantId,
             population.Id, population.Revision, opened.ApplicationId, opened.SystemInstanceId,
             opened.SystemInstanceRevision, opened.ObservedAt, opened.SourceKind, opened.Source,

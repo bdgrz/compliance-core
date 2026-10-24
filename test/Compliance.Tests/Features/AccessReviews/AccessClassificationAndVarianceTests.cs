@@ -30,9 +30,8 @@ public sealed class AccessClassificationAndVarianceTests
         await using var fixture = await AccessReviewFixture.CreateAsync(
             applicationRestricted: true);
         fixture.AllowManagerRestrictedRead();
-        var opened = await fixture.SendAsync(fixture.ManagerUserId, new OpenAccessPopulation(
-            fixture.TenantId, fixture.ApplicationId, fixture.InstanceId, 1,
-            AccessReviewFixture.Observed, "Manual export"));
+        var opened = await fixture.SendAsync(fixture.ManagerUserId,
+            fixture.Open(AccessReviewFixture.Observed));
         fixture.DenyManagerRestrictedRead();
 
         // Act
@@ -57,7 +56,7 @@ public sealed class AccessClassificationAndVarianceTests
 
         // Act
         var denied = await fixture.FailAsync(fixture.ManagerUserId,
-            new ClassifyAccessPrincipal(fixture.TenantId, populationId, "ada", 0,
+            new ClassifyAccessPrincipal(Uuid.CreateVersion4(), fixture.TenantId, populationId, "ada", 0,
                 AccessReviewVocabulary.Unclassified, "Reviewed."), RequestErrorKind.NotFound);
 
         // Assert
@@ -100,7 +99,7 @@ public sealed class AccessClassificationAndVarianceTests
         // Act
         await fixture.ClassifyAsync(populationId, "ada", AccessReviewVocabulary.Unclassified);
         var changed = await fixture.ClassifyAsync(populationId, "ada", AccessReviewVocabulary.Human,
-            fixture.AdaPersonId, count: 1);
+            fixture.AdaPersonId, revision: 1);
         var after = await fixture.SendAsync(fixture.ManagerUserId,
             new ListAccessPrincipals(fixture.TenantId, populationId));
 
@@ -135,20 +134,21 @@ public sealed class AccessClassificationAndVarianceTests
 
         // Act
         var nhiWithoutIdentity = await fixture.FailAsync(fixture.ManagerUserId,
-            new ClassifyAccessPrincipal(fixture.TenantId, populationId, "bot", 0, "nhi", "Bot."),
+            new ClassifyAccessPrincipal(Uuid.CreateVersion4(), fixture.TenantId, populationId, "bot", 0, "nhi",
+                "Bot."),
             RequestErrorKind.Validation);
         var sharedWithoutOwner = await fixture.FailAsync(fixture.ManagerUserId,
-            new ClassifyAccessPrincipal(fixture.TenantId, populationId, "legacy", 0, "shared",
-                "Shared.", SharedJustification: "Break glass."), RequestErrorKind.Validation);
+            new ClassifyAccessPrincipal(Uuid.CreateVersion4(), fixture.TenantId, populationId, "legacy", 0,
+                "shared", "Shared.", SharedJustification: "Break glass."), RequestErrorKind.Validation);
         var group = await fixture.FailAsync(fixture.ManagerUserId,
-            new ClassifyAccessPrincipal(fixture.TenantId, populationId, "engineering", 0,
+            new ClassifyAccessPrincipal(Uuid.CreateVersion4(), fixture.TenantId, populationId, "engineering", 0,
                 "unclassified", "Group."), RequestErrorKind.Validation);
         var unknownPerson = await fixture.FailAsync(fixture.ManagerUserId,
-            new ClassifyAccessPrincipal(fixture.TenantId, populationId, "ada", 0, "human", "Ada.",
-                Uuid.CreateVersion4()), RequestErrorKind.Validation);
+            new ClassifyAccessPrincipal(Uuid.CreateVersion4(), fixture.TenantId, populationId, "ada", 0, "human",
+                "Ada.", Uuid.CreateVersion4()), RequestErrorKind.Validation);
         var stale = await fixture.FailAsync(fixture.ManagerUserId,
-            new ClassifyAccessPrincipal(fixture.TenantId, populationId, "ada", 3, "human", "Ada.",
-                fixture.AdaPersonId), RequestErrorKind.Conflict);
+            new ClassifyAccessPrincipal(Uuid.CreateVersion4(), fixture.TenantId, populationId, "ada", 3, "human",
+                "Ada.", fixture.AdaPersonId), RequestErrorKind.Conflict);
 
         // Assert
         Assert.All(new[] { nhiWithoutIdentity, sharedWithoutOwner, group, unknownPerson, stale },
@@ -186,16 +186,16 @@ public sealed class AccessClassificationAndVarianceTests
     {
         // Arrange
         await using var fixture = await AccessReviewFixture.CreateAsync();
-        var noIamUsers = await fixture.ApprovedExpectationAsync(0,
+        var noIamUsers = await fixture.ApprovedExpectationAsync(
             AccessReviewVocabulary.RequiresExpiry, new AccessExpectationParameters(
                 PrincipalKind: "user_account", ProviderEntitlementId: "read"));
-        await fixture.ApprovedExpectationAsync(2, AccessReviewVocabulary.PrivilegedEntitlement,
+        await fixture.ApprovedExpectationAsync(AccessReviewVocabulary.PrivilegedEntitlement,
             new AccessExpectationParameters(EntitlementKind: "admin_privilege"));
-        await fixture.ApprovedExpectationAsync(4, AccessReviewVocabulary.RequiredAccess,
+        await fixture.ApprovedExpectationAsync(AccessReviewVocabulary.RequiredAccess,
             new AccessExpectationParameters(ProviderSubjectId: "bot", ProviderEntitlementId: "deploy"));
-        await fixture.ApprovedExpectationAsync(6, AccessReviewVocabulary.RequiredAccess,
+        await fixture.ApprovedExpectationAsync(AccessReviewVocabulary.RequiredAccess,
             new AccessExpectationParameters(ProviderSubjectId: "ci", ProviderEntitlementId: "deploy"));
-        await fixture.ApprovedExpectationAsync(8, AccessReviewVocabulary.ForbiddenPrincipalKind,
+        await fixture.ApprovedExpectationAsync(AccessReviewVocabulary.ForbiddenPrincipalKind,
             new AccessExpectationParameters(PrincipalKind: "access_token"));
         var (populationId, _) = await fixture.AcceptAsync(AccessReviewFixture.StandardFacts());
         await fixture.ClassifyAsync(populationId, "bot", AccessReviewVocabulary.Nhi,
@@ -206,9 +206,9 @@ public sealed class AccessClassificationAndVarianceTests
         // Act
         var variance = await fixture.SendAsync(fixture.ManagerUserId,
             new GetAccessVariance(fixture.TenantId, populationId));
-        await fixture.SendAsync(fixture.ApproverUserId, new ExemptAccessExpectation(fixture.TenantId,
-            fixture.InstanceId, noIamUsers.ExpectationId, 10, "legacy", "Migration in progress.",
-            DateTimeOffset.UtcNow.AddDays(30), "read"));
+        await fixture.SendAsync(fixture.ApproverUserId, new ExemptAccessExpectation(Uuid.CreateVersion4(),
+            fixture.TenantId, fixture.InstanceId, noIamUsers.ExpectationId, noIamUsers.Revision, "legacy",
+            "Migration in progress.", DateTimeOffset.UtcNow.AddDays(30), "read"));
         var excepted = await fixture.SendAsync(fixture.ManagerUserId,
             new GetAccessVariance(fixture.TenantId, populationId));
         var expectations = await fixture.SendAsync(fixture.ManagerUserId,
@@ -235,16 +235,17 @@ public sealed class AccessClassificationAndVarianceTests
         // Arrange
         await using var fixture = await AccessReviewFixture.CreateAsync();
         var proposed = await fixture.SendAsync(fixture.ManagerUserId, new ProposeAccessExpectation(
-            fixture.TenantId, fixture.ApplicationId, fixture.InstanceId, 0,
+            Uuid.CreateVersion4(), fixture.TenantId, fixture.ApplicationId, fixture.InstanceId, 0,
             AccessReviewVocabulary.ForbiddenPrincipalKind,
             new AccessExpectationParameters(PrincipalKind: "access_token"), "No tokens.",
             DateTimeOffset.UtcNow));
 
         // Act
         var self = await fixture.FailAsync(fixture.ManagerUserId, new ApproveAccessExpectation(
-            fixture.TenantId, fixture.InstanceId, proposed.ExpectationId, 1), RequestErrorKind.Forbidden);
+            Uuid.CreateVersion4(), fixture.TenantId, fixture.InstanceId, proposed.ExpectationId, 1),
+            RequestErrorKind.Forbidden);
         var invalid = await fixture.FailAsync(fixture.ManagerUserId, new ProposeAccessExpectation(
-            fixture.TenantId, fixture.ApplicationId, fixture.InstanceId, 1,
+            Uuid.CreateVersion4(), fixture.TenantId, fixture.ApplicationId, fixture.InstanceId, 0,
             AccessReviewVocabulary.RequiredAccess, new AccessExpectationParameters(PrincipalKind: "role"),
             "Bad.", DateTimeOffset.UtcNow), RequestErrorKind.Validation);
 

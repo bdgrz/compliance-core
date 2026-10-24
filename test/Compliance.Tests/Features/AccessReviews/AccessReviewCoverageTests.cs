@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
@@ -28,7 +29,7 @@ public sealed class AccessReviewCoverageTests
         var reader = new SourceReader(tenantId, applicationId);
         var events = new InMemoryEventStore();
         var handler = CreateHandler(directory,
-            new ScopeDirectory(), new PopulationDirectory(), reader, events);
+            new ScopeDirectory(), new PopulationDirectory(), reader, events, AccessReviewFacts.Content());
         var request = new GetAccessReviewCoverage(tenantId, applicationId);
 
         // Act
@@ -79,20 +80,15 @@ public sealed class AccessReviewCoverageTests
                 missingInstance.SystemInstanceId, 1, asOf.AddDays(-1), 2,
                 AccessPopulation.Draft, null, null, null),
         ]);
-        var ledger = new AccessReviewSystemLedger(tenantId, exceptedInstance.SystemInstanceId);
-        var exceptionResult = ledger.RecordPopulationException(Uuid.CreateVersion4(), 0,
-            "Source export is temporarily unavailable.", asOf.AddDays(1), scopeActor,
-            asOf.AddDays(-1));
-        Assert.True(exceptionResult.IsSuccess);
-        var reader = new SourceReader(tenantId, applicationId,
-            new Dictionary<Uuid, AccessReviewSystemLedger>
-            {
-                [exceptedInstance.SystemInstanceId] = ledger,
-            });
+        var reader = new SourceReader(tenantId, applicationId);
         var directory = new ApplicationDirectory(tenantId, applicationId, instances);
         var events = new InMemoryEventStore();
+        var content = AccessReviewFacts.Content();
+        await AccessReviewFacts.AppendPopulationExceptionAsync(events, content, tenantId,
+            exceptedInstance.SystemInstanceId, Uuid.CreateVersion4(), "Source export is temporarily unavailable.",
+            asOf.AddDays(1), scopeActor, asOf.AddDays(-1));
         var handler = CreateHandler(directory, scopes, populations,
-            reader, events);
+            reader, events, content);
 
         // Act
         var result = await handler.HandleAsync(new RequestContext<GetAccessReviewCoverage>(
@@ -249,12 +245,12 @@ public sealed class AccessReviewCoverageTests
 
     static GetAccessReviewCoverageHandler CreateHandler(ApplicationDirectory directory,
         ScopeDirectory scopes, PopulationDirectory populations,
-        IAggregateReader reader, IDomainEventReader events)
+        IAggregateReader reader, IDomainEventReader events, IImmutableContentStore? content = null)
     {
         var consistency = new SystemInstanceReadConsistency(directory, reader,
             new LegacySystemInstanceSource(directory, events), events);
         return new GetAccessReviewCoverageHandler(directory, consistency, scopes, populations,
-            reader, events, TimeProvider.System,
+            new AccessExpectationsReader(reader, events, content ?? AccessReviewFacts.Content()), events, TimeProvider.System,
             RestrictedApplicationVisibilityFixture.Create(reader));
     }
 
@@ -278,14 +274,11 @@ public sealed class AccessReviewCoverageTests
     {
         readonly Uuid _tenantId;
         readonly Uuid _applicationId;
-        readonly IReadOnlyDictionary<Uuid, AccessReviewSystemLedger> _ledgers;
 
-        public SourceReader(Uuid tenantId, Uuid applicationId,
-            IReadOnlyDictionary<Uuid, AccessReviewSystemLedger>? ledgers = null)
+        public SourceReader(Uuid tenantId, Uuid applicationId)
         {
             _tenantId = tenantId;
             _applicationId = applicationId;
-            _ledgers = ledgers ?? new Dictionary<Uuid, AccessReviewSystemLedger>();
         }
 
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
@@ -298,10 +291,7 @@ public sealed class AccessReviewCoverageTests
                 Uuid.CreateVersion4(), "Manager", DateTimeOffset.UtcNow).IsSuccess);
                 return ValueTask.FromResult((TAggregate)(Aggregate)application);
             }
-            return ValueTask.FromResult(aggregate is AccessReviewSystemLedger ledger &&
-                _ledgers.TryGetValue(ledger.Id, out var recorded)
-                ? (TAggregate)(Aggregate)recorded
-                : aggregate);
+            return ValueTask.FromResult(aggregate);
         }
     }
 

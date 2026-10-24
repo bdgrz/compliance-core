@@ -474,6 +474,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IAccessPopulationDirectoryReader>(
             provider => provider.GetRequiredService<FitzAccessPopulationDirectory>());
         services.AddScoped<ApplicationAccessPopulationReadConsistency>();
+        services.AddScoped<AccessExpectationsReader>();
         services.AddScoped<FitzAccessReviewCampaignImpactDirectory>();
         services.AddScoped<IAccessReviewCampaignImpactProjection>(
             provider => provider.GetRequiredService<FitzAccessReviewCampaignImpactDirectory>());

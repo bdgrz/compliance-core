@@ -1,5 +1,6 @@
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
+using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
@@ -9,7 +10,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     differently. A ticket or provider change alone is never verification (M0-D07).
 /// </summary>
 public sealed class VerifyAccessRemediationHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock, RestrictedApplicationVisibility visibility)
+    IAggregateReader reader, IImmutableContentStore content, TimeProvider clock, RestrictedApplicationVisibility visibility)
     : IRequestHandler<VerifyAccessRemediation, AccessRemediationVerificationView>
 {
     public async ValueTask<Result<AccessRemediationVerificationView>> HandleAsync(
@@ -31,8 +32,8 @@ public sealed class VerifyAccessRemediationHandler(IAggregateExecutor executor,
             !AccessReviewVocabulary.RequiresRemediation(decision.Decision))
             return Failure(RequestErrorKind.Conflict,
                 "Only an item decided modify or revoke requires remediation.");
-        var loaded = await AcceptedAccessPopulation.LoadAsync(reader, request.TenantId,
-            request.PopulationId, ct).ConfigureAwait(false);
+        var loaded = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId,
+            request.PopulationId, ct, withClassifications: false).ConfigureAwait(false);
         if (!loaded.IsSuccess)
             return Result<AccessRemediationVerificationView>.Failure(loaded.Error);
         var later = loaded.Value;

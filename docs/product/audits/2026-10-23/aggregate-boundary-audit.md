@@ -152,7 +152,7 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | TenantManagerGuard | AccessControl | retain | ACCESS-01 (pending) | 0.68 | [source](../../../../src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs) |
 | AccessPopulation | AccessReviews | split | OPS-07 (pending), OPS-15 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/AccessReviews/AccessPopulation.cs) |
 | AccessReviewCampaign | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs) |
-| AccessReviewSystemLedger | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.91 | [source](../../../../src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs) |
+| AccessReviewSystemLedger | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.91 | retired by the expectation line and population exception split (#1022) |
 | AdvisorHandoff | AdvisorCollaboration | split | ROOTASSURE-01 (pending), ROOTASSURE-04 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs) |
 | ApplicationImportLedger | Applications | split | ROOT-02 (pending) | 0.86 |  |
 | DeclaredApplication | Applications | split | ROOT-01 (pending), ROOT-02 (pending), ROOT-04 (pending), ROOT-05 (pending) | 0.93 |  |
