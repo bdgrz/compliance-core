@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -13,7 +14,7 @@ public sealed record ResponsibilityAssigned(Uuid TenantId, Uuid AssignmentId,
     Uuid MemberId, ResponsibilityType Type, ResponsibilityScope Scope,
     DateTimeOffset AssignedAt, Uuid AssignedByMemberId,
     DateTimeOffset EffectiveFrom, DateTimeOffset? EffectiveUntil,
-    IReadOnlyList<Uuid> SeparationOfDutiesWaiverIds, string AssignedByDisplay) : DomainEvent, IControlFact, IControlMutationContent, ICommitmentFact, ICommitmentMutationContent
+    IReadOnlyList<Uuid> SeparationOfDutiesWaiverIds, string AssignedByDisplay) : DomainEvent, IControlFact, IControlMutationContent, ICommitmentFact, ICommitmentMutationContent, IBoundaryFact, IBoundaryMutationContent
 {
     /// <summary>The exact native acceptance and immutable original result.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -36,6 +37,10 @@ public sealed record ResponsibilityAssigned(Uuid TenantId, Uuid AssignmentId,
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public CommitmentAuthorityHeader? CommitmentHeader { get; init; }
     CommitmentAuthorityHeader ICommitmentFact.Header => CommitmentHeader!;
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public BoundaryAuthorityHeader? BoundaryHeader { get; init; }
+    BoundaryAuthorityHeader IBoundaryFact.Header => BoundaryHeader!;
 
     [JsonPropertyName("actor")]
     public ActorReference? StoredActor { get; init; }

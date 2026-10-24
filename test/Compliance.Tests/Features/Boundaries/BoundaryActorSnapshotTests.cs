@@ -20,14 +20,14 @@ public sealed class BoundaryActorSnapshotTests
         var legacyEventJson = $$"""
             {"tenant_id":"{{TenantId}}","boundary_id":"{{BoundaryId}}","draft_version_id":"{{Uuid.CreateVersion4()}}","revision":1,"decision_id":"{{DecisionId}}","outcome":"accept","actor_member_id":"{{MemberId}}","actor_display":"Reviewer at decision time","rationale":"Reviewed","decided_at":"2026-09-27T12:00:00+00:00"}
             """;
-        var legacyEvent = Assert.IsType<BoundaryReviewed>(JsonSerializer.Deserialize(
-            legacyEventJson, ComplianceCoreJsonContext.Default.BoundaryReviewed));
+        var legacyEvent = Assert.IsType<BoundaryReviewedContent>(JsonSerializer.Deserialize(
+            legacyEventJson, ComplianceCoreJsonContext.Default.BoundaryReviewedContent));
         var capturedActor = ActorReference.ForMember(MemberId, "Reviewer at decision time");
         var currentEvent = legacyEvent with { StoredActor = capturedActor };
 
         // Act
         var eventJson = JsonNode.Parse(JsonSerializer.Serialize(currentEvent,
-            ComplianceCoreJsonContext.Default.BoundaryReviewed))!;
+            ComplianceCoreJsonContext.Default.BoundaryReviewedContent))!;
 
         // Assert
         Assert.Null(legacyEvent.StoredActor);
@@ -44,14 +44,14 @@ public sealed class BoundaryActorSnapshotTests
         var legacyEventJson = $$"""
             {"tenant_id":"{{TenantId}}","boundary_id":"{{BoundaryId}}","draft_version_id":"{{Uuid.CreateVersion4()}}","revision":1,"actor_member_id":"{{MemberId}}","actor_display":"Discarder at discard time","rationale":"Withdrawn","discarded_at":"2026-09-27T12:00:00+00:00"}
             """;
-        var legacyEvent = Assert.IsType<BoundaryDraftDiscarded>(JsonSerializer.Deserialize(
-            legacyEventJson, ComplianceCoreJsonContext.Default.BoundaryDraftDiscarded));
+        var legacyEvent = Assert.IsType<BoundaryDraftDiscardedContent>(JsonSerializer.Deserialize(
+            legacyEventJson, ComplianceCoreJsonContext.Default.BoundaryDraftDiscardedContent));
         var capturedActor = ActorReference.ForMember(MemberId, "Discarder at discard time");
         var currentEvent = legacyEvent with { StoredActor = capturedActor };
 
         // Act
         var eventJson = JsonNode.Parse(JsonSerializer.Serialize(currentEvent,
-            ComplianceCoreJsonContext.Default.BoundaryDraftDiscarded))!;
+            ComplianceCoreJsonContext.Default.BoundaryDraftDiscardedContent))!;
 
         // Assert
         Assert.Null(legacyEvent.StoredActor);

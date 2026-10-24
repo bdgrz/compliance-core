@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     draft is read from its own owner, the complete service history from the client service owner and the paired
 ///     personal decisions from their own owners.
 /// </summary>
-sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateReader reader,
+sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateReader reader, BoundaryReader boundarySources,
     FirmStaffViews staffViews, ProfessionalDutyAuthorityReader duties, CurrentRatifiedIndependenceRulesReader rulesReader,
     IBoundaryDirectoryReader boundaries, BoundaryHistoryReadConsistency boundaryConsistency,
     EngagementPersonalDecisionViews personalDecisions, ServiceEngagementViews engagements,
@@ -44,9 +44,10 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
             history = await engagements.HistoryAsync(tenantId, engagementId, ct).ConfigureAwait(false) ?? [];
             serviceHistory = await ClientServiceHistory.ReadAsync(content, client, ct).ConfigureAwait(false);
         }
-        catch (ImmutableContentIntegrityException)
+        catch (ImmutableContentIntegrityException exception)
         {
-            return Refuse(RequestErrorKind.Conflict, "The engagement or service history cannot be verified.", true);
+            return Refuse(RequestErrorKind.Conflict, "The engagement or service history cannot be verified.",
+                exception is ImmutableContentUnavailableException);
         }
 
         if (history.Any(item => item.RecordedAt > clock.GetUtcNow()) ||
@@ -148,35 +149,41 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
     async ValueTask<Result<ResolvedBoundary?>> ReadSelectedBoundaryAsync(Uuid tenantId,
         ServiceEngagementView engagement, CancellationToken ct)
     {
-        if (engagement.Content.ExaminationBoundary is not { } selected)
-            return Result<ResolvedBoundary?>.Success(null);
-        var source = await reader.HydrateAsync(new SystemBoundary(tenantId, selected.BoundaryId), ct)
-            .ConfigureAwait(false);
-        if (!source.IsCreated || !source.IsVisible || !source.IsVersionApproved(selected.VersionId))
-            return RefuseBoundary("The selected boundary version is not a currently retained approved version.");
-        var freshness = await boundaryConsistency.EnsureAsync(tenantId, selected.BoundaryId,
-            source.Revision, ct).ConfigureAwait(false);
-        if (!freshness.IsSuccess)
-            return Result<ResolvedBoundary?>.Failure(freshness.Error!);
-        var directory = await boundaries.GetAsync(tenantId, selected.BoundaryId, ct).ConfigureAwait(false);
-        var version = await boundaries.GetVersionAsync(tenantId, selected.BoundaryId, selected.VersionId, ct)
-            .ConfigureAwait(false);
-        if (directory is null || directory.TenantId != tenantId || directory.BoundaryId != selected.BoundaryId ||
-            version is not { Status: "approved" } || version.TenantId != tenantId ||
-            version.BoundaryId != selected.BoundaryId || version.VersionId != selected.VersionId ||
-            version.Revision != selected.Revision)
-            return RefuseBoundary("The selected boundary version is missing, stale, foreign or not approved.");
-        var decisionPage = await boundaries.ListDecisionsAsync(tenantId, selected.BoundaryId, 200, null, ct)
-            .ConfigureAwait(false);
-        if (decisionPage is null || decisionPage.NextCursor is not null ||
-            decisionPage.Items.Any(item => item.TenantId != tenantId || item.BoundaryId != selected.BoundaryId))
-            return RefuseBoundary("The complete selected-boundary decision history is unavailable or over its read limit.");
-        var approvals = decisionPage.Items.Where(item => item.Outcome == "approve" &&
-            item.VersionId == selected.VersionId && item.Revision == selected.Revision).ToArray();
-        if (approvals is not [{ } approval] || approval.DecisionId == Uuid.Empty ||
-            approval.DecidedAt == default || approval.DecidedAt > clock.GetUtcNow())
-            return RefuseBoundary("The selected boundary does not have one current exact approval decision.");
-        return Result<ResolvedBoundary?>.Success(new ResolvedBoundary(version, approval));
+        try
+        {
+            if (engagement.Content.ExaminationBoundary is not { } selected)
+                return Result<ResolvedBoundary?>.Success(null);
+            var source = await boundarySources.ReadAsync(tenantId, selected.BoundaryId, ct).ConfigureAwait(false);
+            if (!source.IsCreated || !source.IsVisible || !source.IsVersionApproved(selected.VersionId))
+                return RefuseBoundary("The selected boundary version is not a currently retained approved version.");
+            var freshness = await boundaryConsistency.EnsureAsync(tenantId, selected.BoundaryId,
+                source.Revision, ct).ConfigureAwait(false);
+            if (!freshness.IsSuccess)
+                return Result<ResolvedBoundary?>.Failure(freshness.Error!);
+            var directory = await boundaries.GetAsync(tenantId, selected.BoundaryId, ct).ConfigureAwait(false);
+            var version = await boundaries.GetVersionAsync(tenantId, selected.BoundaryId, selected.VersionId, ct)
+                .ConfigureAwait(false);
+            if (directory is null || directory.TenantId != tenantId || directory.BoundaryId != selected.BoundaryId ||
+                version is not { Status: "approved" } || version.TenantId != tenantId ||
+                version.BoundaryId != selected.BoundaryId || version.VersionId != selected.VersionId ||
+                version.Revision != selected.Revision)
+                return RefuseBoundary("The selected boundary version is missing, stale, foreign or not approved.");
+            var decisionPage = await boundaries.ListDecisionsAsync(tenantId, selected.BoundaryId, 200, null, ct)
+                .ConfigureAwait(false);
+            if (decisionPage is null || decisionPage.NextCursor is not null ||
+                decisionPage.Items.Any(item => item.TenantId != tenantId || item.BoundaryId != selected.BoundaryId))
+                return RefuseBoundary("The complete selected-boundary decision history is unavailable or over its read limit.");
+            var approvals = decisionPage.Items.Where(item => item.Outcome == "approve" &&
+                item.VersionId == selected.VersionId && item.Revision == selected.Revision).ToArray();
+            if (approvals is not [{ } approval] || approval.DecisionId == Uuid.Empty ||
+                approval.DecidedAt == default || approval.DecidedAt > clock.GetUtcNow())
+                return RefuseBoundary("The selected boundary does not have one current exact approval decision.");
+            return Result<ResolvedBoundary?>.Success(new ResolvedBoundary(version, approval));
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<ResolvedBoundary?>.Failure(BoundaryReadFailure.Of(failure));
+        }
     }
 
     /// <summary>The one staff view both the staff record and the canonical-user claim agree on, or null.</summary>

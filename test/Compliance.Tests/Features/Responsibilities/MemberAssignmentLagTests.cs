@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.Independence;
 using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Controls;
@@ -24,7 +25,7 @@ public sealed class MemberAssignmentLagTests
         var userId = Uuid.CreateVersion4();
         var administratorId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
-        var versionId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
@@ -37,6 +38,8 @@ public sealed class MemberAssignmentLagTests
         services.AddScoped<ControlOperations>();
         services.AddScoped<CommitmentReader>();
         services.AddScoped<CommitmentOperations>();
+        services.AddScoped<BoundaryReader>();
+        services.AddScoped<BoundaryOperations>();
         services.AddPortia();
         await using var provider = services.BuildServiceProvider();
         await using var scopeServices = provider.CreateAsyncScope();
@@ -47,18 +50,20 @@ public sealed class MemberAssignmentLagTests
         Assert.True(member.Suspend(RbacIds.Member(tenantId, administratorId),
             "Administrator", now, "Access review failed.").IsSuccess);
         await writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
-        var boundary = new SystemBoundary(tenantId, boundaryId);
+        var boundary = new BoundaryRules(tenantId, boundaryId);
         Assert.True(boundary.Create(Uuid.CreateVersion4(), versionId,
             new BoundaryContent("Member work", "readiness", ["security"], []),
             RbacIds.Member(tenantId, administratorId), "Administrator", now).IsSuccess);
-        await writer.SaveAsync(boundary, new RequestDispatchContext(RequestActor.System));
+        await BoundarySeeds.AppendAsync(scopeServices.ServiceProvider.GetRequiredService<IAggregateReader>(), writer,
+            scopeServices.ServiceProvider.GetRequiredService<IImmutableContentStore>(), boundary);
         var membershipProjection = new FixedMembershipDirectory(true);
         Assert.True((await reader.HydrateAsync(new Member(tenantId, userId))).IsSuspended);
         Assert.False((await membershipProjection.GetAsync(tenantId.ToString(), userId))!.IsSuspended);
         var handler = new AssignResponsibilityHandler(
-            scopeServices.ServiceProvider.GetRequiredService<IAggregateExecutor>(), reader,
-            membershipProjection, new AllowScope(), scopeServices.ServiceProvider.GetRequiredService<ControlOperations>(),
-            scopeServices.ServiceProvider.GetRequiredService<CommitmentOperations>(), TimeProvider.System);
+            membershipProjection, new AllowScope(),
+            scopeServices.ServiceProvider.GetRequiredService<ControlOperations>(),
+            scopeServices.ServiceProvider.GetRequiredService<CommitmentOperations>(),
+            scopeServices.ServiceProvider.GetRequiredService<BoundaryOperations>());
         var request = new AssignResponsibility(Uuid.CreateVersion4(), tenantId, userId,
             ResponsibilityType.ControlOwner, "boundary", boundaryId, versionId, 1,
             now, null, []);
@@ -82,7 +87,7 @@ public sealed class MemberAssignmentLagTests
         Assert.Equal(RequestErrorKind.Validation, result.Error.Kind);
         Assert.False(previewResult.IsSuccess);
         Assert.Equal(RequestErrorKind.Validation, previewResult.Error.Kind);
-        var unchanged = await reader.HydrateAsync(new SystemBoundary(tenantId, boundaryId));
+        var unchanged = await scopeServices.ServiceProvider.GetRequiredService<BoundaryReader>().ReadAsync(tenantId, boundaryId);
         Assert.Empty(unchanged.GetResponsibilitySet(request.Scope).ReadAssignments());
     }
 
@@ -96,7 +101,7 @@ public sealed class MemberAssignmentLagTests
         var memberId = RbacIds.Member(tenantId, userId);
         var administratorMemberId = RbacIds.Member(tenantId, administratorId);
         var boundaryId = Uuid.CreateVersion4();
-        var versionId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var waiverId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var responsibilityScope = new ResponsibilityScope("boundary", boundaryId, versionId, 1);
@@ -111,6 +116,8 @@ public sealed class MemberAssignmentLagTests
         services.AddScoped<ControlOperations>();
         services.AddScoped<CommitmentReader>();
         services.AddScoped<CommitmentOperations>();
+        services.AddScoped<BoundaryReader>();
+        services.AddScoped<BoundaryOperations>();
         services.AddPortia();
         await using var provider = services.BuildServiceProvider();
         await using var scopeServices = provider.CreateAsyncScope();
@@ -119,14 +126,15 @@ public sealed class MemberAssignmentLagTests
         var member = new Member(tenantId, userId);
         Assert.True(member.Register().IsSuccess);
         await writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
-        var boundary = new SystemBoundary(tenantId, boundaryId);
+        var boundary = new BoundaryRules(tenantId, boundaryId);
         Assert.True(boundary.Create(Uuid.CreateVersion4(), versionId,
             new BoundaryContent("Member work", "readiness", ["security"], []),
             administratorMemberId, "Administrator", now).IsSuccess);
         Assert.Null(boundary.AssignResponsibility(responsibilityScope, Uuid.CreateVersion4(),
             memberId, ResponsibilityType.ControlOwner, administratorMemberId,
             "Administrator", now.AddMinutes(-2), now.AddMinutes(-2), null, []));
-        await writer.SaveAsync(boundary, new RequestDispatchContext(RequestActor.System));
+        await BoundarySeeds.AppendAsync(scopeServices.ServiceProvider.GetRequiredService<IAggregateReader>(), writer,
+            scopeServices.ServiceProvider.GetRequiredService<IImmutableContentStore>(), boundary);
         var waiver = new SeparationOfDutiesWaiver(tenantId, waiverId);
         var waiverScope = new SeparationOfDutiesWaiverScope("boundary", boundaryId,
             versionId, 1, SeparationOfDutiesActions.Review);
@@ -137,10 +145,16 @@ public sealed class MemberAssignmentLagTests
         await writer.SaveAsync(waiver, new RequestDispatchContext(RequestActor.System));
         var interleavingReader = new SuspendingWaiverReader(source, writer, tenantId, userId,
             administratorMemberId, now);
-        var handler = new AssignResponsibilityHandler(
-            scopeServices.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
-            interleavingReader, new FixedMembershipDirectory(true), new AllowScope(), scopeServices.ServiceProvider.GetRequiredService<ControlOperations>(),
-            scopeServices.ServiceProvider.GetRequiredService<CommitmentOperations>(), TimeProvider.System);
+        var contentStore = scopeServices.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var events = scopeServices.ServiceProvider.GetRequiredService<IDomainEventReader>();
+        var boundaryOperations = new BoundaryOperations(interleavingReader,
+            new BoundaryReader(interleavingReader, events, contentStore),
+            scopeServices.ServiceProvider.GetRequiredService<NativeOperationExecutor>(), contentStore, TimeProvider.System,
+            new SeparationOfDutiesWaiverProofResolver(interleavingReader,
+                new EventStoreSourceFactResolver(events)));
+        var handler = new AssignResponsibilityHandler(new FixedMembershipDirectory(true), new AllowScope(),
+            scopeServices.ServiceProvider.GetRequiredService<ControlOperations>(),
+            scopeServices.ServiceProvider.GetRequiredService<CommitmentOperations>(), boundaryOperations);
         var request = new AssignResponsibility(Uuid.CreateVersion4(), tenantId, userId,
             ResponsibilityType.AssignedReviewer, "boundary", boundaryId, versionId, 1,
             now, null, [waiverId]);
@@ -157,7 +171,7 @@ public sealed class MemberAssignmentLagTests
         Assert.True((await source.HydrateAsync(new Member(tenantId, userId))).IsSuspended);
         Assert.False(result.IsSuccess);
         Assert.Equal(RequestErrorKind.Validation, result.Error.Kind);
-        var unchanged = await source.HydrateAsync(new SystemBoundary(tenantId, boundaryId));
+        var unchanged = await scopeServices.ServiceProvider.GetRequiredService<BoundaryReader>().ReadAsync(tenantId, boundaryId);
         Assert.Single(unchanged.GetResponsibilitySet(responsibilityScope).ReadAssignments());
     }
 

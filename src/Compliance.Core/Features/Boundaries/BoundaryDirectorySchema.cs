@@ -5,33 +5,22 @@ namespace Bdgrz.Compliance.Features.Boundaries;
 
 static class BoundaryDirectorySchema
 {
-    public static readonly KvDirectoryIndex<BoundaryVersionView> VersionsByBoundary = new(
-        "by_boundary", 1, static version =>
-            [version.BoundaryId.ToString(),
-                version.EffectiveFrom!.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)]);
+    public static readonly KvDirectoryIndex<BoundaryDirectoryIdentity> VersionsByBoundary = new("by_boundary", 1,
+        static value => [value.Header.BoundaryId.ToString(), value.EffectiveFrom!.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)]);
+    public static readonly KvDirectory<BoundaryDirectoryIdentity, string> Versions = new("boundary_version_identities",
+        ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, static value => ScopedKey(value.Header.BoundaryId, value.VersionId!.Value),
+        static key => [key], [VersionsByBoundary]);
+    public static readonly KvDirectoryIndex<BoundaryDirectoryIdentity> DecisionsByBoundary = new("by_boundary", 1,
+        static value => [value.Header.BoundaryId.ToString(), value.DecidedAt!.Value.UtcTicks.ToString("D20", CultureInfo.InvariantCulture),
+            value.DecisionId!.Value.ToString()]);
+    public static readonly KvDirectory<BoundaryDirectoryIdentity, string> Decisions = new("boundary_decision_identities",
+        ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, static value => ScopedKey(value.Header.BoundaryId, value.DecisionId!.Value),
+        static key => [key], [DecisionsByBoundary]);
+    public static readonly KvDirectoryIndex<BoundaryDirectoryIdentity> ByProgram = new("by_program", 1,
+        static value => [value.Header.ProgramId.ToString(), value.Header.BoundaryId.ToString()]);
+    public static readonly KvDirectory<BoundaryDirectoryIdentity, Uuid> Directory = new("boundary_current_identities",
+        ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, static value => value.Header.BoundaryId,
+        static id => [id.ToString()], [ByProgram]);
 
-    public static readonly KvDirectory<BoundaryVersionView, Uuid> Versions = new(
-        "boundary_versions", ComplianceCoreJsonContext.Default.BoundaryVersionView,
-        static version => version.VersionId,
-        static versionId => [versionId.ToString()], [VersionsByBoundary]);
-
-    public static readonly KvDirectoryIndex<BoundaryDecisionView> DecisionsByBoundary = new(
-        "by_boundary", 1, static decision =>
-            [decision.BoundaryId.ToString(),
-                decision.DecidedAt.ToUniversalTime().Ticks.ToString("D20", CultureInfo.InvariantCulture),
-                decision.DecisionId.ToString()]);
-
-    public static readonly KvDirectory<BoundaryDecisionView, Uuid> Decisions = new(
-        "boundary_decisions", ComplianceCoreJsonContext.Default.BoundaryDecisionView,
-        static decision => decision.DecisionId,
-        static decisionId => [decisionId.ToString()], [DecisionsByBoundary]);
-
-    public static readonly KvDirectoryIndex<BoundaryView> ByProgram = new(
-        "by_program", 1, static boundary =>
-            [boundary.ProgramId.ToString(), boundary.BoundaryId.ToString()]);
-
-    public static readonly KvDirectory<BoundaryView, Uuid> Directory = new(
-        "boundaries", ComplianceCoreJsonContext.Default.BoundaryView,
-        static boundary => boundary.BoundaryId,
-        static boundaryId => [boundaryId.ToString()], [ByProgram]);
+    public static string ScopedKey(Uuid boundaryId, Uuid localId) => $"{boundaryId}:{localId}";
 }

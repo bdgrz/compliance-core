@@ -26,8 +26,8 @@ static class MemberResponsibilityReadiness
         {
             await using (var scope = workerServices.CreateAsyncScope())
             {
-                var source = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-                    .HydrateAsync(new SystemBoundary(tenantId, boundaryId));
+                var source = await scope.ServiceProvider.GetRequiredService<BoundaryReader>()
+                    .ReadAsync(tenantId, boundaryId);
                 sourceAssignment = source.GetResponsibilitySet(responsibilityScope)
                     .ReadAssignments().FirstOrDefault(item => item.MemberId == memberId)
                     ?.AssignmentId ?? Uuid.Empty;

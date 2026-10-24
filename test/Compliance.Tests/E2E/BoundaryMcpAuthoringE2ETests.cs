@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -140,7 +141,7 @@ public sealed class BoundaryMcpAuthoringE2ETests(BrokerStackFixture broker)
             Assert.Equal(2, Assert.IsType<JsonElement>(finalRead.StructuredJson)
                 .GetProperty("result").GetProperty("draft").GetProperty("revision").GetInt64());
             await AssertExactBoundaryHistoryAsync(factory.Services.GetRequiredService<IEventStore>(),
-                tenantId, boundaryId, revisedContentStatement:
+                factory.Services.GetRequiredService<IImmutableContentStore>(), tenantId, boundaryId, revisedContentStatement:
                 "The customer service and provider are in scope.");
         }
         finally
@@ -227,7 +228,7 @@ public sealed class BoundaryMcpAuthoringE2ETests(BrokerStackFixture broker)
         }
     }
 
-    static async Task AssertExactBoundaryHistoryAsync(IEventStore store, string tenantId,
+    static async Task AssertExactBoundaryHistoryAsync(IEventStore store, IImmutableContentStore content, string tenantId,
         string boundaryId, string revisedContentStatement)
     {
         var events = new List<DomainEvent>();
@@ -237,13 +238,15 @@ public sealed class BoundaryMcpAuthoringE2ETests(BrokerStackFixture broker)
         {
             events.Add(record.Event);
         }
+        var revisedFact = Assert.IsType<BoundaryDraftRevised>(events[1]);
+        var revisedBody = await BoundaryFactContent.ReadDraftAsync(content, revisedFact);
         Assert.Collection(events,
             created => Assert.IsType<BoundaryDraftCreated>(created),
             revision =>
             {
                 var revised = Assert.IsType<BoundaryDraftRevised>(revision);
                 Assert.Equal(2, revised.Revision);
-                Assert.Equal(revisedContentStatement, revised.Content.Statement);
+                Assert.Equal(revisedContentStatement, revisedBody.Statement);
             });
     }
 

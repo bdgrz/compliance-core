@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Boundaries;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -62,10 +63,13 @@ public sealed class ProjectionFreshnessTests
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
-        var boundary = new SystemBoundary(tenantId, boundaryId);
-        Assert.True(boundary.Create(programId, Uuid.CreateVersion4(),
+        await using var native = new BoundaryProjectionScenario();
+        var boundaryRules = new BoundaryRules(tenantId, boundaryId);
+        Assert.True(boundaryRules.Create(programId, Uuid.CreateVersion5(boundaryId, "draft-1"),
             new BoundaryContent("Scope", "readiness", ["security"], []),
             Uuid.CreateVersion4(), "Lead", DateTimeOffset.UtcNow).IsSuccess);
+        await native.PublishAsync(boundaryRules);
+        var boundary = await native.Reader.HydrateAsync(new SystemBoundary(tenantId, boundaryId));
         var program = new ProgramView(tenantId, programId, "SOC 2", "readiness", "type_i",
             1, new ProgramPlan(null, null, null, null, null, null), Uuid.CreateVersion4(),
             "Lead", DateTimeOffset.UtcNow, []);

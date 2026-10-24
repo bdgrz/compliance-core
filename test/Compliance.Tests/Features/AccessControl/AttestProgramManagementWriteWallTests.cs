@@ -60,7 +60,7 @@ public sealed class AttestProgramManagementWriteWallTests
                 new ProgramPlan(null, null, null, null, null, null)), context, CancellationToken.None)).Error,
             "service" => (await bus.DispatchAsync(new CreateClientService(Tenant, Program, "Service",
                 "Client service purpose", "Client owner"), context, CancellationToken.None)).Error,
-            "boundary" => (await bus.DispatchAsync(new CreateBoundary(Tenant, Program,
+            "boundary" => (await bus.DispatchAsync(new CreateBoundary(Uuid.CreateVersion4(), Tenant, Program,
                 new BoundaryContent("Client boundary", "readiness", ["security"], [])), context, CancellationToken.None)).Error,
             "commitment" => (await bus.DispatchAsync(new CreateCommitmentDraft(Bdgrz.Compliance.Features.Commitments.CommitmentDraft.IdFor(Tenant, Program, "commitment", "COM-1"), Tenant, Program,
                 Uuid.CreateVersion4(), "commitment", "COM-1", "Commitment statement", "Context", "Source"), context, CancellationToken.None)).Error,
@@ -164,7 +164,7 @@ public sealed class AttestProgramManagementWriteWallTests
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var actor = ProgramManagementServices.Actor(User);
-        var created = await bus.SendAsync(new CreateBoundary(Tenant, Program,
+        var created = await bus.SendAsync(new CreateBoundary(Uuid.CreateVersion4(), Tenant, Program,
             new BoundaryContent("Client boundary", "readiness", ["security"], [])), actor);
         Assert.True(created.IsSuccess, created.Error?.Message);
         await ProjectBoundariesAsync(scope.ServiceProvider);
@@ -190,7 +190,7 @@ public sealed class AttestProgramManagementWriteWallTests
     {
         var events = services.GetRequiredService<IDomainEventReader>();
         var projection = services.GetRequiredService<IBoundaryDirectoryProjection>();
-        var identity = new CheckpointIdentity("BoundaryDirectoryV2", EventStreamPattern.ForPattern(Tenant.ToString()));
+        var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName, EventStreamPattern.ForPattern(Tenant.ToString()));
         await using var batch = await projection.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
         var cursor = ProjectionCheckpoint.Start.Cursor;
         await foreach (var record in events.ReadAsync(identity.Pattern, cursor, CancellationToken.None))

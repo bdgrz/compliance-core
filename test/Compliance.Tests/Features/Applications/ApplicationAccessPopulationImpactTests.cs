@@ -28,7 +28,7 @@ public sealed class ApplicationAccessPopulationImpactTests
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
             null, null, Uuid.CreateVersion4(), "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(kv));
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var events = new InMemoryEventStore();
         var populations = new StubPopulationDirectory(
@@ -72,7 +72,7 @@ public sealed class ApplicationAccessPopulationImpactTests
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
             null, null, Uuid.CreateVersion4(), "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(kv));
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var events = new InMemoryEventStore();
         var populations = new StubPopulationDirectory([], nextCursor: "next");

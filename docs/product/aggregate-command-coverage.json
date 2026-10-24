@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "96116e54b71f83c85c2811eb1e4bb6574e968031",
+  "sourceCommit": "da6c705607749771e9837f91bcd19d2e23aca8d7",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 487,
-    "factsWithAggregateEmitter": 452,
+    "factsWithAggregateEmitter": 446,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 35,
+    "legacyReducerOnlyFacts": 41,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 121,
+    "aggregateTypesWithCommandPath": 120,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -2224,21 +2224,15 @@
           "source": "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/BoundaryE2ETests.cs",
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationBoundaryReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/PersonalBoundaryDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
         "test/Compliance.Tests/Features/Readiness/ReadinessSourceRulesTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "BoundaryDraftCreated",
@@ -2249,21 +2243,15 @@
           "source": "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/BoundaryE2ETests.cs",
         "test/Compliance.Tests/E2E/BoundaryMcpAuthoringE2ETests.cs",
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationBoundaryReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationChangePreviewTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Programs/ProgramSetupWorkReadConsistencyTests.cs"
+        "test/Compliance.Tests/Features/Boundaries/BoundaryNativeAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "BoundaryDraftDiscarded",
@@ -2274,18 +2262,13 @@
           "source": "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationBoundaryReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/BoundaryActorSnapshotTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "BoundaryDraftRevised",
@@ -2296,19 +2279,15 @@
           "source": "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/BoundaryMcpAuthoringE2ETests.cs",
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationBoundaryReferenceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "BoundaryReviewed",
@@ -2319,20 +2298,15 @@
           "source": "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/BoundaryE2ETests.cs",
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
-        "test/Compliance.Tests/Features/Boundaries/BoundaryActorSnapshotTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/BoundaryNativeAuthorityTests.cs",
         "test/Compliance.Tests/Features/Boundaries/PersonalBoundaryDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "BoundarySuccessorProposed",
@@ -2343,17 +2317,13 @@
           "source": "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationBoundaryReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "CampaignWaiverApproved",
@@ -6485,11 +6455,11 @@
         "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
         "test/Compliance.Tests/Features/Responsibilities/MemberResponsibilityIndexTests.cs",
         "test/Compliance.Tests/Features/Responsibilities/ResponsibilitySetProjectionTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Hosting/Persistence/EventPersistenceFrameTests.cs",
-        "test/Compliance.Tests/Testing/CommitmentSeeds.cs",
-        "test/Compliance.Tests/Testing/ControlSeeds.cs"
+        "test/Compliance.Tests/Testing/BoundarySeeds.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6521,8 +6491,8 @@
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Testing/CommitmentSeeds.cs",
-        "test/Compliance.Tests/Testing/ControlSeeds.cs"
+        "test/Compliance.Tests/Testing/BoundarySeeds.cs",
+        "test/Compliance.Tests/Testing/CommitmentSeeds.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -11622,10 +11592,10 @@
         "test/Compliance.Tests/Features/AccessControl/SeparationOfDutiesWaiverTests.cs",
         "test/Compliance.Tests/Features/AccessControl/WaiverManagementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Applications/AccessReviewScopeDecisionTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/BoundaryNativeAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentApprovalTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentReviewTests.cs"
+        "test/Compliance.Tests/Features/Commitments/CommitmentApprovalTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11675,11 +11645,11 @@
         "test/Compliance.Tests/Features/AccessControl/ActualStaffEngagementLocatorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceSourceAvailabilityTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11746,27 +11716,21 @@
         "ResponsibilityAssigned",
         "ResponsibilityRevoked"
       ],
-      "commandRequests": [
-        "ApproveBoundary",
-        "CreateBoundary",
-        "DiscardBoundaryDraft",
-        "ProposeBoundarySuccessor",
-        "ReviewBoundary",
-        "ReviseBoundaryDraft",
-        "RevokeResponsibility"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ApplicationInventoryE2ETests.cs",
         "test/Compliance.Tests/E2E/BoundaryE2ETests.cs",
-        "test/Compliance.Tests/E2E/MemberResponsibilityReadiness.cs",
-        "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
-        "test/Compliance.Tests/E2E/TenantReadLeakMatrixE2ETests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/WaiverManagementIndependenceTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/BoundaryPagedReadContractTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationBoundaryReferenceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationChangePreviewTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/BoundaryNativeHttpTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProgramResourceScopeResolverTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProjectionFreshnessTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "SystemDescription",
@@ -13810,7 +13774,7 @@
     {
       "request": "ApproveBoundary",
       "contract": "src/Compliance.Common/Features/Boundaries/ApproveBoundary.cs",
-      "interfaces": "IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -13820,17 +13784,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SeparationOfDutiesWaiver",
-        "SystemBoundary"
-      ],
-      "aggregateTargets": [
-        "SystemBoundary"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/PersonalBoundaryDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/AssignedDecisionAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/AssignedDecisionAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/BoundarySeeds.cs"
       ],
       "note": ""
     },
@@ -14320,22 +14281,18 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Member",
-        "SeparationOfDutiesWaiver",
-        "SystemBoundary"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ControlOperationE2ETests.cs",
         "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorRecordVersionResolverTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/BoundaryConsumerAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/BoundaryNativeAuthorityTests.cs",
         "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentApprovalTests.cs",
-        "test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlActivationHandlerTests.cs"
+        "test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs"
       ],
       "note": ""
     },
@@ -14684,17 +14641,18 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "PracticeIndependenceCommitment",
-        "ServiceEngagementIndependence",
-        "SystemBoundary"
+        "ServiceEngagementIndependence"
       ],
       "aggregateTargets": [
         "ServiceEngagementIndependence"
       ],
       "helperServices": [
+        "BoundaryReader",
         "EngagementAcceptanceVerifier"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceSourceAvailabilityTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
         "test/Compliance.Tests/Testing/ServiceEngagementFacts.cs"
       ],
@@ -16716,7 +16674,7 @@
     {
       "request": "CreateBoundary",
       "contract": "src/Compliance.Common/Features/Boundaries/CreateBoundary.cs",
-      "interfaces": "IRequest<BoundaryRegistration>, IBoundaryAuthoringRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<BoundaryRegistration>, IBoundaryAuthoringRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16727,15 +16685,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ComplianceProgram",
-        "SystemBoundary"
+        "ComplianceProgram"
       ],
-      "aggregateTargets": [
-        "SystemBoundary"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationChangePreviewTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/BoundaryNativeAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/BoundarySeeds.cs"
       ],
       "note": ""
     },
@@ -17549,7 +17508,7 @@
     {
       "request": "DiscardBoundaryDraft",
       "contract": "src/Compliance.Common/Features/Boundaries/DiscardBoundaryDraft.cs",
-      "interfaces": "IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -17559,14 +17518,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemBoundary"
-      ],
-      "aggregateTargets": [
-        "SystemBoundary"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/BoundarySeeds.cs"
+      ],
       "note": ""
     },
     {
@@ -18653,13 +18611,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemBoundary"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "BoundaryReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/BoundaryConsumerAuthorityTests.cs",
         "test/Compliance.Tests/Features/Boundaries/BoundaryProjectionFreshnessTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs",
         "test/Compliance.Tests/Features/Programs/ProgramResourceScopeResolverTests.cs"
@@ -24577,6 +24536,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Boundaries/BoundaryConsumerAuthorityTests.cs",
         "test/Compliance.Tests/Features/Boundaries/ControlBoundaryImpactContributorTests.cs",
         "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/PersonalBoundaryDecisionTransportTests.cs"
@@ -24929,7 +24889,7 @@
     {
       "request": "ProposeBoundarySuccessor",
       "contract": "src/Compliance.Common/Features/Boundaries/ProposeBoundarySuccessor.cs",
-      "interfaces": "IRequest<BoundaryRegistration>, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<BoundaryRegistration>, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -24939,14 +24899,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemBoundary"
-      ],
-      "aggregateTargets": [
-        "SystemBoundary"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/BoundarySeeds.cs"
+      ],
       "note": ""
     },
     {
@@ -28648,7 +28607,7 @@
     {
       "request": "ReviewBoundary",
       "contract": "src/Compliance.Common/Features/Boundaries/ReviewBoundary.cs",
-      "interfaces": "IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28658,17 +28617,15 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SeparationOfDutiesWaiver",
-        "SystemBoundary"
-      ],
-      "aggregateTargets": [
-        "SystemBoundary"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Boundaries/BoundaryNativeAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/PersonalBoundaryDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/AssignedDecisionAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/AssignedDecisionAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/BoundarySeeds.cs"
       ],
       "note": ""
     },
@@ -29195,7 +29152,7 @@
     {
       "request": "ReviseBoundaryDraft",
       "contract": "src/Compliance.Common/Features/Boundaries/ReviseBoundaryDraft.cs",
-      "interfaces": "IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -29205,14 +29162,15 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemBoundary"
-      ],
-      "aggregateTargets": [
-        "SystemBoundary"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationBoundaryReferenceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/BoundaryNativeAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/BoundarySeeds.cs"
+      ],
       "note": ""
     },
     {
@@ -30013,12 +29971,8 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemBoundary"
-      ],
-      "aggregateTargets": [
-        "SystemBoundary"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
@@ -30026,6 +29980,7 @@
         "test/Compliance.Tests/Features/Work/CommitmentDecisionWorkTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/BoundarySeeds.cs",
         "test/Compliance.Tests/Testing/CommitmentSeeds.cs",
         "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
@@ -31189,11 +31144,12 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "ComplianceProgram",
-        "ImmutableSnapshot",
-        "SystemBoundary"
+        "ImmutableSnapshot"
       ],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "BoundaryReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
         "test/Compliance.Tests/Features/Snapshots/ScopeSnapshotTests.cs"

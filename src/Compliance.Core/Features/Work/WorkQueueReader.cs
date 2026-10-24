@@ -45,7 +45,8 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
     ControlEvaluationReader? evaluationReader = null,
     RiskGovernanceReader? riskGovernance = null,
     EvidenceRequestReader? evidenceRequests = null,
-    CommitmentReader? commitmentSources = null)
+    CommitmentReader? commitmentSources = null,
+    BoundaryReader? boundarySources = null)
 {
     public const int SystemEscalationDays = 7;
     public const int DefaultHorizonDays = 30;
@@ -100,7 +101,7 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
         var work = await WorkSource.LoadAsync(reader, controlSources, findings, riskGovernance, evidenceRequests, operatingReader,
             mappingReader, applicabilityReader, evaluationReader, tenantId, programId, today,
             today.AddDays(horizonDays), now, workItemId, boundaries,
-            projectedKinds, ct)
+            projectedKinds, ct, boundarySources)
             .ConfigureAwait(false);
         if (!work.IsSuccess)
             return Result<WorkQueueSnapshot>.Failure(work.Error);

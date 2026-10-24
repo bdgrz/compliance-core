@@ -27,7 +27,7 @@ public sealed class ApplicationPolicyReferencePreviewTests
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
             applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(kv));
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var policies = PolicyProjectionFacts.ReferenceDirectory(kv);
         var events = new InMemoryEventStore();
@@ -85,7 +85,7 @@ public sealed class ApplicationPolicyReferencePreviewTests
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
             applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(kv));
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var policies = PolicyProjectionFacts.ReferenceDirectory(kv);
         var events = new InMemoryEventStore();

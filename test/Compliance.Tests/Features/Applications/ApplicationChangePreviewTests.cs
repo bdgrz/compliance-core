@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Boundaries;
@@ -22,7 +24,7 @@ public sealed class ApplicationChangePreviewTests
         Assert.True(source.Declare("Payroll", "Run payroll", null, Uuid.CreateVersion4(),
             "Manager", DateTimeOffset.UtcNow, isRestricted: true).IsSuccess);
         var applications = new FitzApplicationDirectory(new InMemoryKvClient());
-        var references = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var references = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var events = new InMemoryEventStore();
         var handler = new PreviewApplicationChangeHandler(new SourceReader(source), applications,
@@ -82,7 +84,7 @@ public sealed class ApplicationChangePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         var incomingRelationships = new FitzApplicationIncomingRelationshipDirectory(kv);
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         var events = new InMemoryEventStore();
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
@@ -106,7 +108,7 @@ public sealed class ApplicationChangePreviewTests
         // Assert
         Assert.True(result.IsSuccess);
         var relationships = result.Value.ApplicationRelationships.ToDictionary(
-            static relationship => relationship.RelationshipId);
+                static relationship => relationship.RelationshipId);
         Assert.Equal(2, relationships.Count);
         Assert.Equal("depends_on", relationships[dependsOnId].RelationshipType);
         Assert.Equal("replaces", relationships[replacesId].RelationshipType);
@@ -183,7 +185,7 @@ public sealed class ApplicationChangePreviewTests
         };
         await ProjectRelationshipsAsync(relationshipDirectory, tenantId, relationshipEvents);
         var events = new InMemoryEventStore();
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
@@ -247,7 +249,7 @@ public sealed class ApplicationChangePreviewTests
                 "depends_on", 1, "active", 1, 1, actorId, "Owner", now)).ToArray();
         await ProjectRelationshipsAsync(relationshipDirectory, tenantId, relationshipEvents);
         var events = new InMemoryEventStore();
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
@@ -306,7 +308,7 @@ public sealed class ApplicationChangePreviewTests
         var incoming = new StubIncomingRelationshipDirectory(
             new Page<ApplicationRelationshipView>(incomingRows, null));
         var events = new InMemoryEventStore();
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
@@ -351,7 +353,7 @@ public sealed class ApplicationChangePreviewTests
         recorded.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), sourceId, 1, now));
         var stream = new EventStreamAddress(tenantId.ToString(), "applications", sourceId.ToString());
         await events.AppendAsync(stream, 0, [recorded]);
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         var consistency = new ApplicationIncomingRelationshipReadConsistency(
             relationshipDirectory, events);
@@ -416,7 +418,7 @@ public sealed class ApplicationChangePreviewTests
         var stream = new EventStreamAddress(tenantId.ToString(), "applications", sourceId.ToString());
         var incoming = new InterleavingIncomingRelationshipDirectory(relationshipDirectory,
             ct => events.AppendAsync(stream, 0, [arriving], ct));
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
@@ -463,7 +465,7 @@ public sealed class ApplicationChangePreviewTests
         var incoming = new StubIncomingRelationshipDirectory(
             new Page<ApplicationRelationshipView>([corruptRow], null));
         var events = new InMemoryEventStore();
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
@@ -513,7 +515,7 @@ public sealed class ApplicationChangePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         var incomingRelationships = new FitzApplicationIncomingRelationshipDirectory(kv);
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         var events = new InMemoryEventStore();
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
@@ -555,7 +557,7 @@ public sealed class ApplicationChangePreviewTests
         Assert.True(source.Declare("Application", "Purpose", null, actorId, "Manager", now)
             .IsSuccess);
         var applications = new FitzApplicationDirectory(new InMemoryKvClient());
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var events = new InMemoryEventStore();
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
             tenantId, applicationId, "Application", "Purpose", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
@@ -603,7 +605,7 @@ public sealed class ApplicationChangePreviewTests
             .IsSuccess);
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         var events = new InMemoryEventStore();
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
@@ -704,7 +706,7 @@ public sealed class ApplicationChangePreviewTests
                 : new Page<ApplicationControlDraftReferenceView>([], null),
         };
         var events = new InMemoryEventStore();
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var sourceReader = new SourceReader(source);
         var handler = new PreviewApplicationChangeHandler(sourceReader, applications, boundaries,
             new ApplicationBoundaryReferenceReadConsistency(boundaries, events), controls,
@@ -766,7 +768,7 @@ public sealed class ApplicationChangePreviewTests
                 : new Page<ApplicationControlDraftReferenceView>([], null),
         };
         var events = new InMemoryEventStore();
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var sourceReader = new SourceReader(source);
         var handler = new PreviewApplicationChangeHandler(sourceReader, applications, boundaries,
             new ApplicationBoundaryReferenceReadConsistency(boundaries, events), controls,
@@ -801,7 +803,7 @@ public sealed class ApplicationChangePreviewTests
             .IsSuccess);
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
-        var references = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var references = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
             applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
@@ -871,7 +873,7 @@ public sealed class ApplicationChangePreviewTests
             ], "more"),
         };
         var events = new InMemoryEventStore();
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var handler = new PreviewApplicationChangeHandler(new SourceReader(source), applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
             controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
@@ -912,7 +914,7 @@ public sealed class ApplicationChangePreviewTests
             ], null),
         };
         var events = new InMemoryEventStore();
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var handler = new PreviewApplicationChangeHandler(new SourceReader(source), applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events), controls,
             new ApplicationControlDraftReferenceReadConsistency(controls, events),
@@ -960,7 +962,7 @@ public sealed class ApplicationChangePreviewTests
             OnListAsync = ct => events.AppendAsync(new EventStreamAddress(tenantId.ToString(),
                 "controls", controlId.ToString()), 0, [arriving], ct),
         };
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var handler = new PreviewApplicationChangeHandler(new SourceReader(source), applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events), controls,
             new ApplicationControlDraftReferenceReadConsistency(controls, events),
@@ -1001,7 +1003,7 @@ public sealed class ApplicationChangePreviewTests
         var applications = new InterleavingApplicationDirectory(projected, ct =>
             events.AppendAsync(new EventStreamAddress(tenantId.ToString(), "system-instances",
                 instanceId.ToString()), 0, [arriving], ct));
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var sourceReader = new SourceReader(source);
         var handler = new PreviewApplicationChangeHandler(sourceReader, applications,
@@ -1037,23 +1039,21 @@ public sealed class ApplicationChangePreviewTests
             .IsSuccess);
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
-        var references = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var references = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
             tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
             null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
-        DomainEvent boundary = new BoundaryDraftCreated(tenantId, boundaryId, Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), new BoundaryContent("Payroll system", "readiness",
+        var boundary = await FreezeBoundaryAsync(new BoundaryDraftCreatedContent(tenantId, boundaryId, Uuid.CreateVersion4(), Uuid.CreateVersion5(boundaryId, "draft-1"), new BoundaryContent("Payroll system", "readiness",
                 ["security"],
                 [new BoundaryScopeEntry(Uuid.CreateVersion4(), "inclusion", "application",
                     "Payroll", applicationId, "Operations", "In scope", false),
                 new BoundaryScopeEntry(Uuid.CreateVersion4(), "inclusion", "system_instance",
-                    "Payroll production", systemInstanceId, "Operations", "In scope", false)]),
-            actorId, "Manager", now);
+                    "Payroll production", systemInstanceId, "Operations", "In scope", false)]), actorId, "Manager", now));
         await using (var batch = await references.BeginAsync(new ProjectionBatchContext(
-                         new CheckpointIdentity("ApplicationBoundaryReferencesV2",
+                         new CheckpointIdentity("ApplicationBoundaryReferencesV3",
                              EventStreamPattern.ForPattern(tenantId.ToString(), "boundaries")),
                          ProjectionCheckpoint.Start)))
         {
@@ -1166,7 +1166,7 @@ public sealed class ApplicationChangePreviewTests
         Assert.True(source.Declare("Payroll", "Run payroll", null, actorId, "Manager", now)
             .IsSuccess);
         var applications = new FitzApplicationDirectory(new InMemoryKvClient());
-        var references = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var references = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var events = new InMemoryEventStore();
         var handler = new PreviewApplicationChangeHandler(new SourceReader(source),
@@ -1220,19 +1220,16 @@ public sealed class ApplicationChangePreviewTests
             .IsSuccess);
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
-        var references = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var references = new FitzApplicationBoundaryReferenceDirectory(kv, _controlFacts.Content);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, _controlFacts.Content);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
             tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var events = new InMemoryEventStore();
         var stream = new EventStreamAddress(tenantId.ToString(), "boundaries",
             boundaryId.ToString());
-        DomainEvent boundary = new BoundaryDraftCreated(tenantId, boundaryId,
-            Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            new BoundaryContent("Payroll", "readiness", ["security"],
+        var boundary = await FreezeBoundaryAsync(new BoundaryDraftCreatedContent(tenantId, boundaryId, Uuid.CreateVersion4(), Uuid.CreateVersion5(boundaryId, "draft-1"), new BoundaryContent("Payroll", "readiness", ["security"],
                 [new BoundaryScopeEntry(Uuid.CreateVersion4(), "inclusion",
-                    "application", "Payroll", applicationId, "Operations", "In scope", false)]),
-            actorId, "Manager", now);
+                    "application", "Payroll", applicationId, "Operations", "In scope", false)]), actorId, "Manager", now));
         boundary.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), boundaryId,
             1, now));
         await events.AppendAsync(stream, 0, [boundary]);
@@ -1255,7 +1252,7 @@ public sealed class ApplicationChangePreviewTests
         {
             Assert.True(await cursor.MoveNextAsync());
             await using var batch = await references.BeginAsync(new ProjectionBatchContext(
-                new CheckpointIdentity("ApplicationBoundaryReferencesV2",
+                new CheckpointIdentity("ApplicationBoundaryReferencesV3",
                     EventStreamPattern.ForPattern(tenantId.ToString(), "boundaries")),
                 ProjectionCheckpoint.Start));
             await references.ApplyAsync(boundary);
@@ -1268,6 +1265,18 @@ public sealed class ApplicationChangePreviewTests
         Assert.Equal(RequestErrorKind.Conflict, lagError.Kind);
         Assert.True(lagError.IsTransient);
         Assert.Equal(boundaryId, Assert.Single(recovered.Value.BoundaryReferences).BoundaryId);
+    }
+
+    async Task<DomainEvent> FreezeBoundaryAsync(BoundaryDraftCreatedContent created)
+    {
+        var rules = new BoundaryRules(created.TenantId, created.BoundaryId);
+        Assert.True(rules.Create(created.ProgramId, created.DraftVersionId, created.Content,
+            created.AuthorMemberId, created.AuthorDisplay, created.ChangedAt).IsSuccess);
+        var owner = new SystemBoundary(created.TenantId, created.BoundaryId);
+        var operation = OwnerProvenance.For(owner, created.BoundaryId, nameof(CreateBoundary),
+            ActorReference.ForMember(created.AuthorMemberId, created.AuthorDisplay), created.BoundaryId.ToString(),
+            null, AuthoredIntentDigest.Compute(created), created.ChangedAt);
+        return await BoundarySeeds.FreezeAsync(_controlFacts.Content, rules, rules.PendingChanges, operation, 1);
     }
 
     static async Task<(Uuid TenantId, Uuid ApplicationId, Uuid SystemInstanceId,

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Programs;
@@ -7,7 +8,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Checks the existing accepted assignment path for advisory-note reads.</summary>
-sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, AdvisorHandoffReader handoffs,
+sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, BoundaryReader boundarySources, AdvisorHandoffReader handoffs,
     FirmStaffViews staffViews, ServiceEngagementViews engagements, ITenantActivity tenants,
     IProgramResourceScopeResolver programScopes, TimeProvider clock,
     ITenantMembershipDirectoryReader memberships,
@@ -176,19 +177,25 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, AdvisorHand
     async ValueTask<bool> MatchesProgramScopeAsync(Uuid tenantId, Uuid programId,
         ServiceEngagementAcceptanceView acceptance, CancellationToken ct)
     {
-        if (acceptance.BoundaryId is null && acceptance.BoundaryVersionId is null &&
-            acceptance.BoundaryRevision is null && acceptance.BoundaryApprovalDecisionId is null)
-            return true;
+        try
+        {
+            if (acceptance.BoundaryId is null && acceptance.BoundaryVersionId is null &&
+                acceptance.BoundaryRevision is null && acceptance.BoundaryApprovalDecisionId is null)
+                return true;
 
-        if (acceptance.BoundaryId is not { } boundaryId || boundaryId == Uuid.Empty ||
-            acceptance.BoundaryVersionId is not { } versionId || versionId == Uuid.Empty ||
-            acceptance.BoundaryRevision is not > 0 ||
-            acceptance.BoundaryApprovalDecisionId is not { } decisionId || decisionId == Uuid.Empty)
+            if (acceptance.BoundaryId is not { } boundaryId || boundaryId == Uuid.Empty ||
+                acceptance.BoundaryVersionId is not { } versionId || versionId == Uuid.Empty ||
+                acceptance.BoundaryRevision is not > 0 ||
+                acceptance.BoundaryApprovalDecisionId is not { } decisionId || decisionId == Uuid.Empty)
+                return false;
+
+            var boundary = await boundarySources.ReadAsync(tenantId, boundaryId, ct).ConfigureAwait(false);
+            return boundary.IsCreated && boundary.ProgramId == programId &&
+                boundary.IsVersionApproved(versionId, acceptance.BoundaryRevision.Value, decisionId);
+        }
+        catch (ImmutableContentIntegrityException)
+        {
             return false;
-
-        var boundary = await reader.HydrateAsync(new SystemBoundary(tenantId, boundaryId), ct)
-            .ConfigureAwait(false);
-        return boundary.IsCreated && boundary.ProgramId == programId &&
-            boundary.IsVersionApproved(versionId, acceptance.BoundaryRevision.Value, decisionId);
+        }
     }
 }

@@ -1,23 +1,16 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Boundaries;
 
-public sealed class DiscardBoundaryDraftHandler(IAggregateExecutor executor,
-    TimeProvider clock) : IRequestHandler<DiscardBoundaryDraft>
+public sealed class DiscardBoundaryDraftHandler(BoundaryOperations operations) : IRequestHandler<DiscardBoundaryDraft>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<DiscardBoundaryDraft> context,
-        CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<DiscardBoundaryDraft> context, CancellationToken ct)
     {
         var request = context.Request;
-        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
-            ? subject
-            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
-        return executor.ExecuteAsync(new SystemBoundary(request.TenantId, request.BoundaryId),
-            boundary => CommandFailureRequestAdapter.ToOutcome(boundary.DiscardDraft(
-                request.DraftVersionId, request.ExpectedRevision, request.Rationale,
-                RbacIds.Member(request.TenantId, userId),
-                UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow())),
-            context, ct);
+        return operations.ExecuteUnitAsync(context, request.TenantId, null, request.BoundaryId, request.CommandId,
+            nameof(DiscardBoundaryDraft), request.ExpectedRevision,
+            static (_, _, _, _) => BoundaryOperations.Ready(),
+            (rules, actor, at) => BoundaryOperations.Outcome(rules.DiscardDraft(request.DraftVersionId, request.ExpectedRevision,
+                request.Rationale, actor.MemberId, actor.Display, at)), null, null, ct);
     }
 }

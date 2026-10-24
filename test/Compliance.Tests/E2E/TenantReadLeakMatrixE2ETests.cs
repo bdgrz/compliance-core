@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Bdgrz.Compliance.Features.Content;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
@@ -301,14 +303,15 @@ public sealed class TenantReadLeakMatrixE2ETests(BrokerStackFixture broker)
             // A suspended member's open work remains visible only to an administrator of
             // the owning tenant, including when the API and worker run independently.
             var boundaryId = Uuid.CreateVersion4();
-            var versionId = Uuid.CreateVersion4();
-            var boundary = new SystemBoundary(tenantA, boundaryId);
+            var versionId = Uuid.CreateVersion5(boundaryId, "draft-1");
+            var boundary = new BoundaryRules(tenantA, boundaryId);
             Assert.True(boundary.Create(Uuid.CreateVersion4(), versionId,
                 new BoundaryContent("Member work", "readiness", ["security"], []),
                 userId, "Administrator", DateTimeOffset.UtcNow).IsSuccess);
             using (var scope = factory.Services.CreateScope())
-                await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(
-                    boundary, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+                await BoundarySeeds.AppendAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                    scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
+                    scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), boundary);
             using (var assigned = await owner.PostAsJsonAsync(TenantPath(tenantA) + "/responsibilities", new
             {
                 member_user_id = invitedMemberA.UserId,

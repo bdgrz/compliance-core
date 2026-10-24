@@ -66,14 +66,18 @@ sealed class ProgramResourceScopeResolver(IProgramDirectoryReader programs,
     async ValueTask<Uuid?> ResolveBoundaryAsync(Uuid tenantId, Uuid boundaryId,
         CancellationToken ct)
     {
+        // Current native owner metadata remains available while its body projection catches up.
+        // Scope authorization must not require the latest body before an accepted retry can run.
+        var source = await reader.HydrateAsync(new SystemBoundary(tenantId, boundaryId), ct)
+            .ConfigureAwait(false);
+        if (source.IsCreated)
+            return source.ProgramId;
         var boundary = await boundaries.GetAsync(tenantId, boundaryId, ct).ConfigureAwait(false);
         if (boundary is not null)
             return boundary.TenantId == tenantId && boundary.BoundaryId == boundaryId
                 ? boundary.ProgramId
                 : null;
-        var source = await reader.HydrateAsync(new SystemBoundary(tenantId, boundaryId), ct)
-            .ConfigureAwait(false);
-        return source.IsCreated ? source.ProgramId : null;
+        return null;
     }
 
     async ValueTask<Uuid?> ResolveClientServiceAsync(Uuid tenantId, Uuid serviceId,

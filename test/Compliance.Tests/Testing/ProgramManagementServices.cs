@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Controls;
@@ -54,6 +55,8 @@ static class ProgramManagementServices
         collection.AddScoped<Bdgrz.Compliance.Features.Readiness.ReadinessReader>();
         collection.AddScoped<ControlReader>();
         collection.AddScoped<ControlOperations>();
+        collection.AddScoped<BoundaryReader>();
+        collection.AddScoped<BoundaryOperations>();
         collection.AddScoped<CommitmentReader>();
         collection.AddScoped<CommitmentOperations>();
         collection.AddScoped<PolicyReader>();
@@ -165,6 +168,41 @@ static class ProgramManagementServices
     {
         await using var scope = provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<CommitmentReader>()
+            .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
+    }
+
+    public static async Task SeedAsync(IServiceProvider provider, BoundaryRules selected,
+        Func<BoundaryRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await services.GetRequiredService<BoundaryReader>()
+            .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await BoundarySeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IImmutableContentStore>(), rules, CancellationToken.None);
+    }
+
+    public static async Task SeedAsync<TOut>(IServiceProvider provider, BoundaryRules selected,
+        Func<BoundaryRules, Result<TOut>> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await services.GetRequiredService<BoundaryReader>()
+            .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await BoundarySeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IImmutableContentStore>(), rules, CancellationToken.None);
+    }
+
+    public static async Task<BoundaryRules> HydrateAsync(IServiceProvider provider, BoundaryRules selected)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<BoundaryReader>()
             .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
     }
 

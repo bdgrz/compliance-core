@@ -1,10 +1,9 @@
-using System.Security.Claims;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Responsibilities;
 
@@ -16,32 +15,27 @@ public sealed class ResponsibilityAssignmentConcurrencyTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
-        var versionId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var memberId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
-        var services = new ServiceCollection();
-        services.AddSingleton<IEventStore>(new InMemoryEventStore());
-        services.AddPortia();
-        await using var provider = services.BuildServiceProvider();
-        await using var scopeServices = provider.CreateAsyncScope();
-        var reader = scopeServices.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var writer = scopeServices.ServiceProvider.GetRequiredService<IAggregateWriter>();
-        var boundary = new SystemBoundary(tenantId, boundaryId);
+        await using var native = new BoundaryProjectionScenario();
+        var reader = native.Reader;
+        var boundary = new BoundaryRules(tenantId, boundaryId);
         Assert.True(boundary.Create(Uuid.CreateVersion4(), versionId,
             new BoundaryContent("Statement", "readiness", ["security"], []), Uuid.CreateVersion4(),
             "Author", now).IsSuccess);
-        await writer.SaveAsync(boundary, new RequestDispatchContext(RequestActor.System));
+        await native.PublishAsync(boundary);
         var gate = new HydrationGate(reader, participants: 2);
-        var executor = new AggregateExecutor(gate, writer);
+
         var scope = new ResponsibilityScope("boundary", boundaryId, versionId, 1);
 
         // Act
         var outcomes = await Task.WhenAll(
-            RaceAsync(executor, tenantId, boundaryId, scope, memberId,
+            RaceAsync(native, gate, tenantId, boundaryId, scope, memberId,
                 ResponsibilityType.ControlOwner, now),
-            RaceAsync(executor, tenantId, boundaryId, scope, memberId,
+            RaceAsync(native, gate, tenantId, boundaryId, scope, memberId,
                 ResponsibilityType.AssignedReviewer, now));
-        var resultingBoundary = await reader.HydrateAsync(new SystemBoundary(tenantId, boundaryId));
+        var resultingBoundary = await native.Boundaries.ReadAsync(tenantId, boundaryId);
         var assignments = resultingBoundary.GetResponsibilitySet(scope).ReadAssignments();
 
         // Assert
@@ -50,18 +44,19 @@ public sealed class ResponsibilityAssignmentConcurrencyTests
         Assert.Single(assignments);
     }
 
-    static async Task<object> RaceAsync(AggregateExecutor executor, Uuid tenantId,
+    static async Task<object> RaceAsync(BoundaryProjectionScenario native, IAggregateReader gate, Uuid tenantId,
         Uuid boundaryId, ResponsibilityScope scope, Uuid memberId,
         ResponsibilityType type, DateTimeOffset now)
     {
         try
         {
-            return await executor.ExecuteAsync(new SystemBoundary(tenantId, boundaryId), boundary =>
-            {
-                var failure = boundary.AssignResponsibility(scope, Uuid.CreateVersion4(), memberId,
-                    type, Uuid.CreateVersion4(), "Administrator", now, now, null, []);
-                return CommandFailureRequestAdapter.ToOutcome(failure);
-            }, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            var rules = await native.Boundaries.RulesAsync(tenantId, boundaryId);
+            var failure = rules.AssignResponsibility(scope, Uuid.CreateVersion4(), memberId,
+                type, Uuid.CreateVersion4(), "Administrator", now, now, null, []);
+            if (failure is not null)
+                return Result.Failure(failure.ToRequestError());
+            await BoundarySeeds.AppendAsync(gate, native.Writer, native.Content, rules);
+            return Result.Success;
         }
         catch (EventStreamConcurrencyException exception)
         {

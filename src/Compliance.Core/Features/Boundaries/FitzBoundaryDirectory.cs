@@ -1,255 +1,198 @@
-using Bdgrz.Compliance.Features.Versioning;
+using System.Globalization;
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Boundaries;
 
-sealed class FitzBoundaryDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/boundary-directory-v2/projection", "BoundaryDirectoryV2"),
+sealed class FitzBoundaryDirectory(IKvClient client, BoundaryReader boundaries)
+    : FitzKvProjectionStore(client, "kv://bdgrz/boundary-directory-v3/projection", ProjectorName),
         IBoundaryDirectoryReader, IBoundaryDirectoryProjection
 {
-    public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
+    public const string ProjectorName = "BoundaryDirectoryV3";
+    Uuid? _batchTenantId;
+    public new ValueTask<IProjectionBatch> BeginAsync(ProjectionBatchContext context, CancellationToken ct = default) =>
+        BeginBoundaryBatchAsync(context, ct);
+    ValueTask<IProjectionBatch> IProjectionStore.BeginAsync(ProjectionBatchContext context, CancellationToken ct) =>
+        BeginBoundaryBatchAsync(context, ct);
+    async ValueTask<IProjectionBatch> BeginBoundaryBatchAsync(ProjectionBatchContext context, CancellationToken ct)
     {
-        switch (domainEvent)
+        if (!Uuid.TryParse(context.Identity.Pattern.Realm, CultureInfo.InvariantCulture, out var tenant) || tenant == Uuid.Empty)
+            throw new InvalidOperationException("A boundary directory batch requires its exact tenant scope.");
+        var batch = await base.BeginAsync(context, ct).ConfigureAwait(false);
+        _batchTenantId = tenant;
+        return batch;
+    }
+    public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default) =>
+        base.LoadCheckpointAsync(new CheckpointIdentity(ProjectorName, EventStreamPattern.ForPattern(tenantId.ToString())), ct);
+
+    public async ValueTask ApplyAsync(DomainEvent value, CancellationToken ct = default)
+    {
+        if (value is not IBoundaryFact fact || value is not (BoundaryDraftCreated or BoundaryDraftRevised or BoundaryDraftDiscarded or
+            BoundaryReviewed or BoundaryApproved or BoundarySuccessorProposed))
+            return;
+        BoundaryFactContent.ValidateScope(fact);
+        var header = fact.Header;
+        if (_batchTenantId != header.TenantId || fact.ChangeCount != 1 || fact.NativeSequence < 1 || header.Revision < 1 || !header.IsCreated)
+            throw new InvalidOperationException("A boundary directory fact requires its exact native owner and batch tenant.");
+        var current = await BoundaryDirectorySchema.Directory.GetAsync(Transaction, header.BoundaryId, ct).ConfigureAwait(false);
+        if (current is not null && current.Header == header && current.NativeSequence == fact.NativeSequence)
+            return;
+        if (value is BoundaryDraftCreated)
         {
-            case BoundaryDraftCreated created:
-                await BoundaryDirectorySchema.Directory.InsertAsync(Transaction,
-                        new BoundaryView(created.TenantId, created.BoundaryId,
-                            created.ProgramId,
-                            new BoundaryVersionView(created.TenantId, created.BoundaryId,
-                                created.ProgramId, created.DraftVersionId, 1,
-                                created.Content, "draft", null, created.AuthorMemberId,
-                                created.AuthorDisplay, created.ChangedAt), null, null, 1), ct)
-                    .ConfigureAwait(false);
-                break;
-            case BoundaryDraftRevised revised:
-                var current = await BoundaryDirectorySchema.Directory.GetAsync(Transaction,
-                    revised.BoundaryId, ct).ConfigureAwait(false);
-                if (current?.Draft is null || current.Draft.VersionId != revised.DraftVersionId)
-                    throw new InvalidOperationException(
-                        "A boundary draft revision cannot project before its creation.");
-                await BoundaryDirectorySchema.Directory.ReplaceAsync(Transaction, current,
-                    current with
-                    {
-                        Revision = current.Revision + 1,
-                        Draft = current.Draft with
-                        {
-                            Revision = revised.Revision,
-                            Content = revised.Content,
-                            AuthorMemberId = revised.AuthorMemberId,
-                            AuthorDisplay = revised.AuthorDisplay,
-                            ChangedAt = revised.ChangedAt,
-                        },
-                        LatestDecision = null,
-                    }, ct).ConfigureAwait(false);
-                break;
-            case BoundaryDraftDiscarded discarded:
-                var discardedCurrent = await BoundaryDirectorySchema.Directory.GetAsync(Transaction,
-                    discarded.BoundaryId, ct).ConfigureAwait(false);
-                if (discardedCurrent?.Draft is null ||
-                    discardedCurrent.Draft.VersionId != discarded.DraftVersionId ||
-                    discardedCurrent.Draft.Revision != discarded.Revision)
-                    throw new InvalidOperationException(
-                        "A draft discard cannot project before its exact draft revision.");
-                if (discardedCurrent.LatestApprovedVersion is null)
-                    await BoundaryDirectorySchema.Directory.DeleteAsync(Transaction,
-                        discardedCurrent, ct).ConfigureAwait(false);
-                else
-                    await BoundaryDirectorySchema.Directory.ReplaceAsync(Transaction,
-                            discardedCurrent, discardedCurrent with
-                            {
-                                Draft = null,
-                                Revision = discardedCurrent.Revision + 1,
-                            }, ct)
-                        .ConfigureAwait(false);
-                break;
-            case BoundaryReviewed reviewed:
-                var reviewedCurrent = await BoundaryDirectorySchema.Directory.GetAsync(Transaction,
-                    reviewed.BoundaryId, ct).ConfigureAwait(false);
-                if (reviewedCurrent?.Draft is null ||
-                    reviewedCurrent.Draft.VersionId != reviewed.DraftVersionId ||
-                    reviewedCurrent.Draft.Revision != reviewed.Revision)
-                    throw new InvalidOperationException(
-                        "A boundary review cannot project before its exact draft revision.");
-                var reviewDecision = new BoundaryDecisionView(reviewed.TenantId,
-                    reviewed.BoundaryId, reviewed.DecisionId, reviewed.DraftVersionId,
-                    reviewed.Revision, reviewed.Outcome, reviewed.ActorMemberId,
-                    reviewed.ActorDisplay, reviewed.Rationale, reviewed.DecidedAt,
-                    reviewedCurrent.LatestDecision is { } previousDecision &&
-                    previousDecision.VersionId == reviewed.DraftVersionId &&
-                    previousDecision.Revision == reviewed.Revision
-                        ? previousDecision.DecisionId : null, null, null,
-                    reviewed.SeparationOfDutiesWaiverId)
-                {
-                    Actor = reviewed.Actor,
-                };
-                await BoundaryDirectorySchema.Decisions.InsertAsync(Transaction,
-                    reviewDecision, ct).ConfigureAwait(false);
-                await BoundaryDirectorySchema.Directory.ReplaceAsync(Transaction, reviewedCurrent,
-                    reviewedCurrent with
-                    {
-                        Revision = reviewedCurrent.Revision + 1,
-                        LatestDecision = reviewDecision,
-                    }, ct).ConfigureAwait(false);
-                break;
-            case BoundaryApproved approved:
-                var approvedCurrent = await BoundaryDirectorySchema.Directory.GetAsync(Transaction,
-                    approved.BoundaryId, ct).ConfigureAwait(false);
-                if (approvedCurrent?.Draft is null ||
-                    approvedCurrent.Draft.VersionId != approved.DraftVersionId ||
-                    approvedCurrent.Draft.Revision != approved.Revision ||
-                    approvedCurrent.LatestDecision?.DecisionId != approved.AcceptedReviewDecisionId)
-                    throw new InvalidOperationException(
-                        "A boundary approval cannot project before its accepted review.");
-                if (approvedCurrent.LatestApprovedVersion?.EffectiveFrom is { } priorFrom &&
-                    !EffectiveInterval.CanFollow(priorFrom, approved.EffectiveFrom))
-                    throw new InvalidOperationException(
-                        "A successor boundary version must become effective after its predecessor.");
-                var approvedVersion = approvedCurrent.Draft with
-                {
-                    Status = "approved",
-                    EffectiveFrom = approved.EffectiveFrom,
-                };
-                await BoundaryDirectorySchema.Versions.InsertAsync(Transaction,
-                    approvedVersion, ct).ConfigureAwait(false);
-                var approvalDecision = new BoundaryDecisionView(approved.TenantId,
-                    approved.BoundaryId, approved.ApprovalDecisionId,
-                    approved.DraftVersionId, approved.Revision, "approve",
-                    approved.ActorMemberId, approved.ActorDisplay,
-                    approved.Rationale, approved.DecidedAt, null,
-                    approved.AcceptedReviewDecisionId, approved.ImpactDigest,
-                    approved.SeparationOfDutiesWaiverId)
-                {
-                    Actor = approved.Actor,
-                };
-                await BoundaryDirectorySchema.Decisions.InsertAsync(Transaction,
-                    approvalDecision, ct).ConfigureAwait(false);
-                await BoundaryDirectorySchema.Directory.ReplaceAsync(Transaction, approvedCurrent,
-                    approvedCurrent with
-                    {
-                        Revision = approvedCurrent.Revision + 1,
-                        Draft = null,
-                        LatestApprovedVersion = approvedVersion,
-                        LatestDecision = approvalDecision,
-                    }, ct).ConfigureAwait(false);
-                break;
-            case BoundarySuccessorProposed proposed:
-                var predecessor = await BoundaryDirectorySchema.Directory.GetAsync(Transaction,
-                    proposed.BoundaryId, ct).ConfigureAwait(false);
-                if (predecessor?.LatestApprovedVersion?.VersionId != proposed.PredecessorVersionId ||
-                    predecessor.Draft is not null)
-                    throw new InvalidOperationException(
-                        "A successor cannot project before its approved predecessor.");
-                await BoundaryDirectorySchema.Directory.ReplaceAsync(Transaction, predecessor,
-                    predecessor with
-                    {
-                        Revision = predecessor.Revision + 1,
-                        Draft = new BoundaryVersionView(proposed.TenantId, proposed.BoundaryId,
-                            predecessor.ProgramId, proposed.DraftVersionId, 1,
-                            proposed.Content, "draft", null, proposed.AuthorMemberId,
-                            proposed.AuthorDisplay, proposed.ChangedAt),
-                        LatestDecision = null,
-                    }, ct).ConfigureAwait(false);
-                break;
+            if (current is not null || header.Revision != 1 || fact.NativeSequence != 1 || header.DraftRevision != 1)
+                throw new InvalidOperationException("A boundary cannot project before its exact original creation.");
+        }
+        else if (current is null || current.Header.TenantId != header.TenantId || current.Header.ProgramId != header.ProgramId ||
+            header.Revision != current.Header.Revision + 1 || fact.NativeSequence <= current.NativeSequence)
+            throw new InvalidOperationException("A boundary mutation cannot project before its exact predecessor.");
+        switch (value)
+        {
+            case BoundaryDraftRevised revised when current!.Header.DraftVersionId != revised.DraftVersionId ||
+                current.Header.DraftRevision + 1 != revised.Revision:
+                throw new InvalidOperationException("A boundary draft revision cannot project before its creation.");
+            case BoundaryDraftDiscarded discarded when current!.Header.DraftVersionId != discarded.DraftVersionId ||
+                current.Header.DraftRevision != discarded.Revision:
+                throw new InvalidOperationException("A draft discard cannot project before its exact draft revision.");
+            case BoundaryReviewed reviewed when current!.Header.DraftVersionId != reviewed.DraftVersionId ||
+                current.Header.DraftRevision != reviewed.Revision:
+                throw new InvalidOperationException("A boundary review cannot project before its exact draft revision.");
+            case BoundaryApproved approved when current!.Header.DraftVersionId != approved.DraftVersionId ||
+                current.Header.DraftRevision != approved.Revision || current.Header.AcceptedReviewDecisionId != approved.AcceptedReviewDecisionId:
+                throw new InvalidOperationException("A boundary approval cannot project before its accepted review.");
+            case BoundaryApproved scheduled when current!.Header.LatestApprovedEffectiveFrom is { } prior && scheduled.EffectiveFrom <= prior:
+                throw new InvalidOperationException("A successor boundary version must become effective after its predecessor.");
+            case BoundarySuccessorProposed proposed when current!.Header.LatestApprovedVersionId != proposed.PredecessorVersionId ||
+                current.Header.DraftVersionId != Uuid.Empty:
+                throw new InvalidOperationException("A successor cannot project before its approved predecessor.");
+        }
+        var row = new BoundaryDirectoryIdentity(header, fact.NativeSequence);
+        if (!header.IsVisible)
+        {
+            if (current is not null)
+                await BoundaryDirectorySchema.Directory.DeleteAsync(Transaction, current, ct).ConfigureAwait(false);
+        }
+        else if (current is null)
+            await BoundaryDirectorySchema.Directory.InsertAsync(Transaction, row, ct).ConfigureAwait(false);
+        else
+            await BoundaryDirectorySchema.Directory.ReplaceAsync(Transaction, current, row, ct).ConfigureAwait(false);
+        if (value is BoundaryReviewed review)
+            await BoundaryDirectorySchema.Decisions.InsertAsync(Transaction,
+                row with { DecisionId = review.DecisionId, VersionId = review.DraftVersionId, DecidedAt = review.DecidedAt }, ct).ConfigureAwait(false);
+        else if (value is BoundaryApproved approval)
+        {
+            await BoundaryDirectorySchema.Versions.InsertAsync(Transaction,
+                row with { VersionId = approval.DraftVersionId, EffectiveFrom = approval.EffectiveFrom }, ct).ConfigureAwait(false);
+            await BoundaryDirectorySchema.Decisions.InsertAsync(Transaction,
+                row with { DecisionId = approval.ApprovalDecisionId, VersionId = approval.DraftVersionId, DecidedAt = approval.DecidedAt }, ct).ConfigureAwait(false);
         }
     }
 
-    public async ValueTask<BoundaryView?> GetAsync(Uuid tenantId, Uuid boundaryId,
+    public async ValueTask<BoundaryView?> GetAsync(Uuid tenantId, Uuid boundaryId, CancellationToken ct = default)
+    {
+        BoundaryDirectoryIdentity? row;
+        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
+            row = await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct).ConfigureAwait(false);
+        return row is null ? null : (await SourceAsync(tenantId, boundaryId, row, ct).ConfigureAwait(false)).ToView();
+    }
+    public async ValueTask<Page<BoundaryView>> ListProgramAsync(Uuid tenantId, Uuid programId, int limit, string? cursor,
         CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct)
-            .ConfigureAwait(false);
-    }
-
-    public async ValueTask<Page<BoundaryView>> ListProgramAsync(Uuid tenantId,
-        Uuid programId, int limit, string? cursor, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await BoundaryDirectorySchema.Directory.QueryAsync(tx,
-            BoundaryDirectorySchema.ByProgram.Query().WithPrefix(programId.ToString())
-                .Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
-    }
-
-    public async ValueTask<BoundaryVersionView?> GetVersionAsync(Uuid tenantId,
-        Uuid boundaryId, Uuid versionId, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        var version = await BoundaryDirectorySchema.Versions.GetAsync(tx, versionId, ct)
-            .ConfigureAwait(false);
-        return version?.BoundaryId == boundaryId ? version : null;
-    }
-
-    public async ValueTask<Page<BoundaryVersionView>?> ListVersionsAsync(Uuid tenantId,
-        Uuid boundaryId, int limit, string? cursor, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        if (await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct)
-                .ConfigureAwait(false) is null)
-            return null;
-        return await BoundaryDirectorySchema.Versions.QueryAsync(tx,
-                BoundaryDirectorySchema.VersionsByBoundary.Query()
-                    .WithPrefix(boundaryId.ToString()).Take(Math.Clamp(limit, 1, 200))
-                    .After(cursor), ct)
-            .ConfigureAwait(false);
-    }
-
-    public async ValueTask<BoundaryVersionView?> GetEffectiveVersionAsync(Uuid tenantId,
-        Uuid boundaryId, DateOnly effectiveOn, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        string? cursor = null;
-        BoundaryVersionView? previous = null;
-        do
+        Page<BoundaryDirectoryIdentity> page;
+        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
+            page = await BoundaryDirectorySchema.Directory.QueryAsync(tx, BoundaryDirectorySchema.ByProgram.Query()
+                .WithPrefix(programId.ToString()).Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
+        var values = new List<BoundaryView>(page.Items.Count);
+        foreach (var row in page.Items)
         {
-            var page = await BoundaryDirectorySchema.Versions.QueryAsync(tx,
-                    BoundaryDirectorySchema.VersionsByBoundary.Query()
-                        .WithPrefix(boundaryId.ToString()).Take(200).After(cursor), ct)
-                .ConfigureAwait(false);
-            foreach (var version in page.Items)
-            {
-                var from = version.EffectiveFrom ?? throw new InvalidOperationException(
-                    "An approved boundary version requires an effective date.");
-                if (previous is null && from > effectiveOn)
-                    return null;
-                if (previous is { EffectiveFrom: { } previousFrom } &&
-                    new EffectiveInterval(previousFrom, from).Contains(effectiveOn))
-                    return previous;
-                previous = version;
-            }
-            cursor = page.NextCursor;
-        } while (cursor is not null);
-        return previous is { EffectiveFrom: { } lastFrom } &&
-               new EffectiveInterval(lastFrom, null).Contains(effectiveOn)
-            ? previous
-            : null;
+            if (row.Header.ProgramId != programId)
+                throw new ImmutableContentIntegrityException("The boundary directory row has another program scope.");
+            var source = await SourceAsync(tenantId, row.Header.BoundaryId, row, ct).ConfigureAwait(false);
+            if (source.ToView() is { } view)
+                values.Add(view);
+        }
+        return new(values, page.NextCursor);
     }
-
-    public async ValueTask<BoundaryDecisionView?> GetDecisionAsync(Uuid tenantId,
-        Uuid boundaryId, Uuid decisionId, CancellationToken ct = default)
+    public async ValueTask<BoundaryVersionView?> GetVersionAsync(Uuid tenantId, Uuid boundaryId, Uuid versionId,
+        CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        var decision = await BoundaryDirectorySchema.Decisions.GetAsync(tx, decisionId, ct)
-            .ConfigureAwait(false);
-        return decision?.BoundaryId == boundaryId ? decision : null;
+        BoundaryDirectoryIdentity? row;
+        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
+            row = await BoundaryDirectorySchema.Versions.GetAsync(tx, BoundaryDirectorySchema.ScopedKey(boundaryId, versionId), ct).ConfigureAwait(false);
+        return row is null || row.Header.BoundaryId != boundaryId ? null
+            : (await SourceAsync(tenantId, boundaryId, row, ct).ConfigureAwait(false)).FindVersion(versionId)
+                ?? throw new ImmutableContentUnavailableException("The projected boundary version is not visible at its native source.");
     }
-
-    public async ValueTask<Page<BoundaryDecisionView>?> ListDecisionsAsync(Uuid tenantId,
-        Uuid boundaryId, int limit, string? cursor, CancellationToken ct = default)
+    public async ValueTask<Page<BoundaryVersionView>?> ListVersionsAsync(Uuid tenantId, Uuid boundaryId, int limit,
+        string? cursor, CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        if (await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct)
-                .ConfigureAwait(false) is null)
-            return null;
-        return await BoundaryDirectorySchema.Decisions.QueryAsync(tx,
-                BoundaryDirectorySchema.DecisionsByBoundary.Query()
-                    .WithPrefix(boundaryId.ToString()).Take(Math.Clamp(limit, 1, 200))
-                    .After(cursor), ct)
-            .ConfigureAwait(false);
+        Page<BoundaryDirectoryIdentity> page;
+        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
+        {
+            if (await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct).ConfigureAwait(false) is null)
+                return null;
+            page = await BoundaryDirectorySchema.Versions.QueryAsync(tx, BoundaryDirectorySchema.VersionsByBoundary.Query()
+                .WithPrefix(boundaryId.ToString()).Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
+        }
+        var values = new List<BoundaryVersionView>(page.Items.Count);
+        BoundaryReadSnapshot? source = null;
+        foreach (var row in page.Items)
+        {
+            source = await SourceAsync(tenantId, boundaryId, row, ct, source).ConfigureAwait(false);
+            values.Add(source.FindVersion(row.VersionId!.Value)
+                ?? throw new ImmutableContentUnavailableException("The projected boundary version is not visible at its native source."));
+        }
+        return new(values, page.NextCursor);
     }
-
-    public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-        CancellationToken ct = default) =>
-        base.LoadCheckpointAsync(new CheckpointIdentity("BoundaryDirectoryV2",
-            EventStreamPattern.ForPattern(tenantId.ToString())), ct);
+    public async ValueTask<BoundaryVersionView?> GetEffectiveVersionAsync(Uuid tenantId, Uuid boundaryId, DateOnly effectiveOn,
+        CancellationToken ct = default)
+    {
+        BoundaryDirectoryIdentity? row;
+        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
+            row = await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct).ConfigureAwait(false);
+        return row is null ? null : (await SourceAsync(tenantId, boundaryId, row, ct).ConfigureAwait(false)).EffectiveVersion(effectiveOn);
+    }
+    public async ValueTask<BoundaryDecisionView?> GetDecisionAsync(Uuid tenantId, Uuid boundaryId, Uuid decisionId,
+        CancellationToken ct = default)
+    {
+        BoundaryDirectoryIdentity? row;
+        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
+            row = await BoundaryDirectorySchema.Decisions.GetAsync(tx, BoundaryDirectorySchema.ScopedKey(boundaryId, decisionId), ct).ConfigureAwait(false);
+        return row is null || row.Header.BoundaryId != boundaryId ? null
+            : (await SourceAsync(tenantId, boundaryId, row, ct).ConfigureAwait(false)).FindDecision(decisionId)
+                ?? throw new ImmutableContentUnavailableException("The projected boundary decision is not visible at its native source.");
+    }
+    public async ValueTask<Page<BoundaryDecisionView>?> ListDecisionsAsync(Uuid tenantId, Uuid boundaryId, int limit,
+        string? cursor, CancellationToken ct = default)
+    {
+        Page<BoundaryDirectoryIdentity> page;
+        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
+        {
+            if (await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct).ConfigureAwait(false) is null)
+                return null;
+            page = await BoundaryDirectorySchema.Decisions.QueryAsync(tx, BoundaryDirectorySchema.DecisionsByBoundary.Query()
+                .WithPrefix(boundaryId.ToString()).Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
+        }
+        var values = new List<BoundaryDecisionView>(page.Items.Count);
+        BoundaryReadSnapshot? source = null;
+        foreach (var row in page.Items)
+        {
+            source = await SourceAsync(tenantId, boundaryId, row, ct, source).ConfigureAwait(false);
+            values.Add(source.FindDecision(row.DecisionId!.Value)
+                ?? throw new ImmutableContentUnavailableException("The projected boundary decision is not visible at its native source."));
+        }
+        return new(values, page.NextCursor);
+    }
+    async ValueTask<BoundaryReadSnapshot> SourceAsync(Uuid tenantId, Uuid boundaryId, BoundaryDirectoryIdentity row,
+        CancellationToken ct, BoundaryReadSnapshot? pinned = null)
+    {
+        if (row.Header.TenantId != tenantId || row.Header.BoundaryId != boundaryId)
+            throw new ImmutableContentIntegrityException("The boundary identity has another exact source scope.");
+        var source = pinned ?? await boundaries.ReadAsync(tenantId, row.Header.ProgramId, boundaryId, ct).ConfigureAwait(false);
+        if (!source.IsCreated || source.ProgramId != row.Header.ProgramId || source.Revision < row.Header.Revision)
+            throw new ImmutableContentIntegrityException("The boundary identity differs from its authoritative source.");
+        if (row.VersionId is null && row.DecisionId is null && source.IsVisible && source.Owner.Header != row.Header)
+            throw new ImmutableContentUnavailableException("The boundary projection has not reached its native current authority.");
+        return source;
+    }
 }

@@ -5,5 +5,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Boundaries;
 
 [Discriminator("bdgrz.boundary.create", 1)]
-public sealed record CreateBoundary(Uuid TenantId, Uuid ProgramId, BoundaryContent Content)
-    : IRequest<BoundaryRegistration>, IBoundaryAuthoringRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+public sealed record CreateBoundary(Uuid BoundaryId, Uuid TenantId, Uuid ProgramId, BoundaryContent Content)
+    : IRequest<BoundaryRegistration>, IBoundaryAuthoringRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => BoundaryId;
+}

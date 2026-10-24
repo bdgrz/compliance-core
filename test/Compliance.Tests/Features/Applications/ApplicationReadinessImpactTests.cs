@@ -279,7 +279,7 @@ public sealed class ApplicationReadinessImpactTests
         await using var readinessHost = await CreateReaderAsync(new StubProgramDirectory([program]),
             readinessDirectory, events);
         var readinessImpactReader = readinessHost.Reader;
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(kv));
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var handler = new PreviewApplicationChangeHandler(sourceReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),

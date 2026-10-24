@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
@@ -14,13 +15,14 @@ public sealed class BoundaryPagedReadContractTests
     public async Task ShouldRejectOutOfRangeLimitGivenBoundaryLists(int limit)
     {
         // Arrange
+        await using var native = new BoundaryProjectionScenario();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
         var directory = new BoundaryDirectory();
         var programDirectory = new ProgramDirectory(Program(tenantId, programId));
         var consistency = new BoundaryHistoryReadConsistency(directory,
-            new AggregateReader(new SystemBoundary(tenantId, boundaryId)));
+            native.Boundaries);
         var boundaries = new ListProgramBoundariesHandler(directory, programDirectory);
         var versions = new ListBoundaryVersionsHandler(directory, consistency);
         var decisions = new ListBoundaryDecisionsHandler(directory);
@@ -43,13 +45,14 @@ public sealed class BoundaryPagedReadContractTests
     public async Task ShouldRejectInvalidCursorGivenBoundaryLists()
     {
         // Arrange
+        await using var native = new BoundaryProjectionScenario();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
         var directory = new BoundaryDirectory { RejectCursor = true };
         var programDirectory = new ProgramDirectory(Program(tenantId, programId));
         var consistency = new BoundaryHistoryReadConsistency(directory,
-            new AggregateReader(new SystemBoundary(tenantId, boundaryId)));
+            native.Boundaries);
         var boundaries = new ListProgramBoundariesHandler(directory, programDirectory);
         var versions = new ListBoundaryVersionsHandler(directory, consistency);
         var decisions = new ListBoundaryDecisionsHandler(directory);
@@ -72,6 +75,7 @@ public sealed class BoundaryPagedReadContractTests
     public async Task ShouldHideForeignProgramGivenBoundaryList()
     {
         // Arrange
+        await using var native = new BoundaryProjectionScenario();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var handler = new ListProgramBoundariesHandler(new BoundaryDirectory(),
@@ -158,10 +162,4 @@ public sealed class BoundaryPagedReadContractTests
             CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
     }
 
-    sealed class AggregateReader(Aggregate source) : IAggregateReader
-    {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult((TAggregate)source);
-    }
 }

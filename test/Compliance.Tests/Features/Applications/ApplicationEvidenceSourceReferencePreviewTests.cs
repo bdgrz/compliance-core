@@ -23,7 +23,7 @@ public sealed class ApplicationEvidenceSourceReferencePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, applicationId);
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(kv));
         var events = new InMemoryEventStore();
         var controls = new StubControlReferenceDirectory(applicationId,
             ControlReference(tenantId, programId, applicationId, controlId));
@@ -58,7 +58,7 @@ public sealed class ApplicationEvidenceSourceReferencePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, applicationId);
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(kv));
         var events = new InMemoryEventStore();
         var controls = new StubControlReferenceDirectory(applicationId,
             ControlReference(tenantId, programId, applicationId, controlId));
@@ -90,7 +90,7 @@ public sealed class ApplicationEvidenceSourceReferencePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, applicationId);
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv, new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(kv));
         var events = new InMemoryEventStore();
         var controls = new StubControlReferenceDirectory(applicationId,
             ControlReference(tenantId, programId, applicationId, controlId));
@@ -122,7 +122,7 @@ public sealed class ApplicationEvidenceSourceReferencePreviewTests
         var sourceReader = new SourceReader(source);
         var applications = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectApplicationAsync(applications, tenantId, applicationId);
-        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient(), new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(new InMemoryKvClient()));
         var events = new InMemoryEventStore();
         var controls = new StubControlReferenceDirectory(applicationId,
             ControlReference(tenantId, programId, applicationId, controlId));

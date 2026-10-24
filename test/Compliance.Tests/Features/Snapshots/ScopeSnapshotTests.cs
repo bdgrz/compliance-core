@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -272,10 +273,11 @@ public sealed class ScopeSnapshotTests
     public async Task ShouldRejectNinthAmendmentBeforeAppendGivenBoundedLineage()
     {
         // Arrange
+        await using var native = new BoundaryProjectionScenario();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
-        var boundaryVersionId = Uuid.CreateVersion4();
+        var boundaryVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var actorId = Uuid.CreateVersion4();
         var reviewerId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
@@ -284,7 +286,7 @@ public sealed class ScopeSnapshotTests
         Assert.Null(program.Create("SOC 2", plan, actorId, "Lead", now));
         var programRevision = new ProgramRevisionView(programId, 1, "SOC 2", plan,
             actorId, "Lead", now);
-        var boundary = new SystemBoundary(tenantId, boundaryId);
+        var boundary = new BoundaryRules(tenantId, boundaryId);
         var content = new BoundaryContent("Scope", "readiness", ["security"], []);
         Assert.True(boundary.Create(programId, boundaryVersionId, content, actorId, "Lead", now)
             .IsSuccess);
@@ -293,6 +295,7 @@ public sealed class ScopeSnapshotTests
             reviewerId, "Reviewer", now));
         Assert.Null(boundary.Approve(boundaryVersionId, 1, Uuid.CreateVersion4(), decisionId,
             new DateOnly(2027, 1, 1), "Approved", "impact", reviewerId, "Reviewer", now));
+        await native.PublishAsync(boundary);
         var boundaryVersion = new BoundaryVersionView(tenantId, boundaryId, programId,
             boundaryVersionId, 1, content, "approved", new DateOnly(2027, 1, 1), actorId,
             "Lead", now);
@@ -305,7 +308,7 @@ public sealed class ScopeSnapshotTests
         var predecessor = snapshots[^1];
         var freezer = new ScopeSnapshotFreezer(new ProgramRevisionReader(programRevision),
             new LaggingBoundaryDirectory(boundaryVersion),
-            new SnapshotCreationSourcesReader(program, boundary, snapshots), null!,
+            new SnapshotCreationSourcesReader(program, snapshots), native.Boundaries, null!,
             TimeProvider.System);
         var request = new AmendProgramScopeSnapshot(tenantId, predecessor.Id, programId, 1,
             boundaryId, boundaryVersionId, "Correction 9");
@@ -371,18 +374,19 @@ public sealed class ScopeSnapshotTests
     public async Task ShouldReportLagGivenHistoricalApprovalBeforeProjectedVersion(bool projectedDraft)
     {
         // Arrange
+        await using var native = new BoundaryProjectionScenario();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
-        var firstVersionId = Uuid.CreateVersion4();
-        var secondVersionId = Uuid.CreateVersion4();
+        var firstVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
+        var secondVersionId = native.NewSuccessorVersion();
         var authorId = Uuid.CreateVersion4();
         var reviewerId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var plan = new ProgramPlan(null, null, null, null, null, null);
         var program = new ComplianceProgram(tenantId, programId);
         Assert.Null(program.Create("SOC 2", plan, authorId, "Lead", now));
-        var boundary = new SystemBoundary(tenantId, boundaryId);
+        var boundary = new BoundaryRules(tenantId, boundaryId);
         var content = new BoundaryContent("Scope", "readiness", ["security"], []);
         Assert.True(boundary.Create(programId, firstVersionId, content,
             authorId, "Lead", now).IsSuccess);
@@ -392,12 +396,13 @@ public sealed class ScopeSnapshotTests
         Assert.Null(boundary.Approve(firstVersionId, 1, Uuid.CreateVersion4(), firstDecisionId,
             new DateOnly(2027, 1, 1), "Approved", "impact-1", reviewerId, "Reviewer", now));
         Assert.Null(boundary.ProposeSuccessor(firstVersionId, secondVersionId, content,
-            authorId, "Lead", now));
+            authorId, "Lead", now, commandId: native.SuccessorCommand(secondVersionId)));
         var secondDecisionId = Uuid.CreateVersion4();
         Assert.Null(boundary.Review(secondVersionId, 1, secondDecisionId, "accept", "Reviewed",
             reviewerId, "Reviewer", now));
         Assert.Null(boundary.Approve(secondVersionId, 1, Uuid.CreateVersion4(), secondDecisionId,
             new DateOnly(2027, 2, 1), "Approved", "impact-2", reviewerId, "Reviewer", now));
+        await native.PublishAsync(boundary);
         var projected = projectedDraft
             ? new BoundaryVersionView(tenantId, boundaryId, programId, firstVersionId, 1,
                 content, "draft", null, authorId, "Lead", now)
@@ -406,7 +411,7 @@ public sealed class ScopeSnapshotTests
             new ProgramRevisionReader(new ProgramRevisionView(programId, 1, "SOC 2",
                 plan, authorId, "Lead", now)),
             new LaggingBoundaryDirectory(projected),
-            new SnapshotSourcesReader(program, boundary), null!, TimeProvider.System);
+            new SnapshotSourcesReader(program), native.Boundaries, null!, TimeProvider.System);
         var request = new FreezeProgramScopeSnapshot(tenantId, programId, 1,
             boundaryId, firstVersionId);
 
@@ -467,10 +472,11 @@ public sealed class ScopeSnapshotTests
     public async Task ShouldReportExactSourceStateGivenSnapshotVerification()
     {
         // Arrange
+        await using var native = new BoundaryProjectionScenario();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
-        var versionId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var snapshotId = Uuid.CreateVersion4();
         var actorId = Uuid.CreateVersion4();
         var reviewerId = Uuid.CreateVersion4();
@@ -480,7 +486,7 @@ public sealed class ScopeSnapshotTests
         Assert.Null(program.Create("SOC 2", plan, actorId, "Lead", now));
         var programRevision = new ProgramRevisionView(programId, 1, "SOC 2", plan,
             actorId, "Lead", now);
-        var boundary = new SystemBoundary(tenantId, boundaryId);
+        var boundary = new BoundaryRules(tenantId, boundaryId);
         var content = new BoundaryContent("Scope", "readiness", ["security"], []);
         Assert.True(boundary.Create(programId, versionId, content, actorId, "Lead", now).IsSuccess);
         var decisionId = Uuid.CreateVersion4();
@@ -488,6 +494,7 @@ public sealed class ScopeSnapshotTests
             reviewerId, "Reviewer", now));
         Assert.Null(boundary.Approve(versionId, 1, Uuid.CreateVersion4(), decisionId,
             new DateOnly(2027, 1, 1), "Approved", "impact", reviewerId, "Reviewer", now));
+        await native.PublishAsync(boundary);
         var boundaryVersion = new BoundaryVersionView(tenantId, boundaryId, programId,
             versionId, 1, content, "approved", new DateOnly(2027, 1, 1), actorId,
             "Lead", now);
@@ -503,18 +510,20 @@ public sealed class ScopeSnapshotTests
 
         async Task<ProgramScopeSnapshotVerification> VerifyAsync(SnapshotView? projectedSnapshot,
             ProgramRevisionView? projectedProgram, BoundaryVersionView? projectedBoundary,
-            ComplianceProgram? programSource = null, SystemBoundary? boundarySource = null)
+            ComplianceProgram? programSource = null, BoundaryReader? boundarySource = null)
         {
             var handler = new VerifyProgramScopeSnapshotHandler(
                 new SnapshotDirectoryStub(projectedSnapshot),
                 new OptionalProgramRevisionReader(projectedProgram),
                 new LaggingBoundaryDirectory(projectedBoundary),
-                new VerificationSourcesReader(snapshot, programSource ?? program,
-                    boundarySource ?? boundary));
+                new VerificationSourcesReader(snapshot, programSource ?? program),
+                boundarySource ?? native.Boundaries);
             var result = await handler.HandleAsync(
                 Context(new VerifyProgramScopeSnapshot(tenantId, snapshotId)), CancellationToken.None);
             return Assert.IsType<ProgramScopeSnapshotVerification>(result.Value);
         }
+
+        await using var missingNative = new BoundaryProjectionScenario();
 
         // Act
         var verified = await VerifyAsync(view, programRevision, boundaryVersion);
@@ -534,7 +543,7 @@ public sealed class ScopeSnapshotTests
             boundaryVersion with { Status = "draft" });
         var missing = await VerifyAsync(view, programRevision, boundaryVersion,
             new ComplianceProgram(tenantId, programId),
-            new SystemBoundary(tenantId, boundaryId));
+            missingNative.Boundaries);
         var inconsistent = await VerifyAsync(view,
             programRevision with { ProgramId = Uuid.CreateVersion4() },
             boundaryVersion with { TenantId = Uuid.CreateVersion4() });
@@ -576,6 +585,7 @@ public sealed class ScopeSnapshotTests
     public async Task ShouldReportDigestMismatchGivenCorruptSnapshotSourceAndProjectionLag()
     {
         // Arrange
+        await using var native = new BoundaryProjectionScenario();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var snapshotId = Uuid.CreateVersion4();
@@ -590,8 +600,7 @@ public sealed class ScopeSnapshotTests
             new SnapshotDirectoryStub(null), new OptionalProgramRevisionReader(null),
             new LaggingBoundaryDirectory(null),
             new VerificationSourcesReader(source,
-                new ComplianceProgram(tenantId, programId),
-                new SystemBoundary(tenantId, manifest.BoundaryId)));
+                new ComplianceProgram(tenantId, programId)), native.Boundaries);
 
         // Act
         var result = await handler.HandleAsync(
@@ -663,16 +672,16 @@ public sealed class ScopeSnapshotTests
         }
     }
 
-    sealed class SnapshotSourcesReader(ComplianceProgram program, SystemBoundary boundary)
+    sealed class SnapshotSourcesReader(ComplianceProgram program)
         : IAggregateReader
     {
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
             CancellationToken ct = default) where TAggregate : Aggregate =>
             ValueTask.FromResult((TAggregate)(Aggregate)(aggregate is ComplianceProgram
-                ? program : boundary));
+                ? program : aggregate));
     }
 
-    sealed class SnapshotCreationSourcesReader(ComplianceProgram program, SystemBoundary boundary,
+    sealed class SnapshotCreationSourcesReader(ComplianceProgram program,
         IEnumerable<ImmutableSnapshot> snapshots) : IAggregateReader
     {
         readonly Dictionary<Uuid, ImmutableSnapshot> _snapshots = snapshots.ToDictionary(
@@ -685,7 +694,6 @@ public sealed class ScopeSnapshotTests
                 ImmutableSnapshot snapshot when _snapshots.TryGetValue(snapshot.Id,
                     out var retained) => ValueTask.FromResult((TAggregate)(Aggregate)retained),
                 ComplianceProgram => ValueTask.FromResult((TAggregate)(Aggregate)program),
-                SystemBoundary => ValueTask.FromResult((TAggregate)(Aggregate)boundary),
                 _ => ValueTask.FromResult(aggregate),
             };
     }
@@ -725,8 +733,7 @@ public sealed class ScopeSnapshotTests
             CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
     }
 
-    sealed class VerificationSourcesReader(ImmutableSnapshot snapshot, ComplianceProgram program,
-        SystemBoundary boundary) : IAggregateReader
+    sealed class VerificationSourcesReader(ImmutableSnapshot snapshot, ComplianceProgram program) : IAggregateReader
     {
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
             CancellationToken ct = default) where TAggregate : Aggregate =>
@@ -734,7 +741,6 @@ public sealed class ScopeSnapshotTests
             {
                 ImmutableSnapshot => snapshot,
                 ComplianceProgram => program,
-                SystemBoundary => boundary,
                 _ => throw new NotSupportedException(),
             }));
     }

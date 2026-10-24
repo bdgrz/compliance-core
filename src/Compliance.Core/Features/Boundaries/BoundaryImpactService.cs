@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Cntryl.Portia;
@@ -5,7 +6,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Boundaries;
 
 public sealed class BoundaryImpactService(
-    IBoundaryDirectoryReader directory,
+    IBoundaryDirectoryReader directory, BoundaryReader sources,
     IEnumerable<IBoundaryImpactContributor> contributors)
 {
     static readonly string[] ExpectedContexts =
@@ -14,59 +15,74 @@ public sealed class BoundaryImpactService(
     public async ValueTask<Result<BoundaryImpactPreview>> PreviewAsync(
         PreviewBoundaryImpact request, CancellationToken ct)
     {
-        var boundary = await directory.GetAsync(request.TenantId, request.BoundaryId, ct)
-            .ConfigureAwait(false);
-        if (boundary is null)
-            return Result<BoundaryImpactPreview>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The boundary was not found."));
-        if (boundary.Draft is null || boundary.Draft.VersionId != request.DraftVersionId ||
-            boundary.Draft.Revision != request.ExpectedRevision)
-            return Result<BoundaryImpactPreview>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The boundary draft changed or its projection has not reached the requested revision."));
-
-        var changes = Compare(boundary.LatestApprovedVersion?.Content, boundary.Draft.Content);
-        var contributions = new List<BoundaryImpactContribution>();
-        foreach (var contributor in contributors.OrderBy(static item => item.Context,
-                     StringComparer.Ordinal))
+        try
         {
-            var contributionResult = await contributor.ContributeAsync(boundary, changes, ct)
+            var discovered = await directory.GetAsync(request.TenantId, request.BoundaryId, ct)
                 .ConfigureAwait(false);
-            if (!contributionResult.IsSuccess)
-                return Result<BoundaryImpactPreview>.Failure(contributionResult.Error);
-            var contribution = contributionResult.Value;
-            if (contribution.Context != contributor.Context || contribution.Records is null ||
-                contribution.Records.Count > 200 ||
-                contribution.Records.Any(record => record.TenantId != request.TenantId ||
-                                                   record.Context != contributor.Context || record.RecordId == Uuid.Empty))
-                throw new InvalidOperationException(
-                    "A boundary impact contributor returned an invalid or unbounded result.");
-            contributions.Add(contribution with
+            if (discovered is null)
+                return Result<BoundaryImpactPreview>.Failure(new RequestError(RequestErrorKind.NotFound,
+                    "The boundary was not found."));
+            if (discovered.Draft is null || discovered.Draft.VersionId != request.DraftVersionId ||
+                discovered.Draft.Revision != request.ExpectedRevision)
+                return Result<BoundaryImpactPreview>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The boundary draft changed or its projection has not reached the requested revision."));
+
+            var source = await sources.ReadAsync(request.TenantId, request.BoundaryId, ct).ConfigureAwait(false);
+            var boundary = source.ToView();
+            if (boundary?.Draft is null || boundary.Draft.VersionId != request.DraftVersionId ||
+                boundary.Draft.Revision != request.ExpectedRevision || boundary.ProgramId != discovered.ProgramId ||
+                boundary.Revision != discovered.Revision)
+                return Result<BoundaryImpactPreview>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The boundary draft changed or its projection has not reached the requested revision."));
+
+            var changes = Compare(boundary.LatestApprovedVersion?.Content, boundary.Draft.Content);
+            var contributions = new List<BoundaryImpactContribution>();
+            foreach (var contributor in contributors.OrderBy(static item => item.Context,
+                         StringComparer.Ordinal))
             {
-                Records = [.. contribution.Records
-                    .OrderBy(static record => record.RecordType, StringComparer.Ordinal)
-                    .ThenBy(static record => record.RecordId.ToString(), StringComparer.Ordinal)],
+                var contributionResult = await contributor.ContributeAsync(boundary, changes, ct)
+                    .ConfigureAwait(false);
+                if (!contributionResult.IsSuccess)
+                    return Result<BoundaryImpactPreview>.Failure(contributionResult.Error);
+                var contribution = contributionResult.Value;
+                if (contribution.Context != contributor.Context || contribution.Records is null ||
+                    contribution.Records.Count > 200 ||
+                    contribution.Records.Any(record => record.TenantId != request.TenantId ||
+                                                       record.Context != contributor.Context || record.RecordId == Uuid.Empty))
+                    throw new InvalidOperationException(
+                        "A boundary impact contributor returned an invalid or unbounded result.");
+                contributions.Add(contribution with
+                {
+                    Records = [.. contribution.Records
+                        .OrderBy(static record => record.RecordType, StringComparer.Ordinal)
+                        .ThenBy(static record => record.RecordId.ToString(), StringComparer.Ordinal)],
+                });
+            }
+            if (contributions.Select(static item => item.Context).Distinct(StringComparer.Ordinal).Count() !=
+                contributions.Count)
+                throw new InvalidOperationException("Boundary impact contexts must be unique.");
+            var contributed = contributions.Select(static item => item.Context)
+                .ToHashSet(StringComparer.Ordinal);
+            var pending = boundary.LatestApprovedVersion is null
+                ? Array.Empty<string>()
+                : ExpectedContexts.Where(contextName => !contributed.Contains(contextName) ||
+                                                        contributions.Any(item => item.Context == contextName && !item.Complete)).ToArray();
+            var complete = pending.Length == 0 && contributions.All(static item => item.Complete);
+            var preview = new BoundaryImpactPreview(request.TenantId,
+                request.BoundaryId, request.DraftVersionId, request.ExpectedRevision,
+                boundary.LatestApprovedVersion?.VersionId, changes, contributions,
+                pending, complete, string.Empty);
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(preview,
+                ComplianceCoreJsonContext.Default.BoundaryImpactPreview);
+            return Result<BoundaryImpactPreview>.Success(preview with
+            {
+                Digest = Convert.ToHexString(SHA256.HashData(bytes)),
             });
         }
-        if (contributions.Select(static item => item.Context).Distinct(StringComparer.Ordinal).Count() !=
-            contributions.Count)
-            throw new InvalidOperationException("Boundary impact contexts must be unique.");
-        var contributed = contributions.Select(static item => item.Context)
-            .ToHashSet(StringComparer.Ordinal);
-        var pending = boundary.LatestApprovedVersion is null
-            ? Array.Empty<string>()
-            : ExpectedContexts.Where(contextName => !contributed.Contains(contextName) ||
-                                                    contributions.Any(item => item.Context == contextName && !item.Complete)).ToArray();
-        var complete = pending.Length == 0 && contributions.All(static item => item.Complete);
-        var preview = new BoundaryImpactPreview(request.TenantId,
-            request.BoundaryId, request.DraftVersionId, request.ExpectedRevision,
-            boundary.LatestApprovedVersion?.VersionId, changes, contributions,
-            pending, complete, string.Empty);
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(preview,
-            ComplianceCoreJsonContext.Default.BoundaryImpactPreview);
-        return Result<BoundaryImpactPreview>.Success(preview with
+        catch (ImmutableContentIntegrityException failure)
         {
-            Digest = Convert.ToHexString(SHA256.HashData(bytes)),
-        });
+            return Result<BoundaryImpactPreview>.Failure(BoundaryReadFailure.Of(failure));
+        }
     }
 
     static List<BoundaryChange> Compare(BoundaryContent? previous,

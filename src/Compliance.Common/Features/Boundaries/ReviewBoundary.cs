@@ -4,6 +4,9 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Boundaries;
 
 [Discriminator("bdgrz.boundary.review", 1)]
-public sealed record ReviewBoundary(Uuid TenantId, Uuid BoundaryId, Uuid DraftVersionId,
+public sealed record ReviewBoundary(Uuid CommandId, Uuid TenantId, Uuid BoundaryId, Uuid DraftVersionId,
     long ExpectedRevision, string Outcome, string Rationale, Uuid? SeparationOfDutiesWaiverId = null)
-    : IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

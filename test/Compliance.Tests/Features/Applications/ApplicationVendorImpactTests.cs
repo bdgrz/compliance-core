@@ -252,7 +252,7 @@ public sealed class ApplicationVendorImpactTests
                 tenantId, applicationId, "Payroll", "Payroll processing", null, actorId,
                 "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
             return new Scenario(tenantId, applicationId, reader, applications,
-                new FitzApplicationBoundaryReferenceDirectory(kv),
+                new FitzApplicationBoundaryReferenceDirectory(kv, new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(kv)),
                 new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content),
                 new InMemoryEventStore());
         }

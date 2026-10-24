@@ -1,36 +1,26 @@
-using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Boundaries;
 
-public sealed class CreateBoundaryHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IBoundaryReferenceValidator references,
-    TimeProvider clock)
+public sealed class CreateBoundaryHandler(BoundaryOperations operations, IBoundaryReferenceValidator references)
     : IRequestHandler<CreateBoundary, BoundaryRegistration>
 {
-    public async ValueTask<Result<BoundaryRegistration>> HandleAsync(
-        IRequestContext<CreateBoundary> context, CancellationToken ct)
+    public ValueTask<Result<BoundaryRegistration>> HandleAsync(IRequestContext<CreateBoundary> context, CancellationToken ct)
     {
         var request = context.Request;
-        var program = await reader.HydrateAsync(new ComplianceProgram(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
-        if (!program.IsCreated)
-            return Result<BoundaryRegistration>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The program was not found."));
-        var validation = await references.ValidateAsync(request.TenantId, request.ProgramId,
-                request.Content, ct)
-            .ConfigureAwait(false);
-        if (!validation.IsSuccess)
-            return Result<BoundaryRegistration>.Failure(validation.Error);
-        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
-            ? subject
-            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
-        var boundaryId = context.RequestId;
-        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
-        return await executor.ExecuteAsync(new SystemBoundary(request.TenantId, boundaryId),
-            boundary => AggregateOutcome.CommitOnSuccess(boundary.Create(request.ProgramId,
-                draftVersionId, request.Content, RbacIds.Member(request.TenantId, userId),
-                UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow())),
-            context, ct).ConfigureAwait(false);
+        return operations.ExecuteAsync<CreateBoundary, BoundaryRegistration>(context, request.TenantId, request.ProgramId,
+            request.BoundaryId, request.BoundaryId, nameof(CreateBoundary), null,
+            async (snapshot, actor, at, token) =>
+            {
+                var program = await operations.Sources.HydrateAsync(new ComplianceProgram(request.TenantId, request.ProgramId), token).ConfigureAwait(false);
+                return !program.IsCreated ? Result.Failure(new RequestError(RequestErrorKind.NotFound, "The program was not found."))
+                    : await references.ValidateAsync(request.TenantId, request.ProgramId, request.Content, token).ConfigureAwait(false);
+            },
+            (rules, actor, at) =>
+            {
+                var result = rules.Create(request.ProgramId, Uuid.CreateVersion5(request.BoundaryId, "draft-1"), request.Content,
+                    actor.MemberId, actor.Display, at);
+                return result.IsSuccess ? Result.Success : Result.Failure(result.Error!);
+            }, null, null, ct);
     }
 }

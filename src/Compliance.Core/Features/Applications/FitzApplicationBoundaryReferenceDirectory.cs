@@ -1,102 +1,108 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-sealed class FitzApplicationBoundaryReferenceDirectory(IKvClient client)
+sealed class FitzApplicationBoundaryReferenceDirectory(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client,
-            "kv://bdgrz/application-boundary-references-v2/projection",
-            "ApplicationBoundaryReferencesV2"),
+            "kv://bdgrz/application-boundary-references-v3/projection",
+            "ApplicationBoundaryReferencesV3"),
         IApplicationBoundaryReferenceDirectory, IApplicationBoundaryReferenceProjection
 {
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
+        if (domainEvent is not IBoundaryFact fact)
+            throw new InvalidOperationException("A boundary reverse index requires one native source fact.");
+        var mutation = await BoundaryFactContent.ReadChangeAsync(content, fact, ct).ConfigureAwait(false);
         // Review decisions do not change a boundary version's referenced records.
-        switch (domainEvent)
-        {
-            case BoundaryDraftCreated created:
-                var initial = new BoundaryReferenceState(created.BoundaryId, created.ProgramId,
-                    created.DraftVersionId, 1, ReferenceIds(created.Content), null, []);
-                await ApplicationBoundaryReferenceSchema.States.InsertAsync(Transaction,
-                    initial, ct).ConfigureAwait(false);
-                await InsertDraftAsync(created.TenantId, initial, created.Content, ct)
-                    .ConfigureAwait(false);
-                break;
-            case BoundaryDraftRevised revised:
-                var revising = await RequireStateAsync(revised.BoundaryId, ct)
-                    .ConfigureAwait(false);
-                if (revising.DraftVersionId != revised.DraftVersionId ||
-                    revising.DraftRevision + 1 != revised.Revision)
-                    throw new InvalidOperationException("A boundary draft revision is out of order.");
-                await DeleteReferencesAsync(revising.BoundaryId, revised.DraftVersionId,
-                    revising.DraftEntryIds, ct).ConfigureAwait(false);
-                var revisedState = revising with
-                {
-                    DraftRevision = revised.Revision,
-                    DraftEntryIds = ReferenceIds(revised.Content),
-                };
-                await ApplicationBoundaryReferenceSchema.States.ReplaceAsync(Transaction,
-                    revising, revisedState, ct).ConfigureAwait(false);
-                await InsertDraftAsync(revised.TenantId, revisedState, revised.Content, ct)
-                    .ConfigureAwait(false);
-                break;
-            case BoundaryDraftDiscarded discarded:
-                var discarding = await RequireStateAsync(discarded.BoundaryId, ct)
-                    .ConfigureAwait(false);
-                if (discarding.DraftVersionId != discarded.DraftVersionId ||
-                    discarding.DraftRevision != discarded.Revision)
-                    throw new InvalidOperationException("A boundary draft discard is out of order.");
-                await DeleteReferencesAsync(discarding.BoundaryId, discarded.DraftVersionId,
-                    discarding.DraftEntryIds, ct).ConfigureAwait(false);
-                await ApplicationBoundaryReferenceSchema.States.ReplaceAsync(Transaction,
-                    discarding, discarding with
-                    {
-                        DraftVersionId = null,
-                        DraftRevision = 0,
-                        DraftEntryIds = [],
-                    }, ct).ConfigureAwait(false);
-                break;
-            case BoundaryApproved approved:
-                var approving = await RequireStateAsync(approved.BoundaryId, ct)
-                    .ConfigureAwait(false);
-                if (approving.DraftVersionId != approved.DraftVersionId ||
-                    approving.DraftRevision != approved.Revision)
-                    throw new InvalidOperationException("A boundary approval is out of order.");
-                if (approving.ApprovedVersionId is { } previousVersion)
-                    await ChangeStatusAsync(approving.BoundaryId, previousVersion,
-                            approving.ApprovedEntryIds, "historical", null, ct)
+        foreach (var change in mutation.Changes)
+            switch (change)
+            {
+                case BoundaryDraftCreatedContent created:
+                    var initial = new BoundaryReferenceState(created.BoundaryId, created.ProgramId,
+                        created.DraftVersionId, 1, ReferenceIds(created.Content), null, []);
+                    await ApplicationBoundaryReferenceSchema.States.InsertAsync(Transaction,
+                        initial, ct).ConfigureAwait(false);
+                    await InsertDraftAsync(created.TenantId, initial, created.Content, ct)
                         .ConfigureAwait(false);
-                await ChangeStatusAsync(approving.BoundaryId, approved.DraftVersionId,
-                        approving.DraftEntryIds, "approved", approved.EffectiveFrom, ct)
-                    .ConfigureAwait(false);
-                await ApplicationBoundaryReferenceSchema.States.ReplaceAsync(Transaction,
-                    approving, approving with
+                    break;
+                case BoundaryDraftRevisedContent revised:
+                    var revising = await RequireStateAsync(revised.BoundaryId, ct)
+                        .ConfigureAwait(false);
+                    if (revising.DraftVersionId != revised.DraftVersionId ||
+                        revising.DraftRevision + 1 != revised.Revision)
+                        throw new InvalidOperationException("A boundary draft revision is out of order.");
+                    await DeleteReferencesAsync(revising.BoundaryId, revised.DraftVersionId,
+                        revising.DraftEntryIds, ct).ConfigureAwait(false);
+                    var revisedState = revising with
                     {
-                        DraftVersionId = null,
-                        DraftRevision = 0,
-                        DraftEntryIds = [],
-                        ApprovedVersionId = approved.DraftVersionId,
-                        ApprovedEntryIds = approving.DraftEntryIds,
-                    }, ct).ConfigureAwait(false);
-                break;
-            case BoundarySuccessorProposed proposed:
-                var predecessor = await RequireStateAsync(proposed.BoundaryId, ct)
-                    .ConfigureAwait(false);
-                if (predecessor.ApprovedVersionId != proposed.PredecessorVersionId ||
-                    predecessor.DraftVersionId is not null)
-                    throw new InvalidOperationException("A boundary successor is out of order.");
-                var successor = predecessor with
-                {
-                    DraftVersionId = proposed.DraftVersionId,
-                    DraftRevision = 1,
-                    DraftEntryIds = ReferenceIds(proposed.Content),
-                };
-                await ApplicationBoundaryReferenceSchema.States.ReplaceAsync(Transaction,
-                    predecessor, successor, ct).ConfigureAwait(false);
-                await InsertDraftAsync(proposed.TenantId, successor, proposed.Content, ct)
-                    .ConfigureAwait(false);
-                break;
-        }
+                        DraftRevision = revised.Revision,
+                        DraftEntryIds = ReferenceIds(revised.Content),
+                    };
+                    await ApplicationBoundaryReferenceSchema.States.ReplaceAsync(Transaction,
+                        revising, revisedState, ct).ConfigureAwait(false);
+                    await InsertDraftAsync(revised.TenantId, revisedState, revised.Content, ct)
+                        .ConfigureAwait(false);
+                    break;
+                case BoundaryDraftDiscardedContent discarded:
+                    var discarding = await RequireStateAsync(discarded.BoundaryId, ct)
+                        .ConfigureAwait(false);
+                    if (discarding.DraftVersionId != discarded.DraftVersionId ||
+                        discarding.DraftRevision != discarded.Revision)
+                        throw new InvalidOperationException("A boundary draft discard is out of order.");
+                    await DeleteReferencesAsync(discarding.BoundaryId, discarded.DraftVersionId,
+                        discarding.DraftEntryIds, ct).ConfigureAwait(false);
+                    await ApplicationBoundaryReferenceSchema.States.ReplaceAsync(Transaction,
+                        discarding, discarding with
+                        {
+                            DraftVersionId = null,
+                            DraftRevision = 0,
+                            DraftEntryIds = [],
+                        }, ct).ConfigureAwait(false);
+                    break;
+                case BoundaryApprovedContent approved:
+                    var approving = await RequireStateAsync(approved.BoundaryId, ct)
+                        .ConfigureAwait(false);
+                    if (approving.DraftVersionId != approved.DraftVersionId ||
+                        approving.DraftRevision != approved.Revision)
+                        throw new InvalidOperationException("A boundary approval is out of order.");
+                    if (approving.ApprovedVersionId is { } previousVersion)
+                        await ChangeStatusAsync(approving.BoundaryId, previousVersion,
+                                approving.ApprovedEntryIds, "historical", null, ct)
+                            .ConfigureAwait(false);
+                    await ChangeStatusAsync(approving.BoundaryId, approved.DraftVersionId,
+                            approving.DraftEntryIds, "approved", approved.EffectiveFrom, ct)
+                        .ConfigureAwait(false);
+                    await ApplicationBoundaryReferenceSchema.States.ReplaceAsync(Transaction,
+                        approving, approving with
+                        {
+                            DraftVersionId = null,
+                            DraftRevision = 0,
+                            DraftEntryIds = [],
+                            ApprovedVersionId = approved.DraftVersionId,
+                            ApprovedEntryIds = approving.DraftEntryIds,
+                        }, ct).ConfigureAwait(false);
+                    break;
+                case BoundarySuccessorProposedContent proposed:
+                    var predecessor = await RequireStateAsync(proposed.BoundaryId, ct)
+                        .ConfigureAwait(false);
+                    if (predecessor.ApprovedVersionId != proposed.PredecessorVersionId ||
+                        predecessor.DraftVersionId is not null)
+                        throw new InvalidOperationException("A boundary successor is out of order.");
+                    var successor = predecessor with
+                    {
+                        DraftVersionId = proposed.DraftVersionId,
+                        DraftRevision = 1,
+                        DraftEntryIds = ReferenceIds(proposed.Content),
+                    };
+                    await ApplicationBoundaryReferenceSchema.States.ReplaceAsync(Transaction,
+                        predecessor, successor, ct).ConfigureAwait(false);
+                    await InsertDraftAsync(proposed.TenantId, successor, proposed.Content, ct)
+                        .ConfigureAwait(false);
+                    break;
+            }
     }
 
     static Uuid[] ReferenceIds(BoundaryContent content) =>
@@ -165,6 +171,6 @@ sealed class FitzApplicationBoundaryReferenceDirectory(IKvClient client)
 
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
         CancellationToken ct = default) =>
-        base.LoadCheckpointAsync(new CheckpointIdentity("ApplicationBoundaryReferencesV2",
+        base.LoadCheckpointAsync(new CheckpointIdentity("ApplicationBoundaryReferencesV3",
             EventStreamPattern.ForPattern(tenantId.ToString(), "boundaries")), ct);
 }

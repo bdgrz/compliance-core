@@ -6,12 +6,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
 
-sealed class FitzBoundaryDecisionWorkItemDirectory(IKvClient client, IAggregateReader sourceReader)
+sealed class FitzBoundaryDecisionWorkItemDirectory(IKvClient client, BoundaryReader sources)
     : FitzKvProjectionStore(client,
-        "kv://bdgrz/accountable-work-items/boundary-decisions-v1", ProjectorName),
+        "kv://bdgrz/accountable-work-items/boundary-decisions-v2", ProjectorName),
       IAccountableWorkItemDirectoryReader, IBoundaryDecisionWorkItemProjection
 {
-    public const string ProjectorName = "AccountableWorkItemBoundaryDecisionV1";
+    public const string ProjectorName = "AccountableWorkItemBoundaryDecisionV2";
     const string RevisionKey = ProjectorName;
 
     string IAccountableWorkItemDirectoryReader.ProjectorName => ProjectorName;
@@ -35,6 +35,8 @@ sealed class FitzBoundaryDecisionWorkItemDirectory(IKvClient client, IAggregateR
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
+        if (domainEvent is IBoundaryFact { ChangeCount: 0 })
+            return;
         var (tenantId, boundaryId) = ScopeFor(domainEvent);
         if (tenantId == Uuid.Empty || boundaryId == Uuid.Empty)
             throw new InvalidOperationException(
@@ -47,7 +49,7 @@ sealed class FitzBoundaryDecisionWorkItemDirectory(IKvClient client, IAggregateR
             throw new InvalidOperationException(
                 "A boundary work event cannot replace state outside its recorded scope.");
 
-        var boundary = await sourceReader.HydrateAsync(new SystemBoundary(tenantId, boundaryId), ct)
+        var boundary = await sources.ReadAsync(tenantId, boundaryId, ct)
             .ConfigureAwait(false);
         if (!boundary.IsCreated || boundary.ProgramId == Uuid.Empty || boundary.Revision < 1)
             throw new InvalidOperationException(

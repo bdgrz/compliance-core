@@ -1,443 +1,393 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Text.Json;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Responsibilities;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Boundaries;
 
+/// <summary>Compact current boundary authority. Historical content and responsibility scopes are verified outside the owner.</summary>
 public sealed class SystemBoundary : Aggregate
 {
+    public const string Area = "boundaries";
     readonly Uuid _tenantId;
-    bool _created;
-    Uuid _programId;
-    Uuid _initialDraftVersionId;
-    BoundaryContent? _initialContent;
-    Uuid _draftVersionId;
-    long _draftRevision;
-    BoundaryContent? _draftContent;
-    Uuid _draftAuthorMemberId;
-    bool _draftEverReviewed;
-    Uuid _acceptedReviewDecisionId;
-    string? _latestReviewOutcome;
-    Uuid _latestApprovedVersionId;
-    readonly Dictionary<Uuid, (long Revision, Uuid DecisionId)> _approvedVersions = [];
-    readonly Dictionary<ResponsibilityScope, ResponsibilitySet> _responsibilitySets = [];
-    readonly Dictionary<ResponsibilityScope, List<ResponsibilityDecisionFact>> _responsibilityDecisions = [];
-    DateOnly? _latestApprovedEffectiveFrom;
-    DateTimeOffset? _draftChangedAt;
-    long _revision;
-
-    public bool IsCreated => _created;
-    public bool IsVisible => _draftContent is not null || _latestApprovedVersionId != Uuid.Empty;
-    public Uuid ProgramId => _programId;
-    public long Revision => _revision;
-    public Uuid DraftVersionId => _draftVersionId;
-    public long DraftRevision => _draftRevision;
-    public Uuid DraftAuthorMemberId => _draftAuthorMemberId;
-    public DateTimeOffset? DraftChangedAt => _draftChangedAt;
-    public string? LatestReviewOutcome => _latestReviewOutcome;
-    public Uuid LatestApprovedVersionId => _latestApprovedVersionId;
-    public bool IsVersionApproved(Uuid versionId) => _approvedVersions.ContainsKey(versionId);
-
-    public bool IsVersionApproved(Uuid versionId, long revision, Uuid decisionId) =>
-        _approvedVersions.TryGetValue(versionId, out var approval) &&
-        approval.Revision == revision && approval.DecisionId == decisionId;
-
-    /// <summary>The initial approved version; any later approval changes the boundary.</summary>
-    public Uuid FirstApprovedVersionId { get; private set; }
-
-    public SystemBoundary(Uuid tenantId, Uuid boundaryId)
-        : base(boundaryId, new EventStreamAddress(tenantId.ToString(), "boundaries", boundaryId.ToString()))
+    BoundaryAuthorityHeader? _header;
+    public SystemBoundary(Uuid tenantId, Uuid boundaryId, Uuid selectedCommandId = default)
+        : base(boundaryId, new EventStreamAddress(tenantId.ToString(), Area, boundaryId.ToString()))
     {
         _tenantId = tenantId;
-        On<BoundaryDraftCreated>(ev =>
+        Acceptance = new(selectedCommandId);
+        On<BoundaryDraftCreated>(ApplyFact);
+        On<BoundaryDraftRevised>(ApplyFact);
+        On<BoundaryReviewed>(ApplyFact);
+        On<BoundaryApproved>(ApplyFact);
+        On<BoundaryDraftDiscarded>(ApplyFact);
+        On<BoundarySuccessorProposed>(ApplyFact);
+        On<ResponsibilityAssigned>(ApplyFact);
+        On<ResponsibilityRevoked>(ApplyFact);
+    }
+    public NativeAcceptance Acceptance { get; }
+    public BoundaryAuthorityHeader? Header => _header;
+    public ImmutableContentRef? CurrentAuthority { get; private set; }
+    public long NativeSequence { get; private set; }
+    public Uuid TenantId => _tenantId;
+    public Uuid ProgramId => _header?.ProgramId ?? Uuid.Empty;
+    public long Revision => _header?.Revision ?? 0;
+    public bool IsCreated => _header?.IsCreated ?? false;
+    public bool IsVisible => _header?.IsVisible ?? false;
+    public Uuid DraftVersionId => _header?.DraftVersionId ?? Uuid.Empty;
+    public long DraftRevision => _header?.DraftRevision ?? 0;
+    public Uuid DraftAuthorMemberId => _header?.DraftAuthorMemberId ?? Uuid.Empty;
+    public DateTimeOffset? DraftChangedAt => _header?.DraftChangedAt;
+    public string? LatestReviewOutcome => _header?.LatestReviewOutcome;
+    public Uuid LatestApprovedVersionId => _header?.LatestApprovedVersionId ?? Uuid.Empty;
+    public Uuid FirstApprovedVersionId => _header?.FirstApprovedVersionId ?? Uuid.Empty;
+    public bool IsCurrentResponsibilityScope(ResponsibilityScope scope) => scope is not null && IsCreated && DraftVersionId != Uuid.Empty &&
+        scope.RecordType == "boundary" && scope.RecordId == Id && scope.VersionId == DraftVersionId && scope.Revision == DraftRevision;
+    public Result Prepare(Uuid program, bool creating)
+    {
+        if (creating)
+            return IsCreated ? Fail(RequestErrorKind.Conflict, "The boundary already exists with different content.") : Result.Success;
+        return !IsCreated || ProgramId != program ? Fail(RequestErrorKind.NotFound, "The boundary was not found.") : Result.Success;
+    }
+    public Result Append(DomainEvent value, long preparedSequence, ulong preparedPhysicalPosition,
+        BoundaryMutationContent mutation, BoundaryAuthorityContent? before, BoundaryAuthorityContent after)
+    {
+        if (NativeSequence != preparedSequence || CommittedStreamPosition != preparedPhysicalPosition)
+            return Fail(RequestErrorKind.Conflict, "The boundary changed while exact content and authority were prepared.", true);
+        if (value is not IBoundaryFact fact || fact.Header is null || mutation is null || after is null)
+            return Fail(RequestErrorKind.Validation, "A boundary mutation requires its exact native preparation.");
+        try
         {
-            _revision++;
-            _created = true;
-            _programId = ev.ProgramId;
-            _initialDraftVersionId = ev.DraftVersionId;
-            _initialContent = ev.Content;
-            _draftVersionId = ev.DraftVersionId;
-            _draftRevision = 1;
-            _draftContent = ev.Content;
-            _draftAuthorMemberId = ev.AuthorMemberId;
-            _draftEverReviewed = false;
-            _draftChangedAt = ev.ChangedAt;
-            _latestReviewOutcome = null;
-        });
-        On<BoundaryDraftRevised>(ev =>
+            Validate(value, fact);
+            Require(mutation.Changes is not null && mutation.Changes.Count == fact.ChangeCount && (mutation.Changes.Count == 0) == (mutation.Receipt is not null) &&
+                mutation.Changes.All(change => BoundaryFactContent.InScope(change, fact.Header)) &&
+                (mutation.Receipt is null || BoundaryFactContent.InScope(mutation.Receipt, fact.Header)) &&
+                Matches(fact.Change, mutation, BoundaryFactContent.ChangeSchema) && after.Header == fact.Header &&
+                Matches(fact.Authority, after, BoundaryFactContent.AuthoritySchema), "The boundary mutation has another prepared body or scope.");
+            Require(_header is null ? before is null : before is not null && before.Header == _header && CurrentAuthority is not null &&
+                Matches(CurrentAuthority, before, BoundaryFactContent.AuthoritySchema), "The boundary before authority has another physical source cut.");
+            var expectedFact = BoundaryFactFactory.Create(fact.Operation.CommandKind, fact.Header, fact.NativeSequence, fact.Operation,
+                fact.Change, fact.Authority, fact.FirstResponse!, fact.OperationResult!, mutation);
+            Require(ContentDigest.Sha256(expectedFact, expectedFact.GetType()) == ContentDigest.Sha256(value, value.GetType()),
+                "The boundary native metadata differs from its immutable original mutation.");
+            var authored = mutation.Changes.Select(change => change switch
+            {
+                BoundaryDraftCreatedContent created => created.Content,
+                BoundaryDraftRevisedContent revised => revised.Content,
+                BoundarySuccessorProposedContent proposed => proposed.Content,
+                _ => null,
+            }).OfType<BoundaryContent>().SingleOrDefault();
+            Require(authored is null || BoundaryRules.Validate(authored) is null && ContentDigest.OfJson(authored) == fact.Header.Content.Sha256,
+                "The boundary authored content differs from its exact immutable reference.");
+            ValidateLocal(value, mutation, before);
+            Require(ContentDigest.OfJson(after) == ContentDigest.OfJson(ExpectedAuthority(value, fact.Header, before)),
+                "The boundary prepared current authority differs from its exact local transition.");
+            Require(DomainEventPayload.Size(value) <= DomainEventPayload.MaximumBytes, "The native boundary scalar envelope exceeds its frame budget.");
+        }
+        catch (InvalidOperationException)
         {
-            _revision++;
-            _draftRevision = ev.Revision;
-            _draftContent = ev.Content;
-            _draftAuthorMemberId = ev.AuthorMemberId;
-            _acceptedReviewDecisionId = Uuid.Empty;
-            _draftChangedAt = ev.ChangedAt;
-            _latestReviewOutcome = null;
-        });
-        On<BoundaryReviewed>(ev =>
+            return Fail(RequestErrorKind.Validation, "The native boundary mutation has an invalid local authority binding.");
+        }
+        RaiseEvent(value);
+        return Result.Success;
+    }
+    void ApplyFact(DomainEvent value)
+    {
+        var fact = (IBoundaryFact)value;
+        try
         {
-            _revision++;
-            _acceptedReviewDecisionId = ev.Outcome == "accept" ? ev.DecisionId : Uuid.Empty;
-            _latestReviewOutcome = ev.Outcome;
-            _draftEverReviewed = true;
-            RecordResponsibilityDecision(new ResponsibilityScope("boundary", Id,
-                    ev.DraftVersionId, ev.Revision), ev.ActorMemberId,
-                ResponsibilityType.AssignedReviewer, ev.DecidedAt,
-                ev.SeparationOfDutiesWaiverId);
-        });
-        On<BoundaryDraftDiscarded>(_ =>
+            Validate(value, fact);
+        }
+        catch (InvalidOperationException)
         {
-            _revision++;
-            _draftVersionId = Uuid.Empty;
-            _draftContent = null;
-            _acceptedReviewDecisionId = Uuid.Empty;
-            _latestReviewOutcome = null;
-            _draftChangedAt = null;
-        });
-        On<BoundaryApproved>(ev =>
+            throw new ImmutableContentIntegrityException("The stored native boundary envelope has an invalid authority binding.");
+        }
+        _header = fact.Header;
+        CurrentAuthority = fact.Authority;
+        NativeSequence = fact.NativeSequence;
+        Acceptance.Observe(value);
+    }
+    void Validate(DomainEvent value, IBoundaryFact fact)
+    {
+        Require(fact.Operation is not null && fact.Operation.Actor is not null && fact.Header is not null,
+            "A boundary native fact requires its original operation and compact header.");
+        var operation = fact.Operation;
+        var header = fact.Header;
+        OwnerProvenance.RequireOwn(this, operation.LogicalId, operation);
+        Require(TenantId != Uuid.Empty && Id != Uuid.Empty && fact.TenantId == TenantId && header.TenantId == TenantId && header.BoundaryId == Id &&
+            header.ProgramId != Uuid.Empty && fact.NativeSequence == NativeSequence + 1 && header.IsCreated && header.Revision > 0 &&
+            operation.RootOperationId == operation.LogicalId && operation.CausationEventId is null && operation.Episode == Id.ToString() &&
+            operation.AffectedOwner == Stream && operation.ExpectedRevisionOwner == Stream && (operation.FirstOwner is null || operation.FirstOwner == Stream) &&
+            operation.Actor.Kind == "member" && Uuid.TryParse(operation.Actor.Id, out var member) && member != Uuid.Empty && Hex(operation.AuthoredIntentSha256) &&
+            Reference(header.Content, BoundaryFactContent.ContentSchema) && Reference(fact.Change, BoundaryFactContent.ChangeSchema) &&
+            Reference(fact.Authority, BoundaryFactContent.AuthoritySchema) && Reference(fact.FirstResponse, FirstResponses.Schema) &&
+            Reference(fact.OperationResult, "mutation-result-content.v1"), "A boundary native fact has another owner or operation binding.");
+        var actor = Uuid.Parse(operation.Actor.Id, CultureInfo.InvariantCulture);
+        var metadata = value switch
         {
-            _revision++;
-            RecordResponsibilityDecision(new ResponsibilityScope("boundary", Id,
-                    ev.DraftVersionId, ev.Revision), ev.ActorMemberId,
-                ResponsibilityType.PolicyApprover, ev.DecidedAt,
-                ev.SeparationOfDutiesWaiverId);
-            if (_approvedVersions.Count == 0)
-                FirstApprovedVersionId = ev.DraftVersionId;
-            _approvedVersions.Add(ev.DraftVersionId, (ev.Revision, ev.ApprovalDecisionId));
-            _latestApprovedVersionId = ev.DraftVersionId;
-            _latestApprovedEffectiveFrom = ev.EffectiveFrom;
-            _draftVersionId = Uuid.Empty;
-            _draftContent = null;
-            _acceptedReviewDecisionId = Uuid.Empty;
-            _latestReviewOutcome = null;
-            _draftChangedAt = null;
-        });
-        On<BoundarySuccessorProposed>(ev =>
+            BoundaryDraftCreated item => (item.AuthorMemberId, item.AuthorDisplay, item.ChangedAt),
+            BoundaryDraftRevised item => (item.AuthorMemberId, item.AuthorDisplay, item.ChangedAt),
+            BoundarySuccessorProposed item => (item.AuthorMemberId, item.AuthorDisplay, item.ChangedAt),
+            BoundaryReviewed item => (item.ActorMemberId, item.ActorDisplay, item.DecidedAt),
+            BoundaryApproved item => (item.ActorMemberId, item.ActorDisplay, item.DecidedAt),
+            BoundaryDraftDiscarded item => (item.ActorMemberId, item.ActorDisplay, item.DiscardedAt),
+            ResponsibilityAssigned item => (item.AssignedByMemberId, item.AssignedByDisplay, item.AssignedAt),
+            ResponsibilityRevoked item => (item.RevokedByMemberId, item.RevokedByDisplay, item.RevokedAt),
+            _ => (Uuid.Empty, string.Empty, DateTimeOffset.MinValue),
+        };
+        Require(actor == metadata.Item1 && operation.Actor.Display == metadata.Item2 && operation.AcceptedAt == metadata.Item3,
+            "The boundary receipt lost its original member, display snapshot or acceptance instant.");
+        if (_header is null)
         {
-            _revision++;
-            _draftVersionId = ev.DraftVersionId;
-            _draftRevision = 1;
-            _draftContent = ev.Content;
-            _draftAuthorMemberId = ev.AuthorMemberId;
-            _draftEverReviewed = false;
-            _acceptedReviewDecisionId = Uuid.Empty;
-            _draftChangedAt = ev.ChangedAt;
-            _latestReviewOutcome = null;
-        });
-        On<ResponsibilityAssigned>(ev => GetResponsibilitySet(ev.Scope).Apply(ev));
-        On<ResponsibilityRevoked>(ev => GetResponsibilitySet(ev.Scope).Apply(ev));
+            Require(value is BoundaryDraftCreated created && operation.CommandKind == nameof(CreateBoundary) && operation.LogicalId == Id &&
+                operation.OriginalExpectedRevision is null && fact.ChangeCount == 1 && created.ProgramId == header.ProgramId &&
+                created.DraftVersionId == Uuid.CreateVersion5(Id, "draft-1") && created.Content == header.Content &&
+                header == new BoundaryAuthorityHeader(TenantId, created.ProgramId, Id, 1, true, true, created.DraftVersionId, 1,
+                    created.AuthorMemberId, false, Uuid.Empty, null, Uuid.Empty, Uuid.Empty, null, created.ChangedAt, header.Content),
+                "A boundary begins with its exact authored first draft identity.");
+            return;
+        }
+        var before = _header;
+        Require(value is not BoundaryDraftCreated && header.ProgramId == before.ProgramId, "The boundary program identity is immutable.");
+        if (fact.ChangeCount == 0)
+        {
+            Require(value is ResponsibilityAssigned assignment
+                ? operation.CommandKind == nameof(AssignResponsibility) && operation.LogicalId == assignment.AssignmentId && IsCurrentResponsibilityScope(assignment.Scope)
+                : value is ResponsibilityRevoked revoked && operation.CommandKind == nameof(RevokeResponsibility) && IsCurrentResponsibilityScope(revoked.Scope),
+                "A no-op acceptance must retain exact current responsibility operation identity.");
+            Require(header == before && operation.OriginalExpectedRevision == unchecked((ulong)before.DraftRevision), "A no-op cannot change current authority.");
+            return;
+        }
+        Require(fact.ChangeCount == 1, "A boundary native operation publishes one business mutation.");
+        var expected = before;
+        if (value is not BoundarySuccessorProposed)
+            Require(operation.OriginalExpectedRevision == unchecked((ulong)before.DraftRevision), "The original exact draft revision gate changed.");
+        switch (value)
+        {
+            case BoundaryDraftRevised revised:
+                Require(operation.CommandKind == nameof(ReviseBoundaryDraft) && before.DraftVersionId != Uuid.Empty &&
+                    revised.DraftVersionId == before.DraftVersionId && revised.Revision == before.DraftRevision + 1 && revised.Content == header.Content,
+                    "Revision must retain the exact next boundary draft revision.");
+                expected = before with
+                {
+                    Revision = before.Revision + 1,
+                    DraftRevision = revised.Revision,
+                    Content = header.Content,
+                    DraftAuthorMemberId = actor,
+                    DraftChangedAt = revised.ChangedAt,
+                    AcceptedReviewDecisionId = Uuid.Empty,
+                    LatestReviewOutcome = null
+                };
+                break;
+            case BoundaryReviewed reviewed:
+                Require(operation.CommandKind == nameof(ReviewBoundary) && operation.LogicalId == reviewed.DecisionId &&
+                    reviewed.DraftVersionId == before.DraftVersionId && before.DraftVersionId != Uuid.Empty && reviewed.Revision == before.DraftRevision &&
+                    reviewed.Outcome is "accept" or "request_changes", "Review must answer the exact pending boundary draft.");
+                expected = before with
+                {
+                    Revision = before.Revision + 1,
+                    DraftEverReviewed = true,
+                    LatestReviewOutcome = reviewed.Outcome,
+                    AcceptedReviewDecisionId = reviewed.Outcome == "accept" ? reviewed.DecisionId : Uuid.Empty
+                };
+                break;
+            case BoundaryApproved approved:
+                Require(operation.CommandKind == nameof(ApproveBoundary) && operation.LogicalId == approved.ApprovalDecisionId &&
+                    before.DraftVersionId != Uuid.Empty && approved.DraftVersionId == before.DraftVersionId && approved.Revision == before.DraftRevision &&
+                    before.AcceptedReviewDecisionId != Uuid.Empty && approved.AcceptedReviewDecisionId == before.AcceptedReviewDecisionId && approved.EffectiveFrom != default &&
+                    (before.LatestApprovedEffectiveFrom is null || approved.EffectiveFrom > before.LatestApprovedEffectiveFrom),
+                    "Approval must retain the latest exact accepted review and later effective version.");
+                expected = before with
+                {
+                    Revision = before.Revision + 1,
+                    DraftVersionId = Uuid.Empty,
+                    DraftChangedAt = null,
+                    AcceptedReviewDecisionId = Uuid.Empty,
+                    LatestReviewOutcome = null,
+                    LatestApprovedVersionId = approved.DraftVersionId,
+                    LatestApprovedEffectiveFrom = approved.EffectiveFrom,
+                    FirstApprovedVersionId = before.FirstApprovedVersionId == Uuid.Empty ? approved.DraftVersionId : before.FirstApprovedVersionId
+                };
+                break;
+            case BoundaryDraftDiscarded discarded:
+                Require(operation.CommandKind == nameof(DiscardBoundaryDraft) && before.DraftVersionId != Uuid.Empty && !before.DraftEverReviewed &&
+                    discarded.DraftVersionId == before.DraftVersionId && discarded.Revision == before.DraftRevision, "A referenced boundary draft cannot be discarded.");
+                expected = before with
+                {
+                    Revision = before.Revision + 1,
+                    DraftVersionId = Uuid.Empty,
+                    DraftChangedAt = null,
+                    AcceptedReviewDecisionId = Uuid.Empty,
+                    LatestReviewOutcome = null,
+                    IsVisible = before.LatestApprovedVersionId != Uuid.Empty
+                };
+                break;
+            case BoundarySuccessorProposed proposed:
+                Require(operation.CommandKind == nameof(ProposeBoundarySuccessor) && operation.OriginalExpectedRevision == unchecked((ulong)before.Revision) &&
+                    before.DraftVersionId == Uuid.Empty && before.LatestApprovedVersionId != Uuid.Empty && proposed.PredecessorVersionId == before.LatestApprovedVersionId &&
+                    proposed.DraftVersionId == Uuid.CreateVersion5(operation.LogicalId, "draft") && proposed.Content == header.Content,
+                    "A successor must follow the exact approved boundary without another open draft.");
+                expected = before with
+                {
+                    Revision = before.Revision + 1,
+                    IsVisible = true,
+                    DraftVersionId = proposed.DraftVersionId,
+                    DraftRevision = 1,
+                    DraftAuthorMemberId = actor,
+                    DraftEverReviewed = false,
+                    AcceptedReviewDecisionId = Uuid.Empty,
+                    LatestReviewOutcome = null,
+                    DraftChangedAt = proposed.ChangedAt,
+                    Content = header.Content
+                };
+                break;
+            case ResponsibilityAssigned assigned:
+                Require(operation.CommandKind == nameof(AssignResponsibility) && operation.LogicalId == assigned.AssignmentId && IsCurrentResponsibilityScope(assigned.Scope),
+                    "Assignment requires the exact current boundary draft revision.");
+                break;
+            case ResponsibilityRevoked revoked:
+                Require(operation.CommandKind == nameof(RevokeResponsibility) && IsCurrentResponsibilityScope(revoked.Scope),
+                    "Revocation requires the exact current boundary draft revision.");
+                break;
+            default:
+                throw new InvalidOperationException("The boundary has another native mutation kind.");
+        }
+        Require(header == expected, "The boundary compact header differs from its exact local transition.");
+    }
+    BoundaryAuthorityContent ExpectedAuthority(DomainEvent value, BoundaryAuthorityHeader header, BoundaryAuthorityContent? before)
+    {
+        var after = before is null ? new BoundaryAuthorityContent(header, [], []) : before with { Header = header };
+        if (((IBoundaryFact)value).ChangeCount == 0)
+            return after;
+        switch (value)
+        {
+            case BoundaryDraftCreated or BoundaryDraftRevised or BoundarySuccessorProposed or BoundaryDraftDiscarded or BoundaryApproved:
+                return after with { Assignments = [], DecisionConstraints = [] };
+            case BoundaryReviewed reviewed:
+                return after with
+                {
+                    DecisionConstraints = after.DecisionConstraints.Append(new BoundaryDecisionConstraint(reviewed.ActorMemberId,
+                    ResponsibilityType.AssignedReviewer, reviewed.DecidedAt, reviewed.SeparationOfDutiesWaiverId)).ToArray()
+                };
+            case ResponsibilityAssigned assigned:
+                var assignedSet = Set(before!);
+                assignedSet.Apply(assigned);
+                return after with { Assignments = assignedSet.ReadAssignments() };
+            case ResponsibilityRevoked revoked:
+                var revokedSet = Set(before!);
+                revokedSet.Apply(revoked);
+                return after with { Assignments = revokedSet.ReadAssignments() };
+            default:
+                return after;
+        }
+    }
+    void ValidateLocal(DomainEvent value, BoundaryMutationContent mutation, BoundaryAuthorityContent? before)
+    {
+        var proofs = mutation.Waivers ?? [];
+        Require(proofs.All(proof => proof is not null && LocatorValid(proof)) && proofs.Select(proof => proof.WaiverId).Distinct().Count() == proofs.Count,
+            "A boundary mutation requires exact distinct immutable waiver proofs.");
+        if (value is BoundaryReviewed reviewed)
+        {
+            var data = (BoundaryReviewedContent)mutation.Changes.Single();
+            Require(!string.IsNullOrWhiteSpace(data.Rationale), "Review requires its authored rationale.");
+            ValidateDecision(before!, reviewed.ActorMemberId, ResponsibilityType.AssignedReviewer, SeparationOfDutiesActions.Review,
+                reviewed.DecidedAt, reviewed.SeparationOfDutiesWaiverId, proofs);
+            return;
+        }
+        if (value is BoundaryApproved approved)
+        {
+            var data = (BoundaryApprovedContent)mutation.Changes.Single();
+            Require(!string.IsNullOrWhiteSpace(data.Rationale) && !string.IsNullOrWhiteSpace(data.ImpactDigest), "Approval requires rationale and acknowledged impact.");
+            ValidateDecision(before!, approved.ActorMemberId, ResponsibilityType.PolicyApprover, SeparationOfDutiesActions.Approve,
+                approved.DecidedAt, approved.SeparationOfDutiesWaiverId, proofs);
+            return;
+        }
+        if (value is BoundaryDraftDiscarded)
+            Require(!string.IsNullOrWhiteSpace(((BoundaryDraftDiscardedContent)mutation.Changes.Single()).Rationale), "Discarding a draft requires its rationale.");
+        if (value is ResponsibilityAssigned assigned)
+        {
+            var set = Set(before!);
+            var proposed = new ResponsibilityAssignmentView(TenantId, assigned.AssignmentId, assigned.MemberId, assigned.Type, assigned.Scope,
+                assigned.AssignedAt, assigned.AssignedByMemberId, assigned.EffectiveFrom, assigned.EffectiveUntil, null, Uuid.Empty, []);
+            foreach (var constraint in before!.DecisionConstraints.Where(item => item.WaiverId is null))
+            {
+                var decision = new ResponsibilityAssignmentView(TenantId, Uuid.Empty, constraint.MemberId, constraint.Type, assigned.Scope,
+                    constraint.At, Uuid.Empty, constraint.At, constraint.At.AddTicks(1), null, Uuid.Empty, []);
+                Require(ResponsibilityConflictPolicy.FindConflicts(before.Assignments.Append(proposed), decision).Count == 0,
+                    "Assignment must preserve unwaived historical decision independence.");
+            }
+            Require(proofs.Select(proof => proof.WaiverId).OrderBy(id => id.ToString(), StringComparer.Ordinal)
+                .SequenceEqual(assigned.SeparationOfDutiesWaiverIds.OrderBy(id => id.ToString(), StringComparer.Ordinal)) &&
+                set.AssignAuthorized(assigned.AssignmentId, assigned.MemberId, assigned.Type, assigned.AssignedByMemberId,
+                    assigned.AssignedByDisplay, assigned.AssignedAt, assigned.EffectiveFrom, assigned.EffectiveUntil, proofs) is null,
+                "Assignment does not satisfy the exact current responsibility and waiver authority.");
+            if (((IBoundaryFact)value).ChangeCount == 0)
+                Require(Matches(CurrentAuthority!, before! with { Assignments = set.ReadAssignments() }, BoundaryFactContent.AuthoritySchema), "No-op assignment changed authority.");
+            return;
+        }
+        Require(proofs.Count == 0, "This boundary mutation cannot consume a decision waiver.");
+        if (value is ResponsibilityRevoked revoked)
+        {
+            var set = Set(before!);
+            Require(set.Revoke(revoked.AssignmentId, revoked.RevokedByMemberId, revoked.RevokedByDisplay, revoked.RevokedAt, revoked.Reason) is null,
+                "Revocation requires the retained exact assignment.");
+            if (((IBoundaryFact)value).ChangeCount == 0)
+                Require(Matches(CurrentAuthority!, before! with { Assignments = set.ReadAssignments() }, BoundaryFactContent.AuthoritySchema), "No-op revocation changed authority.");
+        }
     }
 
-    public ResponsibilitySet GetResponsibilitySet(ResponsibilityScope scope)
+    void ValidateDecision(BoundaryAuthorityContent before, Uuid member, ResponsibilityType role, string action, DateTimeOffset at,
+        Uuid? waiverId, IReadOnlyList<SeparationOfDutiesWaiverProof> proofs)
     {
-        if (!StringComparer.Ordinal.Equals(scope.RecordType, "boundary") || scope.RecordId != Id)
-            throw new ArgumentException("The responsibility scope must belong to this boundary.", nameof(scope));
-        if (!_responsibilitySets.TryGetValue(scope, out var set))
+        var set = Set(before);
+        var proof = waiverId is { } id ? proofs.SingleOrDefault(item => item.WaiverId == id) : null;
+        Require(proofs.Count == (proof is null ? 0 : 1) && (waiverId is null || proof is not null), "A decision must bind its exact immutable waiver.");
+        var author = before.Header.DraftAuthorMemberId == member;
+        Require(ResponsibilityDecisionGuard.ValidateAuthorized(set, Scope(), member, role, at, author, proof) is null &&
+            (proof is not null ? BoundaryWaiverProof.Allows(proof, TenantId, new SeparationOfDutiesWaiverScope(
+                SeparationOfDutiesRecordTypes.Boundary, Id, DraftVersionId, DraftRevision, action), member, at) : !author),
+            "The boundary decision violates its exact author, reviewer or responsibility independence.");
+    }
+    ResponsibilityScope Scope() => new(SeparationOfDutiesRecordTypes.Boundary, Id, DraftVersionId, DraftRevision);
+    ResponsibilitySet Set(BoundaryAuthorityContent authority)
+    {
+        var scope = Scope();
+        var set = new ResponsibilitySet(TenantId, scope);
+        foreach (var assignment in authority.Assignments)
         {
-            set = new ResponsibilitySet(_tenantId, scope);
-            _responsibilitySets.Add(scope, set);
+            Require(assignment.TenantId == TenantId && assignment.Scope == scope, "The current responsibility authority has another exact scope.");
+            set.Apply(new ResponsibilityAssigned(TenantId, assignment.AssignmentId, assignment.MemberId, assignment.Type, scope,
+                assignment.AssignedAt, assignment.AssignedByMemberId, assignment.EffectiveFrom, assignment.EffectiveUntil,
+                assignment.SeparationOfDutiesWaiverIds, assignment.AssignedByDisplay));
+            if (assignment.RevokedAt is { } at)
+                set.Apply(new ResponsibilityRevoked(TenantId, assignment.AssignmentId, scope, assignment.RevokedByMemberId, at,
+                    assignment.RevocationReason ?? string.Empty, assignment.RevokedByDisplay ?? string.Empty));
         }
         return set;
     }
-
-    public CommandFailure? AssignResponsibility(ResponsibilityScope scope, Uuid assignmentId,
-        Uuid memberId, ResponsibilityType type, Uuid assignedByMemberId,
-        string assignedByDisplay, DateTimeOffset assignedAt, DateTimeOffset effectiveFrom,
-        DateTimeOffset? effectiveUntil, IReadOnlyList<SeparationOfDutiesWaiver> waivers)
+    static bool LocatorValid(SeparationOfDutiesWaiverProof proof) => proof.ApprovalFact is not null && proof.ApprovalFact.EventId != Uuid.Empty &&
+        proof.ApprovalFact.ResourcePosition == 1 && proof.ApprovalFact.AggregateVersion == 2 && Hex(proof.ApprovalFact.PayloadSha256) && proof.ValidFrom < proof.ValidUntil;
+    static bool Reference(ImmutableContentRef? value, string schema) => value is not null && value.ContentId != Uuid.Empty && value.Bytes >= 0 &&
+        value.MediaType == ImmutableContentStoreExtensions.JsonMediaType && value.Schema == schema && Hex(value.Sha256);
+    static bool Matches<T>(ImmutableContentRef reference, T value, string schema) where T : notnull
     {
-        if (!IsCurrentResponsibilityScope(scope))
-            return CommandFailure.StateConflict(
-                "Responsibilities must target the current exact boundary draft revision.");
-        var set = GetResponsibilitySet(scope);
-        var proposed = new ResponsibilityAssignmentView(_tenantId, assignmentId, memberId,
-            type, scope, assignedAt, assignedByMemberId, effectiveFrom, effectiveUntil,
-            null, Uuid.Empty, []);
-        var historicalConflict = HasUnwaivedHistoricalConflict(scope,
-            set.ReadAssignments().Append(proposed));
-        if (historicalConflict)
-            return CommandFailure.StateConflict(
-                "The responsibility would create an unwaived conflict with a prior decision on this exact revision.");
-        return set.Assign(assignmentId, memberId, type,
-            assignedByMemberId, assignedByDisplay, assignedAt, effectiveFrom, effectiveUntil,
-            waivers, RaiseEvent);
-    }
-
-    public CommandFailure? RevokeResponsibility(ResponsibilityScope scope, Uuid assignmentId,
-        Uuid memberId, string memberDisplay, DateTimeOffset revokedAt, string reason)
-    {
-        if (!IsCurrentResponsibilityScope(scope))
-            return CommandFailure.StateConflict(
-                "Responsibilities must target the current exact boundary draft revision.");
-        return GetResponsibilitySet(scope).Revoke(assignmentId, memberId, memberDisplay,
-            revokedAt, reason, RaiseEvent);
-    }
-
-    bool IsCurrentResponsibilityScope(ResponsibilityScope scope) =>
-        StringComparer.Ordinal.Equals(scope.RecordType, "boundary") && scope.RecordId == Id &&
-        _created && _draftContent is not null && scope.VersionId == _draftVersionId &&
-        scope.Revision == _draftRevision;
-
-    void RecordResponsibilityDecision(ResponsibilityScope scope, Uuid memberId,
-        ResponsibilityType type, DateTimeOffset at, Uuid? waiverId)
-    {
-        if (!_responsibilityDecisions.TryGetValue(scope, out var decisions))
-        {
-            decisions = [];
-            _responsibilityDecisions.Add(scope, decisions);
-        }
-        decisions.Add(new ResponsibilityDecisionFact(memberId, type, at, waiverId));
-    }
-
-    bool HasUnwaivedHistoricalConflict(ResponsibilityScope scope,
-        IEnumerable<ResponsibilityAssignmentView> assignments)
-    {
-        if (!_responsibilityDecisions.TryGetValue(scope, out var decisions))
+        if (!Reference(reference, schema))
             return false;
-        foreach (var decision in decisions)
-        {
-            if (decision.WaiverId is not null)
-                continue;
-            var decidedAction = new ResponsibilityAssignmentView(_tenantId, Uuid.Empty,
-                decision.MemberId, decision.Type, scope, decision.At, Uuid.Empty,
-                decision.At, decision.At.AddTicks(1), null, Uuid.Empty, []);
-            if (ResponsibilityConflictPolicy.FindConflicts(assignments, decidedAction).Count > 0)
-                return true;
-        }
-        return false;
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        return reference.Bytes == bytes.LongLength && reference.Sha256 == ContentDigest.Sha256(bytes);
     }
-
-    sealed record ResponsibilityDecisionFact(Uuid MemberId, ResponsibilityType Type,
-        DateTimeOffset At, Uuid? WaiverId);
-
-    public Result<BoundaryRegistration> Create(Uuid programId, Uuid draftVersionId,
-        BoundaryContent content, Uuid authorMemberId, string authorDisplay,
-        DateTimeOffset changedAt)
+    static bool Hex(string? value) => value is { Length: 64 } && value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f');
+    static void Require([DoesNotReturnIf(false)] bool condition, string message)
     {
-        if (_created)
-            return programId == _programId && draftVersionId == _initialDraftVersionId &&
-                   Equivalent(content, _initialContent)
-                ? Result<BoundaryRegistration>.Success(new BoundaryRegistration(Id, _initialDraftVersionId))
-                : Result<BoundaryRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The boundary already exists with different content."));
-        if (programId == Uuid.Empty || draftVersionId == Uuid.Empty || authorMemberId == Uuid.Empty)
-            return Result<BoundaryRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
-                "The boundary requires a program, draft version, and author."));
-        var validation = Validate(content);
-        if (validation is not null)
-            return Result<BoundaryRegistration>.Failure(new RequestError(
-                RequestErrorKind.Validation, validation));
-        RaiseEvent(new BoundaryDraftCreated(_tenantId, Id, programId, draftVersionId,
-            content, authorMemberId, authorDisplay, changedAt));
-        return Result<BoundaryRegistration>.Success(new BoundaryRegistration(Id, draftVersionId));
+        if (!condition)
+            throw new InvalidOperationException(message);
     }
-
-    public CommandFailure? Revise(Uuid draftVersionId, long expectedRevision,
-        BoundaryContent content, Uuid authorMemberId, string authorDisplay,
-        DateTimeOffset changedAt)
-    {
-        if (!_created)
-            return CommandFailure.MissingRecord("The boundary was not found.");
-        if (_draftVersionId == Uuid.Empty)
-            return CommandFailure.StateConflict(
-                "The approved boundary is immutable. Propose a successor draft.");
-        if (DraftVersionConflict(draftVersionId, expectedRevision) is { } conflict)
-            return CommandFailure.ForVersion(conflict);
-        var validation = Validate(content);
-        if (validation is not null)
-            return CommandFailure.InvalidContent(validation);
-        RaiseEvent(new BoundaryDraftRevised(_tenantId, Id, draftVersionId,
-            _draftRevision + 1, content, authorMemberId, authorDisplay, changedAt));
-        return null;
-    }
-
-    VersionConflict? DraftVersionConflict(Uuid draftVersionId, long expectedRevision) =>
-        _created && _draftVersionId != Uuid.Empty &&
-        (draftVersionId != _draftVersionId || expectedRevision != _draftRevision)
-            ? VersionedRecordRules.StaleDraft("boundary", _draftVersionId.ToGuid(), _draftRevision)
-            : null;
-
-    public CommandFailure? Review(Uuid draftVersionId, long expectedRevision, Uuid decisionId,
-        string outcome, string rationale, Uuid reviewerMemberId, string reviewerDisplay,
-        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? separationOfDutiesWaiver = null)
-    {
-        var current = CheckDraft(draftVersionId, expectedRevision);
-        if (current is not null)
-            return current;
-        var responsibilityScope = new ResponsibilityScope("boundary", Id, draftVersionId,
-            expectedRevision);
-        var responsibilityFailure = ResponsibilityDecisionGuard.Validate(
-            GetResponsibilitySet(responsibilityScope), responsibilityScope, reviewerMemberId,
-            ResponsibilityType.AssignedReviewer, decidedAt,
-            reviewerMemberId == _draftAuthorMemberId, separationOfDutiesWaiver);
-        if (responsibilityFailure is not null)
-            return responsibilityFailure;
-        var reviewWaiverScope = new SeparationOfDutiesWaiverScope(
-            SeparationOfDutiesRecordTypes.Boundary, Id, draftVersionId,
-            expectedRevision, SeparationOfDutiesActions.Review);
-        if (separationOfDutiesWaiver is not null &&
-            (separationOfDutiesWaiver.TenantId != _tenantId ||
-             !separationOfDutiesWaiver.Allows(reviewWaiverScope, reviewerMemberId, decidedAt)))
-            return CommandFailure.ActorProhibited(
-                "The separation-of-duties waiver is not active for this reviewer and draft revision.");
-        if (reviewerMemberId == _draftAuthorMemberId && separationOfDutiesWaiver is null)
-            return CommandFailure.ActorProhibited(
-                "A boundary author cannot review their own draft.");
-        if (outcome is not ("accept" or "request_changes") || string.IsNullOrWhiteSpace(rationale))
-            return CommandFailure.InvalidContent("A review requires an outcome and rationale.");
-        BoundaryReviewed reviewed = new(_tenantId, Id, draftVersionId, expectedRevision,
-            decisionId, outcome, reviewerMemberId, reviewerDisplay, rationale.Trim(), decidedAt,
-            separationOfDutiesWaiver?.Id)
-        {
-            StoredActor = ActorReference.ForMember(reviewerMemberId, reviewerDisplay),
-        };
-        RaiseEvent(reviewed);
-        return null;
-    }
-
-    public CommandFailure? DiscardDraft(Uuid draftVersionId, long expectedRevision,
-        string rationale, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset discardedAt)
-    {
-        var current = CheckDraft(draftVersionId, expectedRevision);
-        if (current is not null)
-            return current;
-        if (VersionedRecordRules.DraftDiscardConflict(_draftEverReviewed) is { } referenced)
-            return CommandFailure.ForVersion(referenced);
-        if (string.IsNullOrWhiteSpace(rationale))
-            return CommandFailure.InvalidContent("Discarding a draft requires a rationale.");
-        RaiseEvent(new BoundaryDraftDiscarded(_tenantId, Id, draftVersionId,
-            expectedRevision, actorMemberId, actorDisplay, rationale.Trim(), discardedAt)
-        {
-            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
-        });
-        return null;
-    }
-
-    public CommandFailure? Approve(Uuid draftVersionId, long expectedRevision,
-        Uuid approvalDecisionId, Uuid acceptedReviewDecisionId, DateOnly effectiveFrom, string rationale,
-        string impactDigest, Uuid approverMemberId, string approverDisplay, DateTimeOffset decidedAt,
-        SeparationOfDutiesWaiver? separationOfDutiesWaiver = null)
-    {
-        var current = CheckDraft(draftVersionId, expectedRevision);
-        if (current is not null)
-            return current;
-        var responsibilityScope = new ResponsibilityScope("boundary", Id, draftVersionId,
-            expectedRevision);
-        var responsibilityFailure = ResponsibilityDecisionGuard.Validate(
-            GetResponsibilitySet(responsibilityScope), responsibilityScope, approverMemberId,
-            ResponsibilityType.PolicyApprover, decidedAt,
-            approverMemberId == _draftAuthorMemberId, separationOfDutiesWaiver);
-        if (responsibilityFailure is not null)
-            return responsibilityFailure;
-        var approvalWaiverScope = new SeparationOfDutiesWaiverScope(
-            SeparationOfDutiesRecordTypes.Boundary, Id, draftVersionId,
-            expectedRevision, SeparationOfDutiesActions.Approve);
-        if (separationOfDutiesWaiver is not null &&
-            (separationOfDutiesWaiver.TenantId != _tenantId ||
-             !separationOfDutiesWaiver.Allows(approvalWaiverScope, approverMemberId, decidedAt)))
-            return CommandFailure.ActorProhibited(
-                "The separation-of-duties waiver is not active for this approver and draft revision.");
-        if (approverMemberId == _draftAuthorMemberId && separationOfDutiesWaiver is null)
-            return CommandFailure.ActorProhibited(
-                "A boundary author cannot approve their own draft.");
-        // Drafts recorded before a content rule existed must satisfy it before approval.
-        if (Validate(_draftContent) is { } invalidContent)
-            return CommandFailure.InvalidContent(invalidContent);
-        if (acceptedReviewDecisionId == Uuid.Empty ||
-            acceptedReviewDecisionId != _acceptedReviewDecisionId)
-            return CommandFailure.StateConflict(
-                "Approval requires the latest accepted review of this draft revision.");
-        if (string.IsNullOrWhiteSpace(rationale))
-            return CommandFailure.InvalidContent("Approval requires a rationale.");
-        if (string.IsNullOrWhiteSpace(impactDigest))
-            return CommandFailure.InvalidContent(
-                "Approval requires the acknowledged impact preview digest.");
-        if (_latestApprovedEffectiveFrom is { } prior &&
-            !EffectiveInterval.CanFollow(prior, effectiveFrom))
-            return CommandFailure.InvalidContent(
-                "A successor must become effective after the previous approved version.");
-        BoundaryApproved approved = new(_tenantId, Id, draftVersionId, expectedRevision,
-            approvalDecisionId, acceptedReviewDecisionId, approverMemberId, approverDisplay,
-            rationale.Trim(), effectiveFrom, decidedAt, impactDigest,
-            separationOfDutiesWaiver?.Id)
-        {
-            StoredActor = ActorReference.ForMember(approverMemberId, approverDisplay),
-        };
-        RaiseEvent(approved);
-        return null;
-    }
-
-    public CommandFailure? ProposeSuccessor(Uuid expectedApprovedVersionId,
-        Uuid draftVersionId, BoundaryContent content, Uuid authorMemberId,
-        string authorDisplay, DateTimeOffset changedAt)
-    {
-        if (!_created)
-            return CommandFailure.MissingRecord("The boundary was not found.");
-        if (_latestApprovedVersionId == Uuid.Empty)
-            return CommandFailure.StateConflict("The boundary has no approved version.");
-        if (expectedApprovedVersionId != _latestApprovedVersionId)
-            return CommandFailure.ForVersion(
-                VersionedRecordRules.StaleApprovedVersion("boundary",
-                    _latestApprovedVersionId.ToGuid()));
-        if (_draftVersionId != Uuid.Empty)
-            return CommandFailure.StateConflict("The boundary already has an open successor draft.");
-        var validation = Validate(content);
-        if (validation is not null)
-            return CommandFailure.InvalidContent(validation);
-        RaiseEvent(new BoundarySuccessorProposed(_tenantId, Id, draftVersionId,
-            _latestApprovedVersionId, content, authorMemberId, authorDisplay, changedAt));
-        return null;
-    }
-
-    CommandFailure? CheckDraft(Uuid draftVersionId, long expectedRevision)
-    {
-        if (!_created)
-            return CommandFailure.MissingRecord("The boundary was not found.");
-        if (_draftVersionId == Uuid.Empty)
-            return CommandFailure.StateConflict(
-                "The approved boundary is immutable. Propose a successor draft.");
-        return DraftVersionConflict(draftVersionId, expectedRevision) is { } conflict
-            ? CommandFailure.ForVersion(conflict)
-            : null;
-    }
-
-    static string? Validate(BoundaryContent? content)
-    {
-        if (content is null || string.IsNullOrWhiteSpace(content.Statement))
-            return "A boundary requires a statement.";
-        if (content.EngagementStage is not ("readiness" or "type_i" or "type_ii"))
-            return "The engagement stage must be readiness, type_i, or type_ii.";
-        if (content.TrustServicesCategories is null || content.TrustServicesCategories.Count == 0 ||
-            content.TrustServicesCategories.Any(category =>
-                category is not ("security" or "availability" or "processing_integrity" or
-                    "confidentiality" or "privacy")) ||
-            content.TrustServicesCategories.Distinct(StringComparer.Ordinal).Count() !=
-            content.TrustServicesCategories.Count)
-            return "The boundary requires distinct, recognized Trust Services categories.";
-        if (!content.TrustServicesCategories.Contains("security", StringComparer.Ordinal))
-            return "The boundary requires the security category; optional categories add to it.";
-        if (content.Entries is null || content.Entries.Any(entry =>
-                entry is null || entry.EntryId == Uuid.Empty ||
-                entry.Kind is not ("inclusion" or "exclusion" or "assumption" or "question") ||
-                entry.SubjectType is not ("service" or "person" or "application" or
-                    "system_instance" or
-                    "component" or "information" or "data_flow" or "process" or
-                    "location" or "provider" or "commitment") ||
-                string.IsNullOrWhiteSpace(entry.Subject) ||
-                string.IsNullOrWhiteSpace(entry.OwnerReference) ||
-                string.IsNullOrWhiteSpace(entry.Rationale) ||
-                entry.GovernedRecordId == Uuid.Empty ||
-                (entry.Unresolved && entry.GovernedRecordId is not null) ||
-                (!entry.Unresolved && entry.GovernedRecordId is null)) ||
-            content.Entries.Select(static entry => entry.EntryId).Distinct().Count() !=
-            content.Entries.Count)
-            return "Every scope entry requires a unique ID, typed subject, owner, rationale, and a consistent governed reference state.";
-        return null;
-    }
-
-    static bool Equivalent(BoundaryContent? left, BoundaryContent? right) =>
-        left is not null && right is not null &&
-        left.Statement == right.Statement && left.EngagementStage == right.EngagementStage &&
-        left.TrustServicesCategories.SequenceEqual(right.TrustServicesCategories) &&
-        left.Entries.SequenceEqual(right.Entries);
+    static Result Fail(RequestErrorKind kind, string message, bool transient = false) => Result.Failure(new RequestError(kind, message, transient));
 }
