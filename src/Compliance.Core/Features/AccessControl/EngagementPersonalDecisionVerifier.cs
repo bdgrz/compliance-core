@@ -95,7 +95,10 @@ sealed class EngagementPersonalDecisionVerifier(IAggregateReader reader, IImmuta
             : null;
         return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, request.Intent,
             EngagementPersonalDecisionEffects.UseKey(request.OperationId, owner.Stream, request.Target), requirement,
-            commandKind, null, superseded));
+            commandKind, null, superseded)
+        {
+            RequiresAbort = decision.Canceled is not null,
+        });
     }
 
     /// <summary>Derives the verified terminal source of a settle receiver and the disposition it requires.</summary>

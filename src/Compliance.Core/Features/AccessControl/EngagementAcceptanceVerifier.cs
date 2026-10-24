@@ -96,7 +96,10 @@ sealed class EngagementAcceptanceVerifier(IAggregateReader reader, IImmutableCon
             : null;
         return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, intentReference,
             EngagementAcceptanceEffects.UseKey(operationId, owner.Stream, target), requirement, commandKind, null,
-            superseded));
+            superseded)
+        {
+            RequiresAbort = operation.Rejected is not null,
+        });
     }
 
     /// <summary>Derives the verified terminal source of a settle receiver and the disposition it requires.</summary>

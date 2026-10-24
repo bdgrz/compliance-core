@@ -30,7 +30,7 @@ static class IncidentFacts
     /// <summary>A verified completion carrying a well-formed proof of a corrective-action completion.</summary>
     public static ComplianceIncidentFollowUpCompletionView Completion(ComplianceIncident incident, Uuid workItemId) =>
         new(workItemId, new SourceFactProof<CorrectiveActionCompletedV2>(
-            new EventStreamAddress(incident.Stream.Realm, FindingAggregate.Area, Uuid.CreateVersion4().ToString()),
+            new EventStreamAddress(incident.Stream.Realm, CorrectiveAction.Area, Uuid.CreateVersion4().ToString()),
             Uuid.CreateVersion4(), 2, 3, EventKind.Of(typeof(CorrectiveActionCompletedV2)), new string('d', 64),
             Response(), 30, 20));
 

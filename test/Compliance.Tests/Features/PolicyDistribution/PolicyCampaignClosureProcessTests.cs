@@ -11,6 +11,38 @@ namespace Bdgrz.Compliance.Tests.Features.PolicyDistribution;
 
 public sealed class PolicyCampaignClosureProcessTests
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task ShouldSettleHeldUsesGivenCancellationPersistedBeforeProcessCheckpoint(int stageIndex)
+    {
+        // Arrange
+        var crash = new CrashAfterReplaces();
+        await using var host = new CampaignHost(crash.Wrap);
+        await host.SeedAsync();
+        var campaign = await host.LaunchAsync();
+        var (ackId, closeId) = await AcknowledgeAndCloseAsync(host, campaign);
+        await host.ReactResultsAsync(campaign);
+        await host.RunAsync(await host.ResultKey(ackId));
+        crash.ArmAfterReplaceCount(1);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => host.ReactClosureAsync(campaign));
+        crash.Disarm();
+        var key = await host.ClosureKey(closeId);
+        var record = (await host.RecordAsync(key))!;
+        Assert.True((await host.ParticipantAsync(campaign, host.LearnerPerson)).Uses.HasActiveUse);
+        record = await host.Records.ReplaceAsync(record with { StageIndex = stageIndex, Lease = null }, record.Version);
+        var abort = (await host.StepAsync(record, "abort", nameof(AbortPolicyCampaignClosure)))!;
+        Assert.IsType<ReceiverOutcome.Applied>((await host.DispatchAsync(abort)).Value);
+
+        // Act: recover after the cancellation append, before its participant settlements or the driver's checkpoint.
+        var resumed = await host.RunAsync(key);
+
+        // Assert
+        Assert.False((await host.ParticipantAsync(campaign, host.LearnerPerson)).Uses.HasActiveUse);
+        Assert.Equal(ProcessState.Aborted, resumed.State);
+        Assert.Null((await host.CampaignAsync(campaign)).Closing);
+    }
+
     [Fact]
     public async Task ShouldCloseWithExactTotalsAndSettleEveryUseGivenAppliedResults()
     {
@@ -243,9 +275,9 @@ public sealed class PolicyCampaignClosureProcessTests
         var delayedComplete = await host.DispatchAsync(complete);
 
         // Assert
-        var superseded = Assert.IsType<ReceiverOutcome.Superseded>(delayedAcquire.Value);
+        var superseded = Assert.IsType<ReceiverOutcome.Rejected>(delayedAcquire.Value);
         Assert.Contains("canceled", superseded.Reason, StringComparison.Ordinal);
-        var finalization = Assert.IsType<ReceiverOutcome.Superseded>(delayedComplete.Value);
+        var finalization = Assert.IsType<ReceiverOutcome.Rejected>(delayedComplete.Value);
         Assert.Contains("canceled", finalization.Reason, StringComparison.Ordinal);
         Assert.Null((await host.CampaignAsync(campaign)).Closing);
         Assert.Empty(await host.EventsAsync<PolicyCampaignParticipantCampaignClosureUseAuthorized>(

@@ -13,6 +13,6 @@ public sealed record SourceUseSource(DurableIntentHeader Header, ImmutableConten
     ReservationKey Key, SourceUseRequirement Requirement, string CommandKind,
     SourceUseSettlementDisposition? Disposition, string? SupersededReason)
 {
-    /// <summary>A rejected source requires the process abort and settlement stages to recover any held uses.</summary>
+    /// <summary>A canceled or rejected source requires the process abort and settlement stages to recover any held uses.</summary>
     public bool RequiresAbort { get; init; }
 }

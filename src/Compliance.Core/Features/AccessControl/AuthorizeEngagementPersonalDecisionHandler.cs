@@ -49,8 +49,9 @@ sealed class AuthorizeEngagementPersonalDecisionHandler(IAggregateReader reader,
         }
 
         if (decision.Canceled is not null)
-            return SourceUseReceiverSupport.Superseded("The personal decision was canceled; authorization is fenced.",
-                NativeFactReference.Of(owner.Stream, decision.Canceled));
+            return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected(
+                "The personal decision was canceled; authorization is fenced.",
+                NativeFactReference.Of(owner.Stream, decision.Canceled)));
         if (decision.Authorized is not null)
             return SourceUseReceiverSupport.Superseded("The personal decision is already authorized.",
                 NativeFactReference.Of(owner.Stream, decision.Authorized));
@@ -91,7 +92,7 @@ sealed class AuthorizeEngagementPersonalDecisionHandler(IAggregateReader reader,
                 if (!step.IsSuccess)
                     return Result<ReceiverOutcome>.Failure(step.Error!);
                 if (step.Value!.Fenced is { } fenced)
-                    return SourceUseReceiverSupport.Superseded(fenced, step.Value.Fact);
+                    return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected(fenced, step.Value.Fact));
                 return step.Value.Applied
                     ? SourceUseReceiverSupport.Applied(step.Value.Fact)
                     : SourceUseReceiverSupport.Replayed(step.Value.Fact);

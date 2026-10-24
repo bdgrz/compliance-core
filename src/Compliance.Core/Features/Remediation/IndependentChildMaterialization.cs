@@ -18,8 +18,6 @@ sealed class IndependentChildMaterialization : IChildMaterializationReceiver
 {
     public const string Materialize = "materialize";
 
-    public static ProcessDefinition Definition() => IndependentChildMaterializationProcess.Definition();
-
     public string Receiver => nameof(MaterializeCorrectiveAction);
 
     public async ValueTask<IRequest<ReceiverOutcome>?> CreateAsync(ProcessStep step, IServiceProvider services,

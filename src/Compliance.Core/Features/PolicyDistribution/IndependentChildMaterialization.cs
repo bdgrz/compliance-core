@@ -21,8 +21,6 @@ sealed class IndependentChildMaterialization : IChildMaterializationReceiver
     public const string Materialize = "materialize";
 
     /// <summary>The generation a materialization is bound to is the admitted parent generation, frozen in the intent.</summary>
-    public static ProcessDefinition Definition() => IndependentChildMaterializationProcess.Definition();
-
     /// <summary>The command id the process driver derives for the receiver of one admitted child.</summary>
     public static Uuid ReceiverCommandId(Uuid rootSourceEventId, string target, string episode) =>
         Kernel.EffectIdentity.CommandId(rootSourceEventId, $"{ProcessName}:{nameof(ApplyPolicyParticipantResult)}",

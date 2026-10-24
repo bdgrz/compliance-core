@@ -13,6 +13,45 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 
 public sealed class EngagementAcceptanceProcessTests
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task ShouldSettleEveryKeyGivenAcceptanceRejectedBeforeProcessCheckpoint(int stageIndex)
+    {
+        // Arrange
+        await using var host = new IndependenceHost();
+        var (engagement, partner) = await ReadyAsync(host);
+        var request = AcceptCommand(host, engagement);
+        Assert.True((await host.HttpAsync(request, partner.Actor)).IsSuccess);
+        var record = await StartAsync(host, engagement, request.CommandId);
+        var facts = new Dictionary<string, NativeFactReference>();
+        foreach (var target in record.Targets)
+            foreach (var receiver in EngagementAcceptanceProcess.Definition().Stages[0].Receivers)
+            {
+                if (await BuildAsync(host, record, receiver, target) is not { } command)
+                    continue;
+                var held = Assert.IsType<ReceiverOutcome.Applied>((await SendAsync(host, command)).Value);
+                facts[ProcessRecord.FactKey(receiver, target)] = held.Fact;
+            }
+        record = await host.Scope.ServiceProvider.GetRequiredService<IProcessRecordStore>().ReplaceAsync(
+            record with { StageIndex = stageIndex, Facts = facts }, record.Version);
+        var reject = (await BuildAsync(host, record, nameof(RejectServiceEngagementAcceptance)))!;
+        Assert.IsType<ReceiverOutcome.Applied>((await SendAsync(host, reject)).Value);
+        Assert.True((await host.HydrateAsync(new ClientServiceIndependence(host.Tenant))).Uses.HasActiveUse);
+
+        // Act
+        var resumed = await RunAsync(host, engagement, request.CommandId);
+
+        // Assert
+        Assert.False((await host.HydrateAsync(new ClientServiceIndependence(host.Tenant))).Uses.HasActiveUse);
+        var intent = await IntentOfAsync(host, engagement, request.CommandId);
+        foreach (var subject in await host.Content.ReadSelectionAsync<PracticeSubjectIntent>(host.Tenant.ToString(),
+                     intent.Subjects))
+            Assert.False((await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant, subject.Kind,
+                subject.SubjectId))).Uses.HasActiveUse);
+        Assert.Equal(ProcessState.Aborted, resumed.State);
+    }
+
     [Fact]
     public async Task ShouldAcquireCanonicalOrderGivenEpochKeySortsAfterPracticeKeys()
     {
@@ -162,7 +201,7 @@ public sealed class EngagementAcceptanceProcessTests
 
         // Assert
         Assert.NotEmpty(late);
-        Assert.All(late, outcome => Assert.IsType<ReceiverOutcome.Superseded>(outcome.Value));
+        Assert.All(late, outcome => Assert.IsType<ReceiverOutcome.Rejected>(outcome.Value));
     }
 
     [Fact]

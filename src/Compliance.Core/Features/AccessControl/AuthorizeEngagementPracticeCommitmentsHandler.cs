@@ -52,8 +52,9 @@ sealed class AuthorizeEngagementPracticeCommitmentsHandler(IAggregateReader read
         }
 
         if (operation.Rejected is not null)
-            return SourceUseReceiverSupport.Superseded("The operation was rejected; authorization is fenced.",
-                NativeFactReference.Of(owner.Stream, operation.Rejected));
+            return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected(
+                "The operation was rejected; authorization is fenced.",
+                NativeFactReference.Of(owner.Stream, operation.Rejected)));
         if (operation.Authorized is not null)
             return SourceUseReceiverSupport.Superseded("The operation is already authorized.",
                 NativeFactReference.Of(owner.Stream, operation.Authorized));
@@ -100,7 +101,7 @@ sealed class AuthorizeEngagementPracticeCommitmentsHandler(IAggregateReader read
                 if (!step.IsSuccess)
                     return Result<ReceiverOutcome>.Failure(step.Error!);
                 if (step.Value!.Fenced is { } fenced)
-                    return SourceUseReceiverSupport.Superseded(fenced, step.Value.Fact);
+                    return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected(fenced, step.Value.Fact));
                 return step.Value.Applied
                     ? SourceUseReceiverSupport.Applied(step.Value.Fact)
                     : SourceUseReceiverSupport.Replayed(step.Value.Fact);

@@ -51,11 +51,15 @@ static class IncidentOperations
             new StandardResponseBody(result));
     }
 
-    /// <summary>The first half of an acceptance: the guards passed, so the frozen response is returned.</summary>
-    public static Result<FirstResponseDescriptor> Prepared(CommandFailure? failure, FirstResponseDescriptor response) =>
-        failure is null
-            ? Result<FirstResponseDescriptor>.Success(response)
-            : Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
+    /// <summary>Checks domain guards before freezing the response, after native acceptance was resolved.</summary>
+    public static async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(CommandFailure? failure,
+        IImmutableContentStore content, Uuid tenantId, CancellationToken ct)
+    {
+        if (failure is not null)
+            return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
+        return Result<FirstResponseDescriptor>.Success(await UnitResponseAsync(content, tenantId, ct)
+            .ConfigureAwait(false));
+    }
 
     /// <summary>The second half of an acceptance: the native fact was raised or the guard failed.</summary>
     public static Result Applied(CommandFailure? failure) =>

@@ -32,34 +32,37 @@ public sealed class RecordComplianceIncidentSystemDescriptionDecisionHandler(Nat
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "The exact incident no-change decision is required."));
 
-        var description = await reader.HydrateAsync(new SystemDescriptionAggregate(request.TenantId,
-            request.ProgramId, request.SystemDescriptionId), ct).ConfigureAwait(false);
-        var decision = SystemDescriptionDecisionCorrelation.Find(description, request.TenantId,
-            request.ProgramId, request.IncidentId, request.SystemDescriptionVersionId,
-            request.DecisionId, "no_change", request.AssessmentSha256);
-        if (decision is null)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The requested no-change fact is not correlated to this incident."));
-
         var provenance = IncidentOperations.Provenance(request, CommandKind, request.CommandId, request.TenantId,
             request.ProgramId, request.IncidentId, null, ActorReference.ForSystemProcess("system", "system"),
             clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var observed = await reader.HydrateAsync(IncidentOperations.Owner(request.TenantId, request.ProgramId,
-            request.IncidentId, request.CommandId), ct).ConfigureAwait(false);
-        if (observed.Acceptance.Decide(binding) == NativeAcceptanceDecision.None &&
-            Classify(observed, request, decision) is { } outcome)
-            return Result.Failure(outcome);
+        CorrelatedSystemDescriptionDecision? decision = null;
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(ComplianceIncident incident, CancellationToken token)
+        {
+            var description = await reader.HydrateAsync(new SystemDescriptionAggregate(request.TenantId,
+                request.ProgramId, request.SystemDescriptionId), token).ConfigureAwait(false);
+            decision = SystemDescriptionDecisionCorrelation.Find(description, request.TenantId, request.ProgramId,
+                request.IncidentId, request.SystemDescriptionVersionId, request.DecisionId, "no_change", request.AssessmentSha256);
+            if (decision is null)
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The requested no-change fact is not correlated to this incident."));
+            if (Classify(incident, request, decision) is { } outcome)
+                return Result<FirstResponseDescriptor>.Failure(outcome);
+            if (Guard(incident, request, decision) is { } mismatch)
+                return Result<FirstResponseDescriptor>.Failure(mismatch);
+            return await IncidentOperations.PrepareAsync(incident.PrepareSystemDescriptionDecision(decision.Decision,
+                decision.DecisionId, decision.Rationale, decision.ActorMemberId, decision.ActorDisplay, decision.DecidedAt),
+                content, request.TenantId, token).ConfigureAwait(false);
+        }
 
-        var response = await IncidentOperations.UnitResponseAsync(content, request.TenantId, ct).ConfigureAwait(false);
         var accepted = await operations.ExecuteAsync(new NativeOperation<ComplianceIncident>(binding,
             () => IncidentOperations.Owner(request.TenantId, request.ProgramId, request.IncidentId, request.CommandId),
             incident => incident.Acceptance,
-            incident => Prepare(incident, request, decision, response),
-            (ComplianceIncident incident, ImmutableContentRef frozen) => Guard(incident, request, decision) is { } mismatch
+            PrepareAsync,
+            (ComplianceIncident incident, ImmutableContentRef frozen) => Guard(incident, request, decision!) is { } mismatch
                 ? Result.Failure(mismatch)
                 : IncidentOperations.Applied(incident.RecordSystemDescriptionDecision(provenance, frozen,
-                    decision.Decision, decision.DecisionId, decision.Rationale, decision.ActorMemberId,
+                    decision!.Decision, decision.DecisionId, decision.Rationale, decision.ActorMemberId,
                     decision.ActorDisplay, decision.DecidedAt))), context, ct).ConfigureAwait(false);
         return IncidentOperations.Done(accepted);
     }
@@ -82,17 +85,6 @@ public sealed class RecordComplianceIncidentSystemDescriptionDecisionHandler(Nat
             retained is not null,
             current.SystemDescriptionDecisions.Any(item => item.ContentVersion == request.ContentVersion),
             decision.DecidedAt, retained?.AssessedAt ?? default);
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(ComplianceIncident incident,
-        RecordComplianceIncidentSystemDescriptionDecision request, CorrelatedSystemDescriptionDecision decision,
-        FirstResponseDescriptor response)
-    {
-        if (Guard(incident, request, decision) is { } mismatch)
-            return Result<FirstResponseDescriptor>.Failure(mismatch);
-        return IncidentOperations.Prepared(incident.PrepareSystemDescriptionDecision(decision.Decision,
-            decision.DecisionId, decision.Rationale, decision.ActorMemberId, decision.ActorDisplay,
-            decision.DecidedAt), response);
     }
 
     static RequestError? Guard(ComplianceIncident incident,
