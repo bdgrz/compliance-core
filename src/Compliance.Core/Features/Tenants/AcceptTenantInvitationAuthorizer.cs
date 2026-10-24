@@ -8,6 +8,9 @@ sealed class AcceptTenantInvitationAuthorizer(IEmailAddressDirectoryReader email
     public async ValueTask<Result> AuthorizeAsync(
         IRequestContext<AcceptTenantInvitation> context, CancellationToken ct)
     {
+        if (context.Request.InvitationId == Uuid.Empty || context.Request.TenantId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "An invitation id and tenant are required."));
         if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
             return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
                 "Invitation acceptance requires a Bdgrz user identity."));

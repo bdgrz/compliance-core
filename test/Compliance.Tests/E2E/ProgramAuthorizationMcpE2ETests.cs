@@ -355,8 +355,9 @@ public sealed class ProgramAuthorizationMcpE2ETests(BrokerStackFixture broker)
                     .GetProperty("program_id").GetString());
 
                 // Accept a same-tenant member with tenant.access but no program.manage.
-                var invitePath = $"/api/v1/tenants/{tenantId}/member-invitations";
-                using var invited = await administrator.PostAsJsonAsync(invitePath, new
+                var participantInvitationId = Uuid.CreateVersion4();
+                var invitePath = $"/api/v1/tenants/{tenantId}/member-invitations/{participantInvitationId}";
+                using var invited = await administrator.PutAsJsonAsync(invitePath, new
                 {
                     email_address = participantEmail,
                     built_in_role = BuiltInRbac.ComplianceParticipationRole,
@@ -375,8 +376,8 @@ public sealed class ProgramAuthorizationMcpE2ETests(BrokerStackFixture broker)
                     participantId, participantEmail,
                     splitHosts ? worker!.Services.GetRequiredService<MockEmailChallengeDelivery>() : null);
                 await WaitForInvitationDeliveryAsync(administrator, tenantId, participantEmail);
-                using var accepted = await participant.PostAsJsonAsync(
-                    $"/api/v1/tenants/{tenantId}/invitations/acceptance",
+                using var accepted = await participant.PutAsJsonAsync(
+                    $"/api/v1/tenants/{tenantId}/invitations/{participantInvitationId}/acceptance",
                     new { email_address = participantEmail, token });
                 Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
                 var effectivePermissions = await WaitForPermissionsAsync(administrator,

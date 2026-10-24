@@ -1,6 +1,9 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Fitz.Extensions;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Tenants;
@@ -28,8 +31,7 @@ public sealed class TenantPagedReadContractTests
             Context(new ListMyTenants(limit), actor), CancellationToken.None);
         var members = await new ListTenantMembersHandler(memberships).HandleAsync(
             Context(new ListTenantMembers(tenantId, limit), actor), CancellationToken.None);
-        var invitationPage = await new ListTenantInvitationsHandler(invitations, memberships,
-            TimeProvider.System).HandleAsync(
+        var invitationPage = await Handler(invitations, memberships).HandleAsync(
             Context(new ListTenantInvitations(tenantId, limit), actor), CancellationToken.None);
 
         // Assert
@@ -58,7 +60,7 @@ public sealed class TenantPagedReadContractTests
             Context(new ListTenants(), actor), CancellationToken.None);
         _ = await new ListTenantMembersHandler(memberships).HandleAsync(
             Context(new ListTenantMembers(tenantId), actor), CancellationToken.None);
-        _ = await new ListTenantInvitationsHandler(invitations, memberships, TimeProvider.System)
+        _ = await Handler(invitations, memberships)
             .HandleAsync(Context(new ListTenantInvitations(tenantId), actor), CancellationToken.None);
 
         // Assert
@@ -86,8 +88,7 @@ public sealed class TenantPagedReadContractTests
             Context(new ListMyTenants(Cursor: "invalid"), actor), CancellationToken.None);
         var members = await new ListTenantMembersHandler(memberships).HandleAsync(
             Context(new ListTenantMembers(tenantId, Cursor: "invalid"), actor), CancellationToken.None);
-        var invitationPage = await new ListTenantInvitationsHandler(invitations, memberships,
-            TimeProvider.System).HandleAsync(
+        var invitationPage = await Handler(invitations, memberships).HandleAsync(
             Context(new ListTenantInvitations(tenantId, Cursor: "invalid"), actor), CancellationToken.None);
 
         // Assert
@@ -104,8 +105,7 @@ public sealed class TenantPagedReadContractTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var invitations = new InvitationDirectory { Entry = Invitation(tenantId) };
-        var handler = new ListTenantInvitationsHandler(invitations, new MembershipDirectory(),
-            TimeProvider.System);
+        var handler = Handler(invitations, new MembershipDirectory());
 
         // Act
         var result = await handler.HandleAsync(Context(new ListTenantInvitations(tenantId,
@@ -170,11 +170,9 @@ public sealed class TenantPagedReadContractTests
             Context(new ListMyTenants(), actor), CancellationToken.None);
         var members = await new ListTenantMembersHandler(memberships).HandleAsync(
             Context(new ListTenantMembers(tenantId), actor), CancellationToken.None);
-        var invitationPage = await new ListTenantInvitationsHandler(invitations, memberships,
-            TimeProvider.System).HandleAsync(
+        var invitationPage = await Handler(invitations, memberships).HandleAsync(
             Context(new ListTenantInvitations(tenantId), actor), CancellationToken.None);
-        var invitationFilter = await new ListTenantInvitationsHandler(invitations, memberships,
-            TimeProvider.System).HandleAsync(Context(new ListTenantInvitations(tenantId,
+        var invitationFilter = await Handler(invitations, memberships).HandleAsync(Context(new ListTenantInvitations(tenantId,
                 EmailAddress: entry.EmailAddress), actor), CancellationToken.None);
 
         // Assert
@@ -184,7 +182,12 @@ public sealed class TenantPagedReadContractTests
         AssertNotFound(invitationFilter.Error);
     }
 
-    static TenantInvitationDirectoryEntry Invitation(Uuid tenantId) => new(tenantId,
+    static ListTenantInvitationsHandler Handler(ITenantInvitationDirectoryReader invitations,
+        ITenantMembershipDirectoryReader memberships) => new(invitations, memberships,
+        new FitzKvTenantInvitationDeliveryStore(new PersistenceKvClient(new InMemoryKvClient())),
+        new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient())), TimeProvider.System);
+
+    static TenantInvitationDirectoryEntry Invitation(Uuid tenantId) => new(tenantId, Uuid.CreateVersion4(),
         "invitee@example.com", "client_personnel", false, null, DateTimeOffset.UtcNow.AddDays(1),
         Uuid.CreateVersion4(), null);
 

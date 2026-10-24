@@ -262,7 +262,7 @@ The 21 surviving baseline reactor rows retain their original source-reviewed fai
 | ControlOccurrenceFindingReactor | — | 0.32 | [source](../../../../src/Compliance.Core/Features/Remediation/ControlOccurrenceFindingReactor.cs) |
 | BoundaryRiskReassessmentReactor | — | 0.53 | [source](../../../../src/Compliance.Core/Features/Risks/BoundaryRiskReassessmentReactor.cs) |
 | RiskMethodReassessmentReactor | — | 0.41 | [source](../../../../src/Compliance.Core/Features/Risks/RiskMethodReassessmentReactor.cs) |
-| TenantInvitationDeliveryReactor | CHOREO-07 | 0.67 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs) |
+| TenantInvitationDeliveryReactor | CHOREO-07 | 0.67 | (removed in #1022) |
 | TenantInvitationReactor | — | 0.63 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantInvitationReactor.cs) |
 | TenantRegistrationReactor | CHOREO-08 | 0.60 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs) |
 | TenantSelfServiceActivationReactor | — | 0.68 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantSelfServiceActivationReactor.cs) |

@@ -334,8 +334,8 @@ public sealed class TenantIdentityReadLeakMatrixE2ETests(BrokerStackFixture brok
 
     static async Task InviteAsync(HttpClient client, Uuid tenantId, string email)
     {
-        using var response = await client.PostAsJsonAsync(
-            TenantPath(tenantId) + "/member-invitations", new
+        using var response = await client.PutAsJsonAsync(
+            TenantPath(tenantId) + $"/member-invitations/{Uuid.CreateVersion4()}", new
             {
                 email_address = email,
                 built_in_role = BuiltInRbac.ComplianceParticipationRole,
@@ -357,8 +357,9 @@ public sealed class TenantIdentityReadLeakMatrixE2ETests(BrokerStackFixture brok
         Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> factory,
         IHost? worker, bool splitHosts, HttpClient inviter, Uuid tenantId, string email)
     {
-        using var invitation = await inviter.PostAsJsonAsync(
-            TenantPath(tenantId) + "/invitations", new
+        var invitationId = Uuid.CreateVersion4();
+        using var invitation = await inviter.PutAsJsonAsync(
+            TenantPath(tenantId) + $"/invitations/{invitationId}", new
             {
                 email_address = email,
                 affiliation = "client_personnel",
@@ -375,8 +376,8 @@ public sealed class TenantIdentityReadLeakMatrixE2ETests(BrokerStackFixture brok
                 out token)), $"The invitation for {email} was not delivered.");
         await TenantInvitationE2ETests.VerifyEmailAsync(factory, member, memberId.ToString(),
             email, services.GetRequiredService<MockEmailChallengeDelivery>());
-        using var accepted = await member.PostAsJsonAsync(
-            TenantPath(tenantId) + "/invitations/acceptance", new
+        using var accepted = await member.PutAsJsonAsync(
+            TenantPath(tenantId) + $"/invitations/{invitationId}/acceptance", new
             {
                 email_address = email,
                 token,

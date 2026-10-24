@@ -136,8 +136,9 @@ public sealed class SnapshotE2ETests(BrokerStackFixture broker)
                 var digest = preview.GetProperty("digest").GetString()!;
 
                 var reviewerEmail = $"snapshot-reviewer-{Guid.NewGuid():N}@example.com";
-                using var invitation = await owner.PostAsJsonAsync(
-                    $"/api/v1/tenants/{tenantId}/invitations",
+                var invitationId = Uuid.CreateVersion4();
+                using var invitation = await owner.PutAsJsonAsync(
+                    $"/api/v1/tenants/{tenantId}/invitations/{invitationId}",
                     new { email_address = reviewerEmail, affiliation = "client_personnel", administrator = false });
                 Assert.Equal(HttpStatusCode.NoContent, invitation.StatusCode);
                 var delivery = splitWorker
@@ -156,8 +157,8 @@ public sealed class SnapshotE2ETests(BrokerStackFixture broker)
                 await TenantInvitationE2ETests.VerifyEmailAsync(factory, reviewer,
                     reviewerId, reviewerEmail,
                     splitWorker ? worker!.Services.GetRequiredService<MockEmailChallengeDelivery>() : null);
-                using var accepted = await reviewer.PostAsJsonAsync(
-                    $"/api/v1/tenants/{tenantId}/invitations/acceptance",
+                using var accepted = await reviewer.PutAsJsonAsync(
+                    $"/api/v1/tenants/{tenantId}/invitations/{invitationId}/acceptance",
                     new { email_address = reviewerEmail, token });
                 Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
                 var parsedTenantId = Uuid.Parse(tenantId, CultureInfo.InvariantCulture);

@@ -1,18 +1,24 @@
-using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
-/// <summary>One replaceable, single-use invitation per tenant and normalized email address.</summary>
+/// <summary>
+///     One immutable invitation offer, identified by its client-chosen invitation id: the exact recipient, purpose,
+///     scopes and expiry, one verified token and at most one accepting user. Creation and acceptance are native
+///     operations of this owner; delivery attempts and the mailbox claim live in their own owners.
+/// </summary>
 public sealed class TenantInvitation : Aggregate
 {
-    static readonly Uuid InvitationNamespaceId = Uuid.Parse(
-        "d769ee6a-18e9-529e-a5a5-46082e96db53", CultureInfo.InvariantCulture);
+    /// <summary>Lifetime of an invitation token.</summary>
+    public static TimeSpan Lifetime { get; } = TimeSpan.FromDays(7);
 
     readonly Uuid _tenantId;
-    readonly string _emailAddress;
+    readonly Uuid _invitationId;
+    string? _emailAddress;
     string? _tokenHash;
     DateTimeOffset _expiresAt;
     string? _affiliation;
@@ -21,188 +27,171 @@ public sealed class TenantInvitation : Aggregate
     DateTimeOffset _invitedAt;
     bool _administrator;
     string? _builtInRole;
-    Uuid[]? _guestProgramIds;
+    ImmutableContentRef? _guestProgramIdsManifest;
     DateOnly? _guestExpiresOn;
-    Uuid? _deliveryAttemptId;
-    string _deliveryStatus = "pending";
+    long _mailboxGeneration;
     bool _created;
     bool _accepted;
     Uuid _acceptedUserId;
 
-    public TenantInvitation(Uuid tenantId, string emailAddress)
-        : base(CreateId(tenantId, emailAddress),
-            new EventStreamAddress(tenantId.ToString(), "tenant-invitations",
-                CreateId(tenantId, emailAddress).ToString()))
+    /// <summary>Opens the invitation owner; <paramref name="selectedLogicalId" /> selects the operation to resolve for a retry.</summary>
+    public TenantInvitation(Uuid tenantId, Uuid invitationId, Uuid selectedLogicalId = default)
+        : base(invitationId, new EventStreamAddress(tenantId.ToString(), "tenant-invitations", invitationId.ToString()))
     {
         _tenantId = tenantId;
-        _emailAddress = Normalize(emailAddress);
+        _invitationId = invitationId;
+        Acceptance = new NativeAcceptance(selectedLogicalId);
         On<TenantMemberInvited>(Apply);
         On<TenantInvitationAccepted>(Apply);
-        On<TenantInvitationDeliverySent>(sent =>
-        {
-            if (_deliveryAttemptId != sent.DeliveryAttemptId)
-                throw new InvalidOperationException("The invitation delivery outcome is stale.");
-            _deliveryStatus = "delivered";
-        });
-        On<TenantInvitationDeliveryFailed>(failed =>
-        {
-            if (_deliveryAttemptId != failed.DeliveryAttemptId)
-                throw new InvalidOperationException("The invitation delivery outcome is stale.");
-            _deliveryStatus = "failed";
-        });
     }
 
+    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
+
+    public bool IsCreated => _created;
     public bool IsAccepted => _accepted;
-    public static Uuid IdFor(Uuid tenantId, string emailAddress) =>
-        CreateId(tenantId, emailAddress);
-    public Uuid? CurrentDeliveryAttemptId => _deliveryAttemptId;
-    public string DeliveryStatus => _deliveryStatus;
+    public Uuid AcceptedUserId => _acceptedUserId;
+    public string? EmailAddress => _emailAddress;
+    public string? Affiliation => _affiliation;
+    public bool Administrator => _administrator;
+    public string? BuiltInRole => _builtInRole;
+    public DateTimeOffset ExpiresAt => _expiresAt;
+    public DateOnly? GuestExpiresOn => _guestExpiresOn;
+    public ImmutableContentRef? GuestProgramIdsManifest => _guestProgramIdsManifest;
+    public long MailboxGeneration => _mailboxGeneration;
 
-    public static Uuid DeliveryAttemptFor(TenantMemberInvited invited) =>
-        invited.DeliveryAttemptId ?? Uuid.CreateVersion5(InvitationNamespaceId,
-            $"legacy-delivery\n{invited.TenantId}\n{invited.EmailAddress}\n{invited.TokenHash}");
+    /// <summary>True once the invitation can no longer be accepted by time: its token or guest membership ended.</summary>
+    public bool IsExpiredAt(DateTimeOffset now) => _created && (now >= _expiresAt ||
+        _guestExpiresOn is { } endDate && DateOnly.FromDateTime(now.UtcDateTime) > endDate);
 
-    public Result Invite(string affiliation, bool administrator, string tokenHash,
-        DateTimeOffset expiresAt, DateTimeOffset now, Uuid invitedBy,
-        string? builtInRole = null, Uuid? deliveryAttemptId = null,
-        string? tokenKeyId = null)
+    /// <summary>
+    ///     Checks the terms of a new invitation against the offer rules without raising anything; the first half of
+    ///     the native acceptance pair.
+    /// </summary>
+    public Result PrepareInvite(TenantInvitationTerms terms, string tokenHash, DateTimeOffset expiresAt,
+        DateTimeOffset now)
     {
-        return InviteCore(affiliation, administrator, tokenHash, expiresAt, now, invitedBy,
-            builtInRole, deliveryAttemptId, tokenKeyId, null, null, null);
-    }
-
-    public Result InviteGuest(IReadOnlyList<Uuid> programIds, DateOnly expiresOn,
-        string tokenHash, DateTimeOffset invitationExpiresAt, DateTimeOffset now, Uuid invitedBy,
-        Uuid? deliveryAttemptId = null, string? tokenKeyId = null,
-        string? invitedByDisplay = null)
-    {
-        if (programIds is null || programIds.Count == 0 || programIds.Any(id => id == Uuid.Empty) ||
-            programIds.Distinct().Count() != programIds.Count ||
-            expiresOn <= DateOnly.FromDateTime(now.UtcDateTime))
-            return Failure(RequestErrorKind.Validation,
-                "A guest invitation requires distinct program scopes and a future membership end date.");
-
-        var normalizedPrograms = programIds.OrderBy(id => id.ToString(), StringComparer.Ordinal).ToArray();
-        return InviteCore("guest", false, tokenHash, invitationExpiresAt, now, invitedBy,
-            null, deliveryAttemptId, tokenKeyId, normalizedPrograms, expiresOn, invitedByDisplay);
-    }
-
-    Result InviteCore(string affiliation, bool administrator, string tokenHash,
-        DateTimeOffset expiresAt, DateTimeOffset now, Uuid invitedBy, string? builtInRole,
-        Uuid? deliveryAttemptId, string? tokenKeyId, Uuid[]? guestProgramIds,
-        DateOnly? guestExpiresOn, string? invitedByDisplay)
-    {
-        var isGuest = affiliation == "guest";
-        if (affiliation is not ("client_personnel" or "firm_staff" or "guest"))
+        ArgumentNullException.ThrowIfNull(terms);
+        if (!EmailAddresses.TryNormalize(terms.EmailAddress, out var normalized) || normalized != terms.EmailAddress)
+            return Failure(RequestErrorKind.Validation, "Enter a valid email address.");
+        var isGuest = terms.Affiliation == "guest";
+        if (terms.Affiliation is not ("client_personnel" or "firm_staff" or "guest"))
             return Failure(RequestErrorKind.Validation,
                 "Affiliation must be client_personnel, firm_staff, or guest.");
-        if (isGuest && (administrator || builtInRole is not null || guestProgramIds is not { Length: > 0 } ||
-                        guestProgramIds.Any(id => id == Uuid.Empty) ||
-                        guestProgramIds.Distinct().Count() != guestProgramIds.Length ||
-                        guestExpiresOn is not { } endDate ||
-                        endDate <= DateOnly.FromDateTime(now.UtcDateTime) ||
-                        endDate == DateOnly.MaxValue || string.IsNullOrWhiteSpace(invitedByDisplay)))
+        if (isGuest && (terms.Administrator || terms.BuiltInRole is not null ||
+                        terms.GuestProgramIds is not { Count: > 0 } programs ||
+                        programs.Any(id => id == Uuid.Empty) ||
+                        programs.Distinct().Count() != programs.Count ||
+                        terms.GuestExpiresOn is not { } endDate ||
+                        endDate <= DateOnly.FromDateTime(now.UtcDateTime) || endDate == DateOnly.MaxValue ||
+                        string.IsNullOrWhiteSpace(terms.InvitedByDisplay)))
             return Failure(RequestErrorKind.Validation,
                 "A guest invitation requires scoped programs, a future membership end date, and no administrator or built-in role.");
-        if (!isGuest && (guestProgramIds is not null || guestExpiresOn is not null))
+        if (!isGuest && (terms.GuestProgramIds is not null || terms.GuestExpiresOn is not null))
             return Failure(RequestErrorKind.Validation,
                 "Only a guest invitation may include guest program scopes or an end date.");
-        if (administrator && affiliation != "client_personnel")
+        if (terms.Administrator && terms.Affiliation != "client_personnel")
             return Failure(RequestErrorKind.Validation, "The first administrator must be client personnel.");
-        if (administrator && builtInRole is not null)
+        if (terms.Administrator && terms.BuiltInRole is not null)
             return Failure(RequestErrorKind.Validation,
                 "A first-administrator invitation cannot select a second role.");
-        if (builtInRole is not null &&
-            (affiliation != "client_personnel" || BuiltInRbac.TeamIdForRole(_tenantId, builtInRole) is null))
+        if (terms.BuiltInRole is not null &&
+            (terms.Affiliation != "client_personnel" || BuiltInRbac.TeamIdForRole(_tenantId, terms.BuiltInRole) is null))
             return Failure(RequestErrorKind.Validation,
                 "A built-in role requires client personnel and a supported role value.");
-        if (_accepted)
-            return Failure(RequestErrorKind.Conflict, "The invitation has already been accepted.");
-        if (_affiliation is not null &&
-            (_affiliation != affiliation || _administrator != administrator))
-            return Failure(RequestErrorKind.Conflict,
-                "The pending invitation has a different affiliation or administrator purpose.");
-        if (!IsTokenHash(tokenHash) || expiresAt <= now || invitedBy == Uuid.Empty ||
-            now == default)
+        if (_created)
+            return Failure(RequestErrorKind.Conflict, "The invitation already exists with different terms.");
+        if (!IsTokenHash(tokenHash) || expiresAt <= now || terms.InvitedBy == Uuid.Empty || now == default)
             return Failure(RequestErrorKind.Validation, "A valid invitation is required.");
-
-        deliveryAttemptId ??= Uuid.CreateVersion4();
-        RaiseEvent(new TenantMemberInvited(_tenantId, _emailAddress, affiliation,
-            administrator, tokenHash, expiresAt, invitedBy, builtInRole, deliveryAttemptId,
-            tokenKeyId, guestProgramIds?.ToArray(), guestExpiresOn, now,
-            invitedByDisplay?.Trim()));
         return Result.Success;
     }
 
-    public Result RecordDeliverySent(Uuid deliveryAttemptId, DateTimeOffset sentAt)
+    /// <summary>
+    ///     Accepts the creation as the native fact of <paramref name="operation" />. The logical id of the operation
+    ///     is the invitation id; <paramref name="mailboxGeneration" /> is the generation of the claim it was
+    ///     published under.
+    /// </summary>
+    public Result Invite(OperationProvenance operation, ImmutableContentRef firstResponse, TenantInvitationTerms terms,
+        string tokenHash, string? tokenKeyId, DateTimeOffset expiresAt, DateTimeOffset now, long mailboxGeneration,
+        ImmutableContentRef? guestProgramIdsManifest)
     {
-        var check = CheckDeliveryAttempt(deliveryAttemptId, sentAt);
-        if (check is not null)
-            return Result.Failure(check);
-        if (_deliveryStatus == "delivered")
-            return Result.Success;
-        if (_deliveryStatus == "failed")
-            return Failure(RequestErrorKind.Conflict,
-                "The failed invitation delivery attempt must be reissued.");
-        RaiseEvent(new TenantInvitationDeliverySent(_tenantId, _emailAddress,
-            deliveryAttemptId, sentAt));
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.LogicalId != _invitationId || operation.Owner != Stream)
+            return Failure(RequestErrorKind.Validation, "An invitation requires its own logical operation.");
+        var prepared = PrepareInvite(terms, tokenHash, expiresAt, now);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (mailboxGeneration < 1 || (terms.Affiliation == "guest") != (guestProgramIdsManifest is not null))
+            return Failure(RequestErrorKind.Validation, "An invitation requires its mailbox claim and exact scopes.");
+        RaiseEvent(new TenantMemberInvited(_tenantId, _invitationId, terms.EmailAddress, terms.Affiliation,
+            terms.Administrator, tokenHash, expiresAt, terms.InvitedBy, terms.BuiltInRole, tokenKeyId,
+            guestProgramIdsManifest, terms.GuestExpiresOn, now, terms.InvitedByDisplay?.Trim(), mailboxGeneration,
+            operation, firstResponse));
         return Result.Success;
     }
 
-    public Result RecordDeliveryFailure(Uuid deliveryAttemptId, string failureCode,
-        DateTimeOffset failedAt)
+    /// <summary>
+    ///     Checks an acceptance against the pending offer without raising anything. An exact retry of an accepted
+    ///     operation never reaches this check, so expiry cannot turn a replay into a failure.
+    /// </summary>
+    public Result PrepareAccept(Uuid userId, string emailAddress, string token, DateTimeOffset now)
     {
-        var check = CheckDeliveryAttempt(deliveryAttemptId, failedAt);
-        if (check is not null)
-            return Result.Failure(check);
-        if (string.IsNullOrWhiteSpace(failureCode) || failureCode.Length > 100)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A delivery failure code is required and must be at most 100 characters."));
-        if (_deliveryStatus == "failed")
-            return Result.Success;
-        if (_deliveryStatus == "delivered")
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The invitation delivery attempt has already succeeded."));
-        RaiseEvent(new TenantInvitationDeliveryFailed(_tenantId, _emailAddress,
-            deliveryAttemptId, failureCode.Trim(), failedAt));
-        return Result.Success;
-    }
-
-    public Result Accept(Uuid userId, string token, DateTimeOffset now)
-    {
-        if (_accepted)
-            return _acceptedUserId == userId
-                ? Result.Success
-                : Failure(RequestErrorKind.Forbidden, "The invitation belongs to another user.");
-        if (userId == Uuid.Empty || string.IsNullOrWhiteSpace(token) || _tokenHash is null)
+        if (!_created || _tokenHash is null)
             return Failure(RequestErrorKind.Validation, "A valid invitation token is required.");
+        if (_accepted)
+            return Failure(RequestErrorKind.Forbidden, "The invitation belongs to another user.");
+        if (userId == Uuid.Empty || string.IsNullOrWhiteSpace(token))
+            return Failure(RequestErrorKind.Validation, "A valid invitation token is required.");
+        if (!EmailAddresses.TryNormalize(emailAddress, out var normalized) || normalized != _emailAddress)
+            return Failure(RequestErrorKind.Validation, "The invitation token is invalid.");
         if (now >= _expiresAt)
             return Failure(RequestErrorKind.Validation, "The invitation has expired.");
         if (_invitedAt != default && now < _invitedAt)
-            return Failure(RequestErrorKind.Validation,
-                "An invitation cannot be accepted before it was issued.");
+            return Failure(RequestErrorKind.Validation, "An invitation cannot be accepted before it was issued.");
         if (_affiliation == "guest" && _guestExpiresOn is { } guestExpiresOn &&
             DateOnly.FromDateTime(now.UtcDateTime) > guestExpiresOn)
             return Failure(RequestErrorKind.Validation, "The guest membership has expired.");
 
         var suppliedHash = SHA256.HashData(Encoding.UTF8.GetBytes(token));
         var expectedHash = Convert.FromHexString(_tokenHash);
-        if (!CryptographicOperations.FixedTimeEquals(suppliedHash, expectedHash))
-            return Failure(RequestErrorKind.Validation, "The invitation token is invalid.");
+        return CryptographicOperations.FixedTimeEquals(suppliedHash, expectedHash)
+            ? Result.Success
+            : Failure(RequestErrorKind.Validation, "The invitation token is invalid.");
+    }
 
-        RaiseEvent(new TenantInvitationAccepted(_tenantId, userId, _emailAddress,
-            _affiliation!, _administrator, _builtInRole, _guestProgramIds?.ToArray(),
-            _guestExpiresOn, now, _invitedBy, _invitedByDisplay));
+    /// <summary>
+    ///     Accepts the acceptance as the native fact of <paramref name="operation" />. The accepted guest scope
+    ///     manifest must carry exactly the offered scope content.
+    /// </summary>
+    public Result Accept(OperationProvenance operation, ImmutableContentRef firstResponse, Uuid userId,
+        string emailAddress, string token, DateTimeOffset now, ImmutableContentRef? acceptedGuestProgramIdsManifest)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.LogicalId != TenantInvitationIds.AcceptanceOf(_invitationId) || operation.Owner != Stream)
+            return Failure(RequestErrorKind.Validation, "An acceptance requires its own logical operation.");
+        var prepared = PrepareAccept(userId, emailAddress, token, now);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (!SameScope(_guestProgramIdsManifest, acceptedGuestProgramIdsManifest))
+            return Failure(RequestErrorKind.Conflict, "The accepted guest scope differs from the offer.");
+        RaiseEvent(new TenantInvitationAccepted(_tenantId, _invitationId, userId, _emailAddress!, _affiliation!,
+            _administrator, _builtInRole, acceptedGuestProgramIdsManifest, _guestExpiresOn, now, _invitedBy,
+            _invitedByDisplay, operation, firstResponse));
         return Result.Success;
     }
 
     void Apply(TenantMemberInvited invited)
     {
-        if (invited.TenantId != _tenantId || invited.EmailAddress != _emailAddress)
-            throw new InvalidOperationException("The invitation does not match its tenant and email address.");
+        Acceptance.Observe(invited);
+        if (_created || invited.TenantId != _tenantId || invited.InvitationId != _invitationId ||
+            invited.Operation.LogicalId != _invitationId || invited.Operation.Owner != Stream ||
+            !EmailAddresses.TryNormalize(invited.EmailAddress, out var normalized) || normalized != invited.EmailAddress)
+            throw new InvalidOperationException("The invitation does not match its tenant, id and email address.");
         if (invited.Affiliation is not ("client_personnel" or "firm_staff" or "guest") ||
             !IsTokenHash(invited.TokenHash) || invited.ExpiresAt == default ||
-            invited.InvitedBy == Uuid.Empty ||
+            invited.InvitedBy == Uuid.Empty || invited.MailboxGeneration < 1 ||
             invited.InvitedAt != default && invited.ExpiresAt <= invited.InvitedAt ||
             invited.Administrator && invited.Affiliation != "client_personnel" ||
             invited.BuiltInRole is not null &&
@@ -211,19 +200,16 @@ public sealed class TenantInvitation : Aggregate
             throw new InvalidOperationException("The invitation event has invalid terms.");
         var isGuest = invited.Affiliation == "guest";
         if (isGuest && (invited.Administrator || invited.BuiltInRole is not null ||
-                        invited.InvitedAt == default ||
-                        invited.GuestProgramIds is not { Count: > 0 } programs ||
-                        programs.Any(id => id == Uuid.Empty) ||
-                        programs.Distinct().Count() != programs.Count ||
+                        invited.InvitedAt == default || invited.GuestProgramIdsManifest is null ||
                         invited.GuestExpiresOn is not { } expiresOn ||
                         expiresOn <= DateOnly.FromDateTime(invited.InvitedAt.UtcDateTime) ||
                         expiresOn == DateOnly.MaxValue ||
-                        invited.InvitedBy == Uuid.Empty ||
                         string.IsNullOrWhiteSpace(invited.InvitedByDisplay)))
             throw new InvalidOperationException("The guest invitation event has invalid scope or expiry terms.");
-        if (!isGuest && (invited.GuestProgramIds is not null || invited.GuestExpiresOn is not null))
+        if (!isGuest && (invited.GuestProgramIdsManifest is not null || invited.GuestExpiresOn is not null))
             throw new InvalidOperationException("Only a guest invitation event may carry guest scope terms.");
         _created = true;
+        _emailAddress = invited.EmailAddress;
         _tokenHash = invited.TokenHash;
         _expiresAt = invited.ExpiresAt;
         _affiliation = invited.Affiliation;
@@ -232,61 +218,43 @@ public sealed class TenantInvitation : Aggregate
         _invitedAt = invited.InvitedAt;
         _administrator = invited.Administrator;
         _builtInRole = invited.BuiltInRole;
-        _guestProgramIds = invited.GuestProgramIds?.ToArray();
+        _guestProgramIdsManifest = invited.GuestProgramIdsManifest;
         _guestExpiresOn = invited.GuestExpiresOn;
-        _deliveryAttemptId = DeliveryAttemptFor(invited);
-        _deliveryStatus = "pending";
+        _mailboxGeneration = invited.MailboxGeneration;
     }
 
     void Apply(TenantInvitationAccepted accepted)
     {
-        if (!_created || _accepted || accepted.TenantId != _tenantId ||
-            accepted.EmailAddress != _emailAddress ||
+        Acceptance.Observe(accepted);
+        if (!_created || _accepted || accepted.TenantId != _tenantId || accepted.InvitationId != _invitationId ||
+            accepted.Operation.LogicalId != TenantInvitationIds.AcceptanceOf(_invitationId) ||
+            accepted.Operation.Owner != Stream || accepted.EmailAddress != _emailAddress ||
             accepted.UserId == Uuid.Empty || accepted.Affiliation != _affiliation ||
             accepted.Administrator != _administrator || accepted.BuiltInRole != _builtInRole)
             throw new InvalidOperationException("The accepted invitation does not match its pending terms.");
         if (accepted.AcceptedAt != default && accepted.AcceptedAt >= _expiresAt)
             throw new InvalidOperationException("An expired invitation cannot be accepted.");
-        if (accepted.AcceptedAt != default && _invitedAt != default &&
-            accepted.AcceptedAt < _invitedAt)
+        if (accepted.AcceptedAt != default && _invitedAt != default && accepted.AcceptedAt < _invitedAt)
             throw new InvalidOperationException("An invitation cannot be accepted before it was issued.");
         if (_affiliation == "guest" &&
             (accepted.AcceptedAt == default || accepted.GuestExpiresOn != _guestExpiresOn ||
-             accepted.AcceptedAt < _invitedAt ||
-             accepted.GuestProgramIds is null || !_guestProgramIds!.SequenceEqual(accepted.GuestProgramIds) ||
+             accepted.AcceptedAt < _invitedAt || !SameScope(_guestProgramIdsManifest, accepted.GuestProgramIdsManifest) ||
              accepted.InvitedBy != _invitedBy || accepted.InvitedByDisplay != _invitedByDisplay ||
              DateOnly.FromDateTime(accepted.AcceptedAt.UtcDateTime) > _guestExpiresOn))
             throw new InvalidOperationException("The accepted guest invitation does not match its scope and expiry.");
-        if (_affiliation != "guest" &&
-            (accepted.GuestProgramIds is not null || accepted.GuestExpiresOn is not null))
+        if (_affiliation != "guest" && (accepted.GuestProgramIdsManifest is not null || accepted.GuestExpiresOn is not null))
             throw new InvalidOperationException("Only a guest invitation acceptance may carry guest terms.");
 
         _accepted = true;
         _acceptedUserId = accepted.UserId;
     }
 
-    RequestError? CheckDeliveryAttempt(Uuid deliveryAttemptId, DateTimeOffset attemptedAt) =>
-        !_created
-            ? new RequestError(RequestErrorKind.NotFound, "The invitation does not exist.")
-            : deliveryAttemptId == Uuid.Empty || attemptedAt == default
-                ? new RequestError(RequestErrorKind.Validation,
-                    "A delivery attempt requires an identity and timestamp.")
-                : _deliveryAttemptId != deliveryAttemptId
-                    ? new RequestError(RequestErrorKind.Conflict,
-                        "The invitation delivery attempt is stale.")
-                    : null;
+    // The accepted manifest is separate content under its own schema; equal scope means equal bytes and digest.
+    static bool SameScope(ImmutableContentRef? offered, ImmutableContentRef? accepted) =>
+        offered is null ? accepted is null
+            : accepted is not null && offered.Sha256 == accepted.Sha256 && offered.Bytes == accepted.Bytes;
 
-    static Uuid CreateId(Uuid tenantId, string emailAddress) =>
-        Uuid.CreateVersion5(InvitationNamespaceId, $"{tenantId}\n{Normalize(emailAddress)}");
+    static bool IsTokenHash(string? tokenHash) => tokenHash is { Length: 64 } && tokenHash.All(Uri.IsHexDigit);
 
-    static string Normalize(string emailAddress) =>
-        EmailAddresses.TryNormalize(emailAddress, out var normalized)
-            ? normalized
-            : throw new ArgumentException("A valid email address is required.", nameof(emailAddress));
-
-    static bool IsTokenHash(string? tokenHash) => tokenHash is { Length: 64 } &&
-        tokenHash.All(Uri.IsHexDigit);
-
-    static Result Failure(RequestErrorKind kind, string message) =>
-        Result.Failure(new RequestError(kind, message));
+    static Result Failure(RequestErrorKind kind, string message) => Result.Failure(new RequestError(kind, message));
 }

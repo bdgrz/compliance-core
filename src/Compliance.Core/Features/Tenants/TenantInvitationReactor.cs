@@ -1,10 +1,11 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 using Microsoft.Extensions.Logging;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
 public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus,
-    ILogger<TenantInvitationReactor> logger, TenantActivationPolicy? policy = null)
+    IImmutableContentStore content, ILogger<TenantInvitationReactor> logger, TenantActivationPolicy? policy = null)
     : Reactor(checkpoints, EventStreamPattern.ForTenant("tenant-invitations")),
       IReactorHandler<TenantInvitationAccepted>
 {
@@ -16,65 +17,68 @@ public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore c
 
     async ValueTask ReactAsync(IReactorContext<TenantInvitationAccepted> context, CancellationToken ct)
     {
-        var invitedByDisplay = context.Trigger.InvitedByDisplay;
-        Uuid[]? guestPrograms = null;
+        var accepted = context.Trigger;
+        var invitedByDisplay = accepted.InvitedByDisplay;
+        IReadOnlyList<Uuid>? guestPrograms = null;
         DateOnly? guestExpiresOn = null;
-        if (context.Trigger.Affiliation == "guest")
+        if (accepted.Affiliation == "guest")
         {
-            if (context.Trigger.GuestProgramIds is not { Count: > 0 } programs ||
-                context.Trigger.GuestExpiresOn is not { } expiresOn ||
-                context.Trigger.InvitedBy == Uuid.Empty ||
-                string.IsNullOrWhiteSpace(invitedByDisplay) ||
-                context.Trigger.AcceptedAt == default ||
-                DateOnly.FromDateTime(context.Trigger.AcceptedAt.UtcDateTime) > expiresOn)
+            if (accepted.GuestProgramIdsManifest is null || accepted.GuestExpiresOn is not { } expiresOn ||
+                accepted.InvitedBy == Uuid.Empty || string.IsNullOrWhiteSpace(invitedByDisplay) ||
+                accepted.AcceptedAt == default ||
+                DateOnly.FromDateTime(accepted.AcceptedAt.UtcDateTime) > expiresOn)
                 throw new InvalidOperationException("A guest acceptance must retain its invited scope and attribution.");
-            guestPrograms = programs.ToArray();
+            guestPrograms = await content.ReadJsonAsync<IReadOnlyList<Uuid>>(accepted.TenantId.ToString(),
+                accepted.GuestProgramIdsManifest, ct).ConfigureAwait(false);
+            if (guestPrograms is not { Count: > 0 })
+                throw new InvalidOperationException("A guest acceptance must retain its invited scope and attribution.");
             guestExpiresOn = expiresOn;
         }
 
         // A user re-invited while already a live member keeps that episode; the owner reports the exact
-        // live-episode conflict and the rest of the acceptance (grants, teams, activation) still applies.
-        var registration = await bus.SendAsync(MemberRegistrationEffects.Register(
-            context.Trigger.Metadata.EventId, context.Trigger.TenantId, context.Trigger.UserId,
-            context.Trigger.Affiliation, guestExpiresOn), context, ct).ConfigureAwait(false);
-        if (!registration.IsSuccess && registration.Error != Member.LiveEpisodeConflict)
-            throw new ReactionCommandFailedException(registration.Error);
+        // live-episode conflict and the rest of the acceptance (grants, teams, activation) still applies. The
+        // registration id is the episode id, so a replay binds the team assignments to the episode it registered.
+        var registration = MemberRegistrationEffects.Register(accepted.Metadata.EventId, accepted.TenantId,
+            accepted.UserId, accepted.Affiliation, guestExpiresOn);
+        var registered = await bus.SendAsync(registration, context, ct).ConfigureAwait(false);
+        if (!registered.IsSuccess && registered.Error != Member.LiveEpisodeConflict)
+            throw new ReactionCommandFailedException(registered.Error);
+        var episodeId = registered.IsSuccess ? registration.CommandId : Uuid.Empty;
         if (guestPrograms is not null && guestExpiresOn is { } endDate)
         {
-            var invitationId = TenantInvitation.IdFor(context.Trigger.TenantId,
-                context.Trigger.EmailAddress);
             foreach (var programId in guestPrograms)
             {
-                await bus.SendReactionAsync(new ProvisionGuestProgramAccess(context.Trigger.TenantId,
-                    context.Trigger.UserId, programId, invitationId, endDate,
-                    context.Trigger.AcceptedAt, context.Trigger.InvitedBy,
+                await bus.SendReactionAsync(new ProvisionGuestProgramAccess(accepted.TenantId, accepted.UserId,
+                    programId, accepted.InvitationId, endDate, accepted.AcceptedAt, accepted.InvitedBy,
                     invitedByDisplay!), context, ct);
             }
         }
-        var memberId = RbacIds.Member(context.Trigger.TenantId, context.Trigger.UserId);
-        if (context.Trigger.BuiltInRole is { } role)
+
+        var memberId = RbacIds.Member(accepted.TenantId, accepted.UserId);
+        if (accepted.BuiltInRole is { } role)
         {
-            var teamId = BuiltInRbac.TeamIdForRole(context.Trigger.TenantId, role) ??
+            var teamId = BuiltInRbac.TeamIdForRole(accepted.TenantId, role) ??
                 throw new InvalidOperationException("The accepted invitation has an unknown built-in role.");
-            await AssignAsync(context, teamId, memberId, ct).ConfigureAwait(false);
+            await AssignAsync(context, teamId, memberId, episodeId, ct).ConfigureAwait(false);
         }
-        if (context.Trigger.Administrator)
+
+        if (accepted.Administrator)
         {
-            await AssignAsync(context, BuiltInRbac.AdministratorsTeamId(context.Trigger.TenantId), memberId, ct)
+            // The administrators team is admitted on the tenant manager guard; the guard's process applies it.
+            await AssignAsync(context, BuiltInRbac.AdministratorsTeamId(accepted.TenantId), memberId, episodeId, ct)
                 .ConfigureAwait(false);
             await _policy.SendActivationAsync(bus,
-                new ActivateTenant(context.Trigger.TenantId, context.Trigger.UserId,
-                    context.Trigger.EmailAddress), context, logger, ct);
+                new ActivateTenant(accepted.TenantId, accepted.UserId, accepted.EmailAddress), context, logger, ct);
         }
     }
 
     // A user re-invited while already on the team keeps that assignment; the owner reports the exact
     // already-assigned conflict and the rest of the acceptance still applies.
     async ValueTask AssignAsync(IReactorContext<TenantInvitationAccepted> context, Uuid teamId, Uuid memberId,
-        CancellationToken ct)
+        Uuid episodeId, CancellationToken ct)
     {
         var assignment = await bus.SendAsync(TeamMemberEffects.Assign(context.Trigger.Metadata.EventId,
-            context.Trigger.TenantId, teamId, memberId), context, ct).ConfigureAwait(false);
+            context.Trigger.TenantId, teamId, memberId, episodeId), context, ct).ConfigureAwait(false);
         if (!assignment.IsSuccess && assignment.Error != TeamMember.AlreadyAssignedConflict)
             throw new ReactionCommandFailedException(assignment.Error);
     }

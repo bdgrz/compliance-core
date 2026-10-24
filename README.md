@@ -109,13 +109,15 @@ acceptance but before the sent event can produce another email with the same val
 Reissuing replaces the challenge and invalidates its previous token. Keep SMTP credentials and
 token keys in deployment secrets. The `.env.example` remains suitable for local mock delivery.
 Invitations use the same configured SMTP relay and key ring outside development. The API commits
-only a token hash, attempt ID, and key ID; the worker derives the seven-day invitation token,
-sends it with a stable `Message-ID`, and records the outcome. A worker restart retries an
-unacknowledged send with the same token and message ID. SMTP delivery is at least once; the relay
-may still deliver a duplicate after a crash. A recorded key or SMTP failure requires an
-administrator to reissue; the tenant worker continues with later invitations. Reissue
-invalidates the previous token. Historical hash-only invitations cannot be delivered by the
-worker and must be reissued. Development and
+only a token hash and key ID under the client-chosen invitation ID; the invitation delivery process
+(not the invitation stream) derives the seven-day invitation token, sends it with a stable
+`Message-ID` for one attempt, and keeps the attempt result in its own process record. A worker
+restart retries an unacknowledged send with the same token and message ID. SMTP delivery is at
+least once; the relay may still deliver a duplicate after a crash. A recorded key or SMTP failure
+requires an administrator to invite again under a new invitation ID, which is allowed once the
+failed delivery is recorded; the tenant worker continues with later invitations. At most one
+invitation is pending per mailbox: a second invitation ID for the same address conflicts until
+the first is accepted, expired or failed. Development and
 tests default to `MockTenantInvitationDelivery` in the worker that sent the invitation. Invitation
 acceptance and email verification are human HTTP flows and have no MCP tools; operator invitation
 management, organization queries, lifecycle, and slug operations use both HTTP and MCP.

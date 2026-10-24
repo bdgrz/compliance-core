@@ -6,14 +6,16 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 /// <summary>
 ///     Deterministic team assignment and removal commands dispatched by internal reactors, so replays reuse one
 ///     logical id. System callers bind to the member's current episode and the owner's current state by sending an
-///     empty episode and negative expectations.
+///     empty episode and negative expectations; a caller that registered the member itself passes the episode it
+///     registered so a replay can never assign a later episode.
 /// </summary>
 static class TeamMemberEffects
 {
     /// <summary>The assignment command a source event causes for one member on one team.</summary>
-    public static AssignTeamMember Assign(Uuid sourceEventId, Uuid tenantId, Uuid teamId, Uuid memberId) =>
+    public static AssignTeamMember Assign(Uuid sourceEventId, Uuid tenantId, Uuid teamId, Uuid memberId,
+        Uuid memberEpisodeId = default) =>
         new(CommandId(sourceEventId, "team-member:assign", tenantId, teamId, memberId), tenantId, teamId, memberId,
-            Uuid.Empty, -1, -1);
+            memberEpisodeId, -1, -1);
 
     /// <summary>
     ///     The removal a source event causes for one proven assignment. The command id names the assignment episode, and

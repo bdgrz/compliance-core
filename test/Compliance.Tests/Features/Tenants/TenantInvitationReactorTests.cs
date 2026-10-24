@@ -7,12 +7,32 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Tenants;
 
 public sealed class TenantInvitationReactorTests
 {
+    readonly IImmutableContentStore _content = new FitzKvImmutableContentStore(
+        new PersistenceKvClient(new InMemoryKvClient()));
+
+    static TenantInvitationAccepted Accepted(Uuid tenantId, Uuid userId, string email, string affiliation,
+        bool administrator = false, Uuid? invitationId = null, ImmutableContentRef? scope = null,
+        DateOnly? guestExpiresOn = null, DateTimeOffset? acceptedAt = null, Uuid invitedBy = default,
+        string? display = null, string? role = null)
+    {
+        var id = invitationId ?? Uuid.CreateVersion4();
+        var invitation = new TenantInvitation(tenantId, id);
+        return new TenantInvitationAccepted(tenantId, id, userId, email, affiliation, administrator, role, scope,
+            guestExpiresOn, acceptedAt ?? TenantInvitationFacts.At, invitedBy == Uuid.Empty ? Uuid.CreateVersion4() : invitedBy,
+            display, TenantInvitationFacts.Provenance(invitation, TenantInvitationIds.AcceptanceOf(id),
+                "AcceptTenantInvitation"), null);
+    }
+
     [Fact]
     public async Task ShouldProvisionEveryGrantedProgramGivenGuestAcceptsInvitation()
     {
@@ -20,14 +40,16 @@ public sealed class TenantInvitationReactorTests
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var invitedBy = Uuid.CreateVersion4();
+        var invitationId = Uuid.CreateVersion4();
         var programIds = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() };
-        var scenario = new ReactorScenario().Given(new TenantInvitationAccepted(tenantId,
-            userId, "guest@example.com", "guest", false,
-            GuestProgramIds: programIds, GuestExpiresOn: new DateOnly(2026, 11, 30),
-            AcceptedAt: new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero),
-            InvitedBy: invitedBy, InvitedByDisplay: "Org Admin"));
+        var scope = await _content.WriteJsonAsync(tenantId.ToString(), Uuid.CreateVersion4(),
+            AcceptTenantInvitationHandler.GuestScopeSchema, (IReadOnlyList<Uuid>)programIds);
+        var scenario = new ReactorScenario().Given(Accepted(tenantId, userId, "guest@example.com", "guest",
+            invitationId: invitationId, scope: scope, guestExpiresOn: new DateOnly(2026, 11, 30),
+            acceptedAt: new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero), invitedBy: invitedBy,
+            display: "Org Admin"));
         var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(),
-            TypedReactionBus.For(scenario), NullLogger<TenantInvitationReactor>.Instance);
+            TypedReactionBus.For(scenario), _content, NullLogger<TenantInvitationReactor>.Instance);
 
         // Act
         await scenario.RunAsync(reactor);
@@ -38,8 +60,7 @@ public sealed class TenantInvitationReactorTests
         Assert.Equal(new DateOnly(2026, 11, 30), registration.MembershipExpiresOn);
         var grants = TypedReactionBus.Sent(scenario).OfType<ProvisionGuestProgramAccess>().ToArray();
         Assert.Equal(programIds.Length, grants.Length);
-        Assert.All(grants, grant => Assert.Equal(
-            TenantInvitation.IdFor(tenantId, "guest@example.com"), grant.InvitationId));
+        Assert.All(grants, grant => Assert.Equal(invitationId, grant.InvitationId));
         Assert.Equal(programIds.OrderBy(id => id.ToString(), StringComparer.Ordinal),
             grants.Select(grant => grant.ProgramId).OrderBy(id => id.ToString(), StringComparer.Ordinal));
         Assert.All(grants, grant =>
@@ -49,11 +70,52 @@ public sealed class TenantInvitationReactorTests
             Assert.Equal(invitedBy, grant.InvitedBy);
             Assert.Equal("Org Admin", grant.InvitedByDisplay);
             Assert.Equal(new DateOnly(2026, 11, 30), grant.ExpiresOn);
-            Assert.Equal(new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero),
-                grant.AcceptedAt);
+            Assert.Equal(new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero), grant.AcceptedAt);
         });
         Assert.Empty(TypedReactionBus.Sent(scenario).OfType<AssignTeamMember>());
         Assert.Empty(TypedReactionBus.Sent(scenario).OfType<ActivateTenant>());
+    }
+
+    [Fact]
+    public async Task ShouldBindTeamAssignmentToTheRegisteredEpisodeGivenAcceptedInvitation()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var scenario = new ReactorScenario().Given(Accepted(tenantId, userId, "member@example.com", "client_personnel",
+            role: BuiltInRbac.ComplianceManagementRole));
+        var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(),
+            TypedReactionBus.For(scenario), _content, NullLogger<TenantInvitationReactor>.Instance);
+
+        // Act
+        await scenario.RunAsync(reactor);
+
+        // Assert
+        var registration = Assert.Single(TypedReactionBus.Sent(scenario).OfType<RegisterMember>());
+        var assignment = Assert.Single(TypedReactionBus.Sent(scenario).OfType<AssignTeamMember>());
+        Assert.Equal(registration.CommandId, assignment.MemberEpisodeId);
+        Assert.Equal(BuiltInRbac.TeamIdForRole(tenantId, BuiltInRbac.ComplianceManagementRole), assignment.TeamId);
+        Assert.Equal(RbacIds.Member(tenantId, userId), assignment.MemberId);
+    }
+
+    [Fact]
+    public async Task ShouldAdmitAdministratorsTeamAssignmentToTheCurrentEpisodeGivenAlreadyLiveMember()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var scenario = new ReactorScenario()
+            .Given(Accepted(tenantId, Uuid.CreateVersion4(), "admin@example.com", "client_personnel", true))
+            .RespondTo<RegisterMember>(Result.Failure(Member.LiveEpisodeConflict));
+        var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(),
+            TypedReactionBus.For(scenario), _content, NullLogger<TenantInvitationReactor>.Instance);
+
+        // Act
+        await scenario.RunAsync(reactor);
+
+        // Assert
+        var assignment = Assert.Single(TypedReactionBus.Sent(scenario).OfType<AssignTeamMember>());
+        Assert.Equal(BuiltInRbac.AdministratorsTeamId(tenantId), assignment.TeamId);
+        Assert.Equal(Uuid.Empty, assignment.MemberEpisodeId);
     }
 
     [Fact]
@@ -63,12 +125,12 @@ public sealed class TenantInvitationReactorTests
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(tenantId, userId, "admin@example.com",
-                "client_personnel", Administrator: true))
+            .Given(Accepted(tenantId, userId, "admin@example.com",
+                "client_personnel", administrator: true))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The first administrator is still being provisioned.", isTransient: true)));
         var checkpoints = new InMemoryProjectionCheckpointStore();
-        var reactor = new TenantInvitationReactor(checkpoints, TypedReactionBus.For(scenario),
+        var reactor = new TenantInvitationReactor(checkpoints, TypedReactionBus.For(scenario), _content,
             NullLogger<TenantInvitationReactor>.Instance);
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
@@ -99,12 +161,12 @@ public sealed class TenantInvitationReactorTests
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(tenantId, userId, "admin@example.com",
-                "client_personnel", Administrator: true))
+            .Given(Accepted(tenantId, userId, "admin@example.com",
+                "client_personnel", administrator: true))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The first administrator is still being provisioned.", isTransient: true)));
         var checkpoints = new InMemoryProjectionCheckpointStore();
-        var reactor = new TenantInvitationReactor(checkpoints, TypedReactionBus.For(scenario),
+        var reactor = new TenantInvitationReactor(checkpoints, TypedReactionBus.For(scenario), _content,
             NullLogger<TenantInvitationReactor>.Instance);
         using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
@@ -135,14 +197,14 @@ public sealed class TenantInvitationReactorTests
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(tenantId, userId, "admin@example.com",
-                "client_personnel", Administrator: true))
+            .Given(Accepted(tenantId, userId, "admin@example.com",
+                "client_personnel", administrator: true))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The first administrator is still being provisioned.", isTransient: true)));
         var checkpoints = new InMemoryProjectionCheckpointStore();
         using var logs = new AuthorizationDenialLogE2ETests.CapturingLoggerProvider();
         using var loggerFactory = LoggerFactory.Create(builder => builder.AddProvider(logs));
-        var reactor = new TenantInvitationReactor(checkpoints, TypedReactionBus.For(scenario),
+        var reactor = new TenantInvitationReactor(checkpoints, TypedReactionBus.For(scenario), _content,
             loggerFactory.CreateLogger<TenantInvitationReactor>());
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
 
@@ -175,10 +237,10 @@ public sealed class TenantInvitationReactorTests
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(tenantId, userId, "admin@example.com",
-                "client_personnel", Administrator: true))
+            .Given(Accepted(tenantId, userId, "admin@example.com",
+                "client_personnel", administrator: true))
             .RespondTo<RegisterMember>(Result.Failure(Member.LiveEpisodeConflict));
-        var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario),
+        var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario), _content,
             NullLogger<TenantInvitationReactor>.Instance);
 
         // Act
@@ -196,14 +258,14 @@ public sealed class TenantInvitationReactorTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(tenantId, Uuid.CreateVersion4(), "admin@example.com",
-                "client_personnel", Administrator: true));
+            .Given(Accepted(tenantId, Uuid.CreateVersion4(), "admin@example.com",
+                "client_personnel", administrator: true));
 
         // Act
         await scenario.RunAsync(new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(),
-            TypedReactionBus.For(scenario), NullLogger<TenantInvitationReactor>.Instance));
+            TypedReactionBus.For(scenario), _content, NullLogger<TenantInvitationReactor>.Instance));
         await scenario.RunAsync(new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(),
-            TypedReactionBus.For(scenario), NullLogger<TenantInvitationReactor>.Instance));
+            TypedReactionBus.For(scenario), _content, NullLogger<TenantInvitationReactor>.Instance));
 
         // Assert
         var assignments = TypedReactionBus.Sent(scenario).OfType<AssignTeamMember>().ToArray();
@@ -217,11 +279,11 @@ public sealed class TenantInvitationReactorTests
     {
         // Arrange
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "admin@example.com",
-                "client_personnel", Administrator: true));
+            .Given(Accepted(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "admin@example.com",
+                "client_personnel", administrator: true));
         TypedReactionBus.FailWith<AssignTeamMember>(scenario, TeamMember.AlreadyAssignedConflict);
         var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(),
-            TypedReactionBus.For(scenario), NullLogger<TenantInvitationReactor>.Instance);
+            TypedReactionBus.For(scenario), _content, NullLogger<TenantInvitationReactor>.Instance);
 
         // Act
         await scenario.RunAsync(reactor);
@@ -236,12 +298,12 @@ public sealed class TenantInvitationReactorTests
     {
         // Arrange
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "admin@example.com",
-                "client_personnel", Administrator: true));
+            .Given(Accepted(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "admin@example.com",
+                "client_personnel", administrator: true));
         TypedReactionBus.FailWith<AssignTeamMember>(scenario, new RequestError(RequestErrorKind.Conflict,
             "The team assignment changed since it was read.", false));
         var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(),
-            TypedReactionBus.For(scenario), NullLogger<TenantInvitationReactor>.Instance);
+            TypedReactionBus.For(scenario), _content, NullLogger<TenantInvitationReactor>.Instance);
 
         // Act
         var failure = await Record.ExceptionAsync(async () => await scenario.RunAsync(reactor));
@@ -257,11 +319,11 @@ public sealed class TenantInvitationReactorTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(tenantId, Uuid.CreateVersion4(), "admin@example.com",
-                "client_personnel", Administrator: true))
+            .Given(Accepted(tenantId, Uuid.CreateVersion4(), "admin@example.com",
+                "client_personnel", administrator: true))
             .RespondTo<RegisterMember>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Membership authority cleanup must finish before a new invitation can take effect.", false)));
-        var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario),
+        var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario), _content,
             NullLogger<TenantInvitationReactor>.Instance);
 
         // Act
@@ -279,12 +341,12 @@ public sealed class TenantInvitationReactorTests
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(tenantId, userId, "admin@example.com",
-                "client_personnel", Administrator: true))
+            .Given(Accepted(tenantId, userId, "admin@example.com",
+                "client_personnel", administrator: true))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Membership and permission projections are not ready.")));
         var checkpoints = new InMemoryProjectionCheckpointStore();
-        var reactor = new TenantInvitationReactor(checkpoints, TypedReactionBus.For(scenario),
+        var reactor = new TenantInvitationReactor(checkpoints, TypedReactionBus.For(scenario), _content,
             NullLogger<TenantInvitationReactor>.Instance);
 
         // Act
@@ -312,15 +374,15 @@ public sealed class TenantInvitationReactorTests
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(tenantId, userId, "admin@example.com",
-                "client_personnel", Administrator: true))
+            .Given(Accepted(tenantId, userId, "admin@example.com",
+                "client_personnel", administrator: true))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The first administrator must be client personnel.")));
         var checkpoints = new InMemoryProjectionCheckpointStore();
         using var logs = new AuthorizationDenialLogE2ETests.CapturingLoggerProvider();
         using var loggerFactory = LoggerFactory.Create(builder => builder.AddProvider(logs));
         var policy = new TenantActivationPolicy(TimeSpan.FromMilliseconds(50), permanentFailureLimit: 3);
-        var reactor = new TenantInvitationReactor(checkpoints, TypedReactionBus.For(scenario),
+        var reactor = new TenantInvitationReactor(checkpoints, TypedReactionBus.For(scenario), _content,
             loggerFactory.CreateLogger<TenantInvitationReactor>(), policy);
 
         // Act
@@ -347,12 +409,12 @@ public sealed class TenantInvitationReactorTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var scenario = new ReactorScenario()
-            .Given(new TenantInvitationAccepted(tenantId, Uuid.CreateVersion4(), "admin@example.com",
-                "client_personnel", Administrator: true))
+            .Given(Accepted(tenantId, Uuid.CreateVersion4(), "admin@example.com",
+                "client_personnel", administrator: true))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The first administrator is still being provisioned.", isTransient: true)));
         var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(),
-            TypedReactionBus.For(scenario), NullLogger<TenantInvitationReactor>.Instance,
+            TypedReactionBus.For(scenario), _content, NullLogger<TenantInvitationReactor>.Instance,
             new TenantActivationPolicy(TimeSpan.FromMilliseconds(100), permanentFailureLimit: 1));
 
         // Act

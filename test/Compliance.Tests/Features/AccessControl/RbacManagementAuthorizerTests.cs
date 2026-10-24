@@ -111,7 +111,7 @@ public sealed class RbacManagementAuthorizerTests
         var permissions = new RecordingPermissionAuthorizer(false);
         var authorizer = new RbacManagementAuthorizer(permissions, new ActiveTenant(),
             new FixedMembershipDirectory(true));
-        var request = new InviteGuestConsultant(TenantId, "guest@example.com",
+        var request = new InviteGuestConsultant(Uuid.CreateVersion4(), TenantId, "guest@example.com",
             [Uuid.CreateVersion4()], new DateOnly(2026, 11, 30));
         var context = new RequestContext<IRbacManagementRequest>(request, BdgrzActor());
 

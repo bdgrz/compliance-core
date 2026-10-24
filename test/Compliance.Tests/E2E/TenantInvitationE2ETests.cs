@@ -86,8 +86,9 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
             var recipientEmail = $"delivered-lead-{Guid.NewGuid():N}@example.com";
 
             // Act
-            using var invited = await administrator.PostAsJsonAsync(
-                $"/api/v1/tenants/{tenantId}/member-invitations",
+            var invitationId = Uuid.CreateVersion4();
+            using var invited = await administrator.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/member-invitations/{invitationId}",
                 new { email_address = recipientEmail, built_in_role = BuiltInRbac.ComplianceManagementRole });
             Assert.Equal(HttpStatusCode.NoContent, invited.StatusCode);
             await inbox.Completion;
@@ -105,8 +106,8 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
             var wrongEmail = $"delivered-wrong-{Guid.NewGuid():N}@example.com";
             var wrongUserId = await LoginAsync(wrongIdentity, wrongEmail);
             await VerifyEmailAsync(factory, wrongIdentity, wrongUserId, wrongEmail);
-            var acceptancePath = $"/api/v1/tenants/{deliveredTenantId}/invitations/acceptance";
-            using var wrongIdentityAcceptance = await wrongIdentity.PostAsJsonAsync(acceptancePath,
+            var acceptancePath = $"/api/v1/tenants/{deliveredTenantId}/invitations/{invitationId}/acceptance";
+            using var wrongIdentityAcceptance = await wrongIdentity.PutAsJsonAsync(acceptancePath,
                 new { email_address = recipientEmail, token = deliveredCode });
             Assert.Equal(HttpStatusCode.Forbidden, wrongIdentityAcceptance.StatusCode);
             _ = await WaitForJourneyInvitationAsync(administrator, tenantId, recipientEmail, "pending");
@@ -115,13 +116,13 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
             using var recipient = factory.CreateClient();
             var recipientUserId = await LoginAsync(recipient, recipientEmail);
             await VerifyEmailAsync(factory, recipient, recipientUserId, recipientEmail);
-            using var wrongOrganizationAcceptance = await recipient.PostAsJsonAsync(
-                $"/api/v1/tenants/{otherTenantId}/invitations/acceptance",
+            using var wrongOrganizationAcceptance = await recipient.PutAsJsonAsync(
+                $"/api/v1/tenants/{otherTenantId}/invitations/{invitationId}/acceptance",
                 new { email_address = recipientEmail, token = deliveredCode });
             Assert.Equal(HttpStatusCode.BadRequest, wrongOrganizationAcceptance.StatusCode);
             await AssertJourneyNonmemberAsync(factory, otherTenantId, recipientUserId);
             await AssertTenantDiscoveryAsync(recipient, otherTenantId, otherRegistration.Slug, false);
-            using var accepted = await recipient.PostAsJsonAsync(acceptancePath,
+            using var accepted = await recipient.PutAsJsonAsync(acceptancePath,
                 new { email_address = recipientEmail, token = deliveredCode });
             Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
             var teamId = BuiltInRbac.PowerUsersTeamId(tenantId);
@@ -211,8 +212,9 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
             $"/api/v1/tenants/{tenantId}/members/{administratorId}");
 
         var memberEmail = $"member-{Guid.NewGuid():N}@example.com";
-        using var invitedMember = await administratorClient.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenantId}/member-invitations",
+        var memberInvitationId = Uuid.CreateVersion4();
+        using var invitedMember = await administratorClient.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/member-invitations/{memberInvitationId}",
             new { email_address = memberEmail, built_in_role = BuiltInRbac.ComplianceParticipationRole });
         Assert.Equal(HttpStatusCode.NoContent, invitedMember.StatusCode);
         var memberToken = await WaitForInvitationDeliveryReadyAsync(factory, tenantId, memberEmail);
@@ -220,8 +222,8 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
         using var memberClient = factory.CreateClient();
         var memberUserId = await LoginAsync(memberClient, memberEmail);
         await VerifyEmailAsync(factory, memberClient, memberUserId, memberEmail);
-        using var acceptedMember = await memberClient.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenantId}/invitations/acceptance",
+        using var acceptedMember = await memberClient.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/invitations/{memberInvitationId}/acceptance",
             new { email_address = memberEmail, token = memberToken });
         Assert.Equal(HttpStatusCode.NoContent, acceptedMember.StatusCode);
 
@@ -424,16 +426,17 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
 
         var administratorId = await LoginAsync(administratorClient, administratorEmail);
         activationLag.TargetUser(administratorId);
-        var acceptance = $"/api/v1/tenants/{tenantId}/invitations/acceptance";
-        using var unverified = await administratorClient.PostAsJsonAsync(acceptance,
+        var administratorInvitationId = TenantInvitationIds.FirstAdministratorOf(tenantId);
+        var acceptance = $"/api/v1/tenants/{tenantId}/invitations/{administratorInvitationId}/acceptance";
+        using var unverified = await administratorClient.PutAsJsonAsync(acceptance,
             new { email_address = administratorEmail, token = invitationToken });
         Assert.Equal(HttpStatusCode.Forbidden, unverified.StatusCode);
         await VerifyEmailAsync(factory, administratorClient, administratorId, administratorEmail);
 
-        using var invalid = await administratorClient.PostAsJsonAsync(acceptance,
+        using var invalid = await administratorClient.PutAsJsonAsync(acceptance,
             new { email_address = administratorEmail, token = "wrong-token" });
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
-        using var accepted = await administratorClient.PostAsJsonAsync(acceptance,
+        using var accepted = await administratorClient.PutAsJsonAsync(acceptance,
             new { email_address = administratorEmail, token = invitationToken });
         Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
 
@@ -470,8 +473,9 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
         Assert.Equal("active", tenant?.Status);
 
         var staffEmail = $"staff-{Guid.NewGuid():N}@example.com";
-        using var invitedStaff = await operatorClient.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenantId}/invitations",
+        var staffInvitationId = Uuid.CreateVersion4();
+        using var invitedStaff = await operatorClient.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/invitations/{staffInvitationId}",
             new { email_address = staffEmail, affiliation = "firm_staff", administrator = false });
         Assert.Equal(HttpStatusCode.NoContent, invitedStaff.StatusCode);
         string? staffToken = null;
@@ -484,7 +488,8 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
         using var staffClient = factory.CreateClient();
         var staffId = await LoginAsync(staffClient, staffEmail);
         await VerifyEmailAsync(factory, staffClient, staffId, staffEmail);
-        using var acceptedStaff = await staffClient.PostAsJsonAsync(acceptance,
+        using var acceptedStaff = await staffClient.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/invitations/{staffInvitationId}/acceptance",
             new { email_address = staffEmail, token = staffToken });
         Assert.Equal(HttpStatusCode.NoContent, acceptedStaff.StatusCode);
 
@@ -757,12 +762,11 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
             await using (var scope = factory.Services.CreateAsyncScope())
             {
                 var services = scope.ServiceProvider;
-                var source = await services.GetRequiredService<IAggregateReader>()
-                    .HydrateAsync(new TenantInvitation(tenantId, emailAddress));
-                sourceAccepted = source.IsAccepted;
-                projectedAccepted = (await services
-                    .GetRequiredService<ITenantInvitationDirectoryReader>()
-                    .GetAsync(tenantId, emailAddress))?.AcceptedUserId == userId;
+                var entry = await services.GetRequiredService<ITenantInvitationDirectoryReader>()
+                    .GetAsync(tenantId, emailAddress);
+                sourceAccepted = entry is not null && (await services.GetRequiredService<IAggregateReader>()
+                    .HydrateAsync(new TenantInvitation(tenantId, entry.InvitationId))).IsAccepted;
+                projectedAccepted = entry?.AcceptedUserId == userId;
                 workerCheckpointAdvanced = await services
                     .GetRequiredService<ITenantInvitationDirectoryProjection>()
                     .LoadCheckpointAsync(checkpoint) != ProjectionCheckpoint.Start;
@@ -788,6 +792,29 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
             $"lastHttpStatus={lastHttpStatus}; invitationStatus={invitationStatus}.");
     }
 
+    /// <summary>Reads the id of a mailbox's current invitation from the administrative list.</summary>
+    internal static async Task<Uuid> InvitationIdAsync(HttpClient administrator, Uuid tenantId, string emailAddress)
+    {
+        var path = $"/api/v1/tenants/{tenantId}/member-invitations?email_address=" +
+                   Uri.EscapeDataString(emailAddress);
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            using var response = await administrator.GetAsync(path);
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var page = await response.Content.ReadFromJsonAsync<JsonElement>();
+                var items = page.GetProperty("items").EnumerateArray().ToArray();
+                if (items.Length == 1)
+                    return Uuid.Parse(items[0].GetProperty("invitation_id").GetString()!, CultureInfo.InvariantCulture);
+            }
+
+            await Task.Delay(250);
+        }
+
+        throw new TimeoutException("The invitation did not appear in the administrative list.");
+    }
+
     internal static async Task<string> WaitForInvitationDeliveryReadyAsync(
         WebApplicationFactory<Program> factory, Uuid tenantId, string emailAddress)
     {
@@ -804,10 +831,14 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
             await using (var scope = factory.Services.CreateAsyncScope())
             {
                 var services = scope.ServiceProvider;
-                var invitation = await services.GetRequiredService<IAggregateReader>()
-                    .HydrateAsync(new TenantInvitation(tenantId, emailAddress));
-                sourceEventRecorded = invitation.CurrentDeliveryAttemptId is not null;
-                deliveryStatus = invitation.DeliveryStatus;
+                var entry = await services.GetRequiredService<ITenantInvitationDirectoryReader>()
+                    .GetAsync(tenantId, emailAddress);
+                sourceEventRecorded = entry is not null;
+                var record = entry is null
+                    ? null
+                    : await services.GetRequiredService<ITenantInvitationDeliveryStore>()
+                        .ReadAsync(tenantId, entry.InvitationId);
+                deliveryStatus = record?.Status ?? "unknown";
                 directoryWorkerAdvanced = await services
                     .GetRequiredService<ITenantInvitationDirectoryProjection>()
                     .LoadCheckpointAsync(checkpoint) != ProjectionCheckpoint.Start;

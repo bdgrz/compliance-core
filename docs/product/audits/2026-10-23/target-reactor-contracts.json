@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "selected target protocol; implementation pending",
-  "reactorCount": 117,
+  "reactorCount": 120,
   "reactors": [
     {
       "reactor": "ProfessionalAssertionClaimReactor",
@@ -10049,6 +10049,199 @@
       "processes": [
         "EmailChallengeDeliveryProcess"
       ]
+    },
+    {
+      "reactor": "TenantInvitationDeliveryProcessReactor",
+      "sourceOwner": "TenantInvitation",
+      "sourceEvents": [
+        "TenantMemberInvited"
+      ],
+      "command": "SendTenantInvitation",
+      "targetOwner": "TenantInvitationDeliveryProcess",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<TenantMemberInvited>",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "InvitationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Payload",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "TenantInvitationDeliveryPayload"
+        }
+      ],
+      "guard": "Exact immutable payload of the accepted invitation fact; skipped as proven superseded once the offer is accepted, expired or its mailbox moved to a newer invitation. Sends one attempt with a stable identity; a resumed unknown result sends the same attempt again and never a new one.",
+      "eventsEmitted": [],
+      "processOnly": false,
+      "effectKind": "send_tenant_invitation",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "tests": [
+        "ShouldNotDuplicateGivenReceiverAppendBeforeCheckpointCrash",
+        "ShouldResumeGivenTransientDependencyAndProjectionLag",
+        "ShouldIgnoreOnlyProvenSupersededGenerationGivenLateDelivery",
+        "ShouldConflictGivenChangedIntentForSameEffectKey"
+      ],
+      "handler": "SendTenantInvitationHandler",
+      "http": false,
+      "mcp": false,
+      "principal": "trusted reactor/process principal scoped to verified source tenant and concrete command kind",
+      "commandIdRule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId.",
+      "sourceProofVariants": [
+        "TenantMemberInvited"
+      ],
+      "intentSchema": "TenantInvitationDeliveryPayload",
+      "processes": [
+        "TenantInvitationDeliveryProcess"
+      ]
+    },
+    {
+      "reactor": "TenantInvitationDeliveryProcessReactor",
+      "sourceOwner": "TenantInvitation",
+      "sourceEvents": [
+        "TenantMemberInvited"
+      ],
+      "command": "RecordTenantInvitationDeliverySent",
+      "targetOwner": "TenantInvitationDeliveryProcess",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<TenantMemberInvited>",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "InvitationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AttemptId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SentAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "guard": "Only the attempt whose stored result is accepted; a callback of another attempt is a stale no-op and a contradicting terminal outcome is a permanent conflict.",
+      "eventsEmitted": [],
+      "processOnly": false,
+      "effectKind": "record_tenant_invitation_delivery_sent",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "tests": [
+        "ShouldNotDuplicateGivenReceiverAppendBeforeCheckpointCrash",
+        "ShouldResumeGivenTransientDependencyAndProjectionLag",
+        "ShouldIgnoreOnlyProvenSupersededGenerationGivenLateDelivery",
+        "ShouldConflictGivenChangedIntentForSameEffectKey"
+      ],
+      "handler": "RecordTenantInvitationDeliverySentHandler",
+      "http": false,
+      "mcp": false,
+      "principal": "trusted reactor/process principal scoped to verified source tenant and concrete command kind",
+      "commandIdRule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId.",
+      "sourceProofVariants": [
+        "TenantMemberInvited"
+      ],
+      "intentSchema": "TenantInvitationDeliveryPayload",
+      "processes": [
+        "TenantInvitationDeliveryProcess"
+      ]
+    },
+    {
+      "reactor": "TenantInvitationDeliveryProcessReactor",
+      "sourceOwner": "TenantInvitation",
+      "sourceEvents": [
+        "TenantMemberInvited"
+      ],
+      "command": "RecordTenantInvitationDeliveryFailed",
+      "targetOwner": "TenantInvitationDeliveryProcess",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<TenantMemberInvited>",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "InvitationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AttemptId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FailureCode",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "FailedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "guard": "Only the attempt whose stored result is a definite rejection; a callback of another attempt is a stale no-op and a contradicting terminal outcome is a permanent conflict. A definite failure is not retried automatically.",
+      "eventsEmitted": [],
+      "processOnly": false,
+      "effectKind": "record_tenant_invitation_delivery_failed",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "tests": [
+        "ShouldNotDuplicateGivenReceiverAppendBeforeCheckpointCrash",
+        "ShouldResumeGivenTransientDependencyAndProjectionLag",
+        "ShouldIgnoreOnlyProvenSupersededGenerationGivenLateDelivery",
+        "ShouldConflictGivenChangedIntentForSameEffectKey"
+      ],
+      "handler": "RecordTenantInvitationDeliveryFailedHandler",
+      "http": false,
+      "mcp": false,
+      "principal": "trusted reactor/process principal scoped to verified source tenant and concrete command kind",
+      "commandIdRule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId.",
+      "sourceProofVariants": [
+        "TenantMemberInvited"
+      ],
+      "intentSchema": "TenantInvitationDeliveryPayload",
+      "processes": [
+        "TenantInvitationDeliveryProcess"
+      ]
     }
   ],
   "processes": [
@@ -11029,6 +11222,31 @@
             "DeliverRecoveryChallenge"
           ],
           "rule": "At-least-once; an unknown result is reconciled before the same message is resent."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "TenantInvitationDeliveryProcess",
+      "rootSourceEvents": [
+        "TenantMemberInvited"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "send",
+          "receivers": [
+            "SendTenantInvitation"
+          ],
+          "rule": "One immutable payload and one attempt identity; a resumed unknown result sends the same attempt."
+        },
+        {
+          "stage": "record",
+          "receivers": [
+            "RecordTenantInvitationDeliverySent",
+            "RecordTenantInvitationDeliveryFailed"
+          ],
+          "rule": "Exactly one outcome receiver, selected by the result the attempt stored."
         }
       ],
       "abort": []

@@ -92,17 +92,18 @@ public sealed class MemberAccessE2ETests(BrokerStackFixture broker)
                 Assert.Empty((await beforeInvitation.Content.ReadFromJsonAsync<InvitationPageDocument>())!.Items);
 
                 // Act
-                using var deniedInvite = await invitee.PostAsJsonAsync(invitePath, new
+                var inviteeInvitationId = Uuid.CreateVersion4();
+                using var deniedInvite = await invitee.PutAsJsonAsync($"{invitePath}/{Uuid.CreateVersion4()}", new
                 {
                     email_address = inviteeEmail,
                     built_in_role = BuiltInRbac.ComplianceManagementRole,
                 });
-                using var invalidRole = await administrator.PostAsJsonAsync(invitePath, new
+                using var invalidRole = await administrator.PutAsJsonAsync($"{invitePath}/{Uuid.CreateVersion4()}", new
                 {
                     email_address = inviteeEmail,
                     built_in_role = "unapproved_role",
                 });
-                using var invited = await administrator.PostAsJsonAsync(invitePath, new
+                using var invited = await administrator.PutAsJsonAsync($"{invitePath}/{inviteeInvitationId}", new
                 {
                     email_address = inviteeEmail,
                     built_in_role = BuiltInRbac.ComplianceManagementRole,
@@ -142,8 +143,8 @@ public sealed class MemberAccessE2ETests(BrokerStackFixture broker)
                 await TenantInvitationE2ETests.VerifyEmailAsync(factory, invitee,
                     inviteeId, inviteeEmail,
                     splitHosts ? worker!.Services.GetRequiredService<MockEmailChallengeDelivery>() : null);
-                using var accepted = await invitee.PostAsJsonAsync(
-                    $"/api/v1/tenants/{tenantId}/invitations/acceptance",
+                using var accepted = await invitee.PutAsJsonAsync(
+                    $"/api/v1/tenants/{tenantId}/invitations/{inviteeInvitationId}/acceptance",
                     new { email_address = inviteeEmail, token });
                 Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
 

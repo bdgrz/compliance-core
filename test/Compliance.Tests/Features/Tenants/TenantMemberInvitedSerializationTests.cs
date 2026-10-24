@@ -1,39 +1,42 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
-using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Tenants;
 
 public sealed class TenantMemberInvitedSerializationTests
 {
+    static readonly DateTimeOffset At = TenantInvitationFacts.At;
+
     [Fact]
-    public void ShouldPreserveGuestScopeAndInvitationAttributionGivenEventRoundTrip()
+    public void ShouldPreserveGuestScopeReferenceAndInvitationAttributionGivenEventRoundTrip()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
+        var invitationId = Uuid.CreateVersion4();
+        var invitation = new TenantInvitation(tenantId, invitationId);
         var invitedBy = Uuid.CreateVersion4();
-        var programs = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() };
-        var invitedAt = new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
-        var original = new TenantMemberInvited(tenantId, "guest@example.com", "guest", false,
-            new string('A', 64), invitedAt.AddDays(7), invitedBy,
-            GuestProgramIds: programs, GuestExpiresOn: new DateOnly(2026, 11, 30),
-            InvitedAt: invitedAt, InvitedByDisplay: "Org Admin");
-        var json = JsonSerializer.Serialize(original,
-            ComplianceCoreJsonContext.Default.TenantMemberInvited);
+        var scope = TenantInvitationFacts.Scope(TenantInvitationAdmission.GuestScopeSchema);
+        var original = new TenantMemberInvited(tenantId, invitationId, "guest@example.com", "guest",
+            false, new string('A', 64), At.AddDays(7), invitedBy, null, "current", scope, new DateOnly(2026, 11, 30), At,
+            "Org Admin", 3, TenantInvitationFacts.Provenance(invitation, invitationId), TenantInvitationFacts.Response());
+        var json = JsonSerializer.Serialize(original, ComplianceCoreJsonContext.Default.TenantMemberInvited);
 
         // Act
-        var replayed = JsonSerializer.Deserialize(json,
-            ComplianceCoreJsonContext.Default.TenantMemberInvited);
+        var replayed = JsonSerializer.Deserialize(json, ComplianceCoreJsonContext.Default.TenantMemberInvited);
 
         // Assert
         Assert.NotNull(replayed);
+        Assert.Equal(invitationId, replayed.InvitationId);
         Assert.Equal("guest", replayed.Affiliation);
-        Assert.Equal(programs, replayed.GuestProgramIds);
+        Assert.Equal(scope, replayed.GuestProgramIdsManifest);
         Assert.Equal(new DateOnly(2026, 11, 30), replayed.GuestExpiresOn);
-        Assert.Equal(invitedAt, replayed.InvitedAt);
+        Assert.Equal(At, replayed.InvitedAt);
         Assert.Equal(invitedBy, replayed.InvitedBy);
         Assert.Equal("Org Admin", replayed.InvitedByDisplay);
+        Assert.Equal(3, replayed.MailboxGeneration);
+        Assert.Equal(original.Operation, replayed.Operation);
+        Assert.Equal(original.FirstResponse, replayed.FirstResponse);
     }
 
     [Fact]
@@ -41,53 +44,112 @@ public sealed class TenantMemberInvitedSerializationTests
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
-        var userId = Uuid.CreateVersion4();
-        var invitedBy = Uuid.CreateVersion4();
-        var programId = Uuid.CreateVersion4();
-        var acceptedAt = new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
-        var original = new TenantInvitationAccepted(tenantId, userId, "guest@example.com",
-            "guest", false, GuestProgramIds: [programId],
-            GuestExpiresOn: new DateOnly(2026, 11, 30), AcceptedAt: acceptedAt,
-            InvitedBy: invitedBy, InvitedByDisplay: "Org Admin");
-        var json = JsonSerializer.Serialize(original,
-            ComplianceCoreJsonContext.Default.TenantInvitationAccepted);
+        var invitationId = Uuid.CreateVersion4();
+        var invitation = new TenantInvitation(tenantId, invitationId);
+        var scope = TenantInvitationFacts.Scope(AcceptTenantInvitationHandler.GuestScopeSchema);
+        var original = new TenantInvitationAccepted(tenantId, invitationId, Uuid.CreateVersion4(),
+            "guest@example.com", "guest", false, null, scope, new DateOnly(2026, 11, 30), At, Uuid.CreateVersion4(),
+            "Org Admin", TenantInvitationFacts.Provenance(invitation, TenantInvitationIds.AcceptanceOf(invitationId),
+                "AcceptTenantInvitation"), TenantInvitationFacts.Response());
+        var json = JsonSerializer.Serialize(original, ComplianceCoreJsonContext.Default.TenantInvitationAccepted);
 
         // Act
-        var replayed = JsonSerializer.Deserialize(json,
-            ComplianceCoreJsonContext.Default.TenantInvitationAccepted);
+        var replayed = JsonSerializer.Deserialize(json, ComplianceCoreJsonContext.Default.TenantInvitationAccepted);
 
         // Assert
         Assert.NotNull(replayed);
+        Assert.Equal(original.InvitationId, replayed.InvitationId);
         Assert.Equal("guest", replayed.Affiliation);
-        Assert.Equal([programId], replayed.GuestProgramIds);
+        Assert.Equal(scope, replayed.GuestProgramIdsManifest);
         Assert.Equal(new DateOnly(2026, 11, 30), replayed.GuestExpiresOn);
-        Assert.Equal(acceptedAt, replayed.AcceptedAt);
-        Assert.Equal(invitedBy, replayed.InvitedBy);
+        Assert.Equal(At, replayed.AcceptedAt);
+        Assert.Equal(original.InvitedBy, replayed.InvitedBy);
         Assert.Equal("Org Admin", replayed.InvitedByDisplay);
+        Assert.Equal(original.Operation, replayed.Operation);
     }
 
     [Fact]
-    public void ShouldReplayHistoricalInvitationGivenMissingDeliveryFields()
+    public void ShouldRoundTripMailboxFactsGivenClaimAndRelease()
     {
         // Arrange
-        var original = new TenantMemberInvited(Uuid.CreateVersion4(), "member@example.com",
-            "client_personnel", false, new string('A', 64), DateTimeOffset.UtcNow.AddDays(7),
-            Uuid.CreateVersion4());
-        var json = JsonSerializer.Serialize(original,
-            ComplianceCoreJsonContext.Default.TenantMemberInvited);
-        var document = JsonNode.Parse(json)!.AsObject();
-        Assert.True(document.Remove("delivery_attempt_id"));
-        Assert.True(document.Remove("token_key_id"));
+        var tenantId = Uuid.CreateVersion4();
+        var invitationId = Uuid.CreateVersion4();
+        var claimed = new TenantInvitationMailboxClaimed(tenantId, "member@example.com", invitationId, 2, At);
+        var released = new TenantInvitationMailboxReleased(tenantId, "member@example.com", invitationId, 2,
+            TenantInvitationMailboxClaim.AcceptedReason, At.AddDays(1));
 
         // Act
-        var replayed = JsonSerializer.Deserialize(document.ToJsonString(),
-            ComplianceCoreJsonContext.Default.TenantMemberInvited);
+        var claimedBack = JsonSerializer.Deserialize(JsonSerializer.Serialize(claimed,
+            ComplianceCoreJsonContext.Default.TenantInvitationMailboxClaimed),
+            ComplianceCoreJsonContext.Default.TenantInvitationMailboxClaimed);
+        var releasedBack = JsonSerializer.Deserialize(JsonSerializer.Serialize(released,
+            ComplianceCoreJsonContext.Default.TenantInvitationMailboxReleased),
+            ComplianceCoreJsonContext.Default.TenantInvitationMailboxReleased);
+
+        // Assert
+        Assert.Equal(claimed, claimedBack);
+        Assert.Equal(released, releasedBack);
+    }
+
+    [Fact]
+    public void ShouldRoundTripDeliveryRecordGivenAttemptResults()
+    {
+        // Arrange
+        var invitationId = Uuid.CreateVersion4();
+        var attemptId = TenantInvitationDeliveryRecord.AttemptIdFor(invitationId);
+        var record = TenantInvitationDeliveryRecord.Start(Uuid.CreateVersion4(), invitationId)
+            .Begin(attemptId, At).WithResult(attemptId, TenantInvitationDeliveryAttempt.Rejected, "delivery_failed", At) with
+        {
+            Status = TenantInvitationDeliveryRecord.Failed,
+            Version = 3,
+        };
+
+        // Act
+        var replayed = JsonSerializer.Deserialize(JsonSerializer.Serialize(record,
+            ComplianceCoreJsonContext.Default.TenantInvitationDeliveryRecord),
+            ComplianceCoreJsonContext.Default.TenantInvitationDeliveryRecord);
 
         // Assert
         Assert.NotNull(replayed);
-        Assert.Equal(original, replayed);
-        Assert.Null(replayed.DeliveryAttemptId);
-        Assert.Null(replayed.TokenKeyId);
-        Assert.NotEqual(Uuid.Empty, TenantInvitation.DeliveryAttemptFor(replayed));
+        Assert.Equal(record.Status, replayed.Status);
+        Assert.Equal(record.Version, replayed.Version);
+        Assert.Equal(record.Attempts, replayed.Attempts);
+    }
+
+    [Fact]
+    public void ShouldKeepAcceptanceIdDistinctFromInvitationIdGivenDerivation()
+    {
+        // Arrange
+        var invitationId = Uuid.CreateVersion4();
+
+        // Act
+        var acceptance = TenantInvitationIds.AcceptanceOf(invitationId);
+        var request = new AcceptTenantInvitation(invitationId, Uuid.CreateVersion4(), "member@example.com", "token");
+
+        // Assert
+        Assert.NotEqual(invitationId, acceptance);
+        Assert.Equal(acceptance, TenantInvitationIds.AcceptanceOf(invitationId));
+        Assert.Equal(acceptance, ((IIdentifiedRequest)request).RequestId);
+        Assert.NotEqual(acceptance, TenantInvitationIds.AcceptanceOf(Uuid.CreateVersion4()));
+    }
+
+    [Fact]
+    public void ShouldKeepTokenOutOfTheAuthoredIntentGivenAcceptance()
+    {
+        // Arrange
+        var invitationId = Uuid.CreateVersion4();
+        var tenantId = Uuid.CreateVersion4();
+        var intent = new TenantInvitationAcceptanceIntent(invitationId, tenantId, "member@example.com");
+
+        // Act
+        var digest = Bdgrz.Compliance.Features.Kernel.AuthoredIntentDigest.Compute(intent);
+        var changed = Bdgrz.Compliance.Features.Kernel.AuthoredIntentDigest.Compute(
+            intent with { EmailAddress = "other@example.com" });
+
+        // Assert
+        Assert.Equal(64, digest.Length);
+        Assert.NotEqual(digest, changed);
+        Assert.DoesNotContain(nameof(AcceptTenantInvitation.Token), JsonSerializer.Serialize(intent,
+            ComplianceCoreJsonContext.Default.TenantInvitationAcceptanceIntent), StringComparison.OrdinalIgnoreCase);
     }
 }
