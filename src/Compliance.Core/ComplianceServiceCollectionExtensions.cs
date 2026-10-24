@@ -758,18 +758,15 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(IndependentChildMaterializationProcess.Definition());
         services.AddSingleton<IChildMaterializationReceiver, ProviderRiskAcceptanceLinkMaterializer>();
         services.AddScoped<ProviderReviewVerifier>();
-        // ISourceFactResolver cannot be resolved by the production container until Portia publishes the shared
-        // connection's IStreamClient (AddStreamClient, Portia 0.9.1); the registration is lazy, so nothing resolves
-        // it before then and the pin bump makes the receivers and the process factory work without further changes.
+        // Portia 0.9.1 registers the shared connection's IStreamClient for source-fact verification.
         services.TryAddScoped<ISourceFactResolver>(provider => new FitzSourceFactResolver(
             provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>()));
-        // Like ISourceFactResolver, the fixed-cut reader resolves IStreamClient lazily, so nothing resolves it before Portia publishes it.
+        // The fixed-cut reader shares the Portia stream client.
         services.TryAddScoped<IAuthoritativeSnapshotReader>(provider => new FitzAuthoritativeSnapshotReader(
             provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>(),
             provider.GetService<TimeProvider>()));
         services.AddScoped<ApplicationPublicationReader>();
-        // The resolver needs the stream-backed source fact resolver, which the production container cannot build
-        // until Portia publishes the shared connection's IStreamClient; it is created on first use.
+        // Waiver proofs use the same stream-backed source-fact resolver.
         services.AddScoped<ISeparationOfDutiesWaiverProofResolver>(provider =>
             new DeferredSeparationOfDutiesWaiverProofResolver(() =>
                 ActivatorUtilities.CreateInstance<SeparationOfDutiesWaiverProofResolver>(provider)));
