@@ -77,6 +77,13 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ArtifactRetentionMutation>();
         services.AddScoped<ArtifactRetentionRead>();
         services.AddScoped<AuditPackageSourceBuilder>();
+        services.AddScoped<AuditPackageReader>();
+        services.AddScoped<AuditPackageRootOperation>();
+        services.AddScoped<AuditPackageSourceVerifier>();
+        services.AddScoped<AuditPackageArchiveBuilder>();
+        services.AddSingleton<IAuditPackageBuildOutputs, FitzKvAuditPackageBuildOutputs>();
+        services.AddSingleton(AuditPackageBuildProcess.Definition());
+        services.AddSingleton(AuditPackageDeliveryRecordingProcess.Definition());
         var emailDeliverySettings = EmailChallengeDeliverySettings.FromConfiguration(configuration,
             requireRealEmailDelivery);
         services.AddSingleton(emailDeliverySettings);
@@ -1214,11 +1221,13 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ApproveAuditPackageDisclosureHandler>()
             .AddRequestHandler<ApproveAuditPackageValidationOverrideHandler>()
             .AddRequestHandler<RecordAuditPackageBuildResultHandler>()
+            .AddRequestHandler<StartAuditPackageBuildHandler>()
+            .AddRequestHandler<MaterializeRecordedAuditPackageDeliveryHandler>()
             .AddRequestHandler<RequestAuditPackageBuildHandler>()
             .AddRequestHandler<RecordAuditPackageDeliveryHandler>()
             .AddRequestHandler<RecordClientExportBuildResultHandler>()
             .AddRequestHandler<RecordClientExportDeliveryHandler>()
-            .AddRequestAuthorizer<RecordAuditPackageBuildResultAuthorizer>()
+            .AddRequestAuthorizer<AuditPackageReceiverAuthorizer>()
             .AddRequestAuthorizer<RecordClientExportBuildResultAuthorizer>()
             .AddRequestHandler<DefineAuditPopulationHandler>()
             .AddRequestHandler<RecordAuditPopulationFactsHandler>()
@@ -1666,6 +1675,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<AccessReviewCompletionReactor>(AccessReviewCompletionReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AccessReviewCompletionSettlementReactor>(AccessReviewCompletionSettlementReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AuditPackageBuildProcessReactor>(AuditPackageBuildProcessReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AuditPackageDeliveryAdmissionReactor>(AuditPackageDeliveryAdmissionReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FindingClosureReactor>(FindingClosureReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })

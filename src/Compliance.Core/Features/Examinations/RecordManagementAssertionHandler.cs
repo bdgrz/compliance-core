@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Records management wording against its exact validated examination sources.</summary>
 public sealed class RecordManagementAssertionHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock) : IRequestHandler<RecordManagementAssertion>
+    IAggregateReader reader, AuditPackageReader packages, TimeProvider clock) : IRequestHandler<RecordManagementAssertion>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<RecordManagementAssertion> context,
         CancellationToken ct)
@@ -29,9 +29,12 @@ public sealed class RecordManagementAssertionHandler(IAggregateExecutor executor
         if (request.ExaminationId != content.ExaminationId)
             return Conflict("The examination route identity must match the assertion's frozen source content.");
 
-        var package = await reader.HydrateAsync(new AuditPackage(request.TenantId,
-            request.ProgramId, content.PackageId), ct).ConfigureAwait(false);
-        if (package.Current is not { } packageView)
+        var package = await ExaminationSignOffSourceValidator.ReadPackageAsync(packages, request.TenantId,
+            request.ProgramId, content.PackageId, ct)
+            .ConfigureAwait(false);
+        if (!package.IsSuccess)
+            return Result.Failure(package.Error!);
+        if (package.Value.View is not { } packageView)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The assertion's audit package was not found in this program."));
         if (packageView.ExaminationId != content.ExaminationId ||

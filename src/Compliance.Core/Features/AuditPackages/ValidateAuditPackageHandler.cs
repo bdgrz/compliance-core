@@ -1,67 +1,55 @@
-using Bdgrz.Compliance.Features.Versioning;
+using System.Globalization;
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Artifacts;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
-/// <summary>Validates that the current package selection still matches its frozen source snapshot.</summary>
-public sealed class ValidateAuditPackageHandler(IAggregateExecutor executor, IAggregateReader reader,
-    AuditPackageSourceBuilder sources, IArtifactContentStore artifacts, TimeProvider clock)
-    : IRequestHandler<ValidateAuditPackage>
+/// <summary>Validates the exact source selection and actual stored archive; proof absence never passes validation.</summary>
+public sealed class ValidateAuditPackageHandler(AuditPackageRootOperation operations, AuditPackageSourceBuilder sources,
+    IArtifactContentStore artifacts, IImmutableContentStore content) : IRequestHandler<ValidateAuditPackage>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<ValidateAuditPackage> context,
-        CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IRequestContext<ValidateAuditPackage> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (!AuditPackageCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,
-                out var actorMemberId, out var actorDisplay))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Audit package validation requires a personal HTTP actor."));
-        if (request.PackageId == Uuid.Empty || request.PackageVersion is < 1 or > int.MaxValue ||
-            string.IsNullOrWhiteSpace(request.ValidationKey))
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "Validation requires a package, positive version, and validation key."));
-
-        var aggregateId = new AuditPackage(request.TenantId, request.ProgramId, request.PackageId);
-        var loaded = await reader.HydrateAsync(aggregateId, ct).ConfigureAwait(false);
-        if (loaded.Current is not { } current)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The audit package was not found in this program."));
-        if (current.CurrentVersion != request.PackageVersion)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "Validation must target the current package version."));
-
-        var version = current.Versions[^1];
-        var content = new AuditPackageContent(current.ExaminationId, current.PackageKind,
-            version.SourceSnapshotKind, version.SourceSnapshotId, version.SourceSnapshotSha256,
-            current.Name, version.SelectedContent, version.SourcePeriodId);
-        var resolved = await sources.ResolveAsync(request.TenantId, request.ProgramId, content, ct)
+        var outcome = await operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.PackageId,
+            request.CommandId, nameof(ValidateAuditPackage), request.ExpectedRevision, _ => request.PackageVersion,
+            owner => owner.PrepareWrite(request.ProgramId, request.ExpectedRevision, request.PackageVersion),
+            async (snapshot, operation, token) =>
+            {
+                if (string.IsNullOrWhiteSpace(request.ValidationKey))
+                    return PackageChanges.Invalid("Validation requires a nonempty stable key.");
+                var view = snapshot.View!;
+                var version = view.Versions[^1];
+                if (version.Validations.Any(item => item.ValidationKey == request.ValidationKey.Trim()))
+                    return PackageChanges.Conflict("The validation key already exists; replay its original command id.");
+                var resolved = await sources.ResolveAsync(request.TenantId, request.ProgramId,
+                    PackageChanges.Content(view, version), token).ConfigureAwait(false);
+                var failureCode = resolved.IsSuccess ? null : "frozen_source_mismatch";
+                if (failureCode is null)
+                    failureCode = version.BuildAttempts.LastOrDefault(attempt => attempt.Status == "built") is { } build
+                        ? await AuditPackageArchiveVerifier.FailureCodeAsync(artifacts, request.TenantId, build,
+                            version.Manifest, token).ConfigureAwait(false) : "archive_content_unavailable";
+                AuditPackageValidationFinding[] findings = failureCode is null ? [] :
+                    [new AuditPackageValidationFinding(Uuid.CreateVersion5(request.PackageId,
+                        $"{request.PackageVersion}\n{request.ValidationKey}\n{failureCode}"), failureCode, "error", true,
+                        false, "The exact frozen source or actual archive did not verify: " + failureCode)];
+                var rules = new AuditPackageRules(request.TenantId, request.ProgramId, request.PackageId, view);
+                if (rules.RecordValidation(request.ExpectedRevision, checked((int)request.PackageVersion),
+                        request.ValidationKey, findings, PackageChanges.Member(operation), operation.Actor.Display,
+                        operation.AcceptedAt) is { } failure)
+                    return PackageChanges.Failure(failure);
+                var validation = rules.Current!.Versions[^1].Validations.Last(item =>
+                    item.ValidationKey == request.ValidationKey.Trim());
+                return Result<PreparedPackageDelta>.Success(await PackageContent.DeltaAsync(content, request.TenantId,
+                    "AuditPackageValidated.change.v1", validation, token).ConfigureAwait(false));
+            }, (owner, operation, delta, response, result) => owner.RecordValidation(request.ProgramId,
+                request.ExpectedRevision, request.PackageVersion, operation, delta.Content, response, result), false, ct)
             .ConfigureAwait(false);
-        var failureCode = resolved.IsSuccess ? null : "frozen_source_mismatch";
-        if (failureCode is null && version.BuildAttempts.LastOrDefault(attempt =>
-                attempt.Status == "built") is { } successfulBuild)
-            failureCode = await AuditPackageArchiveVerifier.FailureCodeAsync(artifacts,
-                request.TenantId, successfulBuild, version.Manifest, ct).ConfigureAwait(false);
-
-        var findings = failureCode is null
-            ? Array.Empty<AuditPackageValidationFinding>()
-            : [new AuditPackageValidationFinding(
-                Uuid.CreateVersion5(request.PackageId,
-                    $"{request.PackageVersion}\n{request.ValidationKey}\n{failureCode}"),
-                failureCode, "error", true, false, Summary(failureCode))];
-
-        return await executor.ExecuteAsync(aggregateId, aggregate =>
-            CommandFailureRequestAdapter.ToOutcome(aggregate.RecordValidation(aggregate.Revision,
-                (int)request.PackageVersion, request.ValidationKey, findings, actorMemberId, actorDisplay,
-                clock.GetUtcNow())), context, ct).ConfigureAwait(false);
+        return AuditPackageRootOperation.Unit(outcome);
     }
-
-    static string Summary(string failureCode) => failureCode switch
-    {
-        "frozen_source_mismatch" =>
-            "Selected source versions do not match a supported frozen examination snapshot.",
-        "archive_content_unavailable" =>
-            "The exact built package archive is not available in verified tenant storage.",
-        _ => "The built archive entries do not match the exact package manifest content.",
-    };
 }

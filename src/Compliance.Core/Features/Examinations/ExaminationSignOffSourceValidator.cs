@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -13,7 +14,24 @@ namespace Bdgrz.Compliance.Features.Examinations;
 /// <summary>Resolves management's sign-off against the exact immutable sources it claims to review.</summary>
 static class ExaminationSignOffSourceValidator
 {
+    internal static async ValueTask<Result<AuditPackageSnapshot>> ReadPackageAsync(AuditPackageReader packages,
+        Uuid tenantId, Uuid programId, Uuid packageId, CancellationToken ct)
+    {
+        try
+        {
+            return Result<AuditPackageSnapshot>.Success(await packages.ReadAsync(tenantId, programId,
+                packageId, ct).ConfigureAwait(false));
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<AuditPackageSnapshot>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The audit package's immutable sources cannot be verified.",
+                isTransient: exception is ImmutableContentUnavailableException));
+        }
+    }
+
     public static async ValueTask<Result<DateTimeOffset>> ValidateAsync(IAggregateReader reader,
+        AuditPackageReader packages,
         Uuid tenantId, Uuid programId, ExaminationSignOffContent content, CancellationToken ct)
     {
         if (tenantId == Uuid.Empty || programId == Uuid.Empty || content is null ||
@@ -23,9 +41,11 @@ static class ExaminationSignOffSourceValidator
             content.Commitments is null)
             return Invalid("A management review requires a complete examination source chain.");
 
-        var package = await reader.HydrateAsync(new AuditPackage(tenantId, programId,
-            content.PackageId), ct).ConfigureAwait(false);
-        if (package.Current is not { } packageView || packageView.TenantId != tenantId ||
+        var package = await ReadPackageAsync(packages, tenantId, programId,
+            content.PackageId, ct).ConfigureAwait(false);
+        if (!package.IsSuccess)
+            return Result<DateTimeOffset>.Failure(package.Error!);
+        if (package.Value.View is not { } packageView || packageView.TenantId != tenantId ||
             packageView.ProgramId != programId || packageView.ExaminationId != content.ExaminationId ||
             packageView.PackageKind != content.ScopeKind)
             return Missing("The exact delivered examination package was not found.");

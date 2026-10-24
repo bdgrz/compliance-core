@@ -1,37 +1,55 @@
+using System.Globalization;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Artifacts;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
-public sealed class RequestAuditPackageBuildHandler(IAggregateExecutor executor,
-    TimeProvider clock) : IRequestHandler<RequestAuditPackageBuild>
+/// <summary>Freezes exact selected bytes and an authored manifest revision before queueing one logical build.</summary>
+public sealed class RequestAuditPackageBuildHandler(AuditPackageRootOperation operations, IImmutableContentStore content)
+    : IRequestHandler<RequestAuditPackageBuild, OperationAcceptedResponse>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<RequestAuditPackageBuild> context,
-        CancellationToken ct)
+    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+        IRequestContext<RequestAuditPackageBuild> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (!AuditPackageCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,
-                out var actorMemberId, out var actorDisplay))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "An audit package build request requires a personal HTTP actor.")));
-
-        return executor.ExecuteAsync(new AuditPackage(request.TenantId, request.ProgramId,
-                request.PackageId), aggregate =>
+        if (string.IsNullOrWhiteSpace(request.BuildKey) || request.PackageVersion is < 1 or > int.MaxValue)
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A build requires a stable key and exact manifest version."));
+        var buildId = AuditPackageCommandIdentity.Build(request.PackageId, request.PackageVersion, request.BuildKey);
+        var outcome = await operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.PackageId,
+            buildId, nameof(RequestAuditPackageBuild), request.ExpectedManifestRevision, _ => request.PackageVersion,
+            owner => owner.PrepareWrite(request.ProgramId, request.ExpectedManifestRevision, request.PackageVersion),
+            async (snapshot, operation, token) =>
             {
-                var current = aggregate.Current;
-                if (current is null)
-                    return AggregateOutcome.Discard(Result.Failure(new RequestError(
-                        RequestErrorKind.NotFound,
-                        "The audit package was not found in this program.")));
-                if (current.ExaminationId != request.ExaminationId ||
-                    !string.Equals(current.PackageKind, request.PackageKind, StringComparison.Ordinal))
-                    return AggregateOutcome.Discard(Result.Failure(new RequestError(
-                        RequestErrorKind.Conflict,
-                        "The build request must identify the package's exact examination and kind.")));
-
-                return CommandFailureRequestAdapter.ToOutcome(aggregate.RequestBuild(
-                    aggregate.Revision, request.BuildKey, actorMemberId, actorDisplay,
-                    clock.GetUtcNow()));
-            }, context, ct);
+                var view = snapshot.View!;
+                if (view.ExaminationId != request.ExaminationId || view.PackageKind != request.PackageKind)
+                    return PackageChanges.Conflict("The build must identify the package's exact examination and kind.");
+                var rules = new AuditPackageRules(request.TenantId, request.ProgramId, request.PackageId, view);
+                if (rules.RequestBuild(request.ExpectedManifestRevision, request.BuildKey, PackageChanges.Member(operation),
+                        operation.Actor.Display, operation.AcceptedAt) is { } failure)
+                    return PackageChanges.Failure(failure);
+                var version = view.Versions[^1];
+                var manifest = await PackageContent.WriteAsync(content, request.TenantId, "audit-package-manifest.v1",
+                    version.Manifest, token).ConfigureAwait(false);
+                var selected = version.Manifest.Entries.OrderBy(entry => entry.RelativePath, StringComparer.Ordinal)
+                    .Select(entry => entry.Source).ToArray();
+                var selection = await PackageContent.WriteAsync<IReadOnlyList<AuditPackageSelectionEntry>>(content,
+                    request.TenantId, "audit-package-selection-entry.v1", selected, token).ConfigureAwait(false);
+                var intent = new PackageBuildIntent(PackageContent.Header(operation), request.PackageId,
+                    view.ExaminationId, view.PackageKind, request.PackageVersion, buildId, request.BuildKey.Trim(),
+                    version.Manifest.AuditPackageManifestId, version.Manifest.ManifestSha256, manifest,
+                    new ImmutableSelectionManifest(selection, "audit-package-selection-entry.v1", selected.Length,
+                        SelectionOrder.CanonicalKey, selection.Sha256));
+                return Result<PreparedPackageDelta>.Success(await PackageContent.DeltaAsync(content, request.TenantId,
+                    PackageBuildIntent.Schema, intent, token).ConfigureAwait(false));
+            }, (owner, operation, delta, response, _) => owner.AdmitBuild(request.ProgramId,
+                request.ExpectedManifestRevision, request.PackageVersion, operation, delta.Content, response), true, ct)
+            .ConfigureAwait(false);
+        return await operations.AcknowledgmentAsync(request.TenantId, outcome, ct).ConfigureAwait(false);
     }
 }

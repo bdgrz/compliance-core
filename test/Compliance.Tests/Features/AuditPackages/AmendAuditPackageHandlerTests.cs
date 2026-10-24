@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Security.Claims;
@@ -9,7 +14,7 @@ using Bdgrz.Compliance.Tests.Features.Examinations;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackage;
+using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackageRules;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPackages;
 
@@ -25,14 +30,12 @@ public sealed class AmendAuditPackageHandlerTests
         var baseline = await fixture.SeedBaselineAsync();
         var packageId = Uuid.CreateVersion4();
         await fixture.SeedBuiltPackageAsync(packageId, baseline);
-        var request = new AmendAuditPackage(fixture.TenantId, fixture.ProgramId, packageId, 3,
-            "Remove the superseded source record.", [fixture.SourceRecord1]);
+        var request = new AmendAuditPackage(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, packageId, 3, "Remove the superseded source record.", [fixture.SourceRecord1]);
 
         // Act
         var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
             request), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -55,14 +58,12 @@ public sealed class AmendAuditPackageHandlerTests
         var baseline = await fixture.SeedBaselineAsync();
         var packageId = Uuid.CreateVersion4();
         await fixture.SeedBuiltPackageAsync(packageId, baseline);
-        var request = new AmendAuditPackage(fixture.TenantId, fixture.ProgramId, packageId, 3,
-            "Attempt to add an unselected source.", [Uuid.CreateVersion4()]);
+        var request = new AmendAuditPackage(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, packageId, 3, "Attempt to add an unselected source.", [Uuid.CreateVersion4()]);
 
         // Act
         var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
             request), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -80,14 +81,12 @@ public sealed class AmendAuditPackageHandlerTests
         var completeContent = fixture.Content(baseline);
         await fixture.SeedBuiltPackageAsync(packageId, baseline,
             selectedContent: [completeContent.SelectedContent[0]]);
-        var request = new AmendAuditPackage(fixture.TenantId, fixture.ProgramId, packageId, 3,
-            "Include the additional exact baseline source.", null, completeContent);
+        var request = new AmendAuditPackage(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, packageId, 3, "Include the additional exact baseline source.", null, completeContent);
 
         // Act
         var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
             request), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -107,14 +106,12 @@ public sealed class AmendAuditPackageHandlerTests
         var packageId = Uuid.CreateVersion4();
         await fixture.SeedBuiltPackageAsync(packageId, baseline);
         var content = fixture.Content(baseline) with { Name = "Attacker-selected package name" };
-        var request = new AmendAuditPackage(fixture.TenantId, fixture.ProgramId, packageId, 3,
-            "Try to change package identity.", null, content);
+        var request = new AmendAuditPackage(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, packageId, 3, "Try to change package identity.", null, content);
 
         // Act
         var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
             request), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -127,8 +124,7 @@ public sealed class AmendAuditPackageHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var request = new AmendAuditPackage(fixture.TenantId, fixture.ProgramId,
-            Uuid.CreateVersion4(), 3, "Unauthorized change.", []);
+        var request = new AmendAuditPackage(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4(), 3, "Unauthorized change.", []);
 
         // Act
         var result = await fixture.Handler().HandleAsync(Fixture.SystemContext(request),
@@ -162,6 +158,16 @@ public sealed class AmendAuditPackageHandlerTests
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
+        public IImmutableContentStore ContentStore { get; } =
+            new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+        public AuditPackageReader Packages => new(Reader, ContentStore);
+        public AuditPackageRootOperation RootOperation => new(Reader, Packages,
+            new NativeOperationExecutor(Reader, Executor, ContentStore), ContentStore, _clock);
+        public async Task<AuditPackageRules> ReadPackageAsync(Uuid id) =>
+            new(TenantId, ProgramId, id, (await Packages.ReadAsync(TenantId, ProgramId, id, CancellationToken.None)).View);
+        public async Task<long> ManifestRevisionAsync(Uuid id) =>
+            (await Packages.ReadAsync(TenantId, ProgramId, id, CancellationToken.None)).Owner.Revision;
+
         public IArtifactContentStore ArtifactStore { get; }
 
         public Fixture()
@@ -180,8 +186,13 @@ public sealed class AmendAuditPackageHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public AmendAuditPackageHandler Handler() => new(Executor, Reader,
-            new AuditPackageSourceBuilder(Reader), _clock);
+        public AmendAuditPackageHandler Handler() => new(RootOperation, new AuditPackageSourceBuilder(Reader), ContentStore);
+
+        public async Task SeedSourceBytesAsync()
+        {
+            await ArtifactStore.StoreIfAbsentAsync(TenantId, new MemoryStream(SourceBytes1));
+            await ArtifactStore.StoreIfAbsentAsync(TenantId, new MemoryStream(SourceBytes2));
+        }
 
         public async Task<TypeIBaselineView> SeedBaselineAsync()
         {
@@ -233,7 +244,7 @@ public sealed class AmendAuditPackageHandlerTests
                 new AuditPackageBuildOutput(manifest.AuditPackageManifestId,
                     manifest.ManifestSha256, manifest.Entries, ArchiveId, archiveSha256,
                     archiveBytes.LongLength, null), null, "build-worker", Now.AddMinutes(3)));
-            await Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
+            await PackageSeeds.WriteAsync(Writer, ContentStore, package.Current!);
         }
 
         async Task<byte[]> BuildArchiveAsync(AuditPackageManifestView manifest,

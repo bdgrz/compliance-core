@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPackages;
@@ -6,7 +7,6 @@ using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Tests.Features.AuditPackages;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackage;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 
@@ -171,7 +171,7 @@ public sealed class RecordExaminationOutcomeHandlerTests
     }
 
     static RecordExaminationOutcomeHandler Handler(AmendAuditPackageHandlerTests.Fixture fixture,
-        TimeProvider clock) => new(fixture.Executor, fixture.Reader, clock);
+        TimeProvider clock) => new(fixture.Executor, fixture.Reader, fixture.Packages, clock);
 
     static RecordExaminationOutcome Request(AmendAuditPackageHandlerTests.Fixture fixture,
         Uuid packageId, Uuid? reportArtifactId) => new(fixture.TenantId, fixture.ProgramId,
@@ -213,8 +213,7 @@ public sealed class RecordExaminationOutcomeHandlerTests
     {
         var baseline = await fixture.SeedBaselineAsync();
         await fixture.SeedBuiltPackageAsync(packageId, baseline);
-        var package = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var package = await fixture.ReadPackageAsync(packageId);
         var actorMemberId = RbacIds.Member(fixture.TenantId, fixture.UserId);
         Assert.Null(package.RecordValidation(package.Revision, 1, "outcome-test", [],
             actorMemberId, "Audit manager", new DateTimeOffset(2026, 10, 18, 17, 4, 0,
@@ -226,7 +225,7 @@ public sealed class RecordExaminationOutcomeHandlerTests
         Assert.Null(package.RecordDelivery(package.Revision, 1, "auditor@example.test",
             "delivery-reference-1", actorMemberId, "Audit manager",
             new DateTimeOffset(2026, 10, 18, 17, 6, 0, TimeSpan.Zero)));
-        await fixture.Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
+        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.ContentStore, package.Current!);
         return package.Current!.Versions[0];
     }
 }

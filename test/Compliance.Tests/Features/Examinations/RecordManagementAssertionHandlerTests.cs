@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs;
+using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPackages;
@@ -7,7 +12,7 @@ using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackage;
+using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackageRules;
 using ManagementAssertionAggregate = Bdgrz.Compliance.Features.Examinations.ManagementAssertion;
 using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
 
@@ -16,6 +21,28 @@ namespace Bdgrz.Compliance.Tests.Features.Examinations;
 public sealed class RecordManagementAssertionHandlerTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldRetryUnavailablePackageContentAndRefuseCorruptionGivenAssertionSources(bool unavailable)
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var sources = await fixture.SeedSourcesAsync();
+        var packages = new AuditPackageReader(fixture.Reader, new FailingPackageContentStore(unavailable));
+        var handler = new RecordManagementAssertionHandler(fixture.Executor, fixture.Reader, packages, fixture.Clock);
+
+        // Act
+        var result = await handler.HandleAsync(fixture.Context(fixture.Request(sources.Content)), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ManagementAssertionAggregate(fixture.TenantId,
+            fixture.ProgramId, fixture.AssertionId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(unavailable, result.Error!.IsTransient);
+        Assert.Equal(0, saved.Revision);
+    }
 
     [Fact]
     public async Task ShouldRecordExactAssertionGivenValidatedPackageAndApprovedBoundDescription()
@@ -188,11 +215,16 @@ public sealed class RecordManagementAssertionHandlerTests
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
+        public IImmutableContentStore ContentStore { get; }
+        public AuditPackageReader Packages { get; }
 
         public Fixture()
         {
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            ContentStore = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+            services.AddSingleton(ContentStore);
+            services.AddScoped<AuditPackageReader>();
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
@@ -200,10 +232,11 @@ public sealed class RecordManagementAssertionHandlerTests
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+            Packages = _scope.ServiceProvider.GetRequiredService<AuditPackageReader>();
         }
 
         public RecordManagementAssertionHandler Handler() =>
-            new(Executor, Reader, Clock);
+            new(Executor, Reader, Packages, Clock);
 
         public async Task<SeededSources> SeedSourcesAsync(bool validatePackage = true,
             string wordingArtifactSource = "auditor")
@@ -272,7 +305,7 @@ public sealed class RecordManagementAssertionHandlerTests
             if (validatePackage)
                 Assert.Null(package.RecordValidation(package.Revision, 1, "assertion-validation", [],
                     ReviewerMemberId, "Independent reviewer", Now.AddMinutes(7)));
-            await Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
+            await PackageSeeds.WriteAsync(Writer, ContentStore, package.Current!);
 
             var wordingArtifactId = Uuid.CreateVersion4();
             var wordingArtifact = new EvidenceArtifact(TenantId, wordingArtifactId);
@@ -341,6 +374,18 @@ public sealed class RecordManagementAssertionHandlerTests
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
         }
+    }
+
+    sealed class FailingPackageContentStore(bool unavailable) : IImmutableContentStore
+    {
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema,
+            string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
+            throw new NotSupportedException("This fixture only reads package content.");
+
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => Task.FromException<ReadOnlyMemory<byte>>(unavailable
+                ? new ImmutableContentUnavailableException("Temporarily unavailable package content.")
+                : new ImmutableContentIntegrityException("Corrupt package content."));
     }
 
     sealed record SeededSources(ManagementAssertionContent Content,

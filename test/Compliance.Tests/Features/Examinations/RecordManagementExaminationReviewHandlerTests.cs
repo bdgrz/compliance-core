@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPackages;
@@ -19,7 +20,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
         var request = new RecordManagementExaminationReview(fixture.TenantId,
             fixture.ProgramId, content.ExaminationId, Uuid.CreateVersion4(), content);
         var handler = new RecordManagementExaminationReviewHandler(fixture.Executor,
-            fixture.Reader, new ManagementExecutiveAuthority(fixture.Reader,
+            fixture.Reader, fixture.Packages, new ManagementExecutiveAuthority(fixture.Reader,
                 new DenyPermissions()), new FixedTimeProvider(DateTimeOffset.UtcNow));
         var context = AmendAuditPackageHandlerTests.Fixture.SystemContext(request);
 
@@ -44,7 +45,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
         var request = new RecordManagementExaminationReview(fixture.TenantId,
             fixture.ProgramId, fixture.ExaminationId, signOffId, content);
         var handler = new RecordManagementExaminationReviewHandler(fixture.Executor,
-            fixture.Reader, new ManagementExecutiveAuthority(fixture.Reader,
+            fixture.Reader, fixture.Packages, new ManagementExecutiveAuthority(fixture.Reader,
                 new AllowPermissions()), new FixedTimeProvider(DateTimeOffset.UtcNow));
 
         // Act
@@ -74,7 +75,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
         var request = new RecordManagementExaminationReview(fixture.TenantId,
             fixture.ProgramId, fixture.ExaminationId, signOffId, content);
         var handler = new RecordManagementExaminationReviewHandler(fixture.Executor,
-            fixture.Reader, new ManagementExecutiveAuthority(fixture.Reader,
+            fixture.Reader, fixture.Packages, new ManagementExecutiveAuthority(fixture.Reader,
                 new DenyPermissions()), new FixedTimeProvider(DateTimeOffset.UtcNow));
 
         // Act
@@ -120,8 +121,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
                 "management", item.VersionId));
         await fixture.SeedBuiltPackageAsync(packageId, baseline, selectedContent:
             fixture.Content(baseline).SelectedContent.Concat(selectedInputs).ToArray());
-        var package = await fixture.Reader.HydrateAsync(new AuditPackage(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var package = await fixture.ReadPackageAsync(packageId);
         Assert.Null(package.RecordValidation(package.Revision, 1, "management-review-test", [],
             memberId, "Management executive", new DateTimeOffset(2026, 10, 18, 17, 4, 0,
                 TimeSpan.Zero)));
@@ -132,7 +132,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
         Assert.Null(package.RecordDelivery(package.Revision, 1, "auditor@example.test",
             "management-review-delivery", memberId, "Management executive",
             new DateTimeOffset(2026, 10, 18, 17, 6, 0, TimeSpan.Zero)));
-        await fixture.Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
+        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.ContentStore, package.Current!);
         var packageVersion = package.Current!.Versions.Single();
         var baselineReferences = baseline.Sources.Select(item => new ExaminationContentReference(
             item.Kind, item.RecordId, item.VersionId, item.Revision, item.ContentSha256)).ToArray();
@@ -197,7 +197,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
         var request = new RecordManagementExaminationReview(fixture.TenantId,
             fixture.ProgramId, fixture.ExaminationId, Uuid.CreateVersion4(), content);
         var handler = new RecordManagementExaminationReviewHandler(fixture.Executor,
-            fixture.Reader, new ManagementExecutiveAuthority(fixture.Reader,
+            fixture.Reader, fixture.Packages, new ManagementExecutiveAuthority(fixture.Reader,
                 new AllowPermissions()), new FixedTimeProvider(
                 new DateTimeOffset(2026, 10, 18, 17, 12, 0, TimeSpan.Zero)));
 
@@ -216,7 +216,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
         Assert.Equal(outcomeId, saved.Current.Content.AuditOutcomeId);
         Assert.Equal(memberId, saved.Current.SignedOffByMemberId);
         var retry = await new RecordManagementExaminationReviewHandler(fixture.Executor,
-                fixture.Reader, new ManagementExecutiveAuthority(fixture.Reader,
+                fixture.Reader, fixture.Packages, new ManagementExecutiveAuthority(fixture.Reader,
                     new AllowPermissions()), new FixedTimeProvider(
                     new DateTimeOffset(2026, 10, 18, 17, 14, 0, TimeSpan.Zero)))
             .HandleAsync(AmendAuditPackageHandlerTests.Fixture.Context(fixture.UserId, request),

@@ -18,11 +18,11 @@ function checkFixture(t, source, trace = false, receiverFields = [], options = {
     const catalog = (name, value) => write(`docs/product/audits/2026-10-23/${name}.json`, value);
     write('tools/check-implementation-coverage.mjs', fs.readFileSync(tool, 'utf8'));
     write('tools/implementation-coverage-allowlist.json', { deferred: [], ulongExpectedRevision: [], reservedRoutes: [] });
-    catalog('aggregate-split-targets', { splitOwners: [] });
+    catalog('aggregate-split-targets', { splitOwners: options.splitOwners ?? [] });
     catalog('target-command-contracts', { sourceHead: 'fixture', commands: [{ command: 'BeginExample', owner: 'Example', fields: [{ name: 'Id', type: 'Uuid' }], http: [{}], events: ['ExampleBegun'] }] });
     catalog('source-admission-contracts', { contracts: [] });
     catalog('remaining-command-identities', { contracts: [] });
-    catalog('target-event-contracts', { events: [] });
+    catalog('target-event-contracts', { events: options.events ?? [] });
     catalog('design-review-traces', { traces: trace ? [{ id: 'example', test: 'ShouldCompleteGivenExample' }] : [] });
     catalog('target-reactor-contracts', options.reactorCatalog ?? {
         reactors: [{ command: 'FinishExample', handler: 'FinishExampleHandler', fields: receiverFields, reactor: 'ExampleReactor', http: false, mcp: false }],
@@ -237,4 +237,34 @@ test('ShouldDiscoverHandlersGivenFullyQualifiedRegistrations', t => {
     const result = checkFixture(t, source, false, [], { reactorCatalog: sharedChildCatalog(false) });
     assert.equal(result.status, 0);
     assert.equal(result.report.scanned.registeredHandlers, 2);
+});
+
+
+test('ShouldUseFinalEventCatalogGivenSupersededPreliminaryOwnerFact', t => {
+    const result = checkFixture(t, `
+        public class Example : Aggregate { }
+        [Discriminator("example.accepted", 1)]
+        public record ExampleAccepted(Uuid Id) : DomainEvent;
+    `, false, [], {
+        reactorCatalog: { reactors: [], processes: [] },
+        splitOwners: [{ currentAggregate: 'OldExample', targetOwners: [{ proposedAggregate: 'Example',
+            existingDomainEvents: [], newDomainEvents: ['PreliminaryProposedFact'], technicalProcessState: [], commands: [] }] }],
+        events: [{ event: 'ExampleAccepted', owner: 'Example', discriminator: 'example.accepted',
+            discriminatorVersion: 1, fields: [{ name: 'Id', type: 'Uuid' }] }]
+    });
+    assert.equal(result.status, 0);
+    assert.equal(result.report.ownersImplemented, '1/1');
+});
+
+test('ShouldRecognizeTechnicalOwnerGivenCompleteRegisteredProcess', t => {
+    const result = checkFixture(t, `
+        public static class ExampleProcess { public const string Name = "ExampleProcess"; }
+        public record FinishExample() : IRequest<Result>;
+        services.AddRequestHandler<FinishExampleHandler>();
+    `, false, [], {
+        splitOwners: [{ currentAggregate: 'OldExample', targetOwners: [{ proposedAggregate: 'ExampleProcess',
+            existingDomainEvents: [], newDomainEvents: [], technicalProcessState: ['attempts'], commands: [] }] }]
+    });
+    assert.equal(result.status, 0);
+    assert.equal(result.report.ownersImplemented, '1/1');
 });

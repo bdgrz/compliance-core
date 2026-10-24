@@ -1,0 +1,68 @@
+{
+  "reviewed": 64,
+  "blockedReviews": 0,
+  "signalsTriaged": 5,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/AuditPackages/AuditPackageArchiveBuilder.cs",
+      "signals": {
+        "authority_gap": 0.55,
+        "invariant_gap": 0.36,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.26
+      },
+      "sha256": "b9e3a2e19bfc48c28f07cbc836a271031fa4695054dc05837d49fd3e2dc6555b",
+      "classification": "known_internal_source_publication_gap",
+      "evidence": "Actual deterministic ZIP builder verifies tenant-scoped pinned source digest/length, writes complete archive before use, and verifies persisted ZIP. Actual-byte/determinism/foreign-tenant/path-traversal tests pass. Production canonical source publication is unfinished: some logical hashes are prefixed/Merkle roots, requiring a physical blob descriptor with full content and proof material. Worker waits on unavailable bytes; this source seam remains S29 work."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPackages/AuditPackageRules.cs",
+      "signals": {
+        "authority_gap": 0.57,
+        "invariant_gap": 0.56,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.42
+      },
+      "sha256": "ab91ea2d1ac30db1459fe6194fcc6a30cdbadccfd3ac6b35f10266ec88a94a4c",
+      "classification": "context_resolved",
+      "evidence": "Pure normalization/policy over a composed read view; it neither emits nor persists facts. Native owner revision guards bind that validation to exact manifest authority. Original Rules creation clock comparison is no longer authoritative retry: the actual root resolves native receipt first. Lost-response and deterministic equal-commit race RED/GREEN tests prove this order."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPackages/RecordAuditPackageDeliveryHandler.cs",
+      "signals": {
+        "authority_gap": 0.54,
+        "invariant_gap": 0.66,
+        "recovery_gap": 0.62,
+        "incomplete_path": 0.29
+      },
+      "sha256": "b0f20c0335c17ee40acf565d7d52bf7d3ea0bfd7366af79ccbd4dc21897fa52c",
+      "classification": "context_resolved",
+      "evidence": "All live archive/current validation/recipient approval checks occur before manifest admission and recheck the same manifest revision at append. Admission freezes exact historical proofs and version before child materialization. Historical/corrupt/unavailable/wrong-proof tests pass; later archive quarantine cannot erase an already admitted external personal handoff. No transmission adapter is invoked."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPackages/StartAuditPackageBuildHandler.cs",
+      "signals": {
+        "authority_gap": 0.55,
+        "invariant_gap": 0.58,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.33
+      },
+      "sha256": "3eb57ba052c56c510bce918897b6359d3df50e5a079a8ce5e51270c6de0bba79",
+      "classification": "context_resolved_with_internal_followup",
+      "evidence": "Build verifies exact admitted source/intent, uses deterministic ZIP bytes, durably stores only successful output before acknowledging, and reuses matching stored output on retry. Partial output is refused and unavailable sources wait. Native terminal business fact follows output storage; technical stages/attempts stay in ProcessRecord. Production source-byte publication remains the internal followup noted above."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ExaminationSignOffSourceValidator.cs",
+      "signals": {
+        "authority_gap": 0.67,
+        "invariant_gap": 0.57,
+        "recovery_gap": 0.55,
+        "incomplete_path": 0.25
+      },
+      "sha256": "d674295018310d85701b6e97bc3f0476fc8b37c33ceeff500302f47d3ee982b3",
+      "classification": "unchanged_policy_context",
+      "evidence": "Consumer now composes native package/delivery owners, preserving tenant/program/examination/version/archive/snapshot assertions. Existing sign-off/as-of/current-owner and source-chain checks remain; no authorization was removed. Four examination acceptance suites were migrated with every original method retained. Mutable source-use protocols in remaining versioned-owner families are separate ongoing work."
+    }
+  ],
+  "scope": "Owner/build/delivery cutover validated; scoped public queries and faithful source-byte publication remain internal followups."
+}

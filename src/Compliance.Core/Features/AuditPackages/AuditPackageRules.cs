@@ -1,4 +1,3 @@
-using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Security.Cryptography;
@@ -10,20 +9,13 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
 /// <summary>
-/// One package stream owns its frozen source selection, deterministic manifest,
-/// build attempts, validation decisions, exact-recipient disclosures, deliveries,
-/// and immutable amendment lineage. Source authorization and freshness are checked
-/// by handlers before they provide package content or validation results.
+/// Pure normalization and business rules over a composed package read view. This class is not an aggregate and
+/// never emits or persists events. Native owner guards recheck the local revision before any accepted delta appends.
 /// </summary>
-public sealed class AuditPackage : Aggregate
+public sealed class AuditPackageRules
 {
     const int MaximumSelectedContent = 256;
-    const int MaximumBuildAttempts = 64;
-    const int MaximumValidations = 64;
     const int MaximumValidationFindings = 256;
-    const int MaximumDisclosures = 64;
-    const int MaximumDeliveries = 128;
-    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumNameLength = 200;
     const int MaximumTextLength = 2000;
     const int MaximumTokenLength = 100;
@@ -54,22 +46,11 @@ public sealed class AuditPackage : Aggregate
 
     public AuditPackageView? Current => _current;
 
-    public AuditPackage(Uuid tenantId, Uuid programId, Uuid packageId)
-        : base(packageId, new EventStreamAddress(tenantId.ToString(), "audit-packages",
-            packageId.ToString()))
+    public Uuid Id { get; }
+
+    public AuditPackageRules(Uuid tenantId, Uuid programId, Uuid packageId, AuditPackageView? current = null)
     {
-        _tenantId = tenantId;
-        _programId = programId;
-        On<AuditPackageCreated>(Apply);
-        On<AuditPackageBuildRequested>(Apply);
-        On<AuditPackageBuildProgressRecorded>(Apply);
-        On<AuditPackageBuildFailed>(Apply);
-        On<AuditPackageBuilt>(Apply);
-        On<AuditPackageValidated>(Apply);
-        On<AuditPackageValidationOverrideApproved>(Apply);
-        On<AuditPackageDisclosureApproved>(Apply);
-        On<AuditPackageDelivered>(Apply);
-        On<AuditPackageAmended>(Apply);
+        (_tenantId, _programId, Id, _current) = (tenantId, programId, packageId, current);
     }
 
     public CommandFailure? Create(AuditPackageContent content, Uuid actorMemberId,
@@ -95,9 +76,7 @@ public sealed class AuditPackage : Aggregate
         var state = new AuditPackageView(_tenantId, _programId, Id,
             normalized.ExaminationId, normalized.PackageKind, normalized.Name, "draft", 1,
             1, createdAt, actorMemberId, actorDisplay.Trim(), createdAt, [version]);
-        return Emit(state, actorMemberId, createdAt, static (tenant, package, revision,
-            actor, snapshot, occurredAt) => new AuditPackageCreated(tenant, package,
-            revision, actor, snapshot, occurredAt), creating: true);
+        return Emit(state, actorMemberId, createdAt, creating: true);
     }
 
     public CommandFailure? RequestBuild(long expectedRevision, string buildKey,
@@ -117,9 +96,9 @@ public sealed class AuditPackage : Aggregate
                 : CommandFailure.StateConflict("A build key cannot be reused with changed intent or attribution.");
         if (expectedRevision != Revision)
             return StaleRevision();
-        if (version.Deliveries.Count > 0 || version.BuildAttempts.Count >= MaximumBuildAttempts)
+        if (version.Deliveries.Count > 0)
             return CommandFailure.StateConflict(
-                "A delivered version is immutable, and build attempts are bounded; amend it to create another version.");
+                "A delivery-admitted version is immutable; amend it to create another version.");
 
         var attempt = new AuditPackageBuildAttemptView(attemptId, buildKey, "requested", 0,
             version.Manifest.Entries.Count, requestedAt, requestedAt, actorMemberId,
@@ -130,9 +109,7 @@ public sealed class AuditPackage : Aggregate
             BuildAttempts = Append(version.BuildAttempts, attempt),
         };
         var next = ReplaceCurrentVersion(current, nextVersion, "building", requestedAt);
-        return Emit(next, actorMemberId, requestedAt, static (tenant, package, revision,
-            actor, snapshot, occurredAt) => new AuditPackageBuildRequested(tenant,
-            package, revision, actor, snapshot, occurredAt));
+        return Emit(next, actorMemberId, requestedAt);
     }
 
     public CommandFailure? RecordBuildProgress(long expectedRevision, Uuid buildAttemptId,
@@ -170,9 +147,7 @@ public sealed class AuditPackage : Aggregate
             BuildAttempts = Replace(version.BuildAttempts, attemptIndex, nextAttempt),
         };
         var next = ReplaceCurrentVersion(current, nextVersion, "building", updatedAt);
-        return Emit(next, actorMemberId, updatedAt, static (tenant, package, revision,
-            actor, snapshot, occurredAt) => new AuditPackageBuildProgressRecorded(tenant,
-            package, revision, actor, snapshot, occurredAt));
+        return Emit(next, actorMemberId, updatedAt);
     }
 
     public CommandFailure? RecordBuildResult(long expectedRevision, Uuid buildAttemptId,
@@ -219,12 +194,8 @@ public sealed class AuditPackage : Aggregate
         var next = ReplaceCurrentVersion(current, nextVersion,
             succeeds ? "built" : "build_failed", completedAt);
         return succeeds
-            ? Emit(next, actorMemberId, completedAt, static (tenant, package, revision,
-                actor, snapshot, occurredAt) => new AuditPackageBuilt(tenant, package,
-                revision, actor, snapshot, occurredAt))
-            : Emit(next, actorMemberId, completedAt, static (tenant, package, revision,
-                actor, snapshot, occurredAt) => new AuditPackageBuildFailed(tenant,
-                package, revision, actor, snapshot, occurredAt));
+            ? Emit(next, actorMemberId, completedAt)
+            : Emit(next, actorMemberId, completedAt);
     }
 
     public CommandFailure? RecordValidation(long expectedRevision, int packageVersion,
@@ -257,8 +228,6 @@ public sealed class AuditPackage : Aggregate
                 : CommandFailure.StateConflict("A validation key cannot be reused with changed result or attribution.");
         if (expectedRevision != Revision)
             return StaleRevision();
-        if (version.Validations.Count >= MaximumValidations)
-            return CommandFailure.StateConflict("The package reached its validation history limit.");
 
         var status = normalizedFindings.Any(item => item.BlocksDelivery)
             ? "blocked"
@@ -274,9 +243,7 @@ public sealed class AuditPackage : Aggregate
         };
         var packageStatus = status == "blocked" ? "validation_blocked" : "validated";
         var next = ReplaceCurrentVersion(current, nextVersion, packageStatus, validatedAt);
-        return Emit(next, actorMemberId, validatedAt, static (tenant, package, revision,
-            actor, snapshot, occurredAt) => new AuditPackageValidated(tenant, package,
-            revision, actor, snapshot, occurredAt));
+        return Emit(next, actorMemberId, validatedAt);
     }
 
     public CommandFailure? ApproveValidationOverride(long expectedRevision, int packageVersion,
@@ -331,9 +298,7 @@ public sealed class AuditPackage : Aggregate
         var next = ReplaceCurrentVersion(current, nextVersion,
             allBlockingFindingsOverridden ? "validated_with_overrides" : "validation_blocked",
             approvedAt);
-        return Emit(next, actorMemberId, approvedAt, static (tenant, package, revision,
-            actor, snapshot, occurredAt) => new AuditPackageValidationOverrideApproved(
-            tenant, package, revision, actor, snapshot, occurredAt));
+        return Emit(next, actorMemberId, approvedAt);
     }
 
     public CommandFailure? ApproveDisclosure(long expectedRevision, int packageVersion,
@@ -364,8 +329,6 @@ public sealed class AuditPackage : Aggregate
                 : CommandFailure.StateConflict("A disclosure approval identity cannot be reused with changed intent.");
         if (expectedRevision != Revision)
             return StaleRevision();
-        if (version.DisclosureApprovals.Count >= MaximumDisclosures)
-            return CommandFailure.StateConflict("The package reached its disclosure approval limit.");
 
         var approval = new AuditPackageDisclosureApprovalView(id, packageVersion,
             version.Manifest.AuditPackageManifestId, version.Manifest.ManifestSha256, recipient,
@@ -376,9 +339,7 @@ public sealed class AuditPackage : Aggregate
             DisclosureApprovals = Append(version.DisclosureApprovals, approval),
         };
         var next = ReplaceCurrentVersion(current, nextVersion, "disclosure_approved", approvedAt);
-        return Emit(next, actorMemberId, approvedAt, static (tenant, package, revision,
-            actor, snapshot, occurredAt) => new AuditPackageDisclosureApproved(tenant,
-            package, revision, actor, snapshot, occurredAt));
+        return Emit(next, actorMemberId, approvedAt);
     }
 
     public CommandFailure? RecordDelivery(long expectedRevision, int packageVersion,
@@ -417,8 +378,6 @@ public sealed class AuditPackage : Aggregate
                 : CommandFailure.StateConflict("A delivery reference cannot be reused with changed package content.");
         if (expectedRevision != Revision)
             return StaleRevision();
-        if (version.Deliveries.Count >= MaximumDeliveries)
-            return CommandFailure.StateConflict("The package reached its retained delivery limit.");
 
         var delivery = new AuditPackageDeliveryView(_tenantId, _programId, deliveryId,
             Id, packageVersion, version.Manifest.AuditPackageManifestId, version.Manifest.ManifestSha256,
@@ -430,9 +389,7 @@ public sealed class AuditPackage : Aggregate
             Deliveries = Append(version.Deliveries, delivery),
         };
         var next = ReplaceCurrentVersion(current, nextVersion, "delivered", deliveredAt);
-        return Emit(next, actorMemberId, deliveredAt, static (tenant, package, revision,
-            actor, snapshot, occurredAt) => new AuditPackageDelivered(tenant, package,
-            revision, actor, snapshot, occurredAt));
+        return Emit(next, actorMemberId, deliveredAt);
     }
 
     public CommandFailure? Amend(long expectedRevision, string amendmentReason,
@@ -484,65 +441,15 @@ public sealed class AuditPackage : Aggregate
             UpdatedAt = amendedAt,
             Versions = Append(current.Versions, nextVersion),
         };
-        return Emit(next, actorMemberId, amendedAt, static (tenant, package, revision,
-            actor, snapshot, occurredAt) => new AuditPackageAmended(tenant, package,
-            revision, actor, snapshot, occurredAt));
+        return Emit(next, actorMemberId, amendedAt);
     }
 
-    void Apply(AuditPackageCreated ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-        ev.ActorMemberId, ev.State, ev.OccurredAt, creating: true);
-
-    void Apply(AuditPackageBuildRequested ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt);
-
-    void Apply(AuditPackageBuildProgressRecorded ev) => ApplyState(ev.TenantId,
-        ev.SubjectId, ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt);
-
-    void Apply(AuditPackageBuildFailed ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt);
-
-    void Apply(AuditPackageBuilt ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt);
-
-    void Apply(AuditPackageValidated ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt);
-
-    void Apply(AuditPackageValidationOverrideApproved ev) => ApplyState(ev.TenantId,
-        ev.SubjectId, ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt);
-
-    void Apply(AuditPackageDisclosureApproved ev) => ApplyState(ev.TenantId,
-        ev.SubjectId, ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt);
-
-    void Apply(AuditPackageDelivered ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt);
-
-    void Apply(AuditPackageAmended ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt);
-
-    void ApplyState(Uuid tenantId, Uuid packageId, long revision, Uuid? actorMemberId,
-        AuditPackageView state, DateTimeOffset occurredAt, bool creating = false)
-    {
-        if (tenantId != _tenantId || packageId != Id || state is null ||
-            state.TenantId != _tenantId || state.ProgramId != _programId ||
-            state.AuditPackageId != Id || state.Revision != revision ||
-            occurredAt == default || revision != Revision + 1 ||
-            creating != (_current is null) || ValidateState(state) is not null ||
-            actorMemberId == Uuid.Empty || _current is { } current && !ValidTransition(current, state))
-            throw new InvalidOperationException("The audit package event is invalid.");
-        _current = Freeze(state);
-    }
-
-    CommandFailure? Emit(AuditPackageView state, Uuid? actorMemberId,
-        DateTimeOffset occurredAt,
-        Func<Uuid, Uuid, long, Uuid?, AuditPackageView, DateTimeOffset, DomainEvent> createEvent,
+    CommandFailure? Emit(AuditPackageView state, Uuid? actorMemberId, DateTimeOffset occurredAt,
         bool creating = false)
     {
         if (state.Revision != Revision + 1 || !ValidTransitionForEmit(state, creating))
             return Invalid("The package transition does not advance exactly one valid revision.");
-        var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        if (!Fits(ev))
-            return Invalid("The complete audit package event exceeds the bounded event payload.");
-        RaiseEvent(ev);
+        _current = Freeze(state);
         return null;
     }
 
@@ -690,7 +597,7 @@ public sealed class AuditPackage : Aggregate
 
     static bool ValidBuildHistory(AuditPackageVersionView version)
     {
-        if (version.BuildAttempts is null || version.BuildAttempts.Count > MaximumBuildAttempts)
+        if (version.BuildAttempts is null)
             return false;
         var ids = new HashSet<Uuid>();
         foreach (var attempt in version.BuildAttempts)
@@ -721,7 +628,7 @@ public sealed class AuditPackage : Aggregate
 
     static bool ValidValidationHistory(AuditPackageView root, AuditPackageVersionView version)
     {
-        if (version.Validations is null || version.Validations.Count > MaximumValidations)
+        if (version.Validations is null)
             return false;
         var priorRevision = 0L;
         foreach (var validation in version.Validations)
@@ -743,7 +650,7 @@ public sealed class AuditPackage : Aggregate
     }
 
     static bool ValidDisclosureHistory(AuditPackageView root, AuditPackageVersionView version) =>
-        version.DisclosureApprovals is not null && version.DisclosureApprovals.Count <= MaximumDisclosures &&
+        version.DisclosureApprovals is not null &&
         version.DisclosureApprovals.All(approval => approval.DisclosureApprovalId != Uuid.Empty &&
             approval.PackageVersion == version.PackageVersion && approval.ManifestId == version.Manifest.AuditPackageManifestId &&
             approval.ManifestSha256 == version.Manifest.ManifestSha256 && approval.ApprovedByMemberId != Uuid.Empty &&
@@ -751,7 +658,7 @@ public sealed class AuditPackage : Aggregate
             Bounded(approval.Rationale, 1, MaximumTextLength) && approval.ApprovedAt != default);
 
     static bool ValidDeliveryHistory(AuditPackageView root, AuditPackageVersionView version) =>
-        version.Deliveries is not null && version.Deliveries.Count <= MaximumDeliveries &&
+        version.Deliveries is not null &&
         version.Deliveries.All(delivery => delivery.TenantId == root.TenantId &&
             delivery.ProgramId == root.ProgramId && delivery.AuditPackageId == root.AuditPackageId &&
             delivery.PackageVersion == version.PackageVersion && delivery.ManifestId == version.Manifest.AuditPackageManifestId &&
@@ -1055,5 +962,4 @@ public sealed class AuditPackage : Aggregate
 
     static CommandFailure Invalid(string message) => CommandFailure.InvalidContent(message);
 
-    static bool Fits(DomainEvent ev) => DomainEventPayload.Size(ev) <= MaximumEventBytes;
 }

@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Records the external auditor's result against its exact delivered package and report.</summary>
 public sealed class RecordExaminationOutcomeHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock) : IRequestHandler<RecordExaminationOutcome>
+    IAggregateReader reader, AuditPackageReader packages, TimeProvider clock) : IRequestHandler<RecordExaminationOutcome>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<RecordExaminationOutcome> context,
         CancellationToken ct)
@@ -23,9 +23,12 @@ public sealed class RecordExaminationOutcomeHandler(IAggregateExecutor executor,
             request.ReportArtifactId == Uuid.Empty)
             return Invalid("An examination outcome requires exact examination, package, version, and outcome identities.");
 
-        var package = await reader.HydrateAsync(new AuditPackage(request.TenantId,
-            request.ProgramId, request.PackageId), ct).ConfigureAwait(false);
-        if (package.Current is not { } packageView)
+        var package = await ExaminationSignOffSourceValidator.ReadPackageAsync(packages, request.TenantId,
+            request.ProgramId, request.PackageId, ct)
+            .ConfigureAwait(false);
+        if (!package.IsSuccess)
+            return Result.Failure(package.Error!);
+        if (package.Value.View is not { } packageView)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The audit package was not found in this program."));
         if (packageView.ExaminationId != request.ExaminationId)
