@@ -244,9 +244,10 @@ public sealed class RiskGovernanceHandlerTests
         // Arrange
         var fixture = await Fixture.CreateAsync("mitigate", allowed: false);
         var worker = await fixture.SeedMemberAsync();
+        var add = fixture.AddAction(worker, [], 0);
 
         // Act
-        await fixture.Scenario(fixture.AssessorUserId).When(fixture.AddAction(worker, [], 0))
+        await fixture.Scenario(fixture.AssessorUserId).When(add)
             .ExpectFailure(RequestErrorKind.Forbidden);
         await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.Submit(Uuid.CreateVersion4(), 1, [Uuid.CreateVersion4()]), RequestErrorKind.Forbidden);
         await fixture.Scenario(fixture.AssessorUserId)
@@ -258,8 +259,7 @@ public sealed class RiskGovernanceHandlerTests
         await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(Uuid.CreateVersion4(), 1, "accept"), RequestErrorKind.Forbidden);
 
         // Assert
-        var governance = await fixture.GovernanceAsync();
-        Assert.Empty(governance.TreatmentActions);
+        Assert.False((await fixture.ActionAsync(add.ActionId)).IsAdded);
     }
 
     [Fact]
@@ -269,7 +269,8 @@ public sealed class RiskGovernanceHandlerTests
         var fixture = await Fixture.CreateAsync("mitigate");
         var other = await Fixture.CreateAsync("mitigate");
         var worker = await fixture.SeedMemberAsync();
-        var foreignEvidence = await other.SeedEvidenceAsync(fulfilled: true, worker);
+        var otherWorker = await other.SeedMemberAsync();
+        var foreignEvidence = await other.SeedEvidenceAsync(fulfilled: true, otherWorker);
         var accepted = await Fixture.CreateAsync("accept");
         var acceptedWorker = await accepted.SeedMemberAsync();
 

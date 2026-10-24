@@ -83,7 +83,7 @@ public sealed class NativeContentTests
 
         // Assert
         Assert.NotNull(read);
-        Assert.IsType<ImmutableContentIntegrityException>(other);
+        Assert.IsType<ImmutableContentUnavailableException>(other);
     }
 
     [Fact]

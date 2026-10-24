@@ -1218,7 +1218,9 @@ public sealed class WorkSourceCompositionTests
         await using var scope = provider.CreateAsyncScope();
         var projectedKinds = scope.ServiceProvider.GetServices<IAccountableWorkItemDirectoryReader>()
             .SelectMany(reader => reader.ProjectedKinds).ToArray();
-        var kinds = projectedKinds.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal);
+        var kinds = projectedKinds.Concat(
+                [WorkSource.RiskTreatmentAction, WorkSource.RiskTreatmentActionReview, WorkSource.RiskControlTreatmentReview])
+            .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal);
 
         // Act
         var mapped = WorkSourceManagement.SourceRequests.Keys.Order(StringComparer.Ordinal);

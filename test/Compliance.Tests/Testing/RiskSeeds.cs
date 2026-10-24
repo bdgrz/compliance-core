@@ -126,7 +126,7 @@ static class RiskSeeds
         var operation = Operation(owner, id, (ulong)owner.Revision, actor, at, nameof(ReviewRiskTreatmentActionCompletion),
             new { outcome, rationale });
         var decision = await FindingContent.WriteAsync(content, tenant, RiskContent.AuthoredReviewSchema,
-            new RiskActionReviewDecision(id, program, risk, outcome, rationale, Uuid.Parse(actor.Id), actor, at, null, null),
+            new RiskActionReviewDecision(id, program, risk, outcome, rationale, Uuid.Parse(actor.Id, System.Globalization.CultureInfo.InvariantCulture), actor, at, null, null),
             CancellationToken.None);
         var cited = await ImmutableSelectionManifests.WriteAsync<ReviewedEvidenceRequest>(content, tenant.ToString(),
             Uuid.CreateVersion4(), "risk-action-reviewed-evidence.v1", [], SelectionOrder.Authored, CancellationToken.None);

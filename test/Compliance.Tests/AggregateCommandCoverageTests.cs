@@ -12,12 +12,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests;
 
-public sealed class AggregateCommandCoverageTests
+public sealed partial class AggregateCommandCoverageTests
 {
     [Fact]
     public void ShouldInventoryEveryDomainEventContractGivenCoverageMap()
     {
         // Arrange
+        ExportInventoryIfRequested();
         using var inventory = ReadInventory();
         var expected = inventory.RootElement.GetProperty("facts").EnumerateArray()
             .Select(static fact => fact.GetProperty("fact").GetString()!).ToHashSet(StringComparer.Ordinal);
@@ -410,6 +411,36 @@ public sealed class AggregateCommandCoverageTests
         Assert.Equal(factNames, factory);
         Assert.Equal(factNames, prepared);
         Assert.Empty(unusedPrepared);
+    }
+
+    [Fact]
+    public void ShouldResolveAggregateCallbacksGivenTypedNativeOperationHelper()
+    {
+        // Arrange
+        const string source = """
+            class Handler
+            {
+                void Handle()
+                {
+                    helper.ExecuteAsync<SampleAggregate>(context, realm, provenance,
+                        () => new SampleAggregate(), owner => owner.Acceptance,
+                        (owner, token) => { token.ThrowIfCancellationRequested(); return owner.Check(); },
+                        owner => owner.Prepare(), (owner, response, result) => owner.Apply());
+                    helper.ExecuteAsync<OtherResult>(context, (result) => result.Unrelated());
+                }
+            }
+            """;
+        var root = CSharpSyntaxTree.ParseText(source).GetRoot();
+        var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().Single();
+
+        // Act
+        var operations = AggregateMutationOperations([(method, root)], ["SampleAggregate"]);
+
+        // Assert
+        Assert.Equal(3, operations.Count);
+        Assert.Contains(("SampleAggregate", "Apply", 0), operations);
+        Assert.Contains(("SampleAggregate", "Check", 0), operations);
+        Assert.Contains(("SampleAggregate", "Prepare", 0), operations);
     }
 
     [Fact]
@@ -1348,6 +1379,15 @@ public sealed class AggregateCommandCoverageTests
         var invocationName = InvocationName(invocation);
         if (invocationName == "ExecuteAsync")
         {
+            var generic = invocation.Expression switch
+            {
+                GenericNameSyntax name => name,
+                MemberAccessExpressionSyntax { Name: GenericNameSyntax name } => name,
+                _ => null,
+            };
+            if (parameterIndex == 0 && generic?.TypeArgumentList.Arguments.FirstOrDefault() is { } ownerType &&
+                TryResolveAggregateName(ownerType, root, aggregateNames) is { } helperOwner)
+                return helperOwner;
             var firstArgument = invocation.ArgumentList.Arguments.FirstOrDefault()?.Expression;
             var containingMethod = lambda.Ancestors().OfType<MethodDeclarationSyntax>()
                 .FirstOrDefault();

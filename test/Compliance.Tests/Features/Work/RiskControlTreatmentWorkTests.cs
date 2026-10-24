@@ -145,9 +145,8 @@ public sealed class RiskControlTreatmentWorkTests
             StringComparison.Ordinal));
     }
 
-    static async Task SeedPendingTreatmentAsync(OperationsFixture fixture, Uuid riskId,
-        Uuid treatmentId)
-    {
-        await RiskSeeds.ProposeTreatmentAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, treatmentId, fixture.ControlId, fixture.ControlVersionId, "This approved control treats the risk.", fixture.LeadMemberId, ActorReference.ForMember(fixture.LeadMemberId, "Lead"), DateTimeOffset.UtcNow);
-    }
+    static Task SeedPendingTreatmentAsync(OperationsFixture fixture, Uuid riskId, Uuid treatmentId) =>
+        RiskSeeds.ProposeTreatmentAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, treatmentId,
+            fixture.ControlId, fixture.ControlVersionId, "This approved control treats the risk.", fixture.LeadMemberId,
+            ActorReference.ForMember(fixture.LeadMemberId, "Lead"), DateTimeOffset.UtcNow);
 }

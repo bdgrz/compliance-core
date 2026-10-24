@@ -126,7 +126,9 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
 
         // Act
         var before = await Queue(directory).ReadAsync(fixture.TenantId, fixture.ProgramId, actor, 30,

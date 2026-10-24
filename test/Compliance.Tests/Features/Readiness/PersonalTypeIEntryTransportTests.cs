@@ -53,8 +53,11 @@ public sealed class PersonalTypeIEntryTransportTests
 
         // Assert
         await using var scope = provider.CreateAsyncScope();
-        Assert.Equal(result.Value, await scope.ServiceProvider.GetRequiredService<ReadinessReader>()
-            .ReadEntryDecisionAsync(source.TenantId, retained, assessment.AssessmentId));
+        var stored = await scope.ServiceProvider.GetRequiredService<ReadinessReader>()
+            .ReadEntryDecisionAsync(source.TenantId, retained, assessment.AssessmentId);
+        Assert.NotNull(stored);
+        Assert.Equal(result.Value.UnresolvedItems, stored.UnresolvedItems);
+        Assert.Equal(result.Value, stored with { UnresolvedItems = result.Value.UnresolvedItems });
         Assert.Equal(RbacIds.Member(source.TenantId, source.DeciderUserId), result.Value.DeciderMemberId);
     }
 

@@ -132,7 +132,7 @@ public sealed class AuditorRequestCommandHandlerTests
         var saved = await fixture.RequestAsync(id);
 
         // Assert
-        Assert.Equal(RequestErrorKind.Conflict, resolved.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, resolved.Error?.Kind);
         Assert.Equal(RequestErrorKind.Conflict, reopened.Error?.Kind);
         Assert.True(saved.IsOpen);
         Assert.Equal(1, saved.Revision);

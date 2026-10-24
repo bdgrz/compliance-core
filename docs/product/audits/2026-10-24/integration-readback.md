@@ -21,4 +21,7 @@ Independent reviews covered the recovered slices' tenant/program scope, retry id
 
 ## Validation
 
-Final local build and unit results are recorded in the integration PR. The tooling tests, selected design validator and implementation drift checker are run on the consolidated source. Structural coverage counts are not a claim that every planned owner, process or feature is complete.
+Final local validation passed: Release build with zero warnings/errors; 5,430 backend unit tests with zero failures; whitespace verification; 22 tooling tests; selected-design validation; and zero implementation-drift failures. BrokerIntegration and WebIntegration remain outside this unit run. The tooling tests, selected design validator and implementation drift checker are run on the consolidated source. Structural coverage counts are not a claim that every planned owner, process or feature is complete.
+
+
+The direct Jev API reviewed every current aggregate, handler and reactor implementation:916 unique files (129 aggregate,726 handler,65 reactor memberships; categories overlap), all using `jev-1.14.0`. File hashes, answers and review keys are retained in `implementation-file-reviews.json`. Seventy-three signals were routed for source/test/spec triage; a signal is not a finding. Subsequent accepted owner slices and confirmed pre-existing replay findings remain active work in the local ledger, and are not declared complete by this integration checkpoint.

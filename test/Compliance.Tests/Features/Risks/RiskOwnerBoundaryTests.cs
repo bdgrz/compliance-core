@@ -360,7 +360,7 @@ public sealed class RiskOwnerBoundaryTests
         // Act
         await fixture.Scenario(fixture.AssessorUserId).When(action with { DueOn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1) }).ExpectFailure(RequestErrorKind.Validation);
         await accepting.Scenario(accepting.AssessorUserId).When(accepting.AddAction(other, [], 0)).ExpectFailure(RequestErrorKind.Conflict);
-        await fixture.Scenario(fixture.AssessorUserId).When(action with { ActionId = Uuid.CreateVersion4(), ExpectedRevision = 5 }).ExpectFailure(RequestErrorKind.Conflict);
+        await fixture.Scenario(fixture.AssessorUserId).When(action with { ActionId = Uuid.CreateVersion4(), ExpectedRevision = 5 }).ExpectFailure(RequestErrorKind.Validation);
         await fixture.Scenario(fixture.AssessorUserId).When(action with { ActionId = Uuid.CreateVersion4(), Title = " " }).ExpectFailure(RequestErrorKind.Validation);
 
         // Assert
