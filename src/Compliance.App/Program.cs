@@ -2673,6 +2673,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Audit packages");
+    app.MapPortiaGet<GetTemplateApplication, TemplateApplicationView>(
+        "/api/v1/tenants/{tenant_id}/programs/{program_id}/template-applications/{template_application_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Methodology templates");
+
     app.MapPortiaGet<GetMethodologyTemplateVersion, MethodologyTemplateVersionView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/methodology-template-versions/{methodology_template_version_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)

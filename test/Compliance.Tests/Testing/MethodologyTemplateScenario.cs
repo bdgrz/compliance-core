@@ -40,6 +40,11 @@ sealed class MethodologyTemplateScenario : IAsyncDisposable
         new(new NativeOperationExecutor(Reader, Executor, store ?? Content),
             new MethodologyTemplateReader(Reader, Events, store ?? Content), store ?? Content, Clock);
 
+    public TemplateApplicationReader ApplicationViews => new(Reader, Events, Content);
+    public TemplateApplicationOperations ApplicationOperations(IImmutableContentStore? store = null) =>
+        new(Reader, new TemplateApplicationReader(Reader, Events, store ?? Content),
+            new NativeOperationExecutor(Reader, Executor, store ?? Content), store ?? Content, Clock);
+
     public static RequestContext<T> Context<T>(T request, Uuid userId) where T : IRequestBase => new(request,
         new ClaimsPrincipal(new ClaimsIdentity([new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString()),
             new Claim("name", "Test actor")], "UnitTest")));

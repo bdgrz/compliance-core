@@ -1,0 +1,19 @@
+{
+  "reviewed": 17,
+  "blockedReviews": 0,
+  "signalsTriaged": 1,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplicationRules.cs",
+      "sha256": "f7a2a3497eed2a77bd5a7af72860e6027f9db9ecbec2fddb6eb1c9ab6cd5bfe1",
+      "signals": {
+        "authority_gap": 0.59,
+        "invariant_gap": 0.67,
+        "recovery_gap": 0.72,
+        "incomplete_path": 0.53
+      },
+      "classification": "transient_full_rules_and_history_under_exact_native_owner_cut",
+      "evidence": "Rules is a pure transient fold, not an aggregate or persisted authoritative State. Native executor resolves original receipt before mutable template/program/application body reads. Append re-executes the actual business change against verified before/after content at exact prepared revision+physical tail and checks compact header, immutable digest and original binding. Tests cover70successor decisions, full legal200KB template, altered historical actor/kind/intent/gate, poisoned immutable bodies/after refs, typed missing/corrupt content and scope isolation. Original Operation.Actor display now matches frozen header/requester and survives renamed-current-label replay. RecordDraftCreated remains pure acceptance only: no trusted callback producer or child split is invented; these precise missing contracts are local blockers."
+    }
+  ]
+}

@@ -53,6 +53,52 @@
       "externalDependency": false,
       "evidence": "source-admission-contracts.json,target-owner-extensions.json and SourceUsePurpose provide no selected Control source-use receiver/purpose/pair. Local current authority/reservation boundary is implemented; foreign current checks do not prove a runnable exact hold.",
       "nextWork": "Select trusted exact source/receiver/purpose and acquiring/settling producer contract before claiming atomic held-source qualification. Continue independent owners/producers; no GitHub issue."
+    },
+    {
+      "id": "S34-TEMPLATE-DRAFT-CALLBACK",
+      "status": "blocked_contract",
+      "evidence": [
+        "docs/product/audits/2026-10-23/command-handler-gaps.md:37",
+        "docs/product/audits/2026-10-23/aggregate-boundary-specification.md:2741",
+        "docs/product/domain-event-aggregate-decisions.json:15241"
+      ],
+      "reason": "No selected RecordTemplateApplicationDraft request, trusted target-source proof schema, callback identity or child acquisition/settlement/materialization protocol. No runtime caller exists in baseline. Preserve pure RecordDraftCreated domain-rule acceptance and original TemplateApplicationDraftCreated decoder; no registered producer, native callback contract or downstream execution claimed.",
+      "slice": "S34",
+      "nextWork": "Continue independent native owners; no GitHub issue created."
+    },
+    {
+      "id": "S34-TEMPLATE-CHILD-OWNER-SPLIT",
+      "status": "blocked_contract",
+      "evidence": [
+        "docs/product/domain-event-aggregate-decisions.json:5221",
+        "docs/product/domain-event-aggregate-decisions.json:15273",
+        "docs/product/audits/2026-10-23/remaining-command-identities.json:ProposeTemplateSuccessorAdoption",
+        "docs/product/audits/2026-10-23/remaining-command-identities.json:RecordTemplateSuccessorDisposition"
+      ],
+      "reason": "Older locked owner decision selects TemplateApplicationDraftReceipt and TemplateApplicationSuccessorDecision. Final selected signatures explicitly retain the three existing commands on TemplateApplication and provide no child admission/hold/cancellation/settlement schemas. Parent approved independent retained-owner compact/native history narrowing. This patch removes lifetime payload/state limits but does not claim the unselected child process split.",
+      "slice": "S34",
+      "nextWork": "Continue independent native owners; no GitHub issue created."
+    },
+    {
+      "id": "S34-TEMPLATE-PREVIEW-SELECTION",
+      "status": "blocked_contract",
+      "evidence": [
+        "src/Compliance.Common/Features/MethodologyTemplates/PreviewMethodologyTemplateApplication.cs",
+        "src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateApplicationPreview.cs"
+      ],
+      "reason": "Unused preview request has tenant/program/template but no exact TemplateVersion or ApplicationKey. Its AffectedRecordIds cannot identify planned template-entry UUIDs without application identity, and no selected semantics define existing records versus planned targets. Do not invent a version/key field, global lookup or misleading preview. Fully scoped GetTemplateApplication is delivered independently.",
+      "slice": "S34",
+      "nextWork": "Continue independent native owners; no GitHub issue created."
+    },
+    {
+      "id": "S34-TEMPLATE-PERSISTED-MIGRATION",
+      "status": "blocked_retained_store_cutover",
+      "evidence": [
+        "docs/product/domain-event-aggregate-decisions.json:12080"
+      ],
+      "reason": "Native three existing roots preserve discriminator spellings and advance versions for immutable delta payloads. This is a writer/read preparation, not persisted v1/v2 envelope migration. Original draft callback decoder is unchanged. No automatic migration, lineage parity or dual-read compatibility is claimed for existing retained application streams.",
+      "slice": "S34",
+      "nextWork": "Continue independent native owners; no GitHub issue created."
     }
   ],
   "remainingSlices": [
@@ -104,10 +150,14 @@
     "typeii-close-integration-jev.json",
     "policy-file-reviews.json",
     "policy-file-triage.json",
-    "policy-integration-jev.json"
+    "policy-integration-jev.json",
+    "template-application-file-reviews.json",
+    "template-application-file-triage.json",
+    "template-application-qualification.json",
+    "template-application-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
-  "reviewSignalsTriaged": 87,
+  "reviewSignalsTriaged": 88,
   "findingArtifacts": [
     "implementation-file-triage-versioned.json",
     "implementation-file-triage-foundations.json",
@@ -284,12 +334,24 @@
     {
       "id": "native-policy-owner-and-consumers",
       "slice": "S32",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "behavioralRed": "3old-handlerfailures;5consumeravailability/cutofffailures+1originalactorlabelfailure",
       "focusedGreen": "316passed/0failed includingproductionHTTPoriginalUnit200retry;BrokerIntegrationexcluded",
       "fullUnitGreen": "5672passed/0failed",
       "jev": "73currentfiles;4signalstriaged;directintegrationmerge.69",
-      "persistenceQualification": "Native v2 facts/new V2/V3 discovery checkpoints; no automatic persisted-v1 migration or deployment qualification."
+      "persistenceQualification": "Native v2 facts/new V2/V3 discovery checkpoints; no automatic persisted-v1 migration or deployment qualification.",
+      "pullRequest": 1104,
+      "mergeCommit": "6cf9d3e25bfa85f756bf2b94a2e196e92bc204c4"
+    },
+    {
+      "id": "native-template-application-history-and-scoped-read",
+      "slice": "S34",
+      "status": "validated_awaiting_merge",
+      "behavioralRed": "2oldAPIframebudgetfailures;1nativeoriginalactorlabelfailure",
+      "focusedGreen": "95passed/0failed includingactualHTTPauthenticationandcontracts",
+      "fullUnitGreen": "5687passed/0failed",
+      "jev": "17currentfiles;1signaltriaged;directintegrationmerge.60",
+      "remaining": "Selected callback/childsplit/preview semantics and persistedmigration tracked locally; plain Unit HTTP adapter remains next independent work."
     }
   ],
   "resolved": [

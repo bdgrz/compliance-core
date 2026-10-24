@@ -237,13 +237,12 @@ public sealed class MethodologyTemplateNativeHistoryTests
         Assert.True((await scenario.PublishAsync(new ApproveMethodologyTemplateVersion(Uuid.CreateVersion4(),
             template, 1, "Publish"), approver)).IsSuccess);
         var request = new ApplyMethodologyTemplate(tenant, programId, template, 1, "annual-review");
-        Assert.True((await new ApplyMethodologyTemplateHandler(scenario.Executor, scenario.Reader, scenario.Views,
-            scenario.Clock).HandleAsync(MethodologyTemplateScenario.Context(request, client), CancellationToken.None)).IsSuccess);
+        Assert.True((await new ApplyMethodologyTemplateHandler(scenario.ApplicationOperations(), scenario.Views).HandleAsync(MethodologyTemplateScenario.Context(request, client), CancellationToken.None)).IsSuccess);
         var applicationId = TemplateApplicationId.For(programId, template, request.ApplicationKey);
         var before = await scenario.Reader.HydrateAsync(new TemplateApplication(tenant, programId, applicationId));
         var missing = new UnreadableSchema(scenario.Content, MethodologyTemplateReader.Schema, unavailable);
-        var handler = new ApplyMethodologyTemplateHandler(scenario.Executor, scenario.Reader,
-            new MethodologyTemplateReader(scenario.Reader, scenario.Events, missing), scenario.Clock);
+        var handler = new ApplyMethodologyTemplateHandler(scenario.ApplicationOperations(),
+            new MethodologyTemplateReader(scenario.Reader, scenario.Events, missing));
         scenario.Clock.Now = Now.AddDays(1);
 
         // Act
