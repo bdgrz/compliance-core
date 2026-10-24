@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Snapshots;
 using Bdgrz.Compliance.Features.NativeOperations;
 using System.Collections.ObjectModel;
 using System.Text;
@@ -155,6 +156,7 @@ public sealed class ExaminationEngagement : Aggregate
             actorMemberId, actorDisplay.Trim(), confirmationRationale, null, null, [], [], 0)
         {
             SourceCoverage = FreezeCoverage(preview.SourceCoverage),
+            SourceContentManifest = preview.SourceContentManifest,
         };
         var engagement = _current with
         {
@@ -234,6 +236,7 @@ public sealed class ExaminationEngagement : Aggregate
             _baseline.AmendmentDepth + 1)
         {
             SourceCoverage = FreezeCoverage(preview.SourceCoverage),
+            SourceContentManifest = preview.SourceContentManifest,
         };
         var engagement = _current with
         {
@@ -346,6 +349,8 @@ public sealed class ExaminationEngagement : Aggregate
         if (!HasExactApprovedBoundary(preview.Sources, expectedBoundaryId))
             return InvalidPreview(
                 "The Type I baseline must bind the engagement's exact approved boundary.");
+        if (!SnapshotSourcePublicationReader.ValidReference(preview.SourceContentManifest))
+            return InvalidPreview("The source publication requires a verified immutable manifest reference.");
         if (preview.ScopeDifferences.Any(difference =>
                 !BoundedText(difference?.Trim() ?? string.Empty, MaximumScopeDifferenceLength)))
             return InvalidPreview("Scope differences must be described with bounded text.");
@@ -356,13 +361,15 @@ public sealed class ExaminationEngagement : Aggregate
     {
         try
         {
-            if (!HasExactApprovedBoundary(baseline.Sources, expectedBoundaryId))
+            if (!SnapshotSourcePublicationReader.ValidReference(baseline.SourceContentManifest) ||
+                !HasExactApprovedBoundary(baseline.Sources, expectedBoundaryId))
                 return false;
             if (!ValidSourceCoverage(baseline.SourceCoverage))
                 return false;
             var preview = TypeIBaselinePreview.Create(baseline.TenantId, baseline.ProgramId,
                 baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences,
-                baseline.SourceCoverage);
+                baseline.SourceCoverage) with
+            { SourceContentManifest = baseline.SourceContentManifest };
             return preview.ContentSha256 == baseline.ContentSha256 &&
                    preview.CanonicalManifest == baseline.CanonicalManifest &&
                    ValidDigest(baseline.ContentSha256) && baseline.Sources.Count is > 0 and <= MaximumSources &&
@@ -417,7 +424,8 @@ public sealed class ExaminationEngagement : Aggregate
         var next = after.ToDictionary(static source => (source.Kind, source.RecordId));
         return prior.Keys.Union(next.Keys)
             .Where(key => !prior.TryGetValue(key, out var oldSource) ||
-                          !next.TryGetValue(key, out var newSource) || oldSource != newSource)
+                          !next.TryGetValue(key, out var newSource) ||
+                          (oldSource with { Content = null }) != (newSource with { Content = null }))
             .Select(static key => key.RecordId).Distinct()
             .OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray();
     }
@@ -489,6 +497,7 @@ public sealed class ExaminationEngagement : Aggregate
 
     static ReadOnlyCollection<TypeIBaselineSourceReference> Freeze(
         IReadOnlyList<TypeIBaselineSourceReference> sources) => Array.AsReadOnly(sources
+        .Select(static source => source with { Content = null })
         .OrderBy(static source => source.Kind, StringComparer.Ordinal)
         .ThenBy(static source => source.RecordId.ToString(), StringComparer.Ordinal).ToArray());
 

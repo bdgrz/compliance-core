@@ -37,7 +37,8 @@ static class AuditPackageArchiveVerifier
                 await using var source = entry.Open();
                 var digest = Convert.ToHexStringLower(await SHA256.HashDataAsync(source, ct)
                     .ConfigureAwait(false));
-                if (!StringComparer.Ordinal.Equals(digest, expected.Source.ContentSha256))
+                if (!StringComparer.Ordinal.Equals(digest,
+                        expected.Source.SourceContent?.Sha256 ?? expected.Source.ContentSha256))
                     return "archive_content_mismatch";
             }
 

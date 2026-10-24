@@ -2376,4 +2376,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.ProtectedResponseBody))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Content.ImmutableContentManifest))]
 [JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Snapshots.SnapshotSourceBlob))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Snapshots.SnapshotSourcePublicationEntry))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Snapshots.SnapshotSourcePublicationManifest))]
 sealed partial class ComplianceCoreJsonContext : JsonSerializerContext;

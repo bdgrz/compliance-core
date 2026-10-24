@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 
@@ -10,4 +12,8 @@ public sealed record TypeIIPeriodCloseValidationContent(
     IReadOnlyList<Uuid> ActualOccurrenceIds,
     IReadOnlyList<Uuid> DuplicateOccurrenceIds,
     IReadOnlyList<Uuid> MissingWorkIds,
-    IReadOnlyList<Uuid> UnresolvedMaterialItemIds);
+    IReadOnlyList<Uuid> UnresolvedMaterialItemIds)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? SourceContentManifest { get; init; }
+}

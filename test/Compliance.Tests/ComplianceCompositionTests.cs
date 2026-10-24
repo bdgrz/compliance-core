@@ -47,7 +47,7 @@ public sealed class ComplianceCompositionTests
         Assert.Equal(TypeIBaselineSourceFamilies.Required.Order(StringComparer.Ordinal),
             contributors.Select(static contributor => contributor.Family)
                 .Order(StringComparer.Ordinal));
-        Assert.IsType<TypeIBaselinePreviewReader>(previewReader);
+        Assert.IsType<PublishedTypeIBaselinePreviewReader>(previewReader);
     }
 
     [Fact]

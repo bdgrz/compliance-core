@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 
@@ -27,4 +29,8 @@ public sealed record TypeIIPeriodView(
     IReadOnlyList<TypeIIPeriodCloseSnapshotView> CloseSnapshots,
     Uuid ActorMemberId,
     string ActorDisplay,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? OpeningSourceContentManifest { get; init; }
+}

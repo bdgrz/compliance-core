@@ -16,7 +16,10 @@ public sealed class AuditPackageArchiveBuilder(IArtifactContentStore artifacts)
         if (tenantId == Uuid.Empty || manifest.TenantId != tenantId || manifest.Entries.Count == 0 ||
             manifest.Entries.Select(entry => entry.RelativePath).Distinct(StringComparer.Ordinal).Count() !=
             manifest.Entries.Count || manifest.Entries.Any(entry => !SafePath(entry.RelativePath) ||
-                entry.Source.ByteLength < 0 || !Sha256(entry.Source.ContentSha256)))
+                entry.Source.ByteLength < 0 || !Sha256(entry.Source.ContentSha256) ||
+                entry.Source.SourceContent is { } physical && (physical.Bytes != entry.Source.ByteLength ||
+                    !Sha256(physical.Sha256) || !StringComparer.OrdinalIgnoreCase.Equals(physical.FileExtension,
+                        entry.Source.Extension))))
             return Failure("The archive manifest contains invalid, duplicate or foreign content.", false);
         var temporary = Path.GetTempFileName();
         try
@@ -29,7 +32,7 @@ public sealed class AuditPackageArchiveBuilder(IArtifactContentStore artifacts)
                 {
                     ct.ThrowIfCancellationRequested();
                     await using var source = await artifacts.OpenVerifiedAsync(new ArtifactContentReference(tenantId,
-                        item.Source.ContentSha256, item.Source.ByteLength), ct).ConfigureAwait(false);
+                        item.Source.SourceContent?.Sha256 ?? item.Source.ContentSha256, item.Source.ByteLength), ct).ConfigureAwait(false);
                     if (source is null)
                         return Failure("An exact selected source is not available in verified tenant storage.", true);
                     var entry = archive.CreateEntry(item.RelativePath, CompressionLevel.NoCompression);
@@ -48,7 +51,8 @@ public sealed class AuditPackageArchiveBuilder(IArtifactContentStore artifacts)
                         await target.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
                     }
                     if (copied != item.Source.ByteLength ||
-                        Convert.ToHexStringLower(digest.GetHashAndReset()) != item.Source.ContentSha256)
+                        Convert.ToHexStringLower(digest.GetHashAndReset()) !=
+                        (item.Source.SourceContent?.Sha256 ?? item.Source.ContentSha256))
                         return Failure("A selected source differs from its exact admitted bytes.", false);
                 }
             }

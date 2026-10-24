@@ -767,7 +767,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
         var material = new byte[domain.Length + bytes.Length];
         domain.CopyTo(material, 0);
         bytes.CopyTo(material, domain.Length);
-        return Convert.ToHexStringLower(SHA256.HashData(material));
+        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
     }
 
     static Result<AccessReviewCampaignHistory> InvalidHistory() =>

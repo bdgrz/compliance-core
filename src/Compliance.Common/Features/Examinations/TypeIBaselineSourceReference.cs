@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -8,4 +10,5 @@ public sealed record TypeIBaselineSourceReference(
     Uuid RecordId,
     Uuid VersionId,
     long Revision,
-    string ContentSha256);
+    string ContentSha256,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] SnapshotSourceBlob? Content = null);

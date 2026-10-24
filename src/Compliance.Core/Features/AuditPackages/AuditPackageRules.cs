@@ -707,7 +707,10 @@ public sealed class AuditPackageRules
                 !Token(entry.SourceType, 80) || entry.SourceRecordId == Uuid.Empty ||
                 entry.SourceVersion <= 0 || !Token(entry.Extension, 16) ||
                 !Sha256(entry.ContentSha256) || entry.ByteLength <= 0 ||
-                !AuthorshipKinds.Contains(entry.Authorship))
+                !AuthorshipKinds.Contains(entry.Authorship) || entry.SourceContent is { } blob &&
+                (!Sha256(blob.Sha256) || blob.Bytes != entry.ByteLength ||
+                 !StringComparer.OrdinalIgnoreCase.Equals(blob.FileExtension, entry.Extension) ||
+                 !Bounded(blob.MediaType, 1, 200) || !Bounded(blob.Description, 1, 1024)))
                 return null;
             var key = $"{entry.SourceType}\n{entry.SourceRecordId}\n{entry.SourceVersion}";
             if (!unique.Add(key))
@@ -831,7 +834,11 @@ public sealed class AuditPackageRules
                 builder.Append(source.SourceVersionId).Append('|');
             builder.Append(source.ContentSha256).Append('|')
                 .Append(source.ByteLength.ToString(CultureInfo.InvariantCulture)).Append('|')
-                .Append(source.Authorship).Append('\n');
+                .Append(source.Authorship);
+            if (source.SourceContent is { } physical)
+                builder.Append("|source_content_v1|").Append(Convert.ToHexStringLower(SHA256.HashData(
+                    JsonSerializer.SerializeToUtf8Bytes(physical, ComplianceCoreJsonContext.Default.SnapshotSourceBlob))));
+            builder.Append('\n');
         }
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(builder.ToString())))
             .ToLowerInvariant();

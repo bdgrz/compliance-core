@@ -1,0 +1,115 @@
+{
+  "reviewed": 49,
+  "blockedReviews": 0,
+  "signalsTriaged": 9,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/AuditPackages/AuditPackageArchiveBuilder.cs",
+      "sha256": "055fa313ac3e9aff6be7e1cfd8346e67e23a0208f064cff4a90f6f5a1f324283",
+      "signals": {
+        "authority_gap": 0.53,
+        "invariant_gap": 0.35,
+        "recovery_gap": 0.72,
+        "incomplete_path": 0.27
+      },
+      "classification": "verified_physical_source_hash_preserves_native_recovery",
+      "evidence": "ZIP build reads exact manifest-selected tenant content, now using sealed physical SHA and byte length while logical frozen membership remains separately bound. Existing native build/cancel/recovery tests and actual full workforce envelope\u2192package\u2192ZIP proof pass. Deterministic output is verified and durable before Built; no new external delivery effect introduced."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPackages/AuditPackageRules.cs",
+      "sha256": "86b4d348b9a711cf26147b40ab5eeac7eacf3572e2b1b09a556315af07844782",
+      "signals": {
+        "authority_gap": 0.57,
+        "invariant_gap": 0.56,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.44
+      },
+      "classification": "pure_manifest_policy_binds_physical_descriptor",
+      "evidence": "Pure normalization/rules has no persistence authority. Selection verifies physical metadata against immutable frozen publication; manifest identity binds it independently of logical source identity. Override substitution is refused; existing author/reviewer/manifest policy and native producer recovery tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributor.cs",
+      "sha256": "b22ebd2bc03d70a74390f72c89ac4c23bd3cde6e146ec5797dde8f17ae5e12ee",
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.5,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.26
+      },
+      "classification": "existing_read_policy_with_exact_capture_hook",
+      "evidence": "The production diff only replaces SHA256.HashData with a byte-identical digest plus explicit active-scope capture. Existing source scope, as-of selection, current visibility and checkpoint policies stay unchanged; queries do not require mutation receipts. Existing source-family tests pass. No separate concrete new defect was found."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributor.cs",
+      "sha256": "997ec17aa5b0596aec752bb23c4b6835046c64afa4f98bd0d5531f5bb3fe4101",
+      "signals": {
+        "authority_gap": 0.63,
+        "invariant_gap": 0.57,
+        "recovery_gap": 0.72,
+        "incomplete_path": 0.31
+      },
+      "classification": "existing_read_policy_with_exact_capture_hook",
+      "evidence": "The production diff only replaces SHA256.HashData with a byte-identical digest plus explicit active-scope capture. Existing source scope, as-of selection, current visibility and checkpoint policies stay unchanged; queries do not require mutation receipts. Existing source-family tests pass. No separate concrete new defect was found."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/EvidenceGovernanceTypeIBaselineSourceContributor.cs",
+      "sha256": "b57f652c4126352a5570385205a147e09ac5f5558d0cc802d20d16f680d36d23",
+      "signals": {
+        "authority_gap": 0.59,
+        "invariant_gap": 0.5,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.27
+      },
+      "classification": "existing_read_policy_with_exact_capture_hook",
+      "evidence": "The production diff only replaces SHA256.HashData with a byte-identical digest plus explicit active-scope capture. Existing source scope, as-of selection, current visibility and checkpoint policies stay unchanged; queries do not require mutation receipts. Existing source-family tests pass. No separate concrete new defect was found."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/InformationAssetTypeIBaselineSourceContributor.cs",
+      "sha256": "4b15c4524adbc8206cf7c56453d9360b3b513013ceba3b7fac8657445fc54e96",
+      "signals": {
+        "authority_gap": 0.59,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.19
+      },
+      "classification": "existing_read_policy_with_exact_capture_hook",
+      "evidence": "The production diff only replaces SHA256.HashData with a byte-identical digest plus explicit active-scope capture. Existing source scope, as-of selection, current visibility and checkpoint policies stay unchanged; queries do not require mutation receipts. Existing source-family tests pass. No separate concrete new defect was found."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/PublishedTypeIBaselinePreviewReader.cs",
+      "sha256": "52525b83739d637a533fe31d41b2e085accbe3d11be8723c3d372393c13de229",
+      "signals": {
+        "authority_gap": 0.66,
+        "invariant_gap": 0.59,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.31
+      },
+      "classification": "publication_error_classification_fixed_with_red_green",
+      "evidence": "Actual production source contributors are wrapped, not reimplemented. Every frozen logical source must have captured bytes; complete populations retain rows plus logical Merkle proof. Artifact publication checks tenant/physical digest/length and verified reopen before sealing one exact scope sidecar. Two actual unavailable/corrupt manifest-write RED rows were reproduced and repaired to return transient/permanent Conflict with unchanged owner tail. Source permissions stay before capture through the original reader/requester."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/FreezeTypeIIPeriodCloseHandler.cs",
+      "sha256": "e50f87ead8288d04204ef399f7e8863856e8035dfa3c9b957a7d4e115559a3c8",
+      "signals": {
+        "authority_gap": 0.52,
+        "invariant_gap": 0.75,
+        "recovery_gap": 0.78,
+        "incomplete_path": 0.56
+      },
+      "classification": "publication_pointer_propagation_verified_native_period_cutover_queued",
+      "evidence": "The patch carries one exact publication reference through opening/validation/freeze and binds it into snapshot digest/equality without changing existing close readiness, coverage, authority or original-revision/clock repairs. Existing period/freeze tests pass. Missing production close reconciliation and retained period full State are separate ongoing unblocked work; this patch does not claim that workflow complete."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "sha256": "a1f6275fd06fb3d6e0fb43f481854a69fdbf2536f9c5b13c19bfabce14cbfb83",
+      "signals": {
+        "authority_gap": 0.54,
+        "invariant_gap": 0.6,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.53
+      },
+      "classification": "publication_pointer_propagation_verified_native_period_cutover_queued",
+      "evidence": "The patch carries one exact publication reference through opening/validation/freeze and binds it into snapshot digest/equality without changing existing close readiness, coverage, authority or original-revision/clock repairs. Existing period/freeze tests pass. Missing production close reconciliation and retained period full State are separate ongoing unblocked work; this patch does not claim that workflow complete."
+    }
+  ]
+}

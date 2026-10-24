@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -209,6 +210,6 @@ public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader read
         var material = new byte[prefix.Length + content.Length];
         prefix.CopyTo(material, 0);
         content.CopyTo(material, prefix.Length);
-        return Convert.ToHexStringLower(SHA256.HashData(material));
+        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
     }
 }

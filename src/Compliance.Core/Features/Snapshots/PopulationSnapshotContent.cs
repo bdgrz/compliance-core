@@ -18,9 +18,12 @@ public sealed record PopulationSnapshotContent(PopulationSnapshot Snapshot,
         if (!snapshot.IsFrozen || snapshot.Kind != kind)
             return Failure(RequestErrorKind.NotFound, "The snapshot was not found.");
         if (snapshot.StoredChunkCount == 0)
-            return snapshot.HasIntactContent
-                ? Result<PopulationSnapshotContent>.Success(new(snapshot, snapshot.Rows))
-                : Corrupt();
+        {
+            if (!snapshot.HasIntactContent)
+                return Corrupt();
+            SnapshotSourceCapture.Population(kind, snapshot.Rows, snapshot.ContentSha256!);
+            return Result<PopulationSnapshotContent>.Success(new(snapshot, snapshot.Rows));
+        }
         if (!snapshot.HasIntactIdentity || snapshot.Rows.Count != 0 ||
             snapshot.StoredChunkCount > PopulationSnapshotStorage.MaximumChunks)
             return Corrupt();
@@ -38,13 +41,15 @@ public sealed record PopulationSnapshotContent(PopulationSnapshot Snapshot,
             rows.AddRange(stored.Rows);
         }
         var digest = PopulationContentIdentity.Compute(kind, rows);
-        return digest.IsSuccess && digest.Value.Sha256 == snapshot.ContentSha256 &&
+        var intact = digest.IsSuccess && digest.Value.Sha256 == snapshot.ContentSha256 &&
                digest.Value.RowCount == snapshot.RowCount &&
                digest.Value.ChunkCount == snapshot.ChunkCount &&
                PopulationSnapshotStorage.ManifestSha256(kind, snapshot.RowCount, chunks) ==
-               snapshot.StorageManifestSha256
-            ? Result<PopulationSnapshotContent>.Success(new(snapshot, rows))
-            : Corrupt();
+               snapshot.StorageManifestSha256;
+        if (!intact)
+            return Corrupt();
+        SnapshotSourceCapture.Population(kind, rows, snapshot.ContentSha256!);
+        return Result<PopulationSnapshotContent>.Success(new(snapshot, rows));
     }
 
     static Result<PopulationSnapshotContent> Corrupt() =>

@@ -118,9 +118,11 @@ public sealed class StartTypeIIObservationPeriodHandler(NativeOperationExecutor 
             planVersion.ContentSha256, baseline.TypeIBaselineId, baseline.ContentSha256,
             planContent.TypeIOutcomeId, outcomeView.ContentSha256,
             planContent.SystemDescriptionVersionId, descriptionVersion.ContentSha256,
-            sourceReferences, acknowledgedGaps);
+            sourceReferences, acknowledgedGaps) with
+        { SourceContentManifest = baseline.SourceContentManifest };
         var opening = new TypeIIPeriodOpeningContent(request.ExaminationId, request.PeriodId,
-            Digest(openingManifest), sourceReferences, acknowledgedGaps);
+            Digest(openingManifest), sourceReferences, acknowledgedGaps)
+        { SourceContentManifest = baseline.SourceContentManifest };
 
         var failure = period.PrepareOpening(planView, opening, actorMemberId, actorDisplay, now, out var initial);
         if (failure is not null)
@@ -184,5 +186,9 @@ public sealed class StartTypeIIObservationPeriodHandler(NativeOperationExecutor 
         string TypeIIPlanSha256, Uuid TypeIBaselineId, string TypeIBaselineSha256,
         Uuid TypeIOutcomeId, string TypeIOutcomeSha256, Uuid SystemDescriptionVersionId,
         string SystemDescriptionSha256, IReadOnlyList<ExaminationContentReference> Sources,
-        IReadOnlyList<Uuid> AcknowledgedGapIds);
+        IReadOnlyList<Uuid> AcknowledgedGapIds)
+    {
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public ImmutableContentRef? SourceContentManifest { get; init; }
+    }
 }
