@@ -128,6 +128,51 @@ public sealed class NativeOperationExecutorTests
     }
 
     [Fact]
+    public async Task ShouldReplayGivenGuardFailureAfterConcurrentAcceptance()
+    {
+        // Arrange
+        ServiceProvider? competitorProvider = null;
+        var (provider, events, _) = Build(inner => new CompeteBeforeHydrationExecutor(inner, async () =>
+        {
+            await using var scope = competitorProvider!.CreateAsyncScope();
+            var winner = new NativeOperationExecutor(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                inner, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            await winner.ExecuteAsync(Operation(Provenance(), 200, "winner"), Context(), CancellationToken.None);
+        }, reject: true));
+        competitorProvider = provider;
+
+        // Act
+        var result = await ExecuteAsync(provider, Provenance(), 200, "loser");
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.IsType<AcceptedAppendResult.Replayed>(result.Value);
+        Assert.Equal(1, await CountAsync(events));
+    }
+
+    [Fact]
+    public async Task ShouldReplayGivenEqualIntentCommitsOnLastAppendAttempt()
+    {
+        // Arrange
+        ServiceProvider? competitorProvider = null;
+        var (provider, events, _) = Build(inner => new AlwaysConflictExecutor(async () =>
+        {
+            await using var scope = competitorProvider!.CreateAsyncScope();
+            var winner = new NativeOperationExecutor(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                inner, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            await winner.ExecuteAsync(Operation(Provenance(), 200, "winner"), Context(), CancellationToken.None);
+        }));
+        competitorProvider = provider;
+
+        // Act
+        var result = await ExecuteAsync(provider, Provenance(), 200, "loser");
+
+        // Assert
+        Assert.IsType<AcceptedAppendResult.Replayed>(result.Value);
+        Assert.Equal(1, await CountAsync(events));
+    }
+
+    [Fact]
     public async Task ShouldResumeByLogicalIdWithoutDuplicateAppendGivenUnknownAppendOutcome()
     {
         // Arrange
@@ -300,7 +345,8 @@ public sealed class NativeOperationExecutorTests
     }
 
     /// <summary>Lets another operation commit before the real executor hydrates, without forcing an OCC error.</summary>
-    sealed class CompeteBeforeHydrationExecutor(IAggregateExecutor inner, Func<Task> competitor) : IAggregateExecutor
+    sealed class CompeteBeforeHydrationExecutor(IAggregateExecutor inner, Func<Task> competitor, bool reject = false)
+        : IAggregateExecutor
     {
         int _calls;
 
@@ -313,7 +359,12 @@ public sealed class NativeOperationExecutorTests
             where TAggregate : Aggregate
         {
             if (Interlocked.Increment(ref _calls) == 1)
+            {
                 await competitor();
+                if (reject)
+                    return Result<TOut>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The guard rejected the stale candidate.", false));
+            }
             return await inner.ExecuteAsync(aggregate, operation, context, ct);
         }
     }
@@ -338,17 +389,23 @@ public sealed class NativeOperationExecutorTests
         }
     }
 
-    sealed class AlwaysConflictExecutor : IAggregateExecutor
+    sealed class AlwaysConflictExecutor(Func<Task>? finalCompetitor = null) : IAggregateExecutor
     {
+        int _calls;
+
         public ValueTask<Result> ExecuteAsync<TAggregate>(TAggregate aggregate,
             Func<TAggregate, AggregateOutcome> operation, IExecutionContext context, CancellationToken ct)
             where TAggregate : Aggregate =>
             throw new EventStreamConcurrencyException("Lost the append race.", new InvalidOperationException());
 
-        public ValueTask<Result<TOut>> ExecuteAsync<TAggregate, TOut>(TAggregate aggregate,
+        public async ValueTask<Result<TOut>> ExecuteAsync<TAggregate, TOut>(TAggregate aggregate,
             Func<TAggregate, AggregateOutcome<TOut>> operation, IExecutionContext context, CancellationToken ct)
-            where TAggregate : Aggregate =>
+            where TAggregate : Aggregate
+        {
+            if (Interlocked.Increment(ref _calls) == NativeOperationExecutor.MaximumAttempts && finalCompetitor is not null)
+                await finalCompetitor();
             throw new EventStreamConcurrencyException("Lost the append race.", new InvalidOperationException());
+        }
     }
 
     /// <summary>Writes normally but fails every verified read, as corrupt or missing content does.</summary>

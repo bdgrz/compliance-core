@@ -33,7 +33,7 @@ public sealed class NativeOperationExecutor(IAggregateReader reader, IAggregateE
                 return Result<AcceptedAppendResult>.Success(decided);
             var prepared = operation.Prepare(hydrated);
             if (!prepared.IsSuccess)
-                return Result<AcceptedAppendResult>.Failure(prepared.Error!);
+                return await ResolveFailureAsync(operation, prepared.Error!, ct).ConfigureAwait(false);
             var frozen = await FirstResponses.FreezeAsync(content, operation.Binding.Realm, prepared.Value!, ct)
                 .ConfigureAwait(false);
             TAggregate? committed = null;
@@ -64,7 +64,7 @@ public sealed class NativeOperationExecutor(IAggregateReader reader, IAggregateE
                             prepared.Value!), null)));
                 }, context, ct).ConfigureAwait(false);
                 if (!step.IsSuccess)
-                    return Result<AcceptedAppendResult>.Failure(step.Error!);
+                    return await ResolveFailureAsync(operation, step.Error!, ct).ConfigureAwait(false);
                 if (step.Value!.Replay is { } replay)
                     return Result<AcceptedAppendResult>.Success(
                         await ReplayAsync(operation, committed!, replay, ct).ConfigureAwait(false));
@@ -74,12 +74,34 @@ public sealed class NativeOperationExecutor(IAggregateReader reader, IAggregateE
                 return Result<AcceptedAppendResult>.Success(
                     done with { NextPhysicalPositionExclusive = committed!.CommittedStreamPosition });
             }
-            catch (EventStreamConcurrencyException) when (attempt < MaximumAttempts)
+            catch (EventStreamConcurrencyException)
             {
                 // The append lost the owner's OCC. An identical concurrent request may have committed: the next
                 // attempt rehydrates and resolves the same logical id before deciding anything.
+                if (attempt >= MaximumAttempts)
+                {
+                    var resolved = await RecheckAsync(operation, ct).ConfigureAwait(false);
+                    if (resolved is not null)
+                        return Result<AcceptedAppendResult>.Success(resolved);
+                    throw;
+                }
             }
         }
+    }
+
+    async Task<Result<AcceptedAppendResult>> ResolveFailureAsync<TAggregate>(NativeOperation<TAggregate> operation,
+        RequestError error, CancellationToken ct) where TAggregate : Aggregate
+    {
+        var resolved = await RecheckAsync(operation, ct).ConfigureAwait(false);
+        return resolved is null ? Result<AcceptedAppendResult>.Failure(error)
+            : Result<AcceptedAppendResult>.Success(resolved);
+    }
+
+    async Task<AcceptedAppendResult?> RecheckAsync<TAggregate>(NativeOperation<TAggregate> operation,
+        CancellationToken ct) where TAggregate : Aggregate
+    {
+        var current = await reader.HydrateAsync(operation.Hydrate(), ct).ConfigureAwait(false);
+        return await DecideAsync(operation, current, operation.Acceptance(current), ct).ConfigureAwait(false);
     }
 
     async Task<AcceptedAppendResult?> DecideAsync<TAggregate>(NativeOperation<TAggregate> operation,
