@@ -1879,8 +1879,9 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### PolicyDistribution
 
-- [PolicyDistributionCampaign](../../src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs#L13)
-- [TrainingCatalog](../../src/Compliance.Core/Features/PolicyDistribution/TrainingCatalog.cs#L13)
+- [PolicyDistributionCampaign](../../src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs#L18)
+- [PolicyCampaignParticipant](../../src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs#L16)
+- [TrainingRequirement](../../src/Compliance.Core/Features/PolicyDistribution/TrainingRequirement.cs#L14)
 
 #### Programs
 
@@ -3015,21 +3016,21 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/versions/{version}` | `GetPolicyVersion` | [registration](../../src/Compliance.App/Program.cs#L1020) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/effective-version` | `GetEffectivePolicyVersion` | [registration](../../src/Compliance.App/Program.cs#L1024) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/decisions` | `ListPolicyDecisions` | [registration](../../src/Compliance.App/Program.cs#L1028) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements` | `DefineTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L1032) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id}` | `DefineTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L1032) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements` | `ListTrainingRequirements` | [registration](../../src/Compliance.App/Program.cs#L1036) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id}` | `GetTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L1040) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id}` | `ReviseTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L1044) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policy-campaigns` | `LaunchPolicyCampaign` | [registration](../../src/Compliance.App/Program.cs#L1048) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-campaigns` | `LaunchTrainingCampaign` | [registration](../../src/Compliance.App/Program.cs#L1052) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/revise-training-requirement/{command_id}` | `ReviseTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L1044) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policy-campaigns/{campaign_id}` | `LaunchPolicyCampaign` | [registration](../../src/Compliance.App/Program.cs#L1048) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-campaigns/{campaign_id}` | `LaunchTrainingCampaign` | [registration](../../src/Compliance.App/Program.cs#L1052) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns` | `ListCampaigns` | [registration](../../src/Compliance.App/Program.cs#L1056) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}` | `GetCampaign` | [registration](../../src/Compliance.App/Program.cs#L1060) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/participants` | `ListCampaignParticipants` | [registration](../../src/Compliance.App/Program.cs#L1064) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/amendments` | `ListCampaignAmendments` | [registration](../../src/Compliance.App/Program.cs#L1068) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/reconciliations` | `ReconcileCampaignAudience` | [registration](../../src/Compliance.App/Program.cs#L1072) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/completions` | `RecordTrainingCompletion` | [registration](../../src/Compliance.App/Program.cs#L1076) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/closure` | `CloseCampaign` | [registration](../../src/Compliance.App/Program.cs#L1080) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/acknowledgements` | `AcknowledgePolicy` | [registration](../../src/Compliance.App/Program.cs#L1085) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/waivers` | `ApproveCampaignWaiver` | [registration](../../src/Compliance.App/Program.cs#L1089) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/reconciliations/{command_id}` | `ReconcileCampaignAudience` | [registration](../../src/Compliance.App/Program.cs#L1072) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/completions/{command_id}` | `RecordTrainingCompletion` | [registration](../../src/Compliance.App/Program.cs#L1076) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/closure/{command_id}` | `CloseCampaign` | [registration](../../src/Compliance.App/Program.cs#L1080) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/acknowledgements/{command_id}` | `AcknowledgePolicy` | [registration](../../src/Compliance.App/Program.cs#L1085) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/waivers/{command_id}` | `ApproveCampaignWaiver` | [registration](../../src/Compliance.App/Program.cs#L1089) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks` | `CreateRiskDraft` | [registration](../../src/Compliance.App/Program.cs#L1093) |
 | PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/draft` | `ReviseRiskDraft` | [registration](../../src/Compliance.App/Program.cs#L1097) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/draft` | `GetRiskDraft` | [registration](../../src/Compliance.App/Program.cs#L1101) |

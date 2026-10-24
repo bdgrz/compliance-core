@@ -5,7 +5,7 @@ namespace Bdgrz.Compliance.Features.Work;
 
 public sealed partial class PolicyCampaignWorkItemProjector(
     IPolicyCampaignWorkItemProjection projection)
-    : Projector(projection, EventStreamPattern.ForTenant("policy-distribution-campaigns"),
+    : Projector(projection, EventStreamPattern.ForTenant(),
         FitzPolicyCampaignWorkItemDirectory.ProjectorName),
       IProjectorHandler<PolicyCampaignLaunched>, IProjectorHandler<PolicyCampaignAudienceFrozen>,
       IProjectorHandler<PolicyCampaignAudienceAmended>,

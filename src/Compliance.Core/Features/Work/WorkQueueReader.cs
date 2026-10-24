@@ -35,7 +35,8 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
     IEnumerable<IAccountableWorkItemDirectoryReader>? accountableWorkItems = null,
     AccessReviewQueueEligibility? accessReviewQueueEligibility = null,
     ControlOperationsReader? operatingReader = null,
-    FindingReader? findings = null)
+    FindingReader? findings = null,
+    CampaignSource? campaignSource = null)
 {
     public const int SystemEscalationDays = 7;
     public const int DefaultHorizonDays = 30;
@@ -107,7 +108,9 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
         {
             var consistency = campaignConsistency ?? throw new InvalidOperationException(
                 "Campaign work requires campaign-directory read consistency.");
-            var campaignWork = await PolicyCampaignWork.LoadAsync(reader, campaigns, consistency,
+            var source = campaignSource ?? throw new InvalidOperationException(
+                "Campaign work requires the campaign source.");
+            var campaignWork = await PolicyCampaignWork.LoadAsync(reader, source, campaigns, consistency,
                 tenantId, programId, today, ct).ConfigureAwait(false);
             if (!campaignWork.IsSuccess)
                 return Result<WorkQueueSnapshot>.Failure(campaignWork.Error);

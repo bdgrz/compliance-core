@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Workforce;
@@ -7,7 +8,8 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
 
-sealed class FitzPolicyCampaignWorkItemDirectory(IKvClient client, IAggregateReader sourceReader)
+sealed class FitzPolicyCampaignWorkItemDirectory(IKvClient client, IAggregateReader sourceReader,
+    IImmutableContentStore content)
     : FitzKvProjectionStore(client,
         "kv://bdgrz/accountable-work-items/policy-campaigns-v1", ProjectorName),
       IAccountableWorkItemDirectoryReader, IPolicyCampaignWorkItemProjection
@@ -20,7 +22,7 @@ sealed class FitzPolicyCampaignWorkItemDirectory(IKvClient client, IAggregateRea
     public IReadOnlyCollection<string> ProjectedKinds => PolicyCampaignWork.ProjectedKinds;
 
     public EventStreamPattern SourcePattern(Uuid tenantId) =>
-        EventStreamPattern.ForPattern(tenantId.ToString(), "policy-distribution-campaigns");
+        EventStreamPattern.ForPattern(tenantId.ToString());
 
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
         CancellationToken ct = default) => base.LoadCheckpointAsync(new CheckpointIdentity(
@@ -60,8 +62,8 @@ sealed class FitzPolicyCampaignWorkItemDirectory(IKvClient client, IAggregateRea
                 await ApplyClosedAsync(closed, ct).ConfigureAwait(false);
                 break;
             default:
-                throw new InvalidOperationException(
-                    $"The policy campaign work projection cannot apply {domainEvent.GetType().Name}.");
+                // The projection reads the campaign and participant areas of the tenant; any other fact is not its input.
+                return;
         }
 
         await IncrementRevisionAsync(ct).ConfigureAwait(false);
@@ -175,7 +177,9 @@ sealed class FitzPolicyCampaignWorkItemDirectory(IKvClient client, IAggregateRea
     {
         var campaign = await RequireCampaignAsync(ev.TenantId, ev.CampaignId, ct)
             .ConfigureAwait(false);
-        foreach (var entry in ev.Entries)
+        var entries = await content.ReadJsonAsync<IReadOnlyList<CampaignAudienceEntry>>(ev.TenantId.ToString(),
+            ev.EntriesManifest, ct).ConfigureAwait(false);
+        foreach (var entry in entries)
         {
             var participant = new PolicyCampaignWorkParticipantState(campaign.TenantId,
                 campaign.ProgramId, campaign.CampaignId, entry.PersonId, entry.DisplayName,
@@ -193,7 +197,9 @@ sealed class FitzPolicyCampaignWorkItemDirectory(IKvClient client, IAggregateRea
     {
         var campaign = await RequireCampaignAsync(ev.TenantId, ev.CampaignId, ct)
             .ConfigureAwait(false);
-        foreach (var amendment in ev.Amendments)
+        var amendments = await content.ReadJsonAsync<IReadOnlyList<CampaignAudienceAmendment>>(
+            ev.TenantId.ToString(), ev.AmendmentsManifest, ct).ConfigureAwait(false);
+        foreach (var amendment in amendments)
         {
             var key = PolicyCampaignWorkItemDirectorySchema.Key(ev.CampaignId, amendment.PersonId);
             var current = await PolicyCampaignWorkItemDirectorySchema.Participants.GetAsync(

@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Programs;
@@ -98,22 +99,26 @@ public sealed class PolicyCampaignHandlerTests
         var memberForOther = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.NonMemberPersonId, version), fixture.MemberUserId, RequestErrorKind.NotFound);
         var managerForMember = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.MemberPersonId, version), fixture.ManagerUserId, RequestErrorKind.Forbidden);
         var personal = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.MemberPersonId, version), fixture.MemberUserId);
-        var recorded = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.NonMemberPersonId, version), fixture.ManagerUserId);
-        var wrongVersion = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.MemberPersonId, version) with
+        var recorded = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.NonMemberPersonId, version, 2), fixture.ManagerUserId);
+        var wrongVersion = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.MemberPersonId, version, 3) with
         {
             PolicyVersion = 2,
         }, fixture.MemberUserId, RequestErrorKind.Conflict);
+        var personalFact = await fixture.AppliedAcknowledgementAsync(campaign.CampaignId, fixture.MemberPersonId);
+        var recordedFact = await fixture.AppliedAcknowledgementAsync(campaign.CampaignId, fixture.NonMemberPersonId);
 
         // Assert
         Assert.False(memberForOther.IsSuccess);
         Assert.False(managerForMember.IsSuccess);
         Assert.False(wrongVersion.IsSuccess);
-        Assert.False(personal.Value.RecordedOnBehalf);
-        Assert.Equal(fixture.MemberPersonId.ToString(), personal.Value.Performer.Id);
-        Assert.True(recorded.Value.RecordedOnBehalf);
-        Assert.Equal("workforce_person", recorded.Value.Performer.Kind);
+        Assert.True(personal.IsSuccess);
+        Assert.True(recorded.IsSuccess);
+        Assert.False(personalFact.RecordedOnBehalf);
+        Assert.Equal(fixture.MemberPersonId.ToString(), personalFact.Performer.Id);
+        Assert.True(recordedFact.RecordedOnBehalf);
+        Assert.Equal("workforce_person", recordedFact.Performer.Kind);
         Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.ManagerUserId).ToString(),
-            recorded.Value.Recorder.Id);
+            recordedFact.Recorder.Id);
         var totals = (await fixture.Scenario(fixture.MemberUserId)
             .When(new GetCampaign(fixture.TenantId, fixture.ProgramId, campaign.CampaignId,
                 DateOnly.FromDateTime(Now.UtcDateTime).AddDays(1)))
@@ -152,12 +157,14 @@ public sealed class PolicyCampaignHandlerTests
                 campaign.CampaignId))
             .ExpectFailure(RequestErrorKind.Forbidden);
         await fixture.Scenario(fixture.MemberUserId)
-            .When(new ApproveCampaignWaiver(fixture.TenantId, fixture.ProgramId,
-                campaign.CampaignId, fixture.NonMemberPersonId, "Leave", expires))
+            .When(new ApproveCampaignWaiver(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                campaign.CampaignId, fixture.NonMemberPersonId, "Leave", expires, 1))
             .ExpectFailure(RequestErrorKind.Forbidden);
         var waiver = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId,
-            new ApproveCampaignWaiver(fixture.TenantId, fixture.ProgramId,
-                campaign.CampaignId, fixture.NonMemberPersonId, "Extended leave", expires));
+            new ApproveCampaignWaiver(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                campaign.CampaignId, fixture.NonMemberPersonId, "Extended leave", expires, 1));
+        var applied = await CampaignSeed.ApplyAdmittedAsync(fixture.Provider, fixture.TenantId, campaign.CampaignId,
+            fixture.NonMemberPersonId, waiver.Value.OperationId, CampaignParticipantResultKind.Waiver);
         var people = await fixture.Scenario(fixture.ManagerUserId)
             .When(new ListCampaignParticipants(fixture.TenantId, fixture.ProgramId,
                 campaign.CampaignId, State: "excepted"))
@@ -167,8 +174,10 @@ public sealed class PolicyCampaignHandlerTests
             .ExpectFailure(RequestErrorKind.NotFound);
 
         // Assert
-        Assert.Equal(expires, waiver.Value.ExpiresOn);
-        Assert.Equal(fixture.NonMemberPersonId, Assert.Single(people.Value.Items).PersonId);
+        Assert.True(applied.IsSuccess, applied.Error?.Message);
+        var excepted = Assert.Single(people.Value.Items);
+        Assert.Equal(fixture.NonMemberPersonId, excepted.PersonId);
+        Assert.Equal(expires, excepted.Waiver!.ExpiresOn);
     }
 
     [Fact]
@@ -180,11 +189,11 @@ public sealed class PolicyCampaignHandlerTests
 
         // Act
         await fixture.Scenario(fixture.ManagerUserId)
-            .When(new LaunchPolicyCampaign(fixture.TenantId, fixture.ProgramId, version.PolicyId,
+            .When(new LaunchPolicyCampaign(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, version.PolicyId,
                 2, fixture.RosterSnapshotId, DateOnly.FromDateTime(Now.UtcDateTime).AddDays(30)))
             .ExpectFailure(RequestErrorKind.NotFound);
         await fixture.Scenario(fixture.ManagerUserId)
-            .When(new LaunchPolicyCampaign(fixture.TenantId, fixture.ProgramId, version.PolicyId,
+            .When(new LaunchPolicyCampaign(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, version.PolicyId,
                 1, Uuid.CreateVersion4(), DateOnly.FromDateTime(Now.UtcDateTime).AddDays(30)))
             .ExpectFailure(RequestErrorKind.NotFound);
 
@@ -222,6 +231,9 @@ public sealed class PolicyCampaignHandlerTests
                 services => services.AddScoped<PolicyImpactService>()
                     .AddScoped<ClientManagementIndependenceGuard>()
                     .AddScoped<PolicyAcknowledgementRecorderGuard>()
+                    .AddScoped<CampaignSource>()
+                    .AddScoped<CampaignLaunch>()
+                    .AddScoped<PolicyParticipantAdmission>()
                     .AddSingleton<IDomainEventReader>(provider =>
                         (IDomainEventReader)provider.GetRequiredService<IEventStore>())
                     .AddSingleton<ICampaignDirectoryReader>(
@@ -261,20 +273,30 @@ public sealed class PolicyCampaignHandlerTests
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Conflict, failure.Message!));
 
-        public async Task<Result<CampaignAcknowledgementView>> AcknowledgeHttpAsync(AcknowledgePolicy request, Uuid userId,
-            RequestErrorKind? expectedFailure = null)
+        /// <summary>Dispatches the personal request; a successful admission is applied to its participant at once.</summary>
+        public async Task<Result<OperationAcceptedResponse>> AcknowledgeHttpAsync(AcknowledgePolicy request,
+            Uuid userId, RequestErrorKind? expectedFailure = null)
         {
             await using var scope = Provider.CreateAsyncScope();
             var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
                 new RequestDispatchContext(ProgramManagementServices.Actor(userId),
-                    new HttpInvocation("POST", "/synthetic/policy-acknowledgement", "/synthetic/policy-acknowledgement", "synthetic")),
+                    new HttpInvocation("PUT", "/synthetic/policy-acknowledgement", "/synthetic/policy-acknowledgement", "synthetic")),
                 CancellationToken.None);
             if (expectedFailure is { } error)
+            {
                 Assert.Equal(error, result.Error?.Kind);
-            else
-                Assert.True(result.IsSuccess, result.Error?.Message);
+                return result;
+            }
+
+            Assert.True(result.IsSuccess, result.Error?.Message);
+            var applied = await CampaignSeed.ApplyAdmittedAsync(Provider, TenantId, request.CampaignId,
+                request.PersonId, result.Value.OperationId, CampaignParticipantResultKind.PolicyAcknowledgement);
+            Assert.True(applied.IsSuccess, applied.Error?.Message);
             return result;
         }
+
+        public async Task<PolicyAcknowledgementRecorded> AppliedAcknowledgementAsync(Uuid campaignId, Uuid personId) =>
+            (await CampaignSeed.ParticipantAsync(Provider, TenantId, campaignId, personId)).Acknowledgement!;
 
         public RequestScenario Scenario(Uuid userId) => RequestScenario.For(Provider)
             .GivenActor(ProgramManagementServices.Actor(userId));
@@ -315,16 +337,16 @@ public sealed class PolicyCampaignHandlerTests
 
         public async Task<CampaignRegistration> LaunchAsync(PolicyVersionView version)
         {
-            var launched = await Scenario(ManagerUserId).When(new LaunchPolicyCampaign(TenantId,
+            var launched = await Scenario(ManagerUserId).When(new LaunchPolicyCampaign(Uuid.CreateVersion4(), TenantId,
                 ProgramId, version.PolicyId, version.Version, RosterSnapshotId,
                 DateOnly.FromDateTime(Now.UtcDateTime).AddDays(30))).ExpectSuccess();
             return launched.Value;
         }
 
         public AcknowledgePolicy Acknowledge(Uuid campaignId, Uuid personId,
-            PolicyVersionView version) => new(TenantId, ProgramId, campaignId, personId,
-            version.Version, version.ContentSha256,
-            PolicyDistributionCampaign.DefaultAcknowledgementText);
+            PolicyVersionView version, long expectedRevision = 1) => new(Uuid.CreateVersion4(), TenantId, ProgramId,
+            campaignId, personId, version.Version, version.ContentSha256,
+            PolicyDistributionCampaign.DefaultAcknowledgementText, expectedRevision);
     }
 
     sealed class ManagerPermissions(IReadOnlySet<Uuid> managers) : IPermissionAuthorizer

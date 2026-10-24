@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Programs;
@@ -39,7 +41,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
-        Assert.Null(after.FindAcknowledgement(person));
+        Assert.Null((await fixture.ParticipantAsync(person)).Acknowledgement);
     }
 
     [Theory]
@@ -63,7 +65,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
         Assert.Contains(affiliation == "guest" ? "Guest members" : "Attest",
             result.Error!.Message, StringComparison.Ordinal);
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
-        Assert.Null(after.FindAcknowledgement(fixture.Source.NonMemberPersonId));
+        Assert.Null((await fixture.ParticipantAsync(fixture.Source.NonMemberPersonId)).Acknowledgement);
     }
 
     [Theory]
@@ -82,9 +84,10 @@ public sealed class PolicyAcknowledgementIndependenceTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.False(result.Value.RecordedOnBehalf);
-        Assert.Equal(RbacIds.Member(fixture.Source.TenantId, fixture.Source.MemberUserId).ToString(), result.Value.Recorder.Id);
-        Assert.NotNull(retained.FindAcknowledgement(fixture.Source.MemberPersonId));
+        var acknowledgement = (await fixture.ParticipantAsync(fixture.Source.MemberPersonId)).Acknowledgement!;
+        Assert.False(acknowledgement.RecordedOnBehalf);
+        Assert.Equal(RbacIds.Member(fixture.Source.TenantId, fixture.Source.MemberUserId).ToString(), acknowledgement.Recorder.Id);
+        Assert.NotNull(retained);
     }
 
     [Theory]
@@ -105,9 +108,10 @@ public sealed class PolicyAcknowledgementIndependenceTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.True(result.Value.RecordedOnBehalf);
-        Assert.Equal(fixture.Source.NonMemberPersonId.ToString(), result.Value.Performer.Id);
-        Assert.Equal(RbacIds.Member(fixture.Source.TenantId, fixture.Source.ManagerUserId).ToString(), result.Value.Recorder.Id);
+        var acknowledgement = (await fixture.ParticipantAsync(fixture.Source.NonMemberPersonId)).Acknowledgement!;
+        Assert.True(acknowledgement.RecordedOnBehalf);
+        Assert.Equal(fixture.Source.NonMemberPersonId.ToString(), acknowledgement.Performer.Id);
+        Assert.Equal(RbacIds.Member(fixture.Source.TenantId, fixture.Source.ManagerUserId).ToString(), acknowledgement.Recorder.Id);
     }
 
     [Theory]
@@ -277,7 +281,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
         // Assert
         Assert.Contains("already assigned", assignment.Error!.Message, StringComparison.Ordinal);
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
-        Assert.True(recorded.Value.RecordedOnBehalf);
+        Assert.True((await fixture.ParticipantAsync(fixture.Source.NonMemberPersonId)).Acknowledgement!.RecordedOnBehalf);
         Assert.Empty(after.Value.Items);
         Assert.Equal(0, after.Value.Counts.Total);
     }
@@ -313,7 +317,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
         Assert.Equal(1, before.Value.Counts.Total);
         Assert.Contains("Only team work", claim.Error!.Message, StringComparison.Ordinal);
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
-        Assert.False(recorded.Value.RecordedOnBehalf);
+        Assert.False((await fixture.ParticipantAsync(fixture.Source.MemberPersonId)).Acknowledgement!.RecordedOnBehalf);
         Assert.Empty(after.Value.Items);
     }
 
@@ -362,6 +366,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
             }).Build(), developerAuthentication: true);
             var store = source.Provider.GetRequiredService<IEventStore>();
             services.AddSingleton(store);
+            services.AddSingleton(source.Provider.GetRequiredService<IImmutableContentStore>());
             services.AddSingleton<IDomainEventReader>((IDomainEventReader)store);
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
             services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(
@@ -379,17 +384,30 @@ public sealed class PolicyAcknowledgementIndependenceTests
             return new Fixture { Source = source, Provider = provider, Version = version, CampaignId = campaign.CampaignId };
         }
 
-        public async Task<Result<CampaignAcknowledgementView>> AcknowledgeAsync(Uuid actor, Uuid person, string transport = "http")
+        /// <summary>Dispatches the request; an admitted acknowledgement is applied to its participant at once.</summary>
+        public async Task<Result<OperationAcceptedResponse>> AcknowledgeAsync(Uuid actor, Uuid person, string transport = "http")
         {
+            var revision = (await CampaignAsync()).Revision;
             await using var scope = Provider.CreateAsyncScope();
-            return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-                Source.Acknowledge(CampaignId, person, Version),
+            var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
+                Source.Acknowledge(CampaignId, person, Version, revision),
                 new RequestDispatchContext(ProgramManagementServices.Actor(actor),
                     transport == "http"
-                        ? new HttpInvocation("POST", "/synthetic/policy/acknowledgements", "/synthetic/policy/acknowledgements", "synthetic")
+                        ? new HttpInvocation("PUT", "/synthetic/policy/acknowledgements", "/synthetic/policy/acknowledgements", "synthetic")
                         : transport == "mcp" ? new McpInvocation("synthetic.policy.acknowledge") : new DirectInvocation()),
                 CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                var applied = await CampaignSeed.ApplyAdmittedAsync(Provider, Source.TenantId, CampaignId, person,
+                    result.Value.OperationId, CampaignParticipantResultKind.PolicyAcknowledgement);
+                Assert.True(applied.IsSuccess, applied.Error?.Message);
+            }
+
+            return result;
         }
+
+        public Task<PolicyCampaignParticipant> ParticipantAsync(Uuid person) =>
+            CampaignSeed.ParticipantAsync(Provider, Source.TenantId, CampaignId, person);
 
         public Task<PolicyDistributionCampaign> CampaignAsync() => ProgramManagementServices.HydrateAsync(Provider,
             new PolicyDistributionCampaign(Source.TenantId, CampaignId));

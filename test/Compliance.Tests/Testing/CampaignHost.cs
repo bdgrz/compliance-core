@@ -1,0 +1,270 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Tests.Features.AccessControl;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+namespace Bdgrz.Compliance.Tests.Testing;
+
+/// <summary>
+///     The full composition over in-memory stores for the campaign admission, participant and closure processes:
+///     requests run through the production pipeline as personal HTTP callers, root facts are turned into process
+///     records by the production reactors, and records are driven by the production driver.
+/// </summary>
+sealed class CampaignHost : IAsyncDisposable
+{
+    public static readonly DateTimeOffset Start = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+
+    readonly ServiceProvider _provider;
+
+    public CampaignHost(Func<IProcessRecordStore, IProcessRecordStore>? store = null)
+    {
+        Clock = new ManualClock(Start);
+        var services = new ServiceCollection();
+        services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
+            ["Fitz:ApplicationName"] = "compliance",
+        }).Build(), developerAuthentication: true);
+        var events = new InMemoryEventStore();
+        services.AddSingleton<IEventStore>(events);
+        services.AddSingleton<IDomainEventReader>(events);
+        services.AddSingleton<IKvClient>(new InMemoryKvClient());
+        services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(
+            new RecordingPermissionAuthorizer(true)));
+        services.AddSingleton<ITenantActivity, ActiveTenant>();
+        services.AddSingleton<ITenantMembershipDirectoryReader, AlwaysMemberDirectory>();
+        services.AddSingleton<TimeProvider>(Clock);
+        if (store is not null)
+        {
+            services.RemoveAll<IProcessRecordStore>();
+            services.AddSingleton<IProcessRecordStore>(provider =>
+                store(new FitzKvProcessRecordStore(provider.GetRequiredService<IKvClient>())));
+        }
+
+        _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+        Scope = _provider.CreateAsyncScope();
+    }
+
+    public ManualClock Clock { get; }
+
+    public IServiceProvider Provider => _provider;
+
+    public AsyncServiceScope Scope { get; }
+
+    public Uuid Tenant { get; } = Uuid.CreateVersion4();
+
+    public Uuid Program { get; } = Uuid.CreateVersion4();
+
+    public Uuid Manager { get; } = Uuid.CreateVersion4();
+
+    public Uuid ManagerMember => RbacIds.Member(Tenant, Manager);
+
+    public Uuid Learner { get; } = Uuid.CreateVersion4();
+
+    public Uuid LearnerPerson { get; } = Uuid.CreateVersion4();
+
+    public Uuid OfflinePerson { get; } = Uuid.CreateVersion4();
+
+    public ActorReference ManagerActor => ActorReference.ForMember(ManagerMember, "Client manager");
+
+    public IProcessRecordStore Records => Scope.ServiceProvider.GetRequiredService<IProcessRecordStore>();
+
+    public IImmutableContentStore Content => Scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+
+    public IDomainEventReader Events => Scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
+
+    /// <summary>Seeds the program and the two people: a member-correlated learner and a person without a membership.</summary>
+    public async Task SeedAsync()
+    {
+        await ProgramManagementServices.SeedAsync(_provider, new ComplianceProgram(Tenant, Program), program =>
+        {
+            Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), Manager,
+                "Client manager", Start));
+            return Result.Success;
+        });
+        await ProgramManagementServices.SeedAsync(_provider, new Person(Tenant, LearnerPerson), person =>
+        {
+            Assert.True(person.Record("Learner", null, ManagerActor, Start).IsSuccess);
+            Assert.Null(person.CorrelateMembership(1, Learner, ManagerActor, Start));
+            return Result.Success;
+        });
+        await ProgramManagementServices.SeedAsync(_provider, new Person(Tenant, OfflinePerson), person =>
+        {
+            Assert.True(person.Record("Offline", null, ManagerActor, Start).IsSuccess);
+            return Result.Success;
+        });
+    }
+
+    public static CampaignSubject PolicySubject { get; } = new("policy", Uuid.CreateVersion4(), "POL-1",
+        "Access Control Policy", 1, new string('a', 64));
+
+    public static CampaignSubject TrainingSubject { get; } = new("training", Uuid.CreateVersion4(), "TR-1",
+        "Security awareness", 1, new string('b', 64));
+
+    /// <summary>Launches a campaign over the given people through the owner path, at the host clock.</summary>
+    public async Task<Uuid> LaunchAsync(CampaignSubject? subject = null, params Uuid[] people)
+    {
+        people = people.Length == 0 ? [LearnerPerson, OfflinePerson] : people;
+        var campaignId = Uuid.CreateVersion4();
+        var matches = people.ToDictionary(static person => person, person => new RosterMatch(person,
+            "Person " + person.ToString()[..4], "employee", null, new DateOnly(2025, 1, 1)));
+        await CampaignSeed.LaunchAsync(_provider, Tenant, Program, campaignId, subject ?? PolicySubject,
+            PolicyAudience.CoreSecurity, [], Uuid.CreateVersion4(), new string('d', 64),
+            new RosterAudience(matches, new HashSet<Uuid>(people)), Today.AddDays(30), "Read and acknowledge",
+            ManagerActor, ManagerMember, Clock.GetUtcNow());
+        return campaignId;
+    }
+
+    public DateOnly Today => DateOnly.FromDateTime(Clock.GetUtcNow().UtcDateTime);
+
+    public static AcknowledgePolicy Acknowledgement(Uuid tenant, Uuid program, Uuid campaign, Uuid person,
+        long expectedRevision, Uuid? commandId = null, CampaignSubject? subject = null) => new(
+        commandId ?? Uuid.CreateVersion4(), tenant, program, campaign, person, (subject ?? PolicySubject).Version,
+        (subject ?? PolicySubject).ContentSha256, PolicyDistributionCampaign.DefaultAcknowledgementText,
+        expectedRevision);
+
+    public AcknowledgePolicy Acknowledge(Uuid campaign, Uuid person, long expectedRevision, Uuid? commandId = null) =>
+        Acknowledgement(Tenant, Program, campaign, person, expectedRevision, commandId);
+
+    /// <summary>Sends the request as a personal HTTP caller, in its own scope as a concurrent request would.</summary>
+    public async Task<Result<T>> SendAsync<T>(IRequest<T> request, Uuid? user = null, RequestMetadata? metadata = null)
+        where T : notnull
+    {
+        await using var scope = _provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
+            new RequestDispatchContext(ProgramManagementServices.Actor(user ?? Manager),
+                new HttpInvocation("PUT", "/synthetic/campaign", "/synthetic/campaign", "synthetic"), metadata),
+            CancellationToken.None);
+    }
+
+    public async Task<CampaignState> StateAsync(Uuid campaignId)
+    {
+        await using var scope = _provider.CreateAsyncScope();
+        var state = await new CampaignSource(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()).ReadAsync(Tenant, Program, campaignId,
+            CancellationToken.None);
+        Assert.True(state.IsSuccess, state.Error?.Message);
+        return state.Value;
+    }
+
+    public Task<PolicyCampaignParticipant> ParticipantAsync(Uuid campaignId, Uuid person) =>
+        CampaignSeed.ParticipantAsync(_provider, Tenant, campaignId, person);
+
+    public Task<PolicyDistributionCampaign> CampaignAsync(Uuid campaignId) =>
+        ProgramManagementServices.HydrateAsync(_provider, new PolicyDistributionCampaign(Tenant, campaignId));
+
+    public EventStreamAddress CampaignStream(Uuid campaignId) =>
+        new PolicyDistributionCampaign(Tenant, campaignId).Stream;
+
+    public ProcessDefinition Definition(string name) => _provider.GetRequiredService<ProcessCatalog>().Get(name);
+
+    public ProcessKey ResultKey(Uuid operationId) =>
+        new(IndependentChildMaterialization.ProcessName, Tenant.ToString(), operationId);
+
+    public ProcessKey ClosureKey(Uuid operationId) =>
+        new(PolicyCampaignClosureEffects.ProcessName, Tenant.ToString(), operationId);
+
+    /// <summary>
+    ///     Runs the participant result root reactor over the committed admissions of a campaign. With
+    ///     <paramref name="tolerateCrash" /> an armed <c>CrashAfterReplaces</c> leaves each record created but undriven.
+    /// </summary>
+    public async Task ReactResultsAsync(Uuid campaignId, bool tolerateCrash = false)
+    {
+        await using var scope = _provider.CreateAsyncScope();
+        var reactor = scope.ServiceProvider.GetRequiredService<PolicyParticipantResultReactor>();
+        await foreach (var record in scope.ServiceProvider.GetRequiredService<IDomainEventReader>()
+                           .ReadAsync(CampaignStream(campaignId), 0))
+            if (record.Event is PolicyParticipantResultAdmitted)
+                try
+                {
+                    await reactor.HandleAsync(
+                        AdministratorTransitionHost.ReactionOf<PolicyParticipantResultAdmitted>(record),
+                        CancellationToken.None);
+                }
+                catch (InvalidOperationException) when (tolerateCrash)
+                {
+                    // The held driver stopped after the process record was created.
+                }
+    }
+
+    /// <summary>Runs the closure root reactor over the committed closure acceptances of a campaign.</summary>
+    public async Task ReactClosureAsync(Uuid campaignId)
+    {
+        await using var scope = _provider.CreateAsyncScope();
+        var reactor = scope.ServiceProvider.GetRequiredService<PolicyCampaignClosureReactor>();
+        await foreach (var record in scope.ServiceProvider.GetRequiredService<IDomainEventReader>()
+                           .ReadAsync(CampaignStream(campaignId), 0))
+            if (record.Event is PolicyCampaignClosureAccepted)
+                await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<PolicyCampaignClosureAccepted>(record),
+                    CancellationToken.None);
+    }
+
+    /// <summary>Drives a process record to its end (or its next wait) with a fresh worker scope.</summary>
+    public async Task<ProcessRecord> RunAsync(ProcessKey key, string worker = "test-worker")
+    {
+        await using var scope = _provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(key, worker,
+            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+    }
+
+    public async Task<ProcessRecord?> RecordAsync(ProcessKey key) => await Records.ReadAsync(key);
+
+    public ValueTask<Result<ReceiverOutcome>> DispatchAsync(IRequest<ReceiverOutcome> command) =>
+        Scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(command,
+            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+
+    /// <summary>The receiver command a step of a record builds, with the deterministic command id of the driver.</summary>
+    public async Task<IRequest<ReceiverOutcome>?> StepAsync(ProcessRecord record, string stage, string receiver,
+        string? target = null)
+    {
+        var definition = Definition(record.Key.ProcessKind);
+        return await definition.CreateReceiver(new ProcessStep(record, stage, receiver, target,
+            EffectIdentity.CommandId(record.Source.EventId, $"{record.Key.ProcessKind}:{receiver}", target ?? "-",
+                record.Episode)), Scope.ServiceProvider, CancellationToken.None);
+    }
+
+    public async Task<List<TEvent>> EventsAsync<TEvent>(EventStreamAddress stream) where TEvent : DomainEvent
+    {
+        var found = new List<TEvent>();
+        try
+        {
+            await foreach (var record in Events.ReadAsync(stream, 0))
+                if (record.Event is TEvent typed)
+                    found.Add(typed);
+        }
+        catch (InvalidOperationException)
+        {
+            // The in-memory store reports an unwritten stream this way.
+        }
+
+        return found;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await Scope.DisposeAsync();
+        await _provider.DisposeAsync();
+    }
+
+    public sealed class ManualClock(DateTimeOffset now) : TimeProvider
+    {
+        DateTimeOffset _now = now;
+
+        public override DateTimeOffset GetUtcNow() => _now;
+
+        public void Advance(TimeSpan by) => _now += by;
+    }
+}

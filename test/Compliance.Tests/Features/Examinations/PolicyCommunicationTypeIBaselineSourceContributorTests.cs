@@ -1,10 +1,16 @@
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 
@@ -13,15 +19,11 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
     static readonly Uuid TenantId = Uuid.CreateVersion4();
     static readonly Uuid ProgramId = Uuid.CreateVersion4();
     static readonly Uuid PolicyId = Policy.IdFor(TenantId, ProgramId, "POL-COMMS");
-    static readonly Uuid RequirementId = TrainingCatalog.IdFor(TenantId, ProgramId, "TR-SEC");
+    static readonly Uuid RequirementId = TrainingRequirementIdentity.IdFor(TenantId, ProgramId, "TR-SEC");
     static readonly Uuid CampaignId = Uuid.CreateVersion4();
     static readonly Uuid RosterSnapshotId = Uuid.CreateVersion4();
     static readonly Uuid Ada = Uuid.CreateVersion4();
     static readonly Uuid Bob = Uuid.CreateVersion4();
-    static readonly Uuid AdaAcknowledgementId = Uuid.CreateVersion4();
-    static readonly Uuid BobAcknowledgementId = Uuid.CreateVersion4();
-    static readonly Uuid AdaCompletionId = Uuid.CreateVersion4();
-    static readonly Uuid BobCompletionId = Uuid.CreateVersion4();
     static readonly Uuid AuthorId = Uuid.CreateVersion4();
     static readonly Uuid ReviewerId = Uuid.CreateVersion4();
     static readonly Uuid ApproverId = Uuid.CreateVersion4();
@@ -35,15 +37,13 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
     public async Task ShouldKeepPolicyCommunicationStableGivenAcknowledgementAfterTypeIDate()
     {
         // Arrange
-        var before = await PolicyCampaign(includeLateResult: false);
-        var after = await PolicyCampaign(includeLateResult: true);
+        await using var fixture = await PolicyCampaign();
+        var original = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+        await fixture.AcknowledgeAsync(Bob, AfterTypeIDate);
 
         // Act
-        var original = await before.Contributor.ReadAsync(Engagement(), before.Context,
-            CancellationToken.None);
-        var later = await after.Contributor.ReadAsync(Engagement(), after.Context,
-            CancellationToken.None);
-        var direct = await before.Contributor.ReadAsync(Engagement(), CancellationToken.None);
+        var later = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+        var direct = await fixture.Contributor.ReadAsync(Engagement(), CancellationToken.None);
 
         // Assert
         Assert.True(original.IsSuccess, original.Error?.Message);
@@ -65,11 +65,12 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
     public async Task ShouldCaptureReconciledClosureTotalsGivenClosureBeforeTypeIDate()
     {
         // Arrange
-        var fixture = await PolicyCampaign(includeLateResult: false, closeBeforeTypeIDate: true);
+        await using var fixture = await PolicyCampaign();
+        await CampaignSeed.CloseAsync(fixture.Provider, TenantId, CampaignId, "The communication review is complete.",
+            Manager, new DateTimeOffset(2027, 3, 20, 12, 0, 0, TimeSpan.Zero));
 
         // Act
-        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
-            CancellationToken.None);
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -83,12 +84,11 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
     public async Task ShouldRejectDifferentCampaignAudienceGivenExactPolicyVersion()
     {
         // Arrange
-        var fixture = await PolicyCampaign(includeLateResult: false,
-            audienceKind: PolicyAudience.RoleTargeted, audienceTeams: ["Finance"]);
+        await using var fixture = await PolicyCampaign(audienceKind: PolicyAudience.RoleTargeted,
+            audienceTeams: ["Finance"]);
 
         // Act
-        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
-            CancellationToken.None);
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -99,28 +99,27 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
     public async Task ShouldCaptureTrainingVersionAsOfTypeIDateGivenLaterRequirementAndCompletion()
     {
         // Arrange
-        var before = await TrainingCampaign(includeLaterChanges: false);
-        var after = await TrainingCampaign(includeLaterChanges: true);
+        await using var fixture = await TrainingCampaign();
 
         // Act
-        var original = await before.Contributor.ReadAsync(Engagement(), before.Context,
-            CancellationToken.None);
-        var later = await after.Contributor.ReadAsync(Engagement(), after.Context,
-            CancellationToken.None);
+        var original = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+        await TrainingSeed.ReviseAsync(fixture.Provider, TenantId, RequirementId, "TR-SEC", 1,
+            new TrainingRequirementContent("Security Awareness v2", "Annual course", PolicyAudience.CoreSecurity, null,
+                "manual"), Manager, AfterTypeIDate);
+        var completed = await CampaignSeed.CompleteAsync(fixture.Provider, TenantId, ProgramId, CampaignId, Bob, 1,
+            new DateOnly(2027, 4, 1), "manual", "certificate-b.pdf", Manager, AfterTypeIDate);
+        var later = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
 
         // Assert
+        Assert.True(completed.IsSuccess, completed.Error?.Message);
         Assert.True(original.IsSuccess, original.Error?.Message);
         Assert.True(later.IsSuccess, later.Error?.Message);
         Assert.Equal("policy_communications", original.Value.Family);
-        var requirement = Assert.Single(original.Value.Sources,
-            item => item.Kind == "training_requirement_version");
+        var requirement = Assert.Single(original.Value.Sources, item => item.Kind == "training_requirement_version");
         Assert.Equal(RequirementId, requirement.RecordId);
-        Assert.Equal(Uuid.CreateVersion5(RequirementId,
-            "training_requirement_version_v1:1"), requirement.VersionId);
-        var campaign = Assert.Single(original.Value.Sources,
-            item => item.Kind == "policy_communication");
-        var laterCampaign = Assert.Single(later.Value.Sources,
-            item => item.Kind == "policy_communication");
+        Assert.Equal(Uuid.CreateVersion5(RequirementId, "training_requirement_version_v1:1"), requirement.VersionId);
+        var campaign = Assert.Single(original.Value.Sources, item => item.Kind == "policy_communication");
+        var laterCampaign = Assert.Single(later.Value.Sources, item => item.Kind == "policy_communication");
         Assert.Equal(campaign.ContentSha256, laterCampaign.ContentSha256);
         Assert.Equal(2, later.Value.Sources.Count);
         Assert.Empty(later.Value.Blockers);
@@ -139,37 +138,40 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
         return new TypeIBaselineSourceReadContext(Uuid.CreateVersion4(), references);
     }
 
-    static async Task<FixtureState> PolicyCampaign(bool includeLateResult,
-        bool closeBeforeTypeIDate = false, string audienceKind = PolicyAudience.CoreSecurity,
+    static async Task<Fixture> PolicyCampaign(string audienceKind = PolicyAudience.CoreSecurity,
         IReadOnlyList<string>? audienceTeams = null)
     {
+        var fixture = new Fixture();
         var policy = CreateApprovedPolicy();
+        await fixture.SaveAsync(policy);
         var version = policy.FindVersion(2)!;
-        var subject = new CampaignSubject("policy", PolicyId, version.Identifier,
-            version.Content.Title, version.Version, version.ContentSha256);
-        var campaign = CreateCampaign(subject, includeLateResult, closeBeforeTypeIDate,
-            audienceKind, audienceTeams);
-        var reader = new AggregateReader(policy, campaign);
-        return await Fixture(campaign, reader, PolicyContext(policy));
+        var subject = new CampaignSubject("policy", PolicyId, version.Identifier, version.Content.Title,
+            version.Version, version.ContentSha256);
+        await fixture.LaunchAsync(subject, audienceKind, audienceTeams ?? []);
+        fixture.Subject = subject;
+        fixture.Context = PolicyContext(policy);
+        var acknowledged = await fixture.AcknowledgeAsync(Ada, new DateTimeOffset(2027, 3, 1, 12, 0, 0, TimeSpan.Zero));
+        Assert.True(acknowledged.IsSuccess, acknowledged.Error?.Message);
+        return fixture;
     }
 
-    static async Task<FixtureState> TrainingCampaign(bool includeLaterChanges)
+    static async Task<Fixture> TrainingCampaign()
     {
-        var catalog = new TrainingCatalog(TenantId, ProgramId);
+        var fixture = new Fixture();
         var first = new TrainingRequirementContent("Security Awareness", "Annual course",
             PolicyAudience.CoreSecurity, null, "manual");
-        Assert.True(catalog.Define(Uuid.CreateVersion4(), "TR-SEC", first, Manager,
-            new DateTimeOffset(2027, 1, 1, 12, 0, 0, TimeSpan.Zero)).IsSuccess);
-        var firstVersion = catalog.Find(RequirementId, 1)!;
-        var subject = new CampaignSubject("training", RequirementId, firstVersion.Identifier,
-            firstVersion.Content.CourseName, firstVersion.Version, firstVersion.ContentSha256);
-        var campaign = CreateCampaign(subject, includeLateResult: includeLaterChanges);
-        if (includeLaterChanges)
-            Assert.True(catalog.Revise(Uuid.CreateVersion4(), RequirementId, 1,
-                first with { CourseName = "Security Awareness v2" }, Manager, AfterTypeIDate)
-                .IsSuccess);
-        var reader = new AggregateReader(catalog, campaign);
-        return await Fixture(campaign, reader, new TypeIBaselineSourceReadContext(Uuid.Empty, []));
+        await TrainingSeed.DefineAsync(fixture.Provider, TenantId, ProgramId, "TR-SEC", first, Manager,
+            new DateTimeOffset(2027, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        var subject = new CampaignSubject("training", RequirementId, "TR-SEC", first.CourseName, 1,
+            TrainingRequirementRules.Hash(TrainingRequirementRules.Clean(first)));
+        await fixture.LaunchAsync(subject, PolicyAudience.CoreSecurity, []);
+        fixture.Subject = subject;
+        fixture.Context = new TypeIBaselineSourceReadContext(Uuid.Empty, []);
+        var completed = await CampaignSeed.CompleteAsync(fixture.Provider, TenantId, ProgramId, CampaignId, Ada, 1,
+            new DateOnly(2027, 3, 1), "manual", "certificate-a.pdf", Manager,
+            new DateTimeOffset(2027, 3, 1, 12, 0, 0, TimeSpan.Zero));
+        Assert.True(completed.IsSuccess, completed.Error?.Message);
+        return fixture;
     }
 
     static Policy CreateApprovedPolicy()
@@ -203,111 +205,95 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
         PolicyAudience.CoreSecurity, null, 12, "Review access quarterly.", null,
         "Security lead", []);
 
-    static PolicyDistributionCampaign CreateCampaign(CampaignSubject subject,
-        bool includeLateResult, bool closeBeforeTypeIDate = false,
-        string audienceKind = PolicyAudience.CoreSecurity, IReadOnlyList<string>? audienceTeams = null)
-    {
-        var campaign = new PolicyDistributionCampaign(TenantId, CampaignId);
-        var roster = new RosterAudience(new Dictionary<Uuid, RosterMatch>
-        {
-            [Ada] = new RosterMatch(Ada, "Ada", "employee", "Security",
-                new DateOnly(2025, 1, 1)),
-            [Bob] = new RosterMatch(Bob, "Bob", "employee", "Security",
-                new DateOnly(2025, 1, 1)),
-        }, new HashSet<Uuid> { Ada, Bob });
-        Assert.True(campaign.Launch(ProgramId, subject, audienceKind, audienceTeams ?? [],
-            RosterSnapshotId, new string('b', 64), roster, new DateOnly(2027, 4, 15),
-            "Complete the required material", Manager, ManagerId, LaunchAt).IsSuccess);
-        if (subject.Kind == "policy")
-        {
-            Assert.Null(campaign.Acknowledge(ProgramId, AdaAcknowledgementId, Ada,
-                subject.Version, subject.ContentSha256,
-                PolicyDistributionCampaign.DefaultAcknowledgementText,
-                Actor(Ada), Manager, true, new DateTimeOffset(2027, 3, 1, 12, 0, 0,
-                    TimeSpan.Zero)));
-            if (includeLateResult)
-                Assert.Null(campaign.Acknowledge(ProgramId, BobAcknowledgementId, Bob,
-                    subject.Version, subject.ContentSha256,
-                    PolicyDistributionCampaign.DefaultAcknowledgementText,
-                    Actor(Bob), Manager, true, AfterTypeIDate));
-        }
-        else
-        {
-            Assert.Null(campaign.RecordCompletion(ProgramId, AdaCompletionId, Ada,
-                subject.Version, new DateOnly(2027, 3, 1), "manual", "certificate-a.pdf",
-                Manager, new DateTimeOffset(2027, 3, 1, 12, 0, 0, TimeSpan.Zero)));
-            if (includeLateResult)
-                Assert.Null(campaign.RecordCompletion(ProgramId, BobCompletionId, Bob,
-                    subject.Version, new DateOnly(2027, 4, 1), "manual", "certificate-b.pdf",
-                    Manager, AfterTypeIDate));
-        }
-        if (closeBeforeTypeIDate)
-            Assert.Null(campaign.Close(ProgramId, "The communication review is complete.",
-                Manager, new DateTimeOffset(2027, 3, 20, 12, 0, 0, TimeSpan.Zero)));
-        return campaign;
-    }
-
-    static async Task<FixtureState> Fixture(PolicyDistributionCampaign campaign,
-        IAggregateReader reader, TypeIBaselineSourceReadContext context)
-    {
-        var pending = new AggregateScenario<PolicyDistributionCampaign>(campaign).PendingEvents;
-        var attached = pending.ToArray();
-        var events = new InMemoryEventStore();
-        var stream = new EventStreamAddress(TenantId.ToString(), "policy-distribution-campaigns",
-            campaign.Id.ToString());
-        await events.AppendAsync(stream, 0, attached);
-        var checkpoint = await CheckpointAfterAsync(events);
-        var replayed = new AggregateScenario<PolicyDistributionCampaign>(
-            new PolicyDistributionCampaign(TenantId, campaign.Id)).Given(attached).Aggregate;
-        var directory = new CampaignDirectory(replayed, checkpoint);
-        var contributor = new PolicyCommunicationTypeIBaselineSourceContributor(directory,
-            reader, events, new CampaignDirectoryReadConsistency(directory, events));
-        return new FixtureState(contributor, context);
-    }
-
-    static async Task<ProjectionCheckpoint> CheckpointAfterAsync(InMemoryEventStore events)
-    {
-        var cursor = EventCursor.Start;
-        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(
-                           TenantId.ToString(), "policy-distribution-campaigns"), cursor,
-                           CancellationToken.None))
-            cursor = record.NextCursor;
-        return new ProjectionCheckpoint(cursor);
-    }
-
     static ActorReference Actor(Uuid memberId) => ActorReference.ForMember(memberId,
         memberId.ToString());
 
-    sealed record FixtureState(ITypeIBaselineSourceContributor Contributor,
-        TypeIBaselineSourceReadContext Context);
-
-    sealed class CampaignDirectory(PolicyDistributionCampaign campaign,
-        ProjectionCheckpoint checkpoint) : ICampaignDirectoryReader
+    /// <summary>Owners, projection fence and contributor composed over one in-memory store.</summary>
+    sealed class Fixture : IAsyncDisposable
     {
-        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-            CancellationToken ct = default) => ValueTask.FromResult(checkpoint);
+        readonly InMemoryEventStore _events = new();
 
-        public ValueTask<Page<CampaignSummaryView>> ListProgramAsync(Uuid tenantId,
-            Uuid programId, int limit, string? cursor, CancellationToken ct = default)
+        public Fixture()
         {
-            var view = campaign.ToView(TypeIDate);
-            var item = new CampaignSummaryView(TenantId, ProgramId, campaign.Id,
-                view.Subject.Kind, view.Subject.RecordId, view.Subject.Identifier,
-                view.Subject.Version, view.Subject.Title, view.DueOn, view.Status,
-                view.Totals.LaunchAudience, view.LaunchedAt);
-            return ValueTask.FromResult(new Page<CampaignSummaryView>([item], null));
+            var services = new ServiceCollection();
+            services.AddSingleton<IEventStore>(_events);
+            services.AddSingleton<IDomainEventReader>(_events);
+            services.AddSingleton(TimeProvider.System);
+            services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+                new PersistenceKvClient(new InMemoryKvClient())));
+            services.AddPortia();
+            Provider = services.BuildServiceProvider();
         }
 
-        public ValueTask<IReadOnlyList<Uuid>> ListForSubjectAsync(Uuid tenantId,
-            Uuid programId, Uuid subjectId, long version, CancellationToken ct = default) =>
-            ValueTask.FromResult<IReadOnlyList<Uuid>>([]);
+        public ServiceProvider Provider { get; }
+
+        public CampaignSubject Subject { get; set; } = null!;
+
+        public TypeIBaselineSourceReadContext Context { get; set; } = null!;
+
+        public ITypeIBaselineSourceContributor Contributor
+        {
+            get
+            {
+                var scope = Provider.CreateScope();
+                var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+                var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+                var campaigns = new CampaignSource(reader, content);
+                var directory = new CampaignDirectory(campaigns, _events);
+                return new PolicyCommunicationTypeIBaselineSourceContributor(directory, reader, _events,
+                    new CampaignDirectoryReadConsistency(directory, _events), campaigns, content);
+            }
+        }
+
+        public async Task SaveAsync(Aggregate aggregate)
+        {
+            await using var scope = Provider.CreateAsyncScope();
+            await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(aggregate,
+                new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        }
+
+        public Task<PolicyDistributionCampaign> LaunchAsync(CampaignSubject subject, string audienceKind, IReadOnlyList<string> teams)
+        {
+            var roster = new RosterAudience(new Dictionary<Uuid, RosterMatch>
+            {
+                [Ada] = new(Ada, "Ada", "employee", "Security", new DateOnly(2025, 1, 1)),
+                [Bob] = new(Bob, "Bob", "employee", "Security", new DateOnly(2025, 1, 1)),
+            }, new HashSet<Uuid> { Ada, Bob });
+            return CampaignSeed.LaunchAsync(Provider, TenantId, ProgramId, CampaignId, subject, audienceKind, teams,
+                RosterSnapshotId, new string('b', 64), roster, new DateOnly(2027, 4, 15),
+                "Complete the required material", Manager, ManagerId, LaunchAt);
+        }
+
+        public Task<Result<ReceiverOutcome>> AcknowledgeAsync(Uuid person, DateTimeOffset at) =>
+            CampaignSeed.AcknowledgeAsync(Provider, TenantId, ProgramId, CampaignId, person, Subject.Version,
+                Subject.ContentSha256, Manager, Actor(person), true, at);
+
+        public ValueTask DisposeAsync() => Provider.DisposeAsync();
     }
 
-    sealed class AggregateReader(params Aggregate[] aggregates) : IAggregateReader
+    sealed class CampaignDirectory(CampaignSource campaigns, InMemoryEventStore events) : ICampaignDirectoryReader
     {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(aggregates.FirstOrDefault(item => item.Id == aggregate.Id &&
-                item.GetType() == typeof(TAggregate)) is TAggregate found ? found : aggregate);
+        public async ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default)
+        {
+            var cursor = EventCursor.Start;
+            await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(),
+                               "policy-distribution-campaigns"), cursor, ct))
+                cursor = record.NextCursor;
+            return new ProjectionCheckpoint(cursor);
+        }
+
+        public async ValueTask<Page<CampaignSummaryView>> ListProgramAsync(Uuid tenantId, Uuid programId, int limit,
+            string? cursor, CancellationToken ct = default)
+        {
+            var state = (await campaigns.ReadAsync(TenantId, ProgramId, CampaignId, ct)).Value;
+            var view = state.ToView(TypeIDate);
+            var item = new CampaignSummaryView(TenantId, ProgramId, CampaignId, view.Subject.Kind,
+                view.Subject.RecordId, view.Subject.Identifier, view.Subject.Version, view.Subject.Title, view.DueOn,
+                view.Status == "closed" ? "closed" : "open", view.Totals.LaunchAudience, view.LaunchedAt);
+            return new Page<CampaignSummaryView>([item], null);
+        }
+
+        public ValueTask<IReadOnlyList<Uuid>> ListForSubjectAsync(Uuid tenantId, Uuid programId, Uuid subjectId,
+            long version, CancellationToken ct = default) => ValueTask.FromResult<IReadOnlyList<Uuid>>([]);
     }
 }

@@ -29,8 +29,8 @@ static class PolicyCampaignWork
     ///     Loads work for the program's open campaigns. The directory only enumerates campaign identities; each
     ///     campaign and each person's membership link are read from their source ledgers.
     /// </summary>
-    public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader, ICampaignDirectoryReader directory,
+    internal static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
+        IAggregateReader reader, CampaignSource campaignSource, ICampaignDirectoryReader directory,
         CampaignDirectoryReadConsistency consistency, Uuid tenantId, Uuid programId,
         DateOnly today, CancellationToken ct)
     {
@@ -50,11 +50,17 @@ static class PolicyCampaignWork
                                                                summary.ProgramId == programId &&
                                                                summary.Status == "open"))
             {
-                var campaign = await reader.HydrateAsync(new PolicyDistributionCampaign(tenantId,
-                    summary.CampaignId), ct).ConfigureAwait(false);
-                if (!campaign.IsLaunched || campaign.ProgramId != programId)
-                    continue;
-                foreach (var person in campaign.Participants(today, null)
+                var loaded = await campaignSource.ReadAsync(tenantId, programId, summary.CampaignId, ct)
+                    .ConfigureAwait(false);
+                if (!loaded.IsSuccess)
+                {
+                    if (loaded.Error.Kind == RequestErrorKind.NotFound)
+                        continue;
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(loaded.Error);
+                }
+
+                var campaign = loaded.Value;
+                foreach (var person in campaign.ParticipantViews(today, null)
                              .Where(person => person.State is "pending" or "overdue" && resolved.Add(person.PersonId)))
                 {
                     var record = await reader.HydrateAsync(new Person(tenantId, person.PersonId), ct)
@@ -75,14 +81,15 @@ static class PolicyCampaignWork
             : Result<IReadOnlyList<WorkCandidate>>.Failure(confirmed.Error);
     }
 
-    public static IReadOnlyList<WorkCandidate> Candidates(PolicyDistributionCampaign campaign, DateOnly today,
+    internal static IReadOnlyList<WorkCandidate> Candidates(CampaignState state, DateOnly today,
         IReadOnlyDictionary<Uuid, Uuid> memberByPerson,
         IReadOnlyDictionary<Uuid, PolicyAcknowledgementPersonSnapshot>? people = null)
     {
-        if (!campaign.IsLaunched || campaign.IsClosed || campaign.Subject is not { } subject)
+        var campaign = state.Campaign;
+        if (!campaign.IsLaunched || campaign.IsSealed || campaign.Subject is not { } subject)
             return [];
         var candidates = new List<WorkCandidate>();
-        foreach (var person in campaign.Participants(today, null)
+        foreach (var person in state.ParticipantViews(today, null)
                      .Where(static person => person.State is "pending" or "overdue"))
         {
             var member = memberByPerson.TryGetValue(person.PersonId, out var memberId) ? memberId : (Uuid?)null;

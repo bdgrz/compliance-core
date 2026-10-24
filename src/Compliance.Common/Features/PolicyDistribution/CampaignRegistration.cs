@@ -2,4 +2,5 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.PolicyDistribution;
 
-public sealed record CampaignRegistration(Uuid CampaignId, int AudienceCount);
+/// <summary>The launched campaign, its frozen audience size and its logical revision.</summary>
+public sealed record CampaignRegistration(Uuid CampaignId, int AudienceCount, long Revision);
