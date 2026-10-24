@@ -1,61 +1,142 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Providers;
 
-/// <summary>Links a still-active, existing R1-07 decision; it never changes gap state.</summary>
-public sealed class LinkProviderCoverageGapRiskAcceptanceHandler(
-    IAggregateExecutor executor, IAggregateReader reader,
-    ProviderReadConsistency providerConsistency, TimeProvider clock)
-    : IRequestHandler<LinkProviderCoverageGapRiskAcceptance, ProviderCoverageGapRegistration>
+/// <summary>
+///     Admits a link to an existing, still-active R1-07 acceptance as the root fact of the gap owner, then answers
+///     202. The gap serializes the open check, the exact expected revision and the uniqueness of the (risk,
+///     acceptance) pair; the active acceptance is proven at this admission instant. The immutable
+///     <see cref="ProviderRiskAcceptance" /> is materialized afterwards by the independent child process and never
+///     changes the gap. The command id is the logical identity and the link id.
+/// </summary>
+public sealed class LinkProviderCoverageGapRiskAcceptanceHandler(NativeOperationExecutor operations,
+    IAggregateReader reader, AssuranceReferences references, ProviderReadConsistency providerConsistency,
+    ISourceFactResolver resolver, IImmutableContentStore content, TimeProvider clock)
+    : IRequestHandler<LinkProviderCoverageGapRiskAcceptance, OperationAcceptedResponse>
 {
-    public async ValueTask<Result<ProviderCoverageGapRegistration>> HandleAsync(
+    const string CommandKind = nameof(LinkProviderCoverageGapRiskAcceptance);
+
+    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
         IRequestContext<LinkProviderCoverageGapRiskAcceptance> context, CancellationToken ct)
     {
         var request = context.Request;
-        var source = await reader.HydrateAsync(new ProviderAssuranceRegister(request.TenantId), ct)
-            .ConfigureAwait(false);
-        var content = new ProviderCoverageGapRiskAcceptanceContent(request.ProgramId,
-            request.RiskId, request.AcceptanceId);
-        if (source.CheckCoverageGapRiskAcceptanceRetry(request.GapId, context.RequestId,
-                request.ExpectedRevision, content) is { } retry)
-            return retry;
-        if (ProviderCoverageGapRules.RiskAcceptanceInputError(content) is { } inputError)
-            return Result<ProviderCoverageGapRegistration>.Failure(new RequestError(
-                RequestErrorKind.Validation, inputError));
-        if (source.CoverageGap(request.GapId) is not { } gap ||
-            gap.TenantId != request.TenantId || gap.ProviderId != request.ProviderId)
-            return Result<ProviderCoverageGapRegistration>.Failure(new RequestError(
-                RequestErrorKind.NotFound, "The provider coverage gap was not found."));
+        if (request.CommandId == Uuid.Empty || request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
+            request.ProviderId == Uuid.Empty || request.GapId == Uuid.Empty || request.RiskId == Uuid.Empty ||
+            request.AcceptanceId == Uuid.Empty || request.ExpectedGapRevision < 1)
+            return Fail(RequestErrorKind.Validation,
+                "A provider coverage gap risk acceptance link requires program, risk, acceptance and gap identities and the expected gap revision.");
+        var actor = ProviderActor.From(context);
+        var now = clock.GetUtcNow();
+        var provenance = Owner(request).Provenance(request.CommandId, CommandKind, actor,
+            ProviderAssuranceGap.PairEpisode(request.RiskId, request.AcceptanceId),
+            (ulong)request.ExpectedGapRevision, AuthoredIntentDigest.Compute(request), now);
+        var binding = AcceptedOperationBinding.Of(provenance);
+        var prior = await reader.HydrateAsync(Owner(request), ct).ConfigureAwait(false);
+        FirstResponseDescriptor? response = null;
+        ImmutableContentRef? intent = null;
+        if (prior.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        {
+            var frozen = await FreezeAsync(request, prior, provenance, now, ct).ConfigureAwait(false);
+            if (!frozen.IsSuccess)
+                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
+            (intent, response) = frozen.Value;
+        }
+        var accepted = await operations.ExecuteAsync(new NativeOperation<ProviderAssuranceGap>(binding,
+            () => Owner(request), owner => owner.Acceptance,
+            owner =>
+            {
+                var checkedLink = owner.PrepareAdmitLink(request.ExpectedGapRevision, request.RiskId,
+                    request.AcceptanceId);
+                return checkedLink.IsSuccess && response is not null
+                    ? Result<FirstResponseDescriptor>.Success(response)
+                    : Result<FirstResponseDescriptor>.Failure(checkedLink.IsSuccess
+                        ? AcceptedAppendResult.ConflictError
+                        : checkedLink.Error!);
+            },
+            (ProviderAssuranceGap owner, ImmutableContentRef acknowledgment) => owner.AdmitLink(provenance,
+                request.ExpectedGapRevision, request.RiskId, request.AcceptanceId, intent!, acknowledgment)),
+            context, ct).ConfigureAwait(false);
+        return await ProviderAssuranceContent.ReadFirstResponseAsync<OperationAcceptedResponse>(content,
+            request.TenantId, ProviderAssuranceContent.AcceptedSchema, accepted, ct).ConfigureAwait(false);
+    }
 
-        var provider = await providerConsistency.GetRevisionAsync(request.TenantId,
-            request.ProviderId, gap.ProviderRevision, ct).ConfigureAwait(false);
+    async ValueTask<Result<(ImmutableContentRef Intent, FirstResponseDescriptor Response)>> FreezeAsync(
+        LinkProviderCoverageGapRiskAcceptance request, ProviderAssuranceGap gap, OperationProvenance provenance,
+        DateTimeOffset now, CancellationToken ct)
+    {
+        var current = await references.ProviderAsync(request.TenantId, request.ProviderId, ct).ConfigureAwait(false);
+        if (!current.IsSuccess)
+            return Failed(current.Error);
+        var prepared = gap.PrepareAdmitLink(request.ExpectedGapRevision, request.RiskId, request.AcceptanceId);
+        if (!prepared.IsSuccess)
+            return Failed(prepared.Error!);
+        if (gap.Recorded!.ProviderId != request.ProviderId)
+            return Failed(new RequestError(RequestErrorKind.NotFound, "The provider coverage gap was not found."));
+        ProviderCoverageGapContent recorded;
+        try
+        {
+            recorded = await ProviderAssuranceContent.ReadAsync<ProviderCoverageGapContent>(content, request.TenantId,
+                gap.Recorded.ContentContent, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Failed(new RequestError(RequestErrorKind.Conflict,
+                $"The recorded provider coverage gap cannot be verified: {exception.Message}", true));
+        }
+        var provider = await providerConsistency.GetRevisionAsync(request.TenantId, request.ProviderId,
+            gap.Recorded.ProviderRevision, ct).ConfigureAwait(false);
         if (!provider.IsSuccess)
-            return Result<ProviderCoverageGapRegistration>.Failure(provider.Error);
-        if (AssuranceReferences.ServiceError(provider.Value, gap.Content.ServiceId,
-                request.ProgramId) is { } serviceError)
-            return Result<ProviderCoverageGapRegistration>.Failure(serviceError);
-
+            return Failed(provider.Error);
+        if (AssuranceReferences.ServiceError(provider.Value, recorded.ServiceId, request.ProgramId) is { } serviceError)
+            return Failed(serviceError);
         var draft = await reader.HydrateAsync(new RiskDraft(request.TenantId, request.RiskId), ct)
             .ConfigureAwait(false);
         if (!draft.IsCreated || draft.ProgramId != request.ProgramId)
-            return Result<ProviderCoverageGapRegistration>.Failure(new RequestError(
-                RequestErrorKind.NotFound, "The risk was not found in this program."));
+            return Failed(new RequestError(RequestErrorKind.NotFound, "The risk was not found in this program."));
         var risk = await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RiskId), ct)
             .ConfigureAwait(false);
-        var acceptance = risk.ProgramId == request.ProgramId
-            ? risk.FindAcceptance(request.AcceptanceId)
-            : null;
-        var now = clock.GetUtcNow();
-        if (acceptance is null || acceptance.AcceptedAt > now || acceptance.ExpiresAt <= now)
-            return Result<ProviderCoverageGapRegistration>.Failure(new RequestError(
-                RequestErrorKind.Conflict,
+        var acceptance = risk.ProgramId == request.ProgramId ? risk.FindAcceptance(request.AcceptanceId) : null;
+        if (acceptance is null || risk.AcceptanceFact(request.AcceptanceId) is not { } fact ||
+            acceptance.AcceptedAt > now || acceptance.ExpiresAt <= now)
+            return Failed(new RequestError(RequestErrorKind.Conflict,
                 "The risk acceptance is missing, expired, or not active."));
-
-        var actor = ProviderActor.From(context);
-        return await executor.ExecuteAsync(new ProviderAssuranceRegister(request.TenantId), register =>
-            AggregateOutcome.CommitOnSuccess(register.LinkCoverageGapRiskAcceptance(
-                request.GapId, request.ProviderId, context.RequestId, request.ExpectedRevision,
-                content, acceptance.ExpiresAt, actor, now)), context, ct).ConfigureAwait(false);
+        SourceFactProof<RiskAccepted> proof;
+        try
+        {
+            (proof, _, _) = await SourceFactProofs.BuildAsync<RiskAccepted>(resolver, content,
+                ProviderAssuranceContent.Realm(request.TenantId), NativeFactReference.Of(risk.Stream, fact), ct)
+                .ConfigureAwait(false);
+        }
+        catch (SourceFactVerificationException exception)
+        {
+            return Failed(new RequestError(RequestErrorKind.Conflict,
+                $"The risk acceptance cannot be proven yet: {exception.Message}", true));
+        }
+        var header = new DurableIntentHeader(request.CommandId, provenance.Owner, provenance.Owner, provenance.Owner,
+            provenance.Actor, provenance.Episode, provenance.OriginalExpectedRevision, provenance.AuthoredIntentSha256,
+            now);
+        var intent = await ProviderAssuranceContent.WriteAsync(content, request.TenantId,
+            ProviderRiskLinkIntent.Schema, new ProviderRiskLinkIntent(header, request.CommandId, request.ProviderId,
+                request.GapId, (ulong)(gap.Revision + 1), request.ProgramId, request.RiskId, request.AcceptanceId,
+                proof, acceptance.ExpiresAt, (ulong)gap.Recorded.ProviderRevision, recorded.ServiceId, now), ct)
+            .ConfigureAwait(false);
+        var response = await ProviderAssuranceContent.AcceptedAsync(content, request.TenantId, request.CommandId, now,
+            ct).ConfigureAwait(false);
+        return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Success((intent, response));
     }
+
+    static Result<(ImmutableContentRef, FirstResponseDescriptor)> Failed(RequestError error) =>
+        Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(error);
+
+    static ProviderAssuranceGap Owner(LinkProviderCoverageGapRiskAcceptance request) =>
+        new(request.TenantId, request.ProviderId, request.GapId, request.CommandId);
+
+    static Result<OperationAcceptedResponse> Fail(RequestErrorKind kind, string message) =>
+        Result<OperationAcceptedResponse>.Failure(new RequestError(kind, message));
 }

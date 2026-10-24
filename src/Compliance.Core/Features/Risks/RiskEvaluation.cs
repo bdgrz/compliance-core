@@ -22,6 +22,7 @@ public sealed class RiskEvaluation : Aggregate
     readonly Uuid _tenantId;
     readonly List<RiskAssessmentView> _assessments = [];
     readonly List<RiskAcceptanceView> _acceptances = [];
+    readonly Dictionary<Uuid, RiskAccepted> _acceptanceFacts = [];
     ActorReference? _lastChangedBy;
     DateTimeOffset? _lastChangedAt;
 
@@ -48,8 +49,12 @@ public sealed class RiskEvaluation : Aggregate
         {
             Apply(ev.ProgramId, ev.Revision, ev.Acceptance.Approver, ev.Acceptance.AcceptedAt);
             _acceptances.Add(ev.Acceptance);
+            _acceptanceFacts[ev.Acceptance.AcceptanceId] = ev;
         });
     }
+
+    /// <summary>The committed fact that recorded one acceptance, so a dependent can prove the exact source.</summary>
+    public RiskAccepted? AcceptanceFact(Uuid acceptanceId) => _acceptanceFacts.GetValueOrDefault(acceptanceId);
 
     public RiskAssessmentView? Latest(string phase) =>
         _assessments.LastOrDefault(assessment => assessment.Phase == phase);

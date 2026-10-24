@@ -47,10 +47,11 @@ public sealed class ProviderAssuranceE2ETests(BrokerStackFixture broker)
         var periodEnd = today.AddDays(-60);
 
         // Act
-        using var recorded = await owner.PostAsJsonAsync($"{path}/assurance-reports", new { content = Report(periodEnd, "Example Assurance LLP") });
+        var reportId = Guid.NewGuid();
+        using var recorded = await owner.PutAsJsonAsync($"{path}/assurance-reports/{reportId}", new { content = Report(periodEnd, "Example Assurance LLP") });
         Assert.Equal(HttpStatusCode.OK, recorded.StatusCode);
-        var reportId = (await recorded.Content.ReadFromJsonAsync<ReportRegistration>())!.ReportId;
-        using var review = await owner.PostAsJsonAsync($"{path}/reviews", new
+        Assert.Equal(reportId, (await recorded.Content.ReadFromJsonAsync<ReportRegistration>())!.ReportId);
+        using var review = await owner.PutAsJsonAsync($"{path}/reviews/{Guid.NewGuid()}", new
         {
             content = new
             {
@@ -62,13 +63,14 @@ public sealed class ProviderAssuranceE2ETests(BrokerStackFixture broker)
                 assurance_report_id = reportId,
             },
         });
-        Assert.Equal(HttpStatusCode.OK, review.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, review.StatusCode);
         await WaitForListAsync(owner, $"{path}/assurance-reports", 1);
         await WaitForListAsync(owner, $"{path}/reviews", 1);
         if (worker is not null)
             await worker.StopAsync();
-        using var revised = await owner.PutAsJsonAsync($"{path}/assurance-reports/{reportId}", new
+        using var revised = await owner.PutAsJsonAsync($"{path}/assurance-reports/revise-assurance-report/{Guid.NewGuid()}", new
         {
+            report_id = reportId,
             expected_revision = 1,
             content = Report(periodEnd, "Renamed Assurance LLP"),
         });

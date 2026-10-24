@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Providers;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization.Metadata;
 
@@ -54,6 +55,9 @@ public static class ResultSchemaRegistry
         [UnitResult.Schema] = ComplianceCoreJsonContext.Default.UnitResult,
         ["location-registration.v1"] = ComplianceCoreJsonContext.Default.LocationRegistration,
         ["operational-process-registration.v1"] = ComplianceCoreJsonContext.Default.OperationalProcessRegistration,
+        [ProviderAssuranceContent.ReportRegistrationSchema] = ComplianceCoreJsonContext.Default.AssuranceReportRegistration,
+        [ProviderAssuranceContent.GapRegistrationSchema] = ComplianceCoreJsonContext.Default.ProviderCoverageGapRegistration,
+        [ProviderAssuranceContent.ReviewRegistrationSchema] = ComplianceCoreJsonContext.Default.ProviderReviewRegistration,
     };
 
     /// <summary>Registered schema names.</summary>

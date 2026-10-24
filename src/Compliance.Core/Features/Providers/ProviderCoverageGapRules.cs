@@ -64,13 +64,6 @@ public static class ProviderCoverageGapRules
             Rationale = content.Rationale.Trim(),
         };
 
-    public static string? RiskAcceptanceInputError(
-        ProviderCoverageGapRiskAcceptanceContent? content) =>
-        content is null || content.ProgramId == Uuid.Empty || content.RiskId == Uuid.Empty ||
-        content.AcceptanceId == Uuid.Empty
-            ? "A provider coverage gap risk acceptance link requires program, risk and acceptance identities."
-            : null;
-
     public static ProviderCoverageGapView Redact(ProviderCoverageGapView view) => view with
     {
         Content = view.Content with { Description = "[redacted]" },

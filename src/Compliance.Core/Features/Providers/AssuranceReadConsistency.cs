@@ -33,7 +33,7 @@ public sealed class AssuranceReadConsistency(IAssuranceReader directory, IDomain
         ProjectionCheckpoint checkpoint, CancellationToken ct)
     {
         await using var pending = events.ReadAsync(EventStreamPattern.ForPattern(
-            tenantId.ToString(), ProviderAssuranceRegister.Area), checkpoint.Cursor, ct)
+            tenantId.ToString(), ProviderAssuranceStreams.Area), checkpoint.Cursor, ct)
             .GetAsyncEnumerator(ct);
         return await pending.MoveNextAsync().ConfigureAwait(false);
     }

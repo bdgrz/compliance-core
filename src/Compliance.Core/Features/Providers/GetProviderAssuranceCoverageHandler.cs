@@ -2,8 +2,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Providers;
 
-/// <summary>Evaluates from the authoritative streams, so the result never lags a projection.</summary>
-public sealed class GetProviderAssuranceCoverageHandler(IAggregateReader reader, AssuranceReferences references,
+/// <summary>
+///     Evaluates the complete report and review history of the provider from the assurance directory. The read
+///     fails closed and transient while the directory is behind its source, so it never evaluates a partial history.
+/// </summary>
+public sealed class GetProviderAssuranceCoverageHandler(AssuranceHistoryReader history, AssuranceReferences references,
     TimeProvider clock) : IRequestHandler<GetProviderAssuranceCoverage, ProviderAssuranceCoverageView>
 {
     public async ValueTask<Result<ProviderAssuranceCoverageView>> HandleAsync(
@@ -13,9 +16,11 @@ public sealed class GetProviderAssuranceCoverageHandler(IAggregateReader reader,
         var provider = await references.ProviderAsync(request.TenantId, request.ProviderId, ct).ConfigureAwait(false);
         if (!provider.IsSuccess)
             return Result<ProviderAssuranceCoverageView>.Failure(provider.Error);
-        var source = await reader.HydrateAsync(new ProviderAssuranceRegister(request.TenantId), ct).ConfigureAwait(false);
+        var source = await history.ReadAsync(request.TenantId, request.ProviderId, ct).ConfigureAwait(false);
+        if (!source.IsSuccess)
+            return Result<ProviderAssuranceCoverageView>.Failure(source.Error);
         var asOf = request.AsOf ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         return Result<ProviderAssuranceCoverageView>.Success(ProviderAssuranceCoverage.Evaluate(provider.Value,
-            source.Reports(request.ProviderId), source.Reviews(request.ProviderId), asOf));
+            source.Value.Reports, source.Value.Reviews, asOf));
     }
 }

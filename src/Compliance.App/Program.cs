@@ -1744,12 +1744,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListProviderRevisions, Page<ProviderView>>("/api/v1/tenants/{tenant_id}/providers/{provider_id}/revisions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
-    app.MapPortiaPost<RecordAssuranceReport, AssuranceReportRegistration>(
-            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports")
+    app.MapPortiaPut<RecordAssuranceReport, AssuranceReportRegistration>(
+            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports/{report_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
     app.MapPortiaPut<ReviseAssuranceReport, AssuranceReportRegistration>(
-            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports/{report_id}")
+            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports/revise-assurance-report/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
     app.MapPortiaGet<ListProviderAssuranceReports, Page<AssuranceReportView>>(
@@ -1757,26 +1757,46 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
     // Personal sign-off: HTTP-only, deliberately not an MCP tool.
-    app.MapPortiaPost<RecordProviderReview, ProviderReviewRegistration>(
-            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/reviews")
+    app.MapPortiaPut<RecordProviderReview, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/reviews/{review_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
     app.MapPortiaGet<ListProviderReviews, Page<ProviderReviewView>>(
             "/api/v1/tenants/{tenant_id}/providers/{provider_id}/reviews")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
-    app.MapPortiaPost<RecordProviderCoverageGap, ProviderCoverageGapRegistration>(
-            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps")
+    app.MapPortiaPut<RecordProviderCoverageGap, ProviderCoverageGapRegistration>(
+            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
     // Coverage-restored closure is an attributed decision and remains HTTP-only.
     app.MapPortiaPut<CloseProviderCoverageGap, ProviderCoverageGapRegistration>(
-            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}")
+            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/close-provider-coverage-gap/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
     // Linking a personal R1-07 acceptance is an authenticated HTTP decision.
-    app.MapPortiaPut<LinkProviderCoverageGapRiskAcceptance, ProviderCoverageGapRegistration>(
-            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances")
+    app.MapPortiaPut<LinkProviderCoverageGapRiskAcceptance, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances/link-provider-coverage-gap-risk-acceptance/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
     app.MapPortiaGet<GetProviderCoverageGap, ProviderCoverageGapView>(

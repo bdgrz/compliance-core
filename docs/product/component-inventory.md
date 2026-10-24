@@ -1887,8 +1887,11 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Providers
 
-- [ProviderAssuranceRegister](../../src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs#L13)
+- [ProviderAssuranceGap](../../src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs)
+- [ProviderAssuranceReport](../../src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs)
+- [ProviderAssuranceReview](../../src/Compliance.Core/Features/Providers/ProviderAssuranceReview.cs)
 - [ProviderRegister](../../src/Compliance.Core/Features/Providers/ProviderRegister.cs#L9)
+- [ProviderRiskAcceptance](../../src/Compliance.Core/Features/Providers/ProviderRiskAcceptance.cs)
 
 #### Readiness
 

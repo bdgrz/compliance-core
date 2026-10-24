@@ -37,6 +37,8 @@ sealed class DirectoryReadinessSourceReader(IBoundaryDirectoryReader boundaries,
 {
     public const int MaximumRecordsPerFamily = 500;
     const int PageSize = 200;
+    /// <summary>The readiness read's own bound per provider and family; it reports truncation and limits no writer.</summary>
+    const int MaximumAssuranceRecordsPerProvider = 200;
     const string WorkforceRosterSnapshotKind = "workforce_roster";
 
     public async ValueTask<Result<ReadinessSourceSet>> ReadAsync(Uuid tenantId, Uuid programId,
@@ -475,7 +477,7 @@ sealed class DirectoryReadinessSourceReader(IBoundaryDirectoryReader boundaries,
 
             var reviews = await ReadBoundedAsync((cursor, token) =>
                     assurance.ListReviewsAsync(tenantId, provider.ProviderId, PageSize, cursor, token),
-                ProviderAssuranceRegister.MaximumRecordsPerProvider, ct).ConfigureAwait(false);
+                MaximumAssuranceRecordsPerProvider, ct).ConfigureAwait(false);
             if (reviews.Truncated)
             {
                 if (!truncated.Contains("providers", StringComparer.Ordinal))
@@ -485,7 +487,7 @@ sealed class DirectoryReadinessSourceReader(IBoundaryDirectoryReader boundaries,
                 .Where(review => review.RecordedAt <= asOf).ToArray();
             var coverageGaps = await ReadBoundedAsync((cursor, token) =>
                     assurance.ListCoverageGapsAsync(tenantId, provider.ProviderId, PageSize,
-                        cursor, token), ProviderAssuranceRegister.MaximumRecordsPerProvider, ct)
+                        cursor, token), MaximumAssuranceRecordsPerProvider, ct)
                 .ConfigureAwait(false);
             if (coverageGaps.Truncated && !truncated.Contains("providers", StringComparer.Ordinal))
                 truncated.Add("providers");
@@ -506,8 +508,8 @@ sealed class DirectoryReadinessSourceReader(IBoundaryDirectoryReader boundaries,
                 if (review.Content.AssuranceReportId is not { } reportId ||
                     review.AssuranceReportRevision is not { } revision)
                     continue;
-                var report = await assurance.GetReportRevisionAsync(tenantId, reportId,
-                    revision, ct).ConfigureAwait(false);
+                var report = await assurance.GetReportRevisionAsync(tenantId, provider.ProviderId,
+                    reportId, revision, ct).ConfigureAwait(false);
                 if (report is { } retained && retained.ProviderId == provider.ProviderId &&
                     retained.RecordedAt <= asOf)
                     reports[(reportId, revision)] = retained;

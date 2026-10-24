@@ -17,6 +17,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
 {
     const int PageSize = 200;
     const int MaximumEventsPerStream = 100_000;
+    const int MaximumAssuranceEvents = 1_000_000;
     const string DigestDomain = "bdgrz.snapshot.source.provider.v1\0";
 
     public string Family => "providers";
@@ -42,7 +43,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         var providerPattern = EventStreamPattern.ForPattern(engagement.TenantId.ToString(),
             Provider.Area);
         var assurancePattern = EventStreamPattern.ForPattern(engagement.TenantId.ToString(),
-            ProviderAssuranceRegister.Area);
+            ProviderAssuranceStreams.Area);
         if (await HasPendingSourceAsync(providerPattern, providerFence, ct).ConfigureAwait(false) ||
             await HasPendingSourceAsync(assurancePattern, assuranceFence, ct).ConfigureAwait(false))
             return BehindSource();
@@ -245,82 +246,71 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         Uuid tenantId, DateTimeOffset through,
         IReadOnlyDictionary<Uuid, ProviderHistory> providerHistories, CancellationToken ct)
     {
-        var stream = new EventStreamAddress(tenantId.ToString(), ProviderAssuranceRegister.Area,
-            tenantId.ToString());
+        var pattern = EventStreamPattern.ForPattern(tenantId.ToString(), ProviderAssuranceStreams.Area);
         var histories = new Dictionary<Uuid, ProviderAssuranceHistory>();
         var eventIds = new HashSet<Uuid>();
         var requestIds = new HashSet<Uuid>();
-        var expectedVersion = 1UL;
-        DateTimeOffset? priorRecordedAt = null;
-        var excluded = false;
+        var versions = new Dictionary<EventStreamAddress, ulong>();
+        var occurred = new Dictionary<EventStreamAddress, DateTimeOffset>();
+        var excluded = new HashSet<EventStreamAddress>();
         var count = 0;
-        await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
+        await foreach (var record in events.ReadAsync(pattern, ProjectionCheckpoint.Start.Cursor, ct)
+                           .ConfigureAwait(false))
         {
-            if (++count > MaximumEventsPerStream || record.Stream != stream ||
+            var stream = record.Stream;
+            if (++count > MaximumAssuranceEvents || stream.Realm != tenantId.ToString() ||
+                stream.Area != ProviderAssuranceStreams.Area ||
                 record.Event?.Metadata is not { } metadata || metadata.EventId == Uuid.Empty ||
-                !eventIds.Add(metadata.EventId) || metadata.AggregateId != tenantId ||
-                metadata.AggregateVersion != expectedVersion || metadata.OccurredOn == default ||
-                priorRecordedAt is { } prior && metadata.OccurredOn < prior ||
-                !TryAssuranceEvent(record.Event, tenantId, out var providerId,
-                    out var requestId, out var recordedAt) || recordedAt == default ||
-                !requestIds.Add(requestId) || !providerHistories.TryGetValue(providerId,
-                    out var providerHistory))
+                !eventIds.Add(metadata.EventId) ||
+                metadata.AggregateVersion != versions.GetValueOrDefault(stream) + 1 ||
+                metadata.OccurredOn == default ||
+                occurred.TryGetValue(stream, out var prior) && metadata.OccurredOn < prior)
+                return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
+            versions[stream] = metadata.AggregateVersion;
+            occurred[stream] = metadata.OccurredOn;
+
+            var resolved = await ResolveAssuranceFactAsync(record.Event, tenantId, ct).ConfigureAwait(false);
+            if (!resolved.IsSuccess)
+                return Result<Dictionary<Uuid, ProviderAssuranceHistory>>.Failure(resolved.Error!);
+            if (resolved.Value is not { } fact)
+                continue; // Technical process facts hold no business content.
+            if (fact.ProviderId == Uuid.Empty || fact.RecordedAt == default ||
+                !requestIds.Add(fact.RequestId) ||
+                !providerHistories.TryGetValue(fact.ProviderId, out var providerHistory))
                 return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
 
-            var providerRevision = ProviderRevisionFor(record.Event!);
-            var priorAssurance = histories.GetValueOrDefault(providerId);
-            if (providerRevision == 0 && priorAssurance is not null &&
-                record.Event is ProviderCoverageGapClosed closed)
-                providerRevision = priorAssurance.Current.ProviderRevisionForGap(closed.GapId);
-            else if (providerRevision == 0 && priorAssurance is not null &&
-                     record.Event is ProviderCoverageGapRiskAcceptanceLinked linked)
-                providerRevision = priorAssurance.Current.ProviderRevisionForGap(linked.GapId);
+            var providerRevision = fact.ProviderRevision;
+            var priorAssurance = histories.GetValueOrDefault(fact.ProviderId);
+            if (providerRevision == 0 && priorAssurance is not null)
+                providerRevision = priorAssurance.Current.ProviderRevisionForGap(fact.GapId);
             var observed = providerHistory!.GetRevision(providerRevision);
-            if (observed is null || observed.RecordedAt > recordedAt ||
-                !TryAssuranceActor(record.Event!, out var actor) || !ValidMemberActor(actor))
+            if (observed is null || observed.RecordedAt > fact.RecordedAt || !ValidMemberActor(fact.Actor))
                 return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
 
-            if (!histories.TryGetValue(providerId, out var history))
+            if (!histories.TryGetValue(fact.ProviderId, out var history))
             {
                 history = new ProviderAssuranceHistory();
-                histories.Add(providerId, history);
+                histories.Add(fact.ProviderId, history);
             }
-            if (!history.Current.Apply(record.Event!, observed))
+            if (!history.Current.Apply(fact, observed))
                 return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
 
-            var isAsOf = recordedAt <= through && metadata.OccurredOn <= through;
+            var isAsOf = fact.RecordedAt <= through && metadata.OccurredOn <= through;
             if (isAsOf)
             {
-                if (excluded || !history.AsOf.Apply(record.Event!, observed))
+                if (excluded.Contains(stream) || !history.AsOf.Apply(fact, observed))
                     return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
-                history.AsOf.Events.Add(SerializeEvent(record.Event!,
-                    ProviderAssuranceRegister.Area, tenantId, metadata));
+                history.AsOf.Events.Add(SerializeFact(fact, stream.Resource, metadata));
             }
             else
-                excluded = true;
-
-            priorRecordedAt = metadata.OccurredOn;
-            expectedVersion++;
+                excluded.Add(stream);
         }
 
-        var source = await reader.HydrateAsync(new ProviderAssuranceRegister(tenantId), ct)
-            .ConfigureAwait(false);
         foreach (var providerId in providerHistories.Keys.OrderBy(static id => id.ToString(),
                      StringComparer.Ordinal))
         {
             var history = histories.GetValueOrDefault(providerId) ??
                 new ProviderAssuranceHistory();
-            if (!SameJsonSequence(source.Reports(providerId), history.Current.Reports,
-                    ComplianceCoreJsonContext.Default.AssuranceReportView,
-                    static item => item.ReportId) ||
-                !SameJsonSequence(source.Reviews(providerId), history.Current.Reviews,
-                    ComplianceCoreJsonContext.Default.ProviderReviewView,
-                    static item => item.ReviewId) ||
-                !SameJsonSequence(source.CoverageGaps(providerId), history.Current.CoverageGaps,
-                    ComplianceCoreJsonContext.Default.ProviderCoverageGapView,
-                    static item => item.GapId))
-                return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
-
             var reports = await ListAllAsync((limit, cursor, token) =>
                     assurance.ListReportsAsync(tenantId, providerId, limit, cursor, token),
                 item => item.TenantId == tenantId && item.ReportId != Uuid.Empty &&
@@ -350,7 +340,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
 
             foreach (var reportRevision in history.Current.ReportRevisions)
             {
-                var retained = await assurance.GetReportRevisionAsync(tenantId,
+                var retained = await assurance.GetReportRevisionAsync(tenantId, providerId,
                     reportRevision.ReportId, reportRevision.Revision, ct).ConfigureAwait(false);
                 if (retained is null || !SameJson(retained, reportRevision,
                         ComplianceCoreJsonContext.Default.AssuranceReportView))
@@ -358,7 +348,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
             }
             foreach (var gap in history.Current.CoverageGaps)
             {
-                var retained = await assurance.GetCoverageGapAsync(tenantId, gap.GapId, ct)
+                var retained = await assurance.GetCoverageGapAsync(tenantId, providerId, gap.GapId, ct)
                     .ConfigureAwait(false);
                 if (retained is null || !SameJson(retained, gap,
                         ComplianceCoreJsonContext.Default.ProviderCoverageGapView))
@@ -366,6 +356,110 @@ public sealed class ProviderTypeIBaselineSourceContributor(
             }
         }
         return Result<Dictionary<Uuid, ProviderAssuranceHistory>>.Success(histories);
+    }
+
+    /// <summary>
+    ///     Resolves one assurance fact together with its verified immutable content. A technical process fact
+    ///     resolves to null; an unknown fact or content that cannot be verified invalidates the history.
+    /// </summary>
+    async ValueTask<Result<AssuranceFact?>> ResolveAssuranceFactAsync(DomainEvent domainEvent, Uuid tenantId,
+        CancellationToken ct)
+    {
+        Task<T> Read<T>(Uuid realm, ImmutableContentRef reference) where T : notnull =>
+            contentStore.ReadJsonAsync<T>(realm.ToString(), reference, ct);
+        try
+        {
+            switch (domainEvent)
+            {
+                case AssuranceReportRecorded ev when ev.TenantId == tenantId:
+                    return Fact(new AssuranceFact(ev, ev.ProviderId, Uuid.Empty, ev.RequestId, ev.RecordedAt,
+                        ev.ProviderRevision, ev.Actor, await Read<AssuranceReportContent>(tenantId, ev.ContentContent)
+                            .ConfigureAwait(false)));
+                case AssuranceReportRevised ev when ev.TenantId == tenantId:
+                    return Fact(new AssuranceFact(ev, ev.ProviderId, Uuid.Empty, ev.RequestId, ev.RecordedAt,
+                        ev.ProviderRevision, ev.Actor, await Read<AssuranceReportContent>(tenantId, ev.ContentContent)
+                            .ConfigureAwait(false)));
+                case ProviderReviewRecorded ev when ev.TenantId == tenantId:
+                    return Fact(new AssuranceFact(ev, ev.ProviderId, Uuid.Empty, ev.RequestId, ev.RecordedAt,
+                        ev.ProviderRevision, ev.Actor, await Read<ProviderReviewContent>(tenantId, ev.ContentContent)
+                            .ConfigureAwait(false)));
+                case ProviderCoverageGapRecorded ev when ev.TenantId == tenantId:
+                    return Fact(new AssuranceFact(ev, ev.ProviderId, ev.GapId, ev.RequestId, ev.RecordedAt,
+                        ev.ProviderRevision, ev.Actor, await Read<ProviderCoverageGapContent>(tenantId,
+                            ev.ContentContent).ConfigureAwait(false)));
+                case ProviderCoverageGapClosed ev when ev.TenantId == tenantId:
+                    return Fact(new AssuranceFact(ev, ev.ProviderId, ev.GapId, ev.RequestId, ev.ClosedAt, 0,
+                        ev.Actor, await Read<ProviderCoverageGapClosureContent>(tenantId, ev.ContentContent)
+                            .ConfigureAwait(false)));
+                case ProviderCoverageGapRiskAcceptanceAdmitted ev when ev.Owner.Realm == tenantId.ToString():
+                    var intent = await Read<ProviderRiskLinkIntent>(tenantId, ev.Intent).ConfigureAwait(false);
+                    return Fact(new AssuranceFact(ev, intent.ProviderId, intent.GapId, intent.LinkId,
+                        intent.LinkedAt, 0, ev.Operation.Actor, intent));
+                case ProviderCoverageGapRiskAcceptanceLinked ev when ev.TenantId == tenantId:
+                    var link = await Read<ProviderCoverageGapRiskAcceptanceView>(tenantId, ev.AcceptanceContent)
+                        .ConfigureAwait(false);
+                    return Fact(new AssuranceFact(ev, ev.ProviderId, ev.GapId, ev.RequestId, link.LinkedAt, 0,
+                        link.LinkedBy, link));
+                case ProviderReviewRequested or ProviderReviewCanceled or
+                    ProviderAssuranceReportProviderReviewUseAuthorized or
+                    ProviderAssuranceReportProviderReviewUseSettled:
+                    return Result<AssuranceFact?>.Success(null);
+                default:
+                    return InvalidHistory<AssuranceFact?>();
+            }
+        }
+        catch (ImmutableContentIntegrityException)
+        {
+            return InvalidHistory<AssuranceFact?>();
+        }
+    }
+
+    static Result<AssuranceFact?> Fact(AssuranceFact fact) => Result<AssuranceFact?>.Success(fact);
+
+    static ProviderSourceEvent SerializeFact(AssuranceFact fact, string resource, DomainEventMetadata metadata)
+    {
+        var json = ComplianceCoreJsonContext.Default;
+        var (kind, domain, content) = fact.Event switch
+        {
+            AssuranceReportRecorded ev => ("assurance_report_recorded",
+                JsonSerializer.SerializeToElement(ev, json.AssuranceReportRecorded),
+                JsonSerializer.SerializeToElement((AssuranceReportContent)fact.Content, json.AssuranceReportContent)),
+            AssuranceReportRevised ev => ("assurance_report_revised",
+                JsonSerializer.SerializeToElement(ev, json.AssuranceReportRevised),
+                JsonSerializer.SerializeToElement((AssuranceReportContent)fact.Content, json.AssuranceReportContent)),
+            ProviderReviewRecorded ev => ("provider_review_recorded",
+                JsonSerializer.SerializeToElement(ev, json.ProviderReviewRecorded),
+                JsonSerializer.SerializeToElement((ProviderReviewContent)fact.Content, json.ProviderReviewContent)),
+            ProviderCoverageGapRecorded ev => ("provider_coverage_gap_recorded",
+                JsonSerializer.SerializeToElement(ev, json.ProviderCoverageGapRecorded),
+                JsonSerializer.SerializeToElement((ProviderCoverageGapContent)fact.Content,
+                    json.ProviderCoverageGapContent)),
+            ProviderCoverageGapClosed ev => ("provider_coverage_gap_closed",
+                JsonSerializer.SerializeToElement(ev, json.ProviderCoverageGapClosed),
+                JsonSerializer.SerializeToElement((ProviderCoverageGapClosureContent)fact.Content,
+                    json.ProviderCoverageGapClosureContent)),
+            ProviderCoverageGapRiskAcceptanceAdmitted ev => ("provider_coverage_gap_risk_acceptance_admitted",
+                JsonSerializer.SerializeToElement(ev, json.ProviderCoverageGapRiskAcceptanceAdmitted),
+                JsonSerializer.SerializeToElement((ProviderRiskLinkIntent)fact.Content, json.ProviderRiskLinkIntent)),
+            ProviderCoverageGapRiskAcceptanceLinked ev => ("provider_coverage_gap_risk_acceptance_linked",
+                JsonSerializer.SerializeToElement(ev, json.ProviderCoverageGapRiskAcceptanceLinked),
+                JsonSerializer.SerializeToElement((ProviderCoverageGapRiskAcceptanceView)fact.Content,
+                    json.ProviderCoverageGapRiskAcceptanceView)),
+            _ => throw new JsonException("The provider source stream contains an unknown event."),
+        };
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            writer.WritePropertyName("fact");
+            domain.WriteTo(writer);
+            writer.WritePropertyName("content");
+            content.WriteTo(writer);
+            writer.WriteEndObject();
+        }
+        using var document = JsonDocument.Parse(stream.ToArray());
+        return new ProviderSourceEvent(ProviderAssuranceStreams.Area, Uuid.Parse(resource, null),
+            metadata.EventId, metadata.AggregateVersion, metadata.OccurredOn, kind, document.RootElement.Clone());
     }
 
     static bool TryProviderEvent(DomainEvent domainEvent, Uuid tenantId, Uuid streamProviderId,
@@ -386,60 +480,6 @@ public sealed class ProviderTypeIBaselineSourceContributor(
                 (requestId, revision, content, actor, recordedAt) = (Uuid.Empty, 0, null!, null, default);
                 return false;
         }
-    }
-
-    static bool TryAssuranceEvent(DomainEvent domainEvent, Uuid tenantId,
-        out Uuid providerId, out Uuid requestId, out DateTimeOffset recordedAt)
-    {
-        switch (domainEvent)
-        {
-            case AssuranceReportRecorded ev:
-                (providerId, requestId, recordedAt) = (ev.ProviderId, ev.RequestId, ev.RecordedAt);
-                return ev.TenantId == tenantId;
-            case AssuranceReportRevised ev:
-                (providerId, requestId, recordedAt) = (ev.ProviderId, ev.RequestId, ev.RecordedAt);
-                return ev.TenantId == tenantId;
-            case ProviderReviewRecorded ev:
-                (providerId, requestId, recordedAt) = (ev.ProviderId, ev.RequestId, ev.RecordedAt);
-                return ev.TenantId == tenantId;
-            case ProviderCoverageGapRecorded ev:
-                (providerId, requestId, recordedAt) = (ev.ProviderId, ev.RequestId, ev.RecordedAt);
-                return ev.TenantId == tenantId;
-            case ProviderCoverageGapClosed ev:
-                (providerId, requestId, recordedAt) = (ev.ProviderId, ev.RequestId, ev.ClosedAt);
-                return ev.TenantId == tenantId;
-            case ProviderCoverageGapRiskAcceptanceLinked ev:
-                (providerId, requestId, recordedAt) = (ev.ProviderId, ev.RequestId,
-                    ev.Acceptance.LinkedAt);
-                return ev.TenantId == tenantId;
-            default:
-                (providerId, requestId, recordedAt) = (Uuid.Empty, Uuid.Empty, default);
-                return false;
-        }
-    }
-
-    static long ProviderRevisionFor(DomainEvent domainEvent) => domainEvent switch
-    {
-        AssuranceReportRecorded ev => ev.ProviderRevision,
-        AssuranceReportRevised ev => ev.ProviderRevision,
-        ProviderReviewRecorded ev => ev.ProviderRevision,
-        ProviderCoverageGapRecorded ev => ev.ProviderRevision,
-        _ => 0,
-    };
-
-    static bool TryAssuranceActor(DomainEvent domainEvent, out ActorReference? actor)
-    {
-        actor = domainEvent switch
-        {
-            AssuranceReportRecorded ev => ev.Actor,
-            AssuranceReportRevised ev => ev.Actor,
-            ProviderReviewRecorded ev => ev.Actor,
-            ProviderCoverageGapRecorded ev => ev.Actor,
-            ProviderCoverageGapClosed ev => ev.Actor,
-            ProviderCoverageGapRiskAcceptanceLinked ev => ev.Acceptance.LinkedBy,
-            _ => null,
-        };
-        return actor is not null;
     }
 
     static bool IsInScope(ProviderContent content, Uuid programId, DateTimeOffset through) =>
@@ -557,18 +597,6 @@ public sealed class ProviderTypeIBaselineSourceContributor(
                 json.ProviderRecorded), providerContent)),
             ProviderRevised ev => ("provider_revised", WithContent(JsonSerializer.SerializeToElement(ev,
                 json.ProviderRevised), providerContent)),
-            AssuranceReportRecorded ev => ("assurance_report_recorded",
-                JsonSerializer.SerializeToElement(ev, json.AssuranceReportRecorded)),
-            AssuranceReportRevised ev => ("assurance_report_revised",
-                JsonSerializer.SerializeToElement(ev, json.AssuranceReportRevised)),
-            ProviderReviewRecorded ev => ("provider_review_recorded",
-                JsonSerializer.SerializeToElement(ev, json.ProviderReviewRecorded)),
-            ProviderCoverageGapRecorded ev => ("provider_coverage_gap_recorded",
-                JsonSerializer.SerializeToElement(ev, json.ProviderCoverageGapRecorded)),
-            ProviderCoverageGapClosed ev => ("provider_coverage_gap_closed",
-                JsonSerializer.SerializeToElement(ev, json.ProviderCoverageGapClosed)),
-            ProviderCoverageGapRiskAcceptanceLinked ev => ("provider_coverage_gap_risk_acceptance_linked",
-                JsonSerializer.SerializeToElement(ev, json.ProviderCoverageGapRiskAcceptanceLinked)),
             _ => throw new JsonException("The provider source stream contains an unknown event."),
         };
         return new ProviderSourceEvent(area, aggregateId, metadata.EventId,
@@ -727,103 +755,116 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         public long ProviderRevisionForGap(Uuid gapId) =>
             _coverageGaps.TryGetValue(gapId, out var gap) ? gap.ProviderRevision : 0;
 
-        public bool Apply(DomainEvent domainEvent, ProviderView providerAtRecorded)
+        public bool Apply(AssuranceFact fact, ProviderView providerAtRecorded)
         {
-            switch (domainEvent)
+            switch (fact.Event)
             {
                 case AssuranceReportRecorded ev:
+                    var recordedContent = (AssuranceReportContent)fact.Content;
                     if (ev.ReportId == Uuid.Empty || ev.RequestId == Uuid.Empty ||
-                        ev.ProviderRevision < 1 || !ValidReportContent(ev.Content) ||
+                        ev.ProviderRevision < 1 || !ValidReportContent(recordedContent) ||
                         !ValidMemberActor(ev.Actor) || _reports.ContainsKey(ev.ReportId))
                         return false;
                     _reports.Add(ev.ReportId, new ReportHistory(MakeReport(ev.TenantId,
-                        ev.ReportId, ev.ProviderId, 1, ev.Content, ev.ProviderRevision,
+                        ev.ReportId, ev.ProviderId, 1, recordedContent, ev.ProviderRevision,
                         ev.Actor, ev.RecordedAt)));
                     return true;
                 case AssuranceReportRevised ev:
+                    var revisedContent = (AssuranceReportContent)fact.Content;
                     if (ev.ReportId == Uuid.Empty || ev.RequestId == Uuid.Empty ||
-                        ev.ProviderRevision < 1 || !ValidReportContent(ev.Content) ||
+                        ev.ProviderRevision < 1 || !ValidReportContent(revisedContent) ||
                         !ValidMemberActor(ev.Actor) || !_reports.TryGetValue(ev.ReportId,
                             out var report) || report.Current.ProviderId != ev.ProviderId ||
                         ev.Revision != report.Current.Revision + 1)
                         return false;
                     report.Add(MakeReport(ev.TenantId, ev.ReportId, ev.ProviderId,
-                        ev.Revision, ev.Content, ev.ProviderRevision, ev.Actor,
+                        ev.Revision, revisedContent, ev.ProviderRevision, ev.Actor,
                         ev.RecordedAt));
                     return true;
                 case ProviderReviewRecorded ev:
+                    var reviewContent = (ProviderReviewContent)fact.Content;
                     if (ev.ReviewId == Uuid.Empty || ev.RequestId == Uuid.Empty ||
-                        ev.ProviderRevision < 1 || !ValidReviewContent(ev.Content) ||
+                        ev.ProviderRevision < 1 || !ValidReviewContent(reviewContent) ||
                         !ValidMemberActor(ev.Actor) ||
                         ev.ProviderMateriality is not (null or "material" or "not_material") ||
                         ev.ProviderMateriality != providerAtRecorded.Content.Materiality ||
                         _reviews.ContainsKey(ev.ReviewId))
                         return false;
-                    var reportRevision = ev.Content.AssuranceReportId is { } reportId
+                    var reportRevision = reviewContent.AssuranceReportId is { } reportId
                         ? _reports.GetValueOrDefault(reportId)?.Current
                         : null;
-                    if (ev.Content.AssuranceReportId is not null &&
+                    if (reviewContent.AssuranceReportId is not null &&
                             (reportRevision is null || reportRevision.ProviderId != ev.ProviderId ||
-                             reportRevision.Content.ReportKind != ev.Content.EvidenceKind ||
+                             reportRevision.Content.ReportKind != reviewContent.EvidenceKind ||
                              reportRevision.Revision != ev.AssuranceReportRevision) ||
-                        ev.Content.AssuranceReportId is null && ev.AssuranceReportRevision is not null)
+                        reviewContent.AssuranceReportId is null && ev.AssuranceReportRevision is not null)
                         return false;
                     _reviews.Add(ev.ReviewId, new ProviderReviewView(ev.TenantId,
-                        ev.ReviewId, ev.ProviderId, ev.Content, ev.ProviderRevision,
+                        ev.ReviewId, ev.ProviderId, reviewContent, ev.ProviderRevision,
                         ev.AssuranceReportRevision, ev.Actor, ev.RecordedAt));
                     return true;
                 case ProviderCoverageGapRecorded ev:
+                    var gapContent = (ProviderCoverageGapContent)fact.Content;
                     if (ev.GapId == Uuid.Empty || ev.RequestId == Uuid.Empty ||
                         ev.ProviderRevision < 1 ||
-                        ProviderCoverageGapRules.InputError(ev.Content) is not null ||
+                        ProviderCoverageGapRules.InputError(gapContent) is not null ||
                         !ValidMemberActor(ev.Actor) || _coverageGaps.ContainsKey(ev.GapId))
                         return false;
                     _coverageGaps.Add(ev.GapId, new ProviderCoverageGapView(ev.TenantId,
                         ev.GapId, ev.ProviderId, ev.ProviderRevision, 1,
-                        ProviderCoverageGapRules.Normalize(ev.Content), "open", ev.Actor,
+                        ProviderCoverageGapRules.Normalize(gapContent), "open", ev.Actor,
                         ev.RecordedAt, null, []));
                     return true;
                 case ProviderCoverageGapClosed ev:
+                    var closureContent = (ProviderCoverageGapClosureContent)fact.Content;
                     if (ev.RequestId == Uuid.Empty ||
-                        ProviderCoverageGapRules.ClosureInputError(ev.Content) is not null ||
+                        ProviderCoverageGapRules.ClosureInputError(closureContent) is not null ||
                         !ValidMemberActor(ev.Actor) ||
                         !_coverageGaps.TryGetValue(ev.GapId, out var gap) ||
                         gap.ProviderId != ev.ProviderId || gap.Status != "open" ||
                         ev.Revision != gap.Revision + 1 ||
-                        ev.Content.SourceKind == gap.Content.SourceKind &&
-                        ev.Content.SourceId == gap.Content.SourceId &&
-                        ev.Content.SourceRevision <= gap.Content.SourceRevision)
+                        closureContent.SourceKind == gap.Content.SourceKind &&
+                        closureContent.SourceId == gap.Content.SourceId &&
+                        closureContent.SourceRevision <= gap.Content.SourceRevision)
                         return false;
                     _coverageGaps[ev.GapId] = gap with
                     {
                         Revision = ev.Revision,
                         Status = "closed",
                         Closure = new ProviderCoverageGapClosureView(
-                            ProviderCoverageGapRules.Normalize(ev.Content), ev.Actor,
+                            ProviderCoverageGapRules.Normalize(closureContent), ev.Actor,
                             ev.ClosedAt)
                         { Revision = ev.Revision },
                     };
                     return true;
-                case ProviderCoverageGapRiskAcceptanceLinked ev:
-                    if (ev.RequestId == Uuid.Empty || ev.Acceptance is null ||
-                        ev.Acceptance.ProgramId == Uuid.Empty || ev.Acceptance.RiskId == Uuid.Empty ||
-                        ev.Acceptance.AcceptanceId == Uuid.Empty ||
-                        ev.Acceptance.ExpiresAt <= ev.Acceptance.LinkedAt ||
-                        ev.Acceptance.Revision != ev.Revision ||
-                        !ValidMemberActor(ev.Acceptance.LinkedBy) ||
-                        !_coverageGaps.TryGetValue(ev.GapId, out var current) ||
-                        current.ProviderId != ev.ProviderId || current.Status != "open" ||
-                        ev.Revision != current.Revision + 1 ||
-                        current.RiskAcceptances.Any(item => item.RiskId == ev.Acceptance.RiskId &&
-                            item.AcceptanceId == ev.Acceptance.AcceptanceId) ||
-                        current.RiskAcceptances.Count >=
-                            ProviderAssuranceRegister.MaximumRiskAcceptanceLinksPerGap)
+                case ProviderCoverageGapRiskAcceptanceAdmitted ev:
+                    var admission = (ProviderRiskLinkIntent)fact.Content;
+                    if (admission.LinkId == Uuid.Empty || admission.ProgramId == Uuid.Empty ||
+                        admission.RiskId == Uuid.Empty || admission.AcceptanceId == Uuid.Empty ||
+                        admission.AcceptanceExpiresAt <= admission.LinkedAt ||
+                        (long)admission.GapAdmissionRevision != ev.Revision ||
+                        !_coverageGaps.TryGetValue(admission.GapId, out var admitting) ||
+                        admitting.ProviderId != admission.ProviderId || admitting.Status != "open" ||
+                        ev.Revision != admitting.Revision + 1)
                         return false;
+                    _coverageGaps[admission.GapId] = admitting with { Revision = ev.Revision };
+                    return true;
+                case ProviderCoverageGapRiskAcceptanceLinked ev:
+                    var linkContent = (ProviderCoverageGapRiskAcceptanceView)fact.Content;
+                    if (ev.RequestId == Uuid.Empty || linkContent.ProgramId == Uuid.Empty ||
+                        linkContent.RiskId == Uuid.Empty || linkContent.AcceptanceId == Uuid.Empty ||
+                        linkContent.ExpiresAt <= linkContent.LinkedAt ||
+                        linkContent.Revision != ev.Revision ||
+                        !ValidMemberActor(linkContent.LinkedBy) ||
+                        !_coverageGaps.TryGetValue(ev.GapId, out var current) ||
+                        current.ProviderId != ev.ProviderId || ev.Revision > current.Revision ||
+                        current.RiskAcceptances.Any(item => item.RiskId == linkContent.RiskId &&
+                            item.AcceptanceId == linkContent.AcceptanceId))
+                        return false;
+                    // The admission already produced the gap revision; a link never changes the gap status.
                     _coverageGaps[ev.GapId] = current with
                     {
-                        Revision = ev.Revision,
-                        RiskAcceptances = Array.AsReadOnly([.. current.RiskAcceptances,
-                            ev.Acceptance]),
+                        RiskAcceptances = Array.AsReadOnly([.. current.RiskAcceptances, linkContent]),
                     };
                     return true;
                 default:
@@ -846,4 +887,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
             public void Add(AssuranceReportView view) => _revisions.Add(view);
         }
     }
+
+    sealed record AssuranceFact(DomainEvent Event, Uuid ProviderId, Uuid GapId, Uuid RequestId,
+        DateTimeOffset RecordedAt, long ProviderRevision, ActorReference? Actor, object Content);
 }

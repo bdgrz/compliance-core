@@ -68,8 +68,8 @@ public sealed class AssuranceReferences(IAggregateReader reader, ProviderSource 
                         .ConfigureAwait(false);
                     if (!fence.IsSuccess)
                         return Result.Failure(fence.Error);
-                    var report = await assurance.GetReportRevisionAsync(tenantId, sourceId,
-                        sourceRevision, ct).ConfigureAwait(false);
+                    var report = await assurance.GetReportRevisionAsync(tenantId, provider.ProviderId,
+                        sourceId, sourceRevision, ct).ConfigureAwait(false);
                     var unchanged = await assuranceConsistency.ConfirmUnchangedAndCaughtUpAsync(
                         tenantId, fence.Value, ct).ConfigureAwait(false);
                     if (!unchanged.IsSuccess)
@@ -83,10 +83,17 @@ public sealed class AssuranceReferences(IAggregateReader reader, ProviderSource 
                 {
                     if (sourceRevision != 1)
                         return SourceNotFound();
-                    var register = await reader.HydrateAsync(new ProviderAssuranceRegister(tenantId), ct)
+                    var fence = await assuranceConsistency.CaptureFenceAsync(tenantId, ct)
                         .ConfigureAwait(false);
-                    return register.Reviews(provider.ProviderId).Any(review =>
-                        review.TenantId == tenantId && review.ReviewId == sourceId)
+                    if (!fence.IsSuccess)
+                        return Result.Failure(fence.Error);
+                    var review = await assurance.GetReviewAsync(tenantId, sourceId, ct).ConfigureAwait(false);
+                    var unchanged = await assuranceConsistency.ConfirmUnchangedAndCaughtUpAsync(
+                        tenantId, fence.Value, ct).ConfigureAwait(false);
+                    if (!unchanged.IsSuccess)
+                        return unchanged;
+                    return review is { } retained && retained.TenantId == tenantId &&
+                           retained.ProviderId == provider.ProviderId
                         ? Result.Success
                         : SourceNotFound();
                 }

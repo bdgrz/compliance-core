@@ -41,26 +41,26 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 473,
-    "factsWithReducer": 451,
-    "factsWithAggregateEmitter": 444,
+    "domainEventContracts": 478,
+    "factsWithReducer": 456,
+    "factsWithAggregateEmitter": 449,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 115,
-    "aggregateTypesWithCommandPath": 112,
-    "requestContracts": 735,
-    "commonRequestContracts": 733,
+    "aggregateTypes": 118,
+    "aggregateTypesWithCommandPath": 115,
+    "requestContracts": 740,
+    "commonRequestContracts": 738,
     "requestClassificationCounts": {
       "command": 346,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 101,
+      "internal_reaction": 106,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 676,
+    "registeredCoreHandlerRegistrations": 681,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 37,
     "unwiredAggregateProducerClassifications": {
@@ -1149,17 +1149,20 @@
       "contract": "src/Compliance.Common/Features/Providers/AssuranceReportRecorded.cs",
       "reducers": [
         {
-          "aggregate": "ProviderAssuranceRegister",
-          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+          "aggregate": "ProviderAssuranceReport",
+          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/ProviderAssuranceRegisterTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
-        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceReportTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -1169,15 +1172,20 @@
       "contract": "src/Compliance.Common/Features/Providers/AssuranceReportRevised.cs",
       "reducers": [
         {
-          "aggregate": "ProviderAssuranceRegister",
-          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+          "aggregate": "ProviderAssuranceReport",
+          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceReportTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -5485,15 +5493,18 @@
       "contract": "src/Compliance.Common/Features/Providers/ProviderCoverageGapClosed.cs",
       "reducers": [
         {
-          "aggregate": "ProviderAssuranceRegister",
-          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+          "aggregate": "ProviderAssuranceGap",
+          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -5503,15 +5514,18 @@
       "contract": "src/Compliance.Common/Features/Providers/ProviderCoverageGapRecorded.cs",
       "reducers": [
         {
-          "aggregate": "ProviderAssuranceRegister",
-          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+          "aggregate": "ProviderAssuranceGap",
+          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -5521,15 +5535,18 @@
       "contract": "src/Compliance.Common/Features/Providers/ProviderCoverageGapRiskAcceptanceLinked.cs",
       "reducers": [
         {
-          "aggregate": "ProviderAssuranceRegister",
-          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+          "aggregate": "ProviderRiskAcceptance",
+          "source": "src/Compliance.Core/Features/Providers/ProviderRiskAcceptance.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+        "src/Compliance.Core/Features/Providers/ProviderRiskAcceptance.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -5559,16 +5576,20 @@
       "contract": "src/Compliance.Common/Features/Providers/ProviderReviewRecorded.cs",
       "reducers": [
         {
-          "aggregate": "ProviderAssuranceRegister",
-          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+          "aggregate": "ProviderAssuranceReview",
+          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceReview.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs"
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceReview.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
-        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8742,6 +8763,119 @@
       ],
       "disposition": "aggregate_fact",
       "note": ""
+    },
+    {
+      "fact": "ProviderAssuranceReportProviderReviewUseAuthorized",
+      "contract": "src/Compliance.Common/Features/Providers/ProviderAssuranceReportProviderReviewUseAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "ProviderAssuranceReport",
+          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProviderAssuranceReportProviderReviewUseSettled",
+      "contract": "src/Compliance.Common/Features/Providers/ProviderAssuranceReportProviderReviewUseSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "ProviderAssuranceReport",
+          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProviderCoverageGapRiskAcceptanceAdmitted",
+      "contract": "src/Compliance.Common/Features/Providers/ProviderCoverageGapRiskAcceptanceAdmitted.cs",
+      "reducers": [
+        {
+          "aggregate": "ProviderAssuranceGap",
+          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProviderReviewCanceled",
+      "contract": "src/Compliance.Common/Features/Providers/ProviderReviewCanceled.cs",
+      "reducers": [
+        {
+          "aggregate": "ProviderAssuranceReview",
+          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceReview.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceReview.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProviderReviewRequested",
+      "contract": "src/Compliance.Common/Features/Providers/ProviderReviewRequested.cs",
+      "reducers": [
+        {
+          "aggregate": "ProviderAssuranceReview",
+          "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceReview.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceReview.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     }
   ],
   "aggregates": [
@@ -10778,38 +10912,6 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "ProviderAssuranceRegister",
-      "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
-      "appliedFacts": [
-        "AssuranceReportRecorded",
-        "AssuranceReportRevised",
-        "ProviderCoverageGapClosed",
-        "ProviderCoverageGapRecorded",
-        "ProviderCoverageGapRiskAcceptanceLinked",
-        "ProviderReviewRecorded"
-      ],
-      "commandRequests": [
-        "CloseProviderCoverageGap",
-        "LinkProviderCoverageGapRiskAcceptance",
-        "RecordAssuranceReport",
-        "RecordProviderCoverageGap",
-        "RecordProviderReview",
-        "ReviseAssuranceReport"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderAssuranceHttpMcpTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderAssuranceRegisterTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderCoverageGapTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
       "aggregate": "ReadinessLedger",
       "source": "src/Compliance.Core/Features/Readiness/ReadinessLedger.cs",
       "appliedFacts": [
@@ -12343,6 +12445,99 @@
         "test/Compliance.Tests/Features/Kernel/AggregateIdentityTests.cs",
         "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs",
         "test/Compliance.Tests/Testing/NamedRecordHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ProviderAssuranceGap",
+      "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs",
+      "appliedFacts": [
+        "ProviderCoverageGapClosed",
+        "ProviderCoverageGapRecorded",
+        "ProviderCoverageGapRiskAcceptanceAdmitted"
+      ],
+      "commandRequests": [
+        "CloseProviderCoverageGap",
+        "LinkProviderCoverageGapRiskAcceptance",
+        "RecordProviderCoverageGap"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ProviderAssuranceReport",
+      "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs",
+      "appliedFacts": [
+        "AssuranceReportRecorded",
+        "AssuranceReportRevised",
+        "ProviderAssuranceReportProviderReviewUseAuthorized",
+        "ProviderAssuranceReportProviderReviewUseSettled"
+      ],
+      "commandRequests": [
+        "RecordAssuranceReport",
+        "ReviseAssuranceReport"
+      ],
+      "internalReactionRequests": [
+        "AuthorizeProviderAssuranceReportProviderReviewUse",
+        "SettleProviderAssuranceReportProviderReviewUse"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceReportTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ProviderAssuranceReview",
+      "source": "src/Compliance.Core/Features/Providers/ProviderAssuranceReview.cs",
+      "appliedFacts": [
+        "ProviderReviewCanceled",
+        "ProviderReviewRecorded",
+        "ProviderReviewRequested"
+      ],
+      "commandRequests": [
+        "RecordProviderReview"
+      ],
+      "internalReactionRequests": [
+        "AbortProviderReview",
+        "CompleteProviderAssuranceReview"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ProviderRiskAcceptance",
+      "source": "src/Compliance.Core/Features/Providers/ProviderRiskAcceptance.cs",
+      "appliedFacts": [
+        "ProviderCoverageGapRiskAcceptanceLinked"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "MaterializeProviderRiskAcceptanceLink"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     }
@@ -14837,7 +15032,7 @@
     {
       "request": "CloseProviderCoverageGap",
       "contract": "src/Compliance.Common/Features/Providers/CloseProviderCoverageGap.cs",
-      "interfaces": "IRequest<ProviderCoverageGapRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ProviderCoverageGapRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14848,13 +15043,18 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceGap"
       ],
       "aggregateTargets": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceGap"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
       "note": ""
     },
     {
@@ -19945,7 +20145,7 @@
     {
       "request": "LinkProviderCoverageGapRiskAcceptance",
       "contract": "src/Compliance.Common/Features/Providers/LinkProviderCoverageGapRiskAcceptance.cs",
-      "interfaces": "IRequest<ProviderCoverageGapRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, IProgramScopedRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProviderManagementRequest, IClientManagementMutationRequest, IProgramScopedRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -19956,15 +20156,18 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ProviderAssuranceRegister",
-        "RiskDraft",
-        "RiskEvaluation"
+        "ProviderAssuranceGap"
       ],
       "aggregateTargets": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceGap"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
       "note": ""
     },
     {
@@ -24198,7 +24401,7 @@
     {
       "request": "RecordAssuranceReport",
       "contract": "src/Compliance.Common/Features/Providers/RecordAssuranceReport.cs",
-      "interfaces": "IRequest<AssuranceReportRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<AssuranceReportRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -24209,15 +24412,19 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceReport"
       ],
       "aggregateTargets": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceReport"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceReportTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "note": ""
     },
@@ -25001,7 +25208,7 @@
     {
       "request": "RecordProviderCoverageGap",
       "contract": "src/Compliance.Common/Features/Providers/RecordProviderCoverageGap.cs",
-      "interfaces": "IRequest<ProviderCoverageGapRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ProviderCoverageGapRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -25012,19 +25219,24 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceGap"
       ],
       "aggregateTargets": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceGap"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
       "note": ""
     },
     {
       "request": "RecordProviderReview",
       "contract": "src/Compliance.Common/Features/Providers/RecordProviderReview.cs",
-      "interfaces": "IRequest<ProviderReviewRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProviderManagementRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -25035,15 +25247,19 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceReview"
       ],
       "aggregateTargets": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceReview"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "note": ""
     },
@@ -27011,7 +27227,7 @@
     {
       "request": "ReviseAssuranceReport",
       "contract": "src/Compliance.Common/Features/Providers/ReviseAssuranceReport.cs",
-      "interfaces": "IRequest<AssuranceReportRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<AssuranceReportRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -27022,15 +27238,19 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceReport"
       ],
       "aggregateTargets": [
-        "ProviderAssuranceRegister"
+        "ProviderAssuranceReport"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceReportTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "note": ""
     },
@@ -29908,6 +30128,163 @@
         "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs"
       ],
       "note": "Process receiver: releases a name claim only for the exact holder and generation. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "AbortProviderReview",
+      "contract": "src/Compliance.Common/Features/Providers/AbortProviderReview.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IIdentifiedRequest, IProviderAssuranceReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AbortProviderReviewHandler",
+          "source": "src/Compliance.Core/Features/Providers/AbortProviderReviewHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ProviderAssuranceReview"
+      ],
+      "aggregateTargets": [
+        "ProviderAssuranceReview"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "note": "System-only provider assurance process receiver. No HTTP/MCP route. Cancels only the exact pending review."
+    },
+    {
+      "request": "AuthorizeProviderAssuranceReportProviderReviewUse",
+      "contract": "src/Compliance.Common/Features/Providers/AuthorizeProviderAssuranceReportProviderReviewUse.cs",
+      "interfaces": "ISourceUseAuthorization, IProviderAssuranceReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizeProviderAssuranceReportProviderReviewUseHandler",
+          "source": "src/Compliance.Core/Features/Providers/AuthorizeProviderAssuranceReportProviderReviewUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ProviderAssuranceReport"
+      ],
+      "aggregateTargets": [
+        "ProviderAssuranceReport"
+      ],
+      "helperServices": [
+        "ProviderReviewVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "note": "System-only provider assurance process receiver. No HTTP/MCP route. Generic acquire base: holds the exact report revision a review pinned at admission, or rejects the review and fences the key."
+    },
+    {
+      "request": "CompleteProviderAssuranceReview",
+      "contract": "src/Compliance.Common/Features/Providers/CompleteProviderAssuranceReview.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IIdentifiedRequest, IProviderAssuranceReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompleteProviderAssuranceReviewHandler",
+          "source": "src/Compliance.Core/Features/Providers/CompleteProviderAssuranceReviewHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ProviderAssuranceReport",
+        "ProviderAssuranceReview"
+      ],
+      "aggregateTargets": [
+        "ProviderAssuranceReview"
+      ],
+      "helperServices": [
+        "AssuranceReferences",
+        "ProviderReviewVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "note": "System-only provider assurance process receiver. No HTTP/MCP route. Records the admitted review once its report use is held."
+    },
+    {
+      "request": "MaterializeProviderRiskAcceptanceLink",
+      "contract": "src/Compliance.Common/Features/Providers/MaterializeProviderRiskAcceptanceLink.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IIdentifiedRequest, IProviderAssuranceReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "MaterializeProviderRiskAcceptanceLinkHandler",
+          "source": "src/Compliance.Core/Features/Providers/MaterializeProviderRiskAcceptanceLinkHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ProviderAssuranceGap",
+        "ProviderRiskAcceptance"
+      ],
+      "aggregateTargets": [
+        "ProviderRiskAcceptance"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "note": "System-only provider assurance process receiver. No HTTP/MCP route. Materializes the immutable link from its admission and never changes the gap."
+    },
+    {
+      "request": "SettleProviderAssuranceReportProviderReviewUse",
+      "contract": "src/Compliance.Common/Features/Providers/SettleProviderAssuranceReportProviderReviewUse.cs",
+      "interfaces": "ISourceUseSettlement, IProviderAssuranceReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleProviderAssuranceReportProviderReviewUseHandler",
+          "source": "src/Compliance.Core/Features/Providers/SettleProviderAssuranceReportProviderReviewUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ProviderAssuranceReport"
+      ],
+      "aggregateTargets": [
+        "ProviderAssuranceReport"
+      ],
+      "helperServices": [
+        "ProviderReviewVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzAssuranceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReviewProcessTests.cs",
+        "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
+      ],
+      "note": "System-only provider assurance process receiver. No HTTP/MCP route. Generic settle base: settles the exact report use, or fences a key never acquired."
     }
   ],
   "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",

@@ -196,7 +196,7 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | ClientService | Programs | retain | ASSURE-11 (pending) | 0.15 | [source](../../../../src/Compliance.Core/Features/Programs/ClientService.cs) |
 | ComplianceProgram | Programs | narrow | ASSURE-16 (pending), ASSURE-11 (pending) | 0.79 | [source](../../../../src/Compliance.Core/Features/Programs/ComplianceProgram.cs) |
 | ProgramRollover | Programs | process | ASSURE-15 (pending), ASSURE-17 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.78 | [source](../../../../src/Compliance.Core/Features/Programs/ProgramRollover.cs) |
-| ProviderAssuranceRegister | Providers | split | ROOTTECH-03 (pending), ROOTTECH-04 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs) |
+| ProviderAssuranceRegister | Providers | split | ROOTTECH-03 (split into ProviderAssuranceReport, ProviderAssuranceReview, ProviderAssuranceGap and ProviderRiskAcceptance), ROOTTECH-04 (split into ProviderAssuranceGap and ProviderRiskAcceptance) | 0.90 | `ProviderAssuranceRegister.cs` (removed by the provider assurance split, #1022) |
 | ProviderRegister | Providers | split | ROOTTECH-01 (pending) | 0.89 | source retired by S18 (`Providers/ProviderRegister.cs`) |
 | ReadinessLedger | Readiness | split | OPS-08 (pending), OPS-11 (pending), OPS-16 (pending) | 0.93 | [source](../../../../src/Compliance.Core/Features/Readiness/ReadinessLedger.cs) |
 | FindingAggregate | Remediation | split | OPS-06 (pending), OPS-11 (pending), OPS-12 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/Remediation/FindingAggregate.NativeValidation.cs) |

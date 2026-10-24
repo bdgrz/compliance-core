@@ -30,7 +30,4 @@ public sealed record ProviderCoverageGapRiskAcceptanceView(Uuid ProgramId, Uuid 
     public long Revision { get; init; }
 }
 
-public sealed record ProviderCoverageGapRiskAcceptanceContent(Uuid ProgramId, Uuid RiskId,
-    Uuid AcceptanceId);
-
 public sealed record ProviderCoverageGapRegistration(Uuid GapId, long Revision);

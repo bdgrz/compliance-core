@@ -84,16 +84,16 @@ Citation metadata must be explicitly classified `public`, `internal`, `confident
 
 | Operation | HTTP | MCP |
 | --- | --- | --- |
-| Record report | `POST /api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports` | `bdgrz.provider.assurance_report.record` |
-| Revise report | `PUT .../providers/{provider_id}/assurance-reports/{report_id}` | `bdgrz.provider.assurance_report.revise` |
+| Record report | `PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports/{report_id}` | `bdgrz.provider.assurance_report.record` |
+| Revise report | `PUT .../providers/{provider_id}/assurance-reports/revise-assurance-report/{command_id}` | `bdgrz.provider.assurance_report.revise` |
 | List reports | `GET .../providers/{provider_id}/assurance-reports` | `bdgrz.provider.assurance_reports.list` |
-| Record review | `POST .../providers/{provider_id}/reviews` | none: personal sign-offs are HTTP-only |
+| Record review (202; the review process holds the exact report revision, then records the review) | `PUT .../providers/{provider_id}/reviews/{review_id}` | none: personal sign-offs are HTTP-only |
 | List reviews | `GET .../providers/{provider_id}/reviews` | `bdgrz.provider.reviews.list` |
 | Coverage | `GET .../providers/{provider_id}/assurance-coverage?as_of=` | `bdgrz.provider.assurance_coverage.get` |
-| Record coverage gap | `POST .../providers/{provider_id}/coverage-gaps` | `bdgrz.provider.coverage_gap.record` |
+| Record coverage gap | `PUT .../providers/{provider_id}/coverage-gaps/{gap_id}` | `bdgrz.provider.coverage_gap.record` |
 | Read/list coverage gaps | `GET .../providers/{provider_id}/coverage-gaps[/{gap_id}]` | `bdgrz.provider.coverage_gap.get`, `bdgrz.provider.coverage_gaps.list` |
-| Close coverage gap | `PUT .../providers/{provider_id}/coverage-gaps/{gap_id}` | none: attributed decision is HTTP-only |
-| Link risk acceptance | `PUT .../providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances` | none: acceptance link is HTTP-only |
+| Close coverage gap | `PUT .../providers/{provider_id}/coverage-gaps/close-provider-coverage-gap/{command_id}` | none: attributed decision is HTTP-only |
+| Link risk acceptance (202; the gap admits, then the immutable link materializes) | `PUT .../providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances/link-provider-coverage-gap-risk-acceptance/{command_id}` | none: acceptance link is HTTP-only |
 | Preview provider change | `POST .../providers/{provider_id}/change-impact-previews` | `bdgrz.provider.change.preview` (read-only) |
 
 Report and review lists use scoped cursors with limits of 1–200 and return a
