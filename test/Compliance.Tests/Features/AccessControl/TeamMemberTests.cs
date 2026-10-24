@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
@@ -442,6 +443,91 @@ public sealed class TeamMemberTests
         Assert.Equal(episode, owner.MembershipEpisodeId);
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task ShouldResolveAcceptanceWithoutWritingContentGivenTeamOperationRetry(bool remove, bool changed)
+    {
+        // Arrange
+        TeamContentStore content = null!;
+        await using var provider = Services(inner => content = new TeamContentStore(inner));
+        var episode = await RegisterAsync(provider);
+        var assign = Assignment(Uuid.CreateVersion4(), episode);
+        var assignment = await AssignAsync(provider, assign);
+        Assert.True(assignment.IsSuccess);
+        var removal = Removal(Uuid.CreateVersion4(), episode, 1, 1);
+        var first = remove ? await RemoveAsync(provider, removal) : assignment;
+        Assert.True(first.IsSuccess);
+        var writes = content.WriteAttempts;
+        content.RejectWrites = true;
+
+        // Act
+        var retry = remove
+            ? await RemoveAsync(provider, changed ? removal with { ExpectedAssignmentRevision = 9 } : removal)
+            : await AssignAsync(provider, changed ? assign with { ExpectedAssignmentRevision = 9 } : assign);
+
+        // Assert
+        if (changed)
+            Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(retry.Error).Kind);
+        else
+        {
+            Assert.True(retry.IsSuccess);
+            Assert.Equal(first.Value, retry.Value);
+        }
+        Assert.Equal(writes, content.WriteAttempts);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldRejectBeforeWritingContentGivenStaleTeamOperation(bool remove)
+    {
+        // Arrange
+        TeamContentStore content = null!;
+        await using var provider = Services(inner => content = new TeamContentStore(inner));
+        var episode = await RegisterAsync(provider);
+        content.RejectWrites = true;
+
+        // Act
+        var result = remove
+            ? await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), episode, 1, 1))
+            : await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode, 1, 1));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Equal(0, content.WriteAttempts);
+        Assert.Empty(await HistoryAsync(provider));
+    }
+
+    [Fact]
+    public async Task ShouldRepeatFrozenResponseGivenMemberRetirementAfterAssignmentAppend()
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        var request = Assignment(Uuid.CreateVersion4(), episode);
+        var executor = provider.GetRequiredService<IAggregateExecutor>();
+
+        // Act
+        var first = await AssignAsync(provider, request, configureExecutor: inner => new AfterCommitExecutor(inner,
+            async () => Assert.True((await executor.ExecuteAsync(new Member(TenantId, UserId), member =>
+                AggregateOutcome.CommitOnSuccess(member.Deprovision(MemberId, "Alex Admin", ActionAt,
+                    "Access ended.")), new RequestDispatchContext(RequestActor.System), CancellationToken.None)).IsSuccess)));
+        var retry = await AssignAsync(provider, request);
+        var assignment = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(Owner());
+
+        // Assert
+        Assert.True(first.IsSuccess);
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(first.Value, retry.Value);
+        Assert.False(assignment.IsAssigned);
+        Assert.Collection(await HistoryAsync(provider),
+            fact => Assert.IsType<TeamMemberAssigned>(fact),
+            fact => Assert.IsType<TeamMemberRemoved>(fact));
+    }
+
     static Uuid Member() => RbacIds.Member(TenantId, UserId);
 
     static TeamMember Owner(Uuid selected = default) => new(TenantId, TeamId, Member(), selected);
@@ -452,7 +538,7 @@ public sealed class TeamMemberTests
     static RemoveTeamMember Removal(Uuid commandId, Uuid episode, long revision, long generation) =>
         new(commandId, TenantId, TeamId, Member(), episode, revision, generation);
 
-    static ServiceProvider Services()
+    static ServiceProvider Services(Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
     {
         var services = new ServiceCollection();
         var events = new InMemoryEventStore();
@@ -460,8 +546,8 @@ public sealed class TeamMemberTests
         services.AddSingleton<IDomainEventReader>(events);
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IProjectionCheckpointStore, InMemoryProjectionCheckpointStore>();
-        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
-            new PersistenceKvClient(new InMemoryKvClient())));
+        IImmutableContentStore content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+        services.AddSingleton(configureContent?.Invoke(content) ?? content);
         services.AddPortia();
         return services.BuildServiceProvider();
     }
@@ -499,10 +585,12 @@ public sealed class TeamMemberTests
     }
 
     static async Task<Result<AdministratorTransitionResponse>> AssignAsync(IServiceProvider provider,
-        AssignTeamMember request, ClaimsPrincipal? actor = null)
+        AssignTeamMember request, ClaimsPrincipal? actor = null,
+        Func<IAggregateExecutor, IAggregateExecutor>? configureExecutor = null)
     {
         var reader = provider.GetRequiredService<IAggregateReader>();
-        var executor = provider.GetRequiredService<IAggregateExecutor>();
+        var inner = provider.GetRequiredService<IAggregateExecutor>();
+        var executor = configureExecutor?.Invoke(inner) ?? inner;
         var content = provider.GetRequiredService<IImmutableContentStore>();
         var cleanup = new MemberAuthorityCleanup(reader, executor, provider.GetRequiredService<IDomainEventReader>(),
             provider.GetRequiredService<IProjectionCheckpointStore>(), TimeProvider.System);
@@ -545,4 +633,42 @@ public sealed class TeamMemberTests
 
     static ClaimsPrincipal Caller(Uuid userId) => new(new ClaimsIdentity(
         [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));
+
+    sealed class TeamContentStore(IImmutableContentStore inner) : IImmutableContentStore
+    {
+        public bool RejectWrites { get; set; }
+        public int WriteAttempts { get; private set; }
+
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema,
+            string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
+        {
+            WriteAttempts++;
+            if (RejectWrites)
+                throw new InvalidOperationException("Content writes are unavailable.");
+            return inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+        }
+
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => inner.ReadVerifiedAsync(realm, reference, ct);
+    }
+
+    sealed class AfterCommitExecutor(IAggregateExecutor inner, Func<Task> competitor) : IAggregateExecutor
+    {
+        int _calls;
+
+        public ValueTask<Result> ExecuteAsync<TAggregate>(TAggregate aggregate,
+            Func<TAggregate, AggregateOutcome> operation, IExecutionContext context, CancellationToken ct)
+            where TAggregate : Aggregate => inner.ExecuteAsync(aggregate, operation, context, ct);
+
+        public async ValueTask<Result<TOut>> ExecuteAsync<TAggregate, TOut>(TAggregate aggregate,
+            Func<TAggregate, AggregateOutcome<TOut>> operation, IExecutionContext context, CancellationToken ct)
+            where TAggregate : Aggregate
+        {
+            var result = await inner.ExecuteAsync(aggregate, operation, context, ct);
+            if (Interlocked.Increment(ref _calls) == 1)
+                await competitor();
+            return result;
+        }
+    }
+
 }

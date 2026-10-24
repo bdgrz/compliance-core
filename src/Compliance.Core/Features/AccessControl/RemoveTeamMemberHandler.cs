@@ -37,11 +37,9 @@ public sealed class RemoveTeamMemberHandler(IAggregateExecutor executor, NativeO
             return await RemoveAdministratorAsync(context, request, provenance, ct).ConfigureAwait(false);
 
         var binding = AcceptedOperationBinding.Of(provenance);
-        var frozen = await TeamMemberResponses.FreezeCompletedAsync(content, request.TenantId.ToString(),
-            request.CommandId, provenance.AcceptedAt, ct).ConfigureAwait(false);
         var accepted = await operations.ExecuteAsync(new NativeOperation<TeamMember>(binding,
             () => Owner(request, request.CommandId), owner => owner.Acceptance,
-            owner => Prepare(owner, request, frozen),
+            (owner, token) => PrepareAsync(owner, request, provenance.AcceptedAt, token),
             (TeamMember owner, ImmutableContentRef response) => owner.Remove(provenance, response, request.MemberEpisodeId,
                 request.ExpectedAssignmentRevision, request.ExpectedAssignmentGeneration)), context, ct)
             .ConfigureAwait(false);
@@ -69,14 +67,15 @@ public sealed class RemoveTeamMemberHandler(IAggregateExecutor executor, NativeO
             : Result<AdministratorTransitionResponse>.Failure(result.Error!);
     }
 
-    static Result<FirstResponseDescriptor> Prepare(TeamMember owner, RemoveTeamMember request,
-        FirstResponseDescriptor response)
+    async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(TeamMember owner, RemoveTeamMember request,
+        DateTimeOffset acceptedAt, CancellationToken ct)
     {
         var prepared = owner.PrepareRemove(request.MemberEpisodeId, request.ExpectedAssignmentRevision,
             request.ExpectedAssignmentGeneration);
-        return prepared.IsSuccess
-            ? Result<FirstResponseDescriptor>.Success(response)
-            : Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+        if (!prepared.IsSuccess)
+            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+        return Result<FirstResponseDescriptor>.Success(await TeamMemberResponses.FreezeCompletedAsync(content,
+            request.TenantId.ToString(), request.CommandId, acceptedAt, ct).ConfigureAwait(false));
     }
 
     /// <summary>The provenance a removal carries; the binding of a retry is derived from it.</summary>

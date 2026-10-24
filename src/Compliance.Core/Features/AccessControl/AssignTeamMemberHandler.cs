@@ -62,11 +62,9 @@ public sealed class AssignTeamMemberHandler(IAggregateExecutor executor, NativeO
         if (administrators)
             return await AssignAdministratorAsync(context, request, member, provenance, ct).ConfigureAwait(false);
 
-        var frozen = await TeamMemberResponses.FreezeCompletedAsync(content, request.TenantId.ToString(),
-            request.CommandId, provenance.AcceptedAt, ct).ConfigureAwait(false);
         var accepted = await operations.ExecuteAsync(new NativeOperation<TeamMember>(binding,
             () => Owner(request, request.CommandId), owner => owner.Acceptance,
-            owner => Prepare(owner, request, member, episodeId, frozen),
+            (owner, token) => PrepareAsync(owner, request, member, episodeId, provenance.AcceptedAt, token),
             (TeamMember owner, ImmutableContentRef response) => owner.Assign(provenance, response, episodeId, request.ExpectedAssignmentRevision,
                 request.ExpectedAssignmentGeneration)), context, ct).ConfigureAwait(false);
         var result = await TeamMemberResponses.ReadAsync(content, request.TenantId.ToString(), accepted, ct)
@@ -123,11 +121,13 @@ public sealed class AssignTeamMemberHandler(IAggregateExecutor executor, NativeO
             assignment.AssignmentEventId, assignment.AssignmentPosition, ct).ConfigureAwait(false);
         if (!compensated.IsSuccess)
             return Result<AdministratorTransitionResponse>.Failure(compensated.Error!);
-        return Fail(RequestErrorKind.Conflict, "The tenant member changed before the team assignment completed.");
+        // The assignment was accepted before its episode ended. Cleanup closes that relationship;
+        // it must not replace the frozen acceptance with a different response on the first attempt.
+        return done;
     }
 
-    static Result<FirstResponseDescriptor> Prepare(TeamMember owner, AssignTeamMember request, Member member,
-        Uuid episodeId, FirstResponseDescriptor response)
+    async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(TeamMember owner, AssignTeamMember request, Member member,
+        Uuid episodeId, DateTimeOffset acceptedAt, CancellationToken ct)
     {
         if (!member.IsRegistered)
             return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound,
@@ -137,9 +137,10 @@ public sealed class AssignTeamMemberHandler(IAggregateExecutor executor, NativeO
                 "The member is on a different membership episode."));
         var prepared = owner.PrepareAssign(episodeId, request.ExpectedAssignmentRevision,
             request.ExpectedAssignmentGeneration);
-        return prepared.IsSuccess
-            ? Result<FirstResponseDescriptor>.Success(response)
-            : Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+        if (!prepared.IsSuccess)
+            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+        return Result<FirstResponseDescriptor>.Success(await TeamMemberResponses.FreezeCompletedAsync(content,
+            request.TenantId.ToString(), request.CommandId, acceptedAt, ct).ConfigureAwait(false));
     }
 
     /// <summary>The provenance an assignment carries; the binding of a retry is derived from it.</summary>
