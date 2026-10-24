@@ -28,11 +28,11 @@ public sealed class SystemInstanceReadTests
         var directory = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectAsync(directory, tenantId,
             new ApplicationDeclared(tenantId, applicationId, "Payroll", "Run payroll",
-                null, actorId, "Manager", now, IsRestricted: true),
+                null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null, IsRestricted: true),
             new SystemInstanceRegistered(tenantId, applicationId, visibleInstanceId, 1,
-                "Production", "production", null, null, actorId, "Manager", now),
+                "Production", "production", null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, visibleInstanceId), null),
             new SystemInstanceRegistered(tenantId, applicationId, hiddenInstanceId, 1,
-                "Staging", "staging", null, null, actorId, "Manager", now));
+                "Staging", "staging", null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, hiddenInstanceId), null));
         var events = new InMemoryEventStore();
         var consistency = new SystemInstanceReadConsistency(directory, sourceReader,
             new LegacySystemInstanceSource(directory, events), events);
@@ -90,11 +90,11 @@ public sealed class SystemInstanceReadTests
         var absentList = await list.HandleAsync(listRequest, CancellationToken.None);
         await ProjectAsync(directory, tenantId,
             new ApplicationDeclared(tenantId, applicationId, "Payroll", "Run payroll",
-                null, actorId, "Manager", now));
+                null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var behindParent = await get.HandleAsync(exactRequest, CancellationToken.None);
         await ProjectAsync(directory, tenantId,
             new SystemInstanceRegistered(tenantId, applicationId, instanceId, 1,
-                "Production", "production", null, null, actorId, "Manager", now));
+                "Production", "production", null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, instanceId), null));
         var caughtUp = await get.HandleAsync(exactRequest, CancellationToken.None);
         var caughtUpList = await list.HandleAsync(listRequest, CancellationToken.None);
 
@@ -131,7 +131,7 @@ public sealed class SystemInstanceReadTests
         var list = new ListSystemInstancesHandler(directory, consistency, visibility);
         await ProjectAsync(directory, tenantId,
             new ApplicationDeclared(tenantId, applicationId, "Payroll", "Run payroll",
-                null, actorId, "Manager", now));
+                null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
 
         // Act
         var empty = await list.HandleAsync(new RequestContext<ListSystemInstances>(
@@ -175,7 +175,7 @@ public sealed class SystemInstanceReadTests
             actorId, "Manager", now).IsSuccess);
         var events = new InMemoryEventStore();
         var appEvent = DomainEventSeed.Attach(new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now),
+            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null),
             applicationId, 1);
         await events.AppendAsync(new EventStreamAddress(tenantId.ToString(),
             "applications", applicationId.ToString()), 0, [appEvent]);
@@ -185,7 +185,7 @@ public sealed class SystemInstanceReadTests
             ProjectionCheckpoint.Start, appCheckpoint);
         var instanceEvent = DomainEventSeed.Attach(new SystemInstanceRegistered(
             tenantId, applicationId, instanceId, 1, "Production", "production",
-            null, null, actorId, "Manager", now), instanceId, 1);
+            null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, instanceId), null), instanceId, 1);
         await events.AppendAsync(new EventStreamAddress(tenantId.ToString(),
             "system-instances", instanceId.ToString()), 0, [instanceEvent]);
         var instanceCheckpoint = await CheckpointAfterAsync(events, tenantId);

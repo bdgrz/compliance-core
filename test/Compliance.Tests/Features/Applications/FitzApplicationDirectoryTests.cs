@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 
@@ -30,13 +31,13 @@ public sealed class FitzApplicationDirectoryTests
                          identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, actorId, "Declarer", now, "internal",
+                "Payroll", "Run payroll", null, actorId, "Declarer", now, ApplicationFacts.Application(tenantId, applicationId), null, "internal",
                 ownerId, ownerId, true, "service", "critical")
             {
                 StoredActor = declaredActor,
             });
             var oldPayload = JsonSerializer.SerializeToNode(new ApplicationRevised(tenantId, applicationId, 2,
-                "Payroll", "Run monthly payroll", null, actorId, "Editor", now.AddMinutes(1))
+                "Payroll", "Run monthly payroll", null, actorId, "Editor", now.AddMinutes(1), ApplicationFacts.Application(tenantId, applicationId), null)
             {
                 StoredActor = revisedActor,
             }, ComplianceCoreJsonContext.Default.ApplicationRevised)!.AsObject();
@@ -118,7 +119,7 @@ public sealed class FitzApplicationDirectoryTests
                          identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", "Operations", actorId, "Original", now,
+                "Payroll", "Run payroll", "Operations", actorId, "Original", now, ApplicationFacts.Application(tenantId, applicationId), null,
                 IsRestricted: true));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -195,10 +196,10 @@ public sealed class FitzApplicationDirectoryTests
                          identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, actorId, "Org Admin", now,
+                "Payroll", "Run payroll", null, actorId, "Org Admin", now, ApplicationFacts.Application(tenantId, applicationId), null,
                 IsRestricted: true));
             await directory.ApplyAsync(new ApplicationRevised(tenantId, applicationId, 2,
-                "Payroll", "Run payroll", null, actorId, "Org Admin", now.AddMinutes(1),
+                "Payroll", "Run payroll", null, actorId, "Org Admin", now.AddMinutes(1), ApplicationFacts.Application(tenantId, applicationId), null,
                 IsRestricted: false));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -239,7 +240,7 @@ public sealed class FitzApplicationDirectoryTests
                          identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, legacyActor, "Original", now)
+                "Payroll", "Run payroll", null, legacyActor, "Original", now, ApplicationFacts.Application(tenantId, applicationId), null)
             {
                 StoredActor = declaredSnapshot,
             });
@@ -248,13 +249,13 @@ public sealed class FitzApplicationDirectoryTests
                 "legacy-source", legacyActor, "Legacy actor", now.AddMinutes(1)));
             await directory.ApplyAsync(new ApplicationRevised(tenantId, applicationId,
                 3, "Payroll", "Run monthly payroll", null, metadataActor,
-                "Metadata actor", now.AddMinutes(2))
+                "Metadata actor", now.AddMinutes(2), ApplicationFacts.Application(tenantId, applicationId), null)
             {
                 StoredActor = revisedSnapshot,
             });
             await directory.ApplyAsync(new SystemInstanceRegistered(tenantId,
                 applicationId, newId, 1, "New", "staging", null,
-                "new-source", instanceActor, "Instance actor", now.AddMinutes(3))
+                "new-source", instanceActor, "Instance actor", now.AddMinutes(3), ApplicationFacts.SystemInstance(tenantId, newId), null)
             {
                 StoredActor = instanceSnapshot,
             });
@@ -306,16 +307,16 @@ public sealed class FitzApplicationDirectoryTests
                          identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, legacyActor, "Original", now));
+                "Payroll", "Run payroll", null, legacyActor, "Original", now, ApplicationFacts.Application(tenantId, applicationId), null));
             await directory.ApplyAsync(new SystemInstanceDeclared(tenantId, applicationId,
                 instanceId, 2, "Production", "production", null, "payroll-prod",
                 legacyActor, "Legacy actor", now));
             await directory.ApplyAsync(new SystemInstanceRegistered(tenantId, applicationId,
                 instanceId, 1, "Production", "production", null, "payroll-prod",
-                Uuid.CreateVersion4(), "New writer", now.AddMinutes(1)));
+                Uuid.CreateVersion4(), "New writer", now.AddMinutes(1), ApplicationFacts.SystemInstance(tenantId, instanceId), null));
             await directory.ApplyAsync(new SystemInstanceRegistered(tenantId, applicationId,
                 laterId, 1, "Staging", "staging", null, null,
-                Uuid.CreateVersion4(), "New writer", now.AddMinutes(2)));
+                Uuid.CreateVersion4(), "New writer", now.AddMinutes(2), ApplicationFacts.SystemInstance(tenantId, laterId), null));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var instance = await directory.GetInstanceAsync(tenantId, instanceId);
@@ -345,10 +346,10 @@ public sealed class FitzApplicationDirectoryTests
                          ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, declaredBy, "Owner", now));
+                "Payroll", "Run payroll", null, declaredBy, "Owner", now, ApplicationFacts.Application(tenantId, applicationId), null));
             await directory.ApplyAsync(new SystemInstanceRegistered(tenantId, applicationId,
                 instanceId, 1, "Production", "production", "Boundary v1", "payroll-prod",
-                declaredBy, "Owner", now));
+                declaredBy, "Owner", now, ApplicationFacts.SystemInstance(tenantId, instanceId), null));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var projector = new ApplicationDirectoryProjector(directory, new AggregateReader(),
@@ -358,7 +359,7 @@ public sealed class FitzApplicationDirectoryTests
         var revised = new SystemInstanceRevised(tenantId, applicationId, instanceId, 2,
             "Production east", "production", "Boundary v2", "payroll-prod-east",
             "The reviewed system moved to the east network zone.", revisedBy, "Reviewer",
-            now.AddDays(10));
+            now.AddDays(10), ApplicationFacts.SystemInstance(tenantId, instanceId), null);
 
         // Act
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
@@ -412,15 +413,15 @@ public sealed class FitzApplicationDirectoryTests
                          identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, legacyActor, "Original", now));
+                "Payroll", "Run payroll", null, legacyActor, "Original", now, ApplicationFacts.Application(tenantId, applicationId), null));
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, otherApplicationId,
-                "Benefits", "Run benefits", null, legacyActor, "Original", now));
+                "Benefits", "Run benefits", null, legacyActor, "Original", now, ApplicationFacts.Application(tenantId, otherApplicationId), null));
             await directory.ApplyAsync(new SystemInstanceDeclared(tenantId, applicationId,
                 instanceId, 2, "Production", "production", null, "payroll-prod",
                 legacyActor, "Legacy actor", now));
             await directory.ApplyAsync(new SystemInstanceRegistered(tenantId,
                 otherApplicationId, instanceId, 1, "Other", "production", null, null,
-                Uuid.CreateVersion4(), "New writer", now.AddMinutes(1)));
+                Uuid.CreateVersion4(), "New writer", now.AddMinutes(1), ApplicationFacts.SystemInstance(tenantId, instanceId), null));
             await directory.ApplyAsync(new SystemInstanceDeclared(tenantId, applicationId,
                 instanceId, 3, "Renamed", "production", null, "payroll-prod",
                 legacyActor, "Legacy actor", now.AddMinutes(2)));
@@ -461,7 +462,7 @@ public sealed class FitzApplicationDirectoryTests
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, actorId, "Manager", now, "internal"));
+                "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null, "internal"));
             await directory.ApplyAsync(new SystemInstanceDeclared(tenantId, applicationId,
                 instanceId, 2, "Production", "production", null, "payroll-prod",
                 actorId, "Manager", now));
@@ -512,10 +513,10 @@ public sealed class FitzApplicationDirectoryTests
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, actorId, "Manager", now));
+                "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
             await Assert.ThrowsAsync<InvalidOperationException>(async () =>
                 await directory.ApplyAsync(new ApplicationRevised(tenantId, Uuid.CreateVersion4(),
-                    2, "Wrong", "Wrong", null, actorId, "Manager", now)));
+                    2, "Wrong", "Wrong", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, Uuid.CreateVersion4()), null)));
         }
 
         // Assert
@@ -525,7 +526,7 @@ public sealed class FitzApplicationDirectoryTests
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, actorId, "Manager", now));
+                "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
             await retry.CommitAsync(ProjectionCheckpoint.Start);
         }
         Assert.NotNull(await directory.GetAsync(tenantId, applicationId));
@@ -552,10 +553,10 @@ public sealed class FitzApplicationDirectoryTests
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, actorId, "Manager", now));
+                "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
             await directory.ApplyAsync(new ApplicationRevised(tenantId, applicationId, 2,
                 "Payroll", "Run monthly payroll", "Finance", actorId, "Manager",
-                now.AddMinutes(1), "internal"));
+                now.AddMinutes(1), ApplicationFacts.Application(tenantId, applicationId), null, "internal"));
             await directory.ApplyAsync(new SystemInstanceDeclared(tenantId, applicationId,
                 instanceId, 3, "Production", "production", null, "payroll-prod",
                 actorId, "Manager", now.AddMinutes(2)));

@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 

@@ -1909,16 +1909,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/data-flows/{data_flow_id}/revisions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");
-    app.MapPortiaPost<DeclareApplication, ApplicationRegistration>(
-            "/api/v1/tenants/{tenant_id}/applications")
+    app.MapPortiaPut<DeclareApplication, ApplicationRegistration>(
+            "/api/v1/tenants/{tenant_id}/applications/{application_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Applications");
     app.MapPortiaPut<ReviseApplication>(
-            "/api/v1/tenants/{tenant_id}/applications/{application_id}", endpoint => endpoint
+            "/api/v1/tenants/{tenant_id}/applications/revise-application/{command_id}", endpoint => endpoint
                 .OnBind(Program.BindApplicationRevisionAsync)
                 .Accepts<ApplicationRevisionHttpBody>("application/json", isOptional: true, "*/*")
                 .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
-                .Parameter<Uuid>("application_id", PortiaHttpParameterLocation.Route, required: true))
+                .Parameter<Uuid>("command_id", PortiaHttpParameterLocation.Route, required: true))
         .AddOpenApiOperationTransformer(Program.PreserveApplicationHttpSchemaAsync)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Applications");
@@ -1989,8 +1989,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Approve a proposed successor after a complete current impact review")
         .WithTags("Applications");
-    app.MapPortiaPost<DeclareSystemInstance, SystemInstanceRegistration>(
-            "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances")
+    app.MapPortiaPut<DeclareSystemInstance, SystemInstanceRegistration>(
+            "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("System instances");
     app.MapPortiaGet<GetSystemInstance, SystemInstanceView>(
@@ -2023,13 +2023,13 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Preview the known impact of a proposed application change")
         .WithTags("Applications");
-    app.MapPortiaPost<RetireApplication>(
-            "/api/v1/tenants/{tenant_id}/applications/{application_id}/retirements")
+    app.MapPortiaPut<RetireApplication>(
+            "/api/v1/tenants/{tenant_id}/applications/{application_id}/retirements/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Retire an application from an effective date, optionally merged into a successor")
         .WithTags("Applications");
-    app.MapPortiaPost<RetireSystemInstance>(
-            "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/retirements")
+    app.MapPortiaPut<RetireSystemInstance>(
+            "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/retirements/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Retire a system instance from an effective date")
         .WithTags("System instances");
@@ -2677,16 +2677,19 @@ public partial class Program
         var body = document.RootElement;
         var options = PortiaHttpBinding.GetJsonOptions(context);
         var classification = ReadApplicationValue<ReviseApplication, string?>(context, body, options,
-            6, "Classification", true, true, out var classificationSupplied);
+            7, "Classification", true, true, out var classificationSupplied);
         var systemOwner = ReadApplicationValue<ReviseApplication, Uuid?>(context, body, options,
-            7, "SystemOwnerPersonId", true, true, out var systemOwnerSupplied);
+            8, "SystemOwnerPersonId", true, true, out var systemOwnerSupplied);
         var accessOwner = ReadApplicationValue<ReviseApplication, Uuid?>(context, body, options,
-            8, "AccessOwnerPersonId", true, true, out var accessOwnerSupplied);
-        return new ReviseApplication(ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "application_id"),
-            Read<long>(2, "ExpectedRevision", false, false), Read<string>(3, "Name", false, false),
-            Read<string>(4, "Purpose", false, false), Read<string?>(5, "OwnerReference", true, false),
-            classification, systemOwner, accessOwner, Read<bool?>(9, "IsRestricted", true, true),
-            Read<string?>(10, "ApplicationKind", true, true), Read<string?>(11, "Criticality", true, true))
+            9, "AccessOwnerPersonId", true, true, out var accessOwnerSupplied);
+        // The command id and tenant come from the route; the application is named by the body, so the
+        // application-scoped declaration route and this revision route never share a template.
+        return new ReviseApplication(ApplicationRouteId(context, "command_id"), ApplicationRouteId(context, "tenant_id"),
+            Read<Uuid>(2, "ApplicationId", false, false),
+            Read<long>(3, "ExpectedRevision", false, false), Read<string>(4, "Name", false, false),
+            Read<string>(5, "Purpose", false, false), Read<string?>(6, "OwnerReference", true, false),
+            classification, systemOwner, accessOwner, Read<bool?>(10, "IsRestricted", true, true),
+            Read<string?>(11, "ApplicationKind", true, true), Read<string?>(12, "Criticality", true, true))
         {
             ClassificationIntent = new(classificationSupplied),
             SystemOwnerIntent = new(systemOwnerSupplied),
@@ -2744,6 +2747,8 @@ public partial class Program
                 value = number;
             else if (typeof(T) == typeof(Uuid?) && Uuid.TryParse(raw, CultureInfo.InvariantCulture, out var id))
                 value = id;
+            else if (typeof(T) == typeof(Uuid) && Uuid.TryParse(raw, CultureInfo.InvariantCulture, out var required))
+                value = required;
             else if (typeof(T) == typeof(bool?) && bool.TryParse(raw, out var boolean))
                 value = boolean;
             else
@@ -2759,6 +2764,8 @@ public partial class Program
 // metadata above. Nonnullable UUID/bool documentation preserves Portia's current export shape.
 readonly record struct ApplicationRevisionHttpBody
 {
+    [JsonRequired]
+    public Uuid ApplicationId { get; init; }
     [JsonRequired]
     public long ExpectedRevision { get; init; }
     [JsonRequired]

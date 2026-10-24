@@ -55,17 +55,17 @@ public sealed class ProviderChangeImpactE2ETests(BrokerStackFixture broker)
         var personId = await PostIdAsync(owner, $"{tenantPath}/people",
             new { display_name = "Provider inventory owner" }, "person_id");
         var programId = await CreateProgramAsync(owner, tenantId);
-        var applicationId = await PostIdAsync(owner, $"{tenantPath}/applications",
-            new { name = "Payroll", purpose = "Run payroll" }, "application_id");
+        var applicationId = await PostIdAsync(owner, $"{tenantPath}/applications/{Guid.NewGuid()}",
+            new { name = "Payroll", purpose = "Run payroll" }, "application_id", HttpMethod.Put);
         var applicationPath = $"{tenantPath}/applications/{applicationId}";
-        var systemInstanceId = await PostIdAsync(owner, $"{applicationPath}/system-instances",
+        var systemInstanceId = await PostIdAsync(owner, $"{applicationPath}/system-instances/{Guid.NewGuid()}",
             new
             {
                 expected_application_revision = 1,
                 name = "Payroll production",
                 kind = "production",
                 source_identifier = "payroll-prod",
-            }, "system_instance_id");
+            }, "system_instance_id", HttpMethod.Put);
         var informationAssetId = await PostIdAsync(owner, $"{tenantPath}/information-assets",
             new
             {
@@ -224,12 +224,12 @@ public sealed class ProviderChangeImpactE2ETests(BrokerStackFixture broker)
     }
 
     static async Task<Guid> PostIdAsync(HttpClient client, string path, object body,
-        string property)
+        string property, HttpMethod? method = null)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await client.PostAsJsonAsync(path, body);
+            using var response = await client.SendAsync(new HttpRequestMessage(method ?? HttpMethod.Post, path) { Content = JsonContent.Create(body) });
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());

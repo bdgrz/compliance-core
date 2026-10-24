@@ -4,6 +4,7 @@ using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 
@@ -19,7 +20,7 @@ public sealed class DeclaredApplicationTests
         var owner = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var payload = JsonSerializer.SerializeToNode(new ApplicationRevised(tenant, id, 2,
-            "Legacy edit", "Legacy purpose", null, actor, "Legacy editor", now),
+            "Legacy edit", "Legacy purpose", null, actor, "Legacy editor", now, ApplicationFacts.Application(tenant, id), null),
             ComplianceCoreJsonContext.Default.ApplicationRevised)!.AsObject();
         payload.Remove("application_kind");
         payload.Remove("criticality");
@@ -27,7 +28,7 @@ public sealed class DeclaredApplicationTests
         var application = new DeclaredApplication(tenant, id);
         new AggregateScenario<DeclaredApplication>(application).Given(
             DomainEventSeed.Attach(new ApplicationDeclared(tenant, id, "Original", "Purpose", null,
-                actor, "Original actor", now.AddMinutes(-1), "internal", owner, owner,
+                actor, "Original actor", now.AddMinutes(-1), ApplicationFacts.Application(tenant, id), null, "internal", owner, owner,
                 ApplicationKind: "service", Criticality: "critical"), id, 1),
             DomainEventSeed.Attach(oldEvent, id, 2));
 
@@ -116,71 +117,6 @@ public sealed class DeclaredApplicationTests
     }
 
     [Fact]
-    public void ShouldReplayIdenticalLegacyDeclarationWithoutRetrofitGivenEnabledPolicy()
-    {
-        // Arrange
-        var tenantId = Uuid.CreateVersion4();
-        var applicationId = Uuid.CreateVersion4();
-        var actorId = Uuid.CreateVersion4();
-        var now = DateTimeOffset.UtcNow;
-        var payload = JsonSerializer.SerializeToNode(new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Original", now),
-            ComplianceCoreJsonContext.Default.ApplicationDeclared)!.AsObject();
-        payload.Remove("application_kind");
-        payload.Remove("criticality");
-        var legacy = payload.Deserialize(ComplianceCoreJsonContext.Default.ApplicationDeclared)!;
-        var application = new DeclaredApplication(tenantId, applicationId);
-        new AggregateScenario<DeclaredApplication>(application).Given(
-            DomainEventSeed.Attach(legacy, applicationId, 1));
-
-        // Act
-        var identical = application.Declare(" Payroll ", " Run payroll ", null, actorId,
-            "Retry", now.AddMinutes(1), governedDeclarationsEnabled: true);
-        var changedKind = application.Declare("Payroll", "Run payroll", null, actorId,
-            "Retry", now, applicationKind: "service", governedDeclarationsEnabled: true);
-        var changedCriticality = application.Declare("Payroll", "Run payroll", null, actorId,
-            "Retry", now, criticality: "critical", governedDeclarationsEnabled: true);
-
-        // Assert
-        Assert.Null(legacy.ApplicationKind);
-        Assert.Null(legacy.Criticality);
-        Assert.True(identical.IsSuccess);
-        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(changedKind.Error).Kind);
-        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(changedCriticality.Error).Kind);
-        Assert.Equal(1, application.Revision);
-        Assert.Empty(new AggregateScenario<DeclaredApplication>(application).PendingEvents);
-    }
-
-    [Fact]
-    public void ShouldCompareNormalizedAdditionsGivenCompleteDeclarationRetry()
-    {
-        // Arrange
-        var application = new DeclaredApplication(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var actorId = Uuid.CreateVersion4();
-        var owner = Uuid.CreateVersion4();
-        var now = DateTimeOffset.UtcNow;
-        Assert.True(application.Declare("Payroll", "Run payroll", null, actorId, "Manager",
-            now, "internal", owner, owner, applicationKind: " service ", criticality: " critical ",
-            governedDeclarationsEnabled: true).IsSuccess);
-
-        // Act
-        var identical = application.Declare("Payroll", "Run payroll", null, actorId, "Manager",
-            now, "internal", owner, owner, applicationKind: "service", criticality: "critical",
-            governedDeclarationsEnabled: true);
-        var changed = application.Declare("Payroll", "Run payroll", null, actorId, "Manager",
-            now, "internal", owner, owner, applicationKind: "service", criticality: "low",
-            governedDeclarationsEnabled: true);
-
-        // Assert
-        Assert.True(identical.IsSuccess);
-        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(changed.Error).Kind);
-        var declared = Assert.IsType<ApplicationDeclared>(Assert.Single(
-            new AggregateScenario<DeclaredApplication>(application).PendingEvents));
-        Assert.Equal("service", declared.ApplicationKind);
-        Assert.Equal("critical", declared.Criticality);
-    }
-
-    [Fact]
     public void ShouldPreserveHistoricalApplicationRevisionGivenLegacyInstanceEvent()
     {
         // Arrange
@@ -193,17 +129,17 @@ public sealed class DeclaredApplicationTests
 
         new AggregateScenario<DeclaredApplication>(application).Given(
             DomainEventSeed.Attach(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", "Operations", actorId, "Manager", now),
+                "Payroll", "Run payroll", "Operations", actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null),
                 applicationId, 1),
             DomainEventSeed.Attach(new ApplicationRevised(tenantId, applicationId, 2,
                 "Payroll", "Run monthly payroll", "Operations", actorId, "Manager",
-                now.AddMinutes(1)), applicationId, 2),
+                now.AddMinutes(1), ApplicationFacts.Application(tenantId, applicationId), null), applicationId, 2),
             DomainEventSeed.Attach(new SystemInstanceDeclared(tenantId, applicationId,
                 instanceId, 3, "Production", "production", null, "payroll-prod",
                 actorId, "Manager", now.AddMinutes(2)), applicationId, 3));
 
         // Act
-        var createReplay = application.Declare("Payroll", "Run payroll", "Operations",
+        var redeclared = application.Declare("Payroll", "Run payroll", "Operations",
             actorId, "Manager", now.AddMinutes(3));
         var stale = application.Revise(2, "Payroll", "Stale edit", null,
             actorId, "Manager", now.AddMinutes(3));
@@ -211,7 +147,7 @@ public sealed class DeclaredApplicationTests
             actorId, "Manager", now.AddMinutes(4));
 
         // Assert
-        Assert.True(createReplay.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(redeclared.Error).Kind);
         Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(stale).Code);
         Assert.Equal(3, Assert.IsType<CommandFailure>(stale).Version!.CurrentRevision);
         Assert.Null(current);
@@ -246,7 +182,7 @@ public sealed class DeclaredApplicationTests
     }
 
     [Fact]
-    public void ShouldPreserveDeclaredClassificationGivenReplayAndRevision()
+    public void ShouldPreserveDeclaredClassificationGivenRevision()
     {
         // Arrange
         var application = new DeclaredApplication(Uuid.CreateVersion4(), Uuid.CreateVersion4());
@@ -256,8 +192,6 @@ public sealed class DeclaredApplicationTests
         // Act
         var declared = application.Declare("Payroll", "Run payroll", "Finance", actorId,
             "Manager", now, " Internal ");
-        var replay = application.Declare("Payroll", "Run payroll", "Finance", actorId,
-            "Manager", now, " Internal ");
         var revised = application.Revise(1, "Payroll", "Run payroll", "Finance", actorId,
             "Manager", now.AddMinutes(1), " Restricted ");
         var oversized = application.Revise(2, "Payroll", "Run payroll", "Finance", actorId,
@@ -265,7 +199,6 @@ public sealed class DeclaredApplicationTests
 
         // Assert
         Assert.True(declared.IsSuccess);
-        Assert.True(replay.IsSuccess);
         Assert.Null(revised);
         Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(oversized).Code);
         Assert.Collection(new AggregateScenario<DeclaredApplication>(application).PendingEvents,
@@ -286,14 +219,11 @@ public sealed class DeclaredApplicationTests
         // Act
         var declared = application.Declare("Payroll", "Run payroll", null, actorId,
             "Manager", now, isRestricted: true);
-        var replay = application.Declare("Payroll", "Run payroll", null, actorId,
-            "Manager", now, isRestricted: true);
         var revised = application.Revise(1, "Payroll", "Run payroll", null, actorId,
             "Manager", now.AddMinutes(1), isRestricted: false);
 
         // Assert
         Assert.True(declared.IsSuccess);
-        Assert.True(replay.IsSuccess);
         Assert.Null(revised);
         Assert.False(application.IsRestricted);
         Assert.Collection(new AggregateScenario<DeclaredApplication>(application).PendingEvents,

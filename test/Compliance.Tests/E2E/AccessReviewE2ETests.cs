@@ -31,10 +31,11 @@ public sealed class AccessReviewE2ETests(BrokerStackFixture broker)
         Assert.Equal(HttpStatusCode.OK, tenant.StatusCode);
         var tenantId = (await ReadAsync(tenant)).GetProperty("tenant_id").GetString()!;
         var root = $"/api/v1/tenants/{tenantId}";
-        var applicationId = await PostWhenAuthorizedAsync(owner, $"{root}/applications",
-            new { name = "AWS", purpose = "Production cloud" }, "application_id");
-        using var declared = await owner.PostAsJsonAsync(
-            $"{root}/applications/{applicationId}/system-instances",
+        var applicationId = await PostWhenAuthorizedAsync(owner,
+            $"{root}/applications/{Guid.NewGuid()}",
+            new { name = "AWS", purpose = "Production cloud" }, "application_id", HttpMethod.Put);
+        using var declared = await owner.PutAsJsonAsync(
+            $"{root}/applications/{applicationId}/system-instances/{Guid.NewGuid()}",
             new { expected_application_revision = 1, name = "Production account", kind = "aws_account" });
         Assert.Equal(HttpStatusCode.OK, declared.StatusCode);
         var instanceId = (await ReadAsync(declared)).GetProperty("system_instance_id").GetString()!;
@@ -181,12 +182,12 @@ public sealed class AccessReviewE2ETests(BrokerStackFixture broker)
 
     /// <summary>Retries until the tenant bootstrap and permission backfills have landed.</summary>
     static async Task<string> PostWhenAuthorizedAsync(HttpClient owner, string path, object body,
-        string idProperty)
+        string idProperty, HttpMethod? method = null)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, body);
+            using var response = await owner.SendAsync(new HttpRequestMessage(method ?? HttpMethod.Post, path) { Content = JsonContent.Create(body) });
             if (response.StatusCode == HttpStatusCode.OK)
                 return (await ReadAsync(response)).GetProperty(idProperty).GetString()!;
             Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden or

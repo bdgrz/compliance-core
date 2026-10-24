@@ -866,7 +866,7 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
         deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(applicationsPath, new
+            using var response = await owner.PutAsJsonAsync($"{applicationsPath}/{Guid.NewGuid()}", new
             {
                 name = "Payroll",
                 purpose = "Run payroll for the boundary impact preview.",

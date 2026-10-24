@@ -1,8 +1,14 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 
@@ -18,9 +24,14 @@ public sealed class SystemInstanceRevisionHandlerTests : IAsyncDisposable
     public SystemInstanceRevisionHandlerTests()
     {
         var services = new ServiceCollection();
+        services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
+            ["Fitz:ApplicationName"] = "compliance",
+        }).Build(), developerAuthentication: true);
         services.AddSingleton<IEventStore, InMemoryEventStore>();
+        services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<TimeProvider>(new FixedTimeProvider(_now));
-        services.AddPortia();
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 
@@ -37,11 +48,12 @@ public sealed class SystemInstanceRevisionHandlerTests : IAsyncDisposable
             "payroll-prod", Uuid.CreateVersion4(), "Original manager", _now).IsSuccess);
         await writer.SaveAsync(instance, new RequestDispatchContext(RequestActor.System),
             CancellationToken.None);
-        var request = new ReviseSystemInstance(_tenantId, _applicationId, _systemInstanceId, 1,
+        var request = new ReviseSystemInstance(Uuid.CreateVersion4(), _tenantId, _applicationId, _systemInstanceId, 1,
             "Production east", "payroll-prod-east", "Boundary v2",
             "The production region moved to the east network zone.");
         var context = new RequestContext<ReviseSystemInstance>(request, actor);
-        var handler = new ReviseSystemInstanceHandler(services.GetRequiredService<IAggregateExecutor>(),
+        var handler = new ReviseSystemInstanceHandler(services.GetRequiredService<NativeOperationExecutor>(),
+            services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<IImmutableContentStore>(),
             services.GetRequiredService<TimeProvider>());
 
         // Act
@@ -71,9 +83,10 @@ public sealed class SystemInstanceRevisionHandlerTests : IAsyncDisposable
             "payroll-prod", Uuid.CreateVersion4(), "Original manager", _now).IsSuccess);
         await writer.SaveAsync(instance, new RequestDispatchContext(RequestActor.System),
             CancellationToken.None);
-        var request = new RetireSystemInstance(_tenantId, _applicationId, _systemInstanceId, 1,
+        var request = new RetireSystemInstance(Uuid.CreateVersion4(), _tenantId, _applicationId, _systemInstanceId, 1,
             default, "The production instance was decommissioned.");
-        var handler = new RetireSystemInstanceHandler(services.GetRequiredService<IAggregateExecutor>(),
+        var handler = new RetireSystemInstanceHandler(services.GetRequiredService<NativeOperationExecutor>(),
+            services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<IImmutableContentStore>(),
             services.GetRequiredService<TimeProvider>());
 
         // Act

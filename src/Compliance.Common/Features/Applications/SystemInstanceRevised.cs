@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
@@ -18,7 +20,9 @@ public sealed record SystemInstanceRevised(
     string Rationale,
     Uuid ActorMemberId,
     string ActorDisplay,
-    DateTimeOffset ChangedAt) : DomainEvent
+    DateTimeOffset ChangedAt,
+    OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse) : DomainEvent, INativeOperationFact
 {
     [JsonPropertyName("actor")]
     public ActorReference? StoredActor { get; init; }

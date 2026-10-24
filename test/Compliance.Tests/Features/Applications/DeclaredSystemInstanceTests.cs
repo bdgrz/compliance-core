@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 
@@ -45,7 +46,7 @@ public sealed class DeclaredSystemInstanceTests
     }
 
     [Fact]
-    public void ShouldOwnImmutableParentAndRevisionGivenDeclarationAndRetry()
+    public void ShouldOwnImmutableParentAndRevisionGivenDeclarationAndRedeclaration()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -58,8 +59,6 @@ public sealed class DeclaredSystemInstanceTests
         // Act
         var declared = instance.Declare(applicationId, " Production ", "production",
             null, " payroll-prod ", actorId, "Manager", now);
-        var retry = instance.Declare(applicationId, "Production", "production",
-            null, "payroll-prod", actorId, "Manager", now.AddMinutes(1));
         var wrongParent = instance.Declare(Uuid.CreateVersion4(), "Production", "production",
             null, "payroll-prod", actorId, "Manager", now.AddMinutes(2));
         var collision = instance.Declare(applicationId, "Staging", "production",
@@ -67,7 +66,6 @@ public sealed class DeclaredSystemInstanceTests
 
         // Assert
         Assert.True(declared.IsSuccess);
-        Assert.True(retry.IsSuccess);
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(wrongParent.Error).Kind);
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(collision.Error).Kind);
         Assert.Equal(applicationId, instance.ApplicationId);
@@ -81,32 +79,6 @@ public sealed class DeclaredSystemInstanceTests
         Assert.Equal("payroll-prod", ev.SourceIdentifier);
         Assert.Equal(ActorReference.ForMember(actorId, "Manager"), ev.StoredActor);
         Assert.Equal(ActorReference.ForMember(actorId, "Manager"), ev.Actor);
-    }
-
-    [Fact]
-    public void ShouldReuseCommittedIdentityGivenReplayedInstanceDeclaration()
-    {
-        // Arrange
-        var tenantId = Uuid.CreateVersion4();
-        var applicationId = Uuid.CreateVersion4();
-        var instanceId = Uuid.CreateVersion4();
-        var actorId = Uuid.CreateVersion4();
-        var now = DateTimeOffset.UtcNow;
-        var instance = new DeclaredSystemInstance(tenantId, instanceId);
-        new AggregateScenario<DeclaredSystemInstance>(instance).Given(DomainEventSeed.Attach(
-            new SystemInstanceRegistered(tenantId, applicationId, instanceId, 1,
-                "Production", "production", null, "payroll-prod", actorId,
-                "Manager", now), instanceId, 1));
-
-        // Act
-        var retry = instance.Declare(applicationId, "Production", "production",
-            null, "payroll-prod", actorId, "Changed display", now.AddDays(1));
-
-        // Assert
-        Assert.True(retry.IsSuccess);
-        Assert.Equal(instanceId, retry.Value.SystemInstanceId);
-        Assert.Equal(1, instance.Revision);
-        Assert.Empty(new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents);
     }
 
     [Fact]

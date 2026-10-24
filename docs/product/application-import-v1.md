@@ -98,6 +98,20 @@ revision. A cancellation first makes the batch refuse a later commit, fences eve
 its hold was never acquired, completes the cancellation from the fence manifest, and only then
 releases.
 
+`DeclaredApplication` replays its own provisional import facts locally: a provisional effect never
+changes the published content, a canceled or failed settlement never advances the public revision,
+and the published candidate becomes the application's content when its own settlement fact is
+replayed. Local writes (`DeclareApplication`, `ReviseApplication`, `RetireApplication`) are
+identified native operations of that stream and refuse to run while any batch hold is unsettled.
+
+Responses that compose several targets (the omission and row previews, the missing-row preview and
+the rejected-item report) read every application at one fixed global cut through
+`ApplicationPublicationReader`. A target shows as published exactly when the batch's own
+`ApplicationImportCommitted` fact lies below that cut, so a batch that publishes between two targets
+or between two pages is visible to all of them or to none. A paged read carries the cut watermark in
+its cursor (`publication_cut_v1:<watermark>:<cursor>`); later pages resume at that watermark and an
+incomplete scan fails the read instead of reading as an absent fact.
+
 `StageApplicationImport` body:
 
 ```json

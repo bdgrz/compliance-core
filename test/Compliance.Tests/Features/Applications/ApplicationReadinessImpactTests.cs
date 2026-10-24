@@ -261,10 +261,10 @@ public sealed class ApplicationReadinessImpactTests
                          ProjectionCheckpoint.Start)))
         {
             await applications.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-                "Payroll", "Run payroll", null, actorId, "Manager", now));
+                "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
             await applications.ApplyAsync(new SystemInstanceRegistered(tenantId, applicationId,
                 systemInstanceId, 1, "Payroll production", "production", null, null,
-                actorId, "Manager", now));
+                actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var program = Program(tenantId, programId);

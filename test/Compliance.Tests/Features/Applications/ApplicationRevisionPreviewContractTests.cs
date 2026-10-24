@@ -8,6 +8,7 @@ using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 
@@ -92,7 +93,7 @@ public sealed class ApplicationRevisionPreviewContractTests
 
         // Act
         var preview = await fixture.PreviewAsync(request);
-        var saved = await fixture.Bus.SendAsync(new ReviseApplication(request.TenantId,
+        var saved = await fixture.Bus.SendAsync(new ReviseApplication(Uuid.CreateVersion4(), request.TenantId,
             request.ApplicationId, request.ExpectedApplicationRevision, request.Name!, request.Purpose!,
             request.OwnerReference, request.Classification, request.SystemOwnerPersonId,
             request.AccessOwnerPersonId, ApplicationKind: request.ApplicationKind,

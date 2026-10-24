@@ -95,6 +95,8 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
         await scenario.When(toolName, arguments).ExpectSuccess();
         var retained = await fixture.EventsAsync();
         arguments[preview ? "expected_application_revision" : "expected_revision"] = preview ? 1 : 2;
+        if (!preview)
+            arguments["command_id"] = Uuid.CreateVersion4().ToString();
         arguments[field] = null;
         var cleared = await scenario.When(toolName, arguments);
 
@@ -125,7 +127,7 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
         await using var scenario = await fixture.ConnectMcpAsync();
         var expected = JsonNode.Parse("""
             {"type":"object","properties":{
-              "tenant_id":true,"application_id":true,
+              "command_id":true,"tenant_id":true,"application_id":true,
               "expected_revision":{"type":["string","integer"],"pattern":"^-?(?:0|[1-9]\\d*)$"},
               "name":{"type":"string"},"purpose":{"type":"string"},
               "owner_reference":{"type":["string","null"]},
@@ -134,12 +136,13 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
               "is_restricted":{"type":["boolean","null"],"default":null},
               "application_kind":{"type":["string","null"],"default":null},
               "criticality":{"type":["string","null"],"default":null}},
-             "required":["tenant_id","application_id","expected_revision","name","purpose","owner_reference"]}
+             "required":["command_id","tenant_id","application_id","expected_revision","name","purpose","owner_reference"]}
             """)!;
         if (preview)
         {
             expected["required"] = new JsonArray("tenant_id", "application_id", "expected_application_revision", "change_kind");
             var properties = expected["properties"]!.AsObject();
+            properties.Remove("command_id");
             properties["expected_application_revision"] = properties["expected_revision"]!.DeepClone();
             properties.Remove("expected_revision");
             properties.Remove("is_restricted");
@@ -335,7 +338,7 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
         await using var fixture = new Fixture(true);
         await fixture.SeedAsync();
         using var body = new StringContent("{}", Encoding.UTF8, "application/json");
-        var query = $"?{(preview ? "expected_application_revision" : "expected_revision")}=1&change_kind=revise&name=Payroll&purpose=Run%20payroll&owner_reference=Finance&classification=internal&system_owner_person_id={fixture.Owner}&access_owner_person_id={fixture.Owner}&is_restricted=true";
+        var query = $"?{(preview ? "expected_application_revision" : "expected_revision")}=1&change_kind=revise&name=Payroll&purpose=Run%20payroll&owner_reference=Finance&classification=internal&system_owner_person_id={fixture.Owner}&access_owner_person_id={fixture.Owner}&is_restricted=true{(preview ? "" : $"&application_id={fixture.Application}")}";
 
         // Act
         using var response = await fixture.SendAsync(preview, body, query);
@@ -457,7 +460,8 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
         // Arrange
         await using var fixture = new Fixture(false);
         var expected = JsonNode.Parse("""
-            {"content":{"application/json":{"schema":{"required":["expected_revision","name","purpose"],"type":"object","properties":{
+            {"content":{"application/json":{"schema":{"required":["application_id","expected_revision","name","purpose"],"type":"object","properties":{
+              "application_id":{"type":"string","format":"uuid"},
               "expected_revision":{"pattern":"^-?(?:0|[1-9]\\d*)$","type":["integer","string"]},
               "name":{"type":["null","string"]},"purpose":{"type":["null","string"]},
               "owner_reference":{"type":["null","string"]},"classification":{"type":["null","string"]},
@@ -473,11 +477,15 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
             properties["expected_application_revision"] = properties["expected_revision"]!.DeepClone();
             properties.Remove("expected_revision");
             properties.Remove("is_restricted");
+            properties.Remove("application_id");
             properties["change_kind"] = JsonNode.Parse("""{"type":["null","string"]}""");
         }
-        var parameters = JsonNode.Parse("""
+        var parameters = JsonNode.Parse(preview ? """
             [{"name":"tenant_id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}},
              {"name":"application_id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]
+            """ : """
+            [{"name":"tenant_id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}},
+             {"name":"command_id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]
             """);
 
         // Act
@@ -646,9 +654,13 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
 
         public async Task<HttpResponseMessage> ReviseAsync(long revision, string fields = "")
         {
-            using var body = new StringContent($"{{\"expected_revision\":{revision},\"name\":\"Payroll\",\"purpose\":\"Run payroll\",\"owner_reference\":\"Finance\"{fields}}}", Encoding.UTF8, "application/json");
-            return await _client.PutAsync($"/api/v1/tenants/{Tenant}/applications/{Application}", body);
+            using var body = new StringContent($"{{\"application_id\":\"{Application}\",\"expected_revision\":{revision},\"name\":\"Payroll\",\"purpose\":\"Run payroll\",\"owner_reference\":\"Finance\"{fields}}}", Encoding.UTF8, "application/json");
+            return await _client.PutAsync(RevisePath(""), body);
         }
+
+        /// <summary>The canonical revision route: the command id is the route identity and the body names the application.</summary>
+        public string RevisePath(string query, Uuid? commandId = null) =>
+            $"/api/v1/tenants/{Tenant}/applications/revise-application/{commandId ?? Uuid.CreateVersion4()}{query}";
 
         public ValueTask<McpScenario> ConnectMcpAsync() => McpScenario.ConnectAsync(_client, new Uri(_client.BaseAddress!, "/mcp"));
 
@@ -665,6 +677,8 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
             };
             if (preview)
                 arguments["change_kind"] = "revise";
+            else
+                arguments["command_id"] = Uuid.CreateVersion4().ToString();
             return arguments;
         }
 
@@ -676,13 +690,15 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
 
         public Task<HttpResponseMessage> SendAsync(bool preview, HttpContent body, string query = "") => preview
             ? _client.PostAsync($"/api/v1/tenants/{Tenant}/applications/{Application}/change-previews{query}", body)
-            : _client.PutAsync($"/api/v1/tenants/{Tenant}/applications/{Application}{query}", body);
+            : _client.PutAsync(RevisePath(query), body);
 
         public Task<HttpContext> AbortableRequestAsync(bool preview, Stream body, CancellationToken ct) =>
             _factory.Server.SendAsync(context =>
             {
                 context.Request.Method = preview ? "POST" : "PUT";
-                context.Request.Path = $"/api/v1/tenants/{Tenant}/applications/{Application}" + (preview ? "/change-previews" : "");
+                context.Request.Path = preview
+                    ? $"/api/v1/tenants/{Tenant}/applications/{Application}/change-previews"
+                    : RevisePath("");
                 context.Request.ContentType = "application/json";
                 context.Request.Headers.Cookie = _cookie;
                 context.Request.Body = body;
@@ -691,8 +707,9 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
         public async Task<JsonNode> OpenApiOperationAsync(bool preview)
         {
             var document = JsonNode.Parse(await _client.GetStringAsync("/openapi/v1.json"))!;
-            var operation = document["paths"]!["/api/v1/tenants/{tenant_id}/applications/{application_id}" +
-                (preview ? "/change-previews" : "")]![preview ? "post" : "put"]!;
+            var operation = document["paths"]![preview
+                ? "/api/v1/tenants/{tenant_id}/applications/{application_id}/change-previews"
+                : "/api/v1/tenants/{tenant_id}/applications/revise-application/{command_id}"]![preview ? "post" : "put"]!;
             var media = operation["requestBody"]!["content"]!["application/json"]!;
             if (media["schema"]!["$ref"]?.GetValue<string>() is { } reference)
                 media["schema"] = document["components"]!["schemas"]![reference.Split('/')[^1]]!.DeepClone();

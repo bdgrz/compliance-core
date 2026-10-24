@@ -27,10 +27,10 @@ public sealed class ApplicationControlVersionReferencePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
-            null, null, actorId, "Manager", now));
+            null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var events = new InMemoryEventStore();
@@ -94,7 +94,7 @@ public sealed class ApplicationControlVersionReferencePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var events = new InMemoryEventStore();

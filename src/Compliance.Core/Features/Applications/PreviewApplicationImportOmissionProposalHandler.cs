@@ -4,7 +4,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Applications;
 
 public sealed class PreviewApplicationImportOmissionProposalHandler(IAggregateReader reader,
-    IImmutableContentStore content)
+    IImmutableContentStore content, ApplicationPublicationReader publication)
     : IRequestHandler<PreviewApplicationImportOmissionProposal, ApplicationImportOmissionPreview>
 {
     public async ValueTask<Result<ApplicationImportOmissionPreview>> HandleAsync(
@@ -27,9 +27,10 @@ public sealed class PreviewApplicationImportOmissionProposalHandler(IAggregateRe
             blockers.Add("invalid_source_rows");
         if (batch.State != "preview_ready")
             blockers.Add("batch_not_preview_ready");
+        var cut = await publication.BeginAsync(ct).ConfigureAwait(false);
         foreach (var row in rows)
         {
-            var target = await reader.HydrateApplicationAsync(request.TenantId, row.ApplicationId, ct).ConfigureAwait(false);
+            var target = await cut.ReadAsync(request.TenantId, row.ApplicationId, ct).ConfigureAwait(false);
             if (!target.IsCreated || target.IsRetired || target.Revision != row.ExpectedApplicationRevision ||
                 target.CheckPendingImportChanges() is not null)
                 blockers.Add("source_claim_target_changed");

@@ -26,7 +26,7 @@ public sealed class ApplicationPolicyReferencePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var policies = new FitzApplicationPolicyReferenceDirectory(kv);
@@ -84,7 +84,7 @@ public sealed class ApplicationPolicyReferencePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var policies = new FitzApplicationPolicyReferenceDirectory(kv);

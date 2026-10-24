@@ -251,7 +251,7 @@ public sealed class ApplicationVendorImpactTests
             var applications = new FitzApplicationDirectory(kv);
             await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
                 tenantId, applicationId, "Payroll", "Payroll processing", null, actorId,
-                "Manager", now));
+                "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
             return new Scenario(tenantId, applicationId, reader, applications,
                 new FitzApplicationBoundaryReferenceDirectory(kv),
                 new FitzApplicationControlDraftReferenceDirectory(kv),
@@ -285,7 +285,7 @@ public sealed class ApplicationVendorImpactTests
             ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
                 tenantId, applicationId, systemInstanceId, revision, "Payroll production",
                 "production", null, null, Uuid.CreateVersion4(), "Manager",
-                DateTimeOffset.UtcNow));
+                DateTimeOffset.UtcNow, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
     }
 
     sealed class StubProviderReader(Page<ProviderView> page) : IProviderReader

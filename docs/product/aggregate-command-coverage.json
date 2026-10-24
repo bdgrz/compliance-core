@@ -593,14 +593,14 @@
         "test/Compliance.Tests/Features/Applications/ApplicationAccessPopulationImpactTests.cs",
         "test/Compliance.Tests/Features/Applications/FitzApplicationDirectoryTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferencePreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/SystemInstanceCutoverTests.cs",
         "test/Compliance.Tests/Features/Applications/AccessReviewScopeLegacyAndProjectionTests.cs",
         "test/Compliance.Tests/Features/Applications/DeclaredSystemInstanceTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs",
         "test/Compliance.Tests/Features/Applications/SystemInstanceReadTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationChangePreviewTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationReviewCampaignImpactTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryHttpTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -857,7 +857,9 @@
         "src/Compliance.Core/Features/Applications/DeclaredApplication.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationRetirementTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationRetirementTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryOperationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryHttpTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -885,7 +887,9 @@
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionGovernanceTests.cs",
         "test/Compliance.Tests/Features/Applications/AccessReviewScopeLegacyAndProjectionTests.cs",
         "test/Compliance.Tests/Features/Applications/DeclaredSystemInstanceTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationUpdateIntentTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryHttpTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6662,7 +6666,6 @@
         "test/Compliance.Tests/Features/Applications/DeclaredApplicationTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationActorSnapshotTests.cs",
         "test/Compliance.Tests/Features/Applications/FitzApplicationDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Applications/SystemInstanceCutoverTests.cs",
         "test/Compliance.Tests/Features/Applications/AccessReviewScopeLegacyAndProjectionTests.cs",
         "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs"
       ],
@@ -6697,7 +6700,8 @@
         "test/Compliance.Tests/Features/Applications/DeclareSystemInstanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationChangePreviewTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationReviewCampaignImpactTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryHttpTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6716,7 +6720,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationRetirementTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryHttpTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9423,14 +9428,18 @@
         "test/Compliance.Tests/Features/Applications/DeclaredSystemInstanceTests.cs",
         "test/Compliance.Tests/Features/Applications/RestrictedApplicationVisibilityTests.cs",
         "test/Compliance.Tests/Features/Applications/SystemInstanceBoundedReadTests.cs",
-        "test/Compliance.Tests/Features/Applications/SystemInstanceCutoverTests.cs",
         "test/Compliance.Tests/Features/Applications/SystemInstanceReadTests.cs",
         "test/Compliance.Tests/Features/Examinations/ApplicationTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Programs/ProgramResourceScopeResolverTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs",
         "test/Compliance.Tests/Features/Work/AccessReviewWorkQueueVisibilityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryOperationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs",
+        "test/Compliance.Tests/Testing/ApplicationInventoryHost.cs",
+        "test/Compliance.Tests/Testing/ApplicationFacts.cs",
+        "test/Compliance.Tests/Testing/ApplicationAggregateExtensions.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9464,7 +9473,10 @@
         "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs",
         "test/Compliance.Tests/Features/Work/AccessReviewWorkQueueVisibilityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Testing/ApplicationInventoryHost.cs",
+        "test/Compliance.Tests/Testing/ApplicationFacts.cs",
+        "test/Compliance.Tests/Testing/ApplicationAggregateExtensions.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10372,7 +10384,9 @@
         "test/Compliance.Tests/Features/Workforce/WorkforceRosterReconciliationTests.cs",
         "test/Compliance.Tests/Features/Workforce/WorkforceRosterSnapshotTests.cs",
         "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs",
-        "test/Compliance.Tests/Features/Workforce/WorkforceSourceObservationTests.cs"
+        "test/Compliance.Tests/Features/Workforce/WorkforceSourceObservationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryHttpTests.cs",
+        "test/Compliance.Tests/Testing/ApplicationInventoryHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11401,7 +11415,11 @@
         "test/Compliance.Tests/Features/Tenants/TenantSlugChangeAttributionTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryOperationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationUpdateIntentTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryHttpTests.cs",
+        "test/Compliance.Tests/Testing/ApplicationInventoryHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12616,7 +12634,8 @@
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProjectionTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
-        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
+        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs"
       ],
       "note": "System-only application import process receiver; appends the provisional effects of one frozen target group as one native batch. No HTTP/MCP route."
     },
@@ -15488,7 +15507,7 @@
     {
       "request": "DeclareApplication",
       "contract": "src/Compliance.Common/Features/Applications/DeclareApplication.cs",
-      "interfaces": "IRequest<ApplicationRegistration>, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<ApplicationRegistration>, IApplicationInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -15498,24 +15517,31 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [],
+      "directAggregateReferences": [
+        "DeclaredApplication"
+      ],
       "aggregateTargets": [
         "DeclaredApplication"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "NativeOperationExecutor"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Applications/PersonalAccessReviewScopeTransportTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryOperationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationUpdateIntentTests.cs",
+        "test/Compliance.Tests/Testing/ApplicationInventoryHost.cs"
       ],
       "note": ""
     },
     {
       "request": "DeclareSystemInstance",
       "contract": "src/Compliance.Common/Features/Applications/DeclareSystemInstance.cs",
-      "interfaces": "IRequest<SystemInstanceRegistration>, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<SystemInstanceRegistration>, IApplicationInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -15531,12 +15557,14 @@
       "aggregateTargets": [
         "DeclaredSystemInstance"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "NativeOperationExecutor"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/SystemInstanceBoundedReadTests.cs",
         "test/Compliance.Tests/Features/Applications/PersonalAccessReviewScopeTransportTests.cs",
-        "test/Compliance.Tests/Features/Applications/SystemInstanceCutoverTests.cs",
-        "test/Compliance.Tests/Features/Applications/DeclareSystemInstanceHandlerTests.cs"
+        "test/Compliance.Tests/Features/Applications/DeclareSystemInstanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryOperationTests.cs"
       ],
       "note": ""
     },
@@ -25887,7 +25915,7 @@
     {
       "request": "RetireApplication",
       "contract": "src/Compliance.Common/Features/Applications/RetireApplication.cs",
-      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -25897,12 +25925,18 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [],
+      "directAggregateReferences": [
+        "DeclaredApplication"
+      ],
       "aggregateTargets": [
         "DeclaredApplication"
       ],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "NativeOperationExecutor"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryOperationTests.cs"
+      ],
       "note": ""
     },
     {
@@ -26056,7 +26090,7 @@
     {
       "request": "RetireSystemInstance",
       "contract": "src/Compliance.Common/Features/Applications/RetireSystemInstance.cs",
-      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -26072,9 +26106,12 @@
       "aggregateTargets": [
         "DeclaredSystemInstance"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "NativeOperationExecutor"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/SystemInstanceRevisionHandlerTests.cs"
+        "test/Compliance.Tests/Features/Applications/SystemInstanceRevisionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryOperationTests.cs"
       ],
       "note": ""
     },
@@ -26517,7 +26554,7 @@
     {
       "request": "ReviseApplication",
       "contract": "src/Compliance.Common/Features/Applications/ReviseApplication.cs",
-      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -26527,17 +26564,23 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [],
+      "directAggregateReferences": [
+        "DeclaredApplication"
+      ],
       "aggregateTargets": [
         "DeclaredApplication"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "NativeOperationExecutor"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionFieldPresenceHttpTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionPreviewContractTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionGovernanceTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryOperationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationUpdateIntentTests.cs"
       ],
       "note": ""
     },
@@ -27187,7 +27230,7 @@
     {
       "request": "ReviseSystemInstance",
       "contract": "src/Compliance.Common/Features/Applications/ReviseSystemInstance.cs",
-      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -27203,9 +27246,12 @@
       "aggregateTargets": [
         "DeclaredSystemInstance"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "NativeOperationExecutor"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/SystemInstanceRevisionHandlerTests.cs"
+        "test/Compliance.Tests/Features/Applications/SystemInstanceRevisionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryOperationTests.cs"
       ],
       "note": ""
     },
@@ -28942,7 +28988,8 @@
         "test/Compliance.Tests/Features/Applications/ApplicationImportProjectionTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportSourceTests.cs",
-        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
+        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs"
       ],
       "note": "System-only application import process receiver; claims the canonical source for the sealed batch. No HTTP/MCP route."
     },
@@ -28968,7 +29015,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportVisibilityReadConsistencyTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportVisibilityReadConsistencyTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs"
       ],
       "note": "System-only application import process receiver; publishes every target together from the complete target proof manifest. No HTTP/MCP route."
     },
@@ -29092,7 +29140,8 @@
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProjectionTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
-        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
+        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs"
       ],
       "note": "System-only application import process receiver; acquires the exclusive hold of one canonical target group. No HTTP/MCP route."
     }

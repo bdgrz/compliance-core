@@ -331,7 +331,7 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
             [
                 DomainEventSeed.Attach(new ApplicationDeclared(scenario.TenantId,
                     scenario.ApplicationId, "Payroll", "Run payroll", null, actor, "Manager",
-                    Now, AccessOwnerPersonId: ownerPersonId), scenario.ApplicationId, 1),
+                    Now, ApplicationFacts.Application(scenario.TenantId, scenario.ApplicationId), null, AccessOwnerPersonId: ownerPersonId), scenario.ApplicationId, 1),
             ]);
             if (legacy)
                 await scenario.Events.AppendAsync(stream, 1,
@@ -343,7 +343,7 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
                         "system-instances", scenario.InstanceId.ToString()), 0,
                 [DomainEventSeed.Attach(new SystemInstanceRegistered(scenario.TenantId,
                     scenario.ApplicationId, scenario.InstanceId, 1, "Production", "production",
-                    null, "payroll-prod", actor, "Manager", Now), scenario.InstanceId, 1)]);
+                    null, "payroll-prod", actor, "Manager", Now, ApplicationFacts.SystemInstance(scenario.TenantId, scenario.InstanceId), null), scenario.InstanceId, 1)]);
             return scenario;
         }
 
@@ -370,7 +370,7 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
             await Events.AppendAsync(new EventStreamAddress(TenantId.ToString(), "applications",
                 ApplicationId.ToString()), (ulong)(revision - 1),
             [DomainEventSeed.Attach(new ApplicationRevised(TenantId, ApplicationId, revision,
-                "Payroll", "Run payroll", null, Uuid.CreateVersion4(), "Manager", Now,
+                "Payroll", "Run payroll", null, Uuid.CreateVersion4(), "Manager", Now, ApplicationFacts.Application(TenantId, ApplicationId), null,
                 AccessOwnerPersonId: personId), ApplicationId, (ulong)revision)]);
         }
 

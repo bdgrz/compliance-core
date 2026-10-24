@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
@@ -88,7 +89,9 @@ public sealed class ApplicationImportCompositionTests
                 ["Fitz:ApplicationName"] = "compliance"
             }).Build();
             services.AddCompliance(configuration, developerAuthentication: true);
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var store = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(store);
+            services.AddSingleton<IAuthoritativeSnapshotReader>(new EventStoreSnapshotReader(store));
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
             services.AddSingleton<IPermissionAuthorizer>(Permissions);
             services.AddSingleton<ITenantActivity>(new ActiveTenant());

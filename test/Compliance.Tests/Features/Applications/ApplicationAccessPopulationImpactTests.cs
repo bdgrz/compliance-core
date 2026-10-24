@@ -24,10 +24,10 @@ public sealed class ApplicationAccessPopulationImpactTests
         var applications = new FitzApplicationDirectory(kv);
         var now = DateTimeOffset.UtcNow;
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, Uuid.CreateVersion4(), "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, Uuid.CreateVersion4(), "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
-            null, null, Uuid.CreateVersion4(), "Manager", now));
+            null, null, Uuid.CreateVersion4(), "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var events = new InMemoryEventStore();
@@ -68,10 +68,10 @@ public sealed class ApplicationAccessPopulationImpactTests
         var applications = new FitzApplicationDirectory(kv);
         var now = DateTimeOffset.UtcNow;
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, Uuid.CreateVersion4(), "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, Uuid.CreateVersion4(), "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
-            null, null, Uuid.CreateVersion4(), "Manager", now));
+            null, null, Uuid.CreateVersion4(), "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var events = new InMemoryEventStore();

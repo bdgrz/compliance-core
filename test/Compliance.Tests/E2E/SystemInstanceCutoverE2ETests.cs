@@ -66,13 +66,15 @@ public sealed class SystemInstanceCutoverE2ETests(BrokerStackFixture broker)
                 $"{legacyPath}?minimum_application_revision=2&minimum_instance_revision=1");
             var revisionTwo = await WaitForOkAsync(owner, $"{applicationPath}/revisions/2");
             var revisionOne = await WaitForOkAsync(owner, $"{applicationPath}/revisions/1");
-            var revise = owner.PutAsJsonAsync(applicationPath, new
-            {
-                expected_revision = 2,
-                name = "Payroll",
-                purpose = "Run monthly payroll",
-            });
-            var declare = owner.PostAsJsonAsync($"{applicationPath}/system-instances", new
+            var revise = owner.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/applications/revise-application/{Guid.NewGuid()}", new
+                {
+                    application_id = applicationId,
+                    expected_revision = 2,
+                    name = "Payroll",
+                    purpose = "Run monthly payroll",
+                });
+            var declare = owner.PutAsJsonAsync($"{applicationPath}/system-instances/{Guid.NewGuid()}", new
             {
                 expected_application_revision = 2,
                 name = "Payroll staging",
@@ -87,10 +89,10 @@ public sealed class SystemInstanceCutoverE2ETests(BrokerStackFixture broker)
                 $"{applicationPath}/system-instances/{newId}?minimum_instance_revision=1");
             var list = await WaitForOkAsync(owner,
                 $"{applicationPath}/system-instances?minimum_application_revision=3");
-            using var missingApplication = await owner.PostAsJsonAsync(
-                $"{applicationsPath}/{Guid.NewGuid()}/system-instances", Declaration());
-            using var otherTenantApplication = await owner.PostAsJsonAsync(
-                $"/api/v1/tenants/{otherTenantId}/applications/{applicationId}/system-instances",
+            using var missingApplication = await owner.PutAsJsonAsync(
+                $"{applicationsPath}/{Guid.NewGuid()}/system-instances/{Guid.NewGuid()}", Declaration());
+            using var otherTenantApplication = await owner.PutAsJsonAsync(
+                $"/api/v1/tenants/{otherTenantId}/applications/{applicationId}/system-instances/{Guid.NewGuid()}",
                 Declaration());
             await using var mcp = await McpScenario.ConnectAsync(owner,
                 new Uri(owner.BaseAddress!, "/mcp"));
@@ -174,6 +176,7 @@ public sealed class SystemInstanceCutoverE2ETests(BrokerStackFixture broker)
     static Dictionary<string, object?> DeclarationArguments(Guid tenantId, Guid applicationId) =>
         new()
         {
+            ["system_instance_id"] = Guid.NewGuid(),
             ["tenant_id"] = tenantId,
             ["application_id"] = applicationId,
             ["expected_application_revision"] = 1,
@@ -237,7 +240,7 @@ public sealed class SystemInstanceCutoverE2ETests(BrokerStackFixture broker)
         HttpStatusCode? lastStatus = null;
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, new
+            using var response = await owner.PutAsJsonAsync($"{path}/{Guid.NewGuid()}", new
             {
                 name = "Payroll",
                 purpose = "Run payroll",
