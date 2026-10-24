@@ -33,7 +33,18 @@
       ],
       "evidence": "ArtifactDownloadGrant tenant/GrantId uses root command ID while admission is artifact-local. Same ID on two artifacts admits two roots without realm-wide binding, then collides on the receiving grant. A foreign terminal cannot authorize decrypt/replay/settlement or produce a second cancellation; using it leaks authority or strands source pins.",
       "implementedFence": "Unqualified protocol is preserved offline and public cutover excluded. Foreign terminal paths fail closed in the candidate. Independently correct configured AES store proceeds.",
-      "nextWork": "Provide selected realm-wide root binding protocol or select a compatible artifact-qualified receiving identity and verified terminal settlement contract."
+      "nextWork": "Provide selected realm-wide root binding protocol or select a compatible artifact-qualified receiving identity and verified terminal settlement contract.",
+      "preservedCandidate": {
+        "archive": "s31-unqualified-protocol-candidate.tar.gz",
+        "sha256": "81913492d5d4973168e84afb7aea71e65409923c320ea7b0e79357c11030638a",
+        "verifiedEntries": [
+          "protocol-unqualified-implementation.patch",
+          "protocol-unqualified-tests.patch",
+          "protocol-unqualified-manifest.json",
+          "S31-qualification-blocker.md"
+        ]
+      },
+      "independentProgress": "Configured persistent AES protected store validated separately; no public protocol cutover."
     }
   ],
   "remainingSlices": [
@@ -70,7 +81,9 @@
     "foundation-original-binding-integration-jev.json",
     "source-publication-file-reviews.json",
     "source-publication-file-triage.json",
-    "source-publication-integration-jev.json"
+    "source-publication-integration-jev.json",
+    "protected-store-file-reviews.json",
+    "protected-store-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -134,12 +147,14 @@
     {
       "id": "audit-package-source-byte-publication",
       "slice": "S29",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "externalDependency": false,
       "evidence": "21TypeI families and TypeII chain mapped. Merkle/prefixed logical digests must retain full content and proof through an exact physical blob descriptor; publishing root preimage alone loses rows.",
       "focusedGreen": "270passed/0failed",
       "fullUnitGreen": "5574passed/0failed",
-      "jev": "49currentfiles;9signalstriaged;directintegrationmerge.93"
+      "jev": "49currentfiles;9signalstriaged;directintegrationmerge.93",
+      "pullRequest": 1099,
+      "mergeCommit": "dd3ea0fc3d6f7d5eff8d10d65fc96abb8221e07f"
     },
     {
       "id": "grant-and-freeze-replay",
@@ -194,6 +209,14 @@
       "status": "queued_unblocked",
       "externalDependency": false,
       "evidence": "Binding defects repaired, but RiskDraft raw initial content/event frame limit, RiskEvaluation history collections and ratification catalog full history/decision collections still require compact native authority and external verified history."
+    },
+    {
+      "id": "configured-protected-response-store",
+      "slice": "S31",
+      "status": "validated_awaiting_merge",
+      "focusedGreen": "41passed/0failed including13crypto/actualDI",
+      "fullUnitGreen": "5587passed/0failed",
+      "jev": "5currentfiles;0highsignals;directintegrationmerge.74"
     }
   ],
   "resolved": [

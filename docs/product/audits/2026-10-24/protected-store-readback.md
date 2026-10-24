@@ -1,0 +1,11 @@
+# Configured protected original-response storage
+
+The independently registered protected content port now uses AES256GCM over persistent immutable ciphertext storage. Explicit configured versioned32byte keys are copied privately; no process-local or ephemeral production key is generated. Missing active configuration refuses a new protected write. Rotation retains older keys for original replay; missing historical key/content remains unavailable.
+
+A fresh96bitnonce and128bittag protect each write. Full envelope digest/length includes header, content identity, key version, result schema, nonce, ciphertext and tag. Length-prefixed AAD additionally binds realm, all affected-owner address fields, root operation and original actor kind/ID; display text is excluded. The store verifies publication metadata and authenticated plaintext round-trip before returning an opaque reference, then verifies again on read. Authentication failure is permanent; missing dependency/key is typed unavailable. No raw plaintext or key is persisted or included in exception messages.
+
+RED1failed: actual AddCompliance composition returned no protected-store service after contract-only scaffolding. GREEN: strict Release0warnings/errors;41focused tests (13crypto/realDI cases plus28HTTPsmokes);5,587unit tests. The production composition test reads actual durable cipher bytes and decrypts the original reference through a fresh provider with the retained configured ring. Other tests cover fresh nonce, old-key rotation, six scope/reference swaps, ciphertext tamper with recomputed digest, missing active/historical keys and unreadable writeback. Whitespace,24Node,design/coverage and diff checks pass.
+
+Jev1.14.0 reviewed5 current implementation/dependency hashes; no signal reached.65. Direct integration selected merge_scoped_repair .74, introduced_regression .24, scope_misrepresentation .08. Full units subsequently passed.
+
+This adds no protected-download route, grant/process/cancellation implementation or public global result lookup. The unqualified protocol candidate remains excluded because its receiving identity collision cannot safely settle two artifact-local admissions without selected realm-wide root binding. Its four preservation artifacts were archived and verified locally before continuing. No production key configuration, deployment or new GitHub issue.
