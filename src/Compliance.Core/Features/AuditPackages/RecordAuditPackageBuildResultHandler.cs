@@ -13,7 +13,7 @@ namespace Bdgrz.Compliance.Features.AuditPackages;
 /// <summary>Records only a durable successful output whose actual ZIP verifies against the original admission.</summary>
 public sealed class RecordAuditPackageBuildResultHandler(AuditPackageSourceVerifier verifier,
     IAggregateReader reader, ReceiverAppend append, IAuditPackageBuildOutputs outputs, IImmutableContentStore content,
-    IArtifactContentStore artifacts, TimeProvider clock) : IRequestHandler<RecordAuditPackageBuildResult, ReceiverOutcome>
+    IArtifactContentStore artifacts, TimeProvider clock, IDomainEventReader events) : IRequestHandler<RecordAuditPackageBuildResult, ReceiverOutcome>
 {
     public async ValueTask<Result<ReceiverOutcome>> HandleAsync(IRequestContext<RecordAuditPackageBuildResult> context,
         CancellationToken ct)
@@ -36,7 +36,7 @@ public sealed class RecordAuditPackageBuildResultHandler(AuditPackageSourceVerif
                 command.Source.EventId, verified.Value!.Intent.Header, command.Target, clock.GetUtcNow());
             var binding = AcceptedOperationBinding.Of(operation);
             var selected = await reader.HydrateAsync(new AuditPackageManifest(tenant, command.PackageId,
-                command.CommandId, nameof(RecordAuditPackageBuildResult)), ct).ConfigureAwait(false);
+                command.CommandId, nameof(RecordAuditPackageBuildResult), command.Generation), ct).ConfigureAwait(false);
             if (selected.Acceptance.Decide(binding) == NativeAcceptanceDecision.Conflict)
                 return ReceiverAppend.Invalid("The callback command was already accepted with another intent.");
             if (selected.Acceptance.Decide(binding) == NativeAcceptanceDecision.Replayed)
@@ -66,15 +66,19 @@ public sealed class RecordAuditPackageBuildResultHandler(AuditPackageSourceVerif
             if (failure is not null)
                 return failure == "archive_content_unavailable" ? ReceiverAppend.Wait("The actual archive is unavailable.")
                     : ReceiverAppend.Invalid("The actual archive does not match the frozen manifest.");
+            var history = await AuditPackageManifestHistory.ReadAsync(events, selected, ct).ConfigureAwait(false);
+            var local = AuditPackagePreparedProof.ForBuild(history, command.Source, command.Generation, command.OperationId);
+            if (!local.IsSuccess)
+                return Result<ReceiverOutcome>.Failure(local.Error!);
             var change = await PackageContent.WriteAsync(content, tenant, "AuditPackageBuilt.change.v1",
                 new AuditPackageBuiltChange(command.BuildId, output, operation.AcceptedAt), ct).ConfigureAwait(false);
             var terminalResult = await PackageContent.FreezeUnitResultAsync(content, tenant, ct).ConfigureAwait(false);
             return await append.ApplyAsync(() => new AuditPackageManifest(tenant, command.PackageId,
-                    command.CommandId, nameof(RecordAuditPackageBuildResult)), owner => owner.Acceptance, binding,
+                    command.CommandId, nameof(RecordAuditPackageBuildResult), command.Generation), owner => owner.Acceptance, binding,
                 owner => owner.IsFrozen(command.Generation)
                     ? ReceiverAppend.Superseded("The exact version was frozen by a delivery.") : null,
                 owner => owner.RecordBuilt(verified.Value.Admission.ProgramId, command.ExpectedRevision ?? owner.Revision,
-                    command.Generation, operation, command.Source, change, terminalResult), context, ct).ConfigureAwait(false);
+                    command.Generation, operation, command.Source, change, terminalResult, local.Value!), context, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentUnavailableException exception)
         {

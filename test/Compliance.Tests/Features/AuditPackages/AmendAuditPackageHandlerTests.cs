@@ -163,7 +163,7 @@ public sealed class AmendAuditPackageHandlerTests
         public IAggregateExecutor Executor { get; }
         public IImmutableContentStore ContentStore { get; } =
             new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
-        public AuditPackageReader Packages => new(Reader, ContentStore);
+        public AuditPackageReader Packages => new(Reader, ContentStore, PeriodEvents);
         public AuditPackageRootOperation RootOperation => new(Reader, Packages,
             new NativeOperationExecutor(Reader, Executor, ContentStore), ContentStore, _clock);
         public async Task<AuditPackageRules> ReadPackageAsync(Uuid id) =>
@@ -181,6 +181,7 @@ public sealed class AmendAuditPackageHandlerTests
                 _artifactRoot, null, ArtifactContentLimits.MaxContentLength), _clock);
             services.AddSingleton(ArtifactStore);
             services.AddPortia();
+            PackageSeeds.Configure(services, PeriodEvents);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
@@ -247,7 +248,7 @@ public sealed class AmendAuditPackageHandlerTests
                 new AuditPackageBuildOutput(manifest.AuditPackageManifestId,
                     manifest.ManifestSha256, manifest.Entries, ArchiveId, archiveSha256,
                     archiveBytes.LongLength, null), null, "build-worker", Now.AddMinutes(3)));
-            await PackageSeeds.WriteAsync(Writer, ContentStore, package.Current!);
+            await PackageSeeds.WriteAsync(Reader, Writer, PeriodEvents, ContentStore, package.Current!);
         }
 
         async Task<byte[]> BuildArchiveAsync(AuditPackageManifestView manifest,

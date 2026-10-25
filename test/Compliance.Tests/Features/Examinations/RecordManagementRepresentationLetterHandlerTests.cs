@@ -223,7 +223,7 @@ public sealed class RecordManagementRepresentationLetterHandlerTests
                 "letter-delivery-1", actorMemberId, "Management representative",
                 Now.AddMinutes(6)));
         }
-        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.ContentStore, package.Current!);
+        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.PeriodEvents, fixture.ContentStore, package.Current!);
 
         var ceoMemberId = RbacIds.Member(fixture.TenantId, Uuid.CreateVersion4());
         var assertionId = Uuid.CreateVersion4();

@@ -188,7 +188,7 @@ public sealed class CreateAuditPackageHandlerTests
             Assert.True(winner.IsSuccess, winner.Error?.Message);
             raced = true;
         });
-        var packages = new AuditPackageReader(reader, fixture.ContentStore);
+        var packages = new AuditPackageReader(reader, fixture.ContentStore, fixture.PeriodEvents);
         var operations = new AuditPackageRootOperation(reader, packages,
             new NativeOperationExecutor(reader, fixture.Executor, fixture.ContentStore), fixture.ContentStore,
             new FixedTimeProvider(Now));
@@ -204,7 +204,7 @@ public sealed class CreateAuditPackageHandlerTests
         Assert.True(replay.IsSuccess, replay.Error?.Message);
         Assert.Equal(1, saved.Revision);
         Assert.Single((await fixture.Packages.ReadAsync(fixture.TenantId, fixture.ProgramId, packageId,
-            CancellationToken.None)).Owner.Facts.OfType<AuditPackageCreated>());
+            CancellationToken.None)).History.Facts.OfType<AuditPackageCreated>());
     }
 
     sealed class Fixture : IAsyncDisposable
@@ -232,7 +232,7 @@ public sealed class CreateAuditPackageHandlerTests
         public IAggregateExecutor Executor { get; }
         public IImmutableContentStore ContentStore { get; } =
             new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
-        public AuditPackageReader Packages => new(Reader, ContentStore);
+        public AuditPackageReader Packages => new(Reader, ContentStore, PeriodEvents);
         public AuditPackageRootOperation RootOperation => new(Reader, Packages,
             new NativeOperationExecutor(Reader, Executor, ContentStore), ContentStore, _clock);
         public async Task<AuditPackageRules> ReadPackageAsync(Uuid id) =>
@@ -246,6 +246,7 @@ public sealed class CreateAuditPackageHandlerTests
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
+            PackageSeeds.Configure(services, PeriodEvents);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();

@@ -132,7 +132,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
         Assert.Null(package.RecordDelivery(package.Revision, 1, "auditor@example.test",
             "management-review-delivery", memberId, "Management executive",
             new DateTimeOffset(2026, 10, 18, 17, 6, 0, TimeSpan.Zero)));
-        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.ContentStore, package.Current!);
+        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.PeriodEvents, fixture.ContentStore, package.Current!);
         var packageVersion = package.Current!.Versions.Single();
         var baselineReferences = baseline.Sources.Select(item => new ExaminationContentReference(
             item.Kind, item.RecordId, item.VersionId, item.Revision, item.ContentSha256)).ToArray();

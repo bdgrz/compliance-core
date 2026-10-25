@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.AuditPackages;
 
 /// <summary>Materializes the exact admitted personal handoff even after a later manifest version exists.</summary>
 public sealed class MaterializeRecordedAuditPackageDeliveryHandler(AuditPackageSourceVerifier verifier,
-    IAggregateReader reader, ReceiverAppend append, IImmutableContentStore content, TimeProvider clock)
+    IAggregateReader reader, ReceiverAppend append, IImmutableContentStore content, TimeProvider clock, IDomainEventReader events)
     : IRequestHandler<MaterializeRecordedAuditPackageDelivery, ReceiverOutcome>
 {
     public async ValueTask<Result<ReceiverOutcome>> HandleAsync(
@@ -35,7 +35,8 @@ public sealed class MaterializeRecordedAuditPackageDeliveryHandler(AuditPackageS
                 return ReceiverAppend.Invalid("The receiver command id differs from its exact source effect key.");
             var parent = await reader.HydrateAsync(new AuditPackageManifest(tenant, command.PackageId), ct)
                 .ConfigureAwait(false);
-            var admitted = (AuditPackageDeliveryAdmitted)parent.FactById(command.Source.EventId)!;
+            var history = await AuditPackageManifestHistory.ReadAsync(events, parent, ct).ConfigureAwait(false);
+            var admitted = (AuditPackageDeliveryAdmitted)history.FactById(command.Source.EventId)!;
             var operation = SourceUseReceiverSupport.Child(command.CommandId, nameof(MaterializeRecordedAuditPackageDelivery),
                 command.Source.EventId, verified.Value!.Header, command.Target, clock.GetUtcNow());
             var terminalResult = await PackageContent.FreezeUnitResultAsync(content, tenant, ct).ConfigureAwait(false);

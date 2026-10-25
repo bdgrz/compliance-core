@@ -43,7 +43,7 @@ public sealed class AuditPackageReadHandlerTests
         await using var fixture = new Fixture();
         var package = await fixture.SeedAsync("Private package", Now);
         var fault = new FaultedContent(fixture.Content, unavailable: false);
-        var handler = new GetAuditPackageHandler(new AuditPackageReader(fixture.Reader, fault));
+        var handler = new GetAuditPackageHandler(new AuditPackageReader(fixture.Reader, fault, fixture.Events));
         var request = new GetAuditPackage(changed == "tenant" ? Uuid.CreateVersion4() : fixture.Tenant,
             changed == "program" ? Uuid.CreateVersion4() : fixture.Program,
             changed == "package" ? Uuid.CreateVersion4() : package.Id);
@@ -65,7 +65,7 @@ public sealed class AuditPackageReadHandlerTests
         await using var fixture = new Fixture();
         var package = await fixture.SeedAsync("Exact package", Now);
         var handler = new GetAuditPackageHandler(new AuditPackageReader(fixture.Reader,
-            new FaultedContent(fixture.Content, unavailable)));
+            new FaultedContent(fixture.Content, unavailable), fixture.Events));
 
         // Act
         var result = await handler.HandleAsync(Context(new GetAuditPackage(fixture.Tenant, fixture.Program,
@@ -85,7 +85,7 @@ public sealed class AuditPackageReadHandlerTests
         await fixture.ProjectAsync();
         Assert.Null(package.RequestBuild(package.Revision, "build-1", fixture.Member,
             "Package author", Now.AddMinutes(1)));
-        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.Content, package.Current!);
+        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.Events, fixture.Content, package.Current!);
         await fixture.ProjectAsync();
         var identity = Assert.Single((await fixture.Directory.ListProgramAsync(fixture.Tenant, fixture.Program,
             50, null)).Items);
@@ -117,7 +117,7 @@ public sealed class AuditPackageReadHandlerTests
         await fixture.SeedAsync("Other tenant", Now, tenant: otherTenant);
         Assert.Null(first.RequestBuild(first.Revision, "later-build", fixture.Member,
             "Package author", Now.AddDays(1)));
-        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.Content, first.Current!);
+        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.Events, fixture.Content, first.Current!);
         await fixture.ProjectAsync();
         await fixture.ProjectAsync(otherTenant);
 
@@ -223,9 +223,9 @@ public sealed class AuditPackageReadHandlerTests
         var second = await fixture.SeedAsync("Unreadable second", Now.AddMinutes(1));
         await fixture.ProjectAsync();
         var owner = await fixture.Reader.HydrateAsync(new AuditPackageManifest(fixture.Tenant, second.Id));
-        var failedContent = Assert.IsType<AuditPackageCreated>(Assert.Single(owner.Facts)).Change.ContentId;
+        var failedContent = Assert.IsType<AuditPackageCreated>(Assert.Single((await AuditPackageManifestHistory.ReadAsync(fixture.Events, owner)).Facts)).Change.ContentId;
         var packages = new AuditPackageReader(fixture.Reader, new FaultedContent(fixture.Content, unavailable,
-            failedContent));
+            failedContent), fixture.Events);
         var handler = new ListAuditPackagesHandler(fixture.Directory,
             new AuditPackageDirectoryReadConsistency(fixture.Directory, fixture.Events), packages);
 
@@ -256,7 +256,7 @@ public sealed class AuditPackageReadHandlerTests
         });
         var handler = new ListAuditPackagesHandler(hooked,
             new AuditPackageDirectoryReadConsistency(hooked, fixture.Events),
-            new AuditPackageReader(fixture.Reader, fixture.Content));
+            new AuditPackageReader(fixture.Reader, fixture.Content, fixture.Events));
 
         // Act
         var result = await handler.HandleAsync(Context(new ListAuditPackages(fixture.Tenant, fixture.Program)),
@@ -276,7 +276,7 @@ public sealed class AuditPackageReadHandlerTests
         var package = await fixture.SeedAsync("Exact package", Now);
         await fixture.ProjectAsync();
         var owner = await fixture.Reader.HydrateAsync(new AuditPackageManifest(fixture.Tenant, package.Id));
-        var created = Assert.IsType<AuditPackageCreated>(Assert.Single(owner.Facts));
+        var created = Assert.IsType<AuditPackageCreated>(Assert.Single((await AuditPackageManifestHistory.ReadAsync(fixture.Events, owner)).Facts));
         var checkpoint = await fixture.Directory.LoadCheckpointAsync(fixture.Tenant);
         string rejection;
 
@@ -337,17 +337,17 @@ public sealed class AuditPackageReadHandlerTests
                     Uuid.CreateVersion4(), 1, "snapshot", new string('b', 64), 100, "management",
                     Uuid.CreateVersion4())]);
             Assert.Null(package.Create(content, Member, "Package author", createdAt));
-            await PackageSeeds.WriteAsync(Writer, Content, package.Current!);
+            await PackageSeeds.WriteAsync(Reader, Writer, Events, Content, package.Current!);
             return package;
         }
 
         public Task<Result<AuditPackageView>> GetAsync(Uuid packageId) => new GetAuditPackageHandler(
-            new AuditPackageReader(Reader, Content)).HandleAsync(Context(new GetAuditPackage(Tenant, Program,
+            new AuditPackageReader(Reader, Content, Events)).HandleAsync(Context(new GetAuditPackage(Tenant, Program,
                 packageId)), CancellationToken.None).AsTask();
 
         public Task<Result<Page<AuditPackageSummaryView>>> ListAsync(int? limit = null, string? cursor = null,
             Uuid? tenant = null, Uuid? program = null) => new ListAuditPackagesHandler(Directory,
-            new AuditPackageDirectoryReadConsistency(Directory, Events), new AuditPackageReader(Reader, Content))
+            new AuditPackageDirectoryReadConsistency(Directory, Events), new AuditPackageReader(Reader, Content, Events))
             .HandleAsync(Context(new ListAuditPackages(tenant ?? Tenant, program ?? Program, limit, cursor)),
                 CancellationToken.None).AsTask();
 

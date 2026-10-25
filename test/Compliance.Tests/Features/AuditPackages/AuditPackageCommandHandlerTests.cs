@@ -176,6 +176,7 @@ public sealed class AuditPackageCommandHandlerTests
         public Uuid LeadUserId { get; } = Uuid.CreateVersion4();
         public Uuid ReviewerUserId { get; } = Uuid.CreateVersion4();
         public Uuid ApproverUserId { get; } = Uuid.CreateVersion4();
+        public InMemoryEventStore PeriodEvents { get; } = new();
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         readonly string _artifactRoot = Path.Combine(Path.GetTempPath(), $"package-command-{Guid.NewGuid():N}");
@@ -183,7 +184,7 @@ public sealed class AuditPackageCommandHandlerTests
         public IAggregateExecutor Executor { get; }
         public IImmutableContentStore ContentStore { get; } =
             new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
-        public AuditPackageReader Packages => new(Reader, ContentStore);
+        public AuditPackageReader Packages => new(Reader, ContentStore, PeriodEvents);
         public AuditPackageRootOperation RootOperation => new(Reader, Packages,
             new NativeOperationExecutor(Reader, Executor, ContentStore), ContentStore, _clock);
         public async Task<AuditPackageRules> ReadPackageAsync(Uuid id) =>
@@ -197,8 +198,9 @@ public sealed class AuditPackageCommandHandlerTests
             ArtifactStore = new LocalArtifactContentStore(new ArtifactContentStoreOptions(
                 _artifactRoot, null, ArtifactContentLimits.MaxContentLength), _clock);
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
+            PackageSeeds.Configure(services, PeriodEvents);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             {
                 ValidateScopes = true,
@@ -224,7 +226,7 @@ public sealed class AuditPackageCommandHandlerTests
         public async Task MaterializeDeliveriesAsync(Uuid packageId)
         {
             var owner = (await Packages.ReadAsync(TenantId, ProgramId, packageId, CancellationToken.None)).Owner;
-            foreach (var fact in owner.Facts.OfType<AuditPackageDeliveryAdmitted>())
+            foreach (var fact in (await AuditPackageManifestHistory.ReadAsync(PeriodEvents, owner)).Facts.OfType<AuditPackageDeliveryAdmitted>())
             {
                 var command = new MaterializeRecordedAuditPackageDelivery(
                     EffectIdentity.CommandId(fact.Metadata.EventId, $"{AuditPackageDeliveryRecordingProcess.Name}:{nameof(MaterializeRecordedAuditPackageDelivery)}", new AuditPackageDelivery(TenantId, packageId, fact.PackageVersion, fact.Operation.LogicalId).Stream.ToString(), fact.Operation.Episode),
@@ -232,8 +234,8 @@ public sealed class AuditPackageCommandHandlerTests
                         fact.PackageVersion, fact.Operation.LogicalId).Stream, fact.Operation.LogicalId,
                     fact.PackageVersion, null, fact.Intent, packageId, fact.Operation.LogicalId, fact.PackageVersion);
                 var handler = new MaterializeRecordedAuditPackageDeliveryHandler(
-                    new AuditPackageSourceVerifier(Reader, ContentStore), Reader,
-                    new Bdgrz.Compliance.Features.Processes.ReceiverAppend(Executor), ContentStore, _clock);
+                    new AuditPackageSourceVerifier(Reader, ContentStore, PeriodEvents), Reader,
+                    new Bdgrz.Compliance.Features.Processes.ReceiverAppend(Executor), ContentStore, _clock, PeriodEvents);
                 var result = await handler.HandleAsync(new Cntryl.Portia.RequestContext<MaterializeRecordedAuditPackageDelivery>(
                     command, new RequestDispatchContext(RequestActor.System)), CancellationToken.None);
                 Assert.True(result.IsSuccess, result.Error?.Message);
@@ -246,7 +248,7 @@ public sealed class AuditPackageCommandHandlerTests
             var package = new AuditPackageAggregate(TenantId, ProgramId, packageId);
             Assert.Null(package.Create(Content(packageId), RbacIds.Member(TenantId, LeadUserId),
                 "Lead", Now));
-            await PackageSeeds.WriteAsync(Writer, ContentStore, package.Current!);
+            await PackageSeeds.WriteAsync(Reader, Writer, PeriodEvents, ContentStore, package.Current!);
             return packageId;
         }
 
@@ -269,7 +271,7 @@ public sealed class AuditPackageCommandHandlerTests
                 built.Value!, null, "build-worker", Now.AddMinutes(2)));
             Assert.Null(package.RecordValidation(package.Revision, 1, "validation-1", [],
                 reviewerMember, "Independent reviewer", Now.AddMinutes(3)));
-            await PackageSeeds.WriteAsync(Writer, ContentStore, package.Current!);
+            await PackageSeeds.WriteAsync(Reader, Writer, PeriodEvents, ContentStore, package.Current!);
             return packageId;
         }
 
@@ -294,7 +296,7 @@ public sealed class AuditPackageCommandHandlerTests
                 "error", true, true, "A selected governed source requires an authorized override.");
             Assert.Null(package.RecordValidation(package.Revision, 1, "blocked-validation-1",
                 [finding], reviewerMember, "Independent reviewer", Now.AddMinutes(3)));
-            await PackageSeeds.WriteAsync(Writer, ContentStore, package.Current!);
+            await PackageSeeds.WriteAsync(Reader, Writer, PeriodEvents, ContentStore, package.Current!);
             return (packageId, finding.FindingId);
         }
 

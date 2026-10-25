@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
@@ -47,6 +48,10 @@ public sealed class PolicyDistributionCampaign : Aggregate
         Acceptance = new NativeAcceptance(selectedLogicalId);
         On<PolicyCampaignLaunched>(ev =>
         {
+            if (ev.Actor is not { Kind: "member" } || ev.ActorMemberId == Uuid.Empty ||
+                !Uuid.TryParse(ev.Actor.Id, System.Globalization.CultureInfo.InvariantCulture, out var memberId) ||
+                memberId != ev.ActorMemberId || ev.Operation is null || ev.Operation.Actor != ev.Actor)
+                throw new ImmutableContentIntegrityException("The campaign launching member differs from its actual native actor.");
             Acceptance.Observe(ev);
             if (_launch is not null || ev.TenantId != _tenantId || ev.CampaignId != Id || ev.Operation.Owner != Stream ||
                 ev.Operation.LogicalId != Id || ev.FirstResponse is null)

@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.AuditorRequests;
 using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Fitz;
@@ -26,6 +27,8 @@ static class PersistenceServiceCollectionExtensions
             new AdvisorAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IAggregateReader>(services, (provider, inner) =>
             new AuditorRequestAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
+        Decorate<IAggregateReader>(services, (provider, inner) =>
+            new AuditPackageManifestAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IRequestBus>(services, (_, inner) => new PersistenceValidationRequestBus(inner));
     }
 
