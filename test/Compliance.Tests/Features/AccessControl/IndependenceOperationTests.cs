@@ -66,7 +66,7 @@ public sealed class IndependenceOperationTests
         // Arrange
         var authorizer = new IndependenceRuleAdministrationAuthorizer(new OperatorAccess(isOperator));
         var context = new RequestContext<IIndependenceRuleAdministrationRequest>(
-            new ReviseIndependenceRules(0, Rules), Actor);
+            new ReviseIndependenceRules(Uuid.CreateVersion4(), 0, Rules), Actor);
 
         // Act
         var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
@@ -81,7 +81,7 @@ public sealed class IndependenceOperationTests
         // Arrange
         var authorizer = new IndependenceRuleAdministrationAuthorizer(new OperatorAccess(true));
         var context = new RequestContext<IIndependenceRuleAdministrationRequest>(
-            new ReviseIndependenceRules(0, Rules), RequestActor.System);
+            new ReviseIndependenceRules(Uuid.CreateVersion4(), 0, Rules), RequestActor.System);
 
         // Act
         var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);

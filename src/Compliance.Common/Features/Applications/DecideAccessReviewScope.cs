@@ -12,4 +12,7 @@ public sealed record DecideAccessReviewScope(Uuid TenantId, Uuid ApplicationId,
     string Decision, string Reason, DateTimeOffset EffectiveFrom,
     DateTimeOffset? ReviewBy = null, Uuid? SeparationOfDutiesWaiverId = null)
     : IRequest<AccessReviewScopeDecisionView>, IApplicationInventoryWriteRequest,
-        IProgramManagementRequest, ICallable;
+        IProgramManagementRequest, ICallable, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => SystemInstanceAccessReviewScopeIdentity.For(TenantId, ApplicationId, SystemInstanceId, ExpectedDecisionCount);
+}

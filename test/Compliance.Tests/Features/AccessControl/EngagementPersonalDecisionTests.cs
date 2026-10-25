@@ -588,11 +588,8 @@ public sealed class EngagementPersonalDecisionTests
         [
             staffRecord.PrepareStatus(staffRecord.Revision).Error,
             designation.PrepareChange((long)designation.Revision, Uuid.CreateVersion4()).Error,
-            catalog.ReviseRules(Uuid.CreateVersion4(), catalog.Sequence, PersonalDecisionFacts.ConditionalRules,
-                partner.OperatorActor, partner.At).Error,
-            ratifications.Ratify(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 2, 1, ratifications.Sequence,
-                new string('c', 64), "Synthetic", partner.Ratifier, partner.RatifierDuty,
-                ActorReference.ForFirmStaff(partner.Ratifier.UserId, "Synthetic ratifier"), partner.At).Error,
+            catalog.PrepareRevision(catalog.Sequence).Error,
+            ratifications.PrepareRatification(ratifications.Sequence, 2).Error,
             clientService.PrepareService(Uuid.CreateVersion4(), (long)clientService.Epoch).Error,
         ];
         var finished = await RunAsync(host.Provider, host.Tenant, engagement, command.EvaluationId);
@@ -666,13 +663,13 @@ public sealed class EngagementPersonalDecisionTests
                 await host.SeedDraftRulesAsync(PersonalDecisionFacts.ConditionalRules);
                 break;
             default:
-                var executor = host.Scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-                var ratified = await executor.ExecuteAsync(new IndependenceRuleRatificationCatalog(), catalog =>
-                    AggregateOutcome.CommitOnSuccess(catalog.Ratify(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 2, 1,
-                        catalog.Sequence, new string('c', 64), "Synthetic later ratification", partner.Ratifier,
-                        partner.RatifierDuty, ActorReference.ForFirmStaff(partner.Ratifier.UserId, "Synthetic ratifier"),
-                        partner.At)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-                Assert.True(ratified.IsSuccess, ratified.Error?.Message);
+                var ratificationId = Uuid.CreateVersion4();
+                await ProgramManagementServices.SeedAsync(host.Provider, new IndependenceRuleRatificationRules(), catalog =>
+                    catalog.Ratify(Uuid.CreateVersion4(), ratificationId, 2, 1, catalog.Sequence, new string('c', 64),
+                        "Synthetic later ratification", partner.Ratifier, partner.RatifierDuty,
+                        ActorReference.ForFirmStaff(partner.Ratifier.UserId, "Synthetic ratifier"), partner.At));
+                var ratified = await host.Scope.ServiceProvider.GetRequiredService<IndependenceRuleRatificationReader>().ReadAsync();
+                Assert.Equal(ratificationId, ratified.Active!.RatificationId);
                 break;
         }
     }

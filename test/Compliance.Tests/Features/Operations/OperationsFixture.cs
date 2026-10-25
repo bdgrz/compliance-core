@@ -1,31 +1,31 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.Independence;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.SourceFacts;
-using Bdgrz.Compliance.Hosting.Persistence;
-using Bdgrz.Compliance.Tests.Features.Readiness;
-using Cntryl.Fitz.Testing;
-using Bdgrz.Compliance.Tests.Features.Evaluations;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.Controls;
-using Bdgrz.Compliance.Features.Commitments;
-using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Remediation;
-using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Versioning;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Features.Evaluations;
+using Bdgrz.Compliance.Tests.Features.Readiness;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Extensions;
-using Cntryl.Portia;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia.Testing;
+using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Operations;
@@ -315,10 +315,10 @@ sealed class OperationsFixture
         bool testerIndependenceRequired = false)
     {
         await using var scope = Provider.CreateAsyncScope();
-        var plan = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ControlEvaluationPlan(TenantId, ProgramId, ControlId));
-        if (plan.CurrentVersion is { } current)
-            return current;
+        var versions = await ControlEvaluationPlanReader.ReadAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), Content, TenantId, ProgramId, ControlId);
+        if (versions.Count > 0)
+            return versions[^1];
         var defaultSteps = steps ??
         [
             new EvaluationProcedureStep("design", "inspection",

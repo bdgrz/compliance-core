@@ -1,131 +1,107 @@
 using System.Globalization;
-using System.Text.Json;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-/// <summary>
-///     Retains personal rule ratifications separately from platform-authored drafts. Ratifications are append-only
-///     and unbounded in number. The catalog embeds <see cref="SourceUseReservations" />: an engagement personal
-///     decision that holds the exact ratification does not change it, but a held catalog refuses new ratifications
-///     until the use is settled.
-/// </summary>
+/// <summary>Current catalog business authority and selected native acceptance; immutable history is read composition.</summary>
 public sealed class IndependenceRuleRatificationCatalog : Aggregate, ISourceUseOwner
 {
-    /// <summary>Stream area of the ratification catalog.</summary>
     public const string Area = "independence-rule-ratifications";
-
     static readonly Uuid CatalogId = Uuid.Parse("b6330afc-1c97-4500-9c6d-c77006fc0dc6", CultureInfo.InvariantCulture);
-    readonly List<IndependenceRuleRatificationView> _ratifications = [];
-    readonly Dictionary<Uuid, (string Intent, ActorReference Actor, IndependenceRuleRatificationView Response)> _decisions = [];
-
-    IndependenceRuleRatificationRecorded? _latest;
-
-    /// <summary>Opens the catalog, selecting the logical operation to resolve.</summary>
-    public IndependenceRuleRatificationCatalog(Uuid selectedLogicalId = default) : base(CatalogId,
-        new EventStreamAddress("bdgrz", Area, CatalogId.ToString()))
+    public static Uuid Identity => CatalogId;
+    public IndependenceRuleRatificationCatalog(Uuid selectedLogicalId = default) : base(CatalogId, new EventStreamAddress(IndependenceCatalogContent.Realm, Area, CatalogId.ToString()))
     {
         Acceptance = new NativeAcceptance(selectedLogicalId);
         Uses = new SourceUseReservations(Stream);
         On<IndependenceRuleRatificationRecorded>(Apply);
         On<IndependenceRuleRatificationCatalogEngagementUseAuthorized>(granted =>
         {
-            Acceptance.Observe(granted);
-            if (_latest is null || granted.Revision != Sequence)
-                throw new InvalidOperationException("A catalog use is granted on a ratified catalog at its held sequence.");
+            if (Header is null || granted.Revision != Sequence)
+                throw new InvalidOperationException("A catalog use is granted on the exact held business sequence.");
             Uses.ApplyGranted(SourceUsePurpose.EngagementPersonalDecision, granted);
+            NativeSequence++;
+            Acceptance.Observe(granted);
         });
         On<IndependenceRuleRatificationCatalogEngagementUseSettled>(settled =>
         {
-            Acceptance.Observe(settled);
             Uses.ApplySettled(SourceUsePurpose.EngagementPersonalDecision, settled);
+            NativeSequence++;
+            Acceptance.Observe(settled);
         });
     }
-
-    /// <summary>The stable identity of the catalog, which the use receivers address as their source owner.</summary>
-    public static Uuid Identity => CatalogId;
-
-    /// <summary>The active grants, receiver generation and fences of this catalog's source uses.</summary>
-    public SourceUseReservations Uses { get; }
-
-    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
+    public SourceUseReservations Uses { get; }
+    public long NativeSequence { get; private set; }
+    public long Sequence => Header?.Sequence ?? 0;
+    public IndependenceRuleRatificationHeader? Header { get; private set; }
+    public ImmutableContentRef? CurrentContent { get; private set; }
+    public IndependenceRuleRatificationRecorded? LatestRatification { get; private set; }
 
-    /// <summary>The latest ratification fact, which a use pins; null while nothing was ratified.</summary>
-    public IndependenceRuleRatificationRecorded? LatestRatification => _latest;
+    public Result PrepareRatification(long expectedSequence, long ruleVersion) => Uses.HasActiveUse
+        ? Failure("An engagement personal decision holds the ratification catalog; retry after it settles.", true)
+        : expectedSequence == Sequence && ruleVersion > (Header?.RuleVersion ?? 0) ? Result.Success
+        : Failure("Reload the ratification sequence; versions advance monotonically.");
 
-    public long Sequence { get; private set; }
-    public IReadOnlyList<IndependenceRuleRatificationView> Ratifications =>
-        Array.AsReadOnly(_ratifications.ToArray());
-    public IndependenceRuleRatificationView? Active => _ratifications.LastOrDefault();
-
-    public IndependenceRuleRatificationView? ForVersion(long ruleVersion) =>
-        _ratifications.SingleOrDefault(item => item.RuleVersion == ruleVersion);
-
-    public Result<IndependenceRuleRatificationView> Ratify(Uuid requestId, Uuid ratificationId,
-        long ruleVersion, long observedRuleCatalogSequence, long expectedRatificationSequence,
-        string ruleContentDigest, string sourceReference, FirmStaffMemberView currentStaff,
-        FirmProfessionalDutyDesignationView duty, ActorReference actor, DateTimeOffset recordedAt)
+    public Result Append(IndependenceRuleRatificationRecorded fact, IndependenceRatificationContent prepared, IReadOnlyList<IndependenceRatificationHistoryRead> history, long nativeSequence, ulong physicalPosition)
     {
-        if (!IndependenceRecordValidation.ValidAttribution(requestId, actor, recordedAt, "firm_staff") ||
-            ratificationId == Uuid.Empty || ruleVersion <= 0 || observedRuleCatalogSequence <= 0 ||
-            !ValidDigest(ruleContentDigest) || !Bounded(sourceReference, 2000) ||
-            currentStaff is not { IsActive: true, Revision: > 0 } ||
-            duty is not { IsActive: true, Duty: FirmProfessionalDuty.RuleRatifier, TenantId: null, Revision: > 0 } ||
-            duty.UserId != currentStaff.UserId || duty.StaffMemberId != currentStaff.StaffMemberId ||
-            duty.DirectoryStaffRevision != currentStaff.Revision || actor.Id != currentStaff.UserId.ToString())
-            return Failure(RequestErrorKind.Validation,
-                "Rule ratification requires an active, explicitly designated professional and exact immutable draft digest.");
-
-        var request = new RatifyIndependenceRuleVersion(requestId, ratificationId, ruleVersion,
-            observedRuleCatalogSequence, expectedRatificationSequence, ruleContentDigest, sourceReference, expectedRatificationSequence);
-        if (Retry(requestId, request, actor) is { } retry)
-            return retry;
+        if (NativeSequence != nativeSequence || CommittedStreamPosition != physicalPosition)
+            return Failure("The catalog native/physical cut changed during immutable preparation.", true);
         if (Uses.HasActiveUse)
-            return Result<IndependenceRuleRatificationView>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "An engagement personal decision holds the ratification catalog; retry after it settles.", true));
-        if (expectedRatificationSequence != Sequence || ruleVersion <= (_ratifications.LastOrDefault()?.RuleVersion ?? 0) ||
-            _ratifications.Any(item => item.RatificationId == ratificationId || item.RuleVersion == ruleVersion))
-            return Failure(RequestErrorKind.Conflict,
-                "Reload the ratification sequence; ratifications are append-only and rule versions advance monotonically.");
-
-        var ratification = new IndependenceRuleRatificationView(ratificationId, ruleVersion,
-            observedRuleCatalogSequence, ruleContentDigest, sourceReference, currentStaff.StaffMemberId,
-            currentStaff.UserId, currentStaff.Revision, duty.DesignationId, duty.Revision, actor, recordedAt);
-        RaiseEvent(new IndependenceRuleRatificationRecorded(requestId, expectedRatificationSequence, ratification));
-        return Result<IndependenceRuleRatificationView>.Success(ratification);
+            return Failure("An engagement personal decision holds this catalog; retry after it settles.", true);
+        try
+        {
+            if (prepared is null || prepared.Ratification is null || fact.Operation is null || prepared.Ratification.RuleVersion <= (Header?.RuleVersion ?? 0) ||
+                prepared.Ratification.RatificationId == Header?.RatificationId || prepared.Previous != CurrentContent || prepared.Sequence != Sequence + 1 || prepared.RequestId != fact.Operation.LogicalId ||
+                !IndependenceCatalogContent.ValidRatification(prepared) || fact.Operation.AuthoredIntentSha256 != IndependenceCatalogContent.Intent(prepared) || !IndependenceCatalogContent.Matches(fact.RatificationContent, prepared, IndependenceCatalogContent.RatificationSchema) ||
+                fact.Header != IndependenceCatalogContent.Header(prepared))
+                return Failure("The catalog mutation differs from its exact immutable business authority.");
+            if (!IndependenceCatalogHistory.ProvesAbsent(CurrentContent, Sequence, history, prepared.Ratification.RatificationId))
+                return Failure("The immutable history already owns this ratification identity.");
+            Validate(fact);
+            if (Acceptance.SelectedLogicalId != Uuid.Empty &&
+                (Acceptance.SelectedLogicalId != fact.Operation.LogicalId || Acceptance.SelectedFact is not null))
+                return Failure("The append does not select one new catalog logical acceptance.");
+            RaiseEvent(fact);
+            return Result.Success;
+        }
+        catch (ImmutableContentIntegrityException) { return Failure("The catalog immutable history proof cannot be verified."); }
+        catch (InvalidOperationException) { return Failure("The catalog native mutation has another owner or sequence."); }
     }
-
-    void Apply(IndependenceRuleRatificationRecorded ev)
+    void Apply(IndependenceRuleRatificationRecorded fact)
     {
-        var item = ev.Ratification;
-        if (ev.ExpectedSequence != Sequence || item.RatificationId == Uuid.Empty || item.RuleVersion <= 0 ||
-            item.ObservedRuleCatalogSequence <= 0 || !ValidDigest(item.RuleContentDigest) ||
-            !Bounded(item.SourceReference, 2000) || item.StaffMemberId == Uuid.Empty || item.UserId == Uuid.Empty ||
-            item.DirectoryStaffRevision <= 0 || item.DutyDesignationId == Uuid.Empty || item.DutyRevision <= 0 ||
-            !IndependenceRecordValidation.ValidAttribution(ev.RequestId, item.Actor, item.RecordedAt, "firm_staff") ||
-            item.Actor.Id != item.UserId.ToString() || item.RuleVersion <= (_ratifications.LastOrDefault()?.RuleVersion ?? 0) ||
-            _ratifications.Any(existing => existing.RatificationId == item.RatificationId ||
-                existing.RuleVersion == item.RuleVersion))
-            throw new InvalidOperationException("A personal rule ratification must retain its exact source and advance the sequence.");
-
-        var request = new RatifyIndependenceRuleVersion(ev.RequestId, item.RatificationId, item.RuleVersion,
-            item.ObservedRuleCatalogSequence, ev.ExpectedSequence, item.RuleContentDigest, item.SourceReference, ev.ExpectedSequence);
-        _ratifications.Add(item);
-        _latest = ev;
-        _decisions.Add(ev.RequestId, (Intent(request), item.Actor, item));
-        Sequence++;
+        Validate(fact);
+        Header = fact.Header;
+        CurrentContent = fact.RatificationContent;
+        LatestRatification = fact;
+        NativeSequence++;
+        Acceptance.Observe(fact);
     }
-
+    void Validate(IndependenceRuleRatificationRecorded fact)
+    {
+        if (fact.Header is not { } header || fact.Operation is not { } operation ||
+            header.Sequence != Sequence + 1 || header.RuleVersion <= (Header?.RuleVersion ?? 0) || header.RatificationId == Uuid.Empty || header.RatificationId == Header?.RatificationId ||
+            fact.NativeSequence != NativeSequence + 1 || operation.LogicalId == Uuid.Empty || operation.RootOperationId != operation.LogicalId ||
+            operation.CommandKind != nameof(RatifyIndependenceRuleVersion) || operation.Owner != Stream || operation.FirstOwner != Stream || operation.AffectedOwner != Stream ||
+            operation.ExpectedRevisionOwner != Stream || operation.Episode != Id.ToString() || operation.OriginalExpectedRevision != unchecked((ulong)Sequence) ||
+            !IndependenceCatalogContent.Digest(operation.AuthoredIntentSha256) || operation.Actor != header.Actor || operation.AcceptedAt != header.RecordedAt ||
+            !IndependenceRecordValidation.ValidAttribution(operation.LogicalId, header.Actor, header.RecordedAt, "firm_staff") ||
+            !IndependenceCatalogContent.Digest(header.RuleContentDigest) ||
+            !IndependenceCatalogContent.Reference(fact.RatificationContent, IndependenceCatalogContent.RatificationSchema) ||
+            !IndependenceCatalogContent.Reference(fact.FirstResponse, FirstResponses.Schema) ||
+            !IndependenceCatalogContent.Reference(fact.OperationResult, "mutation-result-content.v1") || DomainEventPayload.Size(fact) > DomainEventPayload.MaximumBytes)
+            throw new InvalidOperationException("The catalog native fact has another exact actor, owner, intent, gate or sequence.");
+    }
     /// <summary>Holds the exact current ratifications for an engagement personal decision; the sequence does not advance.</summary>
     public Result AuthorizeEngagementUse(OperationProvenance operation, ImmutableContentRef intent, long generation)
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
-        if (_latest is null || operation.Owner != Stream)
+        if (Header is null || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a ratified catalog can be held, on its own stream.", true));
         RaiseEvent(new IndependenceRuleRatificationCatalogEngagementUseAuthorized(Stream, Sequence, generation, intent,
@@ -146,23 +122,6 @@ public sealed class IndependenceRuleRatificationCatalog : Aggregate, ISourceUseO
         return Result.Success;
     }
 
-    /// <summary>Resolves a complete original authored ratification without reselecting the mutable draft.</summary>
-    public Result<IndependenceRuleRatificationView>? Replay(RatifyIndependenceRuleVersion request, ActorReference actor) =>
-        Retry(request.CommandId, request, actor);
 
-    Result<IndependenceRuleRatificationView>? Retry(Uuid requestId, object request, ActorReference actor) =>
-        _decisions.TryGetValue(requestId, out var previous)
-            ? previous.Intent == Intent(request) && previous.Actor.Kind == actor.Kind && previous.Actor.Id == actor.Id
-                ? Result<IndependenceRuleRatificationView>.Success(previous.Response)
-                : Failure(RequestErrorKind.Conflict,
-                    "The request identity already retains another ratification intent or professional actor.")
-            : null;
-
-    static bool ValidDigest(string value) => value is { Length: 64 } &&
-        value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f');
-    static bool Bounded(string value, int maximum) => !string.IsNullOrWhiteSpace(value) &&
-        value.Length <= maximum && !value.Any(char.IsControl) && value == value.Trim();
-    static string Intent<T>(T value) => JsonSerializer.Serialize(value, value!.GetType(), ComplianceCoreJsonContext.Default);
-    static Result<IndependenceRuleRatificationView> Failure(RequestErrorKind kind, string message) =>
-        Result<IndependenceRuleRatificationView>.Failure(new RequestError(kind, message));
+    static Result Failure(string message, bool transient = false) => Result.Failure(new RequestError(RequestErrorKind.Conflict, message, transient));
 }

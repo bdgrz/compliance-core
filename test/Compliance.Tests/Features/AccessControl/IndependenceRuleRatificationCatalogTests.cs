@@ -19,7 +19,7 @@ public sealed class IndependenceRuleRatificationCatalogTests
             true, 1, ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator"), Now,
             ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator"), Now, null);
         var actor = new ActorReference("firm_staff", staff.UserId.ToString(), "Synthetic ratifier");
-        var catalog = new IndependenceRuleRatificationCatalog();
+        var catalog = new IndependenceRuleRatificationRules();
         var digestV1 = new string('a', 64);
         var digestV2 = new string('b', 64);
 

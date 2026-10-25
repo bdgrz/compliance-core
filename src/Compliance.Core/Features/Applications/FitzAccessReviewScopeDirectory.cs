@@ -1,21 +1,39 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-sealed class FitzAccessReviewScopeDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/access-review-scope-directory-v1/projection",
+sealed class FitzAccessReviewScopeDirectory(IKvClient client, IImmutableContentStore content)
+    : FitzKvProjectionStore(client, "kv://bdgrz/access-review-scope-directory-v2/projection",
             AccessReviewScopeStreams.ProjectorName),
         IAccessReviewScopeDirectoryReader, IAccessReviewScopeDirectoryProjection
 {
+    Uuid? _batchTenantId;
+
+    public new ValueTask<IProjectionBatch> BeginAsync(ProjectionBatchContext context,
+        CancellationToken ct = default) => BeginScopeBatchAsync(context, ct);
+
+    ValueTask<IProjectionBatch> IProjectionStore.BeginAsync(ProjectionBatchContext context,
+        CancellationToken ct) => BeginScopeBatchAsync(context, ct);
+
+    async ValueTask<IProjectionBatch> BeginScopeBatchAsync(ProjectionBatchContext context, CancellationToken ct)
+    {
+        if (context.Identity.Pattern.Area != AccessReviewScopeStreams.Area || context.Identity.Pattern.Resource is not null ||
+            !Uuid.TryParse(context.Identity.Pattern.Realm, null, out var tenant) || tenant == Uuid.Empty)
+            throw new InvalidOperationException("A scope projection batch requires its exact tenant source area.");
+        var batch = await base.BeginAsync(context, ct).ConfigureAwait(false);
+        _batchTenantId = tenant;
+        return batch;
+    }
+
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
         if (domainEvent is not AccessReviewScopeDecided ev)
             return;
-        var decision = new AccessReviewScopeDecisionView(ev.TenantId, ev.ApplicationId,
-            ev.SystemInstanceId, ev.SystemInstanceRevision, ev.DecisionId, ev.Sequence,
-            ev.Decision, ev.Reason, ev.EffectiveFrom, ev.ReviewBy, ev.Actor, ev.DecidedAt,
-            ev.SeparationOfDutiesWaiverId);
+        if (ev.TenantId != _batchTenantId)
+            throw new InvalidOperationException("The scope source cannot cross its tenant projection batch.");
+        var decision = await AccessReviewScopeReader.ReadDecisionAsync(content, ev, ct).ConfigureAwait(false);
         var existing = await AccessReviewScopeDirectorySchema.Scopes.GetAsync(Transaction,
             ev.SystemInstanceId, ct).ConfigureAwait(false);
         if (existing is null)
@@ -28,9 +46,14 @@ sealed class FitzAccessReviewScopeDirectory(IKvClient client)
                     [decision]), ct).ConfigureAwait(false);
             return;
         }
-        // A replayed decision that is already projected is ignored.
+        if (existing.TenantId != ev.TenantId || existing.ApplicationId != ev.ApplicationId || existing.SystemInstanceId != ev.SystemInstanceId)
+            throw new InvalidOperationException("A scope projection cannot replace another exact parent or instance.");
         if (ev.Sequence <= existing.Decisions.Count)
+        {
+            if (existing.Decisions[(int)ev.Sequence - 1] != decision)
+                throw new InvalidOperationException("A projected scope decision cannot replace its original body.");
             return;
+        }
         if (ev.Sequence != existing.Decisions.Count + 1)
             throw new InvalidOperationException(
                 "A scope decision cannot project before its predecessor.");

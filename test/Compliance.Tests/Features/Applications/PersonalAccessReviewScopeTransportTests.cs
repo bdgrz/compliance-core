@@ -1,13 +1,14 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
 using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
-using Cntryl.Portia;
+using Cntryl.Fitz;
 using Cntryl.Portia.Testing;
+using Cntryl.Portia;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +16,50 @@ namespace Bdgrz.Compliance.Tests.Features.Applications;
 
 public sealed class PersonalAccessReviewScopeTransportTests
 {
+    [Fact]
+    public async Task ShouldKeepScopeAuthorityBoundedGivenManyEffectiveDecisionsWithFullHistory()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        var effectiveFrom = DateTimeOffset.UtcNow;
+        for (var count = 0; count < 32; count++)
+        {
+            var decision = await fixture.DecideAsync("http", count: count, effectiveFrom: effectiveFrom);
+            Assert.True(decision.IsSuccess, decision.Error?.Message);
+        }
+
+        // Act
+        var owner = await fixture.ReadOwnerAsync();
+        var read = await fixture.ReadAsync();
+
+        // Assert
+        Assert.Equal(32, read.Decisions.Count);
+        Assert.All(typeof(SystemInstanceAccessReviewScope).GetFields(
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic |
+            System.Reflection.BindingFlags.DeclaredOnly), field =>
+            Assert.False(field.GetValue(owner) is System.Collections.ICollection { Count: > 2 },
+                $"The scope owner retains lifetime decisions in {field.Name}."));
+    }
+
+    [Fact]
+    public async Task ShouldReplayOriginalScopeDecisionGivenExactHttpRetryAfterInstanceRevision()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        var effectiveFrom = DateTimeOffset.UtcNow;
+        var first = await fixture.DecideAsync("http", effectiveFrom: effectiveFrom);
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        await fixture.RetireInstanceAsync();
+
+        // Act
+        var replay = await fixture.DecideAsync("http", effectiveFrom: effectiveFrom);
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(first.Value, replay.Value);
+        Assert.Equal(1, replay.Value.SystemInstanceRevision);
+    }
+
     [Theory]
     [InlineData("direct")]
     [InlineData("mcp")]
@@ -113,6 +158,8 @@ public sealed class PersonalAccessReviewScopeTransportTests
     {
         // Arrange
         await using var fixture = await Fixture.CreateAsync();
+        var accepted = await fixture.DecideAsync("http");
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
         var other = await fixture.DeclareApplicationAsync();
         var before = await fixture.ReadAsync();
 
@@ -203,19 +250,42 @@ public sealed class PersonalAccessReviewScopeTransportTests
             return application.Value.ApplicationId;
         }
         public Task SeedAttestHistoryAsync() => AttestAssignmentHistoryFixture.SeedAsync(_provider, Tenant, Approver, revoked: true);
-        public Task<SystemInstanceAccessReviewScope> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new SystemInstanceAccessReviewScope(Tenant, Instance));
+        public async Task<ScopeRead> ReadAsync()
+        {
+            await using var scope = _provider.CreateAsyncScope();
+            var services = scope.ServiceProvider;
+            var reader = services.GetRequiredService<IAggregateReader>();
+            var owner = await reader.HydrateAsync(new SystemInstanceAccessReviewScope(Tenant, Instance));
+            var decisions = await AccessReviewScopeReader.ReadAsync(reader, services.GetRequiredService<IDomainEventReader>(),
+                services.GetRequiredService<IImmutableContentStore>(), Tenant, Application, Instance);
+            return new ScopeRead(owner.CommittedStreamPosition, decisions);
+        }
+        public Task<SystemInstanceAccessReviewScope> ReadOwnerAsync() => ProgramManagementServices.HydrateAsync(
+            _provider, new SystemInstanceAccessReviewScope(Tenant, Instance));
         public Task<DeclaredSystemInstance> ReadInstanceAsync() => ProgramManagementServices.HydrateAsync(_provider, new DeclaredSystemInstance(Tenant, Instance));
-        public async Task<Result<AccessReviewScopeDecisionView>> DecideAsync(string transport, Uuid? user = null, Uuid? application = null, long revision = 1)
+        public async Task<Result<AccessReviewScopeDecisionView>> DecideAsync(string transport, Uuid? user = null, Uuid? application = null, long revision = 1, long count = 0, DateTimeOffset? effectiveFrom = null)
         {
             await using var scope = _provider.CreateAsyncScope();
             RequestInvocation invocation = transport == "http" ? new HttpInvocation("POST", "/synthetic/scope/decision", "/synthetic/scope/decision", "synthetic") :
                 transport == "mcp" ? new McpInvocation("synthetic.scope.decision") : new DirectInvocation();
             return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-                new DecideAccessReviewScope(Tenant, application ?? Application, Instance, revision, 0, "included", "Production data", DateTimeOffset.UtcNow),
+                new DecideAccessReviewScope(Tenant, application ?? Application, Instance, revision, count, "included", "Production data", effectiveFrom ?? DateTimeOffset.UtcNow),
                 new RequestDispatchContext(ProgramManagementServices.Actor(user ?? Approver), invocation), CancellationToken.None);
         }
+        public async Task RetireInstanceAsync()
+        {
+            await ProgramManagementServices.SeedAsync(_provider, new DeclaredSystemInstance(Tenant, Instance), instance =>
+            {
+                Assert.Null(instance.Retire(1, DateTimeOffset.UtcNow, "Closed", RbacIds.Member(Tenant, Registrant),
+                    "Registrant", DateTimeOffset.UtcNow));
+                return Result.Success;
+            });
+        }
+
         public ValueTask DisposeAsync() => _provider.DisposeAsync();
     }
+
+    sealed record ScopeRead(ulong CommittedStreamPosition, IReadOnlyList<AccessReviewScopeDecisionView> Decisions);
 
     sealed class Permissions : IPermissionAuthorizer
     {

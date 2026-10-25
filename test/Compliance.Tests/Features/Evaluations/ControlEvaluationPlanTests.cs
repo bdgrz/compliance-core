@@ -2,7 +2,6 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Evaluations;
 
@@ -29,7 +28,7 @@ public sealed class ControlEvaluationPlanTests
     public void ShouldRetainImmutablePlanVersionsGivenPlanRevision()
     {
         // Arrange
-        var plan = new ControlEvaluationPlan(TenantId, ProgramId, ControlId);
+        var plan = new ControlEvaluationPlanRules(TenantId, ProgramId, ControlId);
         var firstVersionId = Uuid.CreateVersion4();
 
         // Act
@@ -74,7 +73,7 @@ public sealed class ControlEvaluationPlanTests
     public void ShouldRejectInvalidProcedureGivenPlanDefinition()
     {
         // Arrange
-        var plan = new ControlEvaluationPlan(TenantId, ProgramId, ControlId);
+        var plan = new ControlEvaluationPlanRules(TenantId, ProgramId, ControlId);
 
         // Act
         var missingObjective = plan.Define(0, ControlVersionId, Uuid.CreateVersion4(), " ", Steps, true,
@@ -94,7 +93,7 @@ public sealed class ControlEvaluationPlanTests
     public void ShouldAcceptIdempotentRetryGivenSamePlanVersionRequest()
     {
         // Arrange
-        var plan = new ControlEvaluationPlan(TenantId, ProgramId, ControlId);
+        var plan = new ControlEvaluationPlanRules(TenantId, ProgramId, ControlId);
         var versionId = Uuid.CreateVersion4();
 
         // Act
@@ -120,7 +119,7 @@ public sealed class ControlEvaluationPlanTests
     public void ShouldRetainTypedExactScopeVersionsGivenPlanDefinition()
     {
         // Arrange
-        var plan = new ControlEvaluationPlan(TenantId, ProgramId, ControlId);
+        var plan = new ControlEvaluationPlanRules(TenantId, ProgramId, ControlId);
         var scopedItems = new[]
         {
             new EvaluationInspectedItem("boundary", "boundary/abc", "version/3"),
@@ -151,7 +150,7 @@ public sealed class ControlEvaluationPlanTests
     public void ShouldRejectMismatchedControlReferenceGivenPlanDefinition()
     {
         // Arrange
-        var plan = new ControlEvaluationPlan(TenantId, ProgramId, ControlId);
+        var plan = new ControlEvaluationPlanRules(TenantId, ProgramId, ControlId);
 
         // Act
         var failure = plan.Define(0, ControlVersionId, Uuid.CreateVersion4(),

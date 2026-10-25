@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "d3ad9fd6ea4a4c853b7892dca45db78442bfd631",
+  "sourceCommit": "7951ed4d65b76a22047e1ec1791636772fc34017",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 487,
-    "factsWithAggregateEmitter": 431,
+    "factsWithAggregateEmitter": 429,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 56,
+    "legacyReducerOnlyFacts": 58,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 114,
+    "aggregateTypesWithCommandPath": 113,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 735,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 44,
+    "unwiredAggregateProducerOperations": 46,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 31
+      "no_registered_request_route": 33
     },
     "factReplayGuardRows": 0
   },
@@ -592,8 +592,8 @@
         "src/Compliance.Core/Features/Applications/SystemInstanceAccessReviewScope.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/AccessReviewScopeDecisionTests.cs",
-        "test/Compliance.Tests/Features/Applications/AccessReviewScopeLegacyAndProjectionTests.cs"
+        "test/Compliance.Tests/Features/Applications/AccessReviewScopeLegacyAndProjectionTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationScopeNativeHttpTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -2885,7 +2885,10 @@
       "emitters": [
         "src/Compliance.Core/Features/Evaluations/ControlEvaluationPlan.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationScopeNativeHttpTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -4496,12 +4499,14 @@
           "source": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeReadTests.cs",
+        "test/Compliance.Tests/Testing/IndependenceCatalogSeeds.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "IndependenceRuleVersionRatified",
@@ -4521,12 +4526,15 @@
           "source": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeReadTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceRuleCatalogHttpTests.cs",
+        "test/Compliance.Tests/Testing/IndependenceCatalogSeeds.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "InformationAssetRevisionRecorded",
@@ -10023,9 +10031,10 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanTests.cs",
-        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationPlanNativeRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationScopeNativeHttpTests.cs",
+        "test/Compliance.Tests/Testing/EvaluationPlanSeeds.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10625,9 +10634,7 @@
         "IndependenceRuleCatalogEngagementUseSettled",
         "IndependenceRulesRevised"
       ],
-      "commandRequests": [
-        "ReviseIndependenceRules"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [
         "AuthorizeIndependenceRuleCatalogEngagementUse",
         "SettleIndependenceRuleCatalogEngagementUse"
@@ -10635,12 +10642,11 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeReadTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceRuleCatalogHttpTests.cs",
         "test/Compliance.Tests/Features/AccessControl/IndependenceRuleCatalogLifetimeTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementTransportTests.cs",
-        "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs",
-        "test/Compliance.Tests/Testing/IndependenceHost.cs",
-        "test/Compliance.Tests/Testing/PersonalDecisionFacts.cs"
+        "test/Compliance.Tests/Testing/IndependenceCatalogSeeds.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10652,9 +10658,7 @@
         "IndependenceRuleRatificationCatalogEngagementUseSettled",
         "IndependenceRuleRatificationRecorded"
       ],
-      "commandRequests": [
-        "RatifyIndependenceRuleVersion"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [
         "AuthorizeIndependenceRuleRatificationCatalogEngagementUse",
         "SettleIndependenceRuleRatificationCatalogEngagementUse"
@@ -10662,10 +10666,11 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeReadTests.cs",
         "test/Compliance.Tests/Features/AccessControl/IndependenceRuleCatalogLifetimeTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/IndependenceRuleRatificationCatalogTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
-        "test/Compliance.Tests/Testing/PersonalDecisionFacts.cs"
+        "test/Compliance.Tests/Testing/IndependenceCatalogSeeds.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11431,17 +11436,17 @@
         "RiskOwnerAssigned",
         "RiskReassessmentTriggered"
       ],
-      "commandRequests": [
-        "AssignRiskOwner"
-      ],
-      "internalReactionRequests": [
-        "RaiseRiskReassessmentTriggers"
-      ],
+      "commandRequests": [],
+      "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskGovernanceNativeTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskGovernanceRetryTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskOwnerBoundaryTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "RiskMethod",
@@ -11775,7 +11780,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/AccessReviewScopeDecisionTests.cs",
         "test/Compliance.Tests/Features/Applications/AccessReviewScopeLegacyAndProjectionTests.cs",
-        "test/Compliance.Tests/Features/Applications/PersonalAccessReviewScopeTransportTests.cs"
+        "test/Compliance.Tests/Features/Applications/PersonalAccessReviewScopeTransportTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationScopeNativeHttpTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -14298,12 +14304,12 @@
       "directAggregateReferences": [
         "RiskGovernance"
       ],
-      "aggregateTargets": [
-        "RiskGovernance"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskGovernanceNativeTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskGovernanceRetryTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskOwnerBoundaryTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
       ],
@@ -14762,7 +14768,8 @@
         "IndependenceRuleCatalog"
       ],
       "helperServices": [
-        "EngagementUseVerifier"
+        "EngagementUseVerifier",
+        "IndependenceRuleCatalogReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceProcessTests.cs",
@@ -14788,7 +14795,8 @@
         "IndependenceRuleRatificationCatalog"
       ],
       "helperServices": [
-        "EngagementUseVerifier"
+        "EngagementUseVerifier",
+        "IndependenceRuleRatificationReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceProcessTests.cs",
@@ -16964,7 +16972,7 @@
     {
       "request": "DecideAccessReviewScope",
       "contract": "src/Compliance.Common/Features/Applications/DecideAccessReviewScope.cs",
-      "interfaces": "IRequest<AccessReviewScopeDecisionView>, IApplicationInventoryWriteRequest,\n        IProgramManagementRequest, ICallable",
+      "interfaces": "IRequest<AccessReviewScopeDecisionView>, IApplicationInventoryWriteRequest,\n        IProgramManagementRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -17128,7 +17136,7 @@
     {
       "request": "DefineControlEvaluationPlan",
       "contract": "src/Compliance.Common/Features/Evaluations/DefineControlEvaluationPlan.cs",
-      "interfaces": "IRequest<ControlEvaluationPlanVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ControlEvaluationPlanVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -17151,7 +17159,9 @@
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
-        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
+        "test/Compliance.Tests/Features/Evaluations/EvaluationPlanNativeRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Testing/EvaluationPlanSeeds.cs"
       ],
       "note": ""
     },
@@ -17624,13 +17634,14 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ClientServiceIndependence",
-        "IndependenceRuleCatalog"
+        "ClientServiceIndependence"
       ],
       "aggregateTargets": [
         "ClientServiceIndependence"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "IndependenceRuleCatalogReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs",
@@ -18213,9 +18224,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemInstanceAccessReviewScope"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -18715,12 +18724,12 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceRuleCatalog",
-        "IndependenceRuleRatificationCatalog"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "IndependenceRuleCatalogReader",
+        "IndependenceRuleRatificationReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
       ],
@@ -19025,9 +19034,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlEvaluationPlan"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
         "ControlReader"
@@ -19568,14 +19575,15 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceRuleCatalog",
-        "IndependenceRuleRatificationCatalog"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "IndependenceRuleCatalogReader",
+        "IndependenceRuleRatificationReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeReadTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -20159,7 +20167,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/AttestRiskManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskGovernanceNativeTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -22046,9 +22055,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlEvaluationPlan"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
         "ControlReader"
@@ -25470,12 +25477,14 @@
         "RiskEvaluation",
         "RiskGovernance"
       ],
-      "aggregateTargets": [
-        "RiskGovernance"
+      "aggregateTargets": [],
+      "helperServices": [
+        "RiskGovernanceReader"
       ],
-      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskGovernanceNativeTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskGovernanceRetryTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskOwnerBoundaryTests.cs"
       ],
       "note": "Internal event-driven follow-up command."
@@ -25483,7 +25492,7 @@
     {
       "request": "RatifyIndependenceRuleVersion",
       "contract": "src/Compliance.Common/Features/AccessControl/RatifyIndependenceRuleVersion.cs",
-      "interfaces": "IRequest<IndependenceRuleRatificationView>, IPersonalRuleRatificationRequest, ICallable",
+      "interfaces": "IRequest<IndependenceRuleRatificationView>, IPersonalRuleRatificationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -25493,16 +25502,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceRuleCatalog",
-        "IndependenceRuleRatificationCatalog"
-      ],
-      "aggregateTargets": [
-        "IndependenceRuleRatificationCatalog"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
+        "test/Compliance.Tests/Testing/IndependenceCatalogSeeds.cs"
       ],
       "note": ""
     },
@@ -29342,7 +29348,7 @@
     {
       "request": "ReviseIndependenceRules",
       "contract": "src/Compliance.Common/Features/AccessControl/ReviseIndependenceRules.cs",
-      "interfaces": "IRequest<IndependenceRuleVersionView>,\n    IIndependenceRuleAdministrationRequest, ICallable",
+      "interfaces": "IRequest<IndependenceRuleVersionView>,\n    IIndependenceRuleAdministrationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -29352,17 +29358,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceRuleCatalog"
-      ],
-      "aggregateTargets": [
-        "IndependenceRuleCatalog"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceCatalogNativeReadTests.cs",
         "test/Compliance.Tests/Features/AccessControl/IndependenceOperationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceRuleCatalogHttpTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceRuleCatalogLifetimeTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs"
       ],
       "note": ""
@@ -30801,8 +30807,7 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlEvaluation",
-        "ControlEvaluationPlan"
+        "ControlEvaluation"
       ],
       "aggregateTargets": [
         "ControlEvaluation"
@@ -31482,6 +31487,28 @@
       "ownerIssue": 316,
       "callerSources": [],
       "methodArgumentCount": 8,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "RiskOwnerAssigned",
+      "aggregate": "RiskGovernance",
+      "method": "AssignOwner",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/Risks/RiskGovernance.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "RiskReassessmentTriggered",
+      "aggregate": "RiskGovernance",
+      "method": "RaiseTrigger",
+      "methodArgumentCount": 7,
+      "source": "src/Compliance.Core/Features/Risks/RiskGovernance.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

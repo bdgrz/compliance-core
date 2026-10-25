@@ -1,16 +1,16 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Controls;
-using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Portia;
-using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
+using Cntryl.Fitz;
 using Cntryl.Portia.Testing;
+using Cntryl.Portia;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -85,16 +85,11 @@ public sealed class AttestManagementWriteWallTests
         var control = await bus.SendAsync(new CreateControlDraft(Tenant, Program, "AC-1", Content), Actor);
         Assert.True(control.IsSuccess, control.Error?.Message);
         var version = Uuid.CreateVersion4();
-        await ProgramManagementServices.SeedAsync(provider, new ControlEvaluationPlan(Tenant, Program,
-            control.Value!.ControlId), plan =>
-        {
-            Assert.Null(plan.Define(0, Uuid.CreateVersion4(), version, "Review access",
-                [new EvaluationProcedureStep("design", "inspection",
-                    [new EvaluationInspectedItem("artifact", "synthetic-artifact", "1")], "Access is reviewed")],
-                true, RbacIds.Member(Tenant, User), ActorReference.ForMember(RbacIds.Member(Tenant, User),
-                    "Client author"), Now));
-            return Result.Success;
-        });
+        await EvaluationPlanSeeds.WriteAsync(provider, new ControlEvaluationPlanVersionView(Tenant, Program,
+            control.Value!.ControlId, Uuid.CreateVersion4(), version, 1, "Review access",
+            [new EvaluationProcedureStep("design", "inspection",
+                [new EvaluationInspectedItem("artifact", "synthetic-artifact", "1")], "Access is reviewed")],
+            true, RbacIds.Member(Tenant, User), ActorReference.ForMember(RbacIds.Member(Tenant, User), "Client author"), Now));
         await AttestAssignmentHistoryFixture.SeedAsync(provider, Tenant, User, true);
 
         // Act

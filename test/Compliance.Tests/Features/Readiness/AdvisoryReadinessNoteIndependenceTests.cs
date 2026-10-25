@@ -778,7 +778,7 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
 
         public async Task SeedLaterUnratifiedRuleDraftAsync(FirmStaffMemberView staff)
         {
-            await ProgramManagementServices.SeedAsync(Provider, new IndependenceRuleCatalog(), catalog =>
+            await ProgramManagementServices.SeedAsync(Provider, new IndependenceRuleCatalogRules(), catalog =>
             {
                 var content = new IndependenceRuleContent(12,
                     [new("design", "impairing", "impairing"),

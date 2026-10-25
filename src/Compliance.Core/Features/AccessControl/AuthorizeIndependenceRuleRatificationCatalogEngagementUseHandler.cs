@@ -11,7 +11,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     or ineligible source rejects the personal decision and fences the key through the abort path.
 /// </summary>
 sealed class AuthorizeIndependenceRuleRatificationCatalogEngagementUseHandler(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content, TimeProvider clock, EngagementUseVerifier verifier)
+    IImmutableContentStore content, TimeProvider clock, EngagementUseVerifier verifier, IndependenceRuleRatificationReader catalogs)
     : EngagementUseAuthorizeHandler<IndependenceRuleRatificationCatalog, AuthorizeIndependenceRuleRatificationCatalogEngagementUse>(reader, executor, content, clock, verifier)
 {
     protected override string CommandKind => nameof(AuthorizeIndependenceRuleRatificationCatalogEngagementUse);
@@ -35,13 +35,22 @@ sealed class AuthorizeIndependenceRuleRatificationCatalogEngagementUseHandler(IA
             return Stale($"The pinned ratification content cannot be verified: {exception.Message}");
         }
 
-        return owner.ForVersion(ratification.RuleVersion) == ratification
-            ? Result.Success
-            : Stale("The pinned ratification is not the retained one.");
+        try
+        {
+            var retained = (await catalogs.ReadAsync(owner, ct).ConfigureAwait(false)).Active;
+            return retained == ratification
+                ? Result.Success
+                : Stale("The pinned ratification is not the retained one.");
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result.Failure(IndependenceCatalogContent.Failure(error));
+        }
     }
 
     protected override bool IsPinned(IndependenceRuleRatificationCatalog owner, SourceUseRequirement requirement) =>
-        owner.LatestRatification is { } latest && latest.Metadata.EventId == requirement.ContentEvent.EventId &&
+        owner.LatestRatification is { } latest && requirement.ContentEvent.Stream == owner.Stream &&
+        latest.Metadata.EventId == requirement.ContentEvent.EventId && latest.Metadata.AggregateVersion == requirement.ContentEvent.AggregateVersion &&
         (ulong)owner.Sequence == requirement.ResourceRevision;
 
     protected override Func<IndependenceRuleRatificationCatalog, OperationProvenance, ImmutableContentRef, long, Result> GrantOperation() =>

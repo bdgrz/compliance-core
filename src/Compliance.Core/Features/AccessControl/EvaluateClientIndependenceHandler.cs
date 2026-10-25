@@ -13,7 +13,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     returns the original acknowledgment even after services or rules change.
 /// </summary>
 public sealed class EvaluateClientIndependenceHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content, TimeProvider clock)
+    IImmutableContentStore content, TimeProvider clock, IndependenceRuleCatalogReader ruleSources)
     : IRequestHandler<EvaluateClientIndependence, OperationAcceptedResponse>
 {
     const string CommandKind = "EvaluateClientIndependence";
@@ -73,7 +73,13 @@ public sealed class EvaluateClientIndependenceHandler(NativeOperationExecutor op
         var prepared = snapshot.PrepareEvaluation(request.EvaluationId, request.ExpectedServiceEpoch);
         if (!prepared.IsSuccess)
             return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(prepared.Error!);
-        var catalog = await reader.HydrateAsync(new IndependenceRuleCatalog(), ct).ConfigureAwait(false);
+        IndependenceRuleCatalogReadSnapshot catalog;
+        try
+        { catalog = await ruleSources.ReadAsync(ct).ConfigureAwait(false); }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(IndependenceCatalogContent.Failure(error));
+        }
         if (catalog.Current is not { } version || version.Version != request.RuleSetVersion)
             return IndependenceContent.Failure<(ImmutableContentRef, FirstResponseDescriptor)>(
                 RequestErrorKind.Conflict,
@@ -109,7 +115,7 @@ public sealed class EvaluateClientIndependenceHandler(NativeOperationExecutor op
         var cuts = new[]
         {
             Cut(snapshot.Stream, snapshot.CommittedStreamPosition, now),
-            Cut(catalog.Stream, catalog.CommittedStreamPosition, now),
+            Cut(catalog.Owner.Stream, catalog.Owner.CommittedStreamPosition, now),
         };
         var header = new DurableIntentHeader(request.EvaluationId, snapshot.Stream, snapshot.Stream, snapshot.Stream,
             provenance.Actor, InitialEpisode, provenance.OriginalExpectedRevision, provenance.AuthoredIntentSha256, now);

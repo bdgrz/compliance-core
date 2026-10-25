@@ -10,7 +10,8 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     own use receiver holds before the operation is authorized. A pin that no longer matches the evidence the caller
 ///     verified means a source changed while the operation was prepared, and the caller reloads and retries.
 /// </summary>
-sealed class EngagementSourcePins(IAggregateReader reader, IImmutableContentStore content)
+sealed class EngagementSourcePins(IAggregateReader reader, IImmutableContentStore content,
+    IndependenceRuleCatalogReader ruleSources, IndependenceRuleRatificationReader ratificationSources)
 {
     /// <summary>The pin of one staff record at the exact revision the caller verified, or null when it moved.</summary>
     public async ValueTask<SourceUseRequirement?> StaffAsync(Uuid staffMemberId, long expectedRevision,
@@ -48,11 +49,12 @@ sealed class EngagementSourcePins(IAggregateReader reader, IImmutableContentStor
         CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(rules);
-        var catalog = await reader.HydrateAsync(new IndependenceRuleCatalog(), ct).ConfigureAwait(false);
-        var ratifications = await reader.HydrateAsync(new IndependenceRuleRatificationCatalog(), ct)
-            .ConfigureAwait(false);
+        var catalog = (await ruleSources.ReadAsync(ct).ConfigureAwait(false)).Owner;
+        var currentRatification = await ratificationSources.ReadAsync(ct).ConfigureAwait(false);
+        var ratifications = currentRatification.Owner;
+        var ratification = currentRatification.Active;
         if (catalog.LatestRevision is not { } latestRules || ratifications.LatestRatification is not { } latestRatification ||
-            ratifications.ForVersion(rules.Version) is not { } ratification || rules.Ratification != ratification)
+            ratification is null || ratification.RuleVersion != rules.Version || rules.Ratification != ratification)
             return null;
         var rulesContent = await content.WriteJsonAsync(EngagementPersonalDecisionEffects.PlatformRealm,
             Uuid.CreateVersion4(), EngagementPersonalDecisionEffects.RatifiedRulesSchema,

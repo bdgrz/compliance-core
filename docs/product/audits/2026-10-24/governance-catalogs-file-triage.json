@@ -1,0 +1,67 @@
+{
+  "reviewed": 63,
+  "blockedReviews": 0,
+  "signalsTriaged": 5,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs",
+      "sha256": "fd1b0763b24d1bf6cb781fc0742fba7c9ccffe2c5073b58e65308bde0631c13a",
+      "signals": {
+        "authority_gap": 0.64,
+        "invariant_gap": 0.7,
+        "recovery_gap": 0.62,
+        "incomplete_path": 0.45
+      },
+      "classification": "native_catalog_append_and_held_sequence",
+      "evidence": "Native owner validates full root/actor/owner/gate, bounded header/ref/digest/sequence and physical/native preparation cut; actual engagement grants/settles advance native sequence and active uses block business changes. Immutable exact original result/native acceptance owns retry. Current operator authority is request pipeline/handler responsibility. Generic source-use terminal history is a separately queued unblocked compaction, not declared complete."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalogRules.cs",
+      "sha256": "be34836be43e17294d25913caa4ac2d07b035ff32e0bd80898b3a104df212ef3",
+      "signals": {
+        "authority_gap": 0.47,
+        "invariant_gap": 0.63,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.65
+      },
+      "classification": "pure_business_validation",
+      "evidence": "Transient Rules validates content and expected business sequence; it is not persisted command state or retry authority. Native catalog/operations own immutable result, operation binding, OCC and hold constraints. Existing maximum complete valid rule/long history REDs now pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs",
+      "sha256": "e608063aa1ad74de63ddb973553130f87672c9a0704607bf7d239a29d10869b7",
+      "signals": {
+        "authority_gap": 0.6,
+        "invariant_gap": 0.65,
+        "recovery_gap": 0.63,
+        "incomplete_path": 0.38
+      },
+      "classification": "personal_ratification_and_actual_engagement_holds",
+      "evidence": "Native owner validates original personal actor/owner/version/sequence, monotonic rule activation, immutable evidence and full absence proof for reused ratification identity. Actual catalog engagement acquire/settle/fence contracts remain and prevent mixed active pin changes. Existing trusted personal staff/duty source selection is preserved; no new atomic cross-owner mutable draft/duty hold is claimed."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationRules.cs",
+      "sha256": "999b0caf0ecf14897299de52e0d10ae4382aed34c39bdf3ee7cf1cb9603ce6f5",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.66,
+        "recovery_gap": 0.74,
+        "incomplete_path": 0.61
+      },
+      "classification": "pure_personal_ratification_validation",
+      "evidence": "Transient historical Rules validates personal evidence and monotonic activation, not independent mutation replay. Native owner/operations/verified linked history enforce binding, historical identity uniqueness, gate, exact first response and holds. Current personal authority is checked before user retry."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Risks/AssignRiskOwnerHandler.cs",
+      "sha256": "045f7fef63ac9262758161f91d6baaca873bf4a00bfb6c79021947271a4542f5",
+      "signals": {
+        "authority_gap": 0.48,
+        "invariant_gap": 0.67,
+        "recovery_gap": 0.63,
+        "incomplete_path": 0.29
+      },
+      "classification": "native_replay_precedes_mutable_risk_selection",
+      "evidence": "Current request authorization precedes native acceptance lookup. Exact accepted root replay occurs before selecting risk/person/current content; fresh preparations still enforce expected revision and source membership. Inner content errors become typed failed preparation; existing NativeOperationExecutor.ResolveFailureAsync rechecks the exact concurrent winner before returning them. Genuine unavailable-risk retry and orphan-trigger regressions now pass."
+    }
+  ]
+}

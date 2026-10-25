@@ -46,6 +46,9 @@ static class ProgramManagementServices
             new PersistenceKvClient(new InMemoryKvClient())));
         collection.AddScoped<FirmStaffViews>();
         collection.AddScoped<NativeOperationExecutor>();
+        collection.AddScoped<IndependenceRuleCatalogReader>();
+        collection.AddScoped<IndependenceRuleRatificationReader>();
+        collection.AddScoped<IndependenceRuleCatalogOperations>();
         collection.AddScoped<ControlOperationsReader>();
         collection.AddScoped<ProviderSource>();
         collection.AddScoped<ControlMappingReader>();
@@ -90,6 +93,57 @@ static class ProgramManagementServices
         await RiskMethodSeeds.AppendAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
             scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
             scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+
+    public static async Task SeedAsync(IServiceProvider provider, IndependenceRuleCatalogRules selected,
+        Func<IndependenceRuleCatalogRules, Result> operation)
+    {
+        ArgumentNullException.ThrowIfNull(selected);
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = (await services.GetRequiredService<IndependenceRuleCatalogReader>().ReadAsync()).Rules;
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await IndependenceCatalogSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(), services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+    public static async Task SeedAsync(IServiceProvider provider, IndependenceRuleRatificationRules selected,
+        Func<IndependenceRuleRatificationRules, Result> operation)
+    {
+        ArgumentNullException.ThrowIfNull(selected);
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = (await services.GetRequiredService<IndependenceRuleRatificationReader>().ReadAsync()).Rules;
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await IndependenceCatalogSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(), services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+    public static async Task SeedAsync<TOut>(IServiceProvider provider, IndependenceRuleCatalogRules selected,
+        Func<IndependenceRuleCatalogRules, Result<TOut>> operation)
+    {
+        ArgumentNullException.ThrowIfNull(selected);
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = (await services.GetRequiredService<IndependenceRuleCatalogReader>().ReadAsync()).Rules;
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await IndependenceCatalogSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+    public static async Task SeedAsync<TOut>(IServiceProvider provider, IndependenceRuleRatificationRules selected,
+        Func<IndependenceRuleRatificationRules, Result<TOut>> operation)
+    {
+        ArgumentNullException.ThrowIfNull(selected);
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = (await services.GetRequiredService<IndependenceRuleRatificationReader>().ReadAsync()).Rules;
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await IndependenceCatalogSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IImmutableContentStore>(), rules);
     }
 
     public static async Task SeedAsync(IServiceProvider provider, ControlRules selected,

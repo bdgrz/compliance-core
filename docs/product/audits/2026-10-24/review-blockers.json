@@ -498,12 +498,23 @@
     },
     {
       "id": "risk-owner-batch-native",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "fullUnitPassed": 5993,
       "focusedPassed": 401,
       "productionHttpPassed": 3,
       "directJevProductionFilesReviewed": 111,
-      "qualificationArtifact": "risk-owner-batch-qualification.json"
+      "qualificationArtifact": "risk-owner-batch-qualification.json",
+      "pullRequest": 1116,
+      "mergeCommit": "7951ed4d65b76a22047e1ec1791636772fc34017"
+    },
+    {
+      "id": "governance-catalogs-native",
+      "status": "locally_verified_pending_merge",
+      "fullUnitPassed": 6025,
+      "focusedPassed": 548,
+      "productionHttpPassed": 4,
+      "directJevProductionFilesReviewed": 63,
+      "qualificationArtifact": "governance-catalogs-qualification.json"
     }
   ],
   "resolved": [

@@ -106,7 +106,7 @@ public sealed class FirmOperationsCompositionTests
             new RegisterFirmStaff(other, Uuid.CreateVersion4(), "attest", "Synthetic staff source", 0))).IsSuccess);
         Assert.True((await bus.SendAsync(new SetFirmStaffStatus(Uuid.CreateVersion4(), other, false, "Synthetic disable", 1), Actor)).IsSuccess);
         Assert.True((await bus.SendAsync(new SetFirmStaffStatus(Uuid.CreateVersion4(), other, true, "Synthetic enable", 2), Actor)).IsSuccess);
-        Assert.True((await bus.SendAsync(new ReviseIndependenceRules(0, new IndependenceRuleContent(12,
+        Assert.True((await bus.SendAsync(new ReviseIndependenceRules(Uuid.CreateVersion4(), 0, new IndependenceRuleContent(12,
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")], "Synthetic rule source")), Actor)).IsSuccess);
         Assert.True((await bus.SendAsync(new CreateServiceEngagement(Tenant, engagement, 0, content), Actor)).IsSuccess);
         Assert.True((await bus.SendAsync(new AmendServiceEngagement(Uuid.CreateVersion4(), Tenant, engagement, 1,

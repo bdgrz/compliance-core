@@ -184,6 +184,17 @@ sealed class EngagementPersonalDecisionAdmission(NativeOperationExecutor operati
     async ValueTask<Result<(EngagementPersonalDecisionContent, IReadOnlyList<SourceUseRequirement>)>> BuildPartnerAsync(
         Frozen frozen, RecordPartnerIndependenceEvaluation request, Uuid userId, CancellationToken ct)
     {
+        try
+        { return await BuildPartnerCoreAsync(frozen, request, userId, ct).ConfigureAwait(false); }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<(EngagementPersonalDecisionContent, IReadOnlyList<SourceUseRequirement>)>.Failure(IndependenceCatalogContent.Failure(error));
+        }
+    }
+
+    async ValueTask<Result<(EngagementPersonalDecisionContent, IReadOnlyList<SourceUseRequirement>)>> BuildPartnerCoreAsync(
+        Frozen frozen, RecordPartnerIndependenceEvaluation request, Uuid userId, CancellationToken ct)
+    {
         var tenantId = frozen.Spec.TenantId;
         var duty = await duties.ReadCurrentAsync(userId, FirmProfessionalDuty.EngagementPartner, tenantId, ct)
             .ConfigureAwait(false);

@@ -1,11 +1,13 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
-using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
@@ -13,6 +15,31 @@ namespace Bdgrz.Compliance.Tests.Features.Applications;
 public sealed class AccessReviewScopeLegacyAndProjectionTests
 {
     static readonly DateTimeOffset Now = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
+    readonly IImmutableContentStore _content = new FitzKvImmutableContentStore(new InMemoryKvClient());
+
+    [Theory]
+    [InlineData("application")]
+    [InlineData("actor")]
+    [InlineData("content_digest")]
+    public async Task ShouldRejectContradictoryScopeBodyGivenNativeDecisionSource(string fault)
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var original = await DecidedAsync(tenant, Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, "included", Now);
+        var changed = fault switch
+        {
+            "application" => original with { ApplicationId = Uuid.CreateVersion4() },
+            "actor" => original with { Operation = original.Operation with { Actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Other") } },
+            "content_digest" => original with { Content = original.Content with { Sha256 = new string('f', 64) } },
+            _ => original,
+        };
+
+        // Act
+        var error = await Record.ExceptionAsync(async () => await AccessReviewScopeReader.ReadDecisionAsync(_content, changed));
+
+        // Assert
+        Assert.IsType<ImmutableContentIntegrityException>(error);
+    }
 
     [Fact]
     public async Task ShouldRecordDecisionGivenLegacyApplicationStreamInstance()
@@ -20,7 +47,7 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
         // Arrange
         await using var scenario = await Scenario.CreateAsync(registrantId: Uuid.CreateVersion4());
         var decide = scenario.DecideHandler();
-        var get = new GetAccessReviewScopeHandler(scenario.Reader, scenario.Events,
+        var get = new GetAccessReviewScopeHandler(scenario.Reader, scenario.Events, scenario.Content,
             TimeProvider.System, RestrictedApplicationVisibilityFixture.Create(scenario.Reader));
 
         // Act
@@ -70,9 +97,8 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(result.Error).Kind);
-        var recorded = await scenario.Reader.HydrateAsync(new SystemInstanceAccessReviewScope(
-            scenario.TenantId, scenario.InstanceId));
-        Assert.Empty(recorded.Decisions);
+        var recorded = await scenario.ReadDecisionsAsync();
+        Assert.Empty(recorded);
     }
 
     [Fact]
@@ -87,12 +113,11 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
         // Act
         var result = await scenario.DecideHandler().HandleAsync(
             scenario.DecideContext(ownerUserId, waiverId), CancellationToken.None);
-        var recorded = await scenario.Reader.HydrateAsync(new SystemInstanceAccessReviewScope(
-            scenario.TenantId, scenario.InstanceId));
+        var recorded = await scenario.ReadDecisionsAsync();
 
         // Assert
         Assert.True(result.IsSuccess);
-        var decision = Assert.Single(recorded.Decisions);
+        var decision = Assert.Single(recorded);
         Assert.Equal(waiverId, decision.SeparationOfDutiesWaiverId);
         Assert.Equal(RbacIds.Member(scenario.TenantId, ownerUserId).ToString(), decision.ApprovedBy.Id);
     }
@@ -194,12 +219,12 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
     public async Task ShouldProjectSupersedingHistoryIdempotentlyGivenReplayedDecisions()
     {
         // Arrange
-        var directory = new FitzAccessReviewScopeDirectory(new InMemoryKvClient());
+        var directory = new FitzAccessReviewScopeDirectory(new InMemoryKvClient(), _content);
         var tenantId = Uuid.CreateVersion4();
         var applicationId = Uuid.CreateVersion4();
         var instanceId = Uuid.CreateVersion4();
-        var first = Decided(tenantId, applicationId, instanceId, 1, "included", Now);
-        var second = Decided(tenantId, applicationId, instanceId, 2, "excluded", Now.AddDays(10));
+        var first = await DecidedAsync(tenantId, applicationId, instanceId, 1, "included", Now);
+        var second = await DecidedAsync(tenantId, applicationId, instanceId, 2, "excluded", Now.AddDays(10));
 
         // Act
         await ProjectAsync(directory, tenantId, first, second, first, second);
@@ -216,9 +241,9 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
     public async Task ShouldRejectOutOfOrderDecisionGivenMissingPredecessor()
     {
         // Arrange
-        var directory = new FitzAccessReviewScopeDirectory(new InMemoryKvClient());
+        var directory = new FitzAccessReviewScopeDirectory(new InMemoryKvClient(), _content);
         var tenantId = Uuid.CreateVersion4();
-        var gap = Decided(tenantId, Uuid.CreateVersion4(), Uuid.CreateVersion4(), 2,
+        var gap = await DecidedAsync(tenantId, Uuid.CreateVersion4(), Uuid.CreateVersion4(), 2,
             "included", Now);
 
         // Act
@@ -239,9 +264,8 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
             "cloud_account", null, "manual", null, [], Uuid.CreateVersion4(), "Registrant", Now);
         var history = new[]
         {
-            View(Decided(tenantId, applicationId, instanceId, 1, "included", Now,
-                Now.AddDays(5))),
-            View(Decided(tenantId, applicationId, instanceId, 2, "excluded", Now.AddDays(30))),
+            DecisionView(tenantId, applicationId, instanceId, 1, "included", Now, Now.AddDays(5)),
+            DecisionView(tenantId, applicationId, instanceId, 2, "excluded", Now.AddDays(30)),
         };
 
         // Act
@@ -263,7 +287,7 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
     static async Task ProjectAsync(FitzAccessReviewScopeDirectory directory, Uuid tenantId,
         params AccessReviewScopeDecided[] events)
     {
-        var identity = new CheckpointIdentity("AccessReviewScopeDirectoryV1",
+        var identity = new CheckpointIdentity(AccessReviewScopeStreams.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(),
                 "system-instance-access-review-scopes"));
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
@@ -273,16 +297,24 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 
-    static AccessReviewScopeDecided Decided(Uuid tenantId, Uuid applicationId, Uuid instanceId,
-        long sequence, string decision, DateTimeOffset effectiveFrom,
-        DateTimeOffset? reviewBy = null) =>
-        new(tenantId, applicationId, instanceId, 1, Uuid.CreateVersion4(), sequence, decision,
-            "Reason", effectiveFrom, reviewBy, Uuid.CreateVersion4(), "Lead", Now, null);
+    async Task<AccessReviewScopeDecided> DecidedAsync(Uuid tenantId, Uuid applicationId, Uuid instanceId,
+        long sequence, string decision, DateTimeOffset effectiveFrom, DateTimeOffset? reviewBy = null)
+    {
+        var view = DecisionView(tenantId, applicationId, instanceId, sequence, decision, effectiveFrom, reviewBy);
+        var body = await NativeContent.WriteAsync(_content, tenantId, AccessReviewScopeReader.DecisionSchema, view);
+        var owner = new SystemInstanceAccessReviewScope(tenantId, instanceId);
+        var operation = RootOperation.Provenance(view.DecisionId, nameof(DecideAccessReviewScope), owner.Stream,
+            view.ApprovedBy, sequence - 1, new string('d', 64), Now) with
+        { FirstOwner = owner.Stream };
+        return DomainEventSeed.Attach(new AccessReviewScopeDecided(tenantId, applicationId, instanceId,
+            1, view.DecisionId, sequence, effectiveFrom, body, operation, NativeFacts.Ref(), NativeFacts.Ref()),
+            instanceId, (ulong)sequence);
+    }
 
-    static AccessReviewScopeDecisionView View(AccessReviewScopeDecided ev) =>
-        new(ev.TenantId, ev.ApplicationId, ev.SystemInstanceId, ev.SystemInstanceRevision,
-            ev.DecisionId, ev.Sequence, ev.Decision, ev.Reason, ev.EffectiveFrom, ev.ReviewBy,
-            ev.Actor, ev.DecidedAt, null);
+    static AccessReviewScopeDecisionView DecisionView(Uuid tenantId, Uuid applicationId, Uuid instanceId,
+        long sequence, string decision, DateTimeOffset effectiveFrom, DateTimeOffset? reviewBy = null) =>
+        new(tenantId, applicationId, instanceId, 1, Uuid.CreateVersion4(), sequence, decision, "Reason",
+            effectiveFrom, reviewBy, ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), Now, null);
 
     static RequestDispatchContext PersonalHttp(ClaimsPrincipal actor) => new(actor,
         new HttpInvocation("POST", "/synthetic/scope/decision", "/synthetic/scope/decision", "synthetic"));
@@ -307,6 +339,9 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
         public Uuid? AccessOwnerPersonId { get; private set; }
         public IAggregateReader Reader => _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         public IEventStore Events => _scope.ServiceProvider.GetRequiredService<IEventStore>();
+        public IImmutableContentStore Content => _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        public Task<IReadOnlyList<AccessReviewScopeDecisionView>> ReadDecisionsAsync() =>
+            AccessReviewScopeReader.ReadAsync(Reader, Events, Content, TenantId, ApplicationId, InstanceId);
 
         /// <summary>Declares a legacy instance; a null registrant means the member of <paramref name="userId"/>.</summary>
         public static async Task<Scenario> CreateAsync(Uuid? registrantId, Uuid? userId = null,
@@ -314,6 +349,7 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
         {
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(new InMemoryKvClient()));
             services.AddSingleton(TimeProvider.System);
             services.AddPortia();
             var scenario = new Scenario(services.BuildServiceProvider(
@@ -402,8 +438,8 @@ public sealed class AccessReviewScopeLegacyAndProjectionTests
         }
 
         public DecideAccessReviewScopeHandler DecideHandler() => new(
-            _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), Reader, Events,
-            new FixedClock());
+            new NativeOperationExecutor(Reader, _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), Content),
+            Reader, Events, Content, new FixedClock());
 
         public Cntryl.Portia.RequestContext<DecideAccessReviewScope> DecideContext(Uuid userId, Uuid? waiverId = null) => new(
             new DecideAccessReviewScope(TenantId, ApplicationId, InstanceId, 1, 0, "included",

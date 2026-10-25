@@ -1,6 +1,8 @@
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Remediation;
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
 
 namespace Bdgrz.Compliance.Features.Risks;
 
@@ -13,6 +15,65 @@ namespace Bdgrz.Compliance.Features.Risks;
 public sealed class RiskGovernanceReader(IAggregateReader reader, IDomainEventReader events,
     IImmutableContentStore content)
 {
+    /// <summary>Reads the exact physical/native cut of a compact governance owner, with no lifetime state on that owner.</summary>
+    public async Task<IReadOnlyList<DomainEvent>> ReadGovernanceFactsAsync(RiskGovernance owner, CancellationToken ct = default)
+    {
+        var facts = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, owner, ct).ConfigureAwait(false);
+        if (facts.Count != owner.Revision || facts.Count > 0 && (owner.Latest is null ||
+            ContentDigest.Sha256(facts[^1], facts[^1].GetType()) != ContentDigest.Sha256(owner.Latest, owner.Latest.GetType())))
+            throw new ImmutableContentIntegrityException("The risk governance history differs from its exact hydrated cut.");
+        for (var index = 0; index < facts.Count; index++)
+        {
+            var valid = facts[index] switch
+            {
+                RiskOwnerAssigned fact => fact.TenantId == owner.TenantId && fact.ProgramId == owner.ProgramId && fact.RiskId == owner.RiskId && fact.Revision == index + 1,
+                RiskReassessmentTriggered fact => fact.TenantId == owner.TenantId && fact.ProgramId == owner.ProgramId && fact.RiskId == owner.RiskId && fact.Revision == index + 1,
+                _ => false,
+            };
+            if (!valid)
+                throw new ImmutableContentIntegrityException("The risk governance history contains another exact risk or predecessor.");
+        }
+        return facts;
+    }
+
+    /// <summary>Checks the semantic trigger identity in verified immutable history at a frozen command cut.</summary>
+    public async Task<RiskReassessmentTriggerView?> FindTriggerAsync(RiskGovernance owner, Uuid triggerId,
+        CancellationToken ct = default)
+    {
+        RiskReassessmentTriggerView? selected = null;
+        var seen = new HashSet<Uuid>();
+        foreach (var fact in (await ReadGovernanceFactsAsync(owner, ct).ConfigureAwait(false)).OfType<RiskReassessmentTriggered>())
+        {
+            var view = await ReadTriggerAsync(fact, ct).ConfigureAwait(false);
+            if (!seen.Add(view.TriggerId))
+                throw new ImmutableContentIntegrityException("A semantic reassessment trigger appears twice in the same risk history.");
+            if (view.TriggerId == triggerId)
+                selected = view;
+        }
+        return selected;
+    }
+
+    public async Task<RiskReassessmentTriggerView> ReadTriggerAsync(RiskReassessmentTriggered fact, CancellationToken ct = default)
+    {
+        var view = await FindingContent.ReadAsync<RiskReassessmentTriggerView>(content, fact.TenantId, fact.TriggerContent, ct).ConfigureAwait(false);
+        var workload = view.TriggerKind == RiskStates.MethodChanged ? RiskMethodReassessmentReactor.WorkloadName : BoundaryRiskReassessmentReactor.WorkloadName;
+        if (view.RiskId != fact.RiskId || view.TriggerKind is not (RiskStates.MethodChanged or RiskStates.BoundaryChanged) ||
+            string.IsNullOrWhiteSpace(view.SourceReference) || view.SourceReference.Length > 4000 || view.RaisedAt == default || view.Status != "open" ||
+            view.TriggerId != RiskGovernance.TriggerIdFor(fact.ProgramId, fact.RiskId, view.TriggerKind, view.SourceReference) ||
+            fact.Operation.Actor.Kind != "system_process" || fact.Operation.Actor.Id != "reactor:" + workload)
+            throw new ImmutableContentIntegrityException("The trigger body differs from its native risk identity or trusted producer.");
+        return view;
+    }
+
+    public async Task<RiskOwnerView> ReadOwnerAsync(RiskOwnerAssigned fact, CancellationToken ct = default)
+    {
+        var view = await FindingContent.ReadAsync<RiskOwnerView>(content, fact.TenantId, fact.OwnerContent, ct).ConfigureAwait(false);
+        if (view.PersonId == Uuid.Empty || view.CorrelatedMemberId == Uuid.Empty || RiskCommands.InvalidText(view.Rationale) ||
+            view.Rationale != view.Rationale.Trim() || view.AssignedBy != fact.Operation.Actor || view.AssignedAt != fact.Operation.AcceptedAt)
+            throw new ImmutableContentIntegrityException("The risk owner body differs from its original native attribution.");
+        return view;
+    }
+
     /// <summary>The governance of every risk of the program.</summary>
     public ValueTask<RiskGovernanceSnapshot> ReadAsync(Uuid tenantId, Uuid programId, CancellationToken ct = default) =>
         CollectAsync(tenantId, programId, null, ct);
@@ -186,13 +247,17 @@ public sealed class RiskGovernanceReader(IAggregateReader reader, IDomainEventRe
             var governance = await reader.HydrateAsync(new RiskGovernance(tenantId, programId, riskId), ct)
                 .ConfigureAwait(false);
             var owner = governance.Owner is { } assigned
-                ? await FindingContent.ReadAsync<RiskOwnerView>(content, tenantId, assigned.OwnerContent, ct)
-                    .ConfigureAwait(false)
+                ? await ReadOwnerAsync(assigned, ct).ConfigureAwait(false)
                 : (RiskOwnerView?)null;
             var triggers = new List<RiskReassessmentTriggerView>();
-            foreach (var trigger in governance.Triggers)
-                triggers.Add(await FindingContent.ReadAsync<RiskReassessmentTriggerView>(content, tenantId,
-                    trigger.TriggerContent, ct).ConfigureAwait(false));
+            var triggerIds = new HashSet<Uuid>();
+            foreach (var trigger in (await ReadGovernanceFactsAsync(governance, ct).ConfigureAwait(false)).OfType<RiskReassessmentTriggered>())
+            {
+                var view = await ReadTriggerAsync(trigger, ct).ConfigureAwait(false);
+                if (!triggerIds.Add(view.TriggerId))
+                    throw new ImmutableContentIntegrityException("A risk history contains duplicate semantic triggers.");
+                triggers.Add(view);
+            }
             var treatments = new List<RiskControlTreatmentView>();
             foreach (var (_, controlId) in lines.Where(line => line.Risk == riskId))
             {

@@ -41,7 +41,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var rules = new IndependenceRuleContent(12,
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")],
             "Synthetic authored rules");
-        var draft = await bus.SendAsync(new ReviseIndependenceRules(0, rules), Actor);
+        var draft = await bus.SendAsync(new ReviseIndependenceRules(Uuid.CreateVersion4(), 0, rules), Actor);
         var ratification = await bus.DispatchAsync(new RatifyIndependenceRuleVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             1, 1, 0, IndependenceSourceDigest.RuleContent(rules), "Synthetic ratification evidence", 0),
             http, CancellationToken.None);
@@ -243,7 +243,6 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         // Arrange
         await using var provider = Compose();
         await using var scope = provider.CreateAsyncScope();
-        var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var operatorActor = ActorReference.ForPlatformOperator(User, "Synthetic operator");
         var staff = await FirmStaffFacts.RegisterAsync(provider, Staff, User, "attest", "Synthetic staff source",
@@ -256,16 +255,16 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var content = new IndependenceRuleContent(12,
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")],
             "Synthetic rules");
-        var seededRules = await executor.ExecuteAsync(new IndependenceRuleCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.ReviseRules(Uuid.CreateVersion4(), catalog.Sequence,
-                content, operatorActor, Now)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(seededRules.IsSuccess, seededRules.Error?.Message);
-        var seededRatification = await executor.ExecuteAsync(new IndependenceRuleRatificationCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Ratify(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, 1,
-                catalog.Sequence, IndependenceSourceDigest.RuleContent(content), "Synthetic ratification evidence",
-                staff, seededDuty.Value!, ActorReference.ForFirmStaff(User, "Synthetic ratifier"), Now)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(seededRatification.IsSuccess, seededRatification.Error?.Message);
+        await ProgramManagementServices.SeedAsync(provider, new IndependenceRuleCatalogRules(), catalog =>
+            catalog.ReviseRules(Uuid.CreateVersion4(), catalog.Sequence, content, operatorActor, Now));
+        var seededRules = await scope.ServiceProvider.GetRequiredService<IndependenceRuleCatalogReader>().ReadAsync();
+        Assert.NotNull(seededRules.Current);
+        var ratificationId = Uuid.CreateVersion4();
+        await ProgramManagementServices.SeedAsync(provider, new IndependenceRuleRatificationRules(), catalog =>
+            catalog.Ratify(Uuid.CreateVersion4(), ratificationId, 1, 1, catalog.Sequence, IndependenceSourceDigest.RuleContent(content),
+                "Synthetic ratification evidence", staff, seededDuty.Value!, ActorReference.ForFirmStaff(User, "Synthetic ratifier"), Now));
+        var seededRatification = await scope.ServiceProvider.GetRequiredService<IndependenceRuleRatificationReader>().ReadAsync();
+        Assert.Equal(ratificationId, seededRatification.Active!.RatificationId);
         var rulesReader = scope.ServiceProvider.GetRequiredService<CurrentRatifiedIndependenceRulesReader>();
         Assert.NotNull(await rulesReader.ReadActiveAsync(CancellationToken.None));
         var renewedAt = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
@@ -309,9 +308,9 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var rules = new IndependenceRuleContent(12,
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")],
             "Second version for retry proof");
-        Assert.True((await seeded.Executor.ExecuteAsync(new IndependenceRuleCatalog(), current =>
-            AggregateOutcome.CommitOnSuccess(current.ReviseRules(Uuid.CreateVersion4(), 1, rules,
-                seeded.OperatorActor, at)), new RequestDispatchContext(RequestActor.System), CancellationToken.None)).IsSuccess);
+        await ProgramManagementServices.SeedAsync(seeded.Services, new IndependenceRuleCatalogRules(), current =>
+            current.ReviseRules(Uuid.CreateVersion4(), 1, rules, seeded.OperatorActor, at));
+        Assert.Equal(2, (await seeded.Services.GetRequiredService<IndependenceRuleCatalogReader>().ReadAsync()).Current!.Version);
         var request = new RatifyIndependenceRuleVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 2, 2, 1,
             IndependenceSourceDigest.RuleContent(rules), "Original retry decision", 1);
         var context = new Cntryl.Portia.RequestContext<RatifyIndependenceRuleVersion>(request,
@@ -334,6 +333,53 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         Assert.Equal(2, current.Sequence);
     }
 
+    [Fact]
+    public async Task ShouldReplayOriginalPersonalDecisionBeforeLaterCatalogStateAndRequireCurrentDutyGivenHistoricalRetry()
+    {
+        // Arrange
+        var at = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds()).AddMinutes(-1);
+        await using var provider = Compose();
+        await using var scope = provider.CreateAsyncScope();
+        var source = await SeedRatifiedRulesAsync(scope.ServiceProvider, at, at.AddMinutes(59));
+        var ratifications = scope.ServiceProvider.GetRequiredService<IndependenceRuleRatificationReader>();
+        var initial = await ratifications.ReadAsync();
+        var node = initial.Content!;
+        var view = initial.Active!;
+        var original = new RatifyIndependenceRuleVersion(node.RequestId, view.RatificationId, view.RuleVersion,
+            view.ObservedRuleCatalogSequence, 0, view.RuleContentDigest, view.SourceReference, 0);
+        var context = new Cntryl.Portia.RequestContext<RatifyIndependenceRuleVersion>(original,
+            new RequestDispatchContext(Actor, new HttpInvocation("PUT", "/synthetic/ratify", null, "ratify-history-retry")));
+        var content = new IndependenceRuleContent(12,
+            [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")], "Later catalog source");
+        await ProgramManagementServices.SeedAsync(provider, new IndependenceRuleCatalogRules(), rules =>
+            rules.ReviseRules(Uuid.CreateVersion4(), rules.Sequence, content, source.OperatorActor, at));
+        var currentDuty = await scope.ServiceProvider.GetRequiredService<ProfessionalDutyAuthorityReader>()
+            .ReadCurrentAsync(User, FirmProfessionalDuty.RuleRatifier, null, CancellationToken.None);
+        Assert.NotNull(currentDuty);
+        await ProgramManagementServices.SeedAsync(provider, new IndependenceRuleRatificationRules(), rules =>
+            rules.Ratify(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 2, 2, rules.Sequence, IndependenceSourceDigest.RuleContent(content),
+                "Later personal decision", currentDuty.Staff, currentDuty.Designation, ActorReference.ForFirmStaff(User, "Ratifier"), at));
+        var handler = ActivatorUtilities.CreateInstance<RatifyIndependenceRuleVersionHandler>(scope.ServiceProvider);
+
+        // Act
+        var replay = await handler.HandleAsync(context, CancellationToken.None);
+        var changed = await handler.HandleAsync(new Cntryl.Portia.RequestContext<RatifyIndependenceRuleVersion>(
+            original with { SourceReference = "Changed historical intent" }, context), CancellationToken.None);
+        var revokedAt = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+        var assertion = ProfessionalDutyAssertionTestIssuer.Issue(source.DesignationId, User, FirmProfessionalDuty.RuleRatifier, null,
+            2, "revoked", source.InitialAssertion.Evidence.AssertionId, revokedAt.AddMinutes(-1), revokedAt.AddMinutes(30));
+        var revoked = await ProfessionalDutyFacts.RevokeAsync(scope.ServiceProvider, assertion, source.OperatorActor, revokedAt);
+        var denied = await handler.HandleAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(view, replay.Value);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.True(revoked.IsSuccess, revoked.Error?.Message);
+        Assert.Equal(RequestErrorKind.Forbidden, denied.Error?.Kind);
+        Assert.Equal(2, (await ratifications.ReadAsync()).Sequence);
+    }
+
     static async Task<SeededRuleSource> SeedRatifiedRulesAsync(IServiceProvider services, DateTimeOffset at,
         DateTimeOffset expiresAt)
     {
@@ -350,16 +396,16 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var content = new IndependenceRuleContent(12,
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")],
             "Synthetic rules");
-        var seededRules = await executor.ExecuteAsync(new IndependenceRuleCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.ReviseRules(Uuid.CreateVersion4(), catalog.Sequence,
-                content, operatorActor, at)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(seededRules.IsSuccess, seededRules.Error?.Message);
-        var seededRatification = await executor.ExecuteAsync(new IndependenceRuleRatificationCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Ratify(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, 1,
-                catalog.Sequence, IndependenceSourceDigest.RuleContent(content), "Synthetic ratification evidence",
-                staff, seededDuty.Value!, ActorReference.ForFirmStaff(User, "Synthetic ratifier"), at)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(seededRatification.IsSuccess, seededRatification.Error?.Message);
+        await ProgramManagementServices.SeedAsync(services, new IndependenceRuleCatalogRules(), catalog =>
+            catalog.ReviseRules(Uuid.CreateVersion4(), catalog.Sequence, content, operatorActor, at));
+        var seededRules = await services.GetRequiredService<IndependenceRuleCatalogReader>().ReadAsync();
+        Assert.NotNull(seededRules.Current);
+        var ratificationId = Uuid.CreateVersion4();
+        await ProgramManagementServices.SeedAsync(services, new IndependenceRuleRatificationRules(), catalog =>
+            catalog.Ratify(Uuid.CreateVersion4(), ratificationId, 1, 1, catalog.Sequence, IndependenceSourceDigest.RuleContent(content),
+                "Synthetic ratification evidence", staff, seededDuty.Value!, ActorReference.ForFirmStaff(User, "Synthetic ratifier"), at));
+        var seededRatification = await services.GetRequiredService<IndependenceRuleRatificationReader>().ReadAsync();
+        Assert.Equal(ratificationId, seededRatification.Active!.RatificationId);
         return new SeededRuleSource(services, executor,
             services.GetRequiredService<CurrentRatifiedIndependenceRulesReader>(), operatorActor,
             staff, designationId, assertion);

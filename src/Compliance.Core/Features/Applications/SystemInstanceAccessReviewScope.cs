@@ -1,124 +1,72 @@
-using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-/// <summary>
-/// Owns the append-only, effective-dated access-review scope decisions for one system instance
-/// (M0-D05). A new decision supersedes; it never edits a prior one.
-/// </summary>
+/// <summary>Bounded scope-decision authority for one instance, independent of its immutable effective-date history.</summary>
 public sealed class SystemInstanceAccessReviewScope : Aggregate
 {
     public const string Included = "included";
     public const string Excluded = "excluded";
-
     readonly Uuid _tenantId;
-    readonly List<AccessReviewScopeDecisionView> _decisions = [];
+    AccessReviewScopeDecided? _latest;
 
-    public IReadOnlyList<AccessReviewScopeDecisionView> Decisions => _decisions;
-
-    public SystemInstanceAccessReviewScope(Uuid tenantId, Uuid systemInstanceId)
-        : base(systemInstanceId, new EventStreamAddress(tenantId.ToString(),
-            AccessReviewScopeStreams.Area, systemInstanceId.ToString()))
+    public SystemInstanceAccessReviewScope(Uuid tenantId, Uuid systemInstanceId, Uuid selectedLogicalId = default)
+        : base(systemInstanceId, new EventStreamAddress(tenantId.ToString(), AccessReviewScopeStreams.Area,
+            systemInstanceId.ToString()))
     {
         _tenantId = tenantId;
-        On<AccessReviewScopeDecided>(ev => _decisions.Add(new AccessReviewScopeDecisionView(
-            ev.TenantId, ev.ApplicationId, ev.SystemInstanceId, ev.SystemInstanceRevision,
-            ev.DecisionId, ev.Sequence, ev.Decision, ev.Reason, ev.EffectiveFrom, ev.ReviewBy,
-            ev.Actor, ev.DecidedAt, ev.SeparationOfDutiesWaiverId)));
+        Acceptance = new NativeAcceptance(selectedLogicalId);
+        On<AccessReviewScopeDecided>(ApplyFact);
     }
 
-    /// <summary>Returns the latest decision whose effective date is not after <paramref name="asOf"/>.</summary>
-    public AccessReviewScopeDecisionView? EffectiveAt(DateTimeOffset asOf) =>
-        AccessReviewScopeStatus.EffectiveAt(_decisions, asOf);
+    public NativeAcceptance Acceptance { get; }
+    public long Revision => _latest?.Sequence ?? 0;
+    public AccessReviewScopeDecided? Latest => _latest;
 
-    public AccessReviewScopeView ToView(Uuid applicationId, DateTimeOffset asOf)
+    /// <summary>The stable operation identity for the existing personal contract's original decision count.</summary>
+    public static Uuid OperationId(Uuid tenant, Uuid application, Uuid instance, long expectedCount) =>
+        SystemInstanceAccessReviewScopeIdentity.For(tenant, application, instance, expectedCount);
+
+    public Result PrepareDecide(long expectedCount, DateTimeOffset effectiveFrom)
     {
-        var effective = EffectiveAt(asOf);
-        return new AccessReviewScopeView(_tenantId, applicationId, Id, asOf,
-            effective?.Decision ?? AccessReviewScopeStatus.Unresolved, effective, [.. _decisions]);
+        if (expectedCount != Revision)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The instance has {Revision} scope decisions; expected {expectedCount}."));
+        return _latest is { } prior && effectiveFrom < prior.EffectiveFrom
+            ? Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A new scope decision cannot take effect before the decision it supersedes."))
+            : Result.Success;
     }
 
-    public Result<AccessReviewScopeDecisionView> Decide(DeclaredSystemInstance instance,
-        long expectedDecisionCount, Uuid decisionId, string decision, string reason,
-        DateTimeOffset effectiveFrom, DateTimeOffset? reviewBy, Uuid approverMemberId,
-        string approverDisplay, DateTimeOffset decidedAt, SeparationOfDutiesWaiver? waiver)
+    public Result Record(OperationProvenance operation, Uuid applicationId, long instanceRevision,
+        DateTimeOffset effectiveFrom, ImmutableContentRef content, ImmutableContentRef firstResponse,
+        ImmutableContentRef operationResult)
     {
-        ArgumentNullException.ThrowIfNull(instance);
-        if (!instance.IsCreated)
-            return Result<AccessReviewScopeDecisionView>.Failure(new RequestError(
-                RequestErrorKind.NotFound, "The system instance was not found."));
-        return Decide(ScopedSystemInstance.From(instance), expectedDecisionCount, decisionId,
-            decision, reason, effectiveFrom, reviewBy, approverMemberId, approverDisplay,
-            decidedAt, waiver);
+        if (_latest is not null && _latest.ApplicationId != applicationId)
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The system instance was not found."));
+        if (operation.OriginalExpectedRevision is not { } expected || expected > (ulong)long.MaxValue)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The original native revision is required."));
+        var prepared = PrepareDecide((long)expected, effectiveFrom);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (!NativeOwnerHistory.IsOwnRoot(this, operation, nameof(DecideAccessReviewScope), (ulong)Revision))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The decision has another native owner or parent."));
+        RaiseEvent(new AccessReviewScopeDecided(_tenantId, applicationId, Id, instanceRevision,
+            operation.LogicalId, Revision + 1, effectiveFrom, content, operation, firstResponse, operationResult));
+        return Result.Success;
     }
 
-    /// <summary>
-    /// Decides scope for a registered or legacy application-stream instance at its exact revision.
-    /// </summary>
-    public Result<AccessReviewScopeDecisionView> Decide(ScopedSystemInstance instance,
-        long expectedDecisionCount, Uuid decisionId, string decision, string reason,
-        DateTimeOffset effectiveFrom, DateTimeOffset? reviewBy, Uuid approverMemberId,
-        string approverDisplay, DateTimeOffset decidedAt, SeparationOfDutiesWaiver? waiver)
+    void ApplyFact(AccessReviewScopeDecided fact)
     {
-        ArgumentNullException.ThrowIfNull(instance);
-        var retry = _decisions.FirstOrDefault(existing => existing.DecisionId == decisionId);
-        if (retry is not null)
-            return Result<AccessReviewScopeDecisionView>.Success(retry);
-        var failure = Validate(instance, expectedDecisionCount, decision, reason, effectiveFrom,
-            reviewBy, approverMemberId, decidedAt, waiver);
-        if (failure is not null)
-            return Result<AccessReviewScopeDecisionView>.Failure(failure);
-        var normalizedDisplay = approverDisplay.Trim();
-        var ev = new AccessReviewScopeDecided(_tenantId, instance.ApplicationId, Id,
-            instance.Revision, decisionId, _decisions.Count + 1, decision, reason.Trim(),
-            effectiveFrom, reviewBy, approverMemberId, normalizedDisplay, decidedAt, waiver?.Id)
-        {
-            StoredActor = ActorReference.ForMember(approverMemberId, normalizedDisplay),
-        };
-        RaiseEvent(ev);
-        return Result<AccessReviewScopeDecisionView>.Success(_decisions[^1]);
-    }
-
-    RequestError? Validate(ScopedSystemInstance instance, long expectedDecisionCount,
-        string decision, string reason, DateTimeOffset effectiveFrom, DateTimeOffset? reviewBy,
-        Uuid approverMemberId, DateTimeOffset decidedAt, SeparationOfDutiesWaiver? waiver)
-    {
-        if (instance.Id != Id)
-            return new RequestError(RequestErrorKind.NotFound, "The system instance was not found.");
-        if (instance.IsRetired)
-            return new RequestError(RequestErrorKind.Conflict,
-                "A retired system instance cannot receive a new scope decision.");
-        if (decision is not (Included or Excluded))
-            return new RequestError(RequestErrorKind.Validation,
-                "The decision must be included or excluded.");
-        if (string.IsNullOrWhiteSpace(reason) || reason.Length > 2000)
-            return new RequestError(RequestErrorKind.Validation,
-                "A scope decision requires a reason of at most 2000 characters.");
-        if (reviewBy is { } review && review <= effectiveFrom)
-            return new RequestError(RequestErrorKind.Validation,
-                "The review date must be after the effective date.");
-        if (expectedDecisionCount != _decisions.Count)
-            return new RequestError(RequestErrorKind.Conflict,
-                $"The instance has {_decisions.Count} scope decisions; expected {expectedDecisionCount}.");
-        if (_decisions.Count > 0 && effectiveFrom < _decisions[^1].EffectiveFrom)
-            return new RequestError(RequestErrorKind.Validation,
-                "A new scope decision cannot take effect before the decision it supersedes.");
-
-        // Separation of duties (M0-D03, M0-D05): the registrant and current access owner may
-        // approve scope only with an independently approved exact-scope waiver.
-        var conflict = approverMemberId == instance.RegisteredByMemberId ||
-                       approverMemberId == instance.AccessOwnerMemberId;
-        if (!conflict)
-            return waiver is null ? null : new RequestError(RequestErrorKind.Forbidden,
-                "A separation-of-duties waiver may only be used for a current conflict.");
-        var scope = new SeparationOfDutiesWaiverScope(
-            SeparationOfDutiesRecordTypes.SystemInstanceAccessReviewScope, Id, Id,
-            instance.Revision, SeparationOfDutiesActions.Approve);
-        return waiver is not null && waiver.TenantId == _tenantId &&
-               waiver.Allows(scope, approverMemberId, decidedAt)
-            ? null
-            : new RequestError(RequestErrorKind.Forbidden,
-                "The registrant or access owner cannot approve the system instance's access-review scope without an active exact-scope waiver.");
+        Acceptance.Observe(fact);
+        if (fact.TenantId != _tenantId || fact.SystemInstanceId != Id || fact.ApplicationId == Uuid.Empty ||
+            fact.SystemInstanceRevision < 1 || fact.Sequence != Revision + 1 ||
+            _latest is not null && (fact.ApplicationId != _latest.ApplicationId || fact.EffectiveFrom < _latest.EffectiveFrom) ||
+            fact.DecisionId != fact.Operation.LogicalId || fact.FirstResponse is null || fact.OperationResult is null ||
+            !NativeOwnerHistory.IsOwnRoot(this, fact.Operation, nameof(DecideAccessReviewScope), (ulong)Revision))
+            throw new InvalidOperationException("A scope decision must advance its own instance's exact native effective-date line.");
+        _latest = fact;
     }
 }

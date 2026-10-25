@@ -18,6 +18,17 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
     public async ValueTask<Result<ServiceEngagementAcceptanceEvidence>> ReadCurrentAsync(Uuid tenantId,
         Uuid engagementId, Uuid actorUserId, CancellationToken ct)
     {
+        try
+        { return await ReadCurrentCoreAsync(tenantId, engagementId, actorUserId, ct).ConfigureAwait(false); }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<ServiceEngagementAcceptanceEvidence>.Failure(IndependenceCatalogContent.Failure(error));
+        }
+    }
+
+    async ValueTask<Result<ServiceEngagementAcceptanceEvidence>> ReadCurrentCoreAsync(Uuid tenantId,
+        Uuid engagementId, Uuid actorUserId, CancellationToken ct)
+    {
         if (tenantId == Uuid.Empty || engagementId == Uuid.Empty || actorUserId == Uuid.Empty)
             return Refuse(RequestErrorKind.Validation, "An exact client engagement and personal partner identity are required.");
 
