@@ -23,6 +23,20 @@ public sealed class ProposeAccessExpectationHandler(NativeOperationExecutor oper
     public async ValueTask<Result<AccessExpectationView>> HandleAsync(
         IRequestContext<ProposeAccessExpectation> context, CancellationToken ct)
     {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<AccessExpectationView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact scoped expectation source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<AccessExpectationView>> HandleCoreAsync(
+        IRequestContext<ProposeAccessExpectation> context, CancellationToken ct)
+    {
         var request = context.Request;
         if (request.ExpectationId == Uuid.Empty || request.ExpectedRevision < 0)
             return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.Validation,
@@ -38,11 +52,12 @@ public sealed class ProposeAccessExpectationHandler(NativeOperationExecutor oper
             return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.NotFound,
                 "The system instance was not found.");
 
+        var digest = AuthoredIntentDigest.Compute(request);
         var lineId = await expectations.ResolveLineAsync(request.TenantId, request.SystemInstanceId,
-            request.ExpectationId, ct).ConfigureAwait(false);
+            request.ExpectationId, request.ExpectationId, CommandKind, digest, ct).ConfigureAwait(false);
         if (lineId is null && request.SupersedesExpectationId is { } predecessorId)
             lineId = await expectations.ResolveLineAsync(request.TenantId, request.SystemInstanceId, predecessorId,
-                ct).ConfigureAwait(false) ?? Uuid.Empty;
+                ct: ct).ConfigureAwait(false) ?? Uuid.Empty;
         if (lineId == Uuid.Empty)
             return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.NotFound,
                 "The superseded expectation was not found or is not approved.");
@@ -51,51 +66,56 @@ public sealed class ProposeAccessExpectationHandler(NativeOperationExecutor oper
         var now = clock.GetUtcNow();
         var stream = new AccessExpectation(request.TenantId, line).Stream;
         var provenance = AccessReviewOperation.Provenance(request.ExpectationId, CommandKind, stream,
-            actor.Reference, request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
+            actor.Reference, request.ExpectedRevision, digest, now);
         var binding = AcceptedOperationBinding.Of(provenance);
-        var (owner, folded) = await expectations.ReadLineAsync(request.TenantId, line, request.ExpectationId, ct)
-            .ConfigureAwait(false);
 
         FirstResponseDescriptor? response = null;
+        AccessReviewPreparedCut? preparedCut = null;
         ImmutableContentRef? expectationContent = null;
         ImmutableContentRef? result = null;
-        if (owner.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var prepared = owner.PrepareProposal(request.ExpectedRevision, request.SystemInstanceId,
-                request.ExpectationId);
-            if (!prepared.IsSuccess)
-                return Result<AccessExpectationView>.Failure(prepared.Error!);
-            if (AccessExpectationRules.ValidateRule(request.RuleKind, request.Parameters) is { } invalid)
-                return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.Validation, invalid);
-            if (!AccessReviewVocabulary.IsBoundedText(request.Rationale, 4000))
-                return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.Validation,
-                    "An expectation requires a rationale of at most 4000 characters.");
-            if (request.EffectiveUntil is { } until && until <= request.EffectiveFrom)
-                return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.Validation,
-                    "An expectation must end after it takes effect.");
-            if (request.SupersedesExpectationId is { } supersedes &&
-                folded.Find(supersedes) is not { Status: AccessExpectation.Approved })
-                return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.NotFound,
-                    "The superseded expectation was not found or is not approved.");
-            var view = new AccessExpectationView(request.ExpectationId, instance.Id, request.SupersedesExpectationId,
-                request.RuleKind, AccessExpectationRules.Normalize(request.Parameters), request.Rationale.Trim(),
-                request.EffectiveFrom, request.EffectiveUntil, AccessExpectation.Proposed, actor.Reference, now,
-                null, null, null, request.ExpectedRevision + 1);
-            expectationContent = await AccessReviewContent.WriteAsync(content, request.TenantId,
-                AccessReviewContent.ExpectationSchema, view, ct).ConfigureAwait(false);
-            result = await AccessReviewContent.WriteResultAsync(content, request.TenantId,
-                AccessReviewContent.ExpectationSchema, expectationContent, ct).ConfigureAwait(false);
-            response = AccessReviewContent.OkResponse(AccessReviewContent.ExpectationSchema, expectationContent);
-        }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AccessExpectation>(binding,
             () => new AccessExpectation(request.TenantId, line, request.ExpectationId),
             expectation => expectation.Acceptance,
-            expectation => AccessReviewOperation.Prepare(expectation.PrepareProposal(request.ExpectedRevision,
-                request.SystemInstanceId, request.ExpectationId), response,
-                "The expectation line changed while the proposal was prepared; reload and retry."),
-            (AccessExpectation expectation, ImmutableContentRef frozen) => expectation.Propose(provenance, request.SystemInstanceId, actor.MemberId,
-                expectationContent!, frozen, result!)), context, ct).ConfigureAwait(false);
+            async (owner, prepareCt) =>
+            {
+                var folded = await AccessExpectationLine.ReadAsync(owner, events, content, request.TenantId,
+                    prepareCt).ConfigureAwait(false);
+                var prepared = owner.PrepareProposal(request.ExpectedRevision, request.SystemInstanceId,
+                    request.ExpectationId);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                if (AccessExpectationRules.ValidateRule(request.RuleKind, request.Parameters) is { } invalid)
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Validation, invalid);
+                if (!AccessReviewVocabulary.IsBoundedText(request.Rationale, 4000))
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Validation,
+                        "An expectation requires a rationale of at most 4000 characters.");
+                if (request.EffectiveUntil is { } until && until <= request.EffectiveFrom)
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Validation,
+                        "An expectation must end after it takes effect.");
+                if (request.SupersedesExpectationId is { } supersedes &&
+                    folded.Find(supersedes) is not { Status: AccessExpectation.Approved })
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.NotFound,
+                        "The superseded expectation was not found or is not approved.");
+                var view = new AccessExpectationView(request.ExpectationId, instance.Id, request.SupersedesExpectationId,
+                    request.RuleKind, AccessExpectationRules.Normalize(request.Parameters), request.Rationale.Trim(),
+                    request.EffectiveFrom, request.EffectiveUntil, AccessExpectation.Proposed, actor.Reference, now,
+                    null, null, null, request.ExpectedRevision + 1);
+                expectationContent = await AccessReviewContent.WriteAsync(content, request.TenantId,
+                    AccessReviewContent.ExpectationSchema, view, prepareCt).ConfigureAwait(false);
+                result = await AccessReviewContent.WriteResultAsync(content, request.TenantId,
+                    AccessReviewContent.ExpectationSchema, expectationContent, prepareCt).ConfigureAwait(false);
+                response = AccessReviewContent.OkResponse(AccessReviewContent.ExpectationSchema, expectationContent);
+                preparedCut = AccessReviewPreparedCut.Capture(owner);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (AccessExpectation expectation, ImmutableContentRef frozen) =>
+            {
+                if (preparedCut?.Matches(expectation) != true)
+                    return AccessReviewPreparedCut.Changed();
+                return expectation.Propose(provenance, request.SystemInstanceId, actor.MemberId,
+                expectationContent!, frozen, result!);
+            }), context, ct).ConfigureAwait(false);
         return await AccessReviewContent.ResponseAsync<AccessExpectationView>(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
     }

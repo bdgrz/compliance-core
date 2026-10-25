@@ -1,0 +1,8 @@
+{
+  "reviewed": 13,
+  "blockedReviews": 0,
+  "signalsTriaged": 0,
+  "threshold": 0.65,
+  "rows": [],
+  "adversarialEvidence": "Five genuine oldAPI failures:98fact/proposer retention, losing proposal content preparation after equal winner, accepted retry reading unrelated later body, fresh approval picks first ambiguous sameUUID owner and second original proposal retry conflicts. All pass in534focused."
+}

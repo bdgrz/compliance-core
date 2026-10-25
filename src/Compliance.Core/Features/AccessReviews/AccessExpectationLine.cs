@@ -28,18 +28,26 @@ public sealed class AccessExpectationLine
     public static AccessExpectationLine Empty { get; } = new(0);
 
     /// <summary>Folds the facts of a hydrated line, reading each fact's immutable content.</summary>
-    public static async Task<AccessExpectationLine> ReadAsync(AccessExpectation owner,
+    public static async Task<AccessExpectationLine> ReadAsync(AccessExpectation owner, IDomainEventReader events,
         IImmutableContentStore content, Uuid tenantId, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(owner);
         ArgumentNullException.ThrowIfNull(content);
         var line = new AccessExpectationLine(owner.Revision);
-        foreach (var fact in owner.Facts)
+        foreach (var fact in await AccessExpectationHistory.ReadAsync(events, owner, ct).ConfigureAwait(false))
             switch (fact)
             {
                 case AccessExpectationProposed proposed:
-                    line._expectations.Add(await AccessReviewContent.ReadAsync<AccessExpectationView>(content,
-                        tenantId, proposed.ExpectationContent, ct).ConfigureAwait(false));
+                    var expectation = await AccessReviewContent.ReadAsync<AccessExpectationView>(content,
+                        tenantId, proposed.ExpectationContent, ct).ConfigureAwait(false);
+                    if (expectation.ExpectationId != proposed.Operation.LogicalId ||
+                        expectation.SystemInstanceId != proposed.SystemInstanceId || expectation.Revision != proposed.Revision ||
+                        expectation.Status != AccessExpectation.Proposed || expectation.ProposedBy != proposed.Operation.Actor ||
+                        expectation.ProposedAt != proposed.Operation.AcceptedAt ||
+                        expectation.SupersedesExpectationId is { } predecessor &&
+                        line.Find(predecessor) is not { Status: AccessExpectation.Approved })
+                        throw new ImmutableContentIntegrityException("The expectation body differs from its exact proposal or predecessor.");
+                    line._expectations.Add(expectation);
                     break;
                 case AccessExpectationApproved approved:
                     var index = line._expectations.FindIndex(item => item.ExpectationId == approved.ExpectationId);
@@ -52,8 +60,14 @@ public sealed class AccessExpectationLine
                     };
                     break;
                 case AccessExpectationExceptionRecorded recorded:
-                    line._exceptions.Add(await AccessReviewContent.ReadAsync<AccessExpectationExceptionView>(
-                        content, tenantId, recorded.ExceptionContent, ct).ConfigureAwait(false));
+                    var exception = await AccessReviewContent.ReadAsync<AccessExpectationExceptionView>(
+                        content, tenantId, recorded.ExceptionContent, ct).ConfigureAwait(false);
+                    if (exception.ExceptionId != recorded.Operation.LogicalId ||
+                        line.Find(exception.ExpectationId) is not { Status: AccessExpectation.Approved } ||
+                        exception.ApprovedBy != recorded.Operation.Actor || exception.ApprovedAt != recorded.Operation.AcceptedAt ||
+                        exception.ExpiresAt <= exception.ApprovedAt)
+                        throw new ImmutableContentIntegrityException("The exception body differs from its exact approved expectation or native attribution.");
+                    line._exceptions.Add(exception);
                     break;
             }
 

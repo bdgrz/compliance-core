@@ -1,0 +1,43 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "AccessExpectation stage1 compact authority,3 owning preparations, verified complete line history and scoped ambiguity-preserving original native command resolution.",
+  "validation": {
+    "genuineOldApiRedFailed": 5,
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 534,
+    "productionHttpPassed": 80,
+    "backendUnit": {
+      "passed": 6322,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "exactFileAndDependencyHashes": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 13,
+    "signalsTriaged": 0,
+    "mergeProbability": 0.69,
+    "introducedRegressionProbability": 0.53,
+    "adopted": "merge scoped repair after final local checks; continue whole campaign/item protocol"
+  },
+  "parentRefinements": [
+    "Unioned additional Access native reader decorator after current Manifest/Advisor/Auditor/Mapping/SourceUse/Calendar wrappers with fresh opaque key; preserved keyed lifetimes.",
+    "CA1068 required CancellationToken last in ResolveLineAsync. Moved it after optional native-binding arguments and updated all three owning handlers plus named predecessor lookup.",
+    "Original earlier3 RED fixtures corrected unsupported api_token to existing access_token before qualification; initial setup failures discarded. All three plus two real concurrent discovery identity cases now pass."
+  ],
+  "qualification": [
+    "Owner retains instance/revision/latest/explicit selected proposal+approval/native acceptance/bounded replay commitment, no facts/proposers/approved lifetime collections. Full history/read/effective-date/source publication remains explicit transient verified composition.",
+    "Both explicit and executor-internal hydration finalize ordered native payload+immutable event identity commitment and selected complete metadata. Save attribution is not silently part of rolling commitment; actual native/physical cuts kept separate. All three preparations bind full prepared cut before append.",
+    "Accepted original native result resolves before history/content/waiver/expiry/new immutable work while current personal/visibility authorization remains first. Original proposal can replay without unrelated later successor body.",
+    "Tenant/instance-scoped native locator preserves every authoritative line; original command binding+exact authored digest can select one original first owner. Fresh ambiguous identity fails permanently, original two first-owner results remain exact. No global atomic identity registry, new public lookup or fabricated alias.",
+    "Existing Common DTOs, event payloads/tags, routes, source digests, receipt semantics and first response envelopes unchanged. No new SourceUsePurpose/current-held contract, retained conversion, SDKsnapshot compatibility, O(1)/SDKmemory claim, deployment or live broker qualification.",
+    "Full AccessReviewCampaign/Item bulk/publication/fence/hold/settlement/closure remains stage2 and is not complete. Three genuine stage2 REDs preserved outside this merge. Other policy/examination/source inventory work continues."
+  ]
+}

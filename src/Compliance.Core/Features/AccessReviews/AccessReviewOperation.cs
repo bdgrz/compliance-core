@@ -15,7 +15,7 @@ static class AccessReviewOperation
     public static OperationProvenance Provenance(Uuid logicalId, string commandKind, EventStreamAddress owner,
         ActorReference actor, long? expectedRevision, string intentDigest, DateTimeOffset acceptedAt) => new(
         logicalId, logicalId, null, commandKind, actor, owner, InitialEpisode,
-        expectedRevision is { } expected ? (ulong)expected : null, intentDigest, acceptedAt, owner, owner);
+        expectedRevision is { } expected ? (ulong)expected : null, intentDigest, acceptedAt, owner, owner, owner);
 
     /// <summary>Turns a passed guard and the prepared response into the first response, or the guard failure.</summary>
     public static Result<FirstResponseDescriptor> Prepare(Result guard, FirstResponseDescriptor? response,

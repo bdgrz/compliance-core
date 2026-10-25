@@ -14,13 +14,27 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     returns the original frozen exception. An exception never authorizes a successor expectation.
 /// </summary>
 public sealed class ExemptAccessExpectationHandler(NativeOperationExecutor operations,
-    AccessExpectationsReader expectations, IImmutableContentStore content, TimeProvider clock,
+    AccessExpectationsReader expectations, IDomainEventReader events, IImmutableContentStore content, TimeProvider clock,
     RestrictedApplicationVisibility visibility)
     : IRequestHandler<ExemptAccessExpectation, AccessExpectationExceptionView>
 {
     const string CommandKind = "ExemptAccessExpectation";
 
     public async ValueTask<Result<AccessExpectationExceptionView>> HandleAsync(
+        IRequestContext<ExemptAccessExpectation> context, CancellationToken ct)
+    {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<AccessExpectationExceptionView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact scoped expectation source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<AccessExpectationExceptionView>> HandleCoreAsync(
         IRequestContext<ExemptAccessExpectation> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
@@ -36,8 +50,9 @@ public sealed class ExemptAccessExpectationHandler(NativeOperationExecutor opera
                 request.SystemInstanceId, ct).ConfigureAwait(false))
             return AccessReviewOutcome.Failure<AccessExpectationExceptionView>(
                 RequestErrorKind.NotFound, "The system instance was not found.");
+        var digest = AuthoredIntentDigest.Compute(request);
         var lineId = await expectations.ResolveLineAsync(request.TenantId, request.SystemInstanceId,
-            request.ExpectationId, ct).ConfigureAwait(false);
+            request.ExpectationId, request.CommandId, CommandKind, digest, ct).ConfigureAwait(false);
         if (lineId is not { } line)
             return AccessReviewOutcome.Failure<AccessExpectationExceptionView>(RequestErrorKind.NotFound,
                 "The approved expectation was not found.");
@@ -45,46 +60,50 @@ public sealed class ExemptAccessExpectationHandler(NativeOperationExecutor opera
         var now = clock.GetUtcNow();
         var stream = new AccessExpectation(request.TenantId, line).Stream;
         var provenance = AccessReviewOperation.Provenance(request.CommandId, CommandKind, stream, actor.Reference,
-            request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
+            request.ExpectedRevision, digest, now);
         var binding = AcceptedOperationBinding.Of(provenance);
-        var (owner, _) = await expectations.ReadLineAsync(request.TenantId, line, request.CommandId, ct)
-            .ConfigureAwait(false);
 
         FirstResponseDescriptor? response = null;
+        AccessReviewPreparedCut? preparedCut = null;
         ImmutableContentRef? exceptionContent = null;
         ImmutableContentRef? result = null;
-        if (owner.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var prepared = owner.PrepareException(request.ExpectedRevision, request.ExpectationId);
-            if (!prepared.IsSuccess)
-                return Result<AccessExpectationExceptionView>.Failure(prepared.Error!);
-            if (!AccessReviewVocabulary.IsBoundedText(request.ProviderSubjectId, 512) ||
-                request.ProviderEntitlementId is { Length: 0 or > 512 } ||
-                !AccessReviewVocabulary.IsBoundedText(request.Rationale, 4000))
-                return AccessReviewOutcome.Failure<AccessExpectationExceptionView>(RequestErrorKind.Validation,
-                    "An exception requires a principal, an optional entitlement, and a rationale of at most 4000 characters.");
-            if (request.ExpiresAt <= now)
-                return AccessReviewOutcome.Failure<AccessExpectationExceptionView>(RequestErrorKind.Validation,
-                    "An exception must expire in the future.");
-            var view = new AccessExpectationExceptionView(request.CommandId, request.ExpectationId,
-                request.ProviderSubjectId, request.ProviderEntitlementId, request.Rationale.Trim(),
-                request.ExpiresAt, actor.Reference, now);
-            exceptionContent = await AccessReviewContent.WriteAsync(content, request.TenantId,
-                AccessReviewContent.ExpectationExceptionSchema, view, ct).ConfigureAwait(false);
-            result = await AccessReviewContent.WriteResultAsync(content, request.TenantId,
-                AccessReviewContent.ExpectationExceptionSchema, exceptionContent, ct).ConfigureAwait(false);
-            response = AccessReviewContent.OkResponse(AccessReviewContent.ExpectationExceptionSchema,
-                exceptionContent);
-        }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AccessExpectation>(binding,
-            () => new AccessExpectation(request.TenantId, line, request.CommandId),
+            () => new AccessExpectation(request.TenantId, line, request.CommandId, request.ExpectationId),
             expectation => expectation.Acceptance,
-            expectation => AccessReviewOperation.Prepare(expectation.PrepareException(request.ExpectedRevision,
-                request.ExpectationId), response,
-                "The expectation line changed while the exception was prepared; reload and retry."),
-            (AccessExpectation expectation, ImmutableContentRef frozen) => expectation.RecordException(provenance, request.ExpectationId,
-                exceptionContent!, frozen, result!)), context, ct).ConfigureAwait(false);
+            async (owner, prepareCt) =>
+            {
+                _ = await AccessExpectationHistory.ReadAsync(events, owner, prepareCt).ConfigureAwait(false);
+                var prepared = owner.PrepareException(request.ExpectedRevision, request.ExpectationId);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                if (!AccessReviewVocabulary.IsBoundedText(request.ProviderSubjectId, 512) ||
+                    request.ProviderEntitlementId is { Length: 0 or > 512 } ||
+                    !AccessReviewVocabulary.IsBoundedText(request.Rationale, 4000))
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Validation,
+                        "An exception requires a principal, an optional entitlement, and a rationale of at most 4000 characters.");
+                if (request.ExpiresAt <= now)
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Validation,
+                        "An exception must expire in the future.");
+                var view = new AccessExpectationExceptionView(request.CommandId, request.ExpectationId,
+                    request.ProviderSubjectId, request.ProviderEntitlementId, request.Rationale.Trim(),
+                    request.ExpiresAt, actor.Reference, now);
+                exceptionContent = await AccessReviewContent.WriteAsync(content, request.TenantId,
+                    AccessReviewContent.ExpectationExceptionSchema, view, prepareCt).ConfigureAwait(false);
+                result = await AccessReviewContent.WriteResultAsync(content, request.TenantId,
+                    AccessReviewContent.ExpectationExceptionSchema, exceptionContent, prepareCt).ConfigureAwait(false);
+                response = AccessReviewContent.OkResponse(AccessReviewContent.ExpectationExceptionSchema,
+                    exceptionContent);
+                preparedCut = AccessReviewPreparedCut.Capture(owner);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (AccessExpectation expectation, ImmutableContentRef frozen) =>
+            {
+                if (preparedCut?.Matches(expectation) != true)
+                    return AccessReviewPreparedCut.Changed();
+                return expectation.RecordException(provenance, request.ExpectationId,
+                exceptionContent!, frozen, result!);
+            }), context, ct).ConfigureAwait(false);
         return await AccessReviewContent.ResponseAsync<AccessExpectationExceptionView>(content, request.TenantId,
             outcome, ct).ConfigureAwait(false);
     }

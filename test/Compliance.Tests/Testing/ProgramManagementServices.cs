@@ -74,6 +74,7 @@ static class ProgramManagementServices
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         collection.AddVerifiedSourceUseReader();
         collection.AddVerifiedAuditorRequestReader();
+        collection.AddVerifiedAccessReviewReader();
         collection.AddVerifiedMappingLineReader();
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }

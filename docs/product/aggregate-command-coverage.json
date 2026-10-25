@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "9cddd1a6be8d0443503ad0f770d9e35d5fe17930",
+  "sourceCommit": "8eb6a3b8deb3ea8121713d49bd3b975ab92f1b57",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -67,6 +67,7 @@
         "src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationReplayCutTests.cs",
         "test/Compliance.Tests/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributorTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -103,6 +104,9 @@
         "src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationIdentityTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationPreparationReplayTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationReplayCutTests.cs",
         "test/Compliance.Tests/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributorTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -9171,6 +9175,10 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationHistoryTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationPreparationReplayTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationReplayCutTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
         "test/Compliance.Tests/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributorTests.cs"
       ],
@@ -13694,6 +13702,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessExpectationIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationIdentityTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs"
       ],
@@ -25049,6 +25058,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationIdentityTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessExpectationPreparationReplayTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs"
       ],
