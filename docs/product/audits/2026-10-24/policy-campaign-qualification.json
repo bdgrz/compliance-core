@@ -1,0 +1,54 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "PolicyDistributionCampaign and PolicyCampaignParticipant compact native authority, complete external verified history, owning command preparation and correctly bound receiver preparation recovery.",
+  "validation": {
+    "genuineOldApiReceiverRedFailed": 5,
+    "rootRequiredBodyClassificationRedFailed": 2,
+    "rootCorruptBodyPositivePassedBeforeFix": 2,
+    "excludedUnboundCompleteBodyFreeRows": 3,
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 244,
+    "productionHttpPassed": 59,
+    "backendUnit": {
+      "passed": 6396,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "exactFileAndDependencyHashes": "verified",
+    "format": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 36,
+    "signalsTriaged": 6,
+    "integration": "merge scoped repair recommended",
+    "mergeProbability": 0.65,
+    "introducedRegressionProbability": 0.21,
+    "scopeMisrepresentationProbability": 0.24,
+    "adopted": "merge after local full and format gates; continue remaining families, no CI wait per user direction"
+  },
+  "qualification": [
+    "Owners retain bounded current authority, explicit selected operation/roster/closure/source-use knowledge and ordered raw replay commitments; lifetime amendments/admissions/results/waivers/terminal history are composed externally at exact finalized physical cut. No arbitrary lifetime cap.",
+    "Installed reader decorator preserves every current wrapper and registration lifetime through a fresh opaque key. Both default and executor hydration validate complete native history before acceptance replay; async owning preparation captures the exact owner cut and Apply requires that cut again.",
+    "Actual public authorization remains before acceptance replay. Personal acknowledgement/proxy/waiver/training constraints and SourceUse closure grant/fence/settlement processes remain. Current permission checks are exercised through actual HTTP hosts.",
+    "NativeReceiverPreparation resolves actual native receipt before later preparation and rechecks after expected immutable failure or failed result. Requested cancellation retains priority; programmer faults propagate. Callers bind all command terms first.",
+    "CompletePolicyCampaignClosure carries an extra ParticipantProofManifest absent from native receipt binding: required ClosureIntent/SourceUses body and equality checks remain before replay. Accepted Complete may skip derived totals preparation only; missing required bytes are transient, corrupt bytes permanent. Earlier unbound Complete body-free RED rows are excluded and were never applied.",
+    "Native event tags/payload compatibility and existing authored limits remain. No persisted-data replay, reset, migration, deployment, live broker health, SDK snapshot or constant-time hydration claim."
+  ],
+  "rootRefinements": [
+    "Preserved current EX/all reader wrappers and appended Policy; Core DI retained both families.",
+    "Added required Kernel imports and actual native closed evidence for Superseded receipt.",
+    "Updated outside Work constructor and installed production-equivalent verified reader in Work and TypeI fixtures.",
+    "Added real missing/corrupt ClosureIntent/SourceUse body test before splitting unavailable transient from corrupt permanent in both verifier stages."
+  ],
+  "remainingWork": [
+    "ImportSource34 + Batch26 frozen coherent stack next; Digest35 + selected command identity follow-on, Provider family, Staff/Duty/Practice/Client/Engagement independently prepared.",
+    "Existing Access and import receiver preparation gaps remain explicit follow-ons; this patch does not claim global receiver completion.",
+    "Identity/guard/assignment/program and remaining source owner/handler/reactor inventory continues; exact missing protocol qualification remains local. No new issues."
+  ]
+}

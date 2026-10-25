@@ -235,18 +235,17 @@ public sealed class CampaignAdmissionTests
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
         var executor = new CommitThenFailOnceExecutor(scope.ServiceProvider.GetRequiredService<IAggregateExecutor>());
-        var admission = new PolicyParticipantAdmission(new NativeOperationExecutor(reader, executor, content), content);
+        var admission = new PolicyParticipantAdmission(new NativeOperationExecutor(reader, executor, content), content,
+            new CampaignSource(reader, content, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()));
         var request = new AcknowledgePolicy(Uuid.CreateVersion4(), harness.TenantId, harness.ProgramId, campaignId,
             harness.ManagerId, 1, new string('a', 64), PolicyDistributionCampaign.DefaultAcknowledgementText, 1);
-        var state = (await new CampaignSource(reader, content).ReadAsync(harness.TenantId, harness.ProgramId,
-            campaignId, CancellationToken.None, request.CommandId)).Value;
         var plan = new ParticipantAdmissionPlan(request.CommandId, harness.ManagerId, 1, nameof(AcknowledgePolicy),
             AdmittedChildKind.PolicyAcknowledgement, PolicyCampaignContent.AcknowledgeCommandSchema, harness.Manager,
             harness.Manager, false, CampaignOwnerHarness.Now);
 
         // Act
         var result = await admission.AdmitAsync(new Cntryl.Portia.RequestContext<AcknowledgePolicy>(request,
-            new RequestDispatchContext(RequestActor.System)), state, plan, request,
+            new RequestDispatchContext(RequestActor.System)), harness.TenantId, harness.ProgramId, campaignId, plan, request,
             _ => ValueTask.FromResult<Bdgrz.Compliance.Features.Versioning.CommandFailure?>(null), CancellationToken.None);
 
         // Assert

@@ -30,6 +30,8 @@ sealed class CampaignOwnerHarness : IAsyncDisposable
             new PersistenceKvClient(new InMemoryKvClient())));
         services.AddScoped<NativeOperationExecutor>();
         services.AddPortia();
+        services.AddVerifiedSourceUseReader();
+        services.AddVerifiedPolicyCampaignReader();
         Provider = services.BuildServiceProvider();
     }
 
@@ -49,7 +51,8 @@ sealed class CampaignOwnerHarness : IAsyncDisposable
     {
         await using var scope = Provider.CreateAsyncScope();
         var state = await new CampaignSource(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
-            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()).ReadAsync(TenantId, ProgramId,
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(),
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadAsync(TenantId, ProgramId,
             campaignId, CancellationToken.None);
         Assert.True(state.IsSuccess, state.Error?.Message);
         return state.Value;

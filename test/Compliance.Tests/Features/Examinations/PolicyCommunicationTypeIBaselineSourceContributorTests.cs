@@ -295,6 +295,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
             services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
                 new PersistenceKvClient(new InMemoryKvClient())));
             services.AddPortia();
+            services.AddVerifiedPolicyCampaignReader();
             Provider = services.BuildServiceProvider();
         }
 
@@ -311,7 +312,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
                 var scope = Provider.CreateScope();
                 var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
                 var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
-                var campaigns = new CampaignSource(reader, content);
+                var campaigns = new CampaignSource(reader, content, _events);
                 var directory = new CampaignDirectory(campaigns, _events);
                 return new PolicyCommunicationTypeIBaselineSourceContributor(directory, new PolicyReader(reader, _events, content), _events,
                     new CampaignDirectoryReadConsistency(directory, _events), campaigns, content);

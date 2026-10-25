@@ -27,12 +27,10 @@ public sealed class PolicyDistributionCampaign : Aggregate
     public const int JoinerDays = 30;
 
     readonly Uuid _tenantId;
-    readonly List<PolicyCampaignAudienceAmended> _amendments = [];
-    readonly List<PolicyParticipantResultAdmitted> _admitted = [];
-    readonly Dictionary<Uuid, PolicyParticipantResultAdmitted> _admittedByRoot = [];
-    readonly Dictionary<Uuid, PolicyCampaignClosureAccepted> _closures = [];
-    readonly Dictionary<Uuid, PolicyCampaignClosureCanceled> _canceled = [];
-    readonly HashSet<Uuid> _reconciledSnapshots = [];
+    readonly PolicyCampaignReplayCut _cut = new();
+    long _generation = 1;
+    long _admissionCount;
+
     PolicyCampaignLaunched? _launch;
     PolicyCampaignAudienceFrozen? _frozen;
     PolicyCampaignClosureAccepted? _pending;
@@ -41,10 +39,13 @@ public sealed class PolicyDistributionCampaign : Aggregate
     long _reconciliations;
 
     /// <summary>Opens the campaign with a known id, selecting the logical operation to resolve.</summary>
-    public PolicyDistributionCampaign(Uuid tenantId, Uuid campaignId, Uuid selectedLogicalId = default)
+    public PolicyDistributionCampaign(Uuid tenantId, Uuid campaignId, Uuid selectedLogicalId = default,
+        Uuid selectedRosterSnapshotId = default, Uuid selectedClosureRootId = default)
         : base(campaignId, new EventStreamAddress(tenantId.ToString(), Area, campaignId.ToString()))
     {
         _tenantId = tenantId;
+        SelectedRosterSnapshotId = selectedRosterSnapshotId;
+        SelectedClosureRootId = selectedClosureRootId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
         On<PolicyCampaignLaunched>(ev =>
         {
@@ -52,73 +53,96 @@ public sealed class PolicyDistributionCampaign : Aggregate
                 !Uuid.TryParse(ev.Actor.Id, System.Globalization.CultureInfo.InvariantCulture, out var memberId) ||
                 memberId != ev.ActorMemberId || ev.Operation is null || ev.Operation.Actor != ev.Actor)
                 throw new ImmutableContentIntegrityException("The campaign launching member differs from its actual native actor.");
+            if (ev.Operation is null)
+                throw new ImmutableContentIntegrityException("The native campaign fact lacks operation provenance.");
+            if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+                throw new ImmutableContentIntegrityException("The selected native campaign operation occurs more than once.");
             Acceptance.Observe(ev);
             if (_launch is not null || ev.TenantId != _tenantId || ev.CampaignId != Id || ev.Operation.Owner != Stream ||
                 ev.Operation.LogicalId != Id || ev.FirstResponse is null)
-                throw new InvalidOperationException("A campaign is launched once, on the stream its tenant and id derive.");
+                throw new ImmutableContentIntegrityException("A campaign is launched once, on the stream its tenant and id derive.");
             _launch = ev;
             _revision = 1;
-            _reconciledSnapshots.Add(ev.RosterSnapshotId);
             LatestRosterSnapshotId = ev.RosterSnapshotId;
         });
         On<PolicyCampaignAudienceFrozen>(ev =>
         {
+            if (ev.Operation is null)
+                throw new ImmutableContentIntegrityException("The native campaign fact lacks operation provenance.");
+            if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+                throw new ImmutableContentIntegrityException("The selected native campaign operation occurs more than once.");
             Acceptance.Observe(ev);
             if (_launch is null || _frozen is not null || ev.TenantId != _tenantId || ev.CampaignId != Id ||
                 ev.Operation.Owner != Stream)
-                throw new InvalidOperationException("The audience is frozen once, right after the launch.");
+                throw new ImmutableContentIntegrityException("The audience is frozen once, right after the launch.");
             _frozen = ev;
         });
         On<PolicyCampaignAudienceAmended>(ev =>
         {
+            if (ev.Operation is null)
+                throw new ImmutableContentIntegrityException("The native campaign fact lacks operation provenance.");
+            if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+                throw new ImmutableContentIntegrityException("The selected native campaign operation occurs more than once.");
             Acceptance.Observe(ev);
             if (_frozen is null || IsSealed || ev.TenantId != _tenantId || ev.CampaignId != Id ||
-                ev.Operation.Owner != Stream || ev.Reconciliation != _reconciliations + 1 || ev.Batch != 1 ||
-                !_reconciledSnapshots.Add(ev.RosterSnapshotId))
-                throw new InvalidOperationException("A reconciliation follows the previous one on an open campaign.");
+                ev.Operation.Owner != Stream || ev.Reconciliation != _reconciliations + 1 || ev.Batch != 1)
+                throw new ImmutableContentIntegrityException("A reconciliation follows the previous one on an open campaign.");
             _reconciliations = ev.Reconciliation;
             LatestRosterSnapshotId = ev.RosterSnapshotId;
             _revision++;
-            _amendments.Add(ev);
         });
         On<PolicyParticipantResultAdmitted>(ev =>
         {
+            if (ev.Operation is null)
+                throw new ImmutableContentIntegrityException("The native campaign fact lacks operation provenance.");
+            if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+                throw new ImmutableContentIntegrityException("The selected native campaign operation occurs more than once.");
             Acceptance.Observe(ev);
             if (_frozen is null || IsSealed || ev.Owner != Stream || ev.Operation.Owner != Stream ||
-                ev.Revision != _revision + 1 || ev.Generation != Generation ||
-                !_admittedByRoot.TryAdd(ev.Operation.RootOperationId, ev) || ev.FirstResponse is null)
-                throw new InvalidOperationException("A result is admitted on the open generation at the next revision.");
+                ev.Revision != _revision + 1 || ev.Generation != Generation || ev.FirstResponse is null)
+                throw new ImmutableContentIntegrityException("A result is admitted on the open generation at the next revision.");
             _revision = ev.Revision;
-            _admitted.Add(ev);
+            _admissionCount++;
         });
         On<PolicyCampaignClosureAccepted>(ev =>
         {
+            if (ev.Operation is null)
+                throw new ImmutableContentIntegrityException("The native campaign fact lacks operation provenance.");
+            if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+                throw new ImmutableContentIntegrityException("The selected native campaign operation occurs more than once.");
             Acceptance.Observe(ev);
             if (_frozen is null || IsSealed || ev.Owner != Stream || ev.Operation.Owner != Stream ||
-                ev.Revision != _revision + 1 || ev.Generation != Generation || ev.FirstResponse is null ||
-                !_closures.TryAdd(ev.Operation.RootOperationId, ev))
-                throw new InvalidOperationException("A closure is accepted once on the open generation at the next revision.");
+                ev.Revision != _revision + 1 || ev.Generation != Generation || ev.FirstResponse is null)
+                throw new ImmutableContentIntegrityException("A closure is accepted once on the open generation at the next revision.");
             _revision = ev.Revision;
             _pending = ev;
         });
         On<PolicyCampaignClosureCanceled>(ev =>
         {
+            if (ev.Operation is null)
+                throw new ImmutableContentIntegrityException("The native campaign fact lacks operation provenance.");
+            if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+                throw new ImmutableContentIntegrityException("The selected native campaign operation occurs more than once.");
             Acceptance.Observe(ev);
             if (_pending is null || ev.Owner != Stream || ev.Operation.Owner != Stream ||
                 ev.Operation.RootOperationId != _pending.Operation.RootOperationId || ev.Intent != _pending.Intent ||
                 ev.Revision != _revision + 1 || ev.Generation != _pending.Generation)
-                throw new InvalidOperationException("Only the exact pending closure can be canceled.");
+                throw new ImmutableContentIntegrityException("Only the exact pending closure can be canceled.");
             _revision = ev.Revision;
-            _canceled.Add(ev.Operation.RootOperationId, ev);
+            _generation++;
             _pending = null;
         });
         On<PolicyCampaignClosed>(ev =>
         {
+            if (ev.Operation is null)
+                throw new ImmutableContentIntegrityException("The native campaign fact lacks operation provenance.");
+            if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+                throw new ImmutableContentIntegrityException("The selected native campaign operation occurs more than once.");
             Acceptance.Observe(ev);
             if (_pending is null || ev.TenantId != _tenantId || ev.CampaignId != Id || ev.Operation.Owner != Stream ||
                 ev.Operation.RootOperationId != _pending.Operation.RootOperationId || ev.Intent != _pending.Intent ||
                 ev.AudienceGeneration != _reconciliations)
-                throw new InvalidOperationException("Only the exact pending closure can complete.");
+                throw new ImmutableContentIntegrityException("Only the exact pending closure can complete.");
             _revision++;
             _closed = ev;
             _pending = null;
@@ -127,6 +151,14 @@ public sealed class PolicyDistributionCampaign : Aggregate
 
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
+
+    internal PolicyCampaignReplayCut ReplayCut => _cut;
+    internal Uuid SelectedRosterSnapshotId { get; }
+    internal bool SelectedRosterSnapshotSeen { get; set; }
+    internal Uuid SelectedClosureRootId { get; }
+    internal PolicyCampaignClosureAccepted? SelectedClosure { get; set; }
+    internal PolicyCampaignClosureCanceled? SelectedCancellation { get; set; }
+    public long AdmissionCount => _admissionCount;
 
     /// <summary>The roster snapshot the audience was last reconciled against.</summary>
     public Uuid LatestRosterSnapshotId { get; private set; }
@@ -147,7 +179,7 @@ public sealed class PolicyDistributionCampaign : Aggregate
     public long Revision => _revision;
 
     /// <summary>The open admission generation: one more than the number of canceled closures.</summary>
-    public long Generation => _canceled.Count + 1;
+    public long Generation => _generation;
 
     /// <summary>The number of reconciliations, which is the audience generation.</summary>
     public long Reconciliations => _reconciliations;
@@ -170,36 +202,11 @@ public sealed class PolicyDistributionCampaign : Aggregate
     /// <summary>The frozen audience fact, once recorded.</summary>
     public PolicyCampaignAudienceFrozen? Frozen => _frozen;
 
-    /// <summary>Every reconciliation in order.</summary>
-    public IReadOnlyList<PolicyCampaignAudienceAmended> Amendments => _amendments;
-
-    /// <summary>Every admitted result in order.</summary>
-    public IReadOnlyList<PolicyParticipantResultAdmitted> Admitted => _admitted;
-
     /// <summary>The accepted closure that is neither completed nor canceled.</summary>
     public PolicyCampaignClosureAccepted? PendingClosure => _pending;
 
     /// <summary>The terminal closure fact, once recorded.</summary>
     public PolicyCampaignClosed? Closing => _closed;
-
-    /// <summary>True when a roster snapshot was already reconciled (or launched).</summary>
-    public bool HasReconciled(Uuid snapshotId) => _reconciledSnapshots.Contains(snapshotId);
-
-    /// <summary>The admission of a root operation, once recorded.</summary>
-    public PolicyParticipantResultAdmitted? AdmittedFor(Uuid rootOperationId) =>
-        _admittedByRoot.GetValueOrDefault(rootOperationId);
-
-    /// <summary>The accepted closure of a root operation, once recorded.</summary>
-    public PolicyCampaignClosureAccepted? ClosureFor(Uuid rootOperationId) =>
-        _closures.GetValueOrDefault(rootOperationId);
-
-    /// <summary>The cancellation of a root operation's closure, once recorded.</summary>
-    public PolicyCampaignClosureCanceled? CanceledFor(Uuid rootOperationId) =>
-        _canceled.GetValueOrDefault(rootOperationId);
-
-    /// <summary>The results admitted for one participant stream, in admission order.</summary>
-    public IReadOnlyList<PolicyParticipantResultAdmitted> AdmittedFor(EventStreamAddress participant) =>
-        _admitted.Where(admitted => admitted.Operation.AffectedOwner == participant).ToArray();
 
     /// <summary>The result kind an admission carries, derived from its command kind.</summary>
     public static CampaignParticipantResultKind KindOf(PolicyParticipantResultAdmitted admitted)
@@ -210,7 +217,7 @@ public sealed class PolicyDistributionCampaign : Aggregate
             nameof(AcknowledgePolicy) => CampaignParticipantResultKind.PolicyAcknowledgement,
             nameof(RecordTrainingCompletion) => CampaignParticipantResultKind.TrainingCompletion,
             nameof(ApproveCampaignWaiver) => CampaignParticipantResultKind.Waiver,
-            _ => throw new InvalidOperationException($"{admitted.Operation.CommandKind} is not a participant result."),
+            _ => throw new ImmutableContentIntegrityException($"{admitted.Operation.CommandKind} is not a participant result."),
         };
     }
 
@@ -234,6 +241,9 @@ public sealed class PolicyDistributionCampaign : Aggregate
         var prepared = PrepareLaunch();
         if (!prepared.IsSuccess)
             return prepared;
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new PolicyCampaignLaunched(_tenantId, programId, Id, subject, audienceKind, audienceTeams,
             rosterSnapshotId, rosterContentSha256, launchedOn, dueOn, instructions,
             subject.Kind == "policy" ? DefaultAcknowledgementText : null, audienceCount, actor, actorMemberId,
@@ -269,8 +279,14 @@ public sealed class PolicyDistributionCampaign : Aggregate
         var prepared = PrepareOpenAdmission((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
-        if (_reconciledSnapshots.Contains(rosterSnapshotId))
+        if (SelectedRosterSnapshotId != rosterSnapshotId)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A reconciliation requires its exact selected roster snapshot at the finalized native cut.", true));
+        if (SelectedRosterSnapshotSeen)
             return Conflict("The campaign already reconciled that roster snapshot.");
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new PolicyCampaignAudienceAmended(_tenantId, Id, _reconciliations + 1, 1, rosterSnapshotId,
             rosterContentSha256, observedOn, amendments, actor, amendedAt, operation, firstResponse,
             operationResult));
@@ -289,6 +305,9 @@ public sealed class PolicyDistributionCampaign : Aggregate
         var prepared = PrepareOpenAdmission((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new PolicyParticipantResultAdmitted(Stream, _revision + 1, Generation, intent, null, operation,
             firstResponse, null));
         return Result.Success;
@@ -306,6 +325,9 @@ public sealed class PolicyDistributionCampaign : Aggregate
         var prepared = PrepareOpenAdmission((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new PolicyCampaignClosureAccepted(Stream, _revision + 1, Generation, intent, null, operation,
             firstResponse, null));
         return Result.Success;
@@ -317,6 +339,9 @@ public sealed class PolicyDistributionCampaign : Aggregate
         ArgumentNullException.ThrowIfNull(operation);
         if (_pending is null || _pending.Operation.RootOperationId != operation.RootOperationId)
             return Conflict("Only the exact pending closure can be canceled.");
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new PolicyCampaignClosureCanceled(Stream, _revision + 1, _pending.Generation, failureProof,
             null, operation, null, null));
         return Result.Success;
@@ -331,9 +356,18 @@ public sealed class PolicyDistributionCampaign : Aggregate
         if (_pending is null || _pending.Operation.RootOperationId != operation.RootOperationId ||
             _pending.Intent != intent)
             return Conflict("Only the exact pending closure can complete.");
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new PolicyCampaignClosed(_tenantId, Id, closedOn, rationale, totals, actor, closedAt, operation,
             _reconciliations, participantProofs, intent, null, operationResult));
         return Result.Success;
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        _cut.Observe(ev);
+        base.Apply(ev);
     }
 
     Result Stale() => Result.Failure(VersionedRecordRules.StaleRevision("campaign", _revision).ToRequestError());

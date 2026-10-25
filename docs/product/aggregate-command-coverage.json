@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "f592e3c3c69025a571c84e473600ed67f8031ac2",
+  "sourceCommit": "d9ac4ce0bc61003d29855ae143474f89fcd35543",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -2374,6 +2374,8 @@
         "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeHistoryTests.cs",
         "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
       "disposition": "aggregate_fact",
@@ -5421,6 +5423,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/PolicyCommunicationTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAcceptedRetryTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignReceiverPreparationRaceTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyParticipantResultProcessTests.cs",
         "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs",
@@ -5494,6 +5498,7 @@
         "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignClosurePreparationTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
         "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
@@ -5530,7 +5535,9 @@
       "emitters": [
         "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignClosurePreparationTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -11072,12 +11079,12 @@
         "SettlePolicyCampaignParticipantCampaignClosureUse"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAcceptedRetryTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignReceiverPreparationRaceTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeHistoryTests.cs",
         "test/Compliance.Tests/Testing/CampaignFacts.cs",
-        "test/Compliance.Tests/Testing/CampaignHost.cs",
         "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -11113,9 +11120,9 @@
         "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/CampaignTransportTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs"
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeHistoryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12493,7 +12500,10 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignClosurePreparationTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyParticipantResultProcessTests.cs"
       ],
       "note": "System-only campaign closure receiver; cancels the exact pending closure and fences its delayed finalization. No HTTP/MCP route."
@@ -13595,14 +13605,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "PolicyCampaignParticipant",
-        "PolicyDistributionCampaign"
+        "PolicyCampaignParticipant"
       ],
       "aggregateTargets": [
         "PolicyCampaignParticipant"
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignReceiverPreparationRaceTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyParticipantResultProcessTests.cs",
         "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
@@ -13875,6 +13887,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyDistributionCampaignTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyParticipantResultProcessTests.cs",
@@ -14887,7 +14900,9 @@
       "aggregateTargets": [
         "PolicyCampaignParticipant"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "PolicyCampaignReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Content/SourceUseReceiverContractTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs"
@@ -15631,7 +15646,10 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignClosurePreparationTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeHistoryTests.cs",
         "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
       "note": "Command; accepts the closure and seals result admission; PolicyCampaignClosureProcess drains and completes it."
@@ -16183,6 +16201,7 @@
         "CampaignSource"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignClosurePreparationTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
         "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
@@ -21238,7 +21257,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/CampaignLaunchPreparationRaceTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs"
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
       "note": ""
     },
@@ -21264,7 +21284,9 @@
       "helperServices": [
         "CampaignLaunch"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
+      ],
       "note": ""
     },
     {
@@ -25813,7 +25835,10 @@
         "CampaignSource"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs"
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
       "note": ""
     },

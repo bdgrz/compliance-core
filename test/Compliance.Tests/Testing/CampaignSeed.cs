@@ -2,6 +2,7 @@ using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Proofs;
@@ -38,10 +39,15 @@ static class CampaignSeed
         var response = await FirstResponses.FreezeAsync(content, tenantId.ToString(),
             PolicyCampaignContent.OkResponse(PolicyCampaignContent.RegistrationSchema, body), CancellationToken.None);
         var stream = new PolicyDistributionCampaign(tenantId, campaignId).Stream;
+        var digest = subject.Kind == "policy"
+            ? AuthoredIntentDigest.Compute(new LaunchPolicyCampaign(campaignId, tenantId, programId, subject.RecordId,
+                subject.Version, rosterSnapshotId, dueOn, instructions))
+            : AuthoredIntentDigest.Compute(new LaunchTrainingCampaign(campaignId, tenantId, programId, subject.RecordId,
+                subject.Version, rosterSnapshotId, dueOn, instructions));
         var provenance = PolicyCampaignContent.Provenance(campaignId, subject.Kind == "policy"
             ? "LaunchPolicyCampaign"
-            : "LaunchTrainingCampaign", stream, stream, actor, null, new string('0', 64), launchedAt);
-        var launched = await executor.ExecuteAsync(new PolicyDistributionCampaign(tenantId, campaignId),
+            : "LaunchTrainingCampaign", stream, stream, actor, null, digest, launchedAt);
+        var launched = await executor.ExecuteAsync(new PolicyDistributionCampaign(tenantId, campaignId, campaignId),
             campaign => AggregateOutcome.Commit(campaign.LaunchCampaign(provenance, programId, subject, audienceKind,
                 teamsRef, rosterSnapshotId, rosterSha, DateOnly.FromDateTime(launchedAt.UtcDateTime), dueOn,
                 instructions, entries.Count, actor, actorMemberId, launchedAt, entriesRef, response, result)),
@@ -94,7 +100,7 @@ static class CampaignSeed
         var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
         var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var campaigns = new CampaignSource(reader, content);
+        var campaigns = new CampaignSource(reader, content, scope.ServiceProvider.GetRequiredService<IDomainEventReader>());
         var commandId = Uuid.CreateVersion4();
         var loaded = await campaigns.ReadAsync(tenantId, (await reader.HydrateAsync(
             new PolicyDistributionCampaign(tenantId, campaignId))).ProgramId, campaignId, CancellationToken.None,
@@ -106,14 +112,14 @@ static class CampaignSeed
         var request = new CloseCampaign(commandId, tenantId, campaign.ProgramId, campaignId, rationale,
             campaign.Revision);
         var provenance = PolicyCampaignContent.Provenance(commandId, "CloseCampaign", stream, stream, actor,
-            campaign.Revision, new string('1', 64), at);
+            campaign.Revision, AuthoredIntentDigest.Compute(request), at);
         var handler = new CloseCampaignHandler(new NativeOperationExecutor(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content),
             campaigns, content, TimeProvider.System);
         var intent = await handler.FreezeAsync(state, request, provenance, at, CancellationToken.None);
         var accepted = await PolicyCampaignContent.AcceptedResponseAsync(content, tenantId, commandId, at,
             CancellationToken.None);
         var response = await FirstResponses.FreezeAsync(content, tenantId.ToString(), accepted, CancellationToken.None);
-        var admitted = await executor.ExecuteAsync(new PolicyDistributionCampaign(tenantId, campaignId),
+        var admitted = await executor.ExecuteAsync(new PolicyDistributionCampaign(tenantId, campaignId, commandId),
             owner => AggregateOutcome.Commit(owner.AcceptClosure(provenance, intent, response)),
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         Assert.True(admitted.IsSuccess, admitted.Error?.Message);
@@ -130,10 +136,14 @@ static class CampaignSeed
             CancellationToken.None);
         var result = await PolicyCampaignContent.WriteResultAsync(content, tenantId,
             PolicyCampaignContent.CampaignSchema, body, CancellationToken.None);
+        var saved = await new PolicyCampaignReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>())
+            .ReadAsync(tenantId, campaignId, selectedClosureRootId: commandId);
+        var acceptedFact = saved.ClosureFor(commandId)!;
         var header = PolicyCampaignContent.HeaderOf(provenance, stream, stream, at);
         var childProvenance = PolicyCampaignContent.Child(Uuid.CreateVersion4(), nameof(CompletePolicyCampaignClosure),
-            Uuid.CreateVersion4(), header, stream, at);
-        var closed = await executor.ExecuteAsync(new PolicyDistributionCampaign(tenantId, campaignId),
+            acceptedFact.Metadata.EventId, header, stream, at);
+        var closed = await executor.ExecuteAsync(new PolicyDistributionCampaign(tenantId, campaignId, childProvenance.LogicalId,
+            selectedClosureRootId: commandId),
             owner => AggregateOutcome.Commit(owner.CompleteClosure(childProvenance, closedOn, rationale.Trim(),
                 totalsRef, actor, at, proofs, intent, result)),
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
@@ -150,7 +160,7 @@ static class CampaignSeed
         var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var commandId = Uuid.CreateVersion4();
-        var loaded = await new CampaignSource(reader, content).ReadAsync(tenantId, programId, campaignId,
+        var loaded = await new CampaignSource(reader, content, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadAsync(tenantId, programId, campaignId,
             CancellationToken.None, commandId);
         Assert.True(loaded.IsSuccess, loaded.Error?.Message);
         var state = loaded.Value;
@@ -168,8 +178,9 @@ static class CampaignSeed
         var response = await FirstResponses.FreezeAsync(content, tenantId.ToString(),
             PolicyCampaignContent.OkResponse(PolicyCampaignContent.ReconciliationSchema, body), CancellationToken.None);
         var provenance = PolicyCampaignContent.Provenance(commandId, "ReconcileCampaignAudience", campaign.Stream,
-            campaign.Stream, actor, campaign.Revision, new string('3', 64), at);
-        var done = await executor.ExecuteAsync(new PolicyDistributionCampaign(tenantId, campaignId, commandId),
+            campaign.Stream, actor, campaign.Revision, AuthoredIntentDigest.Compute(new ReconcileCampaignAudience(commandId,
+                tenantId, programId, campaignId, rosterSnapshotId, campaign.Revision)), at);
+        var done = await executor.ExecuteAsync(new PolicyDistributionCampaign(tenantId, campaignId, commandId, rosterSnapshotId),
             owner => AggregateOutcome.Commit(owner.Reconcile(provenance, rosterSnapshotId, rosterSha, observedOn,
                 amendments, actor, at, response, result)), new RequestDispatchContext(RequestActor.System),
             CancellationToken.None);
@@ -185,25 +196,36 @@ static class CampaignSeed
         var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-        var campaign = await reader.HydrateAsync(new PolicyDistributionCampaign(tenantId, campaignId));
+        var campaign = await new PolicyCampaignReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>())
+            .ReadAsync(tenantId, campaignId);
         var fact = campaign.AdmittedFor(commandId)!;
         var command = new ApplyPolicyParticipantResult(Uuid.CreateVersion5(commandId, "apply"),
             NativeFactReference.Of(campaign.Stream, fact), PolicyCampaignParticipant.StreamOf(tenantId, campaignId,
                 personId), commandId, fact.Generation, null, fact.Intent, campaignId, personId, kind);
-        var handler = new ApplyPolicyParticipantResultHandler(reader, executor, content, TimeProvider.System);
+        var handler = new ApplyPolicyParticipantResultHandler(reader, executor, content, TimeProvider.System,
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>());
         return await handler.HandleAsync(new Cntryl.Portia.RequestContext<ApplyPolicyParticipantResult>(command,
             new RequestDispatchContext(RequestActor.System)), CancellationToken.None);
     }
 
     /// <summary>The participant of a campaign and person as its owner says it is.</summary>
-    public static async Task<PolicyCampaignParticipant> ParticipantAsync(IServiceProvider provider, Uuid tenantId,
+    public static async Task<PolicyCampaignParticipantSnapshot> ParticipantAsync(IServiceProvider provider, Uuid tenantId,
         Uuid campaignId, Uuid personId, ReservationKey? selectedUse = null)
     {
         await using var scope = provider.CreateAsyncScope();
         var owner = new PolicyCampaignParticipant(tenantId, campaignId, personId);
         if (selectedUse is not null)
             owner.ForSourceUses(selectedUse);
-        return await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(owner);
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        return await new PolicyCampaignReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>())
+            .ReadParticipantAsync(await reader.HydrateAsync(owner));
+    }
+
+    public static async Task<PolicyCampaignSnapshot> CampaignAsync(IServiceProvider provider, Uuid tenantId, Uuid campaignId)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        return await new PolicyCampaignReader(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadAsync(tenantId, campaignId);
     }
 
     static async Task<Result<ReceiverOutcome>> ApplyAsync<TRequest>(IServiceProvider provider, Uuid tenantId,
@@ -216,16 +238,17 @@ static class CampaignSeed
         var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var system = new RequestDispatchContext(RequestActor.System);
-        var source = await new CampaignSource(reader, content).ReadAsync(tenantId, programId, campaignId,
-            CancellationToken.None, commandId);
+        var campaigns = new CampaignSource(reader, content, scope.ServiceProvider.GetRequiredService<IDomainEventReader>());
+        var source = await campaigns.ReadAsync(tenantId, programId, campaignId, CancellationToken.None, commandId);
         Assert.True(source.IsSuccess, source.Error?.Message);
         var state = source.Value;
         var authored = request(commandId, state.Campaign.Revision);
         var plan = new ParticipantAdmissionPlan(commandId, personId, state.Campaign.Revision, commandKind, childKind,
             schema, recorder, performer, onBehalf, at);
         var admission = new PolicyParticipantAdmission(new NativeOperationExecutor(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content),
-            content);
-        var admitted = await admission.AdmitAsync(new Cntryl.Portia.RequestContext<TRequest>(authored, system), state, plan,
+            content, campaigns);
+        var admitted = await admission.AdmitAsync(new Cntryl.Portia.RequestContext<TRequest>(authored, system),
+            tenantId, programId, campaignId, plan,
             authored, _ => ValueTask.FromResult<CommandFailure?>(null), CancellationToken.None);
         Assert.True(admitted.IsSuccess, admitted.Error?.Message);
 

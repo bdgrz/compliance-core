@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.Examinations;
@@ -38,6 +39,8 @@ static class PersistenceServiceCollectionExtensions
             new EvaluationAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IAggregateReader>(services, (provider, inner) =>
             new ExaminationEngagementAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
+        Decorate<IAggregateReader>(services, (provider, inner) =>
+            new PolicyCampaignAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IRequestBus>(services, (_, inner) => new PersistenceValidationRequestBus(inner));
     }
 

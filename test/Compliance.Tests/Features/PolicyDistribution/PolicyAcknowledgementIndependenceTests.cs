@@ -406,11 +406,10 @@ public sealed class PolicyAcknowledgementIndependenceTests
             return result;
         }
 
-        public Task<PolicyCampaignParticipant> ParticipantAsync(Uuid person) =>
+        public Task<PolicyCampaignParticipantSnapshot> ParticipantAsync(Uuid person) =>
             CampaignSeed.ParticipantAsync(Provider, Source.TenantId, CampaignId, person);
 
-        public Task<PolicyDistributionCampaign> CampaignAsync() => ProgramManagementServices.HydrateAsync(Provider,
-            new PolicyDistributionCampaign(Source.TenantId, CampaignId));
+        public Task<PolicyCampaignSnapshot> CampaignAsync() => CampaignSeed.CampaignAsync(Provider, Source.TenantId, CampaignId);
 
         public async ValueTask DisposeAsync()
         {

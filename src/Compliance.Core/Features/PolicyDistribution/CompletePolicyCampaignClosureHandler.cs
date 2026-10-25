@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
@@ -20,48 +21,61 @@ sealed class CompletePolicyCampaignClosureHandler(IAggregateReader reader, IAggr
 {
     const int MaximumAttempts = 4;
 
-    public async ValueTask<Result<ReceiverOutcome>> HandleAsync(IRequestContext<CompletePolicyCampaignClosure> context,
+    public ValueTask<Result<ReceiverOutcome>> HandleAsync(IRequestContext<CompletePolicyCampaignClosure> context,
+        CancellationToken ct) =>
+        PolicyCampaignFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<ReceiverOutcome>> HandleCoreAsync(IRequestContext<CompletePolicyCampaignClosure> context,
         CancellationToken ct)
     {
         var command = context.Request;
         if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty || command.Generation < 1 ||
             command.ExpectedRevision is not null)
             return SourceUseReceiverSupport.Permanent("The completion names another generation or operation.");
-        var closure = await verifier.VerifyAcceptedAsync(command.Source, command.Intent, command.OperationId,
+        var closure = await verifier.ReadAcceptedAsync(command.Source, command.Intent, command.OperationId,
             command.CommandId, ct).ConfigureAwait(false);
         if (closure.Error is not null)
             return Result<ReceiverOutcome>.Failure(closure.Error);
-        var (campaign, accepted, intent) = (closure.Campaign!, closure.Accepted!, closure.Intent!);
+        var (campaign, accepted) = (closure.Campaign!, closure.Accepted!);
         if (command.Target != campaign.Stream || command.CampaignId != campaign.Id ||
-            command.Generation != accepted.Generation || command.ParticipantProofManifest != intent.SourceUses.Content)
+            command.Generation != accepted.Generation)
             return SourceUseReceiverSupport.Permanent("The completion differs from the frozen closure intent.");
 
+        // This command carries an extra manifest term absent from its native receipt binding. Verify it before replay.
+        closure = await verifier.BindAsync(closure, ct).ConfigureAwait(false);
+        if (closure.Error is not null)
+            return Result<ReceiverOutcome>.Failure(closure.Error);
+        if (command.ParticipantProofManifest != closure.Intent!.SourceUses.Content)
+            return SourceUseReceiverSupport.Permanent("The completion differs from the frozen closure intent.");
+        var header = PolicyCampaignContent.HeaderOf(accepted.Operation, campaign.Stream, campaign.Stream,
+            accepted.Operation.AcceptedAt);
         var provenance = PolicyCampaignContent.Child(command.CommandId, nameof(CompletePolicyCampaignClosure),
-            command.Source.EventId, intent.Header, campaign.Stream, clock.GetUtcNow());
+            command.Source.EventId, header, campaign.Stream, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
         for (var attempt = 1; ; attempt++)
         {
             try
             {
-                var current = await reader.HydrateAsync(new PolicyDistributionCampaign(campaign.TenantId, campaign.Id,
-                    command.CommandId), ct).ConfigureAwait(false);
-                if (Decide(current, binding, command.OperationId) is { } early)
-                    return early;
-                var built = await BuildAsync(current, closure, command, provenance, ct).ConfigureAwait(false);
-                if (built.Error is not null)
-                    return Result<ReceiverOutcome>.Failure(built.Error);
+                var preparation = await NativeReceiverPreparation.PrepareAsync<PolicyDistributionCampaign, Built>(reader,
+                    () => new PolicyDistributionCampaign(campaign.TenantId, campaign.Id, command.CommandId,
+                        selectedClosureRootId: command.OperationId), owner => Decide(owner, binding, command.OperationId),
+                    (owner, token) => PrepareAsync(owner, closure, command, token), ct).ConfigureAwait(false);
+                if (!preparation.IsSuccess)
+                    return Result<ReceiverOutcome>.Failure(preparation.Error!);
+                if (preparation.Value!.Outcome is { } known)
+                    return known;
+                var built = preparation.Value.Value!;
                 if (built.Superseded is not null)
                     return built.Superseded.Value;
-                var revision = current.Revision;
                 var step = await executor.ExecuteAsync(new PolicyDistributionCampaign(campaign.TenantId, campaign.Id,
-                    command.CommandId), fresh =>
+                    command.CommandId, selectedClosureRootId: command.OperationId), fresh =>
                     {
                         if (Decide(fresh, binding, command.OperationId) is { } decided)
                             return AggregateOutcome.Discard(Result<Step>.Success(new Step(decided)));
-                        if (fresh.Revision != revision)
+                        if (built.Cut is null || !built.Cut.Matches(fresh))
                             return AggregateOutcome.Discard(Result<Step>.Success(new Step(null)));
                         var raised = fresh.CompleteClosure(provenance, built.ClosedOn, built.Rationale!,
-                            built.Totals!, intent.Header.OriginalActor, intent.Header.AcceptedAt, built.Proofs!,
+                            built.Totals!, header.OriginalActor, header.AcceptedAt, built.Proofs!,
                             command.Intent, built.Result!);
                         return raised.IsSuccess
                             ? AggregateOutcome.Commit(Result<Step>.Success(new Step(SourceUseReceiverSupport.Applied(
@@ -95,7 +109,7 @@ sealed class CompletePolicyCampaignClosureHandler(IAggregateReader reader, IAggr
                 return Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
         }
 
-        if (campaign.CanceledFor(operationId) is { } canceled)
+        if (campaign.SelectedCancellation is { } canceled)
             return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The closure was canceled.",
                 NativeFactReference.Of(campaign.Stream, canceled)));
         return campaign.Closing is { } closed && closed.Operation.RootOperationId == operationId
@@ -103,8 +117,22 @@ sealed class CompletePolicyCampaignClosureHandler(IAggregateReader reader, IAggr
             : null;
     }
 
+    async ValueTask<Result<Built>> PrepareAsync(PolicyDistributionCampaign campaign, PolicyCampaignClosure closure,
+        CompletePolicyCampaignClosure command, CancellationToken ct)
+    {
+        var cut = PolicyCampaignPreparedCut.Capture(campaign);
+        var prepared = await verifier.PrepareAsync(closure, ct).ConfigureAwait(false);
+        if (prepared.Error is not null)
+            return Result<Built>.Failure(prepared.Error);
+        if (command.ParticipantProofManifest != prepared.Intent!.SourceUses.Content)
+            return Result<Built>.Failure(SourceUseReceiverSupport.Permanent(
+                "The completion differs from the frozen closure intent.").Error!);
+        var built = await BuildAsync(campaign, prepared, command, ct).ConfigureAwait(false);
+        return built.Error is not null ? Result<Built>.Failure(built.Error) : Result<Built>.Success(built with { Cut = cut });
+    }
+
     async ValueTask<Built> BuildAsync(PolicyDistributionCampaign campaign, PolicyCampaignClosure closure,
-        CompletePolicyCampaignClosure command, OperationProvenance provenance, CancellationToken ct)
+        CompletePolicyCampaignClosure command, CancellationToken ct)
     {
         var intent = closure.Intent!;
         var tenantId = campaign.TenantId;
@@ -136,9 +164,18 @@ sealed class CompletePolicyCampaignClosureHandler(IAggregateReader reader, IAggr
         }
         catch (ImmutableContentIntegrityException exception)
         {
+            ct.ThrowIfCancellationRequested();
             return Built.Failed(SourceUseReceiverSupport.Permanent(
                 $"The frozen closure decision cannot be verified: {exception.Message}").Error!);
         }
+
+        if (authored.CommandId != command.OperationId || authored.TenantId != tenantId ||
+            authored.ProgramId != campaign.ProgramId || authored.CampaignId != campaign.Id || authored.ExpectedRevision < 0 ||
+            string.IsNullOrWhiteSpace(authored.Rationale) || authored.Rationale.Length > 4000 ||
+            intent.Header.OriginalExpectedRevision != (ulong)authored.ExpectedRevision ||
+            AuthoredIntentDigest.Compute(authored) != intent.Header.AuthoredIntentSha256)
+            return Built.Failed(SourceUseReceiverSupport.Permanent(
+                "The frozen closure decision differs from its original authored operation.").Error!);
 
         var state = await campaigns.StateOfAsync(campaign, ct).ConfigureAwait(false);
         if (!state.IsSuccess)
@@ -171,6 +208,8 @@ sealed class CompletePolicyCampaignClosureHandler(IAggregateReader reader, IAggr
     sealed record Built(RequestError? Error, Result<ReceiverOutcome>? Superseded, DateOnly ClosedOn,
         string? Rationale, ImmutableContentRef? Totals, ImmutableContentRef? Proofs, ImmutableContentRef? Result)
     {
+        public PolicyCampaignPreparedCut? Cut { get; init; }
+
         public static Built Failed(RequestError error) => new(error, null, default, null, null, null, null);
 
         public static Built Cancelled(Result<ReceiverOutcome> superseded) =>

@@ -798,6 +798,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<FindingClosureFences>();
         services.AddSingleton(PolicyCampaignClosureProcess.Definition());
         services.AddScoped<CampaignSource>();
+        services.AddScoped<PolicyCampaignReader>();
         services.AddScoped<CampaignLaunch>();
         services.AddScoped<PolicyParticipantAdmission>();
         services.AddScoped<PolicyCampaignClosureVerifier>();

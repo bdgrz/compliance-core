@@ -1,0 +1,1873 @@
+{
+  "version": "implementation-file-review-v1",
+  "total": 36,
+  "reviewed": 36,
+  "blocked": 0,
+  "calls": 4,
+  "cached": 32,
+  "usage": {
+    "input_tokens": 228620,
+    "output_tokens": 2808
+  },
+  "records": [
+    {
+      "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "c48ee814132931a600fdcb0967eb956bb0283b8e2c8c0214420b79cbeb534d66",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AdministratorReceiverSupport.cs",
+          "sha256": "a0e0b97ca55ea6fd34d10a417e8db53ae1d74e8117713962dfe938634a76148f"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/EngagementUseVerifier.cs",
+          "sha256": "faa888d0165584ff349b879dcb9af94c088df080c5a6c200ceb2603a348c9d4c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/IFirmProfessionalDutyAssertionVerifier.cs",
+          "sha256": "420205f08670a2d71fa0a7c7647321da5ef3b921c79e1b1ee4bf84cd2d352761"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ProfessionalDutyChangeVerifier.cs",
+          "sha256": "be6f3c783eaaa5ef1cbfbaa8d1da4d2a057d36c3ccbed4f1b39b65339aea494a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Tenants/TenantRegistered.cs",
+          "sha256": "888d59d0e91e78d2eebdb51c22181b298498b1cb43923d663db6c4d440cc7e26"
+        }
+      ],
+      "review_key": "8a31d352f492312c8c6da1cb753ff311f0980878763d65dad61bdfc069fa8a66",
+      "reviewed_at": "2026-10-25T06:17:23.213Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.29
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.22
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.29
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.27
+        }
+      },
+      "usage": {
+        "input_tokens": 46127,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/NativeOperations/NativeReceiverPreparation.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "e2da3d80d9eb263d23b38af8b385d8ed70f9e5ec23be494c2fe5e5e90de5d9a5",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Processes/ReceiverOutcome.cs",
+          "sha256": "e42ca6e874c3cf2e4da380d1a93cde03c9788a4b0665dceb9892ffa23c2f8eb8"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/ImmutableContentIntegrityException.cs",
+          "sha256": "6b6b040d848d20ca6b5a000b6a6999f196db61075fe71a8d18dab7eb313efa3d"
+        }
+      ],
+      "review_key": "1e6b52eb95c0c18849802e11de66f7bda6f55352173e4f29381ed96b256b0619",
+      "reviewed_at": "2026-10-25T06:17:23.104Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.39
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.37
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.2
+        }
+      },
+      "usage": {
+        "input_tokens": 2367,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/AbortPolicyCampaignClosureHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "3feee93cb25949b4302f48a7275d729e43055eed4a774e3271e2fcb811f73bc2",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/AbortPolicyCampaignClosure.cs",
+          "sha256": "606b67cb9644b417408882c7f7267f0390ba6e383a7c0277972141aa50f8c27a"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignContent.cs",
+          "sha256": "c69923ced4fc2917079bab982ef8ff3c36da3b21a6161435458ee779e3e8208c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/SourceUse/SourceUseReceiverSupport.cs",
+          "sha256": "2f3415bb495258bef5bd840b6233e39f46b7912f3fa61ea33636835a6d1fb40a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/AcceptedOperationBinding.cs",
+          "sha256": "6f23964a5b4653b474ae73dde8008fed774abc372803326aa0f57d6fe1ae9083"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ClosureIntent.cs",
+          "sha256": "d768fec38d7a5ea95b6d3daf6c75affcb871220cb96ab10e0935c8e008e4a75a"
+        }
+      ],
+      "review_key": "b643a21a99d15c30a7063da3edd642be47b95c3ce51c51b0e3bf9f526d16cce3",
+      "reviewed_at": "2026-10-25T06:25:13.886Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.23
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.26
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.38
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.14
+        }
+      },
+      "usage": {
+        "input_tokens": 7571,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/AcknowledgePolicyHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "1ad90ed76d8a7819a8fbab8b631c59f417615d3b3b617114fd508fd9ba5c2618",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/AcknowledgePolicy.cs",
+          "sha256": "3e57a471457a2d900110828d6f9dd32d723d20e8eaaeebda9c301ef05311aca2"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignContent.cs",
+          "sha256": "c69923ced4fc2917079bab982ef8ff3c36da3b21a6161435458ee779e3e8208c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyParticipantAdmission.cs",
+          "sha256": "eaab2c9d4f8e952db85e5fafc04fc00cea0b0f8dc88a2127b7b87d7381945d07"
+        }
+      ],
+      "review_key": "d0b1e836f1e8c942df68daf84d22b43a9d04ce28dd43c76f2dd7c6e154c92c53",
+      "reviewed_at": "2026-10-25T06:17:23.537Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.43
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.47
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.31
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.17
+        }
+      },
+      "usage": {
+        "input_tokens": 7140,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/ApplyPolicyParticipantResultHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "98a748a86c683450b189aecd760311b1665c6bbbd5bca7da9bc137633f690a28",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/ApplyPolicyParticipantResult.cs",
+          "sha256": "8a22bb754ea752acc037fb2c2d3ff37dd1ce430f253eaf0d0d2200b129427404"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignContent.cs",
+          "sha256": "c69923ced4fc2917079bab982ef8ff3c36da3b21a6161435458ee779e3e8208c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/SourceUse/SourceUseReceiverSupport.cs",
+          "sha256": "2f3415bb495258bef5bd840b6233e39f46b7912f3fa61ea33636835a6d1fb40a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/AcceptedOperationBinding.cs",
+          "sha256": "6f23964a5b4653b474ae73dde8008fed774abc372803326aa0f57d6fe1ae9083"
+        }
+      ],
+      "review_key": "9345bc01b3052b45fb39aecaa0b50cc2c424e492e60388ed8f121c4add2d50f2",
+      "reviewed_at": "2026-10-25T06:17:23.844Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.4
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.32
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.48
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.18
+        }
+      },
+      "usage": {
+        "input_tokens": 10427,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/ApproveCampaignWaiverHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "8eda3155f94ca0049d813382824e52b415e6c90579c11ba1e1e03aed47c66999",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/ApproveCampaignWaiver.cs",
+          "sha256": "14b832e653a23b0826dd3f5a5ca77450f0b70662c205271f11a3d53fe9609bd3"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignContent.cs",
+          "sha256": "c69923ced4fc2917079bab982ef8ff3c36da3b21a6161435458ee779e3e8208c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyParticipantAdmission.cs",
+          "sha256": "eaab2c9d4f8e952db85e5fafc04fc00cea0b0f8dc88a2127b7b87d7381945d07"
+        }
+      ],
+      "review_key": "c142f8866e447feda04dbe4769e6ca8b700af0e4cdf64927bc0bc1aa625bb832",
+      "reviewed_at": "2026-10-25T06:17:24.047Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.43
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.45
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.28
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.21
+        }
+      },
+      "usage": {
+        "input_tokens": 6699,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/AuthorizePolicyCampaignParticipantCampaignClosureUseHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "2a19b8ccf84a6b244bdab3e0ec4f47f3ef90cb20987cd3b8eda7951d4ca25ff2",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/AuthorizePolicyCampaignParticipantCampaignClosureUse.cs",
+          "sha256": "943faca1333a0f75fe6b803af70a573134caaa5753143e6a7e633fde9888d825"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignClosureVerifier.cs",
+          "sha256": "84fc11c4a47955987b0fd1af2f50e4f3705da5dba4cf9b8c8365ba2cf1e33f07"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Processes/ReceiverOutcome.cs",
+          "sha256": "e42ca6e874c3cf2e4da380d1a93cde03c9788a4b0665dceb9892ffa23c2f8eb8"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "ec3f0450a02b92335c394590de05c2ff32904bf0578f1a84a3c27b0e1161a50d",
+      "reviewed_at": "2026-10-25T06:25:14.040Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.45
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.49
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.43
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.2
+        }
+      },
+      "usage": {
+        "input_tokens": 7152,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/CampaignRoster.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "d4b4cca1fc583fc3d508aeb81bb6f7a1e26d8ae9972657d3ab9cab9af63c208b",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/NativeFactReference.cs",
+          "sha256": "e8339249a228b922a84252879739e68919f6ff2b1767ba54a5e131a5f9989b39"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignAmendmentView.cs",
+          "sha256": "0460f7ab7fc45103237c02c64490de783ba73a4523a085c1335a6c97556687a5"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignAudienceAmendment.cs",
+          "sha256": "bf2773d48bcfb7cdec228d82243c6626005b07ebc4d801e4e584677a5dc0c2b7"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignAudienceEntry.cs",
+          "sha256": "eb51cf291fc69df0c363e8bf80f74672223db4cbe7b655d28f0beec5b2cfcf29"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/IImmutableContentStore.cs",
+          "sha256": "954bf85c5b85c2cddb862349b0476c87835aa06236dffc58989f6cbdc19fcfec"
+        }
+      ],
+      "review_key": "19e120a759bc226746df4eadaad96942c6dd6e5fd06afc0556affeb83d30a259",
+      "reviewed_at": "2026-10-25T06:17:24.531Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.42
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.44
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.5
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.27
+        }
+      },
+      "usage": {
+        "input_tokens": 3212,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/CampaignRules.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "8689df2de57086cc6959905ab3d45faa7021cfd33f11f46a9dd972e2896eaf0d",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Operations/EvidenceReference.cs",
+          "sha256": "44f9ef0b4469966fc49ddbf42e8445832a4d78648b2fb676a221a5c52fc82777"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/AcknowledgePolicy.cs",
+          "sha256": "3e57a471457a2d900110828d6f9dd32d723d20e8eaaeebda9c301ef05311aca2"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/ApproveCampaignWaiver.cs",
+          "sha256": "14b832e653a23b0826dd3f5a5ca77450f0b70662c205271f11a3d53fe9609bd3"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignAudienceAmendment.cs",
+          "sha256": "bf2773d48bcfb7cdec228d82243c6626005b07ebc4d801e4e584677a5dc0c2b7"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignAudienceEntry.cs",
+          "sha256": "eb51cf291fc69df0c363e8bf80f74672223db4cbe7b655d28f0beec5b2cfcf29"
+        }
+      ],
+      "review_key": "dee23accc110565187130a447b752061ea8904602fc2f1056a0fdfcb10f58188",
+      "reviewed_at": "2026-10-25T06:17:24.789Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.28
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.47
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.33
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.19
+        }
+      },
+      "usage": {
+        "input_tokens": 4615,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/CampaignSource.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "defca4138c5339ec5250be45439063c1a786c315c0c1865067413964c94afda7",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignTotalsView.cs",
+          "sha256": "a8a9a4ffb9b71a374956b20483933b658160a999eeace7fd6d8ad42e412df585"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/IImmutableContentStore.cs",
+          "sha256": "954bf85c5b85c2cddb862349b0476c87835aa06236dffc58989f6cbdc19fcfec"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/ImmutableContentIntegrityException.cs",
+          "sha256": "6b6b040d848d20ca6b5a000b6a6999f196db61075fe71a8d18dab7eb313efa3d"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/CampaignRoster.cs",
+          "sha256": "d4b4cca1fc583fc3d508aeb81bb6f7a1e26d8ae9972657d3ab9cab9af63c208b"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/CampaignState.cs",
+          "sha256": "bf95460157bc9c14e696b0b63db32cb7b759ac3099a3ea02daab1d46daf1c831"
+        }
+      ],
+      "review_key": "9a8facb3d359bb761c46a331bf005eec26b383087e4991fb4b07229584fbfb7e",
+      "reviewed_at": "2026-10-25T06:17:25.052Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.38
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.32
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.37
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.22
+        }
+      },
+      "usage": {
+        "input_tokens": 5252,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/CampaignState.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "bf95460157bc9c14e696b0b63db32cb7b759ac3099a3ea02daab1d46daf1c831",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Operations/EvidenceReference.cs",
+          "sha256": "44f9ef0b4469966fc49ddbf42e8445832a4d78648b2fb676a221a5c52fc82777"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignAcknowledgementView.cs",
+          "sha256": "d6d0b050418e8783a7844595b847bd36372f3645442a1fbe3acf3260f9d1e75b"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignCompletionView.cs",
+          "sha256": "a01491622e43841970dbef7a98eb8dbb26d9066d6aa16fd19014e21baacb5a68"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignParticipantView.cs",
+          "sha256": "65b4b74d94ffa9e7a252bf5fd1cbb835de52d7e6be0f9150b3dc4accca8d56d3"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignTotalsView.cs",
+          "sha256": "a8a9a4ffb9b71a374956b20483933b658160a999eeace7fd6d8ad42e412df585"
+        }
+      ],
+      "review_key": "205e3bd7894c289c07f04be0460233a55b2c898f29e5f20042cad7b8e349d6ab",
+      "reviewed_at": "2026-10-25T06:17:25.289Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.17
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.3
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.14
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.28
+        }
+      },
+      "usage": {
+        "input_tokens": 3393,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/CloseCampaignHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "157172bc9956b541e88c89f4c40a9b33e1e860ab7a1772fa6c2eef0f512e9151",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CloseCampaign.cs",
+          "sha256": "2fdc0d1177e9927601565866d42d23bf4c4c9e73a12bc368f450493b8fb8e598"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignContent.cs",
+          "sha256": "c69923ced4fc2917079bab982ef8ff3c36da3b21a6161435458ee779e3e8208c"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/AcceptedOperationBinding.cs",
+          "sha256": "6f23964a5b4653b474ae73dde8008fed774abc372803326aa0f57d6fe1ae9083"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ClosureIntent.cs",
+          "sha256": "d768fec38d7a5ea95b6d3daf6c75affcb871220cb96ab10e0935c8e008e4a75a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ClosureParentKind.cs",
+          "sha256": "8c32439d9bed0a63263291230131d5151e203fbf6644f29f40954309954d5611"
+        }
+      ],
+      "review_key": "ba20753acdde0f787118dc40971c641889b1394804253b43bf6a06d492db7a2c",
+      "reviewed_at": "2026-10-25T06:17:25.544Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.41
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.46
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.46
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.37
+        }
+      },
+      "usage": {
+        "input_tokens": 7227,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/CompletePolicyCampaignClosureHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "6cdc372eff67f2136d9d106990b936fe274fe3329946a8b63e71679f5b20c3e9",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CompletePolicyCampaignClosure.cs",
+          "sha256": "e5781e5fbc1215fba6f23afe1fd39b4229f61d7feffc08acd46a2fd94af14f88"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignClosureVerifier.cs",
+          "sha256": "84fc11c4a47955987b0fd1af2f50e4f3705da5dba4cf9b8c8365ba2cf1e33f07"
+        },
+        {
+          "path": "src/Compliance.Core/Features/SourceUse/SourceUseReceiverSupport.cs",
+          "sha256": "2f3415bb495258bef5bd840b6233e39f46b7912f3fa61ea33636835a6d1fb40a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/AcceptedOperationBinding.cs",
+          "sha256": "6f23964a5b4653b474ae73dde8008fed774abc372803326aa0f57d6fe1ae9083"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "adcb50ce98615570618a226e55a3f0326add261570646735fe9d94d4d2b58c7f",
+      "reviewed_at": "2026-10-25T06:25:14.292Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.41
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.51
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.62
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.2
+        }
+      },
+      "usage": {
+        "input_tokens": 8968,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/GetCampaignHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "e7d7f71d16b32e2af310e61827674199ec9795fe1d1f79545448e4360e908e26",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/GetCampaign.cs",
+          "sha256": "1a97c5a2e1788a9067dd79b09f92f19d30029028357f58f6ea10dfce380c9d5f"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignView.cs",
+          "sha256": "2fe41780439ec4928fdbd168072706d56b54f52c253d7bbff980f68b9f52ded3"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Policies/PolicySource.cs",
+          "sha256": "947315f597a90b2b83bffb4b3a4439f7467cc4f1e050a1fc80404b2191b05035"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/CampaignSource.cs",
+          "sha256": "defca4138c5339ec5250be45439063c1a786c315c0c1865067413964c94afda7"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignFailures.cs",
+          "sha256": "000447ec58125321fb403e4abd69d16430d9db6bafd1fcc3351ae972c8e80206"
+        }
+      ],
+      "review_key": "abb557f4286404ad7441554f31459096b2b9ad194cc53f322343fbee84881182",
+      "reviewed_at": "2026-10-25T06:17:26.038Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.2
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.15
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.2
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.17
+        }
+      },
+      "usage": {
+        "input_tokens": 3475,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/LaunchPolicyCampaignHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "51e8e42441ea22671d03e743adcc8419b1e164d9b64e3207649fe66cf4b1a3c4",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/LaunchPolicyCampaign.cs",
+          "sha256": "8acde50d8ea37c45f7335d8e0d9db19698594c4f187582a5cadf4728a56347d9"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignRegistration.cs",
+          "sha256": "67c1d0f3a7d2e2d1308c82b5a0e5e29dca31d9ed9675191628e0fdda41b86331"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignSubject.cs",
+          "sha256": "c31e0f78b5f7745f5cbe0ba5398ce14e9135a01d34b2f35c06b92324fa3e5280"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Policies/PolicyReader.cs",
+          "sha256": "e0db83b26052d7a2be51af5a5edc75403fe0cd1490c8b342f1ff90c1ac1fb60a"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Policies/PolicySource.cs",
+          "sha256": "947315f597a90b2b83bffb4b3a4439f7467cc4f1e050a1fc80404b2191b05035"
+        }
+      ],
+      "review_key": "f289261e8d391d9ec99a8acbf46eaae9c241a5c545cbc96d9dc24cbda595e50d",
+      "reviewed_at": "2026-10-25T06:17:26.292Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.27
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.37
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.38
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.15
+        }
+      },
+      "usage": {
+        "input_tokens": 3719,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/LaunchTrainingCampaignHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "5ed6e59888d95d76be668ba5d818c8845b7df0a2b0187eb7b5a56e68b9adccf3",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/LaunchTrainingCampaign.cs",
+          "sha256": "f8086de28168b0731547ad41f078091844e5689a83fd00722fdc64e0efcdce1e"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignRegistration.cs",
+          "sha256": "67c1d0f3a7d2e2d1308c82b5a0e5e29dca31d9ed9675191628e0fdda41b86331"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignSubject.cs",
+          "sha256": "c31e0f78b5f7745f5cbe0ba5398ce14e9135a01d34b2f35c06b92324fa3e5280"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/TrainingRequirementView.cs",
+          "sha256": "172c63282c5b25415cd66f365fcf3cf7f9b607bba34fb1027aa34b0ed090cc50"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/IImmutableContentStore.cs",
+          "sha256": "954bf85c5b85c2cddb862349b0476c87835aa06236dffc58989f6cbdc19fcfec"
+        }
+      ],
+      "review_key": "b3367efe85e7d3f8e716a176c04c8ebb7fbd86d7059c70dcf74ab7f45f32a6c2",
+      "reviewed_at": "2026-10-25T06:17:26.519Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.35
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.36
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.44
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.15
+        }
+      },
+      "usage": {
+        "input_tokens": 3021,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/ListCampaignAmendmentsHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "61b4b77152d0e108e83fd2bd886e27d8bd1b4ce097a5c065d2c1bc1018b9200a",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/ListCampaignAmendments.cs",
+          "sha256": "188de5ce7ee82bd15b1203205672a708325742f35dc3e554a98f2f8ffbd884f8"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignAmendmentView.cs",
+          "sha256": "0460f7ab7fc45103237c02c64490de783ba73a4523a085c1335a6c97556687a5"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Controls/ControlActivationSource.cs",
+          "sha256": "9e029f5996a8d452e2d78445c7ee2d3ea5de660a45c31476beba02549123d083"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/CampaignSource.cs",
+          "sha256": "defca4138c5339ec5250be45439063c1a786c315c0c1865067413964c94afda7"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignFailures.cs",
+          "sha256": "000447ec58125321fb403e4abd69d16430d9db6bafd1fcc3351ae972c8e80206"
+        }
+      ],
+      "review_key": "856cd4a11ff987d8becf860fce9a6d837a79892c085cccba22e1df5f489f5c4d",
+      "reviewed_at": "2026-10-25T06:17:26.829Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.23
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.16
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.19
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.15
+        }
+      },
+      "usage": {
+        "input_tokens": 3670,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/ListCampaignParticipantsHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "0921786aabf8417aa4a626830d4bb5e13c8a080fa5f099824d684d0c60eb2530",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/ListCampaignParticipants.cs",
+          "sha256": "c18bf2bf32e07348fcb5c1425ca0fe8c800c5a7593bb1e555218a7c38c045d19"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignParticipantView.cs",
+          "sha256": "65b4b74d94ffa9e7a252bf5fd1cbb835de52d7e6be0f9150b3dc4accca8d56d3"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Controls/ControlActivationSource.cs",
+          "sha256": "9e029f5996a8d452e2d78445c7ee2d3ea5de660a45c31476beba02549123d083"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Policies/PolicySource.cs",
+          "sha256": "947315f597a90b2b83bffb4b3a4439f7467cc4f1e050a1fc80404b2191b05035"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/CampaignSource.cs",
+          "sha256": "defca4138c5339ec5250be45439063c1a786c315c0c1865067413964c94afda7"
+        }
+      ],
+      "review_key": "b2dc839aad8408454328c7603520db25678055d745cf341130dd51cde156adee",
+      "reviewed_at": "2026-10-25T06:17:27.034Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.44
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.24
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.21
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.33
+        }
+      },
+      "usage": {
+        "input_tokens": 4079,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/ListCampaignsHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "dc9a18fef9fb4f6c6839d436410eadf98577e9f6e7fb86a4b9e56dea1538a1eb",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/ListCampaigns.cs",
+          "sha256": "dfa18d5c94625cb26510612062e05080d78278ffb801155f4893b52750929fbd"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignSummaryView.cs",
+          "sha256": "3c7385c60679495cb423781ba4073f06d9593b84351960217190d8b1d9db3ccf"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/ICampaignDirectoryReader.cs",
+          "sha256": "cafb3e8c6ad455cbe833e07bf6ea8107b0b36f65065ab8d1a3ed9b7ccb5dced9"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignFailures.cs",
+          "sha256": "000447ec58125321fb403e4abd69d16430d9db6bafd1fcc3351ae972c8e80206"
+        }
+      ],
+      "review_key": "526f8550045726164a81381bd320d1acf0d7293771f48972d1b9e5c3cfaf02dd",
+      "reviewed_at": "2026-10-25T06:17:27.275Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.69
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.54
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.76
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.55
+        }
+      },
+      "usage": {
+        "input_tokens": 2409,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignAggregateReader.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "c0b6cf22d574bc8d69c3fdee99d1280b3087261662d6698731da712c7b96f0b1",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs",
+          "sha256": "4dc31ed7320c62660cbca776ba4a24577fd12d9178320dea738f51eff0d691d9"
+        }
+      ],
+      "review_key": "b072063b7d302c211b29696624401796eeee1a6354a717bcb5395c6305fc4051",
+      "reviewed_at": "2026-10-25T06:17:27.543Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.18
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.35
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.25
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.3
+        }
+      },
+      "usage": {
+        "input_tokens": 4467,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignClosure.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "c057b6d99d66f555844dd41bc012b69b6db9dc2417ba80fcf44c7fa4e5e3f44f",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ClosureIntent.cs",
+          "sha256": "d768fec38d7a5ea95b6d3daf6c75affcb871220cb96ab10e0935c8e008e4a75a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignClosureAccepted.cs",
+          "sha256": "a4cbd070070e29b6d245df683c8106dec8fe85463222d2150e5b22e17b46d8a3"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/ClosureParticipant.cs",
+          "sha256": "8b596212070b9f97f6ff1ca295cb6f4ad308ed1c16de6cf10bed7d3f7b6bfb45"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignSnapshot.cs",
+          "sha256": "13bc8ac21d043595f2380cf39e7b7e9fdaa2b1b57fe1f34d9f87cce6c973f732"
+        }
+      ],
+      "review_key": "132ee6fd8fe146957770680ef46e4d89784f847cbae74e66408959f17c01d0b2",
+      "reviewed_at": "2026-10-25T06:17:27.784Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.06
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.06
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.14
+        }
+      },
+      "usage": {
+        "input_tokens": 3271,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignClosureVerifier.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "84fc11c4a47955987b0fd1af2f50e4f3705da5dba4cf9b8c8365ba2cf1e33f07",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignContent.cs",
+          "sha256": "c69923ced4fc2917079bab982ef8ff3c36da3b21a6161435458ee779e3e8208c"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ClosureIntent.cs",
+          "sha256": "d768fec38d7a5ea95b6d3daf6c75affcb871220cb96ab10e0935c8e008e4a75a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ClosureParentKind.cs",
+          "sha256": "8c32439d9bed0a63263291230131d5151e203fbf6644f29f40954309954d5611"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/NativeFactReference.cs",
+          "sha256": "e8339249a228b922a84252879739e68919f6ff2b1767ba54a5e131a5f9989b39"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignClosureAccepted.cs",
+          "sha256": "a4cbd070070e29b6d245df683c8106dec8fe85463222d2150e5b22e17b46d8a3"
+        }
+      ],
+      "review_key": "1b6e57cbf479f9d4d597984136983e428706f0d95c8a48d92c1a95da2c60ba2d",
+      "reviewed_at": "2026-10-25T06:25:14.472Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.38
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.28
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.47
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.23
+        }
+      },
+      "usage": {
+        "input_tokens": 8208,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignFailures.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "000447ec58125321fb403e4abd69d16430d9db6bafd1fcc3351ae972c8e80206",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Content/ImmutableContentIntegrityException.cs",
+          "sha256": "6b6b040d848d20ca6b5a000b6a6999f196db61075fe71a8d18dab7eb313efa3d"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/ImmutableContentUnavailableException.cs",
+          "sha256": "c38a452468099b283a679e6f6ba936ca87e812f017a57d31a0129b832249901e"
+        }
+      ],
+      "review_key": "ecf7344fe7449da63598420c4ec2774f221bd5cf4702171cbed1b93bb7bb686e",
+      "reviewed_at": "2026-10-25T06:17:28.347Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.06
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.29
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.11
+        }
+      },
+      "usage": {
+        "input_tokens": 1302,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignHistory.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "47857b33264c0c09e11cceb8a4e6a3952a555c9c817ce646e348ec9b32d26b75",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignContent.cs",
+          "sha256": "c69923ced4fc2917079bab982ef8ff3c36da3b21a6161435458ee779e3e8208c"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ChildAdmissionIntent.cs",
+          "sha256": "9fb634707c930c663dbd17fa4cb6988ade5e7d6cf7757f5b1cd7260bd12797dc"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ClosureIntent.cs",
+          "sha256": "d768fec38d7a5ea95b6d3daf6c75affcb871220cb96ab10e0935c8e008e4a75a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/INativeOperationFact.cs",
+          "sha256": "19e0a8721953d240b75c2ee890a9e0fd784a05a3d20bf96b1c3ad8e8f4133e4a"
+        }
+      ],
+      "review_key": "8fd24d9f7a10feb6e367d26cd14e488f915763d32cb9ba0c3ced82fb1cf8d55d",
+      "reviewed_at": "2026-10-25T06:17:28.554Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.51
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.51
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.48
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.34
+        }
+      },
+      "usage": {
+        "input_tokens": 9715,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs",
+      "kinds": [
+        "aggregate"
+      ],
+      "sha256": "4dc31ed7320c62660cbca776ba4a24577fd12d9178320dea738f51eff0d691d9",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/SourceUse/SourceUseReservations.cs",
+          "sha256": "054a1e61db0be1dc5988de5713c8cd57d0a2f9fdcd3862f1a03d3f9f0fd6c4d3"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignWaiverApproved.cs",
+          "sha256": "7d9b53deeb40e43a002d9901c274310fe870219148f49e5b437e754b03041778"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/PolicyAcknowledgementRecorded.cs",
+          "sha256": "b37ef73cfcc0ca14493bda3ee10cecc6e2c674279e845273c3b68b46866a7649"
+        }
+      ],
+      "review_key": "6b59d2edcedbd4cc298b7d17398223a04612b5900546ad64c9a202a97ba6076c",
+      "reviewed_at": "2026-10-25T06:17:28.819Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.46
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.56
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.6
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.34
+        }
+      },
+      "usage": {
+        "input_tokens": 7513,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipantSnapshot.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "f2cf37b90eaaa8ecdc5e1521a9602aff6787e487d7de27f24fa984a4607ba410",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/SourceUse/SourceUseReservations.cs",
+          "sha256": "054a1e61db0be1dc5988de5713c8cd57d0a2f9fdcd3862f1a03d3f9f0fd6c4d3"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/INativeOperationFact.cs",
+          "sha256": "19e0a8721953d240b75c2ee890a9e0fd784a05a3d20bf96b1c3ad8e8f4133e4a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignWaiverApproved.cs",
+          "sha256": "7d9b53deeb40e43a002d9901c274310fe870219148f49e5b437e754b03041778"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/PolicyAcknowledgementRecorded.cs",
+          "sha256": "b37ef73cfcc0ca14493bda3ee10cecc6e2c674279e845273c3b68b46866a7649"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/TrainingCompletionRecorded.cs",
+          "sha256": "332d1a58b0330cfc50926bddaecb81594fcb0d137553424b6f739a96e80e6570"
+        }
+      ],
+      "review_key": "2b825fdf5d345d77b9d5fbfd8f36cb37420c79c659559a6694e467dc3b88f9f0",
+      "reviewed_at": "2026-10-25T06:17:29.051Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.13
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.11
+        }
+      },
+      "usage": {
+        "input_tokens": 4525,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignPreparedCut.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "527886786706de27eddaf2ad90555b618afb625aa9475390dd503e30c4b5b63a",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs",
+          "sha256": "4dc31ed7320c62660cbca776ba4a24577fd12d9178320dea738f51eff0d691d9"
+        }
+      ],
+      "review_key": "897bf3eb727cb8ff8528fec50f9b610291ec8f57680b2878a2d01e3ed59dce58",
+      "reviewed_at": "2026-10-25T06:17:29.292Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.26
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.31
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.22
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.21
+        }
+      },
+      "usage": {
+        "input_tokens": 4474,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignReader.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "65cf5f7db6ad0a5d84f503bac1677f0bc7a73e6a77a81e85a08384bf90bb0deb",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs",
+          "sha256": "4dc31ed7320c62660cbca776ba4a24577fd12d9178320dea738f51eff0d691d9"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipantSnapshot.cs",
+          "sha256": "f2cf37b90eaaa8ecdc5e1521a9602aff6787e487d7de27f24fa984a4607ba410"
+        }
+      ],
+      "review_key": "225098854dcaa46fb078b518111bddb6eee474c9798761a6de0e829655d986df",
+      "reviewed_at": "2026-10-25T06:17:29.543Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.14
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.16
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.16
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.2
+        }
+      },
+      "usage": {
+        "input_tokens": 5425,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignReplayCut.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "c1cb21e719413636f5e58cbfdcd34efba104a22bc77868ea2a11a31563362ef2",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/ImmutableContentIntegrityException.cs",
+          "sha256": "6b6b040d848d20ca6b5a000b6a6999f196db61075fe71a8d18dab7eb313efa3d"
+        },
+        {
+          "path": "src/Compliance.Core/Features/NativeOperations/NativeAcceptance.cs",
+          "sha256": "5bbdc0b6be093b9ebe94592247d2139fae7852a854669bfa4656643ada3ac899"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignReplayDigest.cs",
+          "sha256": "1c2f26cf10db476f76e2556c083a2dc03749811b6d74cc547e4b98b3cce842c9"
+        }
+      ],
+      "review_key": "b67c1d07328c9d8c5627146d149a0f3592e0353a11c652f3df0be447b75209c4",
+      "reviewed_at": "2026-10-25T06:17:29.798Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.38
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.32
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.44
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.27
+        }
+      },
+      "usage": {
+        "input_tokens": 3186,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignReplayDigest.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "1c2f26cf10db476f76e2556c083a2dc03749811b6d74cc547e4b98b3cce842c9",
+      "dependency_sha256": [],
+      "review_key": "e195f88324b18df53e3228076a30c739cd9522ff255b3ccfc2a0ec52ffcbb708",
+      "reviewed_at": "2026-10-25T06:17:30.031Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.22
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.25
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.14
+        }
+      },
+      "usage": {
+        "input_tokens": 1186,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignSnapshot.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "13bc8ac21d043595f2380cf39e7b7e9fdaa2b1b57fe1f34d9f87cce6c973f732",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignSubject.cs",
+          "sha256": "c31e0f78b5f7745f5cbe0ba5398ce14e9135a01d34b2f35c06b92324fa3e5280"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignAudienceAmended.cs",
+          "sha256": "d9d4df472ab99893234ed884d20a9a0b04b415c2202f44e7fe1757a42efb2057"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignAudienceFrozen.cs",
+          "sha256": "f3227b26293001dcfaefea66c4259dbd8bbe87c79f22f32532844e01dbefc29b"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignClosed.cs",
+          "sha256": "61430f2ea7efc730adfad9786d6bbc5e2bfcf6f5dbe076b9a5041bbb9085aee4"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignClosureAccepted.cs",
+          "sha256": "a4cbd070070e29b6d245df683c8106dec8fe85463222d2150e5b22e17b46d8a3"
+        }
+      ],
+      "review_key": "45638339beebc62fe1111823d7082b663738a925ada50dae7e704ba938aed4ed",
+      "reviewed_at": "2026-10-25T06:17:30.278Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.14
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.2
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.1
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.1
+        }
+      },
+      "usage": {
+        "input_tokens": 3242,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs",
+      "kinds": [
+        "aggregate"
+      ],
+      "sha256": "bde5e344671f33eeb307f5b889dc5921b3aa6ace34e4bb30dd7de62a100fb59f",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/AcknowledgePolicy.cs",
+          "sha256": "3e57a471457a2d900110828d6f9dd32d723d20e8eaaeebda9c301ef05311aca2"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/ApproveCampaignWaiver.cs",
+          "sha256": "14b832e653a23b0826dd3f5a5ca77450f0b70662c205271f11a3d53fe9609bd3"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignParticipantResultKind.cs",
+          "sha256": "cdf5ea6949943d1b5c599b7847980d40a171256ac06ba1e919049d025d15122b"
+        }
+      ],
+      "review_key": "3e53cc0d4ca5d28abd59b40b9fe48878cfa8bc13eeda8bb10c37d82dba3476cc",
+      "reviewed_at": "2026-10-25T06:17:30.554Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.54
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.62
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.66
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.38
+        }
+      },
+      "usage": {
+        "input_tokens": 7927,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyParticipantAdmission.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "eaab2c9d4f8e952db85e5fafc04fc00cea0b0f8dc88a2127b7b87d7381945d07",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignContent.cs",
+          "sha256": "c69923ced4fc2917079bab982ef8ff3c36da3b21a6161435458ee779e3e8208c"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/AcceptedOperationBinding.cs",
+          "sha256": "6f23964a5b4653b474ae73dde8008fed774abc372803326aa0f57d6fe1ae9083"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/AdmittedChildKind.cs",
+          "sha256": "f90512473522ac037245064e9e6571c336162c22f67d2ca120d8c551740c65e2"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ChildAdmissionIntent.cs",
+          "sha256": "9fb634707c930c663dbd17fa4cb6988ade5e7d6cf7757f5b1cd7260bd12797dc"
+        }
+      ],
+      "review_key": "7b732607a91e923d6f8b6ffba093282a9d3ca85de3129cce0059f38da2f0aef5",
+      "reviewed_at": "2026-10-25T06:17:30.788Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.74
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.68
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.74
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.4
+        }
+      },
+      "usage": {
+        "input_tokens": 6968,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/ReconcileCampaignAudienceHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "c030d8893f3c4be206150c40fbac74a2234fe7f8d3cc4e626217b1ae05fd867f",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/ReconcileCampaignAudience.cs",
+          "sha256": "d46e0da57f0128e3b18003e17d4e242f7f2b5e5b6b24c1ce45d4f099156a0163"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignContent.cs",
+          "sha256": "c69923ced4fc2917079bab982ef8ff3c36da3b21a6161435458ee779e3e8208c"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/AcceptedOperationBinding.cs",
+          "sha256": "6f23964a5b4653b474ae73dde8008fed774abc372803326aa0f57d6fe1ae9083"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/FirstResponseDescriptor.cs",
+          "sha256": "28ba634a09677e891336eb19e18a5c6c35a1859f07f2dec378247c0a0fe86620"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/CampaignReconciliationView.cs",
+          "sha256": "106e5d1f5351f181ee6727530e597a8bbdc041e64899ab5d9966402cffed1c83"
+        }
+      ],
+      "review_key": "755663c3b35db3604b3c33e8cc876e4e3db8dd6c628aefa63a258e3cfa8e06a6",
+      "reviewed_at": "2026-10-25T06:17:31.063Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.38
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.44
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.49
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.22
+        }
+      },
+      "usage": {
+        "input_tokens": 6692,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/RecordTrainingCompletionHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "a2b1d3939a48366a506e39118faa09805eb2a1f60f10719c8757b5d4ae073cec",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/RecordTrainingCompletion.cs",
+          "sha256": "889c8800477b22175ec3e93dc82a40c7956406950d68530f59cc1323e9502f4d"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignContent.cs",
+          "sha256": "c69923ced4fc2917079bab982ef8ff3c36da3b21a6161435458ee779e3e8208c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyParticipantAdmission.cs",
+          "sha256": "eaab2c9d4f8e952db85e5fafc04fc00cea0b0f8dc88a2127b7b87d7381945d07"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationAcceptedResponse.cs",
+          "sha256": "c1ca57c969816da7a88ad8a0b460a438f267a9843ed7a1b9fbd5ee89171920e8"
+        }
+      ],
+      "review_key": "5a55b8d01d21f54bf29dcea65e9fea8c22bfdbfc90b771bf4a4fd7bdd5269328",
+      "reviewed_at": "2026-10-25T06:17:31.323Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.21
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.28
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.24
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.2
+        }
+      },
+      "usage": {
+        "input_tokens": 6496,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Hosting/Persistence/PersistenceServiceCollectionExtensions.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "943ed0d85a58a168c228d99db2f0f8682f78a8447093741f54e85405a132b817",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/AccessReviews/AccessReviewAggregateReader.cs",
+          "sha256": "fc47162181f57b509e21498283c02370bde8286c19363cffd136a919af3ef1d1"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorAggregateReader.cs",
+          "sha256": "e50967bda57d85e45e4848eb88fc573ba1ee33c33b9ac488d2c227b8da1699bf"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditorRequests/AuditorRequestAggregateReader.cs",
+          "sha256": "9c6e8a8f9fafaea76ac71f715b4a0ded21d4b4a399c94f1f06b288a27bfafeba"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifestAggregateReader.cs",
+          "sha256": "a9eed6c4c785edb1dabafca9d3ca6282322b58187fc68947328c2593d46c6cd4"
+        },
+        {
+          "path": "src/Compliance.Core/Features/ControlMappings/MappingLineAggregateReader.cs",
+          "sha256": "e0ee393d0ad3071f0e2e9db3797c842ca36fc703353c157e9b53d0d4ac9eca4f"
+        }
+      ],
+      "review_key": "a7002e12465368271ed26ebcf7b75f53242236bd4202c37993706bd13865dd95",
+      "reviewed_at": "2026-10-25T06:17:31.538Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.15
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.18
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.18
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.27
+        }
+      },
+      "usage": {
+        "input_tokens": 3500,
+        "output_tokens": 78
+      }
+    }
+  ]
+}

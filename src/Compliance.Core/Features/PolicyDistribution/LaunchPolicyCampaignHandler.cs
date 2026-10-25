@@ -8,6 +8,10 @@ sealed class LaunchPolicyCampaignHandler(CampaignLaunch launch, IAggregateReader
     : IRequestHandler<LaunchPolicyCampaign, CampaignRegistration>
 {
     public ValueTask<Result<CampaignRegistration>> HandleAsync(IRequestContext<LaunchPolicyCampaign> context,
+        CancellationToken ct) =>
+        PolicyCampaignFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    ValueTask<Result<CampaignRegistration>> HandleCoreAsync(IRequestContext<LaunchPolicyCampaign> context,
         CancellationToken ct)
     {
         var request = context.Request;

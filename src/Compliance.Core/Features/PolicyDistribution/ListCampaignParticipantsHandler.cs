@@ -9,7 +9,11 @@ sealed class ListCampaignParticipantsHandler(CampaignSource campaigns, TimeProvi
     static readonly string[] States =
         ["pending", "overdue", "acknowledged", "completed", "excepted", "removed"];
 
-    public async ValueTask<Result<Page<CampaignParticipantView>>> HandleAsync(
+    public ValueTask<Result<Page<CampaignParticipantView>>> HandleAsync(
+        IRequestContext<ListCampaignParticipants> context, CancellationToken ct) =>
+        PolicyCampaignFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<Page<CampaignParticipantView>>> HandleCoreAsync(
         IRequestContext<ListCampaignParticipants> context, CancellationToken ct)
     {
         var request = context.Request;

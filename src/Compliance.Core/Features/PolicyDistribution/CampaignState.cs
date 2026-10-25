@@ -7,17 +7,17 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution;
 ///     results of every participant that has any. A result that is admitted but not yet applied does not count; the
 ///     closure drains them before it freezes the totals.
 /// </summary>
-sealed class CampaignState(PolicyDistributionCampaign campaign, CampaignRoster roster,
-    IReadOnlyList<string> teams, IReadOnlyDictionary<Uuid, PolicyCampaignParticipant> participants,
+sealed class CampaignState(PolicyCampaignSnapshot campaign, CampaignRoster roster,
+    IReadOnlyList<string> teams, IReadOnlyDictionary<Uuid, PolicyCampaignParticipantSnapshot> participants,
     CampaignTotalsView? closingTotals)
 {
-    public PolicyDistributionCampaign Campaign { get; } = campaign;
+    public PolicyCampaignSnapshot Campaign { get; } = campaign;
 
     public CampaignRoster Roster { get; } = roster;
 
     public IReadOnlyList<string> Teams { get; } = teams;
 
-    public IReadOnlyDictionary<Uuid, PolicyCampaignParticipant> Participants { get; } = participants;
+    public IReadOnlyDictionary<Uuid, PolicyCampaignParticipantSnapshot> Participants { get; } = participants;
 
     public string? DisplayNameOf(Uuid personId) => Roster.Find(personId)?.DisplayName;
 

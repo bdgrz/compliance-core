@@ -5,7 +5,11 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution;
 sealed class ListCampaignAmendmentsHandler(CampaignSource campaigns)
     : IRequestHandler<ListCampaignAmendments, Page<CampaignAmendmentView>>
 {
-    public async ValueTask<Result<Page<CampaignAmendmentView>>> HandleAsync(
+    public ValueTask<Result<Page<CampaignAmendmentView>>> HandleAsync(
+        IRequestContext<ListCampaignAmendments> context, CancellationToken ct) =>
+        PolicyCampaignFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<Page<CampaignAmendmentView>>> HandleCoreAsync(
         IRequestContext<ListCampaignAmendments> context, CancellationToken ct)
     {
         var request = context.Request;

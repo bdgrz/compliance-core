@@ -210,13 +210,13 @@ public sealed class PersonalCampaignWaiverTransportTests
         }
 
         public ApproveCampaignWaiver Request() => new(Uuid.CreateVersion4(), Tenant, Program, _campaign, PersonId, "Extended leave", Today.AddMonths(3), 1);
-        public Task<PolicyDistributionCampaign> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new PolicyDistributionCampaign(Tenant, _campaign));
-        public Task<PolicyCampaignParticipant> ParticipantAsync() => CampaignSeed.ParticipantAsync(_provider, Tenant, _campaign, PersonId);
+        public Task<PolicyCampaignSnapshot> ReadAsync() => CampaignSeed.CampaignAsync(_provider, Tenant, _campaign);
+        public Task<PolicyCampaignParticipantSnapshot> ParticipantAsync() => CampaignSeed.ParticipantAsync(_provider, Tenant, _campaign, PersonId);
         public Task<Result<ReceiverOutcome>> ApplyAsync(Uuid commandId) => CampaignSeed.ApplyAdmittedAsync(_provider, Tenant, _campaign, PersonId, commandId, CampaignParticipantResultKind.Waiver);
         public async Task<CampaignState> StateAsync()
         {
             await using var scope = _provider.CreateAsyncScope();
-            return (await new CampaignSource(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()).ReadAsync(Tenant, Program, _campaign, CancellationToken.None)).Value;
+            return (await new CampaignSource(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadAsync(Tenant, Program, _campaign, CancellationToken.None)).Value;
         }
         public async Task<Result<OperationAcceptedResponse>> SendAsync(ApproveCampaignWaiver request, string transport, RequestMetadata? metadata = null)
         {
