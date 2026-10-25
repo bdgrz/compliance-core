@@ -50,7 +50,7 @@ public sealed class ServiceEngagementAcceptanceTests
             var subject = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant, kind,
                 kind == PracticeSubjectKind.Staff ? lead.StaffMemberId : lead.UserId));
             Assert.Equal("attest", subject.Practice);
-            Assert.NotNull(subject.CommitmentOf(command.CommandId));
+            Assert.NotNull((await PracticeCommitmentHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), subject)).Commitments.SingleOrDefault(value => value.Operation.RootOperationId == command.CommandId));
             Assert.False(subject.Uses.HasActiveUse);
         }
 
@@ -285,11 +285,11 @@ public sealed class ServiceEngagementAcceptanceTests
         var user = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant,
             PracticeSubjectKind.CanonicalUser, lead.UserId).ForSourceUse(candidate => EngagementAcceptanceEffects.UseKey(command.CommandId, stream, candidate.Stream)));
         Assert.Null(user.Practice);
-        Assert.Null(user.CommitmentOf(command.CommandId));
+        Assert.Null((await PracticeCommitmentHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), user)).Commitments.SingleOrDefault(value => value.Operation.RootOperationId == command.CommandId));
         var staff = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant, PracticeSubjectKind.Staff,
             lead.StaffMemberId).ForSourceUse(candidate => EngagementAcceptanceEffects.UseKey(command.CommandId, stream, candidate.Stream)));
         Assert.Equal("advisory", staff.Practice);
-        Assert.Null(staff.CommitmentOf(command.CommandId));
+        Assert.Null((await PracticeCommitmentHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), staff)).Commitments.SingleOrDefault(value => value.Operation.RootOperationId == command.CommandId));
         Assert.False((await host.HydrateAsync(new ClientServiceIndependence(host.Tenant))).Uses.HasActiveUse);
         foreach (var subject in new[] { user, staff })
             Assert.True(subject.Uses.Find(EngagementAcceptanceEffects.UseKey(command.CommandId, stream, subject.Stream))
@@ -332,7 +332,7 @@ public sealed class ServiceEngagementAcceptanceTests
             var subject = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant, kind,
                 kind == PracticeSubjectKind.Staff ? lead.StaffMemberId : lead.UserId));
             Assert.Equal("attest", subject.Practice);
-            Assert.Equal(command.CommandId, Assert.Single(subject.Commitments).Operation.RootOperationId);
+            Assert.Equal(command.CommandId, Assert.Single((await PracticeCommitmentHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), subject)).Commitments).Operation.RootOperationId);
         }
     }
 

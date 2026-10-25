@@ -31,31 +31,40 @@ sealed class MaterializeAccessReviewDecisionBatchHandler(IAggregateReader reader
         var target = AccessReviewEffects.BatchStream(tenant, command.CampaignId, command.DecisionBatchId);
         if (command.Target != target)
             return SourceUseReceiverSupport.Permanent("The materialization names another batch stream.");
-        var bulk = await verifier.VerifyAsync(tenant, command.CampaignId, command.Source, command.Intent,
+        var bulk = await verifier.ReadNativeAsync(tenant, command.CampaignId, command.Source, command.Intent,
             command.OperationId, ct).ConfigureAwait(false);
         if (bulk.Error is not null)
             return Result<ReceiverOutcome>.Failure(bulk.Error);
+        var operation = bulk.Admitted!.Operation;
+        var header = AccessReviewIntentBindings.HeaderOf(operation);
         var provenance = SourceUseReceiverSupport.Child(command.CommandId, nameof(MaterializeAccessReviewDecisionBatch),
-            command.Source.EventId, bulk.Intent!.Header, target, clock.GetUtcNow());
+            command.Source.EventId, header, target, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
+        var preparation = await NativeReceiverPreparation.PrepareAsync<AccessReviewDecisionBatch, BulkAccessDecisionIntent>(reader,
+            () => new AccessReviewDecisionBatch(tenant, command.CampaignId, command.DecisionBatchId, command.CommandId),
+            owner => Decide(owner, binding, command, provenance), async (_, token) =>
+            {
+                var prepared = await verifier.PrepareAsync(tenant, bulk, token).ConfigureAwait(false);
+                return prepared.Error is not null ? Result<BulkAccessDecisionIntent>.Failure(prepared.Error)
+                    : Result<BulkAccessDecisionIntent>.Success(prepared.Intent!);
+            }, ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
         for (var attempt = 1; ; attempt++)
         {
             try
             {
                 var current = await reader.HydrateAsync(new AccessReviewDecisionBatch(tenant, command.CampaignId,
                     command.DecisionBatchId, command.CommandId), ct).ConfigureAwait(false);
-                if (BulkReceiverSupport.Decide(current.Acceptance, current.Stream, binding) is { } early)
+                if (Decide(current, binding, command, provenance) is { } early)
                     return early;
-                if (current.Accepted is { } existing)
-                    return existing.Intent == command.Intent
-                        ? SourceUseReceiverSupport.Replayed(BulkReceiverSupport.Fact(current.Stream, existing))
-                        : SourceUseReceiverSupport.Permanent(
-                            "The batch is already materialized with a different frozen intent.");
 
                 var step = await executor.ExecuteAsync(new AccessReviewDecisionBatch(tenant, command.CampaignId,
                     command.DecisionBatchId, command.CommandId), batch =>
                     {
-                        if (BulkReceiverSupport.Decide(batch.Acceptance, batch.Stream, binding) is { } decided)
+                        if (Decide(batch, binding, command, provenance) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
                         if (batch.Accepted is not null)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(
@@ -75,6 +84,22 @@ sealed class MaterializeAccessReviewDecisionBatchHandler(IAggregateReader reader
                 // The batch changed concurrently; rehydrate and decide again.
             }
         }
+    }
+
+    static Result<ReceiverOutcome>? Decide(AccessReviewDecisionBatch batch, AcceptedOperationBinding binding,
+        MaterializeAccessReviewDecisionBatch command, OperationProvenance provenance)
+    {
+        if (batch.Accepted is { } existing &&
+            (existing.Intent != command.Intent || existing.Operation.RootOperationId != command.OperationId ||
+                existing.Operation.CausationEventId != command.Source.EventId || existing.Operation.FirstOwner != provenance.FirstOwner))
+            return SourceUseReceiverSupport.Permanent("The batch is already materialized with another exact source or frozen intent.");
+        if (BulkReceiverSupport.Decide(batch.Acceptance, batch.Stream, binding) is { } known)
+            return known;
+        if (batch.Accepted is not { } accepted)
+            return null;
+        return AcceptedOperationBinding.Of(accepted.Operation with { LogicalId = provenance.LogicalId }) == binding
+            ? SourceUseReceiverSupport.Replayed(BulkReceiverSupport.Fact(batch.Stream, accepted))
+            : SourceUseReceiverSupport.Permanent("The materialized batch has another exact native source binding.");
     }
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);

@@ -30,35 +30,32 @@ sealed class ApplyAccessReviewItemDecisionHandler(IAggregateReader reader, IAggr
             !Uuid.TryParse(command.Target.Realm, CultureInfo.InvariantCulture, out var tenant) ||
             command.Target != AccessReviewEffects.ItemStream(tenant, command.CampaignId, command.ItemId))
             return SourceUseReceiverSupport.Permanent("The apply names another item stream, operation or generation.");
-        var bulk = await verifier.VerifyAsync(tenant, command.CampaignId, command.Source, command.Intent,
+        var bulk = await verifier.ReadNativeAsync(tenant, command.CampaignId, command.Source, command.Intent,
             command.OperationId, ct).ConfigureAwait(false);
         if (bulk.Error is not null)
             return Result<ReceiverOutcome>.Failure(bulk.Error);
-        var (campaign, intent) = (bulk.Campaign!, bulk.Intent!);
-        var selected = await verifier.ItemOfAsync(command.Target.Realm, intent, command.Target.Resource, ct)
-            .ConfigureAwait(false);
-        if (selected is null || selected.ItemId != command.ItemId || campaign.Launched is not { } launched)
-            return SourceUseReceiverSupport.Permanent("The apply differs from the frozen bulk decision selection.");
-
         var provenance = SourceUseReceiverSupport.Child(command.CommandId, nameof(ApplyAccessReviewItemDecision),
-            command.Source.EventId, intent.Header, command.Target, clock.GetUtcNow());
+            command.Source.EventId, AccessReviewIntentBindings.HeaderOf(bulk.Admitted!.Operation), command.Target,
+            clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var view = new AccessDecisionView(Uuid.CreateVersion5(command.OperationId, $"bulk-decision:{command.ItemId}"),
-            command.ItemId, intent.Decision, intent.Rationale, selected.ReviewerMemberId, intent.Header.OriginalActor,
-            intent.Header.AcceptedAt, intent.PreviewToken, intent.Header.AcceptedAt > launched.Deadline, null);
-        var decisions = await content.WriteJsonAsync<IReadOnlyList<AccessDecisionView>>(command.Target.Realm,
-            Uuid.CreateVersion5(command.CommandId, "bulk-decisions"), AccessReviewContent.DecisionsSchema, [view], ct)
-            .ConfigureAwait(false);
+        var preparation = await NativeReceiverPreparation.PrepareAsync<AccessReviewItem, PreparedDecisions>(reader,
+            () => Open(tenant, command), owner => Decide(owner, binding, command, provenance),
+            (_, token) => PrepareAsync(tenant, command, bulk, token), ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
+        var decisions = preparation.Value.Value!.Content;
         for (var attempt = 1; ; attempt++)
         {
             try
             {
                 var current = await reader.HydrateAsync(Open(tenant, command), ct).ConfigureAwait(false);
-                if (Decide(current, binding, command.OperationId) is { } early)
+                if (Decide(current, binding, command, provenance) is { } early)
                     return early;
                 var step = await executor.ExecuteAsync(Open(tenant, command), item =>
                     {
-                        if (Decide(item, binding, command.OperationId) is { } decided)
+                        if (Decide(item, binding, command, provenance) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
                         var raised = item.ApplyBulkDecision(provenance, decisions, command.Intent);
                         return raised.IsSuccess
@@ -76,14 +73,51 @@ sealed class ApplyAccessReviewItemDecisionHandler(IAggregateReader reader, IAggr
         }
     }
 
+    async ValueTask<Result<PreparedDecisions>> PrepareAsync(Uuid tenant, ApplyAccessReviewItemDecision command,
+        AccessReviewBulk native, CancellationToken ct)
+    {
+        var bulk = await verifier.PrepareAsync(tenant, native, ct).ConfigureAwait(false);
+        if (bulk.Error is not null)
+            return Result<PreparedDecisions>.Failure(bulk.Error);
+        var (campaign, intent) = (bulk.Campaign!, bulk.Intent!);
+        try
+        {
+            var selected = await verifier.ItemOfAsync(command.Target.Realm, intent, command.Target.Resource, ct)
+                .ConfigureAwait(false);
+            if (selected is null || selected.ItemId != command.ItemId || campaign.Launched is not { } launched)
+                return Result<PreparedDecisions>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The apply differs from the frozen bulk decision selection.", false));
+            var view = new AccessDecisionView(Uuid.CreateVersion5(command.OperationId, $"bulk-decision:{command.ItemId}"),
+                command.ItemId, intent.Decision, intent.Rationale, selected.ReviewerMemberId, intent.Header.OriginalActor,
+                intent.Header.AcceptedAt, intent.PreviewToken, intent.Header.AcceptedAt > launched.Deadline, null);
+            var decisions = await content.WriteJsonAsync<IReadOnlyList<AccessDecisionView>>(command.Target.Realm,
+                Uuid.CreateVersion5(command.CommandId, "bulk-decisions"), AccessReviewContent.DecisionsSchema, [view], ct)
+                .ConfigureAwait(false);
+            return Result<PreparedDecisions>.Success(new PreparedDecisions(decisions));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<PreparedDecisions>.Failure(new RequestError(RequestErrorKind.Conflict,
+                error.Message, error is ImmutableContentUnavailableException));
+        }
+    }
+
     static AccessReviewItem Open(Uuid tenant, ApplyAccessReviewItemDecision command)
     {
         var owner = new AccessReviewItem(tenant, command.CampaignId, command.ItemId, command.CommandId, command.DecisionBatchId);
         return owner.ForSourceUses(owner.BulkKey(command.OperationId));
     }
 
-    static Result<ReceiverOutcome>? Decide(AccessReviewItem item, AcceptedOperationBinding binding, Uuid batchId)
+    static Result<ReceiverOutcome>? Decide(AccessReviewItem item, AcceptedOperationBinding binding,
+        ApplyAccessReviewItemDecision command, OperationProvenance provenance)
     {
+        var batchId = command.DecisionBatchId;
+        if (item.ProvisionalFor(batchId) is { } applied &&
+            (applied.Intent != command.Intent || applied.Operation.RootOperationId != command.OperationId ||
+                applied.Operation.CausationEventId != command.Source.EventId || applied.Operation.FirstOwner != provenance.FirstOwner ||
+                AcceptedOperationBinding.Of(applied.Operation with { LogicalId = provenance.LogicalId }) != binding))
+            return SourceUseReceiverSupport.Permanent("The applied decision has another exact native source binding.");
         if (BulkReceiverSupport.Decide(item.Acceptance, item.Stream, binding) is { } accepted)
             return accepted;
         if (item.ProvisionalFor(batchId) is { } existing)
@@ -98,6 +132,8 @@ sealed class ApplyAccessReviewItemDecisionHandler(IAggregateReader reader, IAggr
                 : SourceUseReceiverSupport.Transient("The hold of the item is not visible yet.");
         return null;
     }
+
+    sealed record PreparedDecisions(ImmutableContentRef Content);
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);
 }

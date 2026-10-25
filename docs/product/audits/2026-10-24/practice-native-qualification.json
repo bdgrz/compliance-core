@@ -1,0 +1,46 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 1236,
+    "productionHttpPassed": 128,
+    "backendUnit": {
+      "passed": 6565,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "exactSourceAndDependencyHashes": "verified",
+    "format": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 23,
+    "signalsAtOrAbove065": 0,
+    "integration": "merge scoped repair recommended",
+    "mergeProbability": 0.68,
+    "introducedRegressionProbability": 0.27,
+    "scopeMisrepresentationProbability": 0.14,
+    "adopted": "merge after final local format gate without CI wait per user direction; continue remaining work"
+  },
+  "scope": "PracticeIndependenceCommitment compact permanent/current/full-key selected authority, complete external verified history and exact original proof/assignment/denial consumers.",
+  "genuineOldApiRedFailed": 2,
+  "qualification": [
+    "Permanent practice label/first conflict citation/current logical revision remain. Only live committed reservation receipts and one explicitly selected full ReservationKey historical commitment stay on owner. Complete native history, original assignments and receipt/fence/proof state compose outside authority; no lifetime cap or permanent wall release.",
+    "Full key includes root UUID, first owner, generation and purpose. Same-root operations on two first owners no longer collide in owner dictionary. This proves per-owner key correctness, not realm-wide operation binding or complete public multi-owner publication.",
+    "Installed reader validates complete ordered raw payload/immutable metadata and selected full metadata at actual physical/native cut before default/executor reads. All3native producers require selected finalized cut. Current same-practice concurrent live holds remain supported.",
+    "Commit receiver preserves the difference between Reserved.Intent source-use envelope and Committed.Intent ParentIntent. It verifies actual envelope/header/reservation/requirement/frozen subject and exact prepared cut; shared helper recovers receipt after binding. Historical consumers select exact original commitment instead of lifetime owner maps.",
+    "All prior reader wrappers/lifetimes retained via fresh opaque keys; actual bare TrainingWorkAuthority host gains test Practice reader while retaining Digest/current wrappers. Native tag1/DTO/routes/result shapes unchanged. Synthetic direct-owner placeholder seeds do not qualify production authorization. No migration/replay/reset/deploy/broker/snapshot or constant-time hydration claim."
+  ],
+  "rootRefinements": [
+    "Preserved complete Provider/Duty/Digest/Staff/Import/current reader chain before appending Practice.",
+    "Added missing Microsoft.Extensions.DependencyInjection import for2 migrated ServiceEngagementStaffAssignment test calls. No production guard relaxed."
+  ],
+  "remainingWork": [
+    "Client and ServiceEngagement lifetime/preparation/source work active. Engagement source producer subject blobs currently namespace root UUID alone; first-owner namespace correction remains in that upcoming family. No new issues."
+  ]
+}

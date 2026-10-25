@@ -6,6 +6,11 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 /// <summary>Requires the immutable intent to preserve the exact first-owner native acceptance header.</summary>
 static class AccessReviewIntentBindings
 {
+    public static DurableIntentHeader HeaderOf(OperationProvenance operation) =>
+        new(operation.RootOperationId, operation.FirstOwner ?? operation.Owner, operation.AffectedOwner,
+            operation.ExpectedRevisionOwner, operation.Actor, operation.Episode, operation.OriginalExpectedRevision,
+            operation.AuthoredIntentSha256, operation.AcceptedAt);
+
     public static void Require(DurableIntentHeader header, OperationProvenance operation)
     {
         if (header.RootOperationId != operation.RootOperationId || header.FirstOwner != operation.FirstOwner ||

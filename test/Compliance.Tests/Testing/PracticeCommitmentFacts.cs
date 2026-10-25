@@ -36,20 +36,22 @@ static class PracticeCommitmentFacts
         var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         var stream = PracticeSubjects.Stream(tenantId, kind, subjectId);
         OperationProvenance Child(string commandKind) => new(Uuid.CreateVersion4(), operationId, null, commandKind,
-            actor, stream, "initial", 1, new string('a', 64), at, stream, stream);
+            actor, stream, "initial", 1, new string('a', 64), at, stream, stream, stream);
+        var key = new ReservationKey(operationId, stream, 1, stream, "actual_staff_assignment");
+        var reserve = Child(nameof(ReservePracticeIndependence));
+        var commit = Child(nameof(CommitPracticeIndependence));
+        var settle = Child(nameof(SettlePracticeIndependenceReservation));
         var reserved = await executor.ExecuteAsync(new PracticeIndependenceCommitment(tenantId, kind, subjectId,
-            Uuid.Empty, practice, engagementId).ForSourceUse(candidate => new ReservationKey(operationId, stream, 1, candidate.Stream, "actual_staff_assignment")), owner => AggregateOutcome.Commit(owner.Reserve(
-            Child(nameof(ReservePracticeIndependence)), Placeholder, 1)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            reserve.LogicalId, practice, engagementId).ForSourceUses(key), owner => AggregateOutcome.Commit(owner.Reserve(
+            reserve, Placeholder, 1)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         Assert.True(reserved.IsSuccess, reserved.Error?.Message);
-        var committed = await executor.ExecuteAsync(new PracticeIndependenceCommitment(tenantId, kind, subjectId).ForSourceUse(candidate => new ReservationKey(operationId, stream, 1, candidate.Stream, "actual_staff_assignment")),
-            owner => AggregateOutcome.Commit(owner.Commit(Child(nameof(CommitPracticeIndependence)), Placeholder, 1,
-                practice, engagementId)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var committed = await executor.ExecuteAsync(new PracticeIndependenceCommitment(tenantId, kind, subjectId,
+            commit.LogicalId, selectedReservation: key).ForSourceUses(key), owner => AggregateOutcome.Commit(owner.Commit(
+            commit, Placeholder, 1, practice, engagementId)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         Assert.True(committed.IsSuccess, committed.Error?.Message);
-        var settled = await executor.ExecuteAsync(new PracticeIndependenceCommitment(tenantId, kind, subjectId).ForSourceUse(candidate => new ReservationKey(operationId, stream, 1, candidate.Stream, "actual_staff_assignment")),
-            owner => AggregateOutcome.Commit(owner.SettleReservation(
-                Child(nameof(SettlePracticeIndependenceReservation)), Placeholder, 1)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var settled = await executor.ExecuteAsync(new PracticeIndependenceCommitment(tenantId, kind, subjectId,
+            settle.LogicalId).ForSourceUses(key), owner => AggregateOutcome.Commit(owner.SettleReservation(
+            settle, Placeholder, 1)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         Assert.True(settled.IsSuccess, settled.Error?.Message);
     }
 }

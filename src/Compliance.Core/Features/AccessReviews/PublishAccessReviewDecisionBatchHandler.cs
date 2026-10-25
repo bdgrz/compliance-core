@@ -32,43 +32,28 @@ sealed class PublishAccessReviewDecisionBatchHandler(IAggregateReader reader, IA
             return SourceUseReceiverSupport.Permanent("The publication names another batch stream, operation or generation.");
         if (!Uuid.TryParse(command.Source.Stream.Resource, CultureInfo.InvariantCulture, out var campaignId))
             return SourceUseReceiverSupport.Permanent("The source is not an admitted bulk decision of a campaign.");
-        var bulk = await verifier.VerifyAsync(tenant, campaignId, command.Source, command.Intent, command.OperationId, ct)
+        var bulk = await verifier.ReadNativeAsync(tenant, campaignId, command.Source, command.Intent, command.OperationId, ct)
             .ConfigureAwait(false);
         if (bulk.Error is not null)
             return Result<ReceiverOutcome>.Failure(bulk.Error);
-        var intent = bulk.Intent!;
         if (command.Target != AccessReviewEffects.BatchStream(tenant, campaignId, command.DecisionBatchId))
             return SourceUseReceiverSupport.Permanent("The publication names another batch stream.");
 
         var provenance = SourceUseReceiverSupport.Child(command.CommandId, nameof(PublishAccessReviewDecisionBatch),
-            command.Source.EventId, intent.Header, command.Target, clock.GetUtcNow());
+            command.Source.EventId, AccessReviewIntentBindings.HeaderOf(bulk.Admitted!.Operation), command.Target, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var batch = await reader.HydrateAsync(new AccessReviewDecisionBatch(tenant, campaignId, command.DecisionBatchId,
-            command.CommandId), ct).ConfigureAwait(false);
-        if (Decide(batch, binding) is { } early)
-            return early;
-        if (batch.Accepted is null)
-            return SourceUseReceiverSupport.Transient("The batch is not materialized yet.");
-
-        ImmutableContentRef result;
-        try
-        {
-            var verified = await VerifyProofsAsync(tenant, campaignId, command, intent, ct).ConfigureAwait(false);
-            if (verified.Outcome is { } outcome)
-                return outcome;
-            var body = await content.WriteJsonAsync(command.Target.Realm, Uuid.CreateVersion5(command.CommandId, "result-body"),
-                AccessReviewContent.BulkResultSchema, new BulkAccessDecisionResult(verified.Decisions!), ct)
-                .ConfigureAwait(false);
-            result = await content.WriteJsonAsync(command.Target.Realm, Uuid.CreateVersion5(command.CommandId, "result"),
-                "mutation-result-content.v1", new MutationResultContent(AccessReviewContent.BulkResultSchema,
-                    new StandardResponseBody(body)), ct).ConfigureAwait(false);
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen bulk decision cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
-        }
-
+        var preparation = await NativeReceiverPreparation.PrepareAsync<AccessReviewDecisionBatch, PreparedPublication>(reader,
+            () => new AccessReviewDecisionBatch(tenant, campaignId, command.DecisionBatchId, command.CommandId),
+            owner => Decide(owner, binding, command, provenance),
+            (owner, token) => PrepareAsync(tenant, campaignId, command, bulk, owner, token), ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
+        var prepared = preparation.Value.Value!;
+        if (prepared.Outcome is { } terminal)
+            return terminal;
+        var result = prepared.Content!;
         for (var attempt = 1; ; attempt++)
         {
             try
@@ -76,7 +61,7 @@ sealed class PublishAccessReviewDecisionBatchHandler(IAggregateReader reader, IA
                 var step = await executor.ExecuteAsync(new AccessReviewDecisionBatch(tenant, campaignId,
                     command.DecisionBatchId, command.CommandId), fresh =>
                     {
-                        if (Decide(fresh, binding) is { } decided)
+                        if (Decide(fresh, binding, command, provenance) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
                         var raised = fresh.Publish(provenance, command.ItemDecisionProofs, result);
                         return raised.IsSuccess
@@ -91,6 +76,38 @@ sealed class PublishAccessReviewDecisionBatchHandler(IAggregateReader reader, IA
             {
                 // The batch changed concurrently; rehydrate and decide again, including against a cancellation.
             }
+        }
+    }
+
+    async ValueTask<Result<PreparedPublication>> PrepareAsync(Uuid tenant, Uuid campaignId,
+        PublishAccessReviewDecisionBatch command, AccessReviewBulk native, AccessReviewDecisionBatch batch, CancellationToken ct)
+    {
+        var bulk = await verifier.PrepareAsync(tenant, native, ct).ConfigureAwait(false);
+        if (bulk.Error is not null)
+            return Result<PreparedPublication>.Failure(bulk.Error);
+        if (batch.Accepted is null)
+            return Result<PreparedPublication>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The batch is not materialized yet.", true));
+        try
+        {
+            var verified = await VerifyProofsAsync(tenant, campaignId, command, bulk.Intent!, ct).ConfigureAwait(false);
+            if (verified.Outcome is { } outcome)
+                return outcome.IsSuccess
+                    ? Result<PreparedPublication>.Success(new PreparedPublication(null, outcome))
+                    : Result<PreparedPublication>.Failure(outcome.Error!);
+            var body = await content.WriteJsonAsync(command.Target.Realm, Uuid.CreateVersion5(command.CommandId, "result-body"),
+                AccessReviewContent.BulkResultSchema, new BulkAccessDecisionResult(verified.Decisions!), ct)
+                .ConfigureAwait(false);
+            var result = await content.WriteJsonAsync(command.Target.Realm, Uuid.CreateVersion5(command.CommandId, "result"),
+                "mutation-result-content.v1", new MutationResultContent(AccessReviewContent.BulkResultSchema,
+                    new StandardResponseBody(body)), ct).ConfigureAwait(false);
+            return Result<PreparedPublication>.Success(new PreparedPublication(result, null));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<PreparedPublication>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen bulk decision cannot be verified yet: {error.Message}", error is ImmutableContentUnavailableException));
         }
     }
 
@@ -133,8 +150,20 @@ sealed class PublishAccessReviewDecisionBatchHandler(IAggregateReader reader, IA
         return new Verified(null, decisions);
     }
 
-    static Result<ReceiverOutcome>? Decide(AccessReviewDecisionBatch batch, AcceptedOperationBinding binding)
+    static Result<ReceiverOutcome>? Decide(AccessReviewDecisionBatch batch, AcceptedOperationBinding binding,
+        PublishAccessReviewDecisionBatch command, OperationProvenance provenance)
     {
+        if (batch.Accepted is { } materialized &&
+            (materialized.Intent != command.Intent || materialized.Operation.RootOperationId != command.OperationId ||
+                materialized.Operation.CausationEventId != command.Source.EventId || materialized.Operation.FirstOwner != provenance.FirstOwner))
+            return SourceUseReceiverSupport.Permanent("The materialized batch has another exact native admission.");
+        if (batch.Published is { } prior &&
+            (prior.Intent != command.Intent || prior.Operation.RootOperationId != command.OperationId ||
+                prior.Operation.CausationEventId != command.Source.EventId || prior.Operation.FirstOwner != provenance.FirstOwner ||
+                AcceptedOperationBinding.Of(prior.Operation with { LogicalId = provenance.LogicalId }) != binding))
+            return SourceUseReceiverSupport.Permanent("The published batch has another exact native source binding.");
+        // Publication is irreversible. As before, its accepted retry returns the recorded proof set and result.
+        // A new publication must verify the incoming proof claim in PrepareAsync.
         if (BulkReceiverSupport.Decide(batch.Acceptance, batch.Stream, binding) is { } accepted)
             return accepted;
         if (batch.Published is { } published)
@@ -144,6 +173,8 @@ sealed class PublishAccessReviewDecisionBatchHandler(IAggregateReader reader, IA
                 BulkReceiverSupport.Fact(batch.Stream, canceled))
             : null;
     }
+
+    sealed record PreparedPublication(ImmutableContentRef? Content, Result<ReceiverOutcome>? Outcome);
 
     sealed record Verified(Result<ReceiverOutcome>? Outcome, IReadOnlyList<AccessDecisionView>? Decisions)
     {

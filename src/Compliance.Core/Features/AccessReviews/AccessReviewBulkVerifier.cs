@@ -16,49 +16,55 @@ sealed class AccessReviewBulkVerifier(IAggregateReader reader, IImmutableContent
     public async ValueTask<AccessReviewBulk> VerifyAsync(Uuid tenantId, Uuid campaignId, NativeFactReference source,
         ImmutableContentRef intentReference, Uuid operationId, CancellationToken ct)
     {
+        var native = await ReadNativeAsync(tenantId, campaignId, source, intentReference, operationId, ct).ConfigureAwait(false);
+        return native.Error is not null ? native : await PrepareAsync(tenantId, native, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Resolves exact native admission authority before immutable preparation or receiver receipt knowledge.</summary>
+    public async ValueTask<AccessReviewBulk> ReadNativeAsync(Uuid tenantId, Uuid campaignId, NativeFactReference source,
+        ImmutableContentRef intentReference, Uuid operationId, CancellationToken ct)
+    {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(intentReference);
-        BulkAccessDecisionIntent intent;
-        try
-        {
-            intent = await AccessReviewContent.ReadAsync<BulkAccessDecisionIntent>(content, tenantId, intentReference, ct)
-                .ConfigureAwait(false);
-        }
-        catch (ImmutableContentUnavailableException exception)
-        {
-            return AccessReviewBulk.Failed(Transient($"The frozen bulk decision is not readable yet: {exception.Message}"));
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return AccessReviewBulk.Failed(Permanent($"The frozen bulk decision cannot be verified: {exception.Message}"));
-        }
-
-        if (intent.Header.RootOperationId != operationId || intent.DecisionBatchId != operationId ||
-            intent.CampaignId != campaignId || intent.CampaignGeneration != (ulong)AccessReviewEffects.Generation)
-            return AccessReviewBulk.Failed(Permanent("The command differs from the frozen bulk decision intent."));
         var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenantId, campaignId, selectedRootId: operationId), ct)
             .ConfigureAwait(false);
         if (campaign.AdmittedFor(operationId) is not { } admitted)
             return AccessReviewBulk.Failed(Transient("The admitted bulk decision is not visible yet."));
-        if (source.Stream != campaign.Stream || admitted.Metadata!.EventId != source.EventId ||
-            admitted.Metadata.AggregateVersion != source.AggregateVersion || admitted.Intent != intentReference)
-            return AccessReviewBulk.Failed(Permanent("The source is not the admitted bulk decision of this campaign."));
+        return source.Stream != campaign.Stream || admitted.Metadata.EventId != source.EventId ||
+            admitted.Metadata.AggregateVersion != source.AggregateVersion || admitted.Intent != intentReference ||
+            admitted.Operation.RootOperationId != operationId
+            ? AccessReviewBulk.Failed(Permanent("The source is not the admitted bulk decision of this campaign."))
+            : new AccessReviewBulk(campaign, admitted, null, null);
+    }
+
+    /// <summary>Validates the complete frozen bulk selection for a new receiver candidate.</summary>
+    public async ValueTask<AccessReviewBulk> PrepareAsync(Uuid tenantId, AccessReviewBulk native, CancellationToken ct)
+    {
+        var campaign = native.Campaign!;
+        var admitted = native.Admitted!;
+        BulkAccessDecisionIntent intent;
         try
         {
-            AccessReviewIntentBindings.Require(intent.Header, admitted.Operation);
-            var items = await manifests.BulkItemsAsync(AccessReviewContent.Realm(tenantId), intent.Items, ct)
+            intent = await AccessReviewContent.ReadAsync<BulkAccessDecisionIntent>(content, tenantId, admitted.Intent, ct)
                 .ConfigureAwait(false);
+            if (intent.Header is null || intent.Header.RootOperationId != admitted.Operation.RootOperationId ||
+                intent.DecisionBatchId != admitted.Operation.RootOperationId || intent.CampaignId != campaign.Id ||
+                intent.CampaignGeneration != (ulong)AccessReviewEffects.Generation)
+                return AccessReviewBulk.Failed(Permanent("The command differs from the frozen bulk decision intent."));
+            AccessReviewIntentBindings.Require(intent.Header, admitted.Operation);
+            var items = await manifests.BulkItemsAsync(AccessReviewContent.Realm(tenantId), intent.Items, ct).ConfigureAwait(false);
             if (items.Count == 0 || intent.ExpectedCampaignRevision != admitted.Operation.OriginalExpectedRevision ||
                 items.Values.Any(item => item.ItemId == Uuid.Empty || item.ReviewerMemberId == Uuid.Empty ||
-                    item.ExpectedItemRevision == 0 || item.ItemOwner != AccessReviewEffects.ItemStream(tenantId, campaignId, item.ItemId)))
+                    item.ExpectedItemRevision == 0 || item.ItemOwner != AccessReviewEffects.ItemStream(tenantId, campaign.Id, item.ItemId)))
                 throw new ImmutableContentIntegrityException("The complete bulk selection differs from its admitted scoped item owners.");
         }
         catch (ImmutableContentIntegrityException error)
         {
+            ct.ThrowIfCancellationRequested();
             return AccessReviewBulk.Failed(new RequestError(RequestErrorKind.Conflict, error.Message,
                 error is ImmutableContentUnavailableException));
         }
-        return new AccessReviewBulk(campaign, admitted, intent, null);
+        return native with { Intent = intent };
     }
 
     /// <summary>The frozen item intent of a selected item, or null when the batch does not select it.</summary>

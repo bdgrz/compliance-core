@@ -81,6 +81,7 @@ static class ProgramManagementServices
         collection.AddVerifiedAccessReviewReader();
         collection.AddVerifiedEvaluationReader();
         collection.AddVerifiedMappingLineReader();
+        collection.AddVerifiedPracticeCommitmentReader();
         collection.AddVerifiedWorkDigestReader();
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }

@@ -32,41 +32,33 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
             !Uuid.TryParse(command.Target.Realm, CultureInfo.InvariantCulture, out var tenant) ||
             command.Target != AccessReviewEffects.CampaignStream(tenant, command.CampaignId))
             return SourceUseReceiverSupport.Permanent("The closure names another campaign stream, operation or generation.");
-        var completion = await verifier.VerifyAsync(tenant, command.CampaignId, command.Source, command.Intent,
+        var completion = await verifier.ReadNativeAsync(tenant, command.CampaignId, command.Source, command.Intent,
             command.OperationId, command.CommandId, ct).ConfigureAwait(false);
         if (completion.Error is not null)
             return Result<ReceiverOutcome>.Failure(completion.Error);
+        completion = await verifier.BindAsync(tenant, completion, ct).ConfigureAwait(false);
+        if (completion.Error is not null)
+            return Result<ReceiverOutcome>.Failure(completion.Error);
         var (campaign, intent) = (completion.Campaign!, completion.Intent!);
+        if (command.ItemProofs != intent.SourceUses.Content)
+            return SourceUseReceiverSupport.Permanent("The closure differs from the frozen completion item manifest.");
         var now = clock.GetUtcNow();
         var provenance = SourceUseReceiverSupport.Child(command.CommandId, nameof(CompleteAccessReviewCampaignClosure),
             command.Source.EventId, intent.Header, campaign.Stream, now);
         var binding = AcceptedOperationBinding.Of(provenance);
-        if (Decide(campaign, binding, command.OperationId) is { } early)
-            return early;
-        if (campaign.Pending is not { } pending || pending.Operation.RootOperationId != command.OperationId ||
-            command.ItemProofs != intent.SourceUses.Content)
-            return SourceUseReceiverSupport.Permanent("The closure differs from the pending completion admission.");
-
-        var preparedCut = AccessReviewPreparedCut.Capture(campaign);
-        AccessReviewCampaignCompletionView view;
-        ImmutableContentRef proofs;
-        try
-        {
-            var built = await BuildAsync(context, command, completion, tenant, now, ct).ConfigureAwait(false);
-            if (built.Outcome is { } outcome)
-                return outcome;
-            (view, proofs) = (built.View!, built.Proofs!);
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen completion cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
-        }
-
-        var completionContent = await AccessReviewContent.WriteAsync(content, tenant,
-            AccessReviewContent.CompletionSchema, view, ct).ConfigureAwait(false);
-        var result = await AccessReviewContent.WriteResultAsync(content, tenant,
-            AccessReviewContent.CompletionViewSchema, completionContent, ct).ConfigureAwait(false);
+        var preparation = await NativeReceiverPreparation.PrepareAsync<AccessReviewCampaign, PreparedClosure>(reader,
+            () => new AccessReviewCampaign(tenant, command.CampaignId, command.CommandId, command.OperationId),
+            owner => Decide(owner, binding, command.OperationId),
+            (owner, token) => PrepareAsync(context, command, completion with { Campaign = owner }, tenant, now, token), ct)
+            .ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
+        var prepared = preparation.Value.Value!;
+        if (prepared.Outcome is { } outcome)
+            return outcome;
+        var (preparedCut, completionContent, proofs, result) = (prepared.Cut!, prepared.Content!, prepared.Proofs!, prepared.Result!);
         for (var attempt = 1; ; attempt++)
         {
             try
@@ -91,6 +83,38 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
             {
                 // The campaign changed concurrently; rehydrate and decide again, including against a cancellation.
             }
+        }
+    }
+
+    async ValueTask<Result<PreparedClosure>> PrepareAsync(IRequestContext<CompleteAccessReviewCampaignClosure> context,
+        CompleteAccessReviewCampaignClosure command, AccessReviewCompletion completion, Uuid tenant, DateTimeOffset now,
+        CancellationToken ct)
+    {
+        var verified = await verifier.PrepareAsync(tenant, completion, ct).ConfigureAwait(false);
+        if (verified.Error is not null)
+            return Result<PreparedClosure>.Failure(verified.Error);
+        if (verified.Campaign!.Pending is not { } pending || pending.Operation.RootOperationId != command.OperationId)
+            return Result<PreparedClosure>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The closure differs from the pending completion admission.", false));
+        var cut = AccessReviewPreparedCut.Capture(verified.Campaign);
+        try
+        {
+            var built = await BuildAsync(context, command, verified, tenant, now, ct).ConfigureAwait(false);
+            if (built.Outcome is { } outcome)
+                return outcome.IsSuccess
+                    ? Result<PreparedClosure>.Success(new PreparedClosure(null, null, null, null, outcome))
+                    : Result<PreparedClosure>.Failure(outcome.Error!);
+            var completionContent = await AccessReviewContent.WriteAsync(content, tenant,
+                AccessReviewContent.CompletionSchema, built.View!, ct).ConfigureAwait(false);
+            var result = await AccessReviewContent.WriteResultAsync(content, tenant,
+                AccessReviewContent.CompletionViewSchema, completionContent, ct).ConfigureAwait(false);
+            return Result<PreparedClosure>.Success(new PreparedClosure(cut, completionContent, built.Proofs!, result, null));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<PreparedClosure>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen completion cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
         }
     }
 
@@ -184,6 +208,9 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
             ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(campaign.Stream, closed))
             : null;
     }
+
+    sealed record PreparedClosure(AccessReviewPreparedCut? Cut, ImmutableContentRef? Content, ImmutableContentRef? Proofs,
+        ImmutableContentRef? Result, Result<ReceiverOutcome>? Outcome);
 
     sealed record Built(AccessReviewCampaignCompletionView? View, ImmutableContentRef? Proofs,
         Result<ReceiverOutcome>? Outcome);

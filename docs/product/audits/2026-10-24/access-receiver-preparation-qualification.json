@@ -1,0 +1,46 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 1236,
+    "productionHttpPassed": 128,
+    "backendUnit": {
+      "passed": 6565,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "exactSourceAndDependencyHashes": "verified",
+    "format": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 23,
+    "signalsAtOrAbove065": 0,
+    "integration": "merge scoped repair recommended",
+    "mergeProbability": 0.68,
+    "introducedRegressionProbability": 0.27,
+    "scopeMisrepresentationProbability": 0.14,
+    "adopted": "merge after final local format gate without CI wait per user direction; continue remaining work"
+  },
+  "scope": "Correctly bound immutable preparation/receipt recovery for all nine existing manual Access receivers;12production files and5tests; shared helper unchanged.",
+  "genuineOldApiRedFailed": 29,
+  "qualification": [
+    "Actual native scoped stream/event/metadata version/root/intent resolution precedes later immutable preparation. Existing native materialization/application/fence bindings additionally compare source/root/causation/first owner where needed. New attempts retain all original complete item/selection/proof/hold/fence/publication/full-drain/OCC/prepared-cut checks.",
+    "Shared NativeReceiverPreparation rechecks actual selected native receipt after expected unavailable/corrupt preparation or failed result. Requested cancellation wins; equal winner returns original fact; no-winner missing transient/corruption permanent; programmer faults propagate. Decision/result writes and closure snapshot preparation are inside recovery boundary.",
+    "Campaign closure still reads one required ClosureIntent first: incoming ItemProofs equals intent.SourceUses.Content, not completed derived ItemCompletionProofs. Equality now precedes replay. Accepted exact retry can skip full selection/drain/body construction only after required immutable bind. Missing bind remains transient. No unbound Complete shortcut.",
+    "Abort/cancel exact same recorded proof may replay without old proof body. Alternate valid proofs retain original evidence/selected-item validation before replay. Publish and completed batch cancellation preserve existing irreversible retry proof/result semantics; optional witness fields are not universally reinterpreted.",
+    "No owner payload/tag, DTO, route, authorizer, constructor, DI, generic SourceUse component or helper change. Generic Access SourceUse pairs remain explicit separate work. No new trusted source/permit/callback, persisted migration/replay/reset/deploy/broker claim."
+  ],
+  "rootRefinements": [
+    "Qualified RED used BulkV3: actual DecisionBatchId six sites and ReviewerUserId. Initial compile/setup variants excluded; exact originals preserved in recovery.",
+    "Two green trailing batch assertions use actual business Revision0; metadata native version1. Original RED failed earlier receipt/body assertions, preserved separately.31additional green safety rows retain all29qualified RED names/assertions."
+  ],
+  "remainingWork": [
+    "Generic Access SourceUse pair preparation/binding remains queued after Import custom receiver layer. Import existingAPI RED12 candidate prepared; no missing automatic failure producer is invented."
+  ]
+}

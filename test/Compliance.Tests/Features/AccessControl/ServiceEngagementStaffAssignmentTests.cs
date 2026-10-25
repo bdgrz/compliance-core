@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Tests.Testing;
@@ -50,7 +51,7 @@ public sealed class ServiceEngagementStaffAssignmentTests
             var subject = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant, kind,
                 kind == PracticeSubjectKind.Staff ? assignee.StaffMemberId : assignee.UserId));
             Assert.Equal("attest", subject.Practice);
-            Assert.NotNull(subject.CommitmentOf(command.CommandId));
+            Assert.NotNull((await PracticeCommitmentHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), subject)).Commitments.SingleOrDefault(value => value.Operation.RootOperationId == command.CommandId));
             Assert.False(subject.Uses.HasActiveUse);
         }
 
@@ -191,7 +192,7 @@ public sealed class ServiceEngagementStaffAssignmentTests
         var leadWall = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant,
             PracticeSubjectKind.CanonicalUser, lead.UserId));
         Assert.Equal("attest", leadWall.Practice);
-        Assert.NotNull(leadWall.CommitmentOf(accepted));
+        Assert.NotNull((await PracticeCommitmentHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), leadWall)).Commitments.SingleOrDefault(value => value.Operation.RootOperationId == accepted));
         var user = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant,
             PracticeSubjectKind.CanonicalUser, assignee.UserId));
         Assert.Null(user.Practice);

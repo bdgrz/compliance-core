@@ -31,33 +31,23 @@ sealed class CompleteAccessReviewDecisionBatchCancellationHandler(IAggregateRead
             command.Target != AccessReviewEffects.BatchStream(tenant, campaignId, command.DecisionBatchId))
             return SourceUseReceiverSupport.Permanent(
                 "The completion names another batch stream, operation or generation.");
-        var bulk = await verifier.VerifyAsync(tenant, campaignId, command.Source, command.Intent, command.OperationId, ct)
+        var bulk = await verifier.ReadNativeAsync(tenant, campaignId, command.Source, command.Intent, command.OperationId, ct)
             .ConfigureAwait(false);
         if (bulk.Error is not null)
             return Result<ReceiverOutcome>.Failure(bulk.Error);
-        var intent = bulk.Intent!;
         var provenance = SourceUseReceiverSupport.Child(command.CommandId,
-            nameof(CompleteAccessReviewDecisionBatchCancellation), command.Source.EventId, intent.Header, command.Target,
+            nameof(CompleteAccessReviewDecisionBatchCancellation), command.Source.EventId,
+            AccessReviewIntentBindings.HeaderOf(bulk.Admitted!.Operation), command.Target,
             clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var batch = await reader.HydrateAsync(new AccessReviewDecisionBatch(tenant, campaignId, command.DecisionBatchId,
-            command.CommandId), ct).ConfigureAwait(false);
-        if (Decide(batch, binding) is { } early)
-            return early;
-        if (batch.CancellationAccepted is null)
-            return SourceUseReceiverSupport.Transient("The batch cancellation is not visible yet.");
-
-        try
-        {
-            if (await VerifyFencesAsync(tenant, campaignId, command, intent, ct).ConfigureAwait(false) is { } failure)
-                return failure;
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen bulk decision cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
-        }
-
+        var preparation = await NativeReceiverPreparation.PrepareAsync<AccessReviewDecisionBatch, VerifiedCancellation>(reader,
+            () => new AccessReviewDecisionBatch(tenant, campaignId, command.DecisionBatchId, command.CommandId),
+            owner => Decide(owner, binding, command, provenance),
+            (owner, token) => PrepareAsync(tenant, campaignId, command, bulk, owner, token), ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
         for (var attempt = 1; ; attempt++)
         {
             try
@@ -65,7 +55,7 @@ sealed class CompleteAccessReviewDecisionBatchCancellationHandler(IAggregateRead
                 var step = await executor.ExecuteAsync(new AccessReviewDecisionBatch(tenant, campaignId,
                     command.DecisionBatchId, command.CommandId), fresh =>
                     {
-                        if (Decide(fresh, binding) is { } decided)
+                        if (Decide(fresh, binding, command, provenance) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
                         var raised = fresh.CompleteCancellation(provenance, command.ItemFenceProofs);
                         return raised.IsSuccess
@@ -80,6 +70,30 @@ sealed class CompleteAccessReviewDecisionBatchCancellationHandler(IAggregateRead
             {
                 // The batch changed concurrently; rehydrate and decide again.
             }
+        }
+    }
+
+    async ValueTask<Result<VerifiedCancellation>> PrepareAsync(Uuid tenant, Uuid campaignId,
+        CompleteAccessReviewDecisionBatchCancellation command, AccessReviewBulk native, AccessReviewDecisionBatch batch,
+        CancellationToken ct)
+    {
+        var bulk = await verifier.PrepareAsync(tenant, native, ct).ConfigureAwait(false);
+        if (bulk.Error is not null)
+            return Result<VerifiedCancellation>.Failure(bulk.Error);
+        if (batch.CancellationAccepted is null)
+            return Result<VerifiedCancellation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The batch cancellation is not visible yet.", true));
+        try
+        {
+            if (await VerifyFencesAsync(tenant, campaignId, command, bulk.Intent!, ct).ConfigureAwait(false) is { } failure)
+                return Result<VerifiedCancellation>.Failure(failure.Error!);
+            return Result<VerifiedCancellation>.Success(new VerifiedCancellation());
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<VerifiedCancellation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen bulk decision cannot be verified yet: {error.Message}", error is ImmutableContentUnavailableException));
         }
     }
 
@@ -109,8 +123,19 @@ sealed class CompleteAccessReviewDecisionBatchCancellationHandler(IAggregateRead
         return null;
     }
 
-    static Result<ReceiverOutcome>? Decide(AccessReviewDecisionBatch batch, AcceptedOperationBinding binding)
+    static Result<ReceiverOutcome>? Decide(AccessReviewDecisionBatch batch, AcceptedOperationBinding binding,
+        CompleteAccessReviewDecisionBatchCancellation command, OperationProvenance provenance)
     {
+        if (batch.Accepted is { } materialized &&
+            (materialized.Intent != command.Intent || materialized.Operation.RootOperationId != command.OperationId ||
+                materialized.Operation.CausationEventId != command.Source.EventId || materialized.Operation.FirstOwner != provenance.FirstOwner))
+            return SourceUseReceiverSupport.Permanent("The materialized batch has another exact native admission.");
+        if (batch.Canceled is { } prior &&
+            (prior.Intent != command.Intent || prior.Operation.RootOperationId != command.OperationId ||
+                prior.Operation.CausationEventId != command.Source.EventId || prior.Operation.FirstOwner != provenance.FirstOwner ||
+                AcceptedOperationBinding.Of(prior.Operation with { LogicalId = provenance.LogicalId }) != binding))
+            return SourceUseReceiverSupport.Permanent("The canceled batch has another exact native source binding.");
+        // As before, an accepted cancellation retry returns its recorded fence set; only a new one verifies the claim.
         if (BulkReceiverSupport.Decide(batch.Acceptance, batch.Stream, binding) is { } accepted)
             return accepted;
         if (batch.Canceled is { } canceled)
@@ -120,6 +145,8 @@ sealed class CompleteAccessReviewDecisionBatchCancellationHandler(IAggregateRead
                 BulkReceiverSupport.Fact(batch.Stream, published))
             : null;
     }
+
+    sealed record VerifiedCancellation;
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);
 }

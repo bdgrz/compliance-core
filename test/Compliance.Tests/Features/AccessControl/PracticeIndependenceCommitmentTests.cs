@@ -16,6 +16,69 @@ public sealed class PracticeIndependenceCommitmentTests
         "engagement-independence-intent.v1");
 
     [Fact]
+    public async Task ShouldKeepIndependentPracticeReservationsGivenSameRootOnDifferentFirstOwners()
+    {
+        // Arrange
+        await using var host = new IndependenceHost();
+        var subject = Uuid.CreateVersion4();
+        var root = Uuid.CreateVersion4();
+        var stream = PracticeSubjects.Stream(host.Tenant, PracticeSubjectKind.Staff, subject);
+        var executor = host.Scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+        async Task ApplyAsync(Uuid engagement)
+        {
+            var firstOwner = new ServiceEngagementIndependence(host.Tenant, engagement).Stream;
+            var key = new ReservationKey(root, firstOwner, 1, stream, "actual_staff_assignment");
+            OperationProvenance Child(string kind) => new(Uuid.CreateVersion4(), root, null, kind,
+                host.MemberReference, stream, "initial", 1, new string('a', 64), IndependenceHost.At, stream, stream, firstOwner);
+            var reserve = Child(nameof(ReservePracticeIndependence));
+            var commit = Child(nameof(CommitPracticeIndependence));
+            var settle = Child(nameof(SettlePracticeIndependenceReservation));
+            var held = await executor.ExecuteAsync(new PracticeIndependenceCommitment(host.Tenant, PracticeSubjectKind.Staff,
+                subject, reserve.LogicalId, "attest", engagement).ForSourceUses(key), owner =>
+                AggregateOutcome.Commit(owner.Reserve(reserve, Intent, 1)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            Assert.True(held.IsSuccess, held.Error?.Message);
+            var committed = await executor.ExecuteAsync(new PracticeIndependenceCommitment(host.Tenant, PracticeSubjectKind.Staff,
+                subject, commit.LogicalId).ForSourceUses(key), owner => AggregateOutcome.Commit(owner.Commit(commit, Intent, 1,
+                "attest", engagement)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            Assert.True(committed.IsSuccess, committed.Error?.Message);
+            var settled = await executor.ExecuteAsync(new PracticeIndependenceCommitment(host.Tenant, PracticeSubjectKind.Staff,
+                subject, settle.LogicalId).ForSourceUses(key), owner => AggregateOutcome.Commit(owner.SettleReservation(settle, Intent, 1)),
+                new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            Assert.True(settled.IsSuccess, settled.Error?.Message);
+        }
+        await ApplyAsync(Uuid.CreateVersion4());
+
+        // Act
+        var failure = await Record.ExceptionAsync(() => ApplyAsync(Uuid.CreateVersion4()));
+
+        // Assert
+        Assert.Null(failure);
+        Assert.Equal(2UL, (await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant, PracticeSubjectKind.Staff, subject))).Revision);
+    }
+
+    [Fact]
+    public async Task ShouldKeepBoundedPracticeAuthorityGivenManySettledPermanentCommitments()
+    {
+        // Arrange
+        await using var host = new IndependenceHost();
+        var subject = Uuid.CreateVersion4();
+        for (var index = 0; index < 32; index++)
+            await PracticeCommitmentFacts.CommitSubjectAsync(host.Provider, host.Tenant, PracticeSubjectKind.CanonicalUser,
+                subject, "attest", Uuid.CreateVersion4(), Uuid.CreateVersion4(), host.MemberReference, IndependenceHost.At);
+
+        // Act
+        var owner = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant, PracticeSubjectKind.CanonicalUser, subject));
+        var growing = typeof(PracticeIndependenceCommitment).GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+            .Where(field => field.GetValue(owner) is global::System.Collections.ICollection { Count: > 1 }).ToArray();
+
+        // Assert
+        Assert.Empty(growing);
+        Assert.Equal(32UL, owner.Revision);
+        Assert.True(owner.Serves("attest"));
+        Assert.False(owner.Uses.HasActiveUse);
+    }
+
+    [Fact]
     public void ShouldKeepStaffAndCanonicalUserSubjectsApartGivenSameIdentityAndOrderPracticeBeforeServiceEpoch()
     {
         // Arrange
@@ -58,7 +121,8 @@ public sealed class PracticeIndependenceCommitmentTests
         Assert.Equal("attest", owner.Practice);
         Assert.True(owner.IsCommitted);
         Assert.Equal(1UL, owner.Revision);
-        var committed = Assert.Single(owner.Commitments);
+        var history = await PracticeCommitmentHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner);
+        var committed = Assert.Single(history.Commitments);
         Assert.Equal(engagement, committed.EngagementId);
         Assert.Equal(operation, committed.Operation.RootOperationId);
         Assert.False(owner.Uses.HasActiveUse);
@@ -139,10 +203,11 @@ public sealed class PracticeIndependenceCommitmentTests
             AggregateOutcome.Commit(owner.Reserve(Reserve(Uuid.CreateVersion4()), Intent, 1)),
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         var sameOperation = Uuid.CreateVersion4();
+        var sameProvenance = Reserve(sameOperation);
         var same = await executor.ExecuteAsync(new PracticeIndependenceCommitment(host.Tenant,
-            PracticeSubjectKind.Staff, subject, Uuid.Empty, "attest", Uuid.CreateVersion4()).ForSourceUse(candidate =>
+            PracticeSubjectKind.Staff, subject, sameProvenance.LogicalId, "attest", Uuid.CreateVersion4()).ForSourceUse(candidate =>
                 new ReservationKey(sameOperation, stream, 1, candidate.Stream, "actual_staff_assignment")), owner =>
-            AggregateOutcome.Commit(owner.Reserve(Reserve(sameOperation), Intent, 1)),
+            AggregateOutcome.Commit(owner.Reserve(sameProvenance, Intent, 1)),
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
 
         // Assert

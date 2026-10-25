@@ -436,7 +436,8 @@ public sealed class InventoryManagementIndependenceTests
             await AttestAssignmentHistoryFixture.SeedAsync(_provider, tenant, User, closed, practice);
             var retained = await Reader.HydrateAsync(new PracticeIndependenceCommitment(tenant,
                 PracticeSubjectKind.CanonicalUser, User));
-            Assert.Equal(User, Assert.Single(retained.Assignments()).UserId);
+            var history = await PracticeCommitmentHistory.ReadAsync(_scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), retained);
+            Assert.Equal(User, Assert.Single(history.Assignments()).UserId);
         }
 
         public async Task ProjectRecordsAsync()
