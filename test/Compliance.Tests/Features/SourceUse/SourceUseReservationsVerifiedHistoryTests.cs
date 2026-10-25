@@ -200,11 +200,12 @@ public sealed class SourceUseReservationsVerifiedHistoryTests
         var context = new RequestDispatchContext(RequestActor.System);
 
         // Act
-        var granted = await executor.ExecuteAsync(new FirmStaffRecord(staff.StaffMemberId).ForSourceUses(key),
+        var granted = await executor.ExecuteAsync(new FirmStaffRecord(staff.StaffMemberId, operation.LogicalId).ForSourceUses(key),
             owner => AggregateOutcome.Commit(owner.AuthorizeProfessionalDutyUse(operation,
                 NativeFacts.Ref(SourceUseAuthorizationIntent.Schema), (long)key.SourceGeneration)), context);
-        var settled = await executor.ExecuteAsync(new FirmStaffRecord(staff.StaffMemberId).ForSourceUses(key),
-            owner => AggregateOutcome.Commit(owner.SettleProfessionalDutyUse(operation with { LogicalId = Uuid.CreateVersion4() },
+        var settlement = operation with { LogicalId = Uuid.CreateVersion4() };
+        var settled = await executor.ExecuteAsync(new FirmStaffRecord(staff.StaffMemberId, settlement.LogicalId).ForSourceUses(key),
+            owner => AggregateOutcome.Commit(owner.SettleProfessionalDutyUse(settlement,
                 NativeFacts.Ref(SourceUseAuthorizationIntent.Schema), (long)key.SourceGeneration)), context);
         var selected = await reader.HydrateAsync(new FirmStaffRecord(staff.StaffMemberId).ForSourceUses(key));
 

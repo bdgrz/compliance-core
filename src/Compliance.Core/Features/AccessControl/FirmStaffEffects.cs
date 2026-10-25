@@ -21,5 +21,5 @@ static class FirmStaffEffects
         FirmStaffRegistrationIntent intent, EventStreamAddress owner, DateTimeOffset acceptedAt) => new(commandId,
         intent.Header.RootOperationId, causationEventId, commandKind, intent.Header.OriginalActor, owner,
         intent.Header.Episode, intent.Header.OriginalExpectedRevision, intent.Header.AuthoredIntentSha256, acceptedAt,
-        owner, owner);
+        owner, owner, intent.Header.FirstOwner);
 }

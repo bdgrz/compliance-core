@@ -45,10 +45,13 @@ static class FirmStaffFacts
                 recordedAt), intentRef, FirstResponse)), new RequestDispatchContext(RequestActor.System),
             CancellationToken.None);
         Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+        var registered = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new FirmStaffRecord(staffMemberId));
+        var cause = registered.Accepted!.Metadata.EventId;
         var claimId = Uuid.CreateVersion4();
         var claimed = await executor.ExecuteAsync(claim, item => AggregateOutcome.Commit(item.Claim(
             Provenance(claimId, staffMemberId, "ClaimFirmStaffIdentity", operatorActor, claim.Stream, header,
-                recordedAt), intentRef)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+                recordedAt, cause), intentRef)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         Assert.True(claimed.IsSuccess, claimed.Error?.Message);
         var view = new FirmStaffMemberView(staffMemberId, userId, practice, source, true, 1, operatorActor,
             recordedAt);
@@ -57,9 +60,10 @@ static class FirmStaffFacts
         var resultRef = await content.WriteJsonAsync(FirmStaffContentRealm, Uuid.CreateVersion4(),
             "mutation-result-content.v1", new MutationResultContent("FirmStaffChangeRecorded.StaffContent.v1",
                 new StandardResponseBody(staffRef)));
-        var completed = await executor.ExecuteAsync(new FirmStaffRecord(staffMemberId, Uuid.Empty), item =>
-            AggregateOutcome.Commit(item.CompleteRegistration(Provenance(Uuid.CreateVersion4(), staffMemberId,
-                "CompleteFirmStaffRegistration", operatorActor, record.Stream, header, recordedAt), staffRef,
+        var completeId = Uuid.CreateVersion4();
+        var completed = await executor.ExecuteAsync(new FirmStaffRecord(staffMemberId, completeId), item =>
+            AggregateOutcome.Commit(item.CompleteRegistration(Provenance(completeId, staffMemberId,
+                "CompleteFirmStaffRegistration", operatorActor, record.Stream, header, recordedAt, cause), staffRef,
                 resultRef)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         Assert.True(completed.IsSuccess, completed.Error?.Message);
         return view;
@@ -86,7 +90,7 @@ static class FirmStaffFacts
         var commandId = Uuid.CreateVersion4();
         var stream = new FirmStaffRecord(staffMemberId).Stream;
         var provenance = new OperationProvenance(commandId, commandId, null, "SetFirmStaffStatus", actor, stream,
-            "initial", (ulong)current.Revision, new string('c', 64), recordedAt, stream, stream);
+            "initial", (ulong)current.Revision, new string('c', 64), recordedAt, stream, stream, stream);
         var changed = await executor.ExecuteAsync(new FirmStaffRecord(staffMemberId, commandId), item =>
             AggregateOutcome.Commit(item.SetStatus(provenance, reason, staffRef, FirstResponse, resultRef)),
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
@@ -113,7 +117,7 @@ static class FirmStaffFacts
     {
         await using var scope = provider.CreateAsyncScope();
         var projector = new FirmStaffDirectoryProjector(scope.ServiceProvider.GetRequiredService<FitzFirmStaffDirectory>(),
-            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            scope.ServiceProvider.GetRequiredService<FirmStaffViews>());
         await new ProjectorRunner(scope.ServiceProvider.GetRequiredService<IDomainEventReader>())
             .RunAsync(projector, ProjectionCheckpoint.Start);
     }
@@ -140,7 +144,7 @@ static class FirmStaffFacts
     const string FirmStaffContentRealm = "bdgrz";
 
     static OperationProvenance Provenance(Uuid logicalId, Uuid rootId, string kind, ActorReference actor,
-        EventStreamAddress owner, DurableIntentHeader header, DateTimeOffset acceptedAt) => new(logicalId, rootId,
-        logicalId == rootId ? null : rootId, kind, actor, owner, header.Episode, header.OriginalExpectedRevision,
-        header.AuthoredIntentSha256, acceptedAt, owner, owner);
+        EventStreamAddress owner, DurableIntentHeader header, DateTimeOffset acceptedAt, Uuid? cause = null) => new(logicalId, rootId,
+        cause, kind, actor, owner, header.Episode, header.OriginalExpectedRevision,
+        header.AuthoredIntentSha256, acceptedAt, owner, owner, header.FirstOwner);
 }

@@ -74,7 +74,8 @@ sealed class RecordDirectoryIndependenceReevaluationHandler(NativeOperationExecu
             context.CausationId != (process == "reactor:FirmStaffStatusReevaluationV1"
                 ? request.DirectoryEventId : request.AcceptanceEventId))
             return RefuseSource();
-        if (!directory.MatchesRetainedChange(change) || engagement.OperationOf(request.AcceptanceRequestId) is not
+        var directoryHistory = await FirmStaffHistory.ReadAsync(events, directory, ct).ConfigureAwait(false);
+        if (!directoryHistory.Matches(change) || engagement.OperationOf(request.AcceptanceRequestId) is not
             { Completed: { } completed } || completed.Metadata.EventId != request.AcceptanceEventId)
             return RefuseSource();
         FirmStaffMemberView staff;

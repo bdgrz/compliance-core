@@ -36,11 +36,12 @@ public sealed class RegisterFirmStaffHandler(NativeOperationExecutor operations,
         var record = new FirmStaffRecord(request.StaffMemberId, request.StaffMemberId);
         var provenance = new OperationProvenance(request.StaffMemberId, request.StaffMemberId, null, CommandKind,
             FirmStaffOperator.From(context), record.Stream, InitialEpisode, (ulong)request.ExpectedRevision,
-            AuthoredIntentDigest.Compute(request), now, record.Stream, record.Stream);
+            AuthoredIntentDigest.Compute(request), now, record.Stream, record.Stream, record.Stream);
         var binding = AcceptedOperationBinding.Of(provenance);
         var header = new DurableIntentHeader(provenance.RootOperationId, record.Stream, record.Stream, record.Stream,
             provenance.Actor, InitialEpisode, provenance.OriginalExpectedRevision, provenance.AuthoredIntentSha256, now);
         ImmutableContentRef? intent = null;
+        (ulong Version, ulong Position, string Digest)? preparedCut = null;
 
         async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(FirmStaffRecord staff, CancellationToken token)
         {
@@ -60,13 +61,18 @@ public sealed class RegisterFirmStaffHandler(NativeOperationExecutor operations,
                     now), token).ConfigureAwait(false);
             var response = new FirstResponseDescriptor(202, ImmutableContentStoreExtensions.JsonMediaType,
                 "operation-accepted-response.v1", new StandardResponseBody(accepted));
+            preparedCut = (staff.Version, staff.CommittedStreamPosition, staff.ReplayCut.Digest);
             return Result<FirstResponseDescriptor>.Success(response);
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<FirmStaffRecord>(binding,
             () => new FirmStaffRecord(request.StaffMemberId, request.StaffMemberId), staff => staff.Acceptance,
             PrepareAsync,
-            (FirmStaffRecord staff, ImmutableContentRef frozen) => staff.AcceptRegistration(provenance, intent!, frozen)), context, ct)
+            (FirmStaffRecord staff, ImmutableContentRef frozen) =>
+                preparedCut == (staff.Version, staff.CommittedStreamPosition, staff.ReplayCut.Digest)
+                    ? staff.AcceptRegistration(provenance, intent!, frozen)
+                    : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The prepared staff prefix changed before registration admission.", true))), context, ct)
             .ConfigureAwait(false);
         if (!outcome.IsSuccess)
             return Result<OperationAcceptedResponse>.Failure(outcome.Error!);

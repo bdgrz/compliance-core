@@ -730,14 +730,28 @@
     },
     {
       "id": "application-import-source-batch-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "import-source-batch-qualification.json",
       "fileReviews": 36,
       "focusedPassed": 151,
       "rootRequestedCancellationRedFailed": 2,
       "processQualification": "automatic abort/trusted failure mismatch remains local; personal cancellation process retained",
       "httpPassed": 113,
-      "unitPassed": 6413
+      "unitPassed": 6413,
+      "pr": 1131,
+      "mergeCommit": "ce49c69e69693c37e0aeab5ca2fb0cc2659a0966"
+    },
+    {
+      "id": "firm-staff-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "firm-staff-qualification.json",
+      "fileReviews": 19,
+      "signalsTriaged": 3,
+      "genuineOldApiRedFailed": 2,
+      "focusedPassed": 951,
+      "httpPassed": 36,
+      "remainingIndependenceFamilies": "Duty/practice/client/service engagement continue independently",
+      "unitPassed": 6422
     }
   ],
   "resolved": [

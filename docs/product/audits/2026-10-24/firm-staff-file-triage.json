@@ -1,0 +1,56 @@
+{
+  "model": "jev-1.14.0",
+  "files": 19,
+  "threshold": 0.65,
+  "signals": [
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/DirectoryReevaluationDiscovery.cs",
+      "kind": "recovery_gap",
+      "probability": 0.65
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/FirmStaffStatusReevaluationReactor.cs",
+      "kind": "recovery_gap",
+      "probability": 0.66
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/RegisterFirmStaffHandler.cs",
+      "kind": "recovery_gap",
+      "probability": 0.68
+    }
+  ],
+  "exactSourceAndDependencyHashes": "verified",
+  "dispositions": [
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/DirectoryReevaluationDiscovery.cs",
+      "kind": "recovery_gap",
+      "decision": "Existing durable fanout/retry model retained; no demonstrated introduced recovery defect.",
+      "evidence": [
+        "Locator is discovery only: exact authoritative acceptance source tuple/result/assignee fields and complete expected locator set are verified, then authoritative acceptance source sequence is rechecked after paging. Stable derived command IDs make partial fanout retry safe.",
+        "Staff status reconciliation now composes full verified external history and requires exact original native status/metadata before immutable body interpretation. It does not reactivate independent acceptance or drop later/older status causes.",
+        "951access/source-use focused tests pass, including locator lag, original status after later change, multiple clients, replay after closure and single receipt after acceptance/status reconciliation."
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/FirmStaffStatusReevaluationReactor.cs",
+      "kind": "recovery_gap",
+      "decision": "Committed exact source proof precedes status/no-op dispatch; full original history survives owner compaction.",
+      "evidence": [
+        "FirmStaffSource verifies actual typed committed source checkpoint offset/payload/full metadata before any side effect or no-op. Hashed stream identity is derived from actual staff ID, not treated as a reversible UUID.",
+        "Status must match the complete verified original native staff prefix. Tenant discovery rejects malformed identities and deduplicates clients; downstream exact derived command identity and checkpoint retry retain original reaction semantics.",
+        "Actual current/retained/source-use/assignment reevaluation tests pass among951focused."
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/RegisterFirmStaffHandler.cs",
+      "kind": "recovery_gap",
+      "decision": "Native acceptance resolves before new directory/body preparation; original frozen202 response remains authoritative.",
+      "evidence": [
+        "NativeOperationExecutor owns selected acceptance and equal-winner failure recovery. User-directory existence lookup and registration intent/result/descriptor writes execute only inside first async Prepare; full prepared version/physical position/digest is compared again in Apply.",
+        "Installed current platform-operator/personal transport authorization remains before replay. Current original identity/actor/revision/intent binding is preserved; no legacy null-FirstOwner or fabricated child causation qualification is invented.",
+        "Accepted-retry directory-unavailable/no-write, equal winner before failed immutable status/registration preparation, canonical-user race/crash and original status-after-later-change regressions pass."
+      ]
+    }
+  ],
+  "adopted": "proceed with scoped integration review; probabilities advisory, remaining four independence families continue separately"
+}

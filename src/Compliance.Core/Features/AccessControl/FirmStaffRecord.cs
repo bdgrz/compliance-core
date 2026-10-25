@@ -17,7 +17,6 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
     /// <summary>Stream area of every staff record.</summary>
     public const string Area = "firm-staff-records";
 
-    readonly Dictionary<Uuid, FirmStaffChangeRecorded> _changes = [];
     FirmStaffRegistrationAccepted? _accepted;
     FirmStaffRegistrationRejected? _rejected;
     FirmStaffChangeRecorded? _latest;
@@ -55,8 +54,7 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
             var registering = change.ChangeKind == "register";
             if (_accepted is null || _rejected is not null || change.Operation.Owner != Stream ||
                 change.Intent != _accepted.Intent || change.Revision != _revision + 1 ||
-                registering != (_latest is null) || change.ChangeKind is not ("register" or "status") ||
-                !_changes.TryAdd(change.Operation.LogicalId, change))
+                registering != (_latest is null) || change.ChangeKind is not ("register" or "status"))
                 throw new InvalidOperationException("Staff changes must follow the accepted registration and the previous revision.");
             _latest = change;
             _revision = change.Revision;
@@ -117,10 +115,7 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
     /// <summary>The latest change, whose staff content is the current view.</summary>
     public FirmStaffChangeRecorded? Latest => _latest;
 
-    /// <summary>True when a retained change carries exactly this fact; verifies historical decision facts.</summary>
-    internal bool MatchesRetainedChange(FirmStaffChangeRecorded change) =>
-        _changes.TryGetValue(change.Operation.LogicalId, out var retained) &&
-        IndependenceSourceDigest.DirectoryEvent(retained) == IndependenceSourceDigest.DirectoryEvent(change);
+    internal FirmIndependenceReplayCut ReplayCut { get; } = new();
 
     /// <summary>Checks the admission guards without raising anything.</summary>
     public Result PrepareRegistration(long expectedRevision)
@@ -147,6 +142,9 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         var prepared = PrepareRegistration(operation.OriginalExpectedRevision is { } expected ? (long)expected : -1);
         if (!prepared.IsSuccess)
             return prepared;
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new FirmStaffRegistrationAccepted(Stream, 0, FirmStaffEffects.Generation, intent, null, operation,
             firstResponse, null));
         return Result.Success;
@@ -160,6 +158,9 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         if (!IsPending)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a pending registration can be completed."));
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new FirmStaffChangeRecorded(StaffMemberId, "register", null, staffContent, operation, 1,
             _accepted!.Intent, null, operationResult));
         return Result.Success;
@@ -172,6 +173,9 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         if (!IsPending)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a pending registration can be rejected."));
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new FirmStaffRegistrationRejected(Stream, 0, FirmStaffEffects.Generation, _accepted!.Intent,
             failureProof, operation, null, null));
         return Result.Success;
@@ -205,6 +209,9 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         var prepared = PrepareStatus(expected);
         if (!prepared.IsSuccess)
             return prepared;
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new FirmStaffChangeRecorded(operation.LogicalId, "status", reason, staffContent, operation,
             _revision + 1, _accepted!.Intent, firstResponse, operationResult));
         return Result.Success;
@@ -220,6 +227,9 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a registered staff record can be held, on its own stream.", true));
         Uses.RequireForAppend(SourceUsePurpose.ProfessionalDutyRecording, operation, generation, Version, CommittedStreamPosition);
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new FirmStaffProfessionalDutyUseAuthorized(Stream, (long)_revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -234,6 +244,9 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a registered staff record can be held, on its own stream.", true));
         Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new FirmStaffRecordEngagementUseAuthorized(Stream, (long)_revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -248,6 +261,9 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held staff stream."));
         Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new FirmStaffRecordEngagementUseSettled(Stream, (long)_revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -262,12 +278,17 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held staff stream."));
         Uses.RequireForAppend(SourceUsePurpose.ProfessionalDutyRecording, operation, generation, Version, CommittedStreamPosition);
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new FirmStaffProfessionalDutyUseSettled(Stream, (long)_revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
     }
     protected override void Apply(DomainEvent ev)
     {
+        if (!ev.Metadata.IsAudit)
+            ReplayCut.Observe(ev);
         base.Apply(ev);
         Uses.ObserveOwnerFact(ev);
     }

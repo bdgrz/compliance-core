@@ -21,8 +21,9 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
     {
         var claimStream = new FirmStaffIdentityClaim(command.UserId).Stream;
         if (command.CommandId == Uuid.Empty || command.StaffMemberId == Uuid.Empty || command.UserId == Uuid.Empty ||
+            command.Source is null || command.Intent is null ||
             command.Target != claimStream || command.Generation != FirmStaffEffects.Generation ||
-            command.OperationId != command.StaffMemberId)
+            command.OperationId != command.StaffMemberId || command.ExpectedRevision is not (null or 0))
             return Permanent("The claim names another canonical user stream, generation or operation.");
         var verified = await VerifyAsync(command.StaffMemberId, command.Source, command.Intent, command.UserId,
             command.CommandId, ct).ConfigureAwait(false);
@@ -53,6 +54,9 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
                                 return AggregateOutcome.Discard(Result<Step>.Failure(AcceptedAppendResult.ConflictError));
                         }
 
+                        if (claim.ClaimedByStaffMemberId == command.StaffMemberId && claim.Claimed?.Intent != command.Intent)
+                            return AggregateOutcome.Discard(Result<Step>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                "The permanent claim differs from the exact registered immutable identity.")));
                         if (claim.Claimed is { } existing)
                             return AggregateOutcome.Discard(Result<Step>.Success(
                                 claim.ClaimedByStaffMemberId == command.StaffMemberId
@@ -84,8 +88,9 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
     {
         var recordStream = new FirmStaffRecord(command.StaffMemberId).Stream;
         if (command.CommandId == Uuid.Empty || command.StaffMemberId == Uuid.Empty || command.UserId == Uuid.Empty ||
+            command.Source is null || command.Intent is null ||
             command.Target != recordStream || command.Generation != FirmStaffEffects.Generation ||
-            command.OperationId != command.StaffMemberId)
+            command.OperationId != command.StaffMemberId || command.ExpectedRevision is not (null or 0))
             return Permanent("The completion names another staff stream, generation or operation.");
         var verified = await VerifyAsync(command.StaffMemberId, command.Source, command.Intent, command.UserId,
             command.CommandId, ct).ConfigureAwait(false);
@@ -95,20 +100,42 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
             return Superseded("The registration was rejected.", null);
 
         var intent = verified.Intent!;
-        var claim = await reader.HydrateAsync(new FirmStaffIdentityClaim(command.UserId), ct).ConfigureAwait(false);
-        if (!claim.IsClaimed)
-            return Transient("The permanent canonical-user claim is not visible yet.");
-        if (claim.ClaimedByStaffMemberId != command.StaffMemberId)
-            return Permanent("The canonical user is claimed by another staff record.");
-
         var provenance = FirmStaffEffects.Child(command.CommandId, nameof(CompleteFirmStaffRegistration),
             command.Source.EventId, intent, recordStream, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var staff = await FirmStaffContent.WriteStaffAsync(content,
-            Uuid.CreateVersion5(command.CommandId, "staff-content"), FirmStaffContent.RegisteredView(intent), ct)
-            .ConfigureAwait(false);
-        var result = await FirmStaffContent.WriteResultAsync(content,
-            Uuid.CreateVersion5(command.CommandId, "operation-result"), staff, ct).ConfigureAwait(false);
+        Result<ReceiverOutcome>? Decide(FirmStaffRecord owner) => owner.Acceptance.Decide(binding) switch
+        {
+            NativeAcceptanceDecision.Replayed => Result<ReceiverOutcome>.Success(new ReceiverOutcome.Replayed(
+                Fact(owner.Stream, owner.Acceptance.SelectedFact!))),
+            NativeAcceptanceDecision.Conflict => Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError),
+            _ when owner.IsRejected => Superseded("The registration was rejected.", null),
+            _ => null,
+        };
+        var prepared = await NativeReceiverPreparation.PrepareAsync<FirmStaffRecord, Completion>(reader,
+            () => new FirmStaffRecord(command.StaffMemberId, command.CommandId), Decide,
+            async (owner, token) =>
+            {
+                var claim = await reader.HydrateAsync(new FirmStaffIdentityClaim(command.UserId), token)
+                    .ConfigureAwait(false);
+                if (!claim.IsClaimed)
+                    return Result<Completion>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The permanent canonical-user claim is not visible yet.", true));
+                if (claim.ClaimedByStaffMemberId != command.StaffMemberId || claim.Claimed!.Intent != command.Intent)
+                    return Result<Completion>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The canonical user is claimed by another staff registration."));
+                var staff = await FirmStaffContent.WriteStaffAsync(content,
+                    Uuid.CreateVersion5(command.CommandId, "staff-content"), FirmStaffContent.RegisteredView(intent), token)
+                    .ConfigureAwait(false);
+                var result = await FirmStaffContent.WriteResultAsync(content,
+                    Uuid.CreateVersion5(command.CommandId, "operation-result"), staff, token).ConfigureAwait(false);
+                return Result<Completion>.Success(new Completion(staff, result, owner.Version,
+                    owner.CommittedStreamPosition, owner.ReplayCut.Digest));
+            }, ct).ConfigureAwait(false);
+        if (!prepared.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(prepared.Error!);
+        if (prepared.Value!.Outcome is { } known)
+            return known;
+        var candidate = prepared.Value.Value!;
         for (var attempt = 1; ; attempt++)
         {
             try
@@ -127,7 +154,11 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
 
                         if (record.IsRejected)
                             return AggregateOutcome.Discard(Result<Step>.Success(new Step(null, false, null)));
-                        var completed = record.CompleteRegistration(provenance, staff, result);
+                        if ((record.Version, record.CommittedStreamPosition, record.ReplayCut.Digest) !=
+                            (candidate.Version, candidate.Position, candidate.Digest))
+                            return AggregateOutcome.Discard(Result<Step>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                "The prepared staff completion prefix changed before append.", true)));
+                        var completed = record.CompleteRegistration(provenance, candidate.Staff, candidate.Result);
                         return completed.IsSuccess
                             ? AggregateOutcome.Commit(Result<Step>.Success(
                                 new Step(Fact(record.Stream, record.Acceptance.SelectedFact!), true, null)))
@@ -152,8 +183,9 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
         RejectFirmStaffRegistration command, CancellationToken ct)
     {
         var recordStream = new FirmStaffRecord(command.OperationId).Stream;
-        if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty || command.Target != recordStream ||
-            command.Generation != FirmStaffEffects.Generation)
+        if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty || command.FailureProof is null ||
+            command.Target != recordStream ||
+            command.Generation != FirmStaffEffects.Generation || command.ExpectedRevision != 0)
             return Permanent("The rejection names another staff stream or generation.");
         var record = await reader.HydrateAsync(new FirmStaffRecord(command.OperationId, command.CommandId), ct)
             .ConfigureAwait(false);
@@ -163,10 +195,13 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
         try
         {
             intent = await FirmStaffContent.ReadIntentAsync(content, command.FailureProof, ct).ConfigureAwait(false);
+            FirmStaffContent.RequireIntent(record, intent);
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return Permanent($"The frozen registration cannot be verified: {exception.Message}");
+            return exception is ImmutableContentUnavailableException
+                ? Transient($"The frozen registration is not available: {exception.Message}")
+                : Permanent($"The frozen registration cannot be verified: {exception.Message}");
         }
 
         var provenance = FirmStaffEffects.Child(command.CommandId, nameof(RejectFirmStaffRegistration),
@@ -262,10 +297,13 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
         try
         {
             intent = await FirmStaffContent.ReadIntentAsync(content, intentReference, ct).ConfigureAwait(false);
+            FirmStaffContent.RequireIntent(record, intent);
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return new Verified(null, null, Permanent($"The frozen registration cannot be verified: {exception.Message}"));
+            return new Verified(null, null, exception is ImmutableContentUnavailableException
+                ? Transient($"The frozen registration is not available: {exception.Message}")
+                : Permanent($"The frozen registration cannot be verified: {exception.Message}"));
         }
 
         return intent.StaffMemberId != staffMemberId || intent.CanonicalUserId != userId ||
@@ -284,6 +322,9 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
 
     static Result<ReceiverOutcome> Transient(string message) =>
         Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict, message, true));
+
+    sealed record Completion(ImmutableContentRef Staff, ImmutableContentRef Result, ulong Version, ulong Position,
+        string Digest);
 
     sealed record Verified(FirmStaffRecord? Record, FirmStaffRegistrationIntent? Intent,
         Result<ReceiverOutcome>? Failure);
