@@ -4,18 +4,9 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Incidents;
 
-/// <summary>
-///     The accepted incident revision. The fact is the native acceptance of the logical <paramref name="CommandId" />
-///     on the incident stream.
-/// </summary>
-[Discriminator("bdgrz.incidents.compliance-incident-revised", 2)]
-public sealed record ComplianceIncidentRevised(
-    Uuid TenantId,
-    Uuid SubjectId,
-    long Revision,
-    Uuid? ActorMemberId,
-    ComplianceIncidentView State,
-    DateTimeOffset OccurredAt,
-    Uuid CommandId,
-    OperationProvenance Operation,
-    ImmutableContentRef? FirstResponse) : DomainEvent, INativeOperationFact;
+/// <summary>One bounded native incident fact with exact immutable business payload and original accepted response.</summary>
+[Discriminator("bdgrz.incidents.compliance-incident-revised", 3)]
+public sealed record ComplianceIncidentRevised(Uuid TenantId, Uuid SubjectId, long Revision, Uuid? ActorMemberId,
+    ComplianceIncidentAuthorityHeader Header, ImmutableContentRef CurrentContent, ImmutableContentRef Change, long NativeSequence,
+    int ChangeCount, OperationProvenance Operation, ImmutableContentRef FirstResponse, ImmutableContentRef OperationResult,
+    DateTimeOffset OccurredAt) : DomainEvent, IComplianceIncidentFact;

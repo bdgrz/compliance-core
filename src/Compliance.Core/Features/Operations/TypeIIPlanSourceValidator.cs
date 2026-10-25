@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Remediation;
@@ -6,7 +7,6 @@ using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.AuditOutcome;
 using ExaminationEngagementAggregate = Bdgrz.Compliance.Features.Examinations.ExaminationEngagement;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
@@ -14,7 +14,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 static class TypeIIPlanSourceValidator
 {
     public static async ValueTask<Result<TypeIIPlanSourceValidation>> ValidateAsync(
-        IAggregateReader reader, ControlReader controlSources, FindingReader findings, ControlOperationsReader operating, Uuid tenantId,
+        IAggregateReader reader, ControlReader controlSources, FindingReader findings, ControlOperationsReader operating, SystemDescriptionReader descriptions, Uuid tenantId,
         Uuid programId, Uuid examinationId, TypeIIPlanContent content, DateTimeOffset proposedAt, CancellationToken ct)
     {
         if (content is null || content.ExaminationId != examinationId ||
@@ -93,14 +93,23 @@ static class TypeIIPlanSourceValidator
             return Failure(RequestErrorKind.Conflict,
                 "The approved system-description version must be included in the Type I baseline.");
         var descriptionSource = descriptionSources[0];
-        var description = await reader.HydrateAsync(new SystemDescriptionAggregate(tenantId,
-            programId, descriptionSource.RecordId), ct).ConfigureAwait(false);
+        SystemDescriptionReadSnapshot description;
+        SystemDescriptionVersionSource? selectedDescription;
+        try
+        {
+            description = await descriptions.ReadAsync(tenantId, programId, descriptionSource.RecordId, ct).ConfigureAwait(false);
+            selectedDescription = await descriptions.VersionSourceAsync(tenantId, programId, descriptionSource.RecordId, content.SystemDescriptionVersionId, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<TypeIIPlanSourceValidation>.Failure(SystemDescriptionReadFailure.Of(failure));
+        }
         var descriptionView = description.Read();
-        var descriptionVersion = description.FindVersion(content.SystemDescriptionVersionId);
-        var approval = description.FindApproval(content.SystemDescriptionVersionId);
+        var descriptionVersion = selectedDescription?.Version;
+        var approval = selectedDescription?.Approval;
         var binding = descriptionView.Bindings.SingleOrDefault(item =>
             item.VersionId == content.SystemDescriptionVersionId && item.Purpose == "type_i_baseline");
-        if (descriptionVersion is not { Status: "approved" } ||
+        if (selectedDescription?.ApprovalSource is null || descriptionVersion is not { Status: "approved" } ||
             descriptionVersion.TenantId != tenantId || descriptionVersion.ProgramId != programId ||
             descriptionVersion.SystemDescriptionId != descriptionSource.RecordId ||
             descriptionVersion.Scope.Stage != "type_i" ||

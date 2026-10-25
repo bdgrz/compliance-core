@@ -1,0 +1,62 @@
+{
+  "reason": "Existing inline-v1 fact shape was occupied. Reference-based incompatible native payloads advance to2. Historical10-23 target catalog selected1; this audit reconciles actual implementation without rewriting historical evidence.",
+  "rows": [
+    {
+      "event": "SystemDescriptionDraftCreated",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.systemdescription.system-description-draft-created"
+    },
+    {
+      "event": "SystemDescriptionDraftRevised",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.systemdescription.system-description-draft-revised"
+    },
+    {
+      "event": "SystemDescriptionSuccessorProposed",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.systemdescription.system-description-successor-proposed"
+    },
+    {
+      "event": "SystemDescriptionReviewed",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.systemdescription.system-description-reviewed"
+    },
+    {
+      "event": "SystemDescriptionApproved",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.systemdescription.system-description-approved"
+    },
+    {
+      "event": "SystemDescriptionNoChangeRecorded",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.systemdescription.system-description-no-change-recorded"
+    },
+    {
+      "event": "SystemDescriptionSourcesBound",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.systemdescription.system-description-sources-bound"
+    },
+    {
+      "event": "SystemDescriptionBound",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.systemdescription.system-description-bound"
+    }
+  ],
+  "validation": "SystemDescriptionNativeVersionTests:8actual tags plus native roundtrip/oldinline refusal and source-proof actualoffset accept2/refuse1."
+}

@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "4c3005dc2fa8e9ff5b365d3cb5e01c4d34e82341",
+  "sourceCommit": "9788f1d221682600157ba099e352df0850c0aae1",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 511,
-    "factsWithReducer": 487,
-    "factsWithAggregateEmitter": 423,
+    "domainEventContracts": 510,
+    "factsWithReducer": 486,
+    "factsWithAggregateEmitter": 409,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 64,
+    "legacyReducerOnlyFacts": 77,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 110,
+    "aggregateTypesWithCommandPath": 108,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -24,7 +24,7 @@
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 735,
+    "registeredCoreHandlerRegistrations": 738,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 52,
     "unwiredAggregateProducerClassifications": {
@@ -2657,15 +2657,13 @@
           "source": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentDirectoryTests.cs",
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ComplianceIncidentRecorded",
@@ -2676,15 +2674,12 @@
           "source": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCloseHistoryReceiptTests.cs"
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentNativeTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ComplianceIncidentRevised",
@@ -2695,15 +2690,13 @@
           "source": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCloseHistoryReceiptTests.cs"
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentNativeTests.cs",
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ComplianceIncidentSystemDescriptionDecisionRecorded",
@@ -2714,14 +2707,12 @@
           "source": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlApproved",
@@ -4442,14 +4433,12 @@
           "source": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "IndependenceRuleCatalogEngagementUseAuthorized",
@@ -7293,12 +7282,12 @@
           "source": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeVersionContractTests.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SystemDescriptionBound",
@@ -7309,12 +7298,12 @@
           "source": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeVersionContractTests.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SystemDescriptionDraftCreated",
@@ -7325,14 +7314,13 @@
           "source": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionTests.cs"
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeVersionContractTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SystemDescriptionDraftRevised",
@@ -7343,28 +7331,12 @@
           "source": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeVersionContractTests.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "SystemDescriptionExportGenerated",
-      "contract": "src/Compliance.Common/Features/SystemDescription/SystemDescriptionExportGenerated.cs",
-      "reducers": [
-        {
-          "aggregate": "SystemDescription",
-          "source": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SystemDescriptionNoChangeRecorded",
@@ -7375,12 +7347,13 @@
           "source": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Changes/SystemDescriptionDecisionNativeConsumerTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeVersionContractTests.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SystemDescriptionReviewed",
@@ -7391,12 +7364,12 @@
           "source": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeVersionContractTests.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SystemDescriptionSourcesBound",
@@ -7407,14 +7380,12 @@
           "source": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionTests.cs"
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeVersionContractTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SystemDescriptionSuccessorProposed",
@@ -7425,12 +7396,12 @@
           "source": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeVersionContractTests.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SystemInstanceDeclared",
@@ -8150,11 +8121,11 @@
         "test/Compliance.Tests/E2E/BrowserE2EHostIntegrationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantRbacBootstrapReactorTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewInfrastructureTests.cs",
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderAuthorizationTests.cs",
         "test/Compliance.Tests/Features/SourceFacts/EventStoreSourceFactResolverTests.cs",
         "test/Compliance.Tests/Features/SourceFacts/FitzAuthoritativeSnapshotReaderBrokerTests.cs",
-        "test/Compliance.Tests/Features/SourceFacts/FitzAuthoritativeSnapshotReaderTests.cs",
-        "test/Compliance.Tests/Features/SourceFacts/FitzNativeEventReceiptReaderBrokerTests.cs"
+        "test/Compliance.Tests/Features/SourceFacts/FitzAuthoritativeSnapshotReaderTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9926,25 +9897,21 @@
         "ComplianceIncidentSystemDescriptionDecisionRecorded",
         "IncidentResolutionRecorded"
       ],
-      "commandRequests": [
-        "AssessComplianceIncident",
-        "RecordComplianceIncident",
-        "RecordComplianceIncidentResolution",
-        "ReviseComplianceIncident"
-      ],
-      "internalReactionRequests": [
-        "RecordComplianceIncidentSystemDescriptionDecision"
-      ],
+      "commandRequests": [],
+      "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactionHandlerTests.cs",
         "test/Compliance.Tests/Features/Changes/RestrictedComplianceRecordMutationAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentHttpTests.cs",
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentNativeTests.cs",
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCloseHistoryReceiptTests.cs",
-        "test/Compliance.Tests/IncidentFacts.cs"
+        "test/Compliance.Tests/Features/Incidents/IncidentNativeFixture.cs",
+        "test/Compliance.Tests/Features/Incidents/IncidentSeeds.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "ComplianceProgram",
@@ -11776,35 +11743,26 @@
         "SystemDescriptionBound",
         "SystemDescriptionDraftCreated",
         "SystemDescriptionDraftRevised",
-        "SystemDescriptionExportGenerated",
         "SystemDescriptionNoChangeRecorded",
         "SystemDescriptionReviewed",
         "SystemDescriptionSourcesBound",
         "SystemDescriptionSuccessorProposed"
       ],
-      "commandRequests": [
-        "ApproveSystemDescription",
-        "BindSystemDescriptionSources",
-        "BindSystemDescriptionToExamination",
-        "CreateSystemDescriptionDraft",
-        "GenerateSystemDescriptionExport",
-        "ProposeSystemDescriptionSuccessor",
-        "RecordSystemDescriptionNoChangeDecision",
-        "ReviewSystemDescription",
-        "ReviseSystemDescriptionDraft"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Changes/SystemDescriptionDecisionNativeConsumerTests.cs",
         "test/Compliance.Tests/Features/Examinations/RecordManagementAssertionHandlerTests.cs",
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/ProposeTypeIIOperatingPlanHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionTests.cs"
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.NativeOwners.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "SystemInstanceAccessReviewScope",
@@ -14147,7 +14105,7 @@
     {
       "request": "ApproveSystemDescription",
       "contract": "src/Compliance.Common/Features/SystemDescription/ApproveSystemDescription.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, ICallable, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest",
       "classification": "command",
       "handlers": [
         {
@@ -14157,15 +14115,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemDescription"
-      ],
-      "aggregateTargets": [
-        "SystemDescription"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/SystemDescription/DescriptionSeeds.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.SourceProofs.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeTests.cs"
       ],
       "note": ""
     },
@@ -14232,12 +14189,11 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "ComplianceIncident"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs"
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
+        "test/Compliance.Tests/Features/Incidents/IncidentSeeds.cs"
       ],
       "note": ""
     },
@@ -14967,7 +14923,7 @@
     {
       "request": "BindSystemDescriptionSources",
       "contract": "src/Compliance.Common/Features/SystemDescription/BindSystemDescriptionSources.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, ICallable, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest",
       "classification": "command",
       "handlers": [
         {
@@ -14977,18 +14933,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ExaminationEngagement",
-        "SystemDescription",
-        "TypeIIPlan"
-      ],
-      "aggregateTargets": [
-        "SystemDescription"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [
         "TypeIIPeriodReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/SystemDescription/DescriptionSeeds.cs",
         "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs"
       ],
       "note": ""
@@ -14996,7 +14947,7 @@
     {
       "request": "BindSystemDescriptionToExamination",
       "contract": "src/Compliance.Common/Features/SystemDescription/BindSystemDescriptionToExamination.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, ICallable, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest",
       "classification": "command",
       "handlers": [
         {
@@ -15006,14 +14957,11 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemDescription"
-      ],
-      "aggregateTargets": [
-        "SystemDescription"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/SystemDescription/DescriptionSeeds.cs",
         "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs"
       ],
       "note": ""
@@ -17015,7 +16963,7 @@
     {
       "request": "CreateSystemDescriptionDraft",
       "contract": "src/Compliance.Common/Features/SystemDescription/CreateSystemDescriptionDraft.cs",
-      "interfaces": "IRequest, IProgramScopedRequest,\n    IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, ICallable, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest",
       "classification": "command",
       "handlers": [
         {
@@ -17025,16 +16973,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ExaminationEngagement",
-        "SystemDescription"
-      ],
-      "aggregateTargets": [
-        "SystemDescription"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/SystemDescription/DescriptionSeeds.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.SourceProofs.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionHttpTests.cs"
       ],
       "note": ""
     },
@@ -18188,7 +18134,7 @@
     {
       "request": "GenerateSystemDescriptionExport",
       "contract": "src/Compliance.Common/Features/SystemDescription/GenerateSystemDescriptionExport.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest",
       "classification": "command",
       "handlers": [
         {
@@ -18198,15 +18144,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemDescription"
-      ],
-      "aggregateTargets": [
-        "SystemDescription"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionExportBoundaryTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionExportProcessTests.cs"
       ],
       "note": ""
     },
@@ -18925,7 +18869,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ComplianceIncidentReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentDirectoryTests.cs"
       ],
@@ -18946,9 +18892,12 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ComplianceIncidentReader"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentNativeTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -20534,12 +20483,22 @@
       "contract": "src/Compliance.Common/Features/SystemDescription/GetSystemDescription.cs",
       "interfaces": "IRequest<SystemDescriptionView>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "GetSystemDescriptionHandler",
+          "source": "src/Compliance.Core/Features/SystemDescription/GetSystemDescriptionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "SystemDescriptionReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -22032,7 +21991,8 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentNativeTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -23431,12 +23391,22 @@
       "contract": "src/Compliance.Common/Features/SystemDescription/ListSystemDescriptionVersions.cs",
       "interfaces": "IRequest<Page<SystemDescriptionVersionView>>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "ListSystemDescriptionVersionsHandler",
+          "source": "src/Compliance.Core/Features/SystemDescription/ListSystemDescriptionVersionsHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "SystemDescriptionReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -24898,11 +24868,19 @@
       "contract": "src/Compliance.Common/Features/SystemDescription/PreviewSystemDescriptionImpact.cs",
       "interfaces": "IRequest<SystemDescriptionImpactPreview>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "PreviewSystemDescriptionImpactHandler",
+          "source": "src/Compliance.Core/Features/SystemDescription/PreviewSystemDescriptionImpactHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "SystemDescriptionReader"
+      ],
       "testSymbolReferences": [],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -25306,7 +25284,7 @@
     {
       "request": "ProposeSystemDescriptionSuccessor",
       "contract": "src/Compliance.Common/Features/SystemDescription/ProposeSystemDescriptionSuccessor.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, ICallable, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest",
       "classification": "command",
       "handlers": [
         {
@@ -25316,15 +25294,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemDescription"
-      ],
-      "aggregateTargets": [
-        "SystemDescription"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/SystemDescription/DescriptionSeeds.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionExportProcessTests.cs"
       ],
       "note": ""
     },
@@ -25372,7 +25348,8 @@
       "helperServices": [
         "ControlOperationsReader",
         "ControlReader",
-        "FindingReader"
+        "FindingReader",
+        "SystemDescriptionReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ProposeTypeIIOperatingPlanHandlerTests.cs"
@@ -26225,7 +26202,7 @@
     {
       "request": "RecordComplianceIncident",
       "contract": "src/Compliance.Common/Features/Incidents/RecordComplianceIncident.cs",
-      "interfaces": "IRequest, IRestrictedComplianceRecordMutationRequest, ICallable",
+      "interfaces": "IRequest, IRestrictedComplianceRecordMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -26235,14 +26212,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ComplianceIncident"
-      ],
-      "aggregateTargets": [
-        "ComplianceIncident"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentHttpTests.cs",
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentNativeTests.cs",
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentTests.cs",
+        "test/Compliance.Tests/Features/Incidents/IncidentCreationRetryTests.cs",
+        "test/Compliance.Tests/Features/Incidents/IncidentSeeds.cs"
+      ],
       "note": ""
     },
     {
@@ -26259,13 +26238,12 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "ComplianceIncident"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Changes/RestrictedComplianceRecordMutationAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs"
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
+        "test/Compliance.Tests/Features/Incidents/IncidentSeeds.cs"
       ],
       "note": ""
     },
@@ -26283,13 +26261,14 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "ComplianceIncident"
+      "aggregateTargets": [],
+      "helperServices": [
+        "SystemDescriptionReader"
       ],
-      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactionHandlerTests.cs",
-        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs"
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
+        "test/Compliance.Tests/Features/Incidents/IncidentSeeds.cs"
       ],
       "note": "Internal event-driven follow-up command."
     },
@@ -26589,6 +26568,7 @@
         "ManagementAssertion"
       ],
       "helperServices": [
+        "SystemDescriptionReader",
         "TypeIIPeriodReader"
       ],
       "testSymbolReferences": [
@@ -27005,7 +26985,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "SystemDescriptionReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Changes/ChangeSeeds.cs",
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactionHandlerTests.cs"
@@ -27015,7 +26997,7 @@
     {
       "request": "RecordSystemDescriptionNoChangeDecision",
       "contract": "src/Compliance.Common/Features/SystemDescription/RecordSystemDescriptionNoChangeDecision.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, ICallable, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest",
       "classification": "command",
       "handlers": [
         {
@@ -27025,14 +27007,12 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemDescription"
-      ],
-      "aggregateTargets": [
-        "SystemDescription"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Changes/SystemDescriptionDecisionNativeConsumerTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/DescriptionSeeds.cs",
         "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs"
       ],
       "note": ""
@@ -29024,7 +29004,7 @@
     {
       "request": "ReviewSystemDescription",
       "contract": "src/Compliance.Common/Features/SystemDescription/ReviewSystemDescription.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, ICallable, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest",
       "classification": "command",
       "handlers": [
         {
@@ -29034,15 +29014,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemDescription"
-      ],
-      "aggregateTargets": [
-        "SystemDescription"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/SystemDescription/DescriptionSeeds.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.SourceProofs.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeTests.cs"
       ],
       "note": ""
     },
@@ -29343,12 +29322,13 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "ComplianceIncident"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentHttpTests.cs",
+        "test/Compliance.Tests/Features/Incidents/ComplianceIncidentNativeTests.cs",
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
+        "test/Compliance.Tests/Features/Incidents/IncidentSeeds.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCloseHistoryReceiptTests.cs"
       ],
       "note": ""
@@ -29795,7 +29775,7 @@
     {
       "request": "ReviseSystemDescriptionDraft",
       "contract": "src/Compliance.Common/Features/SystemDescription/ReviseSystemDescriptionDraft.cs",
-      "interfaces": "IRequest,\n    IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, ICallable, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest",
       "classification": "command",
       "handlers": [
         {
@@ -29805,15 +29785,15 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SystemDescription"
-      ],
-      "aggregateTargets": [
-        "SystemDescription"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/SystemDescription/DescriptionSeeds.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionExportProcessTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionHttpTests.cs",
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionNativeTests.cs"
       ],
       "note": ""
     },
@@ -30998,7 +30978,8 @@
       "helperServices": [
         "ControlOperationsReader",
         "ControlReader",
-        "FindingReader"
+        "FindingReader",
+        "SystemDescriptionReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",

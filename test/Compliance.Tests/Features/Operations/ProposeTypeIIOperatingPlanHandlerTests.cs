@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Features.SystemDescription;
 using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Features.Content;
@@ -16,7 +17,7 @@ using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.AuditOutcome;
 using ExaminationEngagementAggregate = Bdgrz.Compliance.Features.Examinations.ExaminationEngagement;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
 
 namespace Bdgrz.Compliance.Tests.Features.Operations;
@@ -461,7 +462,8 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
             Findings = new FindingReader(Reader, events, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
             Handler = new ProposeTypeIIOperatingPlanHandler(Executor, Reader, new ControlReader(Reader, events, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()), Findings,
                 new ControlOperationsReader(Reader, events,
-                    scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()), Clock);
+                    scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()), Clock,
+                new SystemDescriptionReader(Reader, events, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()));
         }
 
         public ProposeTypeIIOperatingPlan Request(TypeIIPlanContent content) =>
@@ -564,7 +566,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
             Assert.Null(description.BindToExamination(1, ExaminationId, "type_i_baseline",
                 BaselineId, ExecutiveId, "Chief Executive", Now.AddMinutes(-6)));
             await Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
-            await Writer.SaveAsync(description, new RequestDispatchContext(RequestActor.System));
+            await DescriptionSeeds.WriteAsync(Writer, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), description);
 
             var outcome = new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId);
             Assert.Null(outcome.Record(new AuditOutcomeContent(ExaminationId, "type_i", BaselineId,

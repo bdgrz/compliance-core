@@ -1,22 +1,18 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-public sealed class ReviewSystemDescriptionHandler(IAggregateExecutor executor, TimeProvider clock)
-    : IRequestHandler<ReviewSystemDescription>
+public sealed class ReviewSystemDescriptionHandler(SystemDescriptionOperations operations) : IRequestHandler<ReviewSystemDescription>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<ReviewSystemDescription> context,
-        CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<ReviewSystemDescription> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (!SystemDescriptionCommandActor.TryGet(context.Actor, request.TenantId,
-                out var reviewerMemberId, out var reviewerDisplay))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
-                "System description review requires a Bdgrz member identity.")));
-        return executor.ExecuteAsync(new SystemDescription(request.TenantId, request.ProgramId,
-                request.DescriptionId), aggregate => CommandFailureRequestAdapter.ToOutcome(
-                aggregate.Review(request.Version, reviewerMemberId, reviewerDisplay, request.Outcome,
-                    request.Comments, clock.GetUtcNow())), context, ct);
+        if (!SystemDescriptionCommandActor.TryGet(context.Actor, request.TenantId, out var member, out var display))
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Unauthorized, "A description decision requires a Bdgrz member identity.")));
+        return operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.DescriptionId, request.CommandId,
+            nameof(ReviewSystemDescription), request.ExpectedRevision, (snapshot, operation, token) =>
+            {
+                return ValueTask.FromResult(SystemDescriptionOperations.Outcome(snapshot.Rules.Review(request.Version, member, display, request.Outcome, request.Comments, operation.AcceptedAt)));
+            }, (rules, operation) => new SystemDescriptionReviewedBody(request.TenantId, request.ProgramId, request.DescriptionId, rules.Revision, rules.Reviews.First(item => item.Version == request.Version && item.ReviewerMemberId == member), operation.AcceptedAt), ct);
     }
 }

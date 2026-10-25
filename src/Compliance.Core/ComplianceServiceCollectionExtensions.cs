@@ -597,9 +597,20 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ISignificantChangeDirectoryReader>(provider =>
             provider.GetRequiredService<FitzSignificantChangeDirectory>());
         services.AddScoped<IChangeImpactWorkOwnershipReader, AccountableWorkItemOwnershipReader>();
+        services.AddScoped<SystemDescriptionReader>();
+        services.AddScoped<SystemDescriptionOperations>();
+        services.AddScoped<SystemDescriptionSnapshotSources>();
+        services.AddScoped<SystemDescriptionSourceResolver>();
+        services.AddScoped<SystemDescriptionReadConsistency>();
+        services.AddSingleton<ISystemDescriptionExportProcesses, FitzKvSystemDescriptionExportProcesses>();
+        services.AddScoped<SystemDescriptionExportProcess>();
         services.AddScoped<ISystemDescriptionDecisionCorrelationReader,
             AggregateSystemDescriptionDecisionCorrelationReader>();
         services.AddScoped<RestrictedComplianceRecordVisibility>();
+        services.AddScoped<ComplianceIncidentReader>();
+        services.AddScoped<IncidentOperations>();
+        services.AddScoped<ComplianceIncidentReadConsistency>();
+        services.AddScoped<ComplianceIncidentDirectoryReadConsistency>();
         services.AddScoped<FitzComplianceIncidentDirectory>();
         services.AddScoped<IComplianceIncidentDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzComplianceIncidentDirectory>());
@@ -1355,6 +1366,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordSystemDescriptionNoChangeDecisionHandler>()
             .AddRequestHandler<BindSystemDescriptionToExaminationHandler>()
             .AddRequestHandler<GenerateSystemDescriptionExportHandler>()
+            .AddRequestHandler<GetSystemDescriptionHandler>()
+            .AddRequestHandler<ListSystemDescriptionVersionsHandler>()
+            .AddRequestHandler<PreviewSystemDescriptionImpactHandler>()
             .AddRequestHandler<AnnotateReadinessGapHandler>()
             .AddRequestHandler<ListReadinessAnnotationsHandler>()
             .AddRequestAuthorizer<ReadinessAnnotationCompartmentAuthorizer>()

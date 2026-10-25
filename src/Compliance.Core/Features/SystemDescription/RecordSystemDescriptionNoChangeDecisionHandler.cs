@@ -1,22 +1,18 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-public sealed class RecordSystemDescriptionNoChangeDecisionHandler(IAggregateExecutor executor,
-    TimeProvider clock) : IRequestHandler<RecordSystemDescriptionNoChangeDecision>
+public sealed class RecordSystemDescriptionNoChangeDecisionHandler(SystemDescriptionOperations operations) : IRequestHandler<RecordSystemDescriptionNoChangeDecision>
 {
-    public ValueTask<Result> HandleAsync(
-        IRequestContext<RecordSystemDescriptionNoChangeDecision> context, CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<RecordSystemDescriptionNoChangeDecision> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (!SystemDescriptionCommandActor.TryGet(context.Actor, request.TenantId,
-                out var actorMemberId, out var actorDisplay))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
-                "A system description period-change decision requires a Bdgrz member identity.")));
-        return executor.ExecuteAsync(new SystemDescription(request.TenantId, request.ProgramId,
-                request.DescriptionId), aggregate => CommandFailureRequestAdapter.ToOutcome(
-                aggregate.RecordNoChangeDecision(request.Version, request.ChangeId, request.Rationale,
-                    actorMemberId, actorDisplay, clock.GetUtcNow())), context, ct);
+        if (!SystemDescriptionCommandActor.TryGet(context.Actor, request.TenantId, out var member, out var display))
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Unauthorized, "A description decision requires a Bdgrz member identity.")));
+        return operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.DescriptionId, request.CommandId,
+            nameof(RecordSystemDescriptionNoChangeDecision), request.ExpectedRevision, (snapshot, operation, token) =>
+            {
+                return ValueTask.FromResult(SystemDescriptionOperations.Outcome(snapshot.Rules.RecordNoChangeDecision(request.Version, request.ChangeId, request.Rationale, member, display, operation.AcceptedAt)));
+            }, (rules, operation) => new SystemDescriptionNoChangeRecordedBody(request.TenantId, request.ProgramId, request.DescriptionId, rules.Revision, rules.NoChangeDecisions.First(item => item.Version == request.Version && item.ChangeId == request.ChangeId), operation.AcceptedAt), ct);
     }
 }

@@ -13,8 +13,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>Authoritative change/incident histories with exact scope, current restricted visibility and receipt cutoff.</summary>
-public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEventReader events,
-    RestrictedComplianceRecordVisibility visibility, SignificantChangeReader changes, IImmutableContentStore content, INativeEventReceiptReader receipts)
+public sealed class TypeIIPeriodCloseHistory(IDomainEventReader events,
+    RestrictedComplianceRecordVisibility visibility, SignificantChangeReader changes, IImmutableContentStore content, ComplianceIncidentReader incidents, INativeEventReceiptReader receipts)
 {
     const int MaximumRecords = 100_000;
 
@@ -50,15 +50,16 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
                 }
                 else
                 {
-                    var current = await reader.HydrateAsync(new ComplianceIncident(period.TenantId, period.ProgramId, id), ct).ConfigureAwait(false);
-                    var latest = current.Current ?? throw new ImmutableContentUnavailableException("A discovered native incident is not readable yet.");
-                    var past = IncidentState(group.Last().Payload)
-                        ?? throw new ImmutableContentIntegrityException("A scoped incident history has no complete final state.");
+                    var current = await incidents.ReadAuthorityAsync(period.TenantId, period.ProgramId, id, ct).ConfigureAwait(false)
+                        ?? throw new ImmutableContentUnavailableException("A discovered native incident is not readable yet.");
+                    var latest = current.Owner.Header!;
+                    var past = (await incidents.ReadThroughAsync(period.TenantId, period.ProgramId, id, recordedThrough, ct).ConfigureAwait(false)).View
+                        ?? throw new ImmutableContentIntegrityException("A scoped incident history has no complete verified final immutable state.");
                     if (past.Current is null || DateOnly.FromDateTime(past.Current.Content.OccurredAt.UtcDateTime) > period.PeriodEnd ||
                         past.Resolution is { } resolution && DateOnly.FromDateTime(resolution.ResolvedAt.UtcDateTime) < period.PeriodStart)
                         continue;
-                    if (!await visibility.CanReadAsync(period.TenantId, actor, latest.Current!.Content.HandlingClass,
-                            latest.Assessments.Select(item => item.AssessedByMemberId).ToArray(), ct).ConfigureAwait(false))
+                    if (!await visibility.CanReadAsync(period.TenantId, actor, latest.HandlingClass,
+                            current.Authority.Assessments.Select(item => item.AssessorMemberId).ToArray(), ct).ConfigureAwait(false))
                         throw new CloseSourceAccessException();
                     if (!past.PeriodCloseEligible)
                         blockers.Add($"Compliance incident {id} lacks its exact resolved follow-up and description disposition.");
@@ -110,6 +111,25 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
                     ContentBlobs = [new(change.CurrentContent,Convert.ToBase64String(body.Span)),
                     new(change.Change,Convert.ToBase64String(mutation.Span))]
                 };
+            }
+            if (record.Event is IComplianceIncidentFact incident)
+            {
+                var authority = await content.ReadJsonAsync<ComplianceIncidentCurrentAuthority>(tenant.ToString(), incident.CurrentContent, ct).ConfigureAwait(false);
+                var mutation = await content.ReadJsonAsync<ComplianceIncidentMutation>(tenant.ToString(), incident.Change, ct).ConfigureAwait(false);
+                var references = new[] { incident.CurrentContent,incident.Change,authority.VersionContent,authority.AssessmentContent,
+                    authority.DecisionContent,authority.ResolutionContent,mutation.Payload }.OfType<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef>().ToList();
+                if (authority.ResolutionContent is { } resolutionRef)
+                {
+                    var resolution = await content.ReadJsonAsync<ComplianceIncidentResolutionView>(tenant.ToString(), resolutionRef, ct).ConfigureAwait(false);
+                    references.AddRange(resolution.FollowUpCompletions.Select(item => item.Proof.RequiredFacts));
+                }
+                var blobs = new List<TypeIIPeriodCloseContentBlob>();
+                foreach (var reference in references.Distinct().OrderBy(item => item.Schema, StringComparer.Ordinal).ThenBy(item => item.ContentId.ToString(), StringComparer.Ordinal))
+                {
+                    var bytes = await content.ReadVerifiedAsync(tenant.ToString(), reference, ct).ConfigureAwait(false);
+                    blobs.Add(new(reference, Convert.ToBase64String(bytes.Span)));
+                }
+                captured = captured with { ContentBlobs = blobs.ToArray() };
             }
             result.Add(captured);
         }
@@ -170,16 +190,10 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
     static (Uuid Tenant, Uuid Program, Uuid Record, DateTimeOffset At)? State(DomainEvent fact) => fact switch
     {
         ISignificantChangeFact e => (e.TenantId, e.Header.ProgramId, e.SubjectId, e.Operation.AcceptedAt),
-        ComplianceIncidentRecorded e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
-        ComplianceIncidentRevised e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
-        ComplianceIncidentImpactAssessed e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
-        ComplianceIncidentSystemDescriptionDecisionRecorded e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
-        IncidentResolutionRecorded e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
+        IComplianceIncidentFact e => (e.TenantId, e.Header.ProgramId, e.SubjectId, e.Operation.AcceptedAt),
         _ => null,
     };
 
-    static ComplianceIncidentView? IncidentState(JsonElement payload) => payload.TryGetProperty("state", out var state)
-        ? JsonSerializer.Deserialize(state, ComplianceCoreJsonContext.Default.ComplianceIncidentView) : null;
     static bool Same(IReadOnlyList<TypeIIPeriodCloseNativeSource> left, IReadOnlyList<TypeIIPeriodCloseNativeSource> right) =>
         left.Count == right.Count && left.Zip(right).All(pair => pair.First.Fact == pair.Second.Fact &&
             pair.First.EventKind == pair.Second.EventKind && pair.First.RecordedAt == pair.Second.RecordedAt && pair.First.PayloadSha256 == pair.Second.PayloadSha256 &&

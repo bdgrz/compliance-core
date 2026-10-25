@@ -1,0 +1,47 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Native SystemDescription and ComplianceIncident bounded command authority, exact verified history/current snapshots, all actual producer/read/reactor/source consumers, scoped HTTP and technical export authority.",
+  "validation": {
+    "genuineOldApiRedFailed": {
+      "systemDescription": 4,
+      "incident": 3
+    },
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 364,
+    "productionHttpPassed": 13,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "coverageExport": "pass",
+    "renderedAndInspectedPages": {
+      "docx": 2,
+      "pdf": 1
+    },
+    "backendUnitPassed": 6249,
+    "backendUnitFailed": 0
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 124,
+    "signalsTriaged": 7,
+    "mergeProbability": 0.68,
+    "adopted": "merge scoped repair after final local checks; continue remaining owners"
+  },
+  "parentRefinements": [
+    "Rebased resolved156 over Finding/Operating/Readiness batch; retained authenticated close receipt factory and added native Incident reader to all TypeII close fixtures.",
+    "Fixed invalid nested byte-array initializer; stateless renderer now static; invariant Parse uses previously authenticated member provenance; completed analyzer-specific concrete fixture types and static section IDs.",
+    "Added SDK ICallable transport marker to8 personal HTTP commands and App serializer roots for section lists/optional limit. Retained plain IRequest200 Unit routes; no MCP registrations.",
+    "Resolved fixture Content property/factory collision; restored metadata explicitly on forged DomainEvent clone to test committed payload contradiction.",
+    "Actual-source missing stream/event completion references are exact transient Conflict; malformed/wrong tuple/tenant/kind remain Validation. Archive seed now includes previously required governed resolution evidence.",
+    "Unsupported PDF retry compares exact Kind/Message/IsTransient values, since RequestError objects have reference identity."
+  ],
+  "qualification": [
+    "SystemDescription narrative/version/review/approval/no-change/binding and Incident component/history authority externalized to verified immutable content; native owners keep compact headers/references/selected acceptance. Full transient replay remains O(N); SDK-memory guarantee not claimed.",
+    "Eight occupied inline SystemDescription factv1 shapes advance to2; five prior Incident native factv2 shapes advance to3. No retained conversion or snapshot compatibility. Explicit audit reconciles stale targetv1 selections.",
+    "Existing current actor, authorization, tenant/program/restricted visibility, exact source identities, original Unit200 and identified write/read contracts preserved. Stronger unselected held-current approval/approved_successor protocol not fabricated; actual no_change path retained.",
+    "Technical export uses actual FitzKV tenant-route atomic key+root binding, immutable original approved input, CAS attempts/output/result and forward restart/unknown outcome recovery. No business revision/event, HTTP/MCP/download-ticket added. Actual DOCX/PDF rendered with bundled LibreOffice/Poppler and allpages inspected.",
+    "No deployment, live broker workload/qualification or unselected retained migration. AuditorRequest/query, Advisor and other owner families continue separately."
+  ]
+}

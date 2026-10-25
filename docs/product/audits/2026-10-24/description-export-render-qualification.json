@@ -1,0 +1,46 @@
+{
+  "source": "Actual application export process through unit fixture using Fitz KV implementation with in-memory KV and verified artifact store; no production/broker qualification.",
+  "docxRender": "Bundled LibreOffice through canonical render_docx.py;2 pages visually inspected; readable, no clipping/overlap.",
+  "pdfRender": "Poppler;1 page visually inspected; readable, no clipping/overlap.",
+  "textExtraction": {
+    "docxApprovedNarrative": true,
+    "pdfApprovedNarrative": true
+  },
+  "files": [
+    {
+      "path": "docx-render/page-1.png",
+      "sha256": "9dbe61506830bb9b54a225dbd9dc80e4c1739c6a860a76849041805d43c9ba9c",
+      "bytes": 350264
+    },
+    {
+      "path": "docx-render/page-2.png",
+      "sha256": "c3b3ec11ddfbaf851bd46a89b374999c90fb7ea0ca16cd4b0390d9701c62acc9",
+      "bytes": 22995
+    },
+    {
+      "path": "docx-render/system-description.pdf",
+      "sha256": "9b51b1e936fc62e54e487e180d227f060f0bfbc4567990b5f67bfb9e83c98c96",
+      "bytes": 27296
+    },
+    {
+      "path": "pdf-page-1.png",
+      "sha256": "055cd95ec727f47294d6f537112d17d06330a47f688ab185302126a2e978e00d",
+      "bytes": 193243
+    },
+    {
+      "path": "system-description-source.json",
+      "sha256": "5d3c9513e2f6fc31ec3ebfe6a5659577e1ab050f73350da6ae93afeddf84910a",
+      "bytes": 2836
+    },
+    {
+      "path": "system-description.docx",
+      "sha256": "4575bf7dcd848c4808e6a92838afceea60d7bb96a3bbcaf897c19265a96918b1",
+      "bytes": 3751
+    },
+    {
+      "path": "system-description.pdf",
+      "sha256": "adcb45284454af9347942dc9769aace4ef505111cfacb908711a568ba5c4eea1",
+      "bytes": 6141
+    }
+  ]
+}

@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Readiness;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,9 +27,11 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(long))]
+[JsonSerializable(typeof(int?))]
 [JsonSerializable(typeof(DateOnly))]
 [JsonSerializable(typeof(Uuid))]
 [JsonSerializable(typeof(IReadOnlyList<Uuid>))]
+[JsonSerializable(typeof(IReadOnlyList<SystemDescriptionSection>))]
 [JsonSerializable(typeof(AssignResponsibility))]
 [JsonSerializable(typeof(RatifyIndependenceRuleVersion))]
 [JsonSerializable(typeof(IndependenceRuleRatificationView))]

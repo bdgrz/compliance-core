@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SystemDescription;
 using Bdgrz.Compliance.Hosting.NativeResponses;
 using Bdgrz.Compliance.Features.MethodologyTemplates;
 using Bdgrz.Compliance.Features.NamedRecords;
@@ -2952,6 +2953,18 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Changes");
+    app.MapPortiaPut<RecordComplianceIncident>("/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RecordComplianceIncident>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Incidents");
+    app.MapPortiaPut<ReviseComplianceIncident>("/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}/revisions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseComplianceIncident>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Incidents");
+    app.MapPortiaPut<AssessComplianceIncident>("/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}/assessments/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<AssessComplianceIncident>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Incidents");
+    app.MapPortiaPut<RecordComplianceIncidentResolution>("/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}/resolutions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RecordComplianceIncidentResolution>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Incidents");
     app.MapPortiaGet<GetComplianceImpactAssessment, ComplianceIncidentImpactAssessmentView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}/impact-assessment")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
@@ -2976,6 +2989,61 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/assessments/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<AssessSignificantChange>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Changes");
+    app.MapPortiaPut<ApproveSystemDescription>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/approve-system-description/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ApproveSystemDescription>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
+    app.MapPortiaPut<BindSystemDescriptionSources>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/bind-system-description-sources/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<BindSystemDescriptionSources>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
+    app.MapPortiaPut<BindSystemDescriptionToExamination>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/bind-system-description-to-examination/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<BindSystemDescriptionToExamination>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
+    app.MapPortiaPut<CreateSystemDescriptionDraft>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/create-system-description-draft", config => config.OnNativeResult()).WithNativeFirstResponse<CreateSystemDescriptionDraft>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
+    app.MapPortiaPut<ProposeSystemDescriptionSuccessor>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/propose-system-description-successor/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ProposeSystemDescriptionSuccessor>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
+    app.MapPortiaPut<RecordSystemDescriptionNoChangeDecision>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/record-system-description-no-change-decision/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RecordSystemDescriptionNoChangeDecision>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
+    app.MapPortiaPut<ReviewSystemDescription>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/review-system-description/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviewSystemDescription>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
+    app.MapPortiaPut<ReviseSystemDescriptionDraft>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/revise-system-description-draft/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseSystemDescriptionDraft>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
+    app.MapPortiaGet<GetSystemDescription, SystemDescriptionView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}", endpoint => endpoint.OnBind(Program.BindSystemDescriptionRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("description_id", PortiaHttpParameterLocation.Route, required: true))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
+    app.MapPortiaGet<ListSystemDescriptionVersions, Page<SystemDescriptionVersionView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/versions", endpoint => endpoint.OnBind(Program.BindSystemDescriptionVersions)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("description_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<int?>("limit", PortiaHttpParameterLocation.Query, required: false)
+                .Parameter<string?>("cursor", PortiaHttpParameterLocation.Query, required: false))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
+    app.MapPortiaGet<PreviewSystemDescriptionImpact, SystemDescriptionImpactPreview>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/impact-preview", endpoint => endpoint.OnBind(Program.BindSystemDescriptionImpact)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("description_id", PortiaHttpParameterLocation.Route, required: true))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("System descriptions");
     app.MapMethods(
         "/api/{**path}",
         ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],
@@ -3017,6 +3085,21 @@ static async Task RunWorkerAsync(string[] args)
 /// </summary>
 public partial class Program
 {
+    internal static GetSystemDescription BindSystemDescriptionRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"), ApplicationRouteId(context, "description_id"));
+    internal static PreviewSystemDescriptionImpact BindSystemDescriptionImpact(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"), ApplicationRouteId(context, "description_id"));
+    internal static ListSystemDescriptionVersions BindSystemDescriptionVersions(HttpContext context)
+    {
+        var raw = PortiaHttpBinding.ReadQuery(context, "limit");
+        int? limit = null;
+        if (raw is not null)
+            limit = int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) ? parsed :
+                throw new BadHttpRequestException("The description version limit is invalid.");
+        return new ListSystemDescriptionVersions(ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
+            ApplicationRouteId(context, "description_id"), limit, PortiaHttpBinding.ReadQuery(context, "cursor"));
+    }
+
     internal static GetObservationPeriod BindObservationPeriodRead(HttpContext context) => new(
         ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"), ApplicationRouteId(context, "period_id"));
 

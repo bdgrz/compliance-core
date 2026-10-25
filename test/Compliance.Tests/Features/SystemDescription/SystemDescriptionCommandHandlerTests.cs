@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Cntryl.Fitz.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.SystemDescription;
@@ -20,21 +23,21 @@ public sealed class SystemDescriptionCommandHandlerTests
 
         // Act
         var review = await fixture.ReviewHandler().HandleAsync(Fixture.Context(
-            fixture.ReviewerId, new ReviewSystemDescription(fixture.TenantId, fixture.ProgramId,
-                descriptionId, 1, "approve", "Required sections and current sources reviewed.")),
+            fixture.ReviewerId, new ReviewSystemDescription(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                descriptionId, 1, "approve", "Required sections and current sources reviewed.", 1)),
             CancellationToken.None);
         var approval = await fixture.ApproveHandler().HandleAsync(Fixture.Context(
-            fixture.ApproverId, new ApproveSystemDescription(fixture.TenantId, fixture.ProgramId,
-                descriptionId, 1, "Management approves the current system description.")),
+            fixture.ApproverId, new ApproveSystemDescription(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                descriptionId, 1, "Management approves the current system description.", 2)),
             CancellationToken.None);
         var binding = await fixture.BindHandler().HandleAsync(Fixture.Context(fixture.ApproverId,
-            new BindSystemDescriptionToExamination(fixture.TenantId, fixture.ProgramId,
-                descriptionId, 1, fixture.ExaminationId, "type_i_baseline")), CancellationToken.None);
+            new BindSystemDescriptionToExamination(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                descriptionId, 1, fixture.ExaminationId, "type_i_baseline", 3)), CancellationToken.None);
         var export = await fixture.ExportHandler().HandleAsync(Fixture.Context(fixture.ApproverId,
-            new GenerateSystemDescriptionExport(fixture.TenantId, fixture.ProgramId,
+            new GenerateSystemDescriptionExport(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 descriptionId, 1, "pdf", "type-i-description-v1")), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new Bdgrz.Compliance.Features.SystemDescription.SystemDescription(fixture.TenantId,
-            fixture.ProgramId, descriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, descriptionId);
 
         // Assert
         Assert.True(review.IsSuccess, review.Error?.Message);
@@ -43,7 +46,11 @@ public sealed class SystemDescriptionCommandHandlerTests
         Assert.True(export.IsSuccess, export.Error?.Message);
         Assert.Equal("approved", saved.CurrentVersion!.Status);
         Assert.Equal("type_i_baseline", Assert.Single(saved.Read().Bindings).Purpose);
-        Assert.Equal("pdf", Assert.Single(saved.Read().Exports).Format);
+        Assert.Equal(4, saved.Revision);
+        var state = await fixture.ExportProcesses.ReadAsync(fixture.TenantId, SystemDescriptionExportProcess.IdFor(descriptionId, 1, "type-i-description-v1"), Uuid.Empty, CancellationToken.None);
+        var output = await fixture.Content.ReadJsonAsync<SystemDescriptionExportOutput>(fixture.TenantId.ToString(), state!.Output!);
+        Assert.Equal("pdf", output.Format);
+        Assert.True(output.Artifact.Length > 0);
     }
 
     [Fact]
@@ -53,16 +60,16 @@ public sealed class SystemDescriptionCommandHandlerTests
         await using var fixture = new Fixture();
         var descriptionId = await fixture.SeedDescriptionAsync(typeII: false);
         var review = await fixture.ReviewHandler().HandleAsync(Fixture.Context(fixture.ReviewerId,
-            new ReviewSystemDescription(fixture.TenantId, fixture.ProgramId, descriptionId,
-                1, "approve", "Independent review complete.")), CancellationToken.None);
+            new ReviewSystemDescription(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, descriptionId,
+                1, "approve", "Independent review complete.", 1)), CancellationToken.None);
         Assert.True(review.IsSuccess, review.Error?.Message);
 
         // Act
         var result = await fixture.ApproveHandler().HandleAsync(Fixture.Context(fixture.UserId,
-            new ApproveSystemDescription(fixture.TenantId, fixture.ProgramId, descriptionId,
-                1, "Author cannot approve their own description.")), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new Bdgrz.Compliance.Features.SystemDescription.SystemDescription(fixture.TenantId,
-            fixture.ProgramId, descriptionId));
+            new ApproveSystemDescription(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, descriptionId,
+                1, "Author cannot approve their own description.", 2)), CancellationToken.None);
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, descriptionId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -80,11 +87,11 @@ public sealed class SystemDescriptionCommandHandlerTests
 
         // Act
         var result = await fixture.NoChangeHandler().HandleAsync(Fixture.Context(fixture.ReviewerId,
-            new RecordSystemDescriptionNoChangeDecision(fixture.TenantId, fixture.ProgramId,
-                descriptionId, 1, changeId, "The reviewed change does not alter the described system.")),
+            new RecordSystemDescriptionNoChangeDecision(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                descriptionId, 1, changeId, "The reviewed change does not alter the described system.", 1)),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new Bdgrz.Compliance.Features.SystemDescription.SystemDescription(fixture.TenantId,
-            fixture.ProgramId, descriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, descriptionId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -101,11 +108,11 @@ public sealed class SystemDescriptionCommandHandlerTests
 
         // Act
         var result = await fixture.ProposeSuccessorHandler().HandleAsync(Fixture.Context(
-            fixture.UserId, new ProposeSystemDescriptionSuccessor(fixture.TenantId,
+            fixture.UserId, new ProposeSystemDescriptionSuccessor(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, descriptionId, 3, "Reflect the approved service expansion.")),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new Bdgrz.Compliance.Features.SystemDescription.SystemDescription(
-            fixture.TenantId, fixture.ProgramId, descriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(
+            fixture.TenantId, fixture.ProgramId, descriptionId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -130,6 +137,11 @@ public sealed class SystemDescriptionCommandHandlerTests
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public Uuid ReviewerId { get; } = Uuid.CreateVersion4();
         public Uuid ApproverId { get; } = Uuid.CreateVersion4();
+        public InMemoryEventStore Events { get; } = new();
+        public IImmutableContentStore Content { get; } = DescriptionSeeds.Content();
+        public FitzKvSystemDescriptionExportProcesses ExportProcesses { get; } = new FitzKvSystemDescriptionExportProcesses(new InMemoryKvClient());
+        public SystemDescriptionReader Descriptions => new(Reader, Events, Content);
+        public SystemDescriptionOperations Operations => new(new NativeOperationExecutor(Reader, Executor, Content), Descriptions, Content, _clock);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -137,7 +149,7 @@ public sealed class SystemDescriptionCommandHandlerTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(Events);
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
@@ -146,13 +158,16 @@ public sealed class SystemDescriptionCommandHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public ReviewSystemDescriptionHandler ReviewHandler() => new(Executor, _clock);
-        public ApproveSystemDescriptionHandler ApproveHandler() => new(Executor, _clock);
-        public RecordSystemDescriptionNoChangeDecisionHandler NoChangeHandler() => new(Executor, _clock);
-        public BindSystemDescriptionToExaminationHandler BindHandler() => new(Executor, _clock);
-        public GenerateSystemDescriptionExportHandler ExportHandler() => new(Executor, _clock);
+        public ReviewSystemDescriptionHandler ReviewHandler() => new(Operations);
+        public ApproveSystemDescriptionHandler ApproveHandler() => new(Operations);
+        public RecordSystemDescriptionNoChangeDecisionHandler NoChangeHandler() => new(Operations);
+        public BindSystemDescriptionToExaminationHandler BindHandler() => new(Operations);
+        readonly string _artifactDirectory = Path.Combine(Path.GetTempPath(), "bdgrz-description-command-" + Guid.NewGuid().ToString("N"));
+        public GenerateSystemDescriptionExportHandler ExportHandler() => new(new SystemDescriptionExportProcess(ExportProcesses, Descriptions, Content,
+            new Bdgrz.Compliance.Features.Artifacts.LocalArtifactContentStore(new Bdgrz.Compliance.Features.Artifacts.ArtifactContentStoreOptions(_artifactDirectory, new byte[32],
+                Bdgrz.Compliance.Features.Artifacts.ArtifactContentLimits.MaxContentLength), _clock), _clock));
         public ProposeSystemDescriptionSuccessorHandler ProposeSuccessorHandler() =>
-            new(Executor, _clock);
+            new(Operations);
 
         public static Cntryl.Portia.RequestContext<T> Context<T>(Uuid userId, T request)
             where T : IRequestBase => new(request, new RequestDispatchContext(Actor(userId),
@@ -162,37 +177,37 @@ public sealed class SystemDescriptionCommandHandlerTests
         public async Task<Uuid> SeedDescriptionAsync(bool typeII, Uuid changeId = default)
         {
             var descriptionId = Uuid.CreateVersion4();
-            var content = Content(changeId);
+            var content = DraftContent(changeId);
             var scope = typeII
                 ? new SystemDescriptionScope("type_ii", ExaminationId, BaselineId, PeriodId,
                     CloseSnapshotId)
                 : new SystemDescriptionScope("type_i", ExaminationId, BaselineId, null, null);
-            var aggregate = new Bdgrz.Compliance.Features.SystemDescription.SystemDescription(
+            var aggregate = new Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules(
                 TenantId, ProgramId, descriptionId);
             Assert.Null(aggregate.Create(Uuid.CreateVersion4(), scope, content,
                 RbacIds.Member(TenantId, UserId), "author@example.test", Now));
-            await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
+            await DescriptionSeeds.WriteAsync(Writer, Content, aggregate);
             return descriptionId;
         }
 
         public async Task<Uuid> SeedApprovedDescriptionAsync()
         {
             var descriptionId = Uuid.CreateVersion4();
-            var aggregate = new Bdgrz.Compliance.Features.SystemDescription.SystemDescription(
+            var aggregate = new Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules(
                 TenantId, ProgramId, descriptionId);
             Assert.Null(aggregate.Create(Uuid.CreateVersion4(), new SystemDescriptionScope("type_i",
-                    ExaminationId, BaselineId, null, null), Content(Uuid.Empty),
+                    ExaminationId, BaselineId, null, null), DraftContent(Uuid.Empty),
                 RbacIds.Member(TenantId, UserId), "author@example.test", Now));
             Assert.Null(aggregate.Review(1, RbacIds.Member(TenantId, ReviewerId),
                 "reviewer@example.test", "approve", "Reviewed exact draft.", Now.AddMinutes(1)));
             Assert.Null(aggregate.Approve(1, RbacIds.Member(TenantId, ApproverId),
                 "approver@example.test", "Management approved the exact version.",
                 Now.AddMinutes(2)));
-            await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
+            await DescriptionSeeds.WriteAsync(Writer, Content, aggregate);
             return descriptionId;
         }
 
-        static SystemDescriptionDraftContent Content(Uuid changeId) =>
+        static SystemDescriptionDraftContent DraftContent(Uuid changeId) =>
             new("The Sample System", [
                 Section("services"),
                 Section("commitments_requirements"),
@@ -220,6 +235,8 @@ public sealed class SystemDescriptionCommandHandlerTests
         {
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
+            if (Directory.Exists(_artifactDirectory))
+                Directory.Delete(_artifactDirectory, recursive: true);
         }
     }
 

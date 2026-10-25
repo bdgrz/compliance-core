@@ -47,10 +47,12 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             var families = new PublishedTypeIBaselinePreviewReader(new TypeIBaselinePreviewReader(
                 TypeIBaselineSourceFamilies.Required.Select(family => new CloseFamily(family, boundary)).ToArray()), artifacts,
                 fixture.Host.Content);
-            var history = new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events,
+            var history = new TypeIIPeriodCloseHistory(fixture.Events,
                 new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true)),
                 new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content,
                     fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content,
+                new Bdgrz.Compliance.Features.Incidents.ComplianceIncidentReader(fixture.Reader, fixture.Events, fixture.Host.Content,
+                    fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()),
                 fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>());
             var source = new TypeIIPeriodCloseReconciliation(fixture.Reader, fixture.Events, fixture.Host.Content,
                 fixture.Host.Services.GetRequiredService<ControlOperationsReader>(), fixture.Host.Services.GetRequiredService<FindingReader>(),

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Features.SystemDescription;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Fitz.Testing;
@@ -15,7 +16,7 @@ using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackageRules;
 using ManagementAssertionAggregate = Bdgrz.Compliance.Features.Examinations.ManagementAssertion;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 
@@ -26,13 +27,35 @@ public sealed class RecordManagementAssertionHandlerTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    public async Task ShouldRetryUnavailableDescriptionContentAndRefuseCorruptionGivenAssertionSources(bool unavailable)
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var sources = await fixture.SeedSourcesAsync();
+        var descriptions = new SystemDescriptionReader(fixture.Reader, fixture.PeriodEvents, new FailingPackageContentStore(unavailable));
+        var handler = new RecordManagementAssertionHandler(fixture.Executor, fixture.Reader, fixture.Packages,
+            fixture.Periods, fixture.Clock, descriptions);
+
+        // Act
+        var result = await handler.HandleAsync(fixture.Context(fixture.Request(sources.Content)), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ManagementAssertionAggregate(fixture.TenantId, fixture.ProgramId, fixture.AssertionId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(unavailable, result.Error!.IsTransient);
+        Assert.Null(saved.Current);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
     public async Task ShouldRetryUnavailablePackageContentAndRefuseCorruptionGivenAssertionSources(bool unavailable)
     {
         // Arrange
         await using var fixture = new Fixture();
         var sources = await fixture.SeedSourcesAsync();
         var packages = new AuditPackageReader(fixture.Reader, new FailingPackageContentStore(unavailable));
-        var handler = new RecordManagementAssertionHandler(fixture.Executor, fixture.Reader, packages, fixture.Periods, fixture.Clock);
+        var handler = new RecordManagementAssertionHandler(fixture.Executor, fixture.Reader, packages, fixture.Periods, fixture.Clock, fixture.Descriptions);
 
         // Act
         var result = await handler.HandleAsync(fixture.Context(fixture.Request(sources.Content)), CancellationToken.None);
@@ -215,6 +238,7 @@ public sealed class RecordManagementAssertionHandlerTests
         public MutableTimeProvider Clock { get; } = new(Now.AddMinutes(8));
         public InMemoryEventStore PeriodEvents { get; } = new();
         public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, ContentStore);
+        public SystemDescriptionReader Descriptions => new(Reader, PeriodEvents, ContentStore);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -239,7 +263,7 @@ public sealed class RecordManagementAssertionHandlerTests
         }
 
         public RecordManagementAssertionHandler Handler() =>
-            new(Executor, Reader, Packages, Periods, Clock);
+            new(Executor, Reader, Packages, Periods, Clock, Descriptions);
 
         public async Task<SeededSources> SeedSourcesAsync(bool validatePackage = true,
             string wordingArtifactSource = "auditor")
@@ -284,7 +308,7 @@ public sealed class RecordManagementAssertionHandlerTests
                 "Assertion author", Now.AddMinutes(3)));
             Assert.Null(description.BindToExamination(1, ExaminationId, "type_i_baseline",
                 BaselineId, ApproverMemberId, "CEO", Now.AddMinutes(4)));
-            await Writer.SaveAsync(description, new RequestDispatchContext(RequestActor.System));
+            await DescriptionSeeds.WriteAsync(Writer, ContentStore, description);
             await Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
 
             var selected = new[] { criteria, control, Reference("system_description") with

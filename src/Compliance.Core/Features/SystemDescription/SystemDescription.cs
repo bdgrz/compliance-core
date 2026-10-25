@@ -1,682 +1,133 @@
-using System.Text.Json;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-/// <summary>
-///     One continuing system-description stream owns immutable narrative versions,
-///     their review and approval decisions, snapshot bindings, and export identities.
-/// </summary>
+/// <summary>Bounded native description authority. Narrative content, source manifests and history are immutable references.</summary>
 public sealed class SystemDescription : Aggregate
 {
-    const int MaximumSections = 32;
-    const int MaximumSources = 512;
-    const int MaximumPeriodChanges = 200;
-    const int MaximumEventBytes = 48 * 1024;
-    const int MaximumTitleLength = 200;
-    const int MaximumSectionTextLength = 12_000;
-    const int MaximumDecisionTextLength = 4000;
-    const int MaximumActorDisplayLength = 200;
-    static readonly Uuid DecisionNamespace = Uuid.Parse(
-        "497b8fc1-c9de-5e5b-8a93-f5a6972f2537",
-        System.Globalization.CultureInfo.InvariantCulture);
-    static readonly HashSet<string> RequiredSectionIds = new(StringComparer.Ordinal)
-    {
-        "services", "commitments_requirements", "components_infrastructure_software",
-        "people", "procedures", "information_data_flows", "system_boundary",
-        "control_environment", "user_entity_controls", "subservice_organizations",
-        "exclusions", "relevant_changes",
-    };
-
+    public const string Area = "system-descriptions";
     readonly Uuid _tenantId;
-    readonly Uuid _programId;
-    readonly List<SystemDescriptionVersionView> _versions = [];
-    readonly List<SystemDescriptionReviewView> _reviews = [];
-    readonly List<SystemDescriptionApprovalView> _approvals = [];
-    readonly List<SystemDescriptionNoChangeDecisionView> _noChangeDecisions = [];
-    readonly List<SystemDescriptionBindingView> _bindings = [];
-    readonly List<SystemDescriptionExportView> _exports = [];
-
-    public long Revision { get; private set; }
-
-    public SystemDescriptionVersionView? CurrentVersion => _versions.LastOrDefault();
-
-    public IReadOnlyList<SystemDescriptionReviewView> Reviews =>
-        Array.AsReadOnly(_reviews.ToArray());
-
-    public IReadOnlyList<SystemDescriptionNoChangeDecisionView> NoChangeDecisions =>
-        Array.AsReadOnly(_noChangeDecisions.ToArray());
-
-    public SystemDescription(Uuid tenantId, Uuid programId, Uuid descriptionId)
-        : base(descriptionId, new EventStreamAddress(tenantId.ToString(), "system-descriptions",
-            descriptionId.ToString()))
+    readonly Uuid _requestedProgramId;
+    public SystemDescription(Uuid tenantId, Uuid programId, Uuid descriptionId, Uuid selectedCommandId = default)
+        : base(descriptionId, new EventStreamAddress(tenantId.ToString(), Area, descriptionId.ToString()))
     {
         _tenantId = tenantId;
-        _programId = programId;
-        On<SystemDescriptionDraftCreated>(Apply);
-        On<SystemDescriptionDraftRevised>(Apply);
-        On<SystemDescriptionSourcesBound>(Apply);
-        On<SystemDescriptionReviewed>(Apply);
-        On<SystemDescriptionApproved>(Apply);
-        On<SystemDescriptionSuccessorProposed>(Apply);
-        On<SystemDescriptionNoChangeRecorded>(Apply);
-        On<SystemDescriptionBound>(Apply);
-        On<SystemDescriptionExportGenerated>(Apply);
+        _requestedProgramId = programId;
+        Acceptance = new NativeAcceptance(selectedCommandId);
+        On<SystemDescriptionDraftCreated>(ApplyFact);
+        On<SystemDescriptionDraftRevised>(ApplyFact);
+        On<SystemDescriptionSourcesBound>(ApplyFact);
+        On<SystemDescriptionReviewed>(ApplyFact);
+        On<SystemDescriptionApproved>(ApplyFact);
+        On<SystemDescriptionSuccessorProposed>(ApplyFact);
+        On<SystemDescriptionNoChangeRecorded>(ApplyFact);
+        On<SystemDescriptionBound>(ApplyFact);
     }
-
-    public SystemDescriptionView Read() => new(_tenantId, _programId, Id, Revision,
-        CurrentVersion, Array.AsReadOnly(_versions.ToArray()), Array.AsReadOnly(_reviews.ToArray()),
-        Array.AsReadOnly(_approvals.ToArray()), Array.AsReadOnly(_noChangeDecisions.ToArray()),
-        Array.AsReadOnly(_bindings.ToArray()), Array.AsReadOnly(_exports.ToArray()));
-
-    public SystemDescriptionVersionView? FindVersion(long version) =>
-        _versions.FirstOrDefault(item => item.Version == version);
-
-    public SystemDescriptionVersionView? FindVersion(Uuid versionId) =>
-        _versions.FirstOrDefault(item => item.SystemDescriptionVersionId == versionId);
-
-    public SystemDescriptionApprovalView? FindApproval(Uuid versionId) =>
-        _approvals.FirstOrDefault(item => item.VersionId == versionId);
-
-    public CommandFailure? Create(Uuid versionId, SystemDescriptionScope scope,
-        SystemDescriptionDraftContent content, Uuid authorMemberId, string authorDisplay,
-        DateTimeOffset createdAt)
+    public Uuid TenantId => _tenantId;
+    public Uuid ProgramId => Header?.ProgramId ?? _requestedProgramId;
+    public long Revision => Header?.Revision ?? 0;
+    public long NativeSequence { get; private set; }
+    public SystemDescriptionAuthorityHeader? Header { get; private set; }
+    public ImmutableContentRef? CurrentVersionContent { get; private set; }
+    public ImmutableContentRef? CurrentAuthorityContent { get; private set; }
+    public ImmutableContentRef? SourceSnapshotContent { get; private set; }
+    public NativeAcceptance Acceptance { get; }
+    public Result Append(DomainEvent value, FrozenSystemDescriptionMutation prepared, long sequence, ulong physicalPosition)
     {
-        if (CurrentVersion is { } existing)
-            return versionId == existing.SystemDescriptionVersionId &&
-                   scope == existing.Scope && ContentHash(scope, content) == existing.ContentSha256
-                ? null
-                : CommandFailure.StateConflict(
-                    "The system description already exists with different initial content.");
-        if (_tenantId == Uuid.Empty || _programId == Uuid.Empty || Id == Uuid.Empty ||
-            versionId == Uuid.Empty)
-            return Invalid("A system description requires tenant, program, description, and version identities.");
-        if (ValidateActor(authorMemberId, authorDisplay, createdAt) is { } actorFailure)
-            return actorFailure;
-        if (NormalizeScope(scope) is not { } normalizedScope ||
-            NormalizeContent(content) is not { } normalizedContent)
-            return Invalid("The description requires a valid Type I baseline or Type II period scope and structured sections.");
-
-        var version = BuildVersion(versionId, null, normalizedScope, normalizedContent,
-            "Initial draft", authorMemberId, authorDisplay.Trim(), createdAt);
-        var ev = new SystemDescriptionDraftCreated(_tenantId, _programId, Id, 1, version,
-            createdAt);
-        if (!Fits(ev))
-            return Invalid("The complete system description exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? Revise(long expectedRevision, Uuid versionId,
-        SystemDescriptionDraftContent content, string changeReason, Uuid authorMemberId,
-        string authorDisplay, DateTimeOffset revisedAt)
-    {
-        if (CurrentVersion is not { } current)
-            return CommandFailure.MissingRecord("The system description was not found.");
-        if (expectedRevision != Revision)
-            return CommandFailure.ForVersion(
-                VersionedRecordRules.StaleRevision("system description", Revision));
-        if (current.Status != "draft")
-            return CommandFailure.StateConflict(
-                "An approved or superseded description is immutable; propose a successor draft.");
-        if (ValidateActor(authorMemberId, authorDisplay, revisedAt) is { } actorFailure)
-            return actorFailure;
-        var cleanReason = changeReason?.Trim() ?? string.Empty;
-        if (!BoundedText(cleanReason, MaximumDecisionTextLength) ||
-            NormalizeContent(content) is not { } normalizedContent)
-            return Invalid("A description revision requires valid structured content and a bounded reason.");
-        if (versionId == Uuid.Empty || _versions.Any(item =>
-                item.SystemDescriptionVersionId == versionId))
-            return CommandFailure.StateConflict("A system description version identity cannot be reused.");
-
-        var version = BuildVersion(versionId, current.SystemDescriptionVersionId, current.Scope,
-            normalizedContent, cleanReason, authorMemberId, authorDisplay.Trim(), revisedAt,
-            current.Version + 1);
-        var ev = new SystemDescriptionDraftRevised(_tenantId, _programId, Id, Revision + 1,
-            version, revisedAt);
-        if (!Fits(ev))
-            return Invalid("The revised system description exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? BindSources(long expectedRevision, Uuid versionId,
-        IReadOnlyList<SystemDescriptionSourceReference> sources, Uuid actorMemberId,
-        string actorDisplay, DateTimeOffset boundAt)
-    {
-        if (CurrentVersion is not { } current)
-            return CommandFailure.MissingRecord("The system description was not found.");
-        if (expectedRevision != Revision)
-            return CommandFailure.ForVersion(
-                VersionedRecordRules.StaleRevision("system description", Revision));
-        if (current.Status != "draft")
-            return CommandFailure.StateConflict(
-                "Sources can only be refreshed on a draft version; approved descriptions are immutable.");
-        if (ValidateActor(actorMemberId, actorDisplay, boundAt) is { } actorFailure)
-            return actorFailure;
-        var content = NormalizeContent(current.Content with { Sources = sources });
-        if (content is null)
-            return Invalid("Every bound source must identify one exact governed version and reconciliation state.");
-        if (versionId == Uuid.Empty || _versions.Any(item =>
-                item.SystemDescriptionVersionId == versionId))
-            return CommandFailure.StateConflict("A system description version identity cannot be reused.");
-
-        var version = BuildVersion(versionId, current.SystemDescriptionVersionId, current.Scope,
-            content, "Governed sources refreshed", actorMemberId, actorDisplay.Trim(), boundAt,
-            current.Version + 1);
-        var ev = new SystemDescriptionSourcesBound(_tenantId, _programId, Id, Revision + 1,
-            version, boundAt);
-        if (!Fits(ev))
-            return Invalid("The bound source references exceed the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? ProposeSuccessor(long expectedRevision, Uuid versionId,
-        SystemDescriptionDraftContent content, string changeReason, Uuid authorMemberId,
-        string authorDisplay, DateTimeOffset proposedAt)
-    {
-        if (CurrentVersion is not { Status: "approved" } current)
-            return CommandFailure.StateConflict(
-                "A system description successor requires a currently approved version.");
-        if (expectedRevision != Revision)
-            return CommandFailure.ForVersion(
-                VersionedRecordRules.StaleRevision("system description", Revision));
-        if (ValidateActor(authorMemberId, authorDisplay, proposedAt) is { } actorFailure)
-            return actorFailure;
-        var cleanReason = changeReason?.Trim() ?? string.Empty;
-        if (!BoundedText(cleanReason, MaximumDecisionTextLength) ||
-            NormalizeContent(content) is not { } normalizedContent)
-            return Invalid("A successor requires valid structured content and a bounded change reason.");
-        if (versionId == Uuid.Empty || _versions.Any(item =>
-                item.SystemDescriptionVersionId == versionId))
-            return CommandFailure.StateConflict("A system description version identity cannot be reused.");
-
-        var version = BuildVersion(versionId, current.SystemDescriptionVersionId, current.Scope,
-            normalizedContent, cleanReason, authorMemberId, authorDisplay.Trim(), proposedAt,
-            current.Version + 1);
-        var ev = new SystemDescriptionSuccessorProposed(_tenantId, _programId, Id,
-            Revision + 1, version, proposedAt);
-        if (!Fits(ev))
-            return Invalid("The proposed system description successor exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? Review(long version, Uuid reviewerMemberId, string reviewerDisplay,
-        string outcome, string comments, DateTimeOffset reviewedAt)
-    {
-        if (CurrentVersion is not { } current)
-            return CommandFailure.MissingRecord("The system description was not found.");
-        if (version != current.Version || current.Status != "draft")
-            return CommandFailure.StateConflict(
-                "A review must target the current draft version exactly.");
-        if (ValidateActor(reviewerMemberId, reviewerDisplay, reviewedAt) is { } actorFailure)
-            return actorFailure;
-        comments = comments?.Trim() ?? string.Empty;
-        if (reviewerMemberId == current.AuthorMemberId)
-            return CommandFailure.StateConflict(
-                "The author cannot review their own system description version.");
-        if (outcome is not ("approve" or "request_changes") ||
-            comments.Length > MaximumDecisionTextLength ||
-            outcome == "request_changes" && string.IsNullOrWhiteSpace(comments))
-            return Invalid("A review requires an approve or request_changes outcome and bounded comments.");
-        var reviewId = Uuid.CreateVersion5(DecisionNamespace,
-            $"{Id}\n{current.SystemDescriptionVersionId}\n{reviewerMemberId}");
-        if (_reviews.FirstOrDefault(item => item.ReviewId == reviewId) is { } existing)
-            return existing.Outcome == outcome && existing.Comments == comments &&
-                   existing.ReviewerDisplay == reviewerDisplay.Trim()
-                ? null
-                : CommandFailure.StateConflict(
-                    "A reviewer decision is immutable for this description version.");
-
-        var review = new SystemDescriptionReviewView(reviewId,
-            current.SystemDescriptionVersionId, current.Version, outcome, comments,
-            reviewerMemberId, reviewerDisplay.Trim(), reviewedAt);
-        var ev = new SystemDescriptionReviewed(_tenantId, _programId, Id, Revision + 1,
-            review, reviewedAt);
-        if (!Fits(ev))
-            return Invalid("The system description review exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? Approve(long version, Uuid approverMemberId, string approverDisplay,
-        string rationale, DateTimeOffset approvedAt)
-    {
-        if (CurrentVersion is not { } current)
-            return CommandFailure.MissingRecord("The system description was not found.");
-        if (version != current.Version || current.Status != "draft")
-            return CommandFailure.StateConflict(
-                "Approval must target the current draft version exactly.");
-        if (ValidateActor(approverMemberId, approverDisplay, approvedAt) is { } actorFailure)
-            return actorFailure;
-        rationale = rationale?.Trim() ?? string.Empty;
-        if (approverMemberId == current.AuthorMemberId)
-            return CommandFailure.StateConflict(
-                "The author cannot approve their own system description version.");
-        if (!BoundedText(rationale, MaximumDecisionTextLength))
-            return Invalid("System description approval requires a bounded rationale.");
-        if (_approvals.FirstOrDefault(item => item.VersionId == current.SystemDescriptionVersionId) is { } prior)
-            return prior.ApproverMemberId == approverMemberId && prior.Rationale == rationale
-                ? null
-                : CommandFailure.StateConflict("The system description version is already approved.");
-        if (_reviews.LastOrDefault(item => item.VersionId == current.SystemDescriptionVersionId)?.Outcome
-            != "approve")
-            return CommandFailure.StateConflict(
-                "The exact system description version requires a current independent approval review.");
-        if (current.Content.Sections.Any(static section => section.Status == "incomplete"))
-            return Invalid("Every required system description section must be complete or justified as not applicable.");
-        if (current.Content.Sources.Any(static source => source.Status != "current"))
-            return CommandFailure.StateConflict(
-                "Stale, missing, or contradictory system description sources must be reconciled before approval.");
-        if (current.Scope.Stage == "type_ii" && current.Scope.CloseSnapshotId is null)
-            return CommandFailure.StateConflict(
-                "A final Type II system description must bind its exact period-close snapshot.");
-        if (current.Content.PeriodChanges.Any(change => !change.IsMaterial &&
-                !_noChangeDecisions.Any(decision => decision.VersionId == current.SystemDescriptionVersionId &&
-                    decision.ChangeId == change.ChangeId)))
-            return CommandFailure.StateConflict(
-                "Every non-material Type II change requires an attributable no-change decision.");
-        if (current.Content.PeriodChanges.Any(change => change.IsMaterial &&
-                !current.Content.SignificantChangeIds.Contains(change.ChangeId)))
-            return CommandFailure.StateConflict(
-                "Every material Type II change must be identified in the system description.");
-
-        var approval = new SystemDescriptionApprovalView(current.SystemDescriptionVersionId,
-            current.Version, approverMemberId, approverDisplay.Trim(), rationale,
-            current.Scope.CloseSnapshotId, approvedAt);
-        var ev = new SystemDescriptionApproved(_tenantId, _programId, Id, Revision + 1,
-            approval, approvedAt);
-        if (!Fits(ev))
-            return Invalid("The system description approval exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? RecordNoChangeDecision(long version, Uuid changeId,
-        string rationale, Uuid decidedByMemberId, string decidedByDisplay,
-        DateTimeOffset decidedAt)
-    {
-        if (CurrentVersion is not { } current)
-            return CommandFailure.MissingRecord("The system description was not found.");
-        if (version != current.Version || current.Status != "draft" ||
-            current.Scope.Stage != "type_ii")
-            return CommandFailure.StateConflict(
-                "A no-change decision must target the current Type II draft version.");
-        if (ValidateActor(decidedByMemberId, decidedByDisplay, decidedAt) is { } actorFailure)
-            return actorFailure;
-        rationale = rationale?.Trim() ?? string.Empty;
-        if (decidedByMemberId == current.AuthorMemberId ||
-            !BoundedText(rationale, MaximumDecisionTextLength))
-            return Invalid("A no-change decision requires an independent actor and bounded rationale.");
-        if (current.Content.PeriodChanges.FirstOrDefault(change => change.ChangeId == changeId) is not
-            { IsMaterial: false } change)
-            return CommandFailure.StateConflict(
-                "A no-change decision can only disposition a recorded non-material period change.");
-        var prior = _noChangeDecisions.FirstOrDefault(item => item.VersionId == current.SystemDescriptionVersionId &&
-            item.ChangeId == changeId);
-        if (prior is not null)
-            return prior.DecidedByMemberId == decidedByMemberId && prior.Rationale == rationale
-                ? null
-                : CommandFailure.StateConflict("The period-change disposition is already recorded.");
-
-        var decision = new SystemDescriptionNoChangeDecisionView(current.SystemDescriptionVersionId,
-            current.Version, change.ChangeId, rationale, decidedByMemberId,
-            decidedByDisplay.Trim(), decidedAt);
-        var ev = new SystemDescriptionNoChangeRecorded(_tenantId, _programId, Id,
-            Revision + 1, decision, decidedAt);
-        if (!Fits(ev))
-            return Invalid("The period-change decision exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? BindToExamination(long version, Uuid examinationId,
-        string purpose, Uuid snapshotId, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset boundAt)
-    {
-        if (FindVersion(version) is not { Status: "approved" } approved)
-            return CommandFailure.StateConflict(
-                "Only an approved system description version can be bound to an examination.");
-        if (ValidateActor(actorMemberId, actorDisplay, boundAt) is { } actorFailure)
-            return actorFailure;
-        if (examinationId != approved.Scope.ExaminationId || snapshotId == Uuid.Empty ||
-            purpose is not ("type_i_baseline" or "type_ii_close") ||
-            purpose == "type_i_baseline" && approved.Scope.Stage != "type_i" ||
-            purpose == "type_ii_close" && approved.Scope.Stage != "type_ii")
-            return Invalid("The system description binding must match its approved examination snapshot.");
-        if (purpose == "type_i_baseline" && approved.Scope.TypeIBaselineId != snapshotId ||
-            purpose == "type_ii_close" && approved.Scope.CloseSnapshotId != snapshotId)
-            return CommandFailure.StateConflict(
-                "The binding snapshot does not match the exact snapshot in the approved version.");
-        var existing = _bindings.FirstOrDefault(item => item.VersionId == approved.SystemDescriptionVersionId &&
-            item.Purpose == purpose);
-        if (existing is not null)
-            return existing.SnapshotId == snapshotId && existing.ExaminationId == examinationId
-                ? null
-                : CommandFailure.StateConflict(
-                    "An approved description version cannot be rebound to different examination material.");
-
-        var binding = new SystemDescriptionBindingView(approved.SystemDescriptionVersionId,
-            approved.Version, examinationId, purpose, snapshotId, actorMemberId,
-            actorDisplay.Trim(), boundAt);
-        var ev = new SystemDescriptionBound(_tenantId, _programId, Id, Revision + 1,
-            binding, boundAt);
-        if (!Fits(ev))
-            return Invalid("The system description binding exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? GenerateExport(long version, Uuid exportId, string format,
-        string exportKey, Uuid actorMemberId, string actorDisplay, DateTimeOffset generatedAt)
-    {
-        if (FindVersion(version) is not { Status: "approved" } approved)
-            return CommandFailure.StateConflict(
-                "Only an approved system description version can be exported.");
-        if (ValidateActor(actorMemberId, actorDisplay, generatedAt) is { } actorFailure)
-            return actorFailure;
-        exportKey = exportKey?.Trim() ?? string.Empty;
-        if (exportId == Uuid.Empty || format is not ("docx" or "pdf") ||
-            !BoundedText(exportKey, 400))
-            return Invalid("A system description export requires a stable key and supported document format.");
-        if (_exports.FirstOrDefault(item => item.ExportId == exportId) is { } existing)
-            return existing.VersionId == approved.SystemDescriptionVersionId &&
-                   existing.Format == format && existing.ExportKey == exportKey
-                ? null
-                : CommandFailure.StateConflict("A system description export identity cannot be reused.");
-
-        var export = new SystemDescriptionExportView(exportId,
-            approved.SystemDescriptionVersionId, approved.Version, format, exportKey,
-            approved.ContentSha256, actorMemberId, actorDisplay.Trim(), generatedAt);
-        var ev = new SystemDescriptionExportGenerated(_tenantId, _programId, Id,
-            Revision + 1, export, generatedAt);
-        if (!Fits(ev))
-            return Invalid("The system description export receipt exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    void Apply(SystemDescriptionDraftCreated ev)
-    {
-        if (Revision != 0 || ev.TenantId != _tenantId || ev.ProgramId != _programId ||
-            ev.SystemDescriptionId != Id || ev.AggregateRevision != 1 ||
-            ev.Version.Version != 1 || ev.Version.ParentVersionId is not null ||
-            ev.Version.Status != "draft" || !ValidVersion(ev.Version, 1))
-            throw new InvalidOperationException("The system description opening event is invalid.");
-        _versions.Add(FreezeVersion(ev.Version));
-        Revision = 1;
-    }
-
-    void Apply(SystemDescriptionDraftRevised ev) => ApplyNewVersion(ev.TenantId, ev.ProgramId,
-        ev.SystemDescriptionId, ev.AggregateRevision, ev.Version, expectedStatus: "draft");
-
-    void Apply(SystemDescriptionSourcesBound ev) => ApplyNewVersion(ev.TenantId, ev.ProgramId,
-        ev.SystemDescriptionId, ev.AggregateRevision, ev.Version, expectedStatus: "draft");
-
-    void Apply(SystemDescriptionSuccessorProposed ev) => ApplyNewVersion(ev.TenantId, ev.ProgramId,
-        ev.SystemDescriptionId, ev.AggregateRevision, ev.Version, expectedStatus: "approved");
-
-    void ApplyNewVersion(Uuid tenantId, Uuid programId, Uuid descriptionId,
-        long aggregateRevision, SystemDescriptionVersionView version, string expectedStatus)
-    {
-        var current = CurrentVersion;
-        if (current is null || tenantId != _tenantId || programId != _programId ||
-            descriptionId != Id || aggregateRevision != Revision + 1 ||
-            current.Status != expectedStatus || version.Version != current.Version + 1 ||
-            version.ParentVersionId != current.SystemDescriptionVersionId ||
-            version.Status != "draft" || !ValidVersion(version, version.Version) ||
-            _versions.Any(item => item.SystemDescriptionVersionId == version.SystemDescriptionVersionId))
-            throw new InvalidOperationException("A system description successor event is invalid.");
-        if (current.Status == "draft")
-            _versions[^1] = current with { Status = "superseded" };
-        _versions.Add(FreezeVersion(version));
-        Revision++;
-    }
-
-    void Apply(SystemDescriptionReviewed ev)
-    {
-        if (ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.SystemDescriptionId != Id ||
-            ev.AggregateRevision != Revision + 1 || FindVersion(ev.Review.VersionId) is not
-            { Status: "draft" } version || version.Version != ev.Review.Version ||
-            ev.Review.ReviewerMemberId == version.AuthorMemberId ||
-            _reviews.Any(item => item.ReviewId == ev.Review.ReviewId) ||
-            ev.Review.Outcome is not ("approve" or "request_changes") ||
-            !ValidActor(ev.Review.ReviewerMemberId, ev.Review.ReviewerDisplay, ev.OccurredAt) ||
-            ev.Review.ReviewedAt != ev.OccurredAt)
-            throw new InvalidOperationException("The system description review event is invalid.");
-        _reviews.Add(ev.Review);
-        Revision++;
-    }
-
-    void Apply(SystemDescriptionApproved ev)
-    {
-        var approval = ev.Approval;
-        if (ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.SystemDescriptionId != Id ||
-            ev.AggregateRevision != Revision + 1 || FindVersion(approval.VersionId) is not
-            { Status: "draft" } version || version.Version != approval.Version ||
-            approval.ApproverMemberId == version.AuthorMemberId ||
-            _reviews.LastOrDefault(item => item.VersionId == approval.VersionId)?.Outcome != "approve" ||
-            !CanApprove(version) || !ValidActor(approval.ApproverMemberId,
-                approval.ApproverDisplay, ev.OccurredAt) || approval.ApprovedAt != ev.OccurredAt ||
-            approval.CloseSnapshotId != version.Scope.CloseSnapshotId ||
-            _approvals.Any(item => item.VersionId == approval.VersionId))
-            throw new InvalidOperationException("The system description approval event is invalid.");
-        ReplaceVersion(version with { Status = "approved" });
-        _approvals.Add(approval);
-        Revision++;
-    }
-
-    void Apply(SystemDescriptionNoChangeRecorded ev)
-    {
-        var decision = ev.Decision;
-        if (ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.SystemDescriptionId != Id ||
-            ev.AggregateRevision != Revision + 1 || FindVersion(decision.VersionId) is not
-            { Status: "draft", Scope.Stage: "type_ii" } version ||
-            version.Version != decision.Version || version.AuthorMemberId == decision.DecidedByMemberId ||
-            version.Content.PeriodChanges.FirstOrDefault(change => change.ChangeId == decision.ChangeId)
-                is not { IsMaterial: false } ||
-            !ValidActor(decision.DecidedByMemberId, decision.DecidedByDisplay, ev.OccurredAt) ||
-            decision.DecidedAt != ev.OccurredAt ||
-            _noChangeDecisions.Any(item => item.VersionId == decision.VersionId &&
-                item.ChangeId == decision.ChangeId))
-            throw new InvalidOperationException("The system description no-change event is invalid.");
-        _noChangeDecisions.Add(decision);
-        Revision++;
-    }
-
-    void Apply(SystemDescriptionBound ev)
-    {
-        var binding = ev.Binding;
-        if (ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.SystemDescriptionId != Id ||
-            ev.AggregateRevision != Revision + 1 || FindVersion(binding.VersionId) is not
-            { Status: "approved" } version || version.Version != binding.Version ||
-            binding.ExaminationId != version.Scope.ExaminationId ||
-            binding.Purpose == "type_i_baseline" &&
-                (version.Scope.Stage != "type_i" || version.Scope.TypeIBaselineId != binding.SnapshotId) ||
-            binding.Purpose == "type_ii_close" &&
-                (version.Scope.Stage != "type_ii" || version.Scope.CloseSnapshotId != binding.SnapshotId) ||
-            binding.Purpose is not ("type_i_baseline" or "type_ii_close") ||
-            !ValidActor(binding.BoundByMemberId, binding.BoundByDisplay, ev.OccurredAt) ||
-            binding.BoundAt != ev.OccurredAt ||
-            _bindings.Any(item => item.VersionId == binding.VersionId && item.Purpose == binding.Purpose))
-            throw new InvalidOperationException("The system description binding event is invalid.");
-        _bindings.Add(binding);
-        Revision++;
-    }
-
-    void Apply(SystemDescriptionExportGenerated ev)
-    {
-        var export = ev.Export;
-        if (ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.SystemDescriptionId != Id ||
-            ev.AggregateRevision != Revision + 1 || FindVersion(export.VersionId) is not
-            { Status: "approved" } version || version.Version != export.Version ||
-            export.ExportId == Uuid.Empty || export.ContentSha256 != version.ContentSha256 ||
-            export.Format is not ("docx" or "pdf") ||
-            !ValidActor(export.GeneratedByMemberId, export.GeneratedByDisplay, ev.OccurredAt) ||
-            export.GeneratedAt != ev.OccurredAt || _exports.Any(item => item.ExportId == export.ExportId))
-            throw new InvalidOperationException("The system description export event is invalid.");
-        _exports.Add(export);
-        Revision++;
-    }
-
-    bool CanApprove(SystemDescriptionVersionView version) =>
-        version.Content.Sections.All(static section => section.Status != "incomplete") &&
-        version.Content.Sources.All(static source => source.Status == "current") &&
-        (version.Scope.Stage != "type_ii" || version.Scope.CloseSnapshotId is not null) &&
-        version.Content.PeriodChanges.All(change => change.IsMaterial
-            ? version.Content.SignificantChangeIds.Contains(change.ChangeId)
-            : _noChangeDecisions.Any(decision => decision.VersionId == version.SystemDescriptionVersionId &&
-                decision.ChangeId == change.ChangeId));
-
-    bool ValidVersion(SystemDescriptionVersionView version, long expectedVersion)
-    {
-        if (version.TenantId != _tenantId || version.ProgramId != _programId ||
-            version.SystemDescriptionId != Id || version.SystemDescriptionVersionId == Uuid.Empty ||
-            version.Version != expectedVersion || version.Status != "draft" ||
-            !ValidActor(version.AuthorMemberId, version.AuthorDisplay, version.UpdatedAt) ||
-            NormalizeScope(version.Scope) is not { } scope ||
-            NormalizeContent(version.Content) is not { } content)
-            return false;
-        return scope == version.Scope && ContentHash(scope, content) == version.ContentSha256;
-    }
-
-    SystemDescriptionVersionView BuildVersion(Uuid versionId, Uuid? parentVersionId,
-        SystemDescriptionScope scope, SystemDescriptionDraftContent content, string changeReason,
-        Uuid authorMemberId, string authorDisplay, DateTimeOffset at, long version = 1)
-    {
-        var frozenContent = FreezeContent(content);
-        return new SystemDescriptionVersionView(_tenantId, _programId, Id, versionId, version,
-            parentVersionId, "draft", scope, frozenContent, changeReason, authorMemberId,
-            authorDisplay, at, ContentHash(scope, frozenContent));
-    }
-
-    static SystemDescriptionVersionView FreezeVersion(SystemDescriptionVersionView version) => version with
-    {
-        Content = FreezeContent(version.Content),
-    };
-
-    static SystemDescriptionDraftContent FreezeContent(SystemDescriptionDraftContent content) => content with
-    {
-        Sections = Array.AsReadOnly(content.Sections.OrderBy(static section => section.SectionId,
-            StringComparer.Ordinal).ToArray()),
-        Sources = Array.AsReadOnly(content.Sources.OrderBy(static source => source.Kind,
-            StringComparer.Ordinal).ThenBy(static source => source.RecordId.ToString(),
-            StringComparer.Ordinal).ToArray()),
-        PeriodChanges = Array.AsReadOnly(content.PeriodChanges.OrderBy(static change =>
-            change.ChangeId.ToString(), StringComparer.Ordinal).ToArray()),
-        SignificantChangeIds = Array.AsReadOnly(content.SignificantChangeIds.OrderBy(static id =>
-            id.ToString(), StringComparer.Ordinal).ToArray()),
-    };
-
-    void ReplaceVersion(SystemDescriptionVersionView version)
-    {
-        var index = _versions.FindIndex(item =>
-            item.SystemDescriptionVersionId == version.SystemDescriptionVersionId);
-        _versions[index] = version;
-    }
-
-    static SystemDescriptionScope? NormalizeScope(SystemDescriptionScope? scope)
-    {
-        if (scope is null || scope.ExaminationId == Uuid.Empty || scope.Stage is not ("type_i" or "type_ii"))
-            return null;
-        if (scope.Stage == "type_i" && (scope.TypeIBaselineId is null ||
-                scope.TypeIBaselineId == Uuid.Empty || scope.TypeIIPeriodId is not null ||
-                scope.CloseSnapshotId is not null))
-            return null;
-        if (scope.Stage == "type_ii" && (scope.TypeIIPeriodId is null ||
-                scope.TypeIIPeriodId == Uuid.Empty || scope.TypeIBaselineId == Uuid.Empty ||
-                scope.CloseSnapshotId == Uuid.Empty))
-            return null;
-        return scope;
-    }
-
-    static SystemDescriptionDraftContent? NormalizeContent(SystemDescriptionDraftContent? content)
-    {
-        if (content is null)
-            return null;
-        var title = content.Title?.Trim() ?? string.Empty;
-        if (!BoundedText(title, MaximumTitleLength) || content.Sections is null ||
-            content.Sections.Count != RequiredSectionIds.Count ||
-            content.Sections.Count > MaximumSections || content.Sources is null ||
-            content.Sources.Count > MaximumSources || content.PeriodChanges is null ||
-            content.PeriodChanges.Count > MaximumPeriodChanges || content.SignificantChangeIds is null ||
-            content.SignificantChangeIds.Count > MaximumPeriodChanges)
-            return null;
-        if (content.Sections.Any(section => section is null ||
-                !RequiredSectionIds.Contains(section.SectionId) ||
-                !BoundedText(section.Title?.Trim() ?? string.Empty, MaximumTitleLength) ||
-                section.Content?.Length > MaximumSectionTextLength ||
-                section.Status is not ("complete" or "incomplete" or "not_applicable") ||
-                section.Status == "complete" && string.IsNullOrWhiteSpace(section.Content) ||
-                section.Status == "not_applicable" &&
-                    !BoundedText(section.NotApplicableRationale?.Trim() ?? string.Empty,
-                        MaximumDecisionTextLength)) ||
-            content.Sections.Select(static section => section.SectionId)
-                .Distinct(StringComparer.Ordinal).Count() != RequiredSectionIds.Count)
-            return null;
-        if (content.Sources.Any(source => source is null || !ValidKind(source.Kind) ||
-                source.RecordId == Uuid.Empty || source.VersionId == Uuid.Empty || source.Revision <= 0 ||
-                !ValidDigest(source.ContentSha256) ||
-                source.Status is not ("current" or "stale" or "missing" or "contradictory")) ||
-            content.Sources.Select(static source => (source.Kind, source.RecordId)).Distinct().Count() !=
-            content.Sources.Count)
-            return null;
-        if (content.PeriodChanges.Any(change => change is null || change.ChangeId == Uuid.Empty ||
-                !ValidDigest(change.AssessmentSha256)) ||
-            content.PeriodChanges.Select(static change => change.ChangeId).Distinct().Count() !=
-            content.PeriodChanges.Count || content.SignificantChangeIds.Any(static id => id == Uuid.Empty) ||
-            content.SignificantChangeIds.Distinct().Count() != content.SignificantChangeIds.Count)
-            return null;
-        var significantIds = content.SignificantChangeIds.ToHashSet();
-        if (content.PeriodChanges.Any(change => change.IsMaterial != significantIds.Contains(change.ChangeId)))
-            return null;
-
-        return content with
+        if (NativeSequence != sequence || CommittedStreamPosition != physicalPosition)
+            return Failure("The description changed while its exact source and narrative were prepared.", true);
+        if (value is not ISystemDescriptionFact fact || fact.Header != prepared.Header || fact.CurrentVersionContent != prepared.CurrentVersion ||
+            SystemDescriptionContent.Payload(fact) != prepared.Payload || fact.CurrentAuthorityContent != prepared.AuthorityContent || fact.SourceSnapshotContent != prepared.SourceSnapshotContent || fact.ChangeCount != (prepared.Changed ? 1 : 0) ||
+            (Header is null ? prepared.Before.Revision != 0 || prepared.Header.ProgramId != _requestedProgramId :
+                prepared.Before.Revision == 0 || prepared.BeforeAuthority is null || CurrentAuthorityContent is null ||
+                !SystemDescriptionAuthority.Matches(CurrentAuthorityContent, prepared.BeforeAuthority, SystemDescriptionAuthority.Schema) ||
+                SystemDescriptionAuthority.Header(prepared.Before, prepared.BeforeAuthority) != Header) ||
+            (prepared.Changed || prepared.Mutation is SystemDescriptionReviewedBody or SystemDescriptionNoChangeRecordedBody) &&
+                SystemDescriptionContent.Actor(prepared.Mutation) != fact.ActorMemberId ||
+            !SystemDescriptionContent.Verify(prepared))
+            return Failure("The description mutation does not carry its exact verified local rule transition.");
+        try
         {
-            Title = title,
-            Sections = Array.AsReadOnly(content.Sections.Select(section => section with
-            {
-                Title = section.Title.Trim(),
-                Content = section.Content?.Trim() ?? string.Empty,
-                NotApplicableRationale = section.NotApplicableRationale?.Trim(),
-            }).OrderBy(static section => section.SectionId, StringComparer.Ordinal).ToArray()),
-            Sources = Array.AsReadOnly(content.Sources.OrderBy(static source => source.Kind,
-                StringComparer.Ordinal).ThenBy(static source => source.RecordId.ToString(),
-                StringComparer.Ordinal).ToArray()),
-            PeriodChanges = Array.AsReadOnly(content.PeriodChanges.OrderBy(static change =>
-                change.ChangeId.ToString(), StringComparer.Ordinal).ToArray()),
-            SignificantChangeIds = Array.AsReadOnly(content.SignificantChangeIds.OrderBy(static id =>
-                id.ToString(), StringComparer.Ordinal).ToArray()),
-        };
+            Validate(value, fact);
+            if (DomainEventPayload.Size(value) > DomainEventPayload.MaximumBytes)
+                return Failure("The compact native description fact exceeds the bounded event envelope.");
+        }
+        catch (InvalidOperationException)
+        {
+            return Failure("The description mutation has an invalid native authority binding.");
+        }
+        RaiseEvent(value);
+        return Result.Success;
     }
-
-    static string ContentHash(SystemDescriptionScope scope, SystemDescriptionDraftContent? content) =>
-        content is null ? string.Empty : SystemDescriptionContentIdentity.Digest(scope, content);
-
-    static bool ValidActor(Uuid memberId, string display, DateTimeOffset at) =>
-        memberId != Uuid.Empty && BoundedText(display?.Trim() ?? string.Empty,
-            MaximumActorDisplayLength) && at != default;
-
-    static CommandFailure? ValidateActor(Uuid memberId, string display, DateTimeOffset at) =>
-        ValidActor(memberId, display, at)
-            ? null
-            : Invalid("An attributed system description decision requires a member, display name, and time.");
-
-    static bool ValidKind(string value) => !string.IsNullOrWhiteSpace(value) && value.Length <= 64 &&
-        value[0] is >= 'a' and <= 'z' && value.All(static character =>
-            character is >= 'a' and <= 'z' or >= '0' and <= '9' or '_');
-
-    static bool ValidDigest(string? value) => value is { Length: 64 } && value.All(static character =>
-        character is >= '0' and <= '9' or >= 'a' and <= 'f');
-
-    static bool BoundedText(string value, int maxLength) =>
-        !string.IsNullOrWhiteSpace(value) && value.Length <= maxLength;
-
-    static bool Fits<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value,
-        value!.GetType(), ComplianceCoreJsonContext.Default).Length <= MaximumEventBytes;
-
-    static CommandFailure Invalid(string message) => CommandFailure.InvalidContent(message);
+    void ApplyFact(DomainEvent value)
+    {
+        var fact = (ISystemDescriptionFact)value;
+        Validate(value, fact);
+        Header = fact.Header;
+        CurrentVersionContent = fact.CurrentVersionContent;
+        CurrentAuthorityContent = fact.CurrentAuthorityContent;
+        NativeSequence = fact.NativeSequence;
+        SourceSnapshotContent = fact.SourceSnapshotContent;
+        Acceptance.Observe(value);
+    }
+    void Validate(DomainEvent value, ISystemDescriptionFact fact)
+    {
+        var h = fact.Header;
+        var op = fact.Operation;
+        if (h is null || op is null || op.Actor is null)
+            throw new InvalidOperationException("A description fact requires its complete native authority and operation.");
+        OwnerProvenance.RequireOwn(this, op.LogicalId, op);
+        var kind = value switch
+        {
+            SystemDescriptionDraftCreated => nameof(CreateSystemDescriptionDraft),
+            SystemDescriptionDraftRevised => nameof(ReviseSystemDescriptionDraft),
+            SystemDescriptionSourcesBound => nameof(BindSystemDescriptionSources),
+            SystemDescriptionReviewed => nameof(ReviewSystemDescription),
+            SystemDescriptionApproved => nameof(ApproveSystemDescription),
+            SystemDescriptionSuccessorProposed => nameof(ProposeSystemDescriptionSuccessor),
+            SystemDescriptionNoChangeRecorded => nameof(RecordSystemDescriptionNoChangeDecision),
+            SystemDescriptionBound => nameof(BindSystemDescriptionToExamination),
+            _ => "",
+        };
+        if (fact.TenantId != _tenantId || h.TenantId != _tenantId || h.ProgramId == Uuid.Empty || fact.ProgramId != h.ProgramId ||
+            h.SystemDescriptionId != Id || fact.SystemDescriptionId != Id || fact.AggregateRevision != h.Revision || h.Revision <= 0 ||
+            h.CurrentVersion < 1 || h.CurrentVersionId == Uuid.Empty || h.AuthorMemberId == Uuid.Empty ||
+            h.Status is not ("draft" or "approved") || string.IsNullOrWhiteSpace(h.Title) || h.Title.Length > 200 ||
+            !Hex(h.ContentSha256) || !Hex(h.NoChangeDecisionsSha256) || !Hex(h.BindingsSha256) || !Hex(h.VersionsSha256) ||
+            !Hex(h.ReviewsSha256) || !Hex(h.ApprovalsSha256) || h.VersionUpdatedAt == default ||
+            fact.NativeSequence != NativeSequence + 1 || fact.ChangeCount is < 0 or > 1 || fact.ActorMemberId == Uuid.Empty ||
+            op.Actor.Kind != "member" || !Uuid.TryParse(op.Actor.Id, out var member) || member != fact.ActorMemberId ||
+            op.CommandKind != kind || op.Owner != Stream || op.FirstOwner != Stream || op.AffectedOwner != Stream ||
+            op.ExpectedRevisionOwner != Stream || op.Episode != Id.ToString() || op.RootOperationId != op.LogicalId ||
+            op.CausationEventId is not null || !Hex(op.AuthoredIntentSha256) || op.AcceptedAt == default || fact.OccurredAt != op.AcceptedAt ||
+            !Reference(fact.CurrentVersionContent, SystemDescriptionContent.CurrentSchema) ||
+            !Reference(fact.CurrentAuthorityContent, SystemDescriptionAuthority.Schema) ||
+            !Reference(fact.FirstResponse, FirstResponses.Schema) || !Reference(fact.OperationResult, "mutation-result-content.v1") ||
+            SystemDescriptionContent.Payload(fact) is not { Bytes: > 0 } payload || payload.ContentId == Uuid.Empty || !Hex(payload.Sha256))
+            throw new InvalidOperationException("The description native fact has another exact scope, actor, result or content binding.");
+        if (Header is null)
+        {
+            if (kind != nameof(CreateSystemDescriptionDraft) || op.LogicalId != Id || h.Revision != 1 || h.CurrentVersion != 1 ||
+                h.ParentVersionId is not null || h.Status != "draft" || fact.ChangeCount != 1 || op.OriginalExpectedRevision is not null)
+                throw new InvalidOperationException("A description begins with its own identified initial narrative.");
+            return;
+        }
+        var before = Header;
+        var nextVersion = value is SystemDescriptionDraftRevised or SystemDescriptionSourcesBound or SystemDescriptionSuccessorProposed;
+        if (value is SystemDescriptionDraftCreated || h.ProgramId != before.ProgramId || h.Revision != before.Revision + fact.ChangeCount ||
+            h.CurrentVersion != before.CurrentVersion + (nextVersion ? 1 : 0) ||
+            nextVersion && (h.ParentVersionId != before.CurrentVersionId || h.CurrentVersionId == before.CurrentVersionId || h.Status != "draft") ||
+            !nextVersion && h.CurrentVersionId != before.CurrentVersionId ||
+            op.OriginalExpectedRevision != unchecked((ulong)before.Revision) ||
+            fact.ChangeCount == 0 && (h != before || fact.CurrentVersionContent != CurrentVersionContent))
+            throw new InvalidOperationException("A description transition cannot rewrite identity, lineage or its caller's original revision gate.");
+    }
+    static bool Reference(ImmutableContentRef? value, string schema) => value is { Bytes: > 0 } && value.ContentId != Uuid.Empty &&
+        value.Schema == schema && Hex(value.Sha256);
+    static bool Hex(string? value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);
+    static Result Failure(string message, bool transient = false) => Result.Failure(new RequestError(RequestErrorKind.Conflict, message, transient));
 }

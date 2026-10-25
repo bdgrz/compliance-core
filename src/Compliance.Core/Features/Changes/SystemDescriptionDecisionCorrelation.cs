@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using Bdgrz.Compliance.Features.SystemDescription;
 
 namespace Bdgrz.Compliance.Features.Changes;
 
@@ -11,7 +11,7 @@ static class SystemDescriptionDecisionCorrelation
     public static Uuid NoChangeDecisionId(Uuid versionId, Uuid changeId) =>
         Uuid.CreateVersion5(versionId, "no-change:" + changeId);
 
-    public static CorrelatedSystemDescriptionDecision? Find(SystemDescriptionAggregate description,
+    public static CorrelatedSystemDescriptionDecision? Find(SystemDescriptionReadSnapshot description,
         Uuid tenantId, Uuid programId, Uuid targetId, Uuid versionId, Uuid decisionId,
         string decision, string? assessmentSha256 = null)
     {

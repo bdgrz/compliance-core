@@ -1,5 +1,7 @@
-using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.SourceFacts;
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Tests.Features.Incidents;
+using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Tests.Features.Changes;
 using Bdgrz.Compliance.Tests.Testing;
@@ -26,13 +28,17 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
     [Fact]
     public Task ShouldArchiveExactVerifiedChangeBodiesGivenNativeCloseHistoryWithGovernedReferences() => ArchiveAsync(includeChange: true);
 
-    static async Task ArchiveAsync(bool includeChange)
+    [Fact]
+    public Task ShouldArchiveExactVerifiedIncidentComponentsGivenNativeCloseHistoryWithGovernedReferences() => ArchiveAsync(includeChange: false, includeIncident: true);
+
+    static async Task ArchiveAsync(bool includeChange, bool includeIncident = false)
     {
         // Arrange
         await using var fixture = new Fixture();
         await fixture.RegisterActorAsync();
         await fixture.SeedCoveredCloseReadyPeriodAsync();
         SignificantChangeRules? change = null;
+        ComplianceIncidentRules? incident = null;
         if (includeChange)
         {
             change = new SignificantChangeRules(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4());
@@ -43,14 +49,28 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
                 false, false, false, false, ["other"], [], [], [], [], [], false), fixture.ActorMemberId, "Assessor", StartedAt.AddHours(1)));
             await ChangeSeeds.WriteAsync(fixture.Writer, fixture.Host.Content, change);
         }
+        if (includeIncident)
+        {
+            incident = new ComplianceIncidentRules(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4());
+            Assert.Null(incident.Record(new ComplianceIncidentContent(null, null, null, null, "Exact incident source-byte history", "Complete governed incident narrative.",
+                "operational", "medium", StartedAt, StartedAt.AddMinutes(10), fixture.ProposerMemberId, false, false,
+                Enumerable.Range(0, 1000).Select(index => Uuid.CreateVersion5(incident.Id, "system:" + index)).ToArray(), "confidential",
+                Enumerable.Range(0, 1000).Select(index => Uuid.CreateVersion5(incident.Id, "evidence:" + index)).ToArray()),
+                fixture.ProposerMemberId, "Recorder", StartedAt.AddMinutes(20)));
+            Assert.Null(incident.Assess(1, new ComplianceIncidentImpactAssessmentContent("not_significant", "Reviewed all operating impacts.", true, true, true, true,
+                ["scope", "control", "risk", "vendor", "evidence"], [], [], [], false, false, false), fixture.ActorMemberId, "Assessor", StartedAt.AddMinutes(30)));
+            Assert.Null(incident.Resolve(2, new VerifiedIncidentResolution("Incident contained and reviewed.", StartedAt.AddMinutes(45), [Uuid.CreateVersion5(incident.Id, "evidence:0")], []),
+                fixture.ActorMemberId, "Resolver", StartedAt.AddHours(1)));
+            await IncidentSeeds.WriteAsync(fixture.Writer, fixture.Host.Content, incident);
+        }
         var root = Path.Combine(Path.GetTempPath(), "bdgrz-type-ii-close-source-" + Guid.NewGuid().ToString("N"));
         try
         {
             var artifacts = new LocalArtifactContentStore(new ArtifactContentStoreOptions(root, new byte[32], ArtifactContentLimits.MaxContentLength), fixture.CloseClock);
             var publisher = new TypeIIPeriodCloseSourcePublication(artifacts, fixture.Host.Content);
-            var sources = new PublishingCloseSources(publisher, includeChange ? new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events,
+            var sources = new PublishingCloseSources(publisher, includeChange || includeIncident ? new TypeIIPeriodCloseHistory(fixture.Events,
                 new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true)),
-                new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()) : null);
+                new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content, new ComplianceIncidentReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()) : null);
             var request = await CloseRequestAsync(fixture);
             var validator = Uuid.CreateVersion4();
             var actor = new ClaimsPrincipal(new ClaimsIdentity([new Claim("iss", "bdgrz"), new Claim("sub", validator.ToString()),
@@ -109,6 +129,25 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             Assert.Equal(manifest.RecordedThrough, body.RootElement.GetProperty("recorded_through").GetDateTimeOffset());
             Assert.Equal(request.CommandId, manifest.CloseOperationId);
             Assert.True(body.RootElement.GetProperty("records").GetArrayLength() > 0);
+            if (includeIncident)
+            {
+                var recorded = body.RootElement.GetProperty("records").EnumerateArray().Single(item =>
+                    item.GetProperty("payload").TryGetProperty("header", out var header) &&
+                    header.TryGetProperty("incident_id", out var incidentId) && incidentId.GetString() == incident!.Id.ToString() &&
+                    header.GetProperty("revision").GetInt64() == 1);
+                var blob = recorded.GetProperty("content_blobs").EnumerateArray().Single(item =>
+                    item.GetProperty("reference").GetProperty("schema").GetString() == ComplianceIncidentContentStore.VersionSchema);
+                var exact = Convert.FromBase64String(blob.GetProperty("base64").GetString()!);
+                Assert.Equal(blob.GetProperty("reference").GetProperty("bytes").GetInt64(), exact.LongLength);
+                Assert.Equal(blob.GetProperty("reference").GetProperty("sha256").GetString(), Bdgrz.Compliance.Features.Kernel.ContentDigest.Sha256(exact));
+                var reconstructed = JsonSerializer.Deserialize(exact, Bdgrz.Compliance.ComplianceCoreJsonContext.Default.ComplianceIncidentVersionView);
+                Assert.Equal("Exact incident source-byte history", reconstructed!.Content.Title);
+                Assert.Equal(1000, reconstructed.Content.AffectedSystemIds.Count);
+                Assert.Equal(1000, reconstructed.Content.EvidenceArtifactIds.Count);
+                Assert.Equal(incident!.Current!.Current!.ContentSha256, reconstructed.ContentSha256);
+                Assert.Equal(3, body.RootElement.GetProperty("records").EnumerateArray().Count(item => item.GetProperty("payload").TryGetProperty("header", out var header) &&
+                    header.TryGetProperty("incident_id", out var id) && id.GetString() == incident.Id.ToString()));
+            }
             if (includeChange)
             {
                 var recorded = body.RootElement.GetProperty("records").EnumerateArray().Single(item =>

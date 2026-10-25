@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Tests.Features.SystemDescription;
+using Bdgrz.Compliance.Features.SystemDescription;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -19,6 +21,31 @@ namespace Bdgrz.Compliance.Tests.Features.Operations;
 public sealed class ObservationPeriodReadHandlerTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 24, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task ShouldInvalidateExactNativeDescriptionVersionGivenCloseAmendmentMaterialCapture()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var period = await fixture.SeedClosedAsync();
+        var prior = period.Current!.CloseSnapshots[^1];
+        var id = Uuid.CreateVersion4();
+        var version = Uuid.CreateVersion4();
+        var description = new SystemDescriptionRules(fixture.Tenant, fixture.Program, id);
+        Assert.Null(description.Create(version, new SystemDescriptionScope("type_ii", period.Current.ExaminationId,
+            Uuid.CreateVersion4(), period.Id, prior.CloseSnapshotId), SystemDescriptionNativeFixture.Body(), fixture.Member,
+            "Description author", prior.RecordedAt.AddHours(1)));
+        await DescriptionSeeds.WriteAsync(fixture.Writer, fixture.Content, description);
+
+        // Act
+        await fixture.AmendClosedAsync(period);
+
+        // Assert
+        var affected = period.Current.CloseSnapshots[^1].AffectedExaminationMaterialIds;
+        Assert.Contains(id, affected);
+        Assert.Contains(version, affected);
+        Assert.Contains(prior.CloseSnapshotId, affected);
+    }
 
     [Fact]
     public async Task ShouldReadCurrentLifecycleDatesAndScopeGivenExactNativePeriod()
@@ -447,7 +474,8 @@ public sealed class ObservationPeriodReadHandlerTests
             var reconciliation = new TypeIIPeriodCloseValidationContent([source], prior.ExpectedOccurrenceIds, prior.ExpectedOccurrenceIds,
                 [], [], prior.AcknowledgedMaterialItemIds)
             { SourceContentManifest = publication, RecordedThrough = at };
-            var proof = await new TypeIIPeriodCloseMaterialReader(Events, Content, new RecordedSourceReceiptCutFactory(Events, Receipts)).FreezeAsync(period.Current, prior, reconciliation, operation, CancellationToken.None);
+            var proof = await new TypeIIPeriodCloseMaterialReader(Events, Content, new SystemDescriptionReader(Reader, Events, Content),
+                new RecordedSourceReceiptCutFactory(Events, Receipts)).FreezeAsync(period.Current, prior, reconciliation, operation, CancellationToken.None);
             var evidence = await Content.ReadJsonAsync<TypeIIPeriodCloseMaterialProof>(Tenant.ToString(), proof);
             Assert.Null(period.AmendClose(period.Revision, new TypeIIPeriodCloseSnapshotContent(Uuid.CreateVersion4(), [source],
                 prior.ExpectedOccurrenceIds, prior.AcknowledgedMaterialItemIds)

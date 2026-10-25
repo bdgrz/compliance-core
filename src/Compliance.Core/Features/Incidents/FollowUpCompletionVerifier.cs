@@ -14,7 +14,7 @@ namespace Bdgrz.Compliance.Features.Incidents;
 ///     completion. A caller-supplied work identifier, a projection row or a fact of another kind or tenant is never
 ///     accepted.
 /// </summary>
-public sealed class FollowUpCompletionVerifier(ISourceFactResolver resolver, IImmutableContentStore content)
+public sealed class FollowUpCompletionVerifier(ISourceFactResolver resolver, IImmutableContentStore content, IDomainEventReader events)
 {
     /// <summary>Resolves, reads and checks every named fact; any failure rejects the whole resolution.</summary>
     public async ValueTask<Result<VerifiedIncidentResolution>> VerifyAsync(Uuid tenantId, Uuid programId,
@@ -26,17 +26,43 @@ public sealed class FollowUpCompletionVerifier(ISourceFactResolver resolver, IIm
         var completions = new List<ComplianceIncidentFollowUpCompletionView>();
         foreach (var reference in resolution.FollowUpCompletionFacts)
         {
-            if (reference.Stream.Realm != tenantId.ToString() || reference.Stream.Area != CorrectiveAction.Area)
+            if (reference.Stream is null || reference.EventId == Uuid.Empty || reference.AggregateVersion == 0 ||
+                reference.Stream.Realm != tenantId.ToString() || reference.Stream.Area != CorrectiveAction.Area)
                 return Reject("A follow-up completion must be a fact of a corrective action in this tenant.");
             try
             {
+                DomainEventRecord? selected = null;
+                try
+                {
+                    await foreach (var record in events.ReadAsync(reference.Stream, 0, ct).ConfigureAwait(false))
+                    {
+                        if (record.Stream != reference.Stream)
+                            return Reject("The scoped completion history returned another native source stream.");
+                        if (record.Event.Metadata.IsAudit || record.Event.Metadata.EventId != reference.EventId)
+                            continue;
+                        if (selected is not null || record.Event.Metadata.AggregateVersion != reference.AggregateVersion ||
+                            record.Event is not CorrectiveActionCompletedV2)
+                            return Reject("The named completion has no unique exact native source tuple.");
+                        selected = record;
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    return Pending("The exact committed completion source is not readable yet.");
+                }
+                if (selected is null)
+                    return Pending("The exact committed completion source is not visible yet.");
                 var (proof, fact, locator) = await SourceFactProofs.BuildAsync<CorrectiveActionCompletedV2>(resolver,
-                    content, tenantId.ToString(), reference, ct).ConfigureAwait(false);
+                    content, tenantId.ToString(), reference, selected.ResourceOffset, ct).ConfigureAwait(false);
                 if (fact.TenantId != tenantId || fact.ProgramId != programId ||
                     locator.Source != new CorrectiveAction(tenantId, programId, fact.FindingId, fact.ActionId).Stream)
                     return Reject("A follow-up completion must be a fact of a corrective action in this program.");
                 completions.Add(new ComplianceIncidentFollowUpCompletionView(
                     WorkCandidate.IdFor(fact.ActionId, WorkSource.CorrectiveAction), proof));
+            }
+            catch (SourceFactUnavailableException exception)
+            {
+                return Pending($"The exact committed completion source is not visible yet: {exception.Message}");
             }
             catch (SourceFactVerificationException exception)
             {
@@ -49,6 +75,9 @@ public sealed class FollowUpCompletionVerifier(ISourceFactResolver resolver, IIm
         return Result<VerifiedIncidentResolution>.Success(new VerifiedIncidentResolution(resolution.Resolution,
             resolution.ResolvedAt, resolution.EvidenceArtifactIds, completions));
     }
+
+    static Result<VerifiedIncidentResolution> Pending(string message) => Result<VerifiedIncidentResolution>.Failure(
+        new RequestError(RequestErrorKind.Conflict, message, true));
 
     static Result<VerifiedIncidentResolution> Reject(string message) => Result<VerifiedIncidentResolution>.Failure(
         new RequestError(RequestErrorKind.Validation, message));

@@ -1,13 +1,26 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-/// <summary>Persists the exact approved version's examination snapshot binding.</summary>
-[Discriminator("bdgrz.systemdescription.system-description-bound", 1)]
-public sealed record SystemDescriptionBound(
-    Uuid TenantId,
+/// <summary>One selected native fact, compact authority and exact immutable structured business payload.</summary>
+[Discriminator("bdgrz.systemdescription.system-description-bound", 2)]
+public sealed record SystemDescriptionBound(Uuid TenantId,
     Uuid ProgramId,
     Uuid SystemDescriptionId,
     long AggregateRevision,
-    SystemDescriptionBindingView Binding,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    ImmutableContentRef BindingContent,
+    DateTimeOffset OccurredAt,
+    OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult,
+    SystemDescriptionAuthorityHeader Header,
+    ImmutableContentRef CurrentVersionContent,
+    long NativeSequence,
+    int ChangeCount,
+    Uuid ActorMemberId) : DomainEvent, ISystemDescriptionFact
+{
+    public ImmutableContentRef CurrentAuthorityContent { get; init; } = null!;
+    public ImmutableContentRef? SourceSnapshotContent { get; init; }
+}

@@ -1,42 +1,21 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-public sealed class ReviseSystemDescriptionDraftHandler(IAggregateExecutor executor,
-    TimeProvider clock) : IRequestHandler<ReviseSystemDescriptionDraft>
+public sealed class ReviseSystemDescriptionDraftHandler(SystemDescriptionOperations operations) : IRequestHandler<ReviseSystemDescriptionDraft>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<ReviseSystemDescriptionDraft> context,
-        CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<ReviseSystemDescriptionDraft> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (!TryGetAuthor(context, request.TenantId, out var authorMemberId,
-                out var authorDisplay))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Revising a system description requires a personal HTTP actor.")));
-
-        return executor.ExecuteAsync(new SystemDescription(request.TenantId, request.ProgramId,
-                request.DescriptionId), aggregate =>
+        return operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.DescriptionId, request.CommandId,
+            nameof(ReviseSystemDescriptionDraft), request.ExpectedRevision, (snapshot, operation, token) =>
             {
-                if (aggregate.CurrentVersion is not { } current)
-                    return AggregateOutcome.Discard(Result.Failure(new RequestError(
-                        RequestErrorKind.NotFound, "The system description was not found.")));
-                var content = new SystemDescriptionDraftContent(request.Title, request.Sections,
-                    current.Content.Sources, current.Content.PeriodChanges,
-                    current.Content.SignificantChangeIds);
-                return CommandFailureRequestAdapter.ToOutcome(aggregate.Revise(
-                    request.ExpectedRevision, context.RequestId, content, request.ChangeReason,
-                    authorMemberId, authorDisplay, clock.GetUtcNow()));
-            }, context, ct);
-    }
-
-    static bool TryGetAuthor(IRequestContext<ReviseSystemDescriptionDraft> context,
-        Uuid tenantId, out Uuid memberId, out string display)
-    {
-        memberId = Uuid.Empty;
-        display = string.Empty;
-        return context.Invocation is HttpInvocation && !RequestActor.IsSystem(context.Actor) &&
-               SystemDescriptionCommandActor.TryGet(context.Actor, tenantId, out memberId,
-                   out display);
+                var current = snapshot.CurrentVersion!;
+                var value = new SystemDescriptionDraftContent(request.Title, request.Sections, current.Content.Sources,
+                    current.Content.PeriodChanges, current.Content.SignificantChangeIds);
+                var member = Uuid.Parse(operation.Actor.Id, System.Globalization.CultureInfo.InvariantCulture);
+                return ValueTask.FromResult(SystemDescriptionOperations.Outcome(snapshot.Rules.Revise(request.ExpectedRevision,
+                    request.CommandId, value, request.ChangeReason, member, operation.Actor.Display, operation.AcceptedAt)));
+            }, null, ct);
     }
 }

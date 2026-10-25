@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Content;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -8,14 +9,14 @@ using Bdgrz.Compliance.Tests.Features.Examinations;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using DescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using DescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
 using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriodRules;
 using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.SystemDescription;
 
-public sealed class SystemDescriptionDraftCommandHandlerTests
+public sealed partial class SystemDescriptionDraftCommandHandlerTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 17, 21, 0, 0, TimeSpan.Zero);
     static readonly string[] SectionIds =
@@ -38,8 +39,8 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         // Act
         var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
-            fixture.ProgramId, fixture.DescriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -67,8 +68,8 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         // Act
         var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
-            fixture.ProgramId, fixture.DescriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -87,8 +88,8 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         // Act
         var result = await fixture.CreateHandler().HandleAsync(Fixture.SystemContext(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
-            fixture.ProgramId, fixture.DescriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
@@ -106,14 +107,14 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         {
             Content = item.SectionId == "services" ? "Updated service description." : item.Content,
         }).ToArray();
-        var request = new ReviseSystemDescriptionDraft(fixture.TenantId, fixture.ProgramId,
+        var request = new ReviseSystemDescriptionDraft(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.DescriptionId, 1, "Updated System", sections, "Clarified service scope.");
 
         // Act
         var result = await fixture.ReviseHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
-            fixture.ProgramId, fixture.DescriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -132,14 +133,14 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         await using var fixture = new Fixture();
         await fixture.SeedBaselineAsync();
         await fixture.SeedDescriptionAsync();
-        var request = new ReviseSystemDescriptionDraft(fixture.TenantId, fixture.ProgramId,
+        var request = new ReviseSystemDescriptionDraft(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.DescriptionId, 0, "Stale System", Sections(), "Stale edit.");
 
         // Act
         var result = await fixture.ReviseHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
-            fixture.ProgramId, fixture.DescriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -154,14 +155,14 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         await using var fixture = new Fixture();
         await fixture.SeedBaselineAsync();
         await fixture.SeedDescriptionAsync();
-        var request = new BindSystemDescriptionSources(fixture.TenantId, fixture.ProgramId,
+        var request = new BindSystemDescriptionSources(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.DescriptionId, 1, [fixture.BaselineSourceVersionId]);
 
         // Act
         var result = await fixture.BindSourcesHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
-            fixture.ProgramId, fixture.DescriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -178,14 +179,14 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         await using var fixture = new Fixture();
         await fixture.SeedBaselineAsync();
         await fixture.SeedDescriptionAsync();
-        var request = new BindSystemDescriptionSources(fixture.TenantId, fixture.ProgramId,
+        var request = new BindSystemDescriptionSources(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.DescriptionId, 1, [Uuid.CreateVersion4()]);
 
         // Act
         var result = await fixture.BindSourcesHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
-            fixture.ProgramId, fixture.DescriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -199,14 +200,14 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         await using var fixture = new Fixture();
         await fixture.SeedBaselineAsync(includeAdditionalSource: true);
         await fixture.SeedDescriptionAsync();
-        var request = new BindSystemDescriptionSources(fixture.TenantId, fixture.ProgramId,
+        var request = new BindSystemDescriptionSources(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.DescriptionId, 1, [fixture.BaselineSourceVersionId]);
 
         // Act
         var result = await fixture.BindSourcesHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
-            fixture.ProgramId, fixture.DescriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -222,14 +223,14 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         await fixture.SeedTypeIIDescriptionAsync(period.CloseSnapshots[^1].CloseSnapshotId);
         var sourceVersionIds = period.CloseSnapshots[^1].SourceReferences
             .Select(static source => source.VersionId).ToArray();
-        var request = new BindSystemDescriptionSources(fixture.TenantId, fixture.ProgramId,
+        var request = new BindSystemDescriptionSources(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.DescriptionId, 1, sourceVersionIds);
 
         // Act
         var result = await fixture.BindSourcesHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
-            fixture.ProgramId, fixture.DescriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -248,15 +249,15 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         await using var fixture = new Fixture();
         var period = await fixture.SeedClosedTypeIIPeriodAsync();
         await fixture.SeedTypeIIDescriptionAsync(Uuid.CreateVersion4());
-        var request = new BindSystemDescriptionSources(fixture.TenantId, fixture.ProgramId,
+        var request = new BindSystemDescriptionSources(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.DescriptionId, 1, period.CloseSnapshots[^1].SourceReferences
                 .Select(static source => source.VersionId).ToArray());
 
         // Act
         var result = await fixture.BindSourcesHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
-            fixture.ProgramId, fixture.DescriptionId));
+        var saved = await fixture.Descriptions.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -294,6 +295,9 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         public Uuid UserMemberId => RbacIds.Member(TenantId, UserId);
         public InMemoryEventStore PeriodEvents { get; } = new();
         public IImmutableContentStore PeriodContent { get; } = TypeIIPeriodSeeds.NewContentStore();
+        public SystemDescriptionReader Descriptions => new(Reader, PeriodEvents, PeriodContent);
+        public SystemDescriptionOperations Operations => new(new NativeOperationExecutor(Reader, Executor, PeriodContent), Descriptions, PeriodContent, _clock);
+        public SystemDescriptionSourceResolver Sources => new(Reader, Periods, new SystemDescriptionSnapshotSources(PeriodEvents, PeriodContent));
         public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, PeriodContent);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
@@ -315,11 +319,11 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public CreateSystemDescriptionDraftHandler CreateHandler() => new(Reader, Executor, _clock);
+        public CreateSystemDescriptionDraftHandler CreateHandler() => new(Operations, Sources);
 
-        public ReviseSystemDescriptionDraftHandler ReviseHandler() => new(Executor, _clock);
+        public ReviseSystemDescriptionDraftHandler ReviseHandler() => new(Operations);
 
-        public BindSystemDescriptionSourcesHandler BindSourcesHandler() => new(Reader, Executor, Periods, _clock);
+        public BindSystemDescriptionSourcesHandler BindSourcesHandler() => new(Operations, Sources);
 
         public Cntryl.Portia.RequestContext<T> Context<T>(T request) where T : IRequestBase => new(request,
             new RequestDispatchContext(Actor, new HttpInvocation("POST", "/system-descriptions",
@@ -362,7 +366,7 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
             var aggregate = new DescriptionAggregate(TenantId, ProgramId, DescriptionId);
             Assert.Null(aggregate.Create(Uuid.CreateVersion4(), scope, content, UserMemberId,
                 "author@example.test", Now.AddMinutes(2)));
-            await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
+            await DescriptionSeeds.WriteAsync(Writer, PeriodContent, aggregate);
         }
 
         public async Task<TypeIIPeriodView> SeedClosedTypeIIPeriodAsync()
@@ -416,7 +420,7 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
             var aggregate = new DescriptionAggregate(TenantId, ProgramId, DescriptionId);
             Assert.Null(aggregate.Create(Uuid.CreateVersion4(), scope, content, UserMemberId,
                 "author@example.test", Now.AddMinutes(2)));
-            await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
+            await DescriptionSeeds.WriteAsync(Writer, PeriodContent, aggregate);
         }
 
         IReadOnlyList<ExaminationContentReference> TypeIISourceReferences() =>

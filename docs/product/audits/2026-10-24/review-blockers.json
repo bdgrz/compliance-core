@@ -112,6 +112,12 @@
       "evidence": "Current selected mapping/applicability lane has no actual source-use purpose/receiver/pin for ControlVersion/program edition/catalog/waiver, and ControlReader exposes no selected VersionSource proof API here. Existing exact current approved UUID/edition/catalog/waiver guards remain; owner/history implementation does not establish stronger persisted producer-proof or through-append held-current authority.",
       "nextWork": "Select and implement a concrete trusted source/receiver proof contract; continue independent owners meanwhile.",
       "qualificationArtifact": "mapping-remediation-qualification.json"
+    },
+    {
+      "id": "incident-approved-successor-source-use-pair",
+      "status": "contract_selection_gap",
+      "evidence": "No selected trusted Incident approved_successor producer/receiver/permit source-use pair exists. Existing no_change receiver and historical native source correlation are retained.",
+      "nextWork": "Select actual approval source-use protocol before claiming current-held successor proof; continue independent work. No GitHub issue."
     }
   ],
   "remainingSlices": [
@@ -212,10 +218,16 @@
     "finding-operating-file-reviews.json",
     "finding-operating-file-triage.json",
     "finding-operating-integration-jev.json",
-    "finding-operating-qualification.json"
+    "finding-operating-qualification.json",
+    "description-incident-file-reviews.json",
+    "description-incident-file-triage.json",
+    "description-incident-integration-jev.json",
+    "description-incident-qualification.json",
+    "description-native-version-reconciliation.json",
+    "description-export-render-qualification.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
-  "reviewSignalsTriaged": 95,
+  "reviewSignalsTriaged": 102,
   "findingArtifacts": [
     "implementation-file-triage-versioned.json",
     "implementation-file-triage-foundations.json",
@@ -570,10 +582,18 @@
     },
     {
       "id": "finding-operating-readiness-auditor-response",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "qualificationArtifact": "finding-operating-qualification.json",
       "fileReviews": 77,
-      "genuineOldApiRedFailed": 25
+      "genuineOldApiRedFailed": 25,
+      "pr": 1121,
+      "mergeCommit": "9788f1d221682600157ba099e352df0850c0aae1"
+    },
+    {
+      "id": "description-incident-native",
+      "status": "locally_verified_pending_merge",
+      "qualificationArtifact": "description-incident-qualification.json",
+      "fileReviews": 124
     }
   ],
   "resolved": [
@@ -594,29 +614,32 @@
   "preparedUnqualifiedQueue": [
     {
       "id": "system-description-native",
-      "status": "frozen_runtime_pending",
+      "status": "locally_verified_pending_merge",
       "artifactDirectory": "/tmp/compliance-system-description-prepared"
     },
     {
       "id": "risk-native",
-      "status": "frozen_runtime_pending",
-      "artifactDirectory": "/tmp/compliance-risk-native-prepared"
+      "status": "merged",
+      "artifactDirectory": "/tmp/compliance-risk-native-prepared",
+      "pr": 1116
     },
     {
       "id": "independence-catalogs-native",
-      "status": "frozen_runtime_pending",
-      "artifactDirectory": "/tmp/compliance-ratification-native-prepared"
+      "status": "merged",
+      "artifactDirectory": "/tmp/compliance-ratification-native-prepared",
+      "pr": 1117
     },
     {
       "id": "compliance-incident-native",
-      "status": "frozen_runtime_pending",
+      "status": "locally_verified_pending_merge",
       "artifactDirectory": "/tmp/compliance-incident-native-prepared"
     }
   ],
   "continuingPreparation": [
-    "Generic SourceUseReservations live+selected state with full exact-cut transient validation and explicit proof selection",
-    "AccessPrincipalClassification/CriteriaTextOverlay/TrainingRequirement small native history compactions",
-    "RiskMethod/RiskGovernance/RiskTreatmentAssertion/RiskTreatmentAction current/native history group",
-    "Remaining owner/reactor candidates in remaining-owner-reactor-inventory.json; finite/current/one-shot qualifications must be checked before changing a candidate"
+    "AuditorRequest full history/read/query/cancellation/native preparation",
+    "AdvisorHandoff/AdvisorFeedbackThread complete text/history/current preparation",
+    "Access review campaigns/items and policy communication whole protocol",
+    "AuditPackageManifest and ExaminationEngagement histories",
+    "Remaining owner/reactor source inventory; finite/current/one-shot candidates require exact source qualification"
   ]
 }

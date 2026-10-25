@@ -1,11 +1,12 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-using Bdgrz.Compliance.Features.Changes;
 
 namespace Bdgrz.Compliance.Features.Incidents;
 
 public sealed class ListComplianceIncidentsHandler(IComplianceIncidentDirectoryReader directory,
-    RestrictedComplianceRecordVisibility visibility)
+    RestrictedComplianceRecordVisibility visibility, ComplianceIncidentDirectoryReadConsistency consistency)
     : IRequestHandler<ListComplianceIncidents, Page<ComplianceIncidentSummaryView>>
 {
     public async ValueTask<Result<Page<ComplianceIncidentSummaryView>>> HandleAsync(
@@ -19,6 +20,9 @@ public sealed class ListComplianceIncidentsHandler(IComplianceIncidentDirectoryR
             return Result<Page<ComplianceIncidentSummaryView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The compliance-incident list limit must be between 1 and 200."));
 
+        var fence = await consistency.CaptureAsync(request.TenantId, ct).ConfigureAwait(false);
+        if (!fence.IsSuccess)
+            return Result<Page<ComplianceIncidentSummaryView>>.Failure(fence.Error!);
         var items = new List<ComplianceIncidentSummaryView>(request.Limit ?? 50);
         var cursor = request.Cursor;
         string? nextCursor = null;
@@ -53,9 +57,10 @@ public sealed class ListComplianceIncidentsHandler(IComplianceIncidentDirectoryR
 
                 if (await visibility.CanReadAsync(request.TenantId, context.Actor,
                         current.Content.HandlingClass,
-                    detail.Assessments.Select(static assessment => assessment.AssessedByMemberId).ToArray(), ct)
+                        detail.Assessments.Select(static assessment => assessment.AssessedByMemberId).ToArray(), ct)
                     .ConfigureAwait(false))
-                    items.Add(summary);
+                    items.Add(new ComplianceIncidentSummaryView(detail.TenantId, detail.ProgramId, detail.ComplianceIncidentId,
+                        current.Content.Title, detail.Status, detail.UpdatedAt));
 
                 cursor = sourcePage.NextCursor;
                 if (cursor is not null && !seenCursors.Add(cursor))
@@ -65,19 +70,37 @@ public sealed class ListComplianceIncidentsHandler(IComplianceIncidentDirectoryR
                     break;
             }
         }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<Page<ComplianceIncidentSummaryView>>.Failure(IncidentOperations.ContentFailure(exception));
+        }
         catch (KvDirectoryQueryException)
         {
             return Result<Page<ComplianceIncidentSummaryView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The compliance-incident cursor is invalid."));
         }
 
-        if (items.Count == (request.Limit ?? 50) && nextCursor is not null &&
-            !await HasVisibleAfterAsync(request.TenantId, request.ProgramId, context.Actor,
-                nextCursor, ct).ConfigureAwait(false))
-            nextCursor = null;
+        try
+        {
+            if (items.Count == (request.Limit ?? 50) && nextCursor is not null &&
+                !await HasVisibleAfterAsync(request.TenantId, request.ProgramId, context.Actor,
+                    nextCursor, ct).ConfigureAwait(false))
+                nextCursor = null;
 
-        return Result<Page<ComplianceIncidentSummaryView>>.Success(
-            new Page<ComplianceIncidentSummaryView>(items, nextCursor));
+            var confirmed = await consistency.ConfirmUnchangedAndCaughtUpAsync(request.TenantId, fence.Value, ct).ConfigureAwait(false);
+            if (!confirmed.IsSuccess)
+                return Result<Page<ComplianceIncidentSummaryView>>.Failure(confirmed.Error!);
+            return Result<Page<ComplianceIncidentSummaryView>>.Success(
+                new Page<ComplianceIncidentSummaryView>(items, nextCursor));
+        }
+        catch (KvDirectoryQueryException)
+        {
+            return Result<Page<ComplianceIncidentSummaryView>>.Failure(new RequestError(RequestErrorKind.Validation, "The compliance-incident cursor is invalid."));
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<Page<ComplianceIncidentSummaryView>>.Failure(IncidentOperations.ContentFailure(exception));
+        }
     }
 
     async ValueTask<bool> HasVisibleAfterAsync(Uuid tenantId, Uuid programId,
@@ -94,12 +117,12 @@ public sealed class ListComplianceIncidentsHandler(IComplianceIncidentDirectoryR
                 throw new InvalidOperationException("A one-row compliance-incident read returned multiple rows.");
             var summary = page.Items[0];
             if (summary.TenantId != tenantId || summary.ProgramId != programId)
-                return false;
+                throw new ImmutableContentIntegrityException("The change discovery lookahead returned another scope.");
             var detail = await directory.GetAsync(tenantId, summary.ComplianceIncidentId, ct)
                 .ConfigureAwait(false);
             if (detail is not { Current: { } current } || detail.TenantId != tenantId ||
                 detail.ProgramId != programId || detail.ComplianceIncidentId != summary.ComplianceIncidentId)
-                return false;
+                throw new ImmutableContentUnavailableException("A listed native change is not readable yet.");
             if (await visibility.CanReadAsync(tenantId, actor, current.Content.HandlingClass,
                     detail.Assessments.Select(static assessment => assessment.AssessedByMemberId).ToArray(), ct)
                 .ConfigureAwait(false))
