@@ -21,41 +21,54 @@ sealed class CloseCampaignHandler(NativeOperationExecutor operations, CampaignSo
 {
     const string CommandKind = "CloseCampaign";
 
-    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(IRequestContext<CloseCampaign> context,
+    public ValueTask<Result<OperationAcceptedResponse>> HandleAsync(IRequestContext<CloseCampaign> context,
+        CancellationToken ct) =>
+        PolicyCampaignFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<OperationAcceptedResponse>> HandleCoreAsync(IRequestContext<CloseCampaign> context,
         CancellationToken ct)
     {
         var request = context.Request;
         if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
             return Failure(RequestErrorKind.Validation,
                 "A closure requires a command id and a non-negative expected revision.");
-        var source = await campaigns.ReadAsync(request.TenantId, request.ProgramId, request.CampaignId, ct,
-            request.CommandId).ConfigureAwait(false);
-        if (!source.IsSuccess)
-            return Result<OperationAcceptedResponse>.Failure(source.Error);
-        var state = source.Value;
-        var campaign = state.Campaign;
         var actor = PolicyActor.From(context, request.TenantId);
         var now = clock.GetUtcNow();
-        var provenance = PolicyCampaignContent.Provenance(request.CommandId, CommandKind, campaign.Stream,
-            campaign.Stream, actor.Reference, request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
+        var stream = new PolicyDistributionCampaign(request.TenantId, request.CampaignId).Stream;
+        var provenance = PolicyCampaignContent.Provenance(request.CommandId, CommandKind, stream,
+            stream, actor.Reference, request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? intent = null;
-        FirstResponseDescriptor? response = null;
-        if (campaign.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            if (CampaignRules.CheckClosure(state, request) is { } failure)
-                return Result<OperationAcceptedResponse>.Failure(failure.ToRequestError());
-            intent = await FreezeAsync(state, request, provenance, now, ct).ConfigureAwait(false);
-            response = await PolicyCampaignContent.AcceptedResponseAsync(content, request.TenantId, request.CommandId,
-                now, ct).ConfigureAwait(false);
-        }
-
+        PolicyCampaignPreparedCut? preparedCut = null;
         var outcome = await operations.ExecuteAsync(new NativeOperation<PolicyDistributionCampaign>(binding,
             () => new PolicyDistributionCampaign(request.TenantId, request.CampaignId, request.CommandId),
-            owner => owner.Acceptance, owner => Prepare(owner, request.ExpectedRevision, response),
+            owner => owner.Acceptance, async (owner, token) =>
+            {
+                preparedCut = PolicyCampaignPreparedCut.Capture(owner);
+                if (!owner.IsLaunched || owner.ProgramId != request.ProgramId)
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound, "The campaign was not found."));
+                var source = await campaigns.StateOfAsync(owner, token).ConfigureAwait(false);
+                if (!source.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(source.Error!);
+                if (CampaignRules.CheckClosure(source.Value, request) is { } failure)
+                    return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
+                intent = await FreezeAsync(source.Value, request, provenance, now, token).ConfigureAwait(false);
+                var response = await PolicyCampaignContent.AcceptedResponseAsync(content, request.TenantId, request.CommandId,
+                    now, token).ConfigureAwait(false);
+                var prepared = owner.PrepareOpenAdmission(request.ExpectedRevision);
+                return prepared.IsSuccess ? Result<FirstResponseDescriptor>.Success(response)
+                    : Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+            },
             (PolicyDistributionCampaign owner, ImmutableContentRef frozen) =>
-                owner.AcceptClosure(provenance, intent!, frozen)), context, ct).ConfigureAwait(false);
+            {
+                var guarded = owner.PrepareOpenAdmission(request.ExpectedRevision);
+                if (!guarded.IsSuccess)
+                    return guarded;
+                return preparedCut is null || !preparedCut.Matches(owner)
+                    ? PolicyCampaignPreparedCut.Changed()
+                    : owner.AcceptClosure(provenance, intent!, frozen);
+            }), context, ct).ConfigureAwait(false);
         return await PolicyCampaignContent.AcknowledgmentAsync(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
     }
@@ -99,18 +112,6 @@ sealed class CloseCampaignHandler(NativeOperationExecutor operations, CampaignSo
         return await PolicyCampaignContent.WriteAsync(content, tenantId, ClosureIntent.Schema,
             new ClosureIntent(header, ClosureParentKind.PolicyCampaign, campaign.Id, (ulong)campaign.Generation,
                 children, decision, uses, null), ct).ConfigureAwait(false);
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(PolicyDistributionCampaign owner, long expectedRevision,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareOpenAdmission(expectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The campaign changed while the closure was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static Result<OperationAcceptedResponse> Failure(RequestErrorKind kind, string message) =>

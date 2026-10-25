@@ -1,0 +1,78 @@
+{
+  "model": "jev-1.14.0",
+  "files": 36,
+  "threshold": 0.65,
+  "signals": [
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/ListCampaignsHandler.cs",
+      "kind": "authority_gap",
+      "probability": 0.69
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/ListCampaignsHandler.cs",
+      "kind": "recovery_gap",
+      "probability": 0.76
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs",
+      "kind": "recovery_gap",
+      "probability": 0.66
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyParticipantAdmission.cs",
+      "kind": "authority_gap",
+      "probability": 0.74
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyParticipantAdmission.cs",
+      "kind": "invariant_gap",
+      "probability": 0.68
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyParticipantAdmission.cs",
+      "kind": "recovery_gap",
+      "probability": 0.74
+    }
+  ],
+  "exactSourceAndDependencyHashes": "verified",
+  "dispositions": [
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/ListCampaignsHandler.cs",
+      "signals": [
+        "authority_gap",
+        "recovery_gap"
+      ],
+      "decision": "No demonstrated introduced defect after installed authorizer and source/directory review.",
+      "evidence": [
+        "ListCampaigns implements IProgramReadRequest and remains subject to ProgramManagementAuthorizer. Handler enforces tenant/program scope on every returned item, validates cursor and refuses a pending source tail after the directory checkpoint.",
+        "Patch only wraps the existing behavior with integrity/unavailability classification; it does not grant new authority or make the directory authoritative. Current HTTP and source/projection tests pass."
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs",
+      "signals": [
+        "recovery_gap"
+      ],
+      "decision": "Exact selected native acceptance and full finalized raw-history verification preserve recovery without lifetime owner collections.",
+      "evidence": [
+        "Compact owner keeps scalar current authority, latest/frozen/pending/closed facts, counts, one selected operation/roster/closure and ordered replay commitment. Complete native history remains external and verified at the actual physical cut before default or executor reads return.",
+        "Focused tests cover unselected historical corruption, selected identity reuse, prefix substitution/truncation, original terminal closure after later generations and exact selected roster absence. No retained-data migration or snapshot qualification is claimed."
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyParticipantAdmission.cs",
+      "signals": [
+        "authority_gap",
+        "invariant_gap",
+        "recovery_gap"
+      ],
+      "decision": "Actual public callers retain current authority; native executor resolves acceptance before business preparation and freezes the exact prepared owner cut.",
+      "evidence": [
+        "AcknowledgePolicy enforces personal HTTP, actor/member/person linkage and proxy restrictions before calling admission; training and waiver callers retain program-management and personal permission checks. Current program request authorizer is installed.",
+        "NativeOperationExecutor resolves selected acceptance before full StateOfAsync, caller business callback, proof/intent/result writes. New admission checks launched program, exact active roster and current generation, then compares PolicyCampaignPreparedCut again in Apply.",
+        "Accepted-retry tests preserve original response with unavailable audience bodies and reject revoked personal authority. Receiver recovery tests cover equal winner before expected failure, already accepted retry, cancellation priority and uncaught programmer faults."
+      ]
+    }
+  ],
+  "adopted": "continue exact integration review; model probabilities are advisory"
+}

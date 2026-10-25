@@ -64,7 +64,7 @@ static class CampaignRules
     }
 
     /// <summary>The checks every participant result shares: an open campaign and a currently included person.</summary>
-    public static CommandFailure? CheckOpen(PolicyDistributionCampaign campaign)
+    public static CommandFailure? CheckOpen(PolicyCampaignSnapshot campaign)
     {
         if (!campaign.IsLaunched)
             return CommandFailure.MissingRecord("The campaign was not found.");

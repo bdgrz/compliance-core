@@ -30,7 +30,7 @@ sealed class CampaignRoster
         _participants.TryGetValue(personId, out var participant) && participant.IsActive ? participant : null;
 
     public static async Task<CampaignRoster> ReadAsync(IImmutableContentStore content,
-        PolicyDistributionCampaign campaign, CancellationToken ct)
+        PolicyCampaignSnapshot campaign, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(campaign);

@@ -16,7 +16,7 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution;
 /// </summary>
 sealed class AuthorizePolicyCampaignParticipantCampaignClosureUseHandler(IAggregateReader reader,
     IAggregateExecutor executor, IImmutableContentStore content, TimeProvider clock,
-    PolicyCampaignClosureVerifier verifier, PolicyCampaignClosureFences fences)
+    PolicyCampaignClosureVerifier verifier, PolicyCampaignClosureFences fences, PolicyCampaignReader history)
     : AuthorizeSourceUseHandler<PolicyCampaignParticipant, AuthorizePolicyCampaignParticipantCampaignClosureUse>(
         reader, executor, content, clock)
 {
@@ -74,7 +74,8 @@ sealed class AuthorizePolicyCampaignParticipantCampaignClosureUseHandler(IAggreg
                 $"The frozen participant results cannot be verified: {exception.Message}", false));
         }
 
-        return admitted.All(result => owner.ResultFor(result.OperationId) is not null)
+        var snapshot = await history.ReadParticipantAsync(owner, ct).ConfigureAwait(false);
+        return admitted.All(result => snapshot.ResultFor(result.OperationId) is not null)
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The participant applied results other than the ones the closure froze.", false));

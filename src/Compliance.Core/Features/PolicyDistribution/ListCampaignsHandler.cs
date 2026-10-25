@@ -6,7 +6,11 @@ public sealed class ListCampaignsHandler(ICampaignDirectoryReader directory,
     IDomainEventReader events)
     : IRequestHandler<ListCampaigns, Page<CampaignSummaryView>>
 {
-    public async ValueTask<Result<Page<CampaignSummaryView>>> HandleAsync(
+    public ValueTask<Result<Page<CampaignSummaryView>>> HandleAsync(
+        IRequestContext<ListCampaigns> context, CancellationToken ct) =>
+        PolicyCampaignFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<Page<CampaignSummaryView>>> HandleCoreAsync(
         IRequestContext<ListCampaigns> context, CancellationToken ct)
     {
         var request = context.Request;

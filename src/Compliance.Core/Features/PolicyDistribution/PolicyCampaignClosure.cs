@@ -8,7 +8,7 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution;
 ///     the frozen intent with its complete participants. A non-null <see cref="Error" /> is the transient or
 ///     permanent verification failure; nothing else is set then.
 /// </summary>
-sealed record PolicyCampaignClosure(PolicyDistributionCampaign? Campaign, PolicyCampaignClosureAccepted? Accepted,
+sealed record PolicyCampaignClosure(PolicyCampaignSnapshot? Campaign, PolicyCampaignClosureAccepted? Accepted,
     ClosureIntent? Intent, IReadOnlyList<ClosureParticipant>? Participants, RequestError? Error)
 {
     public static PolicyCampaignClosure Failed(RequestError error) => new(null, null, null, null, error);

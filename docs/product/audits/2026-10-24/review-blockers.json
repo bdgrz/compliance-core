@@ -682,13 +682,28 @@
     },
     {
       "id": "examination-engagement-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "examination-qualification.json",
       "fileReviews": 50,
       "signalsTriaged": 2,
       "genuineOldApiRedFailed": 2,
       "unitPassed": 6365,
-      "httpPassed": 39
+      "httpPassed": 39,
+      "pr": 1129,
+      "mergeCommit": "d9ac4ce0bc61003d29855ae143474f89fcd35543"
+    },
+    {
+      "id": "policy-campaign-participant-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "policy-campaign-qualification.json",
+      "fileReviews": 36,
+      "signalsTriaged": 6,
+      "genuineOldApiReceiverRedFailed": 5,
+      "rootRequiredBodyClassificationRedFailed": 2,
+      "focusedPassed": 244,
+      "httpPassed": 59,
+      "unitPassed": 6396,
+      "mandatoryCompleteBinding": "required intent/source-use bytes remain before receipt replay; extra manifest command term is not bound by native scalar receipt"
     }
   ],
   "resolved": [
@@ -735,10 +750,10 @@
     }
   ],
   "continuingPreparation": [
-    "AuditorRequest full history/read/query/cancellation/native preparation",
-    "AdvisorHandoff/AdvisorFeedbackThread complete text/history/current preparation",
-    "Access review campaigns/items and policy communication whole protocol",
-    "AuditPackageManifest and ExaminationEngagement histories",
-    "Remaining owner/reactor source inventory; finite/current/one-shot candidates require exact source qualification"
+    "ImportSource34 + ImportBatch26 coherent compact/history/producer stack",
+    "Digest35 history/attempt + selected operator command identity; weekly selected admissions/source capture follow-on",
+    "ProviderAssuranceGap full history and captured proof; native receiver recovery",
+    "FirmStaff25 ready; professional duty/practice/client/service-engagement independence active",
+    "Access receiver preparation follow-on after shared helper; remaining identity/guard/assignment/program/source owners continue"
   ]
 }

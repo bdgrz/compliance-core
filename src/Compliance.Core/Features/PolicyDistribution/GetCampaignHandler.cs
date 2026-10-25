@@ -7,7 +7,11 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution;
 sealed class GetCampaignHandler(CampaignSource campaigns, TimeProvider clock)
     : IRequestHandler<GetCampaign, CampaignView>
 {
-    public async ValueTask<Result<CampaignView>> HandleAsync(IRequestContext<GetCampaign> context,
+    public ValueTask<Result<CampaignView>> HandleAsync(IRequestContext<GetCampaign> context,
+        CancellationToken ct) =>
+        PolicyCampaignFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<CampaignView>> HandleCoreAsync(IRequestContext<GetCampaign> context,
         CancellationToken ct)
     {
         var request = context.Request;

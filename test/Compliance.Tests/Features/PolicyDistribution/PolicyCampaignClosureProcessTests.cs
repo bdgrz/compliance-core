@@ -1,4 +1,8 @@
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Proofs;
+using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Processes;
@@ -356,16 +360,37 @@ public sealed class PolicyCampaignClosureProcessTests
     static async Task AppendForeignResultAsync(CampaignHost host, Uuid campaign, Uuid person)
     {
         await using var scope = host.Provider.CreateAsyncScope();
-        var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-        var participant = new PolicyCampaignParticipant(host.Tenant, campaign, person);
-        var stream = participant.Stream;
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var owner = await reader.HydrateAsync(new PolicyCampaignParticipant(host.Tenant, campaign, person));
+        var parent = await host.CampaignAsync(campaign);
         var root = Uuid.CreateVersion4();
-        var provenance = PolicyCampaignContent.Provenance(root, "ApplyPolicyParticipantResult", stream, stream,
-            host.ManagerActor, null, new string('9', 64), host.Clock.GetUtcNow());
-        var applied = await executor.ExecuteAsync(participant, owner => AggregateOutcome
-            .Commit(owner.ApproveWaiver(provenance, "Forged", host.Today.AddMonths(1), host.ManagerActor,
-                host.ManagerMember, host.Clock.GetUtcNow(), CampaignFacts.Opaque(), CampaignFacts.Opaque())),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(applied.IsSuccess, applied.Error?.Message);
+        var at = host.Clock.GetUtcNow();
+        var request = new ApproveCampaignWaiver(root, host.Tenant, host.Program, campaign, person, "Forged",
+            host.Today.AddMonths(1), parent.Revision);
+        var authored = await PolicyCampaignContent.WriteAsync(content, host.Tenant, PolicyCampaignContent.WaiverCommandSchema,
+            request, CancellationToken.None);
+        var proof = await PolicyCampaignContent.WriteManifestAsync(content, host.Tenant,
+            PolicyCampaignContent.AdmissionProofSchema, [new PolicyParticipantAdmissionProof(
+                NativeFactReference.Of(parent.Stream, parent.Launch!), NativeFactReference.Of(parent.Stream, parent.Frozen!),
+                null, false)], SelectionOrder.CanonicalKey, CancellationToken.None);
+        var rootProvenance = PolicyCampaignContent.Provenance(root, nameof(ApproveCampaignWaiver), parent.Stream,
+            owner.Stream, host.ManagerActor, parent.Revision, AuthoredIntentDigest.Compute(request), at);
+        var header = PolicyCampaignContent.HeaderOf(rootProvenance, parent.Stream, owner.Stream, at);
+        var intent = await PolicyCampaignContent.WriteAsync(content, host.Tenant, ChildAdmissionIntent.Schema,
+            new ChildAdmissionIntent(header, campaign, (ulong)parent.Generation, AdmittedChildKind.CampaignWaiver,
+                root, authored, proof, (ulong)parent.Revision + 1), CancellationToken.None);
+        var body = await PolicyCampaignContent.WriteAsync(content, host.Tenant, PolicyCampaignContent.WaiverSchema,
+            new CampaignWaiverView(root, person, request.Reason, request.ExpiresOn, host.ManagerActor, at), CancellationToken.None);
+        var result = await PolicyCampaignContent.WriteResultAsync(content, host.Tenant, PolicyCampaignContent.WaiverSchema,
+            body, CancellationToken.None);
+        // The forged writer uses a real closure source event as causation, without an admission of this result root.
+        var operation = PolicyCampaignContent.Child(Uuid.CreateVersion4(), nameof(ApplyPolicyParticipantResult),
+            parent.PendingClosure!.Metadata.EventId, header, owner.Stream, at);
+        var forged = new CampaignWaiverApproved(host.Tenant, campaign, root, person, request.Reason, request.ExpiresOn,
+            host.ManagerActor, host.ManagerMember, at, operation, intent, null, result);
+        DomainEventSeed.Attach(forged, owner.Id, owner.Version + 1);
+        await scope.ServiceProvider.GetRequiredService<IEventStore>().AppendAsync(owner.Stream, owner.Version, [forged]);
+        Assert.Equal(owner.Version + 1, (ulong)(await host.EventsAsync<DomainEvent>(owner.Stream)).Count);
     }
 }

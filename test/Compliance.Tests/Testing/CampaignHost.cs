@@ -30,7 +30,8 @@ sealed class CampaignHost : IAsyncDisposable
 
     readonly ServiceProvider _provider;
 
-    public CampaignHost(Func<IProcessRecordStore, IProcessRecordStore>? store = null)
+    public CampaignHost(Func<IProcessRecordStore, IProcessRecordStore>? store = null,
+        IImmutableContentStore? content = null)
     {
         Clock = new ManualClock(Start);
         var services = new ServiceCollection();
@@ -43,6 +44,8 @@ sealed class CampaignHost : IAsyncDisposable
         services.AddSingleton<IEventStore>(events);
         services.AddSingleton<IDomainEventReader>(events);
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
+        if (content is not null)
+            services.AddSingleton(content);
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(
             new RecordingPermissionAuthorizer(true)));
         services.AddSingleton<ITenantActivity, ActiveTenant>();
@@ -155,17 +158,18 @@ sealed class CampaignHost : IAsyncDisposable
     {
         await using var scope = _provider.CreateAsyncScope();
         var state = await new CampaignSource(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
-            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()).ReadAsync(Tenant, Program, campaignId,
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(),
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadAsync(Tenant, Program, campaignId,
             CancellationToken.None);
         Assert.True(state.IsSuccess, state.Error?.Message);
         return state.Value;
     }
 
-    public Task<PolicyCampaignParticipant> ParticipantAsync(Uuid campaignId, Uuid person, ReservationKey? selectedUse = null) =>
+    public Task<PolicyCampaignParticipantSnapshot> ParticipantAsync(Uuid campaignId, Uuid person, ReservationKey? selectedUse = null) =>
         CampaignSeed.ParticipantAsync(_provider, Tenant, campaignId, person, selectedUse);
 
-    public Task<PolicyDistributionCampaign> CampaignAsync(Uuid campaignId) =>
-        ProgramManagementServices.HydrateAsync(_provider, new PolicyDistributionCampaign(Tenant, campaignId));
+    public async Task<PolicyCampaignSnapshot> CampaignAsync(Uuid campaignId) =>
+        await Scope.ServiceProvider.GetRequiredService<PolicyCampaignReader>().ReadAsync(Tenant, campaignId);
 
     public EventStreamAddress CampaignStream(Uuid campaignId) =>
         new PolicyDistributionCampaign(Tenant, campaignId).Stream;

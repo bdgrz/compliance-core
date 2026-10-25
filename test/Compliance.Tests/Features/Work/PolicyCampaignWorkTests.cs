@@ -269,6 +269,7 @@ public sealed class PolicyCampaignWorkTests
                 new PersistenceKvClient(new InMemoryKvClient())));
             services.AddScoped<NativeOperationExecutor>();
             services.AddPortia();
+            services.AddVerifiedPolicyCampaignReader();
             Provider = services.BuildServiceProvider();
         }
 
@@ -277,7 +278,8 @@ public sealed class PolicyCampaignWorkTests
         public InMemoryEventStore Events => _events;
 
         public static CampaignSource Source(AsyncServiceScope scope) => new(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
-            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(),
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>());
 
         public Task<PolicyDistributionCampaign> LaunchAsync(params Uuid[] people) =>
             LaunchAsync(people, new CampaignSubject("policy", Uuid.CreateVersion4(), "POL-AC",

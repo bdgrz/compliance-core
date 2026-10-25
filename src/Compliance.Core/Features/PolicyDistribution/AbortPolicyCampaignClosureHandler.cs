@@ -13,80 +13,62 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution;
 ///     that was already canceled supersedes this abort with the original cancellation as evidence.
 /// </summary>
 sealed class AbortPolicyCampaignClosureHandler(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content, TimeProvider clock) : IRequestHandler<AbortPolicyCampaignClosure, ReceiverOutcome>
+    IImmutableContentStore content, TimeProvider clock, IDomainEventReader events) : IRequestHandler<AbortPolicyCampaignClosure, ReceiverOutcome>
 {
     const int MaximumAttempts = 4;
 
-    public async ValueTask<Result<ReceiverOutcome>> HandleAsync(IRequestContext<AbortPolicyCampaignClosure> context,
+    public ValueTask<Result<ReceiverOutcome>> HandleAsync(IRequestContext<AbortPolicyCampaignClosure> context,
+        CancellationToken ct) =>
+        PolicyCampaignFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<ReceiverOutcome>> HandleCoreAsync(IRequestContext<AbortPolicyCampaignClosure> context,
         CancellationToken ct)
     {
         var command = context.Request;
         if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty || command.Generation < 1 ||
             command.ExpectedRevision < 1)
             return SourceUseReceiverSupport.Permanent("The abort names another generation, revision or operation.");
-        var tenantId = PolicyCampaignContent.ParseTenant(command.Target.Realm);
-        ClosureIntent intent;
-        try
-        {
-            intent = await PolicyCampaignContent.ReadAsync<ClosureIntent>(content, tenantId, command.FailureProof, ct)
-                .ConfigureAwait(false);
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return SourceUseReceiverSupport.Permanent($"The frozen closure cannot be verified: {exception.Message}");
-        }
-
-        if (intent.Header.RootOperationId != command.OperationId || intent.ParentKind != ClosureParentKind.PolicyCampaign ||
-            intent.Header.FirstOwner != command.Target)
-            return SourceUseReceiverSupport.Permanent("The abort differs from the frozen closure intent.");
-        var campaign = await reader.HydrateAsync(new PolicyDistributionCampaign(tenantId, intent.ParentId,
-            command.CommandId), ct).ConfigureAwait(false);
-        if (campaign.Stream != command.Target || campaign.ClosureFor(command.OperationId) is not { } accepted ||
+        if (!Uuid.TryParse(command.Target.Realm, System.Globalization.CultureInfo.InvariantCulture, out var tenantId) ||
+            !Uuid.TryParse(command.Target.Resource, System.Globalization.CultureInfo.InvariantCulture, out var campaignId) ||
+            command.Target.Area != PolicyDistributionCampaign.Area)
+            return SourceUseReceiverSupport.Permanent("The abort names another campaign stream.");
+        var campaign = await new PolicyCampaignReader(reader, events).ReadAsync(tenantId, campaignId,
+            command.CommandId, selectedClosureRootId: command.OperationId, ct: ct).ConfigureAwait(false);
+        if (campaign.Stream != command.Target || campaign.Owner.SelectedClosure is not { } accepted ||
             accepted.Intent != command.FailureProof || accepted.Revision != command.ExpectedRevision ||
             accepted.Generation != command.Generation)
             return SourceUseReceiverSupport.Permanent("An abort requires the exact frozen closure of its campaign.");
-
+        var header = PolicyCampaignContent.HeaderOf(accepted.Operation, campaign.Stream, campaign.Stream,
+            accepted.Operation.AcceptedAt);
         var provenance = PolicyCampaignContent.Child(command.CommandId, nameof(AbortPolicyCampaignClosure),
-            accepted.Metadata.EventId, intent.Header, campaign.Stream, clock.GetUtcNow());
+            accepted.Metadata.EventId, header, campaign.Stream, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
+        var preparation = await NativeReceiverPreparation.PrepareAsync<PolicyDistributionCampaign, ClosureIntent>(reader,
+            () => new PolicyDistributionCampaign(tenantId, campaignId, command.CommandId,
+                selectedClosureRootId: command.OperationId), owner => Decide(owner, binding, command.OperationId),
+            (_, token) => PrepareAsync(tenantId, campaignId, accepted, command, header, token), ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
         for (var attempt = 1; ; attempt++)
         {
             try
             {
-                var step = await executor.ExecuteAsync(new PolicyDistributionCampaign(tenantId, intent.ParentId,
-                    command.CommandId), pending =>
+                var step = await executor.ExecuteAsync(new PolicyDistributionCampaign(tenantId, campaignId,
+                    command.CommandId, selectedClosureRootId: command.OperationId), pending =>
                     {
-                        switch (pending.Acceptance.Decide(binding))
-                        {
-                            case NativeAcceptanceDecision.Replayed:
-                                return AggregateOutcome.Discard(Result<Step>.Success(new Step(
-                                    NativeFactReference.Of(pending.Stream, pending.Acceptance.SelectedFact!), false,
-                                    false)));
-                            case NativeAcceptanceDecision.Conflict:
-                                return AggregateOutcome.Discard(Result<Step>.Failure(AcceptedAppendResult.ConflictError));
-                        }
-
-                        if (pending.CanceledFor(command.OperationId) is { } canceled)
-                            return AggregateOutcome.Discard(Result<Step>.Success(
-                                new Step(NativeFactReference.Of(pending.Stream, canceled), false, true)));
-                        if (pending.Closing is { } closed && closed.Operation.RootOperationId == command.OperationId)
-                            return AggregateOutcome.Discard(Result<Step>.Success(new Step(null, false, true)));
+                        if (Decide(pending, binding, command.OperationId) is { } decided)
+                            return AggregateOutcome.Discard(Result<Step>.Success(new Step(decided)));
                         var raised = pending.CancelClosure(provenance, command.FailureProof);
                         return raised.IsSuccess
-                            ? AggregateOutcome.Commit(Result<Step>.Success(new Step(
-                                NativeFactReference.Of(pending.Stream, pending.Acceptance.SelectedFact!), true,
-                                false)))
+                            ? AggregateOutcome.Commit(Result<Step>.Success(new Step(SourceUseReceiverSupport.Applied(
+                                NativeFactReference.Of(pending.Stream, pending.Acceptance.SelectedFact!)))))
                             : AggregateOutcome.Discard(Result<Step>.Failure(raised.Error!));
                     }, context, ct).ConfigureAwait(false);
                 if (!step.IsSuccess)
                     return Result<ReceiverOutcome>.Failure(step.Error!);
-                if (step.Value!.Foreign)
-                    return SourceUseReceiverSupport.Superseded(step.Value.Fact is null
-                        ? "The closure already completed and recovers forward."
-                        : "The closure was already canceled.", step.Value.Fact);
-                return step.Value.Applied
-                    ? SourceUseReceiverSupport.Applied(step.Value.Fact!)
-                    : SourceUseReceiverSupport.Replayed(step.Value.Fact!);
+                return step.Value!.Outcome;
             }
             catch (EventStreamConcurrencyException) when (attempt < MaximumAttempts)
             {
@@ -95,6 +77,47 @@ sealed class AbortPolicyCampaignClosureHandler(IAggregateReader reader, IAggrega
         }
     }
 
-    /// <summary>Fact is the appended, replayed or evidencing fact; Foreign marks the superseded branch.</summary>
-    sealed record Step(NativeFactReference? Fact, bool Applied, bool Foreign);
+    async ValueTask<Result<ClosureIntent>> PrepareAsync(Uuid tenantId, Uuid campaignId,
+        PolicyCampaignClosureAccepted accepted, AbortPolicyCampaignClosure command, DurableIntentHeader header,
+        CancellationToken ct)
+    {
+        ClosureIntent intent;
+        try
+        {
+            intent = await PolicyCampaignContent.ReadAsync<ClosureIntent>(content, tenantId, command.FailureProof, ct)
+                .ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<ClosureIntent>.Failure(SourceUseReceiverSupport.Permanent(
+                $"The frozen closure cannot be verified: {exception.Message}").Error!);
+        }
+        return intent.Header != header || intent.ParentKind != ClosureParentKind.PolicyCampaign ||
+            intent.ParentId != campaignId || intent.ParentGeneration != (ulong)accepted.Generation
+            ? Result<ClosureIntent>.Failure(SourceUseReceiverSupport.Permanent(
+                "The abort differs from the frozen closure intent.").Error!)
+            : Result<ClosureIntent>.Success(intent);
+    }
+
+    static Result<ReceiverOutcome>? Decide(PolicyDistributionCampaign campaign, AcceptedOperationBinding binding,
+        Uuid operationId)
+    {
+        switch (campaign.Acceptance.Decide(binding))
+        {
+            case NativeAcceptanceDecision.Replayed:
+                return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(campaign.Stream, campaign.Acceptance.SelectedFact!));
+            case NativeAcceptanceDecision.Conflict:
+                return Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
+        }
+        if (campaign.SelectedCancellation is { } canceled)
+            return SourceUseReceiverSupport.Superseded("The closure was already canceled.",
+                NativeFactReference.Of(campaign.Stream, canceled));
+        return campaign.Closing is { } closed && closed.Operation.RootOperationId == operationId
+            ? SourceUseReceiverSupport.Superseded("The closure already completed and recovers forward.",
+                NativeFactReference.Of(campaign.Stream, closed))
+            : null;
+    }
+
+    sealed record Step(Result<ReceiverOutcome> Outcome);
 }

@@ -15,7 +15,11 @@ sealed class AcknowledgePolicyHandler(CampaignSource campaigns, IAccessGrantPerm
     TimeProvider clock, PolicyAcknowledgementRecorderGuard recorderGuard, PolicyParticipantAdmission admission)
     : IRequestHandler<AcknowledgePolicy, OperationAcceptedResponse>
 {
-    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+    public ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+        IRequestContext<AcknowledgePolicy> context, CancellationToken ct) =>
+        PolicyCampaignFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<OperationAcceptedResponse>> HandleCoreAsync(
         IRequestContext<AcknowledgePolicy> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
@@ -26,11 +30,10 @@ sealed class AcknowledgePolicyHandler(CampaignSource campaigns, IAccessGrantPerm
         if (request.CommandId == Uuid.Empty || request.PersonId == Uuid.Empty)
             return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The command and person identities are required."));
-        var source = await campaigns.ReadAsync(request.TenantId, request.ProgramId, request.CampaignId, ct,
-            request.CommandId).ConfigureAwait(false);
+        var source = await campaigns.ReadOwnerAsync(request.TenantId, request.ProgramId, request.CampaignId,
+            request.CommandId, ct).ConfigureAwait(false);
         if (!source.IsSuccess)
             return Result<OperationAcceptedResponse>.Failure(source.Error);
-        var state = source.Value;
         var actor = PolicyActor.From(context, request.TenantId);
         var person = await recorderGuard.CaptureAsync(request.TenantId, request.PersonId, ct)
             .ConfigureAwait(false);
@@ -42,27 +45,36 @@ sealed class AcknowledgePolicyHandler(CampaignSource campaigns, IAccessGrantPerm
         if (!self && !await permissions.IsAllowedAsync(request.TenantId, actor.UserId, actor.MemberId,
                 request.ProgramId, IProgramScopedRequest.ManagementPermission, ct).ConfigureAwait(false))
             return NotInAudience();
-        // An accepted retry is resolved from the campaign's own facts; the audience is judged when it is admitted.
-        if (state.Campaign.Acceptance.SelectedFact is null && state.Roster.FindActive(request.PersonId) is null)
-            return NotInAudience();
         if (!self && person.CorrelatedUserId is not null)
-            return Result<OperationAcceptedResponse>.Failure(new RequestError(
-                RequestErrorKind.Forbidden, "A member must acknowledge a policy personally."));
+            return await RefuseActorAsync("A member must acknowledge a policy personally.").ConfigureAwait(false);
         var eligibility = await recorderGuard.EvaluateCapturedAsync(request.TenantId, actor.UserId, person, ct)
             .ConfigureAwait(false);
         if (!self && !eligibility.CanRecordProxy)
-            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "A person with actual Attest assignment history cannot record this client's management acknowledgements."));
+            return await RefuseActorAsync(
+                "A person with actual Attest assignment history cannot record this client's management acknowledgements.")
+                .ConfigureAwait(false);
         var onBehalf = !self;
-        var performer = new ActorReference("workforce_person", request.PersonId.ToString(),
-            state.DisplayNameOf(request.PersonId) ?? "Workforce person");
         var plan = new ParticipantAdmissionPlan(request.CommandId, request.PersonId, request.ExpectedCampaignRevision,
             nameof(AcknowledgePolicy), AdmittedChildKind.PolicyAcknowledgement,
-            PolicyCampaignContent.AcknowledgeCommandSchema, actor.Reference, performer, onBehalf,
+            PolicyCampaignContent.AcknowledgeCommandSchema, actor.Reference, null, onBehalf,
             clock.GetUtcNow());
-        return await admission.AdmitAsync(context, state, plan, request,
+        return await admission.AdmitAsync(context, request.TenantId, request.ProgramId, request.CampaignId, plan, request,
             current => ValueTask.FromResult(CampaignRules.CheckAcknowledgement(current, request)), ct)
             .ConfigureAwait(false);
+
+        async ValueTask<Result<OperationAcceptedResponse>> RefuseActorAsync(string message)
+        {
+            // This request cannot execute or replay. Preserve the existing private 404/403 distinction for a new root.
+            if (source.Value.Acceptance.SelectedFact is null)
+            {
+                var state = await campaigns.StateOfAsync(source.Value, ct).ConfigureAwait(false);
+                if (!state.IsSuccess)
+                    return Result<OperationAcceptedResponse>.Failure(state.Error!);
+                if (state.Value.Roster.FindActive(request.PersonId) is null)
+                    return NotInAudience();
+            }
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Forbidden, message));
+        }
     }
 
     static Result<OperationAcceptedResponse> NotInAudience() =>

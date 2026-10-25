@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.PolicyDistribution;
@@ -11,29 +12,35 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution;
 ///     authoritative campaign owner. The source reference only names the fact; nothing the caller states is trusted
 ///     until the owner confirms it.
 /// </summary>
-sealed class PolicyCampaignClosureVerifier(IAggregateReader reader, IImmutableContentStore content)
+sealed class PolicyCampaignClosureVerifier(IAggregateReader reader, IImmutableContentStore content,
+    IDomainEventReader events)
 {
     /// <summary>Verifies the accepted closure fact named by <paramref name="source" />.</summary>
     public async ValueTask<PolicyCampaignClosure> VerifyAcceptedAsync(NativeFactReference source,
         ImmutableContentRef intentReference, Uuid operationId, Uuid commandId, CancellationToken ct)
     {
-        var loaded = await LoadAsync(source, intentReference, operationId, commandId, ct).ConfigureAwait(false);
+        var loaded = await ReadAcceptedAsync(source, intentReference, operationId, commandId, ct).ConfigureAwait(false);
+        return loaded.Error is not null ? loaded : await PrepareAsync(loaded, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Resolves only the exact native acceptance, before any immutable preparation or receiver replay.</summary>
+    public async ValueTask<PolicyCampaignClosure> ReadAcceptedAsync(NativeFactReference source,
+        ImmutableContentRef intentReference, Uuid operationId, Uuid commandId, CancellationToken ct)
+    {
+        var loaded = await LoadNativeAsync(source, intentReference, operationId, commandId, ct).ConfigureAwait(false);
         if (loaded.Error is not null)
             return loaded;
-        var accepted = loaded.Campaign!.ClosureFor(operationId);
-        if (accepted is null)
-            return PolicyCampaignClosure.Failed(Transient("The accepted closure is not visible yet."));
-        return source.Stream != loaded.Campaign.Stream || accepted.Metadata.EventId != source.EventId ||
-               accepted.Metadata.AggregateVersion != source.AggregateVersion || accepted.Intent != intentReference
+        var accepted = loaded.Accepted!;
+        return accepted.Metadata.EventId != source.EventId || accepted.Metadata.AggregateVersion != source.AggregateVersion
             ? PolicyCampaignClosure.Failed(Permanent("The source is not the accepted closure of this campaign."))
-            : loaded with { Accepted = accepted };
+            : loaded;
     }
 
     /// <summary>Verifies the terminal closed or canceled fact named by <paramref name="source" />.</summary>
     public async ValueTask<PolicyCampaignClosure> VerifyTerminalAsync(NativeFactReference source,
         ImmutableContentRef intentReference, Uuid operationId, Uuid commandId, CancellationToken ct)
     {
-        var loaded = await LoadAsync(source, intentReference, operationId, commandId, ct).ConfigureAwait(false);
+        var loaded = await LoadNativeAsync(source, intentReference, operationId, commandId, ct).ConfigureAwait(false);
         if (loaded.Error is not null)
             return loaded;
         var campaign = loaded.Campaign!;
@@ -48,36 +55,127 @@ sealed class PolicyCampaignClosureVerifier(IAggregateReader reader, IImmutableCo
         return source.Stream != campaign.Stream || terminal.Metadata.EventId != source.EventId ||
                terminal.Metadata.AggregateVersion != source.AggregateVersion
             ? PolicyCampaignClosure.Failed(Permanent("The source is not the terminal fact of this closure."))
-            : loaded with { Accepted = accepted };
+            : await PrepareAsync(loaded with { Accepted = accepted }, ct).ConfigureAwait(false);
     }
 
-    async ValueTask<PolicyCampaignClosure> LoadAsync(NativeFactReference source, ImmutableContentRef intentReference,
+    async ValueTask<PolicyCampaignClosure> LoadNativeAsync(NativeFactReference source, ImmutableContentRef intentReference,
         Uuid operationId, Uuid commandId, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(intentReference);
-        var tenantId = PolicyCampaignContent.ParseTenant(source.Stream.Realm);
+        if (!Uuid.TryParse(source.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture, out var tenantId) ||
+            !Uuid.TryParse(source.Stream.Resource, System.Globalization.CultureInfo.InvariantCulture, out var campaignId) ||
+            source.Stream.Area != PolicyDistributionCampaign.Area)
+            return PolicyCampaignClosure.Failed(Permanent("The closure names another campaign stream."));
+        var campaign = await new PolicyCampaignReader(reader, events).ReadAsync(tenantId, campaignId,
+            commandId, selectedClosureRootId: operationId, ct: ct).ConfigureAwait(false);
+        if (campaign.Stream != source.Stream)
+            return PolicyCampaignClosure.Failed(Permanent("The closure names another campaign stream."));
+        if (campaign.ClosureFor(operationId) is not { } accepted)
+            return PolicyCampaignClosure.Failed(Transient("The accepted closure is not visible yet."));
+        return accepted.Intent != intentReference
+            ? PolicyCampaignClosure.Failed(Permanent("The command differs from the frozen closure intent."))
+            : new PolicyCampaignClosure(campaign, accepted, null, null, null);
+    }
+
+    /// <summary>Binds the extra immutable source terms before deciding a receiver whose command contains them.</summary>
+    public async ValueTask<PolicyCampaignClosure> BindAsync(PolicyCampaignClosure closure, CancellationToken ct)
+    {
+        var campaign = closure.Campaign!;
+        var accepted = closure.Accepted!;
         ClosureIntent intent;
-        IReadOnlyList<ClosureParticipant> participants;
         try
         {
-            intent = await PolicyCampaignContent.ReadAsync<ClosureIntent>(content, tenantId, intentReference, ct)
+            intent = await PolicyCampaignContent.ReadAsync<ClosureIntent>(content, campaign.TenantId, accepted.Intent, ct)
                 .ConfigureAwait(false);
-            participants = await ClosureParticipant.ReadAsync(content, tenantId, intent, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return PolicyCampaignClosure.Failed(Permanent($"The frozen closure cannot be verified: {exception.Message}"));
+            ct.ThrowIfCancellationRequested();
+            return PolicyCampaignClosure.Failed(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen closure cannot be verified: {exception.Message}",
+                isTransient: exception is ImmutableContentUnavailableException));
         }
+        var expected = PolicyCampaignContent.HeaderOf(accepted.Operation, campaign.Stream, campaign.Stream,
+            accepted.Operation.AcceptedAt);
+        return intent.Header != expected || intent.ParentKind != ClosureParentKind.PolicyCampaign ||
+            intent.SourceUses is null || !PolicyCampaignHistory.Reference(intent.SourceUses.Content, SourceUseRequirement.Schema) ||
+            intent.ParentId != campaign.Id || intent.ParentGeneration != (ulong)accepted.Generation
+            ? PolicyCampaignClosure.Failed(Permanent("The command differs from the frozen closure intent."))
+            : closure with { Intent = intent };
+    }
 
-        if (intent.Header.RootOperationId != operationId || intent.ParentKind != ClosureParentKind.PolicyCampaign ||
-            source.Stream != intent.Header.FirstOwner)
-            return PolicyCampaignClosure.Failed(Permanent("The command differs from the frozen closure intent."));
-        var campaign = await reader.HydrateAsync(new PolicyDistributionCampaign(tenantId, intent.ParentId, commandId),
-            ct).ConfigureAwait(false);
-        return campaign.Stream != intent.Header.FirstOwner
-            ? PolicyCampaignClosure.Failed(Permanent("The closure names another campaign stream."))
-            : new PolicyCampaignClosure(campaign, null, intent, participants, null);
+    /// <summary>Verifies complete immutable feasibility after the required source terms and native receipt decision.</summary>
+    public async ValueTask<PolicyCampaignClosure> PrepareAsync(PolicyCampaignClosure closure, CancellationToken ct)
+    {
+        var bound = closure.Intent is null ? await BindAsync(closure, ct).ConfigureAwait(false) : closure;
+        if (bound.Error is not null)
+            return bound;
+        try
+        {
+            return bound with
+            {
+                Participants = await ReadParticipantsAsync(bound.Campaign!, bound.Accepted!, bound.Intent!, ct)
+                .ConfigureAwait(false)
+            };
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            ct.ThrowIfCancellationRequested();
+            return PolicyCampaignClosure.Failed(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen closure cannot be verified: {exception.Message}",
+                isTransient: exception is ImmutableContentUnavailableException));
+        }
+    }
+
+    async Task<IReadOnlyList<ClosureParticipant>> ReadParticipantsAsync(PolicyCampaignSnapshot campaign,
+        PolicyCampaignClosureAccepted accepted, ClosureIntent intent, CancellationToken ct)
+    {
+        if (!PolicyCampaignHistory.Reference(intent.AuthoredDecision, PolicyCampaignContent.CloseCommandSchema) ||
+            intent.AdmittedChildren is null || intent.SourceUses is null || intent.AdmittedChildren.ItemSchema != PolicyCampaignContent.AdmittedResultSchema ||
+            intent.AdmittedChildren.Order != SelectionOrder.Authored ||
+            !PolicyCampaignHistory.Reference(intent.AdmittedChildren.Content, PolicyCampaignContent.AdmittedResultSchema) ||
+            intent.SourceUses.ItemSchema != SourceUseRequirement.Schema || intent.SourceUses.Order != SelectionOrder.CanonicalKey ||
+            !PolicyCampaignHistory.Reference(intent.SourceUses.Content, SourceUseRequirement.Schema))
+            throw new ImmutableContentIntegrityException("The closure manifests name another typed complete selection.");
+        var admitted = await PolicyCampaignContent.ReadManifestAsync<CampaignAdmittedResult>(content, campaign.TenantId,
+            intent.AdmittedChildren, ct).ConfigureAwait(false);
+        var expected = campaign.Admitted.Where(value => value.Metadata.AggregateVersion < accepted.Metadata.AggregateVersion).ToArray();
+        if (admitted.Count != expected.Length)
+            throw new ImmutableContentIntegrityException("The closure does not cover every result admitted before its exact acceptance.");
+        for (var index = 0; index < expected.Length; index++)
+        {
+            var value = admitted[index];
+            var fact = expected[index];
+            if (value is null || value.PersonId == Uuid.Empty || value.OperationId != fact.Operation.RootOperationId ||
+                value.Admission != NativeFactReference.Of(campaign.Stream, fact) ||
+                value.Kind != PolicyDistributionCampaign.KindOf(fact) ||
+                PolicyCampaignParticipant.StreamOf(campaign.TenantId, campaign.Id, value.PersonId) != fact.Operation.AffectedOwner)
+                throw new ImmutableContentIntegrityException("The closure admitted-result selection differs from its exact native acceptance prefix.");
+        }
+        var groups = admitted.GroupBy(value => PolicyCampaignParticipant.StreamOf(campaign.TenantId, campaign.Id, value.PersonId))
+            .ToDictionary(static group => group.Key, static group => group.ToArray());
+        var requirements = await PolicyCampaignContent.ReadManifestAsync<SourceUseRequirement>(content, campaign.TenantId,
+            intent.SourceUses, ct).ConfigureAwait(false);
+        var selected = new HashSet<EventStreamAddress>();
+        var participants = new List<ClosureParticipant>();
+        if (requirements.Count != groups.Count)
+            throw new ImmutableContentIntegrityException("The closure does not hold every participant with an admitted result.");
+        foreach (var requirement in requirements)
+        {
+            if (requirement is null || requirement.SourceOwner is null || !selected.Add(requirement.SourceOwner) ||
+                !groups.TryGetValue(requirement.SourceOwner, out var results) ||
+                requirement.ResourceRevision != (ulong)results.Length || requirement.ContentEvent != results[^1].Admission ||
+                requirement.Purpose != SourceUsePurpose.CampaignClosure ||
+                !PolicyCampaignHistory.Reference(requirement.RequiredFacts, PolicyCampaignContent.AdmittedResultsSchema))
+                throw new ImmutableContentIntegrityException("The participant use differs from the complete exact admitted-result prefix.");
+            var pinned = await PolicyCampaignContent.ReadAsync<IReadOnlyList<CampaignAdmittedResult>>(content,
+                campaign.TenantId, requirement.RequiredFacts, ct).ConfigureAwait(false);
+            if (!pinned.SequenceEqual(results))
+                throw new ImmutableContentIntegrityException("The participant use omits or changes an exact admitted-result proof.");
+            participants.Add(new ClosureParticipant(requirement, results[0].PersonId));
+        }
+        return participants;
     }
 
     static RequestError Permanent(string message) => new(RequestErrorKind.Conflict, message, false);
