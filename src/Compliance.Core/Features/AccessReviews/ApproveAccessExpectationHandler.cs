@@ -14,13 +14,27 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     is the logical operation identity, so an exact retry returns the original frozen view.
 /// </summary>
 public sealed class ApproveAccessExpectationHandler(NativeOperationExecutor operations,
-    AccessExpectationsReader expectations, IAggregateReader reader, IImmutableContentStore content,
+    AccessExpectationsReader expectations, IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content,
     TimeProvider clock, RestrictedApplicationVisibility visibility)
     : IRequestHandler<ApproveAccessExpectation, AccessExpectationView>
 {
     const string CommandKind = "ApproveAccessExpectation";
 
     public async ValueTask<Result<AccessExpectationView>> HandleAsync(
+        IRequestContext<ApproveAccessExpectation> context, CancellationToken ct)
+    {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<AccessExpectationView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact scoped expectation source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<AccessExpectationView>> HandleCoreAsync(
         IRequestContext<ApproveAccessExpectation> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
@@ -36,8 +50,9 @@ public sealed class ApproveAccessExpectationHandler(NativeOperationExecutor oper
                 request.SystemInstanceId, ct).ConfigureAwait(false))
             return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.NotFound,
                 "The system instance was not found.");
+        var digest = AuthoredIntentDigest.Compute(request);
         var lineId = await expectations.ResolveLineAsync(request.TenantId, request.SystemInstanceId,
-            request.ExpectationId, ct).ConfigureAwait(false);
+            request.ExpectationId, request.CommandId, CommandKind, digest, ct).ConfigureAwait(false);
         if (lineId is not { } line)
             return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.NotFound,
                 "The expectation was not found.");
@@ -45,57 +60,62 @@ public sealed class ApproveAccessExpectationHandler(NativeOperationExecutor oper
         var now = clock.GetUtcNow();
         var stream = new AccessExpectation(request.TenantId, line).Stream;
         var provenance = AccessReviewOperation.Provenance(request.CommandId, CommandKind, stream, actor.Reference,
-            request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
+            request.ExpectedRevision, digest, now);
         var binding = AcceptedOperationBinding.Of(provenance);
-        var (owner, folded) = await expectations.ReadLineAsync(request.TenantId, line, request.CommandId, ct)
-            .ConfigureAwait(false);
 
         FirstResponseDescriptor? response = null;
+        AccessReviewPreparedCut? preparedCut = null;
         ImmutableContentRef? result = null;
         Uuid? waiverId = null;
-        if (owner.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var prepared = owner.PrepareApproval(request.ExpectedRevision, request.ExpectationId);
-            if (!prepared.IsSuccess)
-                return Result<AccessExpectationView>.Failure(prepared.Error!);
-            SeparationOfDutiesWaiver? waiver = null;
-            if (request.SeparationOfDutiesWaiverId is { } requested)
-                waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, requested), ct)
-                    .ConfigureAwait(false);
-            var scope = new SeparationOfDutiesWaiverScope(SeparationOfDutiesRecordTypes.AccessExpectation,
-                request.ExpectationId, request.ExpectationId, 1, SeparationOfDutiesActions.Approve);
-            var conflict = owner.Proposers[request.ExpectationId] == actor.MemberId;
-            if (waiver is not null && (!conflict || waiver.TenantId != request.TenantId ||
-                                       !waiver.Allows(scope, actor.MemberId, now)))
-                return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.Forbidden,
-                    "The separation-of-duties waiver is not active for this member and expectation.");
-            if (conflict && waiver is null)
-                return AccessReviewOutcome.Failure<AccessExpectationView>(RequestErrorKind.Forbidden,
-                    "The member who proposed an expectation cannot approve it.");
-            waiverId = waiver?.Id;
-            var approved = folded.Find(request.ExpectationId)! with
-            {
-                Status = AccessExpectation.Approved,
-                ApprovedBy = actor.Reference,
-                ApprovedAt = now,
-                SeparationOfDutiesWaiverId = waiverId,
-                Revision = request.ExpectedRevision + 1,
-            };
-            var body = await AccessReviewContent.WriteAsync(content, request.TenantId,
-                AccessReviewContent.ApprovedExpectationSchema, approved, ct).ConfigureAwait(false);
-            result = await AccessReviewContent.WriteResultAsync(content, request.TenantId,
-                AccessReviewContent.ApprovedExpectationSchema, body, ct).ConfigureAwait(false);
-            response = AccessReviewContent.OkResponse(AccessReviewContent.ApprovedExpectationSchema, body);
-        }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AccessExpectation>(binding,
-            () => new AccessExpectation(request.TenantId, line, request.CommandId),
+            () => new AccessExpectation(request.TenantId, line, request.CommandId, request.ExpectationId),
             expectation => expectation.Acceptance,
-            expectation => AccessReviewOperation.Prepare(expectation.PrepareApproval(request.ExpectedRevision,
-                request.ExpectationId), response,
-                "The expectation line changed while the approval was prepared; reload and retry."),
-            (AccessExpectation expectation, ImmutableContentRef frozen) => expectation.Approve(provenance, request.ExpectationId, actor.Reference, now,
-                waiverId, frozen, result!)), context, ct).ConfigureAwait(false);
+            async (owner, prepareCt) =>
+            {
+                var folded = await AccessExpectationLine.ReadAsync(owner, events, content, request.TenantId,
+                    prepareCt).ConfigureAwait(false);
+                var prepared = owner.PrepareApproval(request.ExpectedRevision, request.ExpectationId);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                SeparationOfDutiesWaiver? waiver = null;
+                if (request.SeparationOfDutiesWaiverId is { } requested)
+                    waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, requested), prepareCt)
+                        .ConfigureAwait(false);
+                var scope = new SeparationOfDutiesWaiverScope(SeparationOfDutiesRecordTypes.AccessExpectation,
+                    request.ExpectationId, request.ExpectationId, 1, SeparationOfDutiesActions.Approve);
+                var conflict = owner.SelectedProposal!.ProposerMemberId == actor.MemberId;
+                if (waiver is not null && (!conflict || waiver.TenantId != request.TenantId ||
+                                           !waiver.Allows(scope, actor.MemberId, now)))
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Forbidden,
+                        "The separation-of-duties waiver is not active for this member and expectation.");
+                if (conflict && waiver is null)
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Forbidden,
+                        "The member who proposed an expectation cannot approve it.");
+                waiverId = waiver?.Id;
+                var approved = folded.Find(request.ExpectationId)! with
+                {
+                    Status = AccessExpectation.Approved,
+                    ApprovedBy = actor.Reference,
+                    ApprovedAt = now,
+                    SeparationOfDutiesWaiverId = waiverId,
+                    Revision = request.ExpectedRevision + 1,
+                };
+                var body = await AccessReviewContent.WriteAsync(content, request.TenantId,
+                    AccessReviewContent.ApprovedExpectationSchema, approved, prepareCt).ConfigureAwait(false);
+                result = await AccessReviewContent.WriteResultAsync(content, request.TenantId,
+                    AccessReviewContent.ApprovedExpectationSchema, body, prepareCt).ConfigureAwait(false);
+                response = AccessReviewContent.OkResponse(AccessReviewContent.ApprovedExpectationSchema, body);
+                preparedCut = AccessReviewPreparedCut.Capture(owner);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (AccessExpectation expectation, ImmutableContentRef frozen) =>
+            {
+                if (preparedCut?.Matches(expectation) != true)
+                    return AccessReviewPreparedCut.Changed();
+                return expectation.Approve(provenance, request.ExpectationId, actor.Reference, now,
+                waiverId, frozen, result!);
+            }), context, ct).ConfigureAwait(false);
         return await AccessReviewContent.ResponseAsync<AccessExpectationView>(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
     }

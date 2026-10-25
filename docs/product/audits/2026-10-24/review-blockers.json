@@ -237,7 +237,11 @@
     "package-campaign-file-reviews.json",
     "package-campaign-file-triage.json",
     "package-campaign-integration-jev.json",
-    "package-campaign-qualification.json"
+    "package-campaign-qualification.json",
+    "access-expectation-file-reviews.json",
+    "access-expectation-file-triage.json",
+    "access-expectation-integration-jev.json",
+    "access-expectation-qualification.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 107,
@@ -632,10 +636,21 @@
     },
     {
       "id": "package-history-and-campaign-prefixes",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "qualificationArtifact": "package-campaign-qualification.json",
       "fileReviews": 20,
-      "genuineRedFailed": 9
+      "genuineRedFailed": 9,
+      "pr": 1125,
+      "mergeCommit": "8eb6a3b8deb3ea8121713d49bd3b975ab92f1b57"
+    },
+    {
+      "id": "access-expectation-native-stage1",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "access-expectation-qualification.json",
+      "fileReviews": 13,
+      "genuineRedFailed": 5,
+      "unitPassed": 6322,
+      "httpPassed": 80
     }
   ],
   "resolved": [

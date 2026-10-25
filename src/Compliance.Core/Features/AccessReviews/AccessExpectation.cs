@@ -24,17 +24,22 @@ public sealed class AccessExpectation : Aggregate
     /// <summary>The status of an approved expectation.</summary>
     public const string Approved = "approved";
 
+    readonly AccessReviewReplayCut _cut = new();
     readonly Uuid _tenantId;
-    readonly List<DomainEvent> _facts = [];
-    readonly Dictionary<Uuid, Uuid> _proposers = [];
-    readonly HashSet<Uuid> _approved = [];
+    readonly Uuid _selectedExpectationId;
+    AccessExpectationProposed? _selectedProposal;
+    AccessExpectationApproved? _selectedApproval;
+    DomainEvent? _latest;
+    long _revision;
     Uuid? _systemInstanceId;
 
     /// <summary>Opens the line of a root expectation, selecting the logical operation to resolve.</summary>
-    public AccessExpectation(Uuid tenantId, Uuid lineId, Uuid selectedLogicalId = default)
+    public AccessExpectation(Uuid tenantId, Uuid lineId, Uuid selectedLogicalId = default,
+        Uuid selectedExpectationId = default)
         : base(lineId, new EventStreamAddress(tenantId.ToString(), Area, lineId.ToString()))
     {
         _tenantId = tenantId;
+        _selectedExpectationId = selectedExpectationId == Uuid.Empty ? selectedLogicalId : selectedExpectationId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
         On<AccessExpectationProposed>(Apply);
         On<AccessExpectationApproved>(Apply);
@@ -44,28 +49,33 @@ public sealed class AccessExpectation : Aggregate
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
 
+    internal AccessReviewReplayCut ReplayCut => _cut;
+
     /// <summary>The system instance this line belongs to, once the line has a fact.</summary>
     public Uuid? SystemInstanceId => _systemInstanceId;
 
     /// <summary>The logical revision: the number of facts of this line.</summary>
-    public long Revision => _facts.Count;
+    public long Revision => _revision;
 
-    /// <summary>Every fact of the line in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
+    /// <summary>The tenant realm of the line.</summary>
+    public Uuid TenantId => _tenantId;
 
-    /// <summary>The proposing member of each expectation on the line.</summary>
-    public IReadOnlyDictionary<Uuid, Uuid> Proposers => _proposers;
+    /// <summary>The last native fact of the current exact cut.</summary>
+    public DomainEvent? Latest => _latest;
 
-    /// <summary>True when the expectation was proposed on this line.</summary>
-    public bool Contains(Uuid expectationId) => _proposers.ContainsKey(expectationId);
+    /// <summary>The proposal explicitly selected before hydration.</summary>
+    public AccessExpectationProposed? SelectedProposal => _selectedProposal;
 
-    /// <summary>True when the expectation was approved on this line.</summary>
-    public bool IsApproved(Uuid expectationId) => _approved.Contains(expectationId);
+    /// <summary>True when the explicitly selected expectation was proposed.</summary>
+    public bool Contains(Uuid expectationId) => expectationId == _selectedExpectationId && _selectedProposal is not null;
+
+    /// <summary>True when the explicitly selected expectation was approved.</summary>
+    public bool IsApproved(Uuid expectationId) => expectationId == _selectedExpectationId && _selectedApproval is not null;
 
     /// <summary>Checks the proposal guards without raising anything.</summary>
     public Result PrepareProposal(long expectedRevision, Uuid systemInstanceId, Uuid expectationId)
     {
-        if (_systemInstanceId is { } owner && owner != systemInstanceId || _proposers.ContainsKey(expectationId))
+        if (_systemInstanceId is { } owner && owner != systemInstanceId || Contains(expectationId))
             return AccessReviewOperation.Failure(RequestErrorKind.Conflict, "The expectation already exists.");
         return expectedRevision == Revision ? Result.Success : Stale();
     }
@@ -80,20 +90,22 @@ public sealed class AccessExpectation : Aggregate
         if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
             return AccessReviewOperation.Failure(RequestErrorKind.Validation,
                 "A proposal is a root operation of its own expectation line with an expected revision.");
+        if (Revision == 0 && operation.LogicalId != Id)
+            return AccessReviewOperation.Failure(RequestErrorKind.Validation,
+                "A new expectation line is rooted in its first proposal identity.");
         var prepared = PrepareProposal((long)expected, systemInstanceId, operation.LogicalId);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessExpectationProposed(_tenantId, systemInstanceId, Revision + 1, proposerMemberId,
+        return Append(operation, new AccessExpectationProposed(_tenantId, systemInstanceId, Revision + 1, proposerMemberId,
             expectationContent, operation, firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Checks the approval guards without raising anything.</summary>
     public Result PrepareApproval(long expectedRevision, Uuid expectationId)
     {
-        if (!_proposers.ContainsKey(expectationId))
+        if (!Contains(expectationId))
             return AccessReviewOperation.Failure(RequestErrorKind.NotFound, "The expectation was not found.");
-        if (_approved.Contains(expectationId))
+        if (IsApproved(expectationId))
             return AccessReviewOperation.Failure(RequestErrorKind.Conflict, "The expectation was already approved.");
         return expectedRevision == Revision ? Result.Success : Stale();
     }
@@ -111,15 +123,14 @@ public sealed class AccessExpectation : Aggregate
         var prepared = PrepareApproval((long)expected, expectationId);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessExpectationApproved(_tenantId, _systemInstanceId!.Value, Revision + 1, expectationId,
+        return Append(operation, new AccessExpectationApproved(_tenantId, _systemInstanceId!.Value, Revision + 1, expectationId,
             approvedBy, approvedAt, waiverId, operation, firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Checks the exception guards without raising anything.</summary>
     public Result PrepareException(long expectedRevision, Uuid expectationId)
     {
-        if (!_approved.Contains(expectationId))
+        if (!IsApproved(expectationId))
             return AccessReviewOperation.Failure(RequestErrorKind.NotFound,
                 "The approved expectation was not found.");
         return expectedRevision == Revision ? Result.Success : Stale();
@@ -137,8 +148,23 @@ public sealed class AccessExpectation : Aggregate
         var prepared = PrepareException((long)expected, expectationId);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessExpectationExceptionRecorded(_tenantId, _systemInstanceId!.Value, Revision + 1,
+        return Append(operation, new AccessExpectationExceptionRecorded(_tenantId, _systemInstanceId!.Value, Revision + 1,
             exceptionContent, operation, firstResponse, operationResult));
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        if (!ev.Metadata.IsAudit)
+            _cut.Observe(ev);
+        base.Apply(ev);
+    }
+
+    Result Append(OperationProvenance operation, DomainEvent fact)
+    {
+        var finalized = _cut.Require(this, Acceptance, operation);
+        if (!finalized.IsSuccess)
+            return finalized;
+        RaiseEvent(fact);
         return Result.Success;
     }
 
@@ -147,22 +173,28 @@ public sealed class AccessExpectation : Aggregate
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || _systemInstanceId is { } owner && owner != ev.SystemInstanceId ||
             ev.Revision != Revision + 1 || ev.Operation.Owner != Stream || ev.FirstResponse is null ||
-            ev.Operation.LogicalId == Uuid.Empty || !_proposers.TryAdd(ev.Operation.LogicalId, ev.ProposerMemberId))
+            ev.Operation.LogicalId == Uuid.Empty || ev.Operation.LogicalId == _selectedExpectationId && _selectedProposal is not null)
             throw new InvalidOperationException(
                 "An expectation proposal follows the previous revision of its own line and names a new expectation.");
         _systemInstanceId = ev.SystemInstanceId;
-        _facts.Add(ev);
+        if (ev.Operation.LogicalId == _selectedExpectationId)
+            _selectedProposal = ev;
+        _revision++;
+        _latest = ev;
     }
 
     void Apply(AccessExpectationApproved ev)
     {
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || ev.SystemInstanceId != _systemInstanceId || ev.Revision != Revision + 1 ||
-            ev.Operation.Owner != Stream || ev.FirstResponse is null || !_proposers.ContainsKey(ev.ExpectationId) ||
-            !_approved.Add(ev.ExpectationId))
+            ev.Operation.Owner != Stream || ev.FirstResponse is null ||
+            ev.ExpectationId == _selectedExpectationId && (_selectedProposal is null || _selectedApproval is not null))
             throw new InvalidOperationException(
                 "An expectation approval follows the previous revision of its own line and names a proposed expectation.");
-        _facts.Add(ev);
+        if (ev.ExpectationId == _selectedExpectationId)
+            _selectedApproval = ev;
+        _revision++;
+        _latest = ev;
     }
 
     void Apply(AccessExpectationExceptionRecorded ev)
@@ -172,7 +204,8 @@ public sealed class AccessExpectation : Aggregate
             ev.Operation.Owner != Stream || ev.FirstResponse is null)
             throw new InvalidOperationException(
                 "An expectation exception follows the previous revision of its own line.");
-        _facts.Add(ev);
+        _revision++;
+        _latest = ev;
     }
 
     Result Stale() => AccessReviewOperation.Stale("access expectation line", Revision);
