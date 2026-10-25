@@ -1,5 +1,5 @@
 using Bdgrz.Compliance.Features.Risks;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -11,35 +11,44 @@ public sealed class RiskDraftRevisionIdentityTests
     [InlineData("actor")]
     [InlineData("revision")]
     [InlineData("content")]
-    public void ShouldKeepOriginalRevisionBindingGivenLaterRevisionAndDurableReplay(string change)
+    public async Task ShouldKeepOriginalRevisionBindingGivenLaterRevisionAndDurableReplay(string change)
     {
         // Arrange
+        await using var fixture = new RiskDraftSourceFixture();
         var tenant = Uuid.CreateVersion4();
         var program = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
         var id = RiskDraft.IdFor(tenant, program, "R-01");
         var command = Uuid.CreateVersion4();
-        var actor = Uuid.CreateVersion4();
-        var now = DateTimeOffset.UtcNow;
-        var owner = new RiskDraft(tenant, id, command);
-        Assert.True(owner.Create(program, Uuid.CreateVersion4(), "R-01", new("Title", "Scenario", "Effect", null), actor, "Author", now).IsSuccess);
+        await fixture.SeedProgramAsync(tenant, program, RbacIds.Member(tenant, user));
+        var creation = new CreateRiskDraft(id, tenant, program, "R-01", "Title", "Scenario", "Effect");
+        Assert.True((await new CreateRiskDraftHandler(fixture.Operations()).HandleAsync(
+            RiskDraftSourceFixture.Context(creation, user), CancellationToken.None)).IsSuccess);
         var request = new ReviseRiskDraft(command, tenant, program, id, 1, "Revised title", "Scenario", "Effect");
-        Assert.Null(owner.Revise(request, actor, "Author", now));
-        Assert.Null(owner.Revise(program, 2, new("Later title", "Later scenario", "Effect", null), actor, "Author", now));
-        var facts = new AggregateScenario<RiskDraft>(owner).PendingEvents.ToArray();
-        var hydrated = new AggregateScenario<RiskDraft>(new(tenant, id, command)).Given(facts);
+        var handler = new ReviseRiskDraftHandler(fixture.Operations());
+        Assert.True((await handler.HandleAsync(RiskDraftSourceFixture.Context(request, user), CancellationToken.None)).IsSuccess);
+        Assert.True((await handler.HandleAsync(RiskDraftSourceFixture.Context(request with
+        {
+            CommandId = Uuid.CreateVersion4(),
+            ExpectedRevision = 2,
+            Title = "Later title"
+        }, user), CancellationToken.None)).IsSuccess);
 
         // Act
-        var original = hydrated.Aggregate.Revise(request, actor, "Updated display", now.AddDays(1));
-        var changed = hydrated.Aggregate.Revise(request with
+        var original = await handler.HandleAsync(RiskDraftSourceFixture.Context(request, user, "Updated display"), CancellationToken.None);
+        var changed = await handler.HandleAsync(RiskDraftSourceFixture.Context(request with
         {
             ExpectedRevision = change == "revision" ? 2 : request.ExpectedRevision,
             Title = change == "content" ? "Changed original intent" : request.Title,
-        }, change == "actor" ? Uuid.CreateVersion4() : actor, "Author", now.AddDays(1));
+        }, change == "actor" ? Uuid.CreateVersion4() : user), CancellationToken.None);
+        var hydrated = await fixture.Reader.HydrateAsync(new RiskDraft(tenant, id, command));
 
         // Assert
-        Assert.Null(original);
-        Assert.Equal(CommandFailureCode.StateConflict, changed?.Code);
-        Assert.Equal(3, hydrated.Aggregate.Revision);
-        Assert.Empty(hydrated.PendingEvents);
+        Assert.True(original.IsSuccess, original.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.Equal(3, hydrated.Revision);
+        Assert.Empty(new AggregateScenario<RiskDraft>(hydrated).PendingEvents);
+        Assert.Equal(2, Assert.IsType<RiskDraftRevised>(hydrated.Acceptance.SelectedFact).Revision);
+        Assert.Equal(3, (await fixture.FactsAsync(tenant, id)).Count);
     }
 }

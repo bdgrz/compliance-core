@@ -1,6 +1,6 @@
+using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Controls;
-using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     <c>shared_account</c>, <c>nhi_unowned</c>, <c>nhi_expired</c>, and <c>disabled_with_access</c>;
 ///     groups and roles report <c>nested_group</c> when they contain another access structure.
 /// </summary>
-public sealed class ListAccessPrincipalsHandler(IAggregateReader reader, IImmutableContentStore content,
+public sealed class ListAccessPrincipalsHandler(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content,
     IAccessReviewSources sources, RestrictedApplicationVisibility visibility)
     : IRequestHandler<ListAccessPrincipals, Page<AccessPrincipalView>>
 {
@@ -33,7 +33,7 @@ public sealed class ListAccessPrincipalsHandler(IAggregateReader reader, IImmuta
             .ConfigureAwait(false))
             return AccessReviewOutcome.Failure<Page<AccessPrincipalView>>(
                 RequestErrorKind.NotFound, "The population was not found.");
-        var loaded = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId,
+        var loaded = await AcceptedAccessPopulation.LoadAsync(reader, events, content, request.TenantId,
             request.PopulationId, ct).ConfigureAwait(false);
         if (!loaded.IsSuccess)
             return Result<Page<AccessPrincipalView>>.Failure(loaded.Error);

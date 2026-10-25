@@ -113,7 +113,7 @@ public sealed class RiskAcceptanceWorkTests
         await SeedPendingAcceptanceAsync(fixture, riskId, residualAssessmentId, method, now);
 
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskEvaluation(fixture.TenantId, riskId), evaluation =>
+            new RiskEvaluationRules(fixture.TenantId, riskId), evaluation =>
             {
                 Assert.Null(evaluation.Accept(fixture.ProgramId, 3, Uuid.CreateVersion4(),
                     residualAssessmentId, method, "compliance_lead", true,
@@ -173,7 +173,7 @@ public sealed class RiskAcceptanceWorkTests
 
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var source = await RiskAcceptanceWork.LoadAsync(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, fixture.TenantId, fixture.ProgramId, now, null, CancellationToken.None);
+        var source = await RiskAcceptanceWork.LoadAsync(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, fixture.TenantId, fixture.ProgramId, now, null, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>(), CancellationToken.None);
         var candidate = Assert.Single(source.Value);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var projected = new ProjectedRiskAcceptanceWorkItems(candidate,
@@ -215,11 +215,12 @@ public sealed class RiskAcceptanceWorkTests
         await SeedPendingAcceptanceAsync(fixture, riskId, Uuid.CreateVersion4(), method, now);
 
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
-        var evaluations = new FitzRiskEvaluationDirectory(new InMemoryKvClient());
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var evaluations = new FitzRiskEvaluationDirectory(new InMemoryKvClient(), sourceScope.ServiceProvider.GetRequiredService<RiskEvaluationReader>());
         await ProjectRiskEvaluationsAsync(evaluations, events, fixture.TenantId);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var workItems = new RiskAcceptanceWorkItemDirectory(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, evaluations);
+        var workItems = new RiskAcceptanceWorkItemDirectory(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, evaluations, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>());
         Assert.Equal(await ReadRiskEvaluationCheckpointAsync(events, fixture.TenantId),
             await workItems.LoadCheckpointAsync(fixture.TenantId));
 
@@ -252,9 +253,10 @@ public sealed class RiskAcceptanceWorkTests
         await fixture.CatchUpBoundaryDirectoryAsync();
 
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
-        var evaluations = new FitzRiskEvaluationDirectory(new InMemoryKvClient());
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var evaluations = new FitzRiskEvaluationDirectory(new InMemoryKvClient(), sourceScope.ServiceProvider.GetRequiredService<RiskEvaluationReader>());
         await using var scope = fixture.Provider.CreateAsyncScope();
-        var workItems = new RiskAcceptanceWorkItemDirectory(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, evaluations);
+        var workItems = new RiskAcceptanceWorkItemDirectory(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, evaluations, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>());
         var consistency = new WorkQueueReadConsistency(events, [workItems]);
 
         // Act
@@ -271,7 +273,7 @@ public sealed class RiskAcceptanceWorkTests
     {
         RiskMethodVersionView? methodVersion = null;
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskMethod(fixture.TenantId, fixture.ProgramId), method =>
+            new RiskMethodRules(fixture.TenantId, fixture.ProgramId), method =>
             {
                 Assert.Null(method.Publish(fixture.ProgramId, 0,
                     ["rare", "unlikely", "possible", "likely", "almost certain"],
@@ -291,7 +293,7 @@ public sealed class RiskAcceptanceWorkTests
         Uuid residualAssessmentId, RiskMethodVersionView method, DateTimeOffset now,
         int likelihood = 3, int impact = 3) =>
         ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskEvaluation(fixture.TenantId, riskId), evaluation =>
+            new RiskEvaluationRules(fixture.TenantId, riskId), evaluation =>
             {
                 Assert.Null(evaluation.RecordAssessment(fixture.ProgramId, 0,
                     Uuid.CreateVersion4(), method, RiskEvaluation.Inherent, 2, 2,
@@ -309,7 +311,7 @@ public sealed class RiskAcceptanceWorkTests
     static Task SeedTreatmentChangeAfterResidualAsync(OperationsFixture fixture, Uuid riskId,
         RiskMethodVersionView method, DateTimeOffset now) =>
         ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskEvaluation(fixture.TenantId, riskId), evaluation =>
+            new RiskEvaluationRules(fixture.TenantId, riskId), evaluation =>
             {
                 Assert.Null(evaluation.RecordAssessment(fixture.ProgramId, 0,
                     Uuid.CreateVersion4(), method, RiskEvaluation.Inherent, 2, 2,

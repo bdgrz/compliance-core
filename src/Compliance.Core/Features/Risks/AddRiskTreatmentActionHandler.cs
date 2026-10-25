@@ -58,7 +58,7 @@ public sealed class AddRiskTreatmentActionHandler(NativeOperationExecutor operat
                     .ConfigureAwait(false) is { } unciteable)
                 return Fail(unciteable);
             var treatment = (await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RiskId), ct)
-                .ConfigureAwait(false)).Treatment?.Kind;
+                .ConfigureAwait(false)).Header?.TreatmentKind;
             if (treatment is null or "accept")
                 return Fail(CommandFailure.StateConflict(
                     "Choose a mitigate, transfer, or avoid treatment before adding treatment actions.").ToRequestError());

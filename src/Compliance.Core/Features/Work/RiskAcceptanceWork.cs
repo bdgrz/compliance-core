@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Globalization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
@@ -18,113 +19,134 @@ static class RiskAcceptanceWork
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
         IAggregateReader reader, RiskGovernanceReader governanceReader, IRiskDraftDirectoryReader directory,
         RiskDraftListReadConsistency? consistency, Uuid tenantId, Uuid programId,
-        DateTimeOffset now, Uuid? workItemId, CancellationToken ct)
+        DateTimeOffset now, Uuid? workItemId, RiskEvaluationReader? evaluationSources, RiskMethodReader? methodSources, CancellationToken ct)
     {
-        var fence = ProjectionCheckpoint.Start;
-        if (consistency is not null)
+        try
         {
-            var captured = await consistency.CaptureFenceAsync(tenantId, ct).ConfigureAwait(false);
-            if (!captured.IsSuccess)
-                return Result<IReadOnlyList<WorkCandidate>>.Failure(captured.Error);
-            fence = captured.Value;
-        }
-
-        var candidates = new List<WorkCandidate>();
-        var methods = await reader.HydrateAsync(new RiskMethod(tenantId, programId), ct)
-            .ConfigureAwait(false);
-        var governance = await governanceReader.ReadAsync(tenantId, programId, ct).ConfigureAwait(false);
-        string? cursor = null;
-        do
-        {
-            var page = await directory.ListProgramAsync(tenantId, programId, 200, cursor, ct)
-                .ConfigureAwait(false);
-            if (page.Items.Any(risk => risk.TenantId != tenantId || risk.ProgramId != programId))
-                return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
-
-            foreach (var draft in page.Items)
+            if (evaluationSources is null || methodSources is null)
+                return Result<IReadOnlyList<WorkCandidate>>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The authoritative risk evaluation source reader is unavailable.", true));
+            var fence = ProjectionCheckpoint.Start;
+            if (consistency is not null)
             {
-                var evaluation = await reader.HydrateAsync(new RiskEvaluation(tenantId,
-                    draft.RiskId), ct).ConfigureAwait(false);
-                var candidate = await CandidateAsync(reader, draft, evaluation.ToView(), methods,
-                    governance, tenantId, programId, now, workItemId, ct).ConfigureAwait(false);
-                if (!candidate.IsSuccess)
-                    return Result<IReadOnlyList<WorkCandidate>>.Failure(candidate.Error);
-                if (candidate.Value is { } value)
-                    candidates.Add(value);
+                var captured = await consistency.CaptureFenceAsync(tenantId, ct).ConfigureAwait(false);
+                if (!captured.IsSuccess)
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(captured.Error);
+                fence = captured.Value;
             }
-            cursor = page.NextCursor;
-        } while (cursor is not null);
 
-        if (consistency is not null)
-        {
-            var confirmed = await consistency.ConfirmUnchangedAndCaughtUpAsync(tenantId, fence, ct)
+            var candidates = new List<WorkCandidate>();
+            var methods = await methodSources.ReadAsync(tenantId, programId, ct)
                 .ConfigureAwait(false);
-            if (!confirmed.IsSuccess)
-                return Result<IReadOnlyList<WorkCandidate>>.Failure(confirmed.Error);
+            var governance = await governanceReader.ReadAsync(tenantId, programId, ct).ConfigureAwait(false);
+            string? cursor = null;
+            do
+            {
+                var page = await directory.ListProgramAsync(tenantId, programId, 200, cursor, ct)
+                    .ConfigureAwait(false);
+                if (page.Items.Any(risk => risk.TenantId != tenantId || risk.ProgramId != programId))
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
+
+                foreach (var draft in page.Items)
+                {
+                    var evaluation = await evaluationSources.ReadAsync(tenantId, programId, draft.RiskId, ct).ConfigureAwait(false);
+                    var candidate = await CandidateAsync(reader, draft, evaluation.ToView(), methods,
+                        governance, tenantId, programId, now, workItemId, ct).ConfigureAwait(false);
+                    if (!candidate.IsSuccess)
+                        return Result<IReadOnlyList<WorkCandidate>>.Failure(candidate.Error);
+                    if (candidate.Value is { } value)
+                        candidates.Add(value);
+                }
+                cursor = page.NextCursor;
+            } while (cursor is not null);
+
+            if (consistency is not null)
+            {
+                var confirmed = await consistency.ConfirmUnchangedAndCaughtUpAsync(tenantId, fence, ct)
+                    .ConfigureAwait(false);
+                if (!confirmed.IsSuccess)
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(confirmed.Error);
+            }
+            return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
         }
-        return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<IReadOnlyList<WorkCandidate>>.Failure(RiskEvaluationReadFailure.Of(failure));
+        }
     }
 
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProjectedAsync(
         IAggregateReader reader, RiskGovernanceReader governanceReader, IRiskDraftDirectoryReader drafts,
         RiskDraftListReadConsistency? riskConsistency,
         IRiskEvaluationDirectoryReader evaluations, Uuid tenantId, Uuid programId,
-        DateTimeOffset now, Uuid? workItemId, CancellationToken ct)
+        DateTimeOffset now, Uuid? workItemId, RiskEvaluationReader? evaluationSources, RiskMethodReader? methodSources, CancellationToken ct)
     {
-        var fence = ProjectionCheckpoint.Start;
-        if (riskConsistency is not null)
+        try
         {
-            var captured = await riskConsistency.CaptureFenceAsync(tenantId, ct)
-                .ConfigureAwait(false);
-            if (!captured.IsSuccess)
-                return Result<IReadOnlyList<WorkCandidate>>.Failure(captured.Error);
-            fence = captured.Value;
-        }
-
-        var candidates = new List<WorkCandidate>();
-        var methods = await reader.HydrateAsync(new RiskMethod(tenantId, programId), ct)
-            .ConfigureAwait(false);
-        var governance = await governanceReader.ReadAsync(tenantId, programId, ct).ConfigureAwait(false);
-        string? cursor = null;
-        do
-        {
-            var page = await drafts.ListProgramAsync(tenantId, programId, 200, cursor, ct)
-                .ConfigureAwait(false);
-            if (page.Items.Any(risk => risk.TenantId != tenantId || risk.ProgramId != programId))
-                return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
-
-            foreach (var draft in page.Items)
+            if (evaluationSources is null || methodSources is null)
+                return Result<IReadOnlyList<WorkCandidate>>.Failure(new RequestError(RequestErrorKind.Conflict, "The authoritative risk evaluation source reader is unavailable.", true));
+            var fence = ProjectionCheckpoint.Start;
+            if (riskConsistency is not null)
             {
-                var source = await evaluations.GetAsync(tenantId, draft.RiskId, ct)
+                var captured = await riskConsistency.CaptureFenceAsync(tenantId, ct)
                     .ConfigureAwait(false);
-                if (source is null)
-                    continue;
-                if (source.TenantId != tenantId || source.ProgramId != programId ||
-                    source.RiskId != draft.RiskId || source.Revision < 1)
+                if (!captured.IsSuccess)
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(captured.Error);
+                fence = captured.Value;
+            }
+
+            var candidates = new List<WorkCandidate>();
+            var methods = await methodSources.ReadAsync(tenantId, programId, ct)
+                .ConfigureAwait(false);
+            var governance = await governanceReader.ReadAsync(tenantId, programId, ct).ConfigureAwait(false);
+            string? cursor = null;
+            do
+            {
+                var page = await drafts.ListProgramAsync(tenantId, programId, 200, cursor, ct)
+                    .ConfigureAwait(false);
+                if (page.Items.Any(risk => risk.TenantId != tenantId || risk.ProgramId != programId))
                     return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
 
-                var candidate = await CandidateAsync(reader, draft, source, methods, governance,
-                    tenantId, programId, now, workItemId, ct).ConfigureAwait(false);
-                if (!candidate.IsSuccess)
-                    return Result<IReadOnlyList<WorkCandidate>>.Failure(candidate.Error);
-                if (candidate.Value is { } value)
-                    candidates.Add(value);
-            }
-            cursor = page.NextCursor;
-        } while (cursor is not null);
+                foreach (var draft in page.Items)
+                {
+                    var projected = await evaluations.GetAsync(tenantId, draft.RiskId, ct).ConfigureAwait(false);
+                    var native = await evaluationSources.ReadAsync(tenantId, programId, draft.RiskId, ct).ConfigureAwait(false);
+                    var source = projected is null ? null : native.ToView();
+                    if (projected is not null && (projected.TenantId != tenantId || projected.ProgramId != programId || projected.RiskId != draft.RiskId || projected.Revision != native.Revision))
+                        return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
+                    if (source is null)
+                        continue;
+                    if (source.TenantId != tenantId || source.ProgramId != programId ||
+                        source.RiskId != draft.RiskId || source.Revision < 1)
+                        return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
 
-        if (riskConsistency is not null)
-        {
-            var confirmed = await riskConsistency.ConfirmUnchangedAndCaughtUpAsync(tenantId,
-                fence, ct).ConfigureAwait(false);
-            if (!confirmed.IsSuccess)
-                return Result<IReadOnlyList<WorkCandidate>>.Failure(confirmed.Error);
+                    var candidate = await CandidateAsync(reader, draft, source, methods, governance,
+                        tenantId, programId, now, workItemId, ct).ConfigureAwait(false);
+                    if (!candidate.IsSuccess)
+                        return Result<IReadOnlyList<WorkCandidate>>.Failure(candidate.Error);
+                    if (candidate.Value is { } value)
+                        candidates.Add(value);
+                }
+                cursor = page.NextCursor;
+            } while (cursor is not null);
+
+            if (riskConsistency is not null)
+            {
+                var confirmed = await riskConsistency.ConfirmUnchangedAndCaughtUpAsync(tenantId,
+                    fence, ct).ConfigureAwait(false);
+                if (!confirmed.IsSuccess)
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(confirmed.Error);
+            }
+            return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
         }
-        return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<IReadOnlyList<WorkCandidate>>.Failure(RiskEvaluationReadFailure.Of(failure));
+        }
     }
 
     static async ValueTask<Result<WorkCandidate?>> CandidateAsync(IAggregateReader reader,
-        RiskDraftView draft, RiskEvaluationView source, RiskMethod methods,
+        RiskDraftView draft, RiskEvaluationView source, RiskMethodReadSnapshot methods,
         RiskGovernanceSnapshot governance, Uuid tenantId, Uuid programId, DateTimeOffset now,
         Uuid? workItemId, CancellationToken ct)
     {

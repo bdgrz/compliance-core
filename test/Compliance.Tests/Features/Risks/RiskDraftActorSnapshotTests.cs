@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Bdgrz.Compliance.Tests.Testing;
 using System.Text.Json.Nodes;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Risks;
@@ -16,18 +17,20 @@ public sealed class RiskDraftActorSnapshotTests
     static readonly string ContentJson = """{"title":"Provider outage","scenario":"Provider unavailable","potential_effect":"Requests cannot be processed","source_note":"Management note"}""";
 
     [Fact]
-    public void ShouldSnapshotEachActorDisplayGivenDisplayChangesBetweenEvents()
+    public async Task ShouldSnapshotEachActorDisplayGivenDisplayChangesBetweenEvents()
     {
         // Arrange
         var riskId = RiskDraft.IdFor(TenantId, ProgramId, "R-01");
-        var risk = new RiskDraft(TenantId, riskId);
+        await using var native = new RiskDraftSourceFixture();
+        var risk = new RiskDraftRules(TenantId, riskId);
         Assert.True(risk.Create(ProgramId, Uuid.CreateVersion4(), "R-01", Content(),
             MemberId, "First display", At).IsSuccess);
         Assert.Null(risk.Revise(ProgramId, 1, Content() with { Scenario = "Extended outage" },
             MemberId, "Second display", At.AddMinutes(1)));
 
         // Act
-        var events = new AggregateScenario<RiskDraft>(risk).PendingEvents;
+        await RiskDraftSeeds.WriteAsync(native.Writer, native.Content, risk);
+        var events = await native.FactsAsync(TenantId, riskId);
 
         // Assert
         Assert.Equal(ActorReference.ForMember(MemberId, "First display"),
@@ -37,21 +40,24 @@ public sealed class RiskDraftActorSnapshotTests
     }
 
     [Fact]
-    public void ShouldReplayLegacyEventsWithMemberActorGivenEventsWithoutActor()
+    public async Task ShouldReplayLegacyEventsWithMemberActorGivenEventsWithoutActor()
     {
         // Arrange
         var riskId = RiskDraft.IdFor(TenantId, ProgramId, "R-01");
-        var created = Deserialize<RiskDraftCreated>($$"""
+        var created = Deserialize<RiskDraftCreatedContent>($$"""
             {"tenant_id":"{{TenantId}}","program_id":"{{ProgramId}}","risk_id":"{{riskId}}","create_request_id":"{{Uuid.CreateVersion4()}}","identifier":"R-01","content":{{ContentJson}},"actor_member_id":"{{MemberId}}","actor_display":"First display","changed_at":"2026-09-23T12:00:00+00:00"}
             """);
-        var revised = Deserialize<RiskDraftRevised>($$"""
+        var revised = Deserialize<RiskDraftRevisedContent>($$"""
             {"tenant_id":"{{TenantId}}","program_id":"{{ProgramId}}","risk_id":"{{riskId}}","revision":2,"content":{{ContentJson}},"actor_member_id":"{{MemberId}}","actor_display":"Second display","changed_at":"2026-09-23T12:01:00+00:00"}
             """);
 
         // Act
-        var replayed = new AggregateScenario<RiskDraft>(new RiskDraft(TenantId, riskId))
-            .Given(DomainEventSeed.Attach(created, riskId, 1),
-                DomainEventSeed.Attach(revised, riskId, 2)).Aggregate;
+        await using var native = new RiskDraftSourceFixture();
+        var rules = new RiskDraftRules(TenantId, riskId);
+        rules.Apply(created);
+        rules.Apply(revised);
+        await RiskDraftSeeds.WriteAsync(native.Writer, native.Content, rules);
+        var replayed = await native.Reader.HydrateAsync(new RiskDraft(TenantId, riskId));
 
         // Assert
         Assert.True(replayed.IsCreated);

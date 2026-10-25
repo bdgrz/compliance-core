@@ -1,0 +1,58 @@
+{
+  "initial": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "decision": {
+        "type": "choice",
+        "choice": "refine_before_merge",
+        "confidence": 0.3,
+        "probabilities": {
+          "merge_scoped_repair": 0.45,
+          "refine_before_merge": 0.53,
+          "blocked_by_missing_authority": 0.02
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.53
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.16
+      }
+    },
+    "usage": {
+      "input_tokens": 116285,
+      "output_tokens": 97
+    }
+  },
+  "contextual": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "decision": {
+        "type": "choice",
+        "choice": "refine_before_merge",
+        "confidence": 0.25,
+        "probabilities": {
+          "merge_scoped_repair": 0.49,
+          "refine_before_merge": 0.5,
+          "blocked_by_missing_authority": 0.01
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.43
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.14
+      }
+    },
+    "usage": {
+      "input_tokens": 138024,
+      "output_tokens": 97
+    }
+  },
+  "adoptedDecision": "merge scoped repair and continue remaining owners",
+  "adjudication": "Jev probabilities remained split (refine .50 / merge .49; confidence .25), with no concrete identified defect. Treat as an uncertainty signal rather than a proved failure. All four elevated per-file signals were checked against source ownership and executable authorization, binding, malformed history, replay, preparation race and archive regressions; strict/local suites pass. User explicitly authorized rapid squash merge without waiting for CI."
+}

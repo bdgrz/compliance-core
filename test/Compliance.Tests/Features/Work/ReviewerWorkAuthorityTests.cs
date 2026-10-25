@@ -331,14 +331,14 @@ public sealed class ReviewerWorkAuthorityTests
         {
             if (kind == "risk_completion")
             {
-                var riskId = Uuid.CreateVersion4();
+                var riskId = RiskDraft.IdFor(Operations.TenantId, Operations.ProgramId, "R-GUEST");
                 var actionId = Uuid.CreateVersion4();
                 var submissionId = Uuid.CreateVersion4();
                 var evidenceId = Uuid.CreateVersion4();
                 var lead = ActorReference.ForMember(Operations.LeadMemberId, "Lead");
                 var completionAt = DateTimeOffset.UtcNow;
                 await ProgramManagementServices.SeedAsync(Operations.Provider,
-                    new RiskDraft(Operations.TenantId, riskId), risk => risk.Create(Operations.ProgramId,
+                    new RiskDraftRules(Operations.TenantId, riskId), risk => risk.Create(Operations.ProgramId,
                         Uuid.CreateVersion4(), "R-GUEST", new RiskDraftContent("Provider outage",
                             "Provider unavailable", "Requests fail", null), Operations.LeadMemberId,
                         "Lead", completionAt));
@@ -361,10 +361,10 @@ public sealed class ReviewerWorkAuthorityTests
             }
             if (kind == "risk_control_treatment")
             {
-                var riskId = Uuid.CreateVersion4();
+                var riskId = RiskDraft.IdFor(Operations.TenantId, Operations.ProgramId, "R-GUEST");
                 var treatmentId = Uuid.CreateVersion4();
                 await ProgramManagementServices.SeedAsync(Operations.Provider,
-                    new RiskDraft(Operations.TenantId, riskId), risk => risk.Create(Operations.ProgramId,
+                    new RiskDraftRules(Operations.TenantId, riskId), risk => risk.Create(Operations.ProgramId,
                         Uuid.CreateVersion4(), "R-GUEST", new RiskDraftContent("Provider outage",
                             "Provider unavailable", "Requests fail", null), Operations.LeadMemberId,
                         "Lead", DateTimeOffset.UtcNow));

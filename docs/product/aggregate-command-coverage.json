@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "cc34a8ce80c28e3deedff6902794aed5a5932608",
+  "sourceCommit": "d3ad9fd6ea4a4c853b7892dca45db78442bfd631",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 487,
-    "factsWithAggregateEmitter": 436,
+    "factsWithAggregateEmitter": 431,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 51,
+    "legacyReducerOnlyFacts": 56,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 117,
+    "aggregateTypesWithCommandPath": 114,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 735,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 43,
+    "unwiredAggregateProducerOperations": 44,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 30
+      "no_registered_request_route": 31
     },
     "factReplayGuardRows": 0
   },
@@ -6514,14 +6514,10 @@
           "source": "src/Compliance.Core/Features/Risks/RiskEvaluation.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Risks/RiskEvaluation.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Risks/RiskEvaluationTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "RiskAssessmentRecorded",
@@ -6532,15 +6528,13 @@
           "source": "src/Compliance.Core/Features/Risks/RiskEvaluation.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Risks/RiskEvaluation.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/RiskTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskEvaluationTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskEvaluationNativeSourceTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "RiskControlTreatmentProposed",
@@ -6599,19 +6593,17 @@
           "source": "src/Compliance.Core/Features/Risks/RiskDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Risks/RiskDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/DraftActorSnapshotE2ETests.cs",
         "test/Compliance.Tests/Features/Risks/FitzRiskDraftDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Risks/FitzRiskDraftHistoryDirectoryV1Tests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskDraftActorProjectionTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskDraftActorSnapshotTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskDraftTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativeIntegrityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativePayloadTests.cs",
+        "test/Compliance.Tests/Testing/RiskDraftSeeds.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "RiskDraftRevised",
@@ -6622,18 +6614,16 @@
           "source": "src/Compliance.Core/Features/Risks/RiskDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Risks/RiskDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/DraftActorSnapshotE2ETests.cs",
-        "test/Compliance.Tests/Features/Risks/FitzRiskDraftDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Risks/FitzRiskDraftHistoryDirectoryV1Tests.cs",
         "test/Compliance.Tests/Features/Risks/RiskDraftActorSnapshotTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskDraftTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativeIntegrityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftRevisionIdentityTests.cs",
+        "test/Compliance.Tests/Testing/RiskDraftSeeds.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "RiskMethodVersionPublished",
@@ -6647,7 +6637,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Risks/RiskMethod.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskMethodReassessmentNativeTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -6812,12 +6804,12 @@
           "source": "src/Compliance.Core/Features/Risks/RiskEvaluation.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Risks/RiskEvaluation.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskEvaluationNativeSourceTests.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "RoleDefined",
@@ -8417,7 +8409,9 @@
       "emitters": [
         "src/Compliance.Core/Features/PolicyDistribution/TrainingRequirement.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NativeOperations/NativeOwnerHistoryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -8735,6 +8729,7 @@
         "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskEvaluationNativeSourceTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzUserIdentityDirectoryTests.cs"
       ],
       "disposition": "audit_only",
@@ -9222,7 +9217,9 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessReviews/AccessPopulationIdentifiedOperationTests.cs"
+        "test/Compliance.Tests/Features/AccessReviews/AccessPopulationIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessPrincipalClassificationCompactionTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/ClassificationPreparationReplayTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11387,10 +11384,7 @@
         "RiskDraftCreated",
         "RiskDraftRevised"
       ],
-      "commandRequests": [
-        "CreateRiskDraft",
-        "ReviseRiskDraft"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/RiskTypeIBaselineSourceContributorTests.cs",
@@ -11399,10 +11393,12 @@
         "test/Compliance.Tests/Features/Risks/RiskDraftActorProjectionTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskDraftActorSnapshotTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskDraftCreationIdentityTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskDraftRevisionIdentityTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskDraftTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskDraftHttpTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativeIntegrityTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "RiskEvaluation",
@@ -11412,23 +11408,21 @@
         "RiskAssessmentRecorded",
         "RiskTreatmentChosen"
       ],
-      "commandRequests": [
-        "AcceptRisk",
-        "ChooseRiskTreatment",
-        "RecordRiskAssessment"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/RiskTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Risks/AttestRiskManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Risks/FitzRiskEvaluationDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskAcceptanceIdentityTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskAssessmentIdentityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskEvaluationCompactionTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskEvaluationNativeSourceTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskEvaluationTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskTreatmentIdentityTests.cs"
+        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Testing/RiskEvaluationSeeds.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "RiskGovernance",
@@ -11455,21 +11449,19 @@
       "appliedFacts": [
         "RiskMethodVersionPublished"
       ],
-      "commandRequests": [
-        "PublishRiskMethodVersion"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/RiskTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Risks/FitzRiskEvaluationDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskAcceptanceIdentityTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskAssessmentIdentityTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskEvaluationTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskMethodNativeTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskMethodPrepareFailureTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskMethodReassessmentNativeTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskMethodTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskTreatmentIdentityTests.cs"
+        "test/Compliance.Tests/Testing/RiskMethodSeeds.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "RiskTreatmentAction",
@@ -12091,6 +12083,7 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NativeOperations/NativeOwnerHistoryTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/TrainingRequirementTests.cs",
         "test/Compliance.Tests/Testing/TrainingSeed.cs"
       ],
@@ -12631,7 +12624,7 @@
     {
       "request": "AcceptRisk",
       "contract": "src/Compliance.Common/Features/Risks/AcceptRisk.cs",
-      "interfaces": "IRequest<RiskAcceptanceView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<RiskAcceptanceView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -12641,14 +12634,8 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "RiskDraft",
-        "RiskEvaluation",
-        "RiskMethod"
-      ],
-      "aggregateTargets": [
-        "RiskEvaluation"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [
         "RiskGovernanceReader"
       ],
@@ -12656,7 +12643,8 @@
         "test/Compliance.Tests/Features/Risks/RiskAcceptanceIdentityTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkCompositionTests.cs"
+        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkCompositionTests.cs",
+        "test/Compliance.Tests/Testing/RiskEvaluationSeeds.cs"
       ],
       "note": ""
     },
@@ -15251,7 +15239,7 @@
     {
       "request": "ChooseRiskTreatment",
       "contract": "src/Compliance.Common/Features/Risks/ChooseRiskTreatment.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -15261,16 +15249,12 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "RiskDraft",
-        "RiskEvaluation"
-      ],
-      "aggregateTargets": [
-        "RiskEvaluation"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Risks/RiskTreatmentIdentityTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentIdentityTests.cs",
+        "test/Compliance.Tests/Testing/RiskEvaluationSeeds.cs"
       ],
       "note": ""
     },
@@ -15473,7 +15457,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs"
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+        "test/Compliance.Tests/Features/AccessReviews/ClassificationPreparationReplayTests.cs"
       ],
       "note": ""
     },
@@ -16895,7 +16880,7 @@
     {
       "request": "CreateRiskDraft",
       "contract": "src/Compliance.Common/Features/Risks/CreateRiskDraft.cs",
-      "interfaces": "IRequest<RiskRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<RiskRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -16905,16 +16890,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ComplianceProgram",
-        "RiskDraft"
-      ],
-      "aggregateTargets": [
-        "RiskDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Risks/RiskDraftCreationIdentityTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskDraftCreationIdentityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftHttpTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativeIntegrityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativePayloadTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativeReadTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftRevisionIdentityTests.cs",
+        "test/Compliance.Tests/Testing/RiskDraftSeeds.cs"
       ],
       "note": ""
     },
@@ -17247,6 +17233,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/NativeOperations/NativeOwnerHistoryTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/TrainingRequirementTests.cs"
       ],
       "note": ""
@@ -20104,7 +20091,9 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativeReadTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -20123,7 +20112,9 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativeReadTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -20160,11 +20151,10 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "RiskEvaluation"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "RiskEvaluationReader",
         "RiskGovernanceReader"
       ],
       "testSymbolReferences": [
@@ -20186,12 +20176,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "RiskMethod"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskMethodNativeTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskMethodPublicationTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -20207,9 +20198,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "RiskMethod"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [],
@@ -20642,7 +20631,10 @@
       ],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NativeOperations/NativeOwnerHistoryTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/TrainingRequirementTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -21180,14 +21172,14 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "FindingAggregate",
-        "RiskEvaluation",
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
         "FindingAggregate"
       ],
       "helperServices": [
-        "FindingReader"
+        "FindingReader",
+        "RiskEvaluationReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
@@ -21258,13 +21250,14 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "RiskDraft",
-        "RiskEvaluation"
+        "RiskDraft"
       ],
       "aggregateTargets": [
         "ProviderAssuranceGap"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "RiskEvaluationReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
         "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
@@ -21351,7 +21344,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/AccessPopulationIdentifiedOperationTests.cs"
+        "test/Compliance.Tests/Features/AccessReviews/AccessPopulationIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessPrincipalClassificationCompactionTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -23188,7 +23182,9 @@
       ],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativeReadTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -25356,7 +25352,7 @@
     {
       "request": "PublishRiskMethodVersion",
       "contract": "src/Compliance.Common/Features/Risks/PublishRiskMethodVersion.cs",
-      "interfaces": "IRequest<RiskMethodVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<RiskMethodVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -25370,11 +25366,12 @@
         "ComplianceProgram",
         "RiskMethod"
       ],
-      "aggregateTargets": [
-        "RiskMethod"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskMethodPublicationTests.cs",
+        "test/Compliance.Tests/Testing/RiskMethodSeeds.cs"
+      ],
       "note": ""
     },
     {
@@ -26755,7 +26752,7 @@
     {
       "request": "RecordRiskAssessment",
       "contract": "src/Compliance.Common/Features/Risks/RecordRiskAssessment.cs",
-      "interfaces": "IRequest<RiskAssessmentView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<RiskAssessmentView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -26765,20 +26762,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "RiskDraft",
-        "RiskEvaluation",
-        "RiskMethod"
-      ],
-      "aggregateTargets": [
-        "RiskEvaluation"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [
         "RiskGovernanceReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/RiskAssessmentIdentityTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskEvaluationNativeSourceTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Testing/RiskEvaluationSeeds.cs"
       ],
       "note": ""
     },
@@ -29578,7 +29571,7 @@
     {
       "request": "ReviseRiskDraft",
       "contract": "src/Compliance.Common/Features/Risks/ReviseRiskDraft.cs",
-      "interfaces": "IRequest,\n    IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest,\n    IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -29588,15 +29581,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "RiskDraft"
-      ],
-      "aggregateTargets": [
-        "RiskDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Risks/RiskDraftRevisionIdentityTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskDraftCreationIdentityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftHttpTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativeIntegrityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftNativeReadTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftRevisionIdentityTests.cs",
+        "test/Compliance.Tests/Testing/RiskDraftSeeds.cs"
       ],
       "note": ""
     },
@@ -31488,6 +31482,17 @@
       "ownerIssue": 316,
       "callerSources": [],
       "methodArgumentCount": 8,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "RiskMethodVersionPublished",
+      "aggregate": "RiskMethod",
+      "method": "Append",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/Risks/RiskMethod.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

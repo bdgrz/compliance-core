@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.Proofs;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -67,10 +68,19 @@ public sealed class RiskTypeIBaselineSourceContributor(
             DateTimeKind.Utc));
         var seenEventIds = new HashSet<Uuid>();
 
-        var methodHistory = await ReadMethodHistoryAsync(context, engagement.TenantId,
-            engagement.ProgramId, through, seenEventIds, ct).ConfigureAwait(false);
-        if (!methodHistory.IsSuccess)
-            return Result<TypeIBaselineSourceContribution>.Failure(methodHistory.Error);
+        Result<MethodHistory> methodHistory;
+        try
+        {
+            methodHistory = await ReadMethodHistoryAsync(context, engagement.TenantId,
+                engagement.ProgramId, through, seenEventIds, ct).ConfigureAwait(false);
+            if (!methodHistory.IsSuccess)
+                return Result<TypeIBaselineSourceContribution>.Failure(methodHistory.Error);
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact risk method source content cannot be verified.", failure is ImmutableContentUnavailableException));
+        }
         var governance = await ReadGovernanceHistoryAsync(context, engagement.TenantId,
             engagement.ProgramId, through, knownRiskIds, ct).ConfigureAwait(false);
         if (!governance.IsSuccess)
@@ -175,92 +185,67 @@ public sealed class RiskTypeIBaselineSourceContributor(
         RiskDraftView summary, DateTimeOffset through, HashSet<Uuid> seenEventIds,
         CancellationToken ct)
     {
-        var stream = new EventStreamAddress(tenantId.ToString(), "risks",
-            summary.RiskId.ToString());
+        var stream = new EventStreamAddress(tenantId.ToString(), RiskDraft.Area, summary.RiskId.ToString());
         var asOfEvents = new List<RiskSourceEvent>();
-        var created = (RiskDraftCreated?)null;
-        RiskDraftContent? currentContent = null;
-        DateTimeOffset currentChangedAt = default;
-        var currentChangedByMemberId = Uuid.Empty;
-        string? currentChangedByDisplay = null;
+        RiskDraftRevisionView? currentContent = null;
+        IRiskDraftFact? last = null;
         var currentRevision = 0L;
         var asOfRevision = 0L;
         var expectedVersion = 1UL;
         DateTimeOffset? priorRecordedAt = null;
         var excluded = false;
         var count = 0;
-        await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
+        try
         {
-            if (++count > MaximumEventsPerStream || record.Stream != stream ||
-                record.Event?.Metadata is not { } metadata ||
-                !ValidMetadata(metadata, summary.RiskId, expectedVersion, seenEventIds) ||
-                context.RecordedThrough is null && priorRecordedAt is { } prior && metadata.OccurredOn < prior)
-                return InvalidHistory<DraftHistory>();
-            var domainEvent = record.Event;
-            DateTimeOffset occurredAt;
-            switch (domainEvent)
+            await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
             {
-                case RiskDraftCreated ev when created is null && currentRevision == 0 &&
-                    ev.TenantId == tenantId && ev.ProgramId == programId && ev.RiskId == summary.RiskId &&
-                    ev.CreateRequestId != Uuid.Empty &&
-                    ev.Identifier == RiskDraft.NormalizeIdentifier(ev.Identifier) &&
-                    RiskDraft.IdFor(tenantId, programId, ev.Identifier) == summary.RiskId &&
-                    ValidDraftContent(ev.Content) && ev.ActorMemberId != Uuid.Empty &&
-                    ValidText(ev.ActorDisplay, 200):
-                    created = ev;
-                    currentContent = ev.Content;
-                    currentChangedAt = ev.ChangedAt;
-                    currentChangedByMemberId = ev.ActorMemberId;
-                    currentChangedByDisplay = ev.ActorDisplay;
-                    currentRevision = 1;
-                    occurredAt = ev.ChangedAt;
-                    break;
-                case RiskDraftRevised ev when created is not null &&
-                    ev.TenantId == tenantId && ev.ProgramId == programId &&
-                    ev.RiskId == summary.RiskId && ev.Revision == currentRevision + 1 &&
-                    ValidDraftContent(ev.Content) && ev.ActorMemberId != Uuid.Empty &&
-                    ValidText(ev.ActorDisplay, 200):
-                    currentContent = ev.Content;
-                    currentChangedAt = ev.ChangedAt;
-                    currentChangedByMemberId = ev.ActorMemberId;
-                    currentChangedByDisplay = ev.ActorDisplay;
-                    currentRevision = ev.Revision;
-                    occurredAt = ev.ChangedAt;
-                    break;
-                default:
+                if (++count > MaximumEventsPerStream || record.Stream != stream || record.Event?.Metadata is not { } metadata ||
+                    !ValidMetadata(metadata, summary.RiskId, metadata.IsAudit ? expectedVersion - 1 : expectedVersion, seenEventIds) ||
+                    context.RecordedThrough is null && priorRecordedAt is { } prior && metadata.OccurredOn < prior)
                     return InvalidHistory<DraftHistory>();
-            }
-            if (occurredAt == default || metadata.OccurredOn == default)
-                return InvalidHistory<DraftHistory>();
-            var isAsOf = context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
-                await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
-            if (isAsOf && excluded)
-                return InvalidHistory<DraftHistory>();
-            if (isAsOf)
-            {
-                if (asOfRevision + 1 != currentRevision)
+                priorRecordedAt = metadata.OccurredOn;
+                if (metadata.IsAudit)
+                    continue;
+                expectedVersion++;
+                if (record.Event is not IRiskDraftFact fact || fact.Header.TenantId != tenantId || fact.Header.ProgramId != programId ||
+                    fact.Header.RiskId != summary.RiskId || fact.NativeSequence != currentRevision + 1 || fact.Header.Revision != currentRevision + 1 ||
+                    record.Event is RiskDraftCreated && currentRevision != 0 || record.Event is RiskDraftRevised && currentRevision == 0 ||
+                    record.Event is not (RiskDraftCreated or RiskDraftRevised))
                     return InvalidHistory<DraftHistory>();
-                asOfRevision = currentRevision;
-                asOfEvents.Add(SerializeEvent(domainEvent, "risks", summary.RiskId, metadata));
+                var version = await RiskDraftFactContent.ReadAsync(content, fact, ct).ConfigureAwait(false);
+                if (version.Identifier != RiskDraft.NormalizeIdentifier(version.Identifier) ||
+                    RiskDraft.IdFor(tenantId, programId, version.Identifier) != summary.RiskId || !ValidDraftContent(version.Content) ||
+                    version.ChangedByMemberId == Uuid.Empty || !ValidText(version.ChangedByDisplay, 200) || version.ChangedAt == default)
+                    return InvalidHistory<DraftHistory>();
+                currentRevision = version.Revision;
+                currentContent = version;
+                last = fact;
+                var isAsOf = context.RecordedThrough is null ? version.ChangedAt <= through && metadata.OccurredOn <= through :
+                    await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
+                if (isAsOf && excluded)
+                    return InvalidHistory<DraftHistory>();
+                if (isAsOf)
+                {
+                    if (asOfRevision + 1 != currentRevision)
+                        return InvalidHistory<DraftHistory>();
+                    asOfRevision = currentRevision;
+                    asOfEvents.Add(await SerializeEventAsync(content, tenantId, record.Event, "risks", summary.RiskId, metadata, ct).ConfigureAwait(false));
+                }
+                else
+                    excluded = true;
             }
-            else
-            {
-                excluded = true;
-            }
-            priorRecordedAt = metadata.OccurredOn;
-            expectedVersion++;
         }
-
-        var current = await reader.HydrateAsync(new RiskDraft(tenantId, summary.RiskId), ct)
-            .ConfigureAwait(false);
-        if (created is null || currentRevision != summary.Revision || !current.IsCreated ||
-            current.Id != summary.RiskId || current.ProgramId != programId ||
-            current.Revision != currentRevision || summary.Content != currentContent ||
-            summary.LastChangedAt != currentChangedAt ||
-            summary.LastChangedByMemberId != currentChangedByMemberId ||
-            summary.LastChangedByDisplay != currentChangedByDisplay)
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<DraftHistory>.Failure(RiskDraftReadFailure.Of(failure));
+        }
+        var current = await reader.HydrateAsync(new RiskDraft(tenantId, summary.RiskId), ct).ConfigureAwait(false);
+        if (last is null || currentContent is null || currentRevision != summary.Revision || !current.IsCreated ||
+            current.Id != summary.RiskId || current.ProgramId != programId || current.Revision != currentRevision ||
+            current.Header != last.Header || current.CurrentContent != last.Content || current.NativeSequence != last.NativeSequence ||
+            summary.Content != currentContent.Content || summary.LastChangedAt != currentContent.ChangedAt ||
+            summary.LastChangedByMemberId != currentContent.ChangedByMemberId || summary.LastChangedByDisplay != currentContent.ChangedByDisplay)
             return InvalidHistory<DraftHistory>();
-
         return Result<DraftHistory>.Success(new DraftHistory(asOfRevision, asOfEvents));
     }
 
@@ -278,55 +263,67 @@ public sealed class RiskTypeIBaselineSourceContributor(
         DateTimeOffset? priorRecordedAt = null;
         var excluded = false;
         var count = 0;
-        await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
+        try
         {
-            if (++count > MaximumEventsPerStream || record.Stream != stream ||
-                record.Event?.Metadata is not { } metadata ||
-                !ValidMetadata(metadata, riskId, expectedVersion, seenEventIds) ||
-                context.RecordedThrough is null && priorRecordedAt is { } prior && metadata.OccurredOn < prior ||
-                !TryEvaluationEvent(record.Event, tenantId, programId, riskId,
-                    expectedRevision, out var occurredAt))
-                return InvalidHistory<EvaluationHistory>();
-            if (!currentState.Apply(record.Event!))
-                return InvalidHistory<EvaluationHistory>();
-            var isAsOf = context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
-                await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
-            if (isAsOf && excluded)
-                return InvalidHistory<EvaluationHistory>();
-            if (isAsOf)
+            await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
             {
-                if (!asOfState.Apply(record.Event!))
+                if (++count > MaximumEventsPerStream || record.Stream != stream || record.Event?.Metadata is not { } metadata ||
+                    !ValidMetadata(metadata, riskId, metadata.IsAudit ? expectedVersion - 1 : expectedVersion, seenEventIds) || context.RecordedThrough is null && priorRecordedAt is { } prior && metadata.OccurredOn < prior)
                     return InvalidHistory<EvaluationHistory>();
-                asOfEvents.Add(SerializeEvent(record.Event!, "risk-evaluations", riskId,
-                    metadata));
+                priorRecordedAt = metadata.OccurredOn;
+                if (metadata.IsAudit)
+                    continue;
+                expectedVersion++;
+                if (record.Event is not IRiskEvaluationFact fact || fact.NativeSequence != expectedRevision)
+                    return InvalidHistory<EvaluationHistory>();
+                var mutation = await RiskEvaluationContent.ReadMutationAsync(content, record.Event, ct).ConfigureAwait(false);
+                if (!RiskEvaluationContent.InScope(mutation, fact.Header) ||
+                    !TryEvaluationEvent(mutation, tenantId, programId, riskId, expectedRevision, out var occurredAt) || !currentState.Apply(mutation))
+                    return InvalidHistory<EvaluationHistory>();
+                var isAsOf = context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
+                    await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
+                if (isAsOf && excluded)
+                    return InvalidHistory<EvaluationHistory>();
+                if (isAsOf)
+                {
+                    if (!asOfState.Apply(mutation))
+                        return InvalidHistory<EvaluationHistory>();
+                    asOfEvents.Add(await SerializeEventAsync(content, tenantId, record.Event, "risk-evaluations", riskId, metadata, ct).ConfigureAwait(false));
+                }
+                else
+                    excluded = true;
+                expectedRevision++;
             }
-            else
-            {
-                excluded = true;
-            }
-            expectedRevision++;
-            expectedVersion++;
-            priorRecordedAt = metadata.OccurredOn;
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<EvaluationHistory>.Failure(RiskEvaluationReadFailure.Of(failure));
         }
 
-        var source = await reader.HydrateAsync(new RiskEvaluation(tenantId, riskId), ct)
-            .ConfigureAwait(false);
-        if (source.Revision != expectedRevision - 1 ||
-            source.Revision > 0 && source.ProgramId != programId ||
-            !SameJson(source.ToView(), currentState.ToView(tenantId, source.ProgramId, riskId,
-                expectedRevision - 1), ComplianceCoreJsonContext.Default.RiskEvaluationView))
-            return InvalidHistory<EvaluationHistory>();
-        var projected = await evaluations.GetAsync(tenantId, riskId, ct).ConfigureAwait(false);
-        if (source.Revision == 0 ? projected is not null && projected.Revision != 0 :
-            projected is null || projected.TenantId != tenantId ||
-            projected.ProgramId != programId || projected.RiskId != riskId ||
-            projected.Revision != source.Revision ||
-            !SameJson(projected, source.ToView(),
-                ComplianceCoreJsonContext.Default.RiskEvaluationView))
-            return InvalidHistory<EvaluationHistory>();
+        try
+        {
+            var source = await new RiskEvaluationReader(reader, events, content).ReadAsync(tenantId, programId, riskId, ct).ConfigureAwait(false);
+            if (source.Revision != expectedRevision - 1 ||
+                source.Revision > 0 && source.ProgramId != programId ||
+                !SameJson(source.ToView(), currentState.ToView(tenantId, source.ProgramId, riskId,
+                    expectedRevision - 1), ComplianceCoreJsonContext.Default.RiskEvaluationView))
+                return InvalidHistory<EvaluationHistory>();
+            var projected = await evaluations.GetAsync(tenantId, riskId, ct).ConfigureAwait(false);
+            if (source.Revision == 0 ? projected is not null && projected.Revision != 0 :
+                projected is null || projected.TenantId != tenantId ||
+                projected.ProgramId != programId || projected.RiskId != riskId ||
+                projected.Revision != source.Revision ||
+                !SameJson(projected, source.ToView(),
+                    ComplianceCoreJsonContext.Default.RiskEvaluationView))
+                return InvalidHistory<EvaluationHistory>();
 
-        return Result<EvaluationHistory>.Success(new EvaluationHistory(source.Revision,
-            asOfEvents, asOfState));
+            return Result<EvaluationHistory>.Success(new EvaluationHistory(source.Revision,
+                asOfEvents, asOfState));
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<EvaluationHistory>.Failure(RiskEvaluationReadFailure.Of(failure));
+        }
     }
 
     async ValueTask<Result<MethodHistory>> ReadMethodHistoryAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid programId,
@@ -346,21 +343,26 @@ public sealed class RiskTypeIBaselineSourceContributor(
         {
             if (++count > MaximumEventsPerStream || record.Stream != stream ||
                 record.Event?.Metadata is not { } metadata ||
-                !ValidMetadata(metadata, methodId, expectedVersion, seenEventIds) ||
-                context.RecordedThrough is null && priorRecordedAt is { } prior && metadata.OccurredOn < prior ||
-                record.Event is not RiskMethodVersionPublished published ||
-                !TryMethodEvent(published, tenantId, programId, versions.Count + 1,
-                    out var occurredAt))
+                !ValidMetadata(metadata, methodId, metadata.IsAudit ? expectedVersion - 1 : expectedVersion, seenEventIds) ||
+                context.RecordedThrough is null && priorRecordedAt is { } prior && metadata.OccurredOn < prior)
                 return InvalidHistory<MethodHistory>();
-            versions.Add(published.Version);
-            var isAsOf = context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
-                await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
+            if (metadata.IsAudit)
+                continue;
+            if (record.Event is not RiskMethodVersionPublished published || published.TenantId != tenantId ||
+                published.ProgramId != programId || published.PublishedVersion != versions.Count + 1)
+                return InvalidHistory<MethodHistory>();
+            var publishedVersion = await RiskMethodContent.ReadAsync(content, published, ct).ConfigureAwait(false);
+            if (!ValidMethodVersion(publishedVersion, tenantId, programId, versions.Count + 1))
+                return InvalidHistory<MethodHistory>();
+            versions.Add(publishedVersion);
+            var isAsOf = context.RecordedThrough is null ? publishedVersion.PublishedAt <= through && metadata.OccurredOn <= through :
+                    await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
             if (isAsOf && excluded)
                 return InvalidHistory<MethodHistory>();
             if (isAsOf)
             {
-                asOfVersions.Add(published.Version);
-                asOfEvents.Add(SerializeEvent(published, "risk-methods", methodId, metadata));
+                asOfVersions.Add(publishedVersion);
+                asOfEvents.Add(await SerializeEventAsync(content, tenantId, published, "risk-methods", methodId, metadata, ct).ConfigureAwait(false));
             }
             else
                 excluded = true;
@@ -368,9 +370,9 @@ public sealed class RiskTypeIBaselineSourceContributor(
             expectedVersion++;
         }
 
-        var source = await reader.HydrateAsync(new RiskMethod(tenantId, programId), ct)
+        var source = await new RiskMethodReader(reader, events, content).ReadAsync(tenantId, programId, ct)
             .ConfigureAwait(false);
-        if (source.Id != methodId || source.PublishedVersion != versions.Count)
+        if (source.PublishedVersion != versions.Count)
             return InvalidHistory<MethodHistory>();
         for (var index = 0; index < versions.Count; index++)
             if (!SameJson(source.GetVersion(index + 1), versions[index],
@@ -420,20 +422,21 @@ public sealed class RiskTypeIBaselineSourceContributor(
                 }
             }
         }
-        catch (ImmutableContentIntegrityException)
+        catch (ImmutableContentIntegrityException failure)
         {
-            return InvalidHistory<GovernanceHistory>();
+            return Result<GovernanceHistory>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact risk governance source content cannot be verified.", failure is ImmutableContentUnavailableException));
         }
 
         return Result<GovernanceHistory>.Success(new GovernanceHistory(histories));
     }
 
-    static bool TryEvaluationEvent(DomainEvent domainEvent, Uuid tenantId, Uuid programId,
+    static bool TryEvaluationEvent(object domainEvent, Uuid tenantId, Uuid programId,
         Uuid riskId, long expectedRevision, out DateTimeOffset occurredAt)
     {
         switch (domainEvent)
         {
-            case RiskAssessmentRecorded { Assessment: { } assessment } recorded:
+            case RiskAssessmentRecordedBody { Assessment: { } assessment } recorded:
                 occurredAt = assessment.AssessedAt;
                 return recorded.TenantId == tenantId && recorded.ProgramId == programId &&
                     recorded.RiskId == riskId && recorded.Revision == expectedRevision &&
@@ -445,14 +448,14 @@ public sealed class RiskTypeIBaselineSourceContributor(
                     assessment.Score == assessment.Likelihood * assessment.Impact &&
                     ValidText(assessment.Rationale, 4000) && ValidMemberActor(assessment.Assessor) &&
                     occurredAt != default;
-            case RiskTreatmentChosen { Treatment: { } treatment } chosen:
+            case RiskTreatmentChosenBody { Treatment: { } treatment } chosen:
                 occurredAt = treatment.ChosenAt;
                 return chosen.TenantId == tenantId && chosen.ProgramId == programId &&
                     chosen.RiskId == riskId && chosen.Revision == expectedRevision &&
                     treatment.Kind is "mitigate" or "accept" or "transfer" or "avoid" &&
                     ValidText(treatment.Rationale, 4000) && ValidMemberActor(treatment.ChosenBy) &&
                     occurredAt != default;
-            case RiskAccepted { Acceptance: { } acceptance } accepted:
+            case RiskAcceptedBody { Acceptance: { } acceptance } accepted:
                 occurredAt = acceptance.AcceptedAt;
                 return accepted.TenantId == tenantId && accepted.ProgramId == programId &&
                     accepted.RiskId == riskId && accepted.Revision == expectedRevision &&
@@ -510,16 +513,6 @@ public sealed class RiskTypeIBaselineSourceContributor(
             if (acceptance is null || acceptance.ExpiresAt <= through)
                 blockers.Add($"Risk {identifier} has no active acceptance for its current residual assessment on the Type I date.");
         }
-    }
-
-    static bool TryMethodEvent(RiskMethodVersionPublished published, Uuid tenantId,
-        Uuid programId, int expectedVersion, out DateTimeOffset occurredAt)
-    {
-        var version = published.Version;
-        occurredAt = version?.PublishedAt ?? default;
-        return published.TenantId == tenantId && published.ProgramId == programId &&
-            ValidMethodVersion(version, tenantId, programId, expectedVersion) &&
-            occurredAt != default;
     }
 
     static bool ValidMethodVersion(RiskMethodVersionView? version, Uuid tenantId,
@@ -589,8 +582,8 @@ public sealed class RiskTypeIBaselineSourceContributor(
         return leftStream.ToArray().AsSpan().SequenceEqual(rightStream.ToArray());
     }
 
-    static RiskSourceEvent SerializeEvent(DomainEvent domainEvent, string area,
-        Uuid aggregateId, DomainEventMetadata metadata)
+    static async ValueTask<RiskSourceEvent> SerializeEventAsync(IImmutableContentStore store, Uuid tenantId,
+        DomainEvent domainEvent, string area, Uuid aggregateId, DomainEventMetadata metadata, CancellationToken ct)
     {
         var json = ComplianceCoreJsonContext.Default;
         var (kind, content) = domainEvent switch
@@ -633,8 +626,35 @@ public sealed class RiskTypeIBaselineSourceContributor(
                 JsonSerializer.SerializeToElement(ev, json.RiskTreatmentActionCompletionReviewCanceled)),
             _ => throw new JsonException("The risk source stream contains an unknown event."),
         };
+        IReadOnlyList<ImmutableContentRef> references = domainEvent switch
+        {
+            RiskMethodVersionPublished fact => [fact.Content],
+            IRiskDraftFact fact => [fact.Content],
+            IRiskEvaluationFact fact => [fact.ChangeContent, fact.CurrentAuthorityContent],
+            RiskOwnerAssigned fact => [fact.OwnerContent],
+            RiskReassessmentTriggered fact => [fact.TriggerContent],
+            RiskControlTreatmentProposed fact => [fact.TreatmentContent],
+            RiskTreatmentActionAdded fact => [fact.ActionContent],
+            RiskTreatmentActionRevised fact => [fact.EvidenceRequestIdsManifest],
+            RiskTreatmentActionCompletionSubmitted fact => [fact.EvidenceRequestIdsManifest],
+            RiskTreatmentActionCompletionReviewAccepted fact => fact.SourceProofs is { } proofs
+                ? [fact.Intent, proofs] : [fact.Intent],
+            RiskTreatmentActionCompletionReviewed fact => [fact.Intent],
+            RiskTreatmentActionCompletionReviewCanceled fact => fact.SourceProofs is { } proofs
+                ? [fact.Intent, proofs] : [fact.Intent],
+            _ => [],
+        };
+        var blobs = new List<SnapshotSourceContentBlob>(references.Count);
+        foreach (var reference in references.Distinct())
+        {
+            var bytes = await store.ReadVerifiedAsync(tenantId.ToString(), reference, ct).ConfigureAwait(false);
+            if (bytes.Length != reference.Bytes || Convert.ToHexStringLower(SHA256.HashData(bytes.Span)) != reference.Sha256)
+                throw new ImmutableContentIntegrityException("A risk source business blob failed exact digest verification.");
+            blobs.Add(new SnapshotSourceContentBlob(reference, bytes.ToArray()));
+        }
         return new RiskSourceEvent(area, aggregateId, metadata.EventId,
-            metadata.AggregateVersion, metadata.OccurredOn, kind, content);
+            metadata.AggregateVersion, metadata.OccurredOn, kind, content)
+        { ContentBlobs = blobs.Count == 0 ? null : blobs.AsReadOnly() };
     }
 
     async ValueTask<bool> HasPendingSourceAsync(EventStreamPattern pattern,
@@ -668,7 +688,10 @@ public sealed class RiskTypeIBaselineSourceContributor(
         var material = new byte[domain.Length + bytes.Length];
         domain.CopyTo(material, 0);
         bytes.CopyTo(material, domain.Length);
-        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
+        var digest = Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
+        var blobs = content.Events.SelectMany(item => item.ContentBlobs ?? []).ToArray();
+        SnapshotSourceCapture.Risk(digest, material, blobs);
+        return digest;
     }
 
     static Result<T> InvalidDirectory<T>() => Result<T>.Failure(new RequestError(
@@ -735,7 +758,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
 
                 if (excluded)
                     return false;
-                AsOfEvents.Add(SerializeEvent(fact, stream.Area, metadata.AggregateId, metadata));
+                AsOfEvents.Add(await SerializeEventAsync(content, tenantId, fact, stream.Area, metadata.AggregateId, metadata, ct).ConfigureAwait(false));
                 if (!await ApplyAsync(fact, tenantId, content, ct).ConfigureAwait(false))
                     return false;
             }
@@ -820,11 +843,11 @@ public sealed class RiskTypeIBaselineSourceContributor(
         public IReadOnlyList<RiskAcceptanceView> Acceptances => _acceptances;
         public RiskTreatmentView? Treatment => _treatment;
 
-        public bool Apply(DomainEvent domainEvent)
+        public bool Apply(object domainEvent)
         {
             switch (domainEvent)
             {
-                case RiskAssessmentRecorded assessment:
+                case RiskAssessmentRecordedBody assessment:
                     if (_assessmentIds.Contains(assessment.Assessment.AssessmentId))
                         return false;
                     if (assessment.Assessment.Phase != RiskEvaluation.Inherent)
@@ -843,7 +866,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
                     _lastChangedBy = assessment.Assessment.Assessor;
                     _lastChangedAt = assessment.Assessment.AssessedAt;
                     return true;
-                case RiskTreatmentChosen treatment:
+                case RiskTreatmentChosenBody treatment:
                     if (!_assessments.Any(static item =>
                             item.Phase == RiskEvaluation.Inherent))
                         return false;
@@ -851,7 +874,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
                     _lastChangedBy = treatment.Treatment.ChosenBy;
                     _lastChangedAt = treatment.Treatment.ChosenAt;
                     return true;
-                case RiskAccepted accepted:
+                case RiskAcceptedBody accepted:
                     var residual = _assessments.LastOrDefault(static item =>
                         item.Phase == RiskEvaluation.Residual);
                     if (_treatment is not { Kind: "accept" } || residual is null ||

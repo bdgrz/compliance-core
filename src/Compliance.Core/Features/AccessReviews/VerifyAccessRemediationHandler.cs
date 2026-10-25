@@ -50,7 +50,7 @@ public sealed class VerifyAccessRemediationHandler(NativeOperationExecutor opera
                 return Result<AccessRemediationVerificationView>.Failure(blocked.Error!);
             if (state.CurrentDecision is not { } decision || !AccessReviewVocabulary.RequiresRemediation(decision.Decision))
                 return Failure(RequestErrorKind.Conflict, "Only an item decided modify or revoke requires remediation.");
-            var loaded = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId, request.PopulationId, ct, withClassifications: false)
+            var loaded = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId, request.PopulationId, ct)
                 .ConfigureAwait(false);
             if (!loaded.IsSuccess)
                 return Result<AccessRemediationVerificationView>.Failure(loaded.Error);

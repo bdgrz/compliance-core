@@ -1,4 +1,7 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
 
 namespace Bdgrz.Compliance.Features.Risks;
 
@@ -11,7 +14,7 @@ public sealed partial class RiskMethodReassessmentReactor(
     IRequestBus bus,
     IAggregateReader reader,
     IRiskDraftDirectoryReader risks,
-    RiskDraftListReadConsistency consistency)
+    RiskDraftListReadConsistency consistency, RiskMethodReader methods)
     : Reactor(checkpoints, EventStreamPattern.ForTenant("risk-methods"), WorkloadName),
       IReactorHandler<RiskMethodVersionPublished>
 {
@@ -20,7 +23,18 @@ public sealed partial class RiskMethodReassessmentReactor(
     public async ValueTask HandleAsync(IReactorContext<RiskMethodVersionPublished> context,
         CancellationToken ct)
     {
-        var version = context.Trigger.Version;
+        var source = context.Trigger;
+        var stream = new RiskMethod(source.TenantId, source.ProgramId).Stream;
+        if (Pattern.IsTenantTemplate || Pattern.Realm != source.TenantId.ToString() || context.Source.Stream != stream)
+            throw new ImmutableContentIntegrityException("A method reaction must originate from its exact tenant and program owner.");
+        var snapshot = await methods.ReadAsync(source.TenantId, source.ProgramId, ct).ConfigureAwait(false);
+        var actual = snapshot.Facts.SingleOrDefault(fact => fact.Metadata.EventId == source.Metadata.EventId);
+        if (actual is null)
+            throw new ImmutableContentUnavailableException("The exact method publication is not visible yet.");
+        if (actual.Metadata != source.Metadata || NativeFactReference.Of(stream, actual) != NativeFactReference.Of(stream, source) ||
+            ContentDigest.OfJson(actual) != ContentDigest.OfJson(source))
+            throw new ImmutableContentIntegrityException("A method reaction differs from its exact committed publication.");
+        var version = snapshot.GetVersion(actual.PublishedVersion)!;
         if (version.Version <= 1)
             return;
         await RiskReassessmentFanOut.SendAsync(bus, reader, risks, consistency, context, context.Trigger.Metadata.EventId,

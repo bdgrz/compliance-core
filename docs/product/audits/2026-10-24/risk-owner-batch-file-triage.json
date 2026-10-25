@@ -1,0 +1,55 @@
+{
+  "reviewed": 111,
+  "blockedReviews": 0,
+  "signalsTriaged": 4,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Risks/GetRiskEvaluationHandler.cs",
+      "signals": {
+        "authority_gap": 0.25,
+        "invariant_gap": 0.65,
+        "recovery_gap": 0.36,
+        "incomplete_path": 0.18
+      },
+      "sha256": "ea89c4b9747f3daed716b0bbe831c0bbae021119e9af163d0b5b753eb6eb3780",
+      "classification": "read_time_status_with_current_triggers",
+      "evidence": "Read-only handler uses source-consistent evaluation then governance trigger history and current clock. Request authorization precedes handler; no accepted-write replay or mutation authority is inferred from read-time status. Missing/corrupt exact sources return typed failure. Source-scope forgery, status, reassessment and work authority cases pass in focused401."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Risks/PublishRiskMethodVersionHandler.cs",
+      "signals": {
+        "authority_gap": 0.57,
+        "invariant_gap": 0.72,
+        "recovery_gap": 0.63,
+        "incomplete_path": 0.29
+      },
+      "sha256": "bc83d51e032bd33dbc9a61a8779282c59d38c866cd941e2141b986b9cdec2bdd",
+      "classification": "stable_original_publication_slot_and_frozen_replay",
+      "evidence": "Existing tenant/program/original ExpectedVersion deterministically identify the publication slot without new wire fields. Current authorization precedes NativeOperationExecutor. Exact acceptance replay precedes mutable program/version reads; changed authored intent/actor conflicts. New publication checks local native version and program, writes immutable original request/result. Old-API stale retry RED and equal-winner prepare/read/write/freeze regression pass with shared kernel recheck."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Risks/RiskDraftRules.cs",
+      "signals": {
+        "authority_gap": 0.66,
+        "invariant_gap": 0.67,
+        "recovery_gap": 0.75,
+        "incomplete_path": 0.51
+      },
+      "sha256": "e7df32dfca84c96374820b458599927d53ebb75bf36ccd9a253ac2d823a806b8",
+      "classification": "pure_business_rules_and_historical_view",
+      "evidence": "Rules is a transient business validator/read model, not a persisted Aggregate or writer. Compact native RiskDraft plus operations/content/history readers enforce original binding, local revision, immutable digest/source identity and physical cut. Native malformed identity, cross-owner body, projection rollback and real HTTP replay/current grant cases pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Risks/RiskEvaluationRules.cs",
+      "signals": {
+        "authority_gap": 0.68,
+        "invariant_gap": 0.7,
+        "recovery_gap": 0.75,
+        "incomplete_path": 0.52
+      },
+      "sha256": "6e2bceae28fc2f93394c7c43b6a3ee68dcef2220fc278503c63ad916e3cb70f6",
+      "classification": "pure_business_rules_and_historical_view",
+      "evidence": "Rules is a transient business validator/read model, not a persisted Aggregate or writer. Compact native RiskEvaluation stores header/ref/sequence/selected acceptance; operations and verified readers enforce complete original binding, revision, method snapshot, immutable body and selected result. Malformed identity/source, missing nested assessment, corrupt bodies, projection rollback, reassessment and work authority cases pass."
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Bdgrz.Compliance.Features.Independence;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Portia;
@@ -13,7 +15,7 @@ public sealed class RiskAcceptanceIdentityTests
     [InlineData("actor")]
     [InlineData("revision")]
     [InlineData("waiver")]
-    public void ShouldBindAllOriginalAcceptanceFieldsGivenLaterResidualAssessment(string change)
+    public async Task ShouldBindAllOriginalAcceptanceFieldsGivenLaterResidualAssessment(string change)
     {
         // Arrange
         var tenant = Uuid.CreateVersion4();
@@ -21,14 +23,15 @@ public sealed class RiskAcceptanceIdentityTests
         var risk = Uuid.CreateVersion4();
         var command = Uuid.CreateVersion4();
         var assessor = Uuid.CreateVersion4();
-        var approver = Uuid.CreateVersion4();
+        var approverUser = Uuid.CreateVersion4();
+        var approver = RbacIds.Member(tenant, approverUser);
         var residual = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var expires = now.AddMonths(6);
-        var method = new RiskMethod(tenant, program);
+        var method = new RiskMethodRules(tenant, program);
         Assert.Null(method.Publish(program, 0, RiskMethodTests.Scale(), RiskMethodTests.Scale(), 12,
             ActorReference.ForMember(approver, "Author"), now));
-        var owner = new RiskEvaluation(tenant, risk, command);
+        var owner = new RiskEvaluationRules(tenant, risk, command);
         Assert.Null(owner.RecordAssessment(program, 0, Uuid.CreateVersion4(), method.Current!, "inherent", 2, 2,
             "Inherent", assessor, "Assessor", now));
         Assert.Null(owner.ChooseTreatment(program, 1, "accept", "Accept within tolerance", assessor, "Author", now));
@@ -39,18 +42,23 @@ public sealed class RiskAcceptanceIdentityTests
             expires, request.Rationale, approver, "Original approver", now));
         Assert.Null(owner.RecordAssessment(program, 4, Uuid.CreateVersion4(), method.Current!, "residual", 1, 1,
             "Later residual", assessor, "Assessor", now));
-        var facts = new AggregateScenario<RiskEvaluation>(owner).PendingEvents.ToArray();
-        var hydrated = new AggregateScenario<RiskEvaluation>(new(tenant, risk, command)).Given(facts);
+        await using var source = new RiskEvaluationSourceFixture();
+        await source.SeedAsync(owner);
+        var facts = await source.FactsAsync(tenant, risk);
+        var hydrated = await source.Evaluations.ReadAsync(tenant, program, risk);
+        var permissions = new PermissionBackedAccessGrantPermissionAuthorizer(new RecordingPermissionAuthorizer(true));
+        var governance = new RiskGovernanceReader(source.Reader, source.Events, source.Content);
+        var waivers = new SeparationOfDutiesWaiverProofResolver(source.Reader, new EventStoreSourceFactResolver(source.Events));
 
         // Act
-        var original = hydrated.Aggregate.ReplayAcceptance(request, approver);
-        var changed = hydrated.Aggregate.ReplayAcceptance(request with
+        var original = await source.Operations().AcceptAsync(RiskEvaluationSourceFixture.Context(request, approverUser), permissions, governance, waivers, CancellationToken.None);
+        var changed = await source.Operations().AcceptAsync(RiskEvaluationSourceFixture.Context(request with
         {
             Rationale = change == "rationale" ? "Changed acceptance" : request.Rationale,
             ExpiresAt = change == "expiry" ? expires.AddDays(1) : expires,
             ExpectedRevision = change == "revision" ? 4 : request.ExpectedRevision,
             SeparationOfDutiesWaiverId = change == "waiver" ? Uuid.CreateVersion4() : null,
-        }, change == "actor" ? Uuid.CreateVersion4() : approver);
+        }, change == "actor" ? Uuid.CreateVersion4() : approverUser), permissions, governance, waivers, CancellationToken.None);
         var result = Assert.IsType<Result<RiskAcceptanceView>>(original);
         var conflict = Assert.IsType<Result<RiskAcceptanceView>>(changed);
 
@@ -59,7 +67,7 @@ public sealed class RiskAcceptanceIdentityTests
         Assert.Equal(residual, result.Value.ResidualAssessmentId);
         Assert.Equal("Original approver", result.Value.Approver.Display);
         Assert.Equal(RequestErrorKind.Conflict, conflict.Error?.Kind);
-        Assert.Equal(5, hydrated.Aggregate.Revision);
-        Assert.Empty(hydrated.PendingEvents);
+        Assert.Equal(5, hydrated.Revision);
+        Assert.Equal(facts.Count, (await source.FactsAsync(tenant, risk)).Count);
     }
 }

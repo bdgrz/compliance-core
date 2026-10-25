@@ -1,12 +1,12 @@
-using Bdgrz.Compliance.Features.Snapshots;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.SourceFacts;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -156,13 +156,7 @@ public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader read
                 throw new ImmutableContentIntegrityException("The licensed overlay source has another exact scope or revision.");
             if (content is null)
                 throw new ImmutableContentUnavailableException("Historical licensed overlay content is not configured.");
-            var supplied = await content.ReadJsonAsync<CriteriaTextOverlayContent>(tenant.ToString(), fact.OverlayContent, ct)
-                .ConfigureAwait(false);
-            var cleaned = CriteriaTextOverlayRules.Clean(supplied);
-            if (cleaned is null || cleaned != supplied || fact.Operation.Actor.Kind != "member")
-                throw new ImmutableContentIntegrityException("The licensed overlay content does not satisfy its original source contract.");
-            current = new CriteriaTextOverlayRevision(tenant, original.EditionId, original.Identifier, fact.Revision,
-                supplied, fact.Operation.Actor, fact.Operation.AcceptedAt);
+            current = await CriteriaTextOverlayHistory.ReadRevisionAsync(content, fact, ct).ConfigureAwait(false);
             if (captured.Includes(fact))
                 retained = current;
         }

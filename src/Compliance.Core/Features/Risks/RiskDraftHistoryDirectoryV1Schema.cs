@@ -5,15 +5,15 @@ namespace Bdgrz.Compliance.Features.Risks;
 
 static class RiskDraftHistoryDirectoryV1Schema
 {
-    public static readonly KvDirectoryIndex<RiskDraftRevisionView> ByRiskRevision = new(
+    public static readonly KvDirectoryIndex<RiskDraftDirectoryIdentity> ByRiskRevision = new(
         "by_risk_revision", 1, static revision =>
-            [revision.RiskId.ToString(),
-                revision.Revision.ToString("D20", CultureInfo.InvariantCulture)]);
+            [revision.Header.RiskId.ToString(),
+                revision.Header.Revision.ToString("D20", CultureInfo.InvariantCulture)]);
 
-    public static readonly KvDirectory<RiskDraftRevisionView, string> Revisions = new(
+    public static readonly KvDirectory<RiskDraftDirectoryIdentity, string> Revisions = new(
         "risk_draft_history_revisions_v1",
-        ComplianceCoreJsonContext.Default.RiskDraftRevisionView,
-        static revision => RevisionKey(revision.RiskId, revision.Revision),
+        ComplianceCoreJsonContext.Default.RiskDraftDirectoryIdentity,
+        static revision => RevisionKey(revision.Header.RiskId, revision.Header.Revision),
         static key => [key], [ByRiskRevision]);
 
     public static string RevisionKey(Uuid riskId, long revision) =>

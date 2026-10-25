@@ -411,7 +411,7 @@ public sealed class RiskGovernanceHandlerTests
         public Uuid ProgramId { get; } = Uuid.CreateVersion4();
         public Uuid AssessorUserId { get; } = Uuid.CreateVersion4();
         public Uuid ApproverUserId { get; } = Uuid.CreateVersion4();
-        public Uuid RiskId { get; } = Uuid.CreateVersion4();
+        public Uuid RiskId => RiskDraft.IdFor(TenantId, ProgramId, "R-01");
         public Uuid ControlId => ControlDraft.IdFor(TenantId, ProgramId, "AC-RISK");
         public Uuid ControlVersionId => ControlVersionIds.Initial(ControlId);
         public Uuid MethodVersionId { get; private set; }
@@ -474,20 +474,20 @@ public sealed class RiskGovernanceHandlerTests
             var now = DateTimeOffset.UtcNow;
             var assessor = RbacIds.Member(fixture.TenantId, fixture.AssessorUserId);
             await ProgramManagementServices.SeedAsync(provider,
-                new RiskDraft(fixture.TenantId, fixture.RiskId), risk => risk.Create(
+                new RiskDraftRules(fixture.TenantId, fixture.RiskId), risk => risk.Create(
                     fixture.ProgramId, Uuid.CreateVersion4(), "R-01", new RiskDraftContent(
                         "Provider outage", "The provider is unavailable", "Requests fail",
                         null), assessor, "Assessor", now));
-            var method = new RiskMethod(fixture.TenantId, fixture.ProgramId);
+            var method = new RiskMethodRules(fixture.TenantId, fixture.ProgramId);
             await ProgramManagementServices.SeedAsync(provider, method, item => Command(
                 item.Publish(fixture.ProgramId, 0, RiskMethodTests.Scale(),
                     RiskMethodTests.Scale(), 12, ActorReference.ForMember(assessor, "Lead"),
                     now)));
             var methodVersion = (await ProgramManagementServices.HydrateAsync(provider,
-                new RiskMethod(fixture.TenantId, fixture.ProgramId))).Current!;
+                new RiskMethodRules(fixture.TenantId, fixture.ProgramId))).Current!;
             fixture.MethodVersionId = methodVersion.MethodVersionId;
             await ProgramManagementServices.SeedAsync(provider,
-                new RiskEvaluation(fixture.TenantId, fixture.RiskId), evaluation =>
+                new RiskEvaluationRules(fixture.TenantId, fixture.RiskId), evaluation =>
                 {
                     Assert.Null(evaluation.RecordAssessment(fixture.ProgramId, 0,
                         Uuid.CreateVersion4(), methodVersion, "inherent", 4, 4, "Severe",

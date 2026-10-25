@@ -17,7 +17,7 @@ public sealed class RiskMethodTests
     public void ShouldPublishSequentialImmutableVersionsGivenExpectedVersion()
     {
         // Arrange
-        var method = new RiskMethod(TenantId, ProgramId);
+        var method = new RiskMethodRules(TenantId, ProgramId);
 
         // Act
         var first = method.Publish(ProgramId, 0, Scale(), Scale(), null, Actor, Now);
@@ -36,7 +36,7 @@ public sealed class RiskMethodTests
         Assert.Null(method.GetVersion(1)!.AppetiteThreshold);
         Assert.Equal(method.GetVersion(1)!.MethodVersionId, method.Find(
             method.GetVersion(1)!.MethodVersionId)!.MethodVersionId);
-        Assert.Equal(2, new AggregateScenario<RiskMethod>(method).PendingEvents.Count);
+        Assert.Equal(2, method.PendingVersions.Count);
     }
 
     [Theory]
@@ -48,7 +48,7 @@ public sealed class RiskMethodTests
         int impactCount, int? appetite)
     {
         // Arrange
-        var method = new RiskMethod(TenantId, ProgramId);
+        var method = new RiskMethodRules(TenantId, ProgramId);
 
         // Act
         var failure = method.Publish(ProgramId, 0, Scale(likelihoodCount), Scale(impactCount),

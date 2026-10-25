@@ -476,9 +476,9 @@ public sealed class WorkSourceCompositionTests
     static async Task SeedRiskAcceptanceWorkAsync(OperationsFixture fixture)
     {
         var now = DateTimeOffset.UtcNow.AddMinutes(-2);
-        var riskId = Uuid.CreateVersion4();
+        var riskId = RiskDraft.IdFor(fixture.TenantId, fixture.ProgramId, "R-MIXED");
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskDraft(fixture.TenantId, riskId), draft =>
+            new RiskDraftRules(fixture.TenantId, riskId), draft =>
             {
                 Assert.True(draft.Create(fixture.ProgramId, Uuid.CreateVersion4(), "R-MIXED",
                     new RiskDraftContent("Data exposure", "Customer records could be exposed.",
@@ -489,7 +489,7 @@ public sealed class WorkSourceCompositionTests
         await RiskSeeds.AssignOwnerAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, fixture.PersonId, fixture.OwnerMemberId, "Owns the service risk.", ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now);
         RiskMethodVersionView? method = null;
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskMethod(fixture.TenantId, fixture.ProgramId), riskMethod =>
+            new RiskMethodRules(fixture.TenantId, fixture.ProgramId), riskMethod =>
             {
                 Assert.Null(riskMethod.Publish(fixture.ProgramId, 0,
                     ["rare", "unlikely", "possible", "likely", "almost certain"],
@@ -500,7 +500,7 @@ public sealed class WorkSourceCompositionTests
             });
         var residualId = Uuid.CreateVersion4();
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskEvaluation(fixture.TenantId, riskId), evaluation =>
+            new RiskEvaluationRules(fixture.TenantId, riskId), evaluation =>
             {
                 Assert.Null(evaluation.RecordAssessment(fixture.ProgramId, 0,
                     Uuid.CreateVersion4(), method!, RiskEvaluation.Inherent, 2, 2,
@@ -1442,7 +1442,7 @@ public sealed class WorkSourceCompositionTests
         await using var scope = provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var registration = Assert.Single(services.GetServices<WorkloadRegistration>(),
-            candidate => candidate.Name == "RiskDraftDirectory");
+            candidate => candidate.Name == FitzRiskDraftDirectory.ProjectorName);
         var projector = (Projector)services.GetRequiredService(registration.ComponentType);
         await new ProjectorScenario(new TenantId(tenantId.ToString())).RunAsync(projector);
         var reader = services.GetRequiredService<IRiskDraftDirectoryReader>();

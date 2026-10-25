@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Testing;
+using RiskEvaluation = Bdgrz.Compliance.Features.Risks.RiskEvaluationRules;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Features.Versioning;
@@ -59,8 +61,8 @@ public sealed class RiskEvaluationTests
         Assert.Null(replay);
         Assert.Null(target);
         Assert.Equal(2, evaluation.Revision);
-        var recorded = Assert.IsType<RiskAssessmentRecorded>(
-            new AggregateScenario<RiskEvaluation>(evaluation).PendingEvents[0]);
+        var recorded = Assert.IsType<RiskAssessmentRecordedBody>(
+            new RiskEvaluationRulesScenario(evaluation).PendingEvents[0]);
         Assert.Equal(20, recorded.Assessment.Score);
         Assert.Equal(ActorReference.ForMember(AssessorId, "Assessor"), recorded.Assessment.Assessor);
         Assert.Equal(method.MethodVersionId, recorded.Assessment.MethodVersionId);
@@ -208,8 +210,8 @@ public sealed class RiskEvaluationTests
 
         // Assert
         Assert.Null(accepted);
-        var acceptance = Assert.IsType<RiskAccepted>(
-            new AggregateScenario<RiskEvaluation>(evaluation).PendingEvents[^1]).Acceptance;
+        var acceptance = Assert.IsType<RiskAcceptedBody>(
+            new RiskEvaluationRulesScenario(evaluation).PendingEvents[^1]).Acceptance;
         Assert.Equal("compliance_lead", acceptance.ApproverAuthority);
         Assert.Equal(ApproverId, acceptance.ApproverMemberId);
         Assert.Equal(Now.AddMonths(12), acceptance.ExpiresAt);
@@ -372,7 +374,7 @@ public sealed class RiskEvaluationTests
 
     static RiskMethodVersionView Method(int? appetite)
     {
-        var method = new RiskMethod(TenantId, ProgramId);
+        var method = new RiskMethodRules(TenantId, ProgramId);
         Assert.Null(method.Publish(ProgramId, 0, RiskMethodTests.Scale(),
             RiskMethodTests.Scale(), appetite, ActorReference.ForMember(ApproverId, "Lead"),
             Now));

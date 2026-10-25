@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Fitz.Testing;
@@ -19,8 +20,9 @@ public sealed class RiskDraftActorProjectionTests
     public async Task ShouldProjectMemberActorGivenLegacyCreatedEventInDraftDirectory()
     {
         // Arrange
-        var directory = new FitzRiskDraftDirectory(new InMemoryKvClient());
-        await ProjectAsync(directory, directory.ApplyAsync, "RiskDraftDirectory", LegacyCreated());
+        await using var native = new RiskDraftSourceFixture();
+        var directory = new FitzRiskDraftDirectory(new InMemoryKvClient(), native.Content, native.Drafts);
+        await ProjectAsync(directory, directory.ApplyAsync, FitzRiskDraftDirectory.ProjectorName, await NativeCreatedAsync(native, LegacyCreated()));
 
         // Act
         var view = await directory.GetAsync(TenantId, RiskId);
@@ -33,9 +35,10 @@ public sealed class RiskDraftActorProjectionTests
     public async Task ShouldProjectSnapshottedActorGivenSnapshottedCreatedEventInDraftDirectory()
     {
         // Arrange
-        var directory = new FitzRiskDraftDirectory(new InMemoryKvClient());
-        await ProjectAsync(directory, directory.ApplyAsync, "RiskDraftDirectory",
-            LegacyCreated() with { StoredActor = Process });
+        await using var native = new RiskDraftSourceFixture();
+        var directory = new FitzRiskDraftDirectory(new InMemoryKvClient(), native.Content, native.Drafts);
+        await ProjectAsync(directory, directory.ApplyAsync, FitzRiskDraftDirectory.ProjectorName,
+            await NativeCreatedAsync(native, LegacyCreated() with { StoredActor = Process }));
 
         // Act
         var view = await directory.GetAsync(TenantId, RiskId);
@@ -48,8 +51,9 @@ public sealed class RiskDraftActorProjectionTests
     public async Task ShouldProjectMemberActorGivenLegacyCreatedEventInHistoryDirectory()
     {
         // Arrange
-        var directory = new FitzRiskDraftHistoryDirectoryV1(new InMemoryKvClient());
-        await ProjectAsync(directory, directory.ApplyAsync, "RiskDraftHistoryDirectoryV1", LegacyCreated());
+        await using var native = new RiskDraftSourceFixture();
+        var directory = new FitzRiskDraftHistoryDirectoryV1(new InMemoryKvClient(), native.Content, native.Drafts);
+        await ProjectAsync(directory, directory.ApplyAsync, FitzRiskDraftHistoryDirectoryV1.ProjectorName, await NativeCreatedAsync(native, LegacyCreated()));
 
         // Act
         var view = await directory.GetRevisionAsync(TenantId, RiskId, 1);
@@ -62,9 +66,10 @@ public sealed class RiskDraftActorProjectionTests
     public async Task ShouldProjectSnapshottedActorGivenSnapshottedCreatedEventInHistoryDirectory()
     {
         // Arrange
-        var directory = new FitzRiskDraftHistoryDirectoryV1(new InMemoryKvClient());
-        await ProjectAsync(directory, directory.ApplyAsync, "RiskDraftHistoryDirectoryV1",
-            LegacyCreated() with { StoredActor = Process });
+        await using var native = new RiskDraftSourceFixture();
+        var directory = new FitzRiskDraftHistoryDirectoryV1(new InMemoryKvClient(), native.Content, native.Drafts);
+        await ProjectAsync(directory, directory.ApplyAsync, FitzRiskDraftHistoryDirectoryV1.ProjectorName,
+            await NativeCreatedAsync(native, LegacyCreated() with { StoredActor = Process }));
 
         // Act
         var view = await directory.GetRevisionAsync(TenantId, RiskId, 1);
@@ -73,10 +78,18 @@ public sealed class RiskDraftActorProjectionTests
         Assert.Equal(Process, view?.Actor);
     }
 
-    static RiskDraftCreated LegacyCreated() => Assert.IsType<RiskDraftCreated>(
+    static async Task<DomainEvent> NativeCreatedAsync(RiskDraftSourceFixture native, RiskDraftCreatedContent created)
+    {
+        var rules = new RiskDraftRules(created.TenantId, created.RiskId);
+        rules.Apply(created);
+        await RiskDraftSeeds.WriteAsync(native.Writer, native.Content, rules);
+        return Assert.Single(await native.FactsAsync(created.TenantId, created.RiskId));
+    }
+
+    static RiskDraftCreatedContent LegacyCreated() => Assert.IsType<RiskDraftCreatedContent>(
         JsonSerializer.Deserialize($$"""
             {"tenant_id":"{{TenantId}}","program_id":"{{ProgramId}}","risk_id":"{{RiskId}}","create_request_id":"{{Uuid.CreateVersion4()}}","identifier":"R-01","content":{"title":"Provider outage","scenario":"Provider unavailable","potential_effect":"Requests cannot be processed","source_note":"Management note"},"actor_member_id":"{{MemberId}}","actor_display":"Legacy display","changed_at":"2026-09-23T12:00:00+00:00"}
-            """, ComplianceCoreJsonContext.Default.RiskDraftCreated));
+            """, ComplianceCoreJsonContext.Default.RiskDraftCreatedContent));
 
     static async Task ProjectAsync(IProjectionStore store,
         Func<DomainEvent, CancellationToken, ValueTask> apply, string name,

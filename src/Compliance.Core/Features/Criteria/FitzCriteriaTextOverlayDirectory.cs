@@ -46,8 +46,8 @@ sealed class FitzCriteriaTextOverlayDirectory(IKvClient client, IImmutableConten
             throw new InvalidOperationException(
                 "A criteria overlay event must belong to its tenant projection batch.");
 
-        var overlay = await content.ReadJsonAsync<CriteriaTextOverlayContent>(revised.TenantId.ToString(),
-            revised.OverlayContent, ct).ConfigureAwait(false);
+        var verified = await CriteriaTextOverlayHistory.ReadRevisionAsync(content, revised, ct).ConfigureAwait(false);
+        var overlay = verified.Content;
         var key = CriteriaTextOverlayDirectorySchema.Key(revised.EditionId,
             revised.Identifier);
         var current = await CriteriaTextOverlayDirectorySchema.Overlays.GetAsync(Transaction,

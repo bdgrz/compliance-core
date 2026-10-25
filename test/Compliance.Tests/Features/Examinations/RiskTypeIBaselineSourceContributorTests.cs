@@ -1,3 +1,10 @@
+using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using Bdgrz.Compliance.Features.Artifacts;
+using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Testing;
@@ -137,6 +144,101 @@ public sealed class RiskTypeIBaselineSourceContributorTests
             blocker.Contains("accepted control treatment", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task ShouldArchiveExactSelectedRiskNarrativesGivenProductionNativeSourcePublication()
+    {
+        // Arrange
+        await using var fixture = await Fixture(includeAssessmentAndOwner: true);
+        var root = Directory.CreateTempSubdirectory("bdgrz-risk-source-archive-").FullName;
+        try
+        {
+            var content = fixture.Provider.GetRequiredService<IImmutableContentStore>();
+            var artifacts = new LocalArtifactContentStore(new ArtifactContentStoreOptions(root, null,
+                ArtifactContentLimits.MaxContentLength), TimeProvider.System);
+            var publisher = new PublishedTypeIBaselinePreviewReader(
+                new TypeIBaselinePreviewReader([fixture.Contributor]), artifacts, content);
+            var preview = await publisher.ReadAsync(Engagement());
+            Assert.True(preview.IsSuccess, preview.Error?.Message);
+            var source = Assert.Single(preview.Value.Sources);
+            Assert.NotNull(source.Content);
+            var selected = new AuditPackageSelectionEntry("risks", "R-01", source.Kind,
+                source.RecordId, source.Revision, source.Content.FileExtension,
+                source.ContentSha256, source.Content.Bytes, "product_calculated", source.VersionId,
+                source.Content);
+            var manifest = new AuditPackageManifestView(TenantId, ProgramId, Uuid.CreateVersion4(),
+                Uuid.CreateVersion4(), 1, Uuid.CreateVersion4(), preview.Value.ContentSha256,
+                [RiskId], [new AuditPackageManifestEntryView(selected, "risks/R-01." + selected.Extension)],
+                new string('a', 64), CreatedAt);
+
+            // Act
+            var built = await new AuditPackageArchiveBuilder(artifacts).BuildAsync(TenantId, manifest,
+                CancellationToken.None);
+            Assert.True(built.IsSuccess, built.Error?.Message);
+            await using var stored = await artifacts.OpenVerifiedAsync(new ArtifactContentReference(TenantId,
+                built.Value!.ArchiveSha256!, built.Value.ArchiveBytes!.Value));
+            using var zip = new ZipArchive(stored!, ZipArchiveMode.Read);
+            var entry = Assert.Single(zip.Entries);
+            await using var payload = entry.Open();
+            using var envelope = await JsonDocument.ParseAsync(payload);
+            var proof = Convert.FromBase64String(envelope.RootElement.GetProperty("source_base64").GetString()!);
+            var blobs = envelope.RootElement.GetProperty("content_blobs").EnumerateArray().ToArray();
+            var recovered = new List<string>();
+            foreach (var blob in blobs)
+            {
+                var reference = blob.GetProperty("reference").Deserialize(ComplianceCoreJsonContext.Default.ImmutableContentRef)!;
+                var bytes = Convert.FromBase64String(blob.GetProperty("base64").GetString()!);
+                Assert.Equal(reference.Bytes, bytes.LongLength);
+                Assert.Equal(reference.Sha256, Convert.ToHexStringLower(SHA256.HashData(bytes)));
+                Assert.Equal((await content.ReadVerifiedAsync(TenantId.ToString(), reference)).ToArray(), bytes);
+                recovered.Add(Encoding.UTF8.GetString(bytes));
+            }
+
+            // Assert
+            Assert.Equal(source.ContentSha256, Convert.ToHexStringLower(SHA256.HashData(proof)));
+            Assert.Equal(source.ContentSha256, envelope.RootElement.GetProperty("logical_content_sha256").GetString());
+            Assert.Equal("application/vnd.bdgrz.risk-snapshot-source.v1+json", source.Content.MediaType);
+            Assert.Equal(source.Content.Bytes, entry.Length);
+            Assert.Contains(recovered, body => body.Contains("Credential misuse", StringComparison.Ordinal));
+            Assert.Contains(recovered, body => body.Contains("A compromised credential could expose customer records.", StringComparison.Ordinal));
+            Assert.Contains(recovered, body => body.Contains("Risk owner is accountable for the mitigation.", StringComparison.Ordinal));
+            Assert.DoesNotContain(recovered, body => body.Contains("Revised credential misuse", StringComparison.Ordinal));
+            Assert.DoesNotContain(recovered, body => body.Contains("Updated after the audit date.", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldReturnClassifiedPublicationFailureGivenUnverifiableRiskBusinessBytes(bool unavailable)
+    {
+        // Arrange
+        await using var fixture = await Fixture(includeAssessmentAndOwner: true,
+            sourceContent: content => new UnavailableBusinessContent(content, unavailable));
+        var root = Directory.CreateTempSubdirectory("bdgrz-risk-source-failure-").FullName;
+        try
+        {
+            var artifacts = new LocalArtifactContentStore(new ArtifactContentStoreOptions(root, null,
+                ArtifactContentLimits.MaxContentLength), TimeProvider.System);
+            var publisher = new PublishedTypeIBaselinePreviewReader(new TypeIBaselinePreviewReader([fixture.Contributor]),
+                artifacts, fixture.Provider.GetRequiredService<IImmutableContentStore>());
+
+            // Act
+            var result = await publisher.ReadAsync(Engagement());
+
+            // Assert
+            Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+            Assert.Equal(unavailable, result.Error!.IsTransient);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     static ExaminationEngagementView Engagement() => new(TenantId, ProgramId,
         Uuid.CreateVersion4(), "type_i", "Audit Firm", TypeIDate, null, ["security"],
         Uuid.CreateVersion4(), [], "draft", 1,
@@ -145,10 +247,11 @@ public sealed class RiskTypeIBaselineSourceContributorTests
 
     static async Task<FixtureState> Fixture(bool includeAssessmentAndOwner = false,
         DateTimeOffset? assessmentAt = null, DateTimeOffset? assessmentRecordedAt = null,
-        bool evaluationDirectoryCaughtUp = true, bool includeAcceptedControlTreatment = false)
+        bool evaluationDirectoryCaughtUp = true, bool includeAcceptedControlTreatment = false,
+        Func<IImmutableContentStore, IImmutableContentStore>? sourceContent = null)
     {
-        var risk = new RiskDraft(TenantId, RiskId);
-        Assert.True(risk.Create(ProgramId, Uuid.CreateVersion4(), "R-01",
+        var risk = new RiskDraftRules(TenantId, RiskId);
+        Assert.True(risk.Create(ProgramId, RiskId, "R-01",
             new RiskDraftContent("Credential misuse", "A credential may be misused.",
                 "Unauthorized access to customer data.", "Security review."), ActorMemberId,
             "Risk owner", CreatedAt).IsSuccess);
@@ -157,8 +260,8 @@ public sealed class RiskTypeIBaselineSourceContributorTests
                 "Unauthorized access to customer data.", "Updated after the audit date."),
             ActorMemberId, "Risk owner", RevisedAfterTypeI));
 
-        var method = new RiskMethod(TenantId, ProgramId);
-        var evaluation = new RiskEvaluation(TenantId, RiskId);
+        var method = new RiskMethodRules(TenantId, ProgramId);
+        var evaluation = new RiskEvaluationRules(TenantId, RiskId);
         if (includeAssessmentAndOwner)
         {
             var actor = ActorReference.ForMember(ActorMemberId, "Risk owner");
@@ -201,24 +304,23 @@ public sealed class RiskTypeIBaselineSourceContributorTests
             }
         }
         var stream = new EventStreamAddress(TenantId.ToString(), "risks", RiskId.ToString());
-        await store.AppendAsync(stream, 0, new AggregateScenario<RiskDraft>(risk).PendingEvents
-            .ToArray());
+        var riskOwner = await RiskDraftSeeds.OwnerAsync(content, risk);
+        await store.AppendAsync(stream, 0, new AggregateScenario<RiskDraft>(riskOwner).PendingEvents.ToArray());
         var draftDirectory = new RiskDraftDirectory(Summary(risk),
             await CheckpointAfterAsync(store, EventStreamPattern.ForPattern(TenantId.ToString(),
                 "risks")));
         if (method.PublishedVersion > 0)
             await store.AppendAsync(new EventStreamAddress(TenantId.ToString(), "risk-methods",
                 method.Id.ToString()), 0,
-                new AggregateScenario<RiskMethod>(method).PendingEvents.ToArray());
+                new AggregateScenario<RiskMethod>(await RiskMethodSeeds.OwnerAsync(content, method)).PendingEvents.ToArray());
         if (evaluation.Revision > 0)
         {
-            var evaluationEvents = new AggregateScenario<RiskEvaluation>(evaluation)
-                .PendingEvents.ToArray();
+            var evaluationOwner = await RiskEvaluationSeeds.OwnerAsync(content, evaluation);
+            var evaluationEvents = new AggregateScenario<RiskEvaluation>(evaluationOwner).PendingEvents.ToArray();
             if (assessmentRecordedAt is { } recordedAt &&
                 evaluationEvents[0] is RiskAssessmentRecorded recorded)
             {
-                DomainEvent stamped = new RiskAssessmentRecorded(recorded.TenantId,
-                    recorded.ProgramId, recorded.RiskId, recorded.Revision, recorded.Assessment);
+                DomainEvent stamped = recorded with { };
                 stamped.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), RiskId, 1,
                     recordedAt));
                 evaluationEvents[0] = stamped;
@@ -233,10 +335,11 @@ public sealed class RiskTypeIBaselineSourceContributorTests
         var evaluationDirectory = new RiskEvaluationDirectory(evaluationCheckpoint,
             evaluation.Revision > 0 ? evaluation.ToView() : null);
         return new FixtureState(new RiskTypeIBaselineSourceContributor(draftDirectory,
-            evaluationDirectory, new RiskGovernanceReader(reader, store, content), content, reader, store), provider);
+            evaluationDirectory, new RiskGovernanceReader(reader, store, content), sourceContent?.Invoke(content) ?? content,
+            reader, store), provider);
     }
 
-    static RiskDraftView Summary(RiskDraft risk) => new(TenantId, ProgramId, RiskId,
+    static RiskDraftView Summary(RiskDraftRules risk) => new(TenantId, ProgramId, RiskId,
         "R-01", risk.Revision, "draft_unassessed", "unresolved",
         new RiskDraftContent("Revised credential misuse", "A credential may be misused.",
             "Unauthorized access to customer data.", "Updated after the audit date."),
@@ -249,6 +352,19 @@ public sealed class RiskTypeIBaselineSourceContributorTests
         await foreach (var record in store.ReadAsync(pattern, cursor, CancellationToken.None))
             cursor = record.NextCursor;
         return new ProjectionCheckpoint(cursor);
+    }
+
+    sealed class UnavailableBusinessContent(IImmutableContentStore inner, bool unavailable) : IImmutableContentStore
+    {
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema, string mediaType,
+            ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
+            inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => reference.Schema == RiskEvaluationContent.AuthoritySchema
+            ? throw (unavailable ? new ImmutableContentUnavailableException("The risk body is temporarily unavailable.")
+                : new ImmutableContentIntegrityException("The risk body failed verification."))
+            : inner.ReadVerifiedAsync(realm, reference, ct);
     }
 
     sealed record FixtureState(ITypeIBaselineSourceContributor Contributor, ServiceProvider Provider) : IAsyncDisposable

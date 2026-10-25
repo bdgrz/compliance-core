@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Fitz.Extensions;
@@ -19,16 +20,17 @@ public sealed class FitzRiskDraftHistoryDirectoryV1Tests
         var authorId = Uuid.CreateVersion4();
         var editorId = Uuid.CreateVersion4();
         var now = new DateTimeOffset(2026, 9, 21, 12, 0, 0, TimeSpan.Zero);
-        var created = new RiskDraftCreated(tenantId, programId, riskId,
-            Uuid.CreateVersion4(), "R-01", Content("Initial"), authorId, "Author", now);
-        var second = new RiskDraftRevised(tenantId, programId, riskId, 2,
-            Content("Second"), editorId, "Editor", now.AddMinutes(1));
-        var third = new RiskDraftRevised(tenantId, programId, riskId, 3,
-            Content("Third"), editorId, "Editor", now.AddMinutes(2));
-        var other = new RiskDraftCreated(tenantId, programId, otherRiskId,
-            Uuid.CreateVersion4(), "R-02", Content("Other"), authorId, "Author", now);
-        var directory = new FitzRiskDraftHistoryDirectoryV1(new InMemoryKvClient());
-        await ProjectAsync(directory, tenantId, created, second, third, other);
+        await using var native = new RiskDraftSourceFixture();
+        var firstRules = new RiskDraftRules(tenantId, riskId);
+        Assert.True(firstRules.Create(programId, riskId, "R-01", Content("Initial"), authorId, "Author", now).IsSuccess);
+        Assert.Null(firstRules.Revise(programId, 1, Content("Second"), editorId, "Editor", now.AddMinutes(1)));
+        Assert.Null(firstRules.Revise(programId, 2, Content("Third"), editorId, "Editor", now.AddMinutes(2)));
+        var firstFacts = await native.PublishAsync(firstRules);
+        var otherRules = new RiskDraftRules(tenantId, otherRiskId);
+        Assert.True(otherRules.Create(programId, otherRiskId, "R-02", Content("Other"), authorId, "Author", now).IsSuccess);
+        var otherFacts = await native.PublishAsync(otherRules);
+        var directory = new FitzRiskDraftHistoryDirectoryV1(new InMemoryKvClient(), native.Content, native.Drafts);
+        await ProjectAsync(directory, tenantId, firstFacts.Concat(otherFacts).ToArray());
 
         // Act
         var first = await directory.ListRevisionsAsync(tenantId, riskId, 2, null);
@@ -54,21 +56,16 @@ public sealed class FitzRiskDraftHistoryDirectoryV1Tests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var firstSource = CreateSource(tenantId, programId, "R-01");
-        var secondSource = CreateSource(tenantId, programId, "R-02");
-        var now = new DateTimeOffset(2026, 9, 21, 12, 0, 0, TimeSpan.Zero);
-        var firstCreated = new RiskDraftCreated(tenantId, programId, firstSource.Id,
-            Uuid.CreateVersion4(), "R-01", Content("Initial"), Uuid.CreateVersion4(),
-            "Author", now);
-        var firstRevised = new RiskDraftRevised(tenantId, programId, firstSource.Id, 2,
-            Content("Second"), Uuid.CreateVersion4(), "Editor", now.AddMinutes(1));
-        var secondCreated = new RiskDraftCreated(tenantId, programId, secondSource.Id,
-            Uuid.CreateVersion4(), "R-02", Content("Other"), Uuid.CreateVersion4(),
-            "Author", now);
-        var directory = new FitzRiskDraftHistoryDirectoryV1(new InMemoryKvClient());
-        await ProjectAsync(directory, tenantId, firstCreated, firstRevised, secondCreated);
-        var consistency = new RiskDraftHistoryReadConsistency(directory,
-            new SourceReader(firstSource, secondSource));
+        await using var native = new RiskDraftSourceFixture();
+        var firstRules = CreateSource(tenantId, programId, "R-01");
+        var secondRules = CreateSource(tenantId, programId, "R-02");
+        Assert.Null(firstRules.Revise(programId, 1, Content("Second"), Uuid.CreateVersion4(), "Editor", DateTimeOffset.UtcNow));
+        var facts = (await native.PublishAsync(firstRules)).Concat(await native.PublishAsync(secondRules)).ToArray();
+        var firstSource = await native.Reader.HydrateAsync(new RiskDraft(tenantId, firstRules.Id));
+        var secondSource = await native.Reader.HydrateAsync(new RiskDraft(tenantId, secondRules.Id));
+        var directory = new FitzRiskDraftHistoryDirectoryV1(new InMemoryKvClient(), native.Content, native.Drafts);
+        await ProjectAsync(directory, tenantId, facts);
+        var consistency = new RiskDraftHistoryReadConsistency(directory, new SourceReader(firstSource, secondSource));
         var handler = new ListRiskDraftRevisionsHandler(directory, consistency);
         var firstPage = await directory.ListRevisionsAsync(tenantId, firstSource.Id, 1, null);
 
@@ -93,15 +90,12 @@ public sealed class FitzRiskDraftHistoryDirectoryV1Tests
         var tenantId = Uuid.CreateVersion4();
         var otherTenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var risk = CreateSource(tenantId, programId, "R-01");
-        Assert.Null(risk.Revise(programId, 1, Content("Revised"), Uuid.CreateVersion4(),
-            "Editor", DateTimeOffset.UtcNow));
-        var created = new RiskDraftCreated(tenantId, programId, risk.Id,
-            Uuid.CreateVersion4(), "R-01", Content("Initial"), Uuid.CreateVersion4(),
-            "Author", new DateTimeOffset(2026, 9, 21, 12, 0, 0, TimeSpan.Zero));
-        var revised = new RiskDraftRevised(tenantId, programId, risk.Id, 2,
-            Content("Revised"), Uuid.CreateVersion4(), "Editor", created.ChangedAt.AddMinutes(1));
-        var projected = new FitzRiskDraftHistoryDirectoryV1(new InMemoryKvClient());
+        await using var native = new RiskDraftSourceFixture();
+        var rules = CreateSource(tenantId, programId, "R-01");
+        Assert.Null(rules.Revise(programId, 1, Content("Revised"), Uuid.CreateVersion4(), "Editor", DateTimeOffset.UtcNow));
+        var facts = await native.PublishAsync(rules);
+        var risk = await native.Reader.HydrateAsync(new RiskDraft(tenantId, rules.Id));
+        var projected = new FitzRiskDraftHistoryDirectoryV1(new InMemoryKvClient(), native.Content, native.Drafts);
         var directory = new TrackingDirectory(projected);
         var consistency = new RiskDraftHistoryReadConsistency(directory,
             new SourceReader(risk));
@@ -110,7 +104,7 @@ public sealed class FitzRiskDraftHistoryDirectoryV1Tests
         // Act
         var lagged = await handler.HandleAsync(Context(new ListRiskDraftRevisions(tenantId,
             programId, risk.Id, MinimumRiskRevision: 2)), CancellationToken.None);
-        await ProjectAsync(projected, tenantId, created, revised);
+        await ProjectAsync(projected, tenantId, facts.ToArray());
         var recovered = await handler.HandleAsync(Context(new ListRiskDraftRevisions(tenantId,
             programId, risk.Id, MinimumRiskRevision: 2)), CancellationToken.None);
         var readsAfterRecovery = directory.RevisionReads;
@@ -139,15 +133,15 @@ public sealed class FitzRiskDraftHistoryDirectoryV1Tests
     static RiskDraftContent Content(string title) => new(title, $"{title} scenario",
         $"{title} effect", "Management observation");
 
-    static RiskDraft CreateSource(Uuid tenantId, Uuid programId, string identifier)
+    static RiskDraftRules CreateSource(Uuid tenantId, Uuid programId, string identifier)
     {
-        var source = new RiskDraft(tenantId, RiskDraft.IdFor(tenantId, programId, identifier));
+        var source = new RiskDraftRules(tenantId, RiskDraft.IdFor(tenantId, programId, identifier));
         Assert.True(source.Create(programId, Uuid.CreateVersion4(), identifier, Content(identifier),
             Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow).IsSuccess);
         return source;
     }
 
-    static CheckpointIdentity Identity(Uuid tenantId) => new("RiskDraftHistoryDirectoryV1",
+    static CheckpointIdentity Identity(Uuid tenantId) => new(FitzRiskDraftHistoryDirectoryV1.ProjectorName,
         EventStreamPattern.ForPattern(tenantId.ToString(), "risks"));
 
     static async Task ProjectAsync(FitzRiskDraftHistoryDirectoryV1 directory, Uuid tenantId,

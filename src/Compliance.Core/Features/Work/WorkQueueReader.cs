@@ -46,7 +46,9 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
     RiskGovernanceReader? riskGovernance = null,
     EvidenceRequestReader? evidenceRequests = null,
     CommitmentReader? commitmentSources = null,
-    BoundaryReader? boundarySources = null)
+    BoundaryReader? boundarySources = null,
+    RiskEvaluationReader? riskEvaluations = null,
+    RiskMethodReader? riskMethods = null)
 {
     public const int SystemEscalationDays = 7;
     public const int DefaultHorizonDays = 30;
@@ -168,7 +170,7 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
             var decisions = await RiskAcceptanceWork.LoadAsync(reader,
                 riskGovernance ?? throw new InvalidOperationException("Risk work requires the risk governance reader."),
                 risks, riskConsistency,
-                tenantId, programId, now, workItemId, ct).ConfigureAwait(false);
+                tenantId, programId, now, workItemId, riskEvaluations, riskMethods, ct).ConfigureAwait(false);
             if (!decisions.IsSuccess)
                 return Result<WorkQueueSnapshot>.Failure(decisions.Error);
             candidates.AddRange(decisions.Value);

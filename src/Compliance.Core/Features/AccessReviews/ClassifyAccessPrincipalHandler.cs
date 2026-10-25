@@ -46,35 +46,34 @@ public sealed class ClassifyAccessPrincipalHandler(NativeOperationExecutor opera
         var stream = new AccessPrincipalClassification(request.TenantId, request.PopulationId,
             request.ProviderSubjectId).Stream;
         var provenance = AccessReviewOperation.Provenance(request.CommandId, CommandKind, stream, actor.Reference,
-            request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
+            request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now) with
+        { FirstOwner = stream };
         var binding = AcceptedOperationBinding.Of(provenance);
-        var current = await reader.HydrateAsync(new AccessPrincipalClassification(request.TenantId,
-            request.PopulationId, request.ProviderSubjectId, request.CommandId), ct).ConfigureAwait(false);
-
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? decisionContent = null;
         ImmutableContentRef? result = null;
-        if (current.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(AccessPrincipalClassification classification,
+            CancellationToken token)
         {
-            var failure = await GuardAsync(request, population, current, ct).ConfigureAwait(false);
+            var failure = await GuardAsync(request, population, classification, token).ConfigureAwait(false);
             if (failure.Error is not null)
-                return Result<AccessPrincipalClassificationView>.Failure(failure.Error);
+                return Result<FirstResponseDescriptor>.Failure(failure.Error);
             var decision = new AccessPrincipalClassificationView(request.ExpectedRevision + 1, request.Classification,
                 request.PersonId, request.ServiceIdentityId, request.AccountableOwnerPersonId,
                 request.SharedJustification?.Trim(), request.Rationale.Trim(), failure.Proposed, actor.Reference, now);
             decisionContent = await AccessReviewContent.WriteAsync(content, request.TenantId,
-                AccessReviewContent.DecisionSchema, decision, ct).ConfigureAwait(false);
+                AccessReviewContent.DecisionSchema, decision, token).ConfigureAwait(false);
             result = await AccessReviewContent.WriteResultAsync(content, request.TenantId,
-                AccessReviewContent.DecisionSchema, decisionContent, ct).ConfigureAwait(false);
-            response = AccessReviewContent.OkResponse(AccessReviewContent.DecisionSchema, decisionContent);
+                AccessReviewContent.DecisionSchema, decisionContent, token).ConfigureAwait(false);
+            return Result<FirstResponseDescriptor>.Success(
+                AccessReviewContent.OkResponse(AccessReviewContent.DecisionSchema, decisionContent));
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AccessPrincipalClassification>(binding,
             () => new AccessPrincipalClassification(request.TenantId, request.PopulationId, request.ProviderSubjectId,
                 request.CommandId),
             classification => classification.Acceptance,
-            classification => AccessReviewOperation.Prepare(classification.PrepareClassify(request.ExpectedRevision),
-                response, "The principal changed while the classification was prepared; reload and retry."),
+            PrepareAsync,
             (AccessPrincipalClassification classification, ImmutableContentRef frozen) =>
                 classification.Classify(provenance, decisionContent!, frozen, result!)),
             context, ct).ConfigureAwait(false);

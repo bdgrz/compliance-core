@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Policies;
@@ -57,13 +58,38 @@ static class ProgramManagementServices
         collection.AddScoped<ControlOperations>();
         collection.AddScoped<BoundaryReader>();
         collection.AddScoped<BoundaryOperations>();
+        collection.AddScoped<RiskDraftReader>();
+        collection.AddScoped<RiskDraftOperations>();
+        collection.AddScoped<RiskEvaluationReader>();
+        collection.AddScoped<RiskEvaluationOperations>();
         collection.AddScoped<CommitmentReader>();
         collection.AddScoped<CommitmentOperations>();
         collection.AddScoped<PolicyReader>();
         collection.AddScoped<PolicyOperations>();
+        collection.AddScoped<RiskMethodReader>();
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+    }
+
+    public static async Task<RiskMethodRules> HydrateAsync(IServiceProvider provider, RiskMethodRules selected)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var snapshot = await scope.ServiceProvider.GetRequiredService<RiskMethodReader>()
+            .ReadAsync(selected.TenantId, selected.ProgramId);
+        return RiskMethodRules.FromVersions(selected.TenantId, selected.ProgramId, snapshot.Versions);
+    }
+
+    public static async Task SeedAsync(IServiceProvider provider, RiskMethodRules selected,
+        Func<RiskMethodRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var rules = await HydrateAsync(provider, selected);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await RiskMethodSeeds.AppendAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), rules);
     }
 
     public static async Task SeedAsync(IServiceProvider provider, ControlRules selected,
@@ -204,6 +230,66 @@ static class ProgramManagementServices
         await using var scope = provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<BoundaryReader>()
             .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
+    }
+
+    public static async Task SeedAsync(IServiceProvider provider, RiskDraftRules selected,
+        Func<RiskDraftRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await services.GetRequiredService<RiskDraftReader>().RulesAsync(selected.TenantId, selected.Id);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await RiskDraftSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(), services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+
+    public static async Task SeedAsync<TOut>(IServiceProvider provider, RiskDraftRules selected,
+        Func<RiskDraftRules, Result<TOut>> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await services.GetRequiredService<RiskDraftReader>().RulesAsync(selected.TenantId, selected.Id);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await RiskDraftSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(), services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+
+    public static async Task<RiskDraftRules> HydrateAsync(IServiceProvider provider, RiskDraftRules selected)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<RiskDraftReader>().RulesAsync(selected.TenantId, selected.Id);
+    }
+
+    public static async Task SeedAsync(IServiceProvider provider, RiskEvaluationRules selected,
+        Func<RiskEvaluationRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await services.GetRequiredService<RiskEvaluationReader>().RulesAsync(selected.TenantId, selected.Id);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await RiskEvaluationSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(), services.GetRequiredService<IDomainEventReader>(), services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+
+    public static async Task SeedAsync<TOut>(IServiceProvider provider, RiskEvaluationRules selected,
+        Func<RiskEvaluationRules, Result<TOut>> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await services.GetRequiredService<RiskEvaluationReader>().RulesAsync(selected.TenantId, selected.Id);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await RiskEvaluationSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(), services.GetRequiredService<IDomainEventReader>(), services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+
+    public static async Task<RiskEvaluationRules> HydrateAsync(IServiceProvider provider, RiskEvaluationRules selected)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>().RulesAsync(selected.TenantId, selected.Id);
     }
 
     public static ClaimsPrincipal Actor(Uuid userId) => new(new ClaimsIdentity(

@@ -18,7 +18,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     original registration, so an exact retry returns it even after the campaign changed. Materializing the items
 ///     is the launch fan-out's work. Later classification or expectation changes never alter a launched campaign.
 /// </summary>
-public sealed class LaunchAccessReviewCampaignHandler(NativeOperationExecutor operations, IAggregateReader reader,
+public sealed class LaunchAccessReviewCampaignHandler(NativeOperationExecutor operations, IAggregateReader reader, IDomainEventReader events,
     AccessReviewReader campaigns, PopulationSnapshotFreezer freezer, IAccessReviewSources sources,
     IImmutableContentStore content, AccessExpectationsReader expectations, TimeProvider clock, RestrictedApplicationVisibility visibility,
     AccessReviewQueueEligibility queueEligibility, OperatingAuthority authority)
@@ -131,7 +131,7 @@ public sealed class LaunchAccessReviewCampaignHandler(NativeOperationExecutor op
                 !await visibility.CanReadSystemInstanceAsync(request.TenantId, actor.UserId, opened.ApplicationId,
                     opened.SystemInstanceId, ct).ConfigureAwait(false))
                 return Fail(RequestErrorKind.NotFound, "The population was not found.");
-            var loaded = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId, assignment.PopulationId,
+            var loaded = await AcceptedAccessPopulation.LoadAsync(reader, events, content, request.TenantId, assignment.PopulationId,
                 ct).ConfigureAwait(false);
             if (!loaded.IsSuccess)
                 return Result<Frozen>.Failure(loaded.Error);

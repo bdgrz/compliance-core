@@ -93,7 +93,7 @@ public sealed class DraftActorSnapshotE2ETests(BrokerStackFixture broker)
                                source_reference = "Contract section 5",
                            }))
                     Assert.Equal(HttpStatusCode.OK, commitmentRevision.StatusCode);
-                using (var riskRevision = await owner.PutAsJsonAsync(drafts[2].Current, new
+                using (var riskRevision = await RiskDraftHttpRequests.ReviseAsync(owner, drafts[2].Current, new
                 {
                     expected_revision = 1,
                     title = "Provider outage",
@@ -101,7 +101,7 @@ public sealed class DraftActorSnapshotE2ETests(BrokerStackFixture broker)
                     potential_effect = "Requests cannot be processed",
                     source_note = "Management note",
                 }))
-                    Assert.Equal(HttpStatusCode.NoContent, riskRevision.StatusCode);
+                    Assert.Equal(HttpStatusCode.OK, riskRevision.StatusCode);
 
                 // Assert: current and immutable history use saved IDs and displays.
                 await using var mcp = await McpScenario.ConnectAsync(owner,
@@ -260,7 +260,7 @@ public sealed class DraftActorSnapshotE2ETests(BrokerStackFixture broker)
             context = "Draft context",
             source_reference = "Contract section 4",
         });
-        using var riskResponse = await owner.PostAsJsonAsync(risks, new
+        using var riskResponse = await RiskDraftHttpRequests.CreateAsync(owner, risks, new
         {
             identifier = "R-01",
             title = "Provider outage",

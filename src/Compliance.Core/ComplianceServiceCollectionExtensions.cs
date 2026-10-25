@@ -391,6 +391,10 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzServiceIdentityDirectory>());
         services.AddScoped<ServiceIdentityReadConsistency>();
         services.AddScoped<ServiceIdentityOwnership>();
+        services.AddScoped<RiskDraftReader>();
+        services.AddScoped<RiskDraftOperations>();
+        services.AddScoped<RiskEvaluationReader>();
+        services.AddScoped<RiskEvaluationOperations>();
         services.AddScoped<FitzRiskDraftDirectory>();
         services.AddScoped<IRiskDraftDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzRiskDraftDirectory>());
@@ -784,6 +788,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<RiskActionReviewVerifier>();
         services.AddScoped<RiskActionReviewFences>();
         services.AddScoped<RiskGovernanceReader>();
+        services.AddScoped<RiskMethodReader>();
         services.AddScoped<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>();
         services.AddScoped<ControlOperationsReader>();
         services.AddScoped<ControlMappingReader>();
@@ -1866,7 +1871,7 @@ public static class ComplianceServiceCollectionExtensions
                 WorkloadScope.PerTenant)
             .AddProjector<CommitmentDraftHistoryDirectoryProjectorV1>(
                 FitzCommitmentDraftHistoryDirectoryV1.ProjectorName, WorkloadScope.PerTenant)
-            .AddProjector<RiskDraftDirectoryProjector>("RiskDraftDirectory", WorkloadScope.PerTenant)
+            .AddProjector<RiskDraftDirectoryProjector>(FitzRiskDraftDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<PersonDirectoryProjector>("PersonDirectoryV2", WorkloadScope.PerTenant)
             .AddProjector<TechnologyInventoryDirectoryProjector>(
                 FitzTechnologyInventoryDirectory.ProjectorName, WorkloadScope.PerTenant)
@@ -1881,7 +1886,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<WorkforceSourceProjector>("WorkforceSourcesV1", WorkloadScope.PerTenant)
             .AddProjector<ServiceIdentityDirectoryProjector>("ServiceIdentityDirectoryV1",
                 WorkloadScope.PerTenant)
-            .AddProjector<RiskDraftHistoryProjectorV1>("RiskDraftHistoryDirectoryV1",
+            .AddProjector<RiskDraftHistoryProjectorV1>(FitzRiskDraftHistoryDirectoryV1.ProjectorName,
                 WorkloadScope.PerTenant)
             .AddProjector<RiskEvaluationDirectoryProjectorV1>(
                 FitzRiskEvaluationDirectory.ProjectorName, WorkloadScope.PerTenant)

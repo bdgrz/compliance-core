@@ -165,24 +165,34 @@ sealed class ProviderAssuranceHost : IAsyncDisposable
     // --- sources
 
     /// <summary>Seeds an active, personally accepted risk of <see cref="ProgramId" /> and returns its identities.</summary>
+    async Task SeedAsync<TOut>(RiskDraftRules source, Func<RiskDraftRules, Result<TOut>> operation)
+    {
+        var result = operation(source);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await using var scope = _provider.CreateAsyncScope();
+        await RiskDraftSeeds.WriteAsync(scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), source);
+    }
+
     public async Task<(Uuid RiskId, Uuid AcceptanceId, DateTimeOffset ExpiresAt)> AcceptRiskAsync(
         TimeSpan? lifetime = null)
     {
-        var riskId = Uuid.CreateVersion4();
+        var identifier = "R-" + Uuid.CreateVersion4().ToString()[..8];
+        var riskId = RiskDraft.IdFor(Tenant, ProgramId, identifier);
         var approver = Uuid.CreateVersion4();
         var assessor = Uuid.CreateVersion4();
         var acceptanceId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var expires = now.Add(lifetime ?? TimeSpan.FromDays(90));
-        await SeedAsync(new RiskDraft(Tenant, riskId), draft => draft.Create(ProgramId, Uuid.CreateVersion4(),
-            $"R-{riskId.ToString()[..8]}", new RiskDraftContent("Provider exposure", "Provider coverage is incomplete.",
+        await SeedAsync(new RiskDraftRules(Tenant, riskId), draft => draft.Create(ProgramId, Uuid.CreateVersion4(),
+            identifier, new RiskDraftContent("Provider exposure", "Provider coverage is incomplete.",
                 "Customer impact", null), assessor, "Assessor", now.AddMinutes(-5)));
-        var method = new RiskMethod(Tenant, ProgramId);
+        var method = new RiskMethodRules(Tenant, ProgramId);
         Assert.Null(method.Publish(ProgramId, 0, ["1", "2", "3", "4", "5"], ["1", "2", "3", "4", "5"], 12,
             ActorReference.ForMember(approver, "Lead"), now.AddMinutes(-5)));
         var version = method.Current!;
         var residualId = Uuid.CreateVersion4();
-        await SeedAsync(new RiskEvaluation(Tenant, riskId), evaluation =>
+        await SeedAsync(new RiskEvaluationRules(Tenant, riskId), evaluation =>
         {
             var failure = evaluation.RecordAssessment(ProgramId, 0, Uuid.CreateVersion4(), version, "inherent", 5, 5,
                 "Severe", assessor, "Assessor", now.AddMinutes(-4)) ??
@@ -196,6 +206,17 @@ sealed class ProviderAssuranceHost : IAsyncDisposable
                 failure.Message ?? string.Empty));
         });
         return (riskId, acceptanceId, expires);
+    }
+
+    public async Task SeedAsync(RiskEvaluationRules selected, Func<RiskEvaluationRules, Result> operation)
+    {
+        await using var scope = _provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await new RiskEvaluationReader(reader, Events, Content).RulesAsync(selected.TenantId, selected.Id);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await RiskEvaluationSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(), Events, Content, rules);
     }
 
     public async Task SeedAsync<TAggregate>(TAggregate aggregate, Func<TAggregate, Result> operation)

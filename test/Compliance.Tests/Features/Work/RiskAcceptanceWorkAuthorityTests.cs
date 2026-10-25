@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Independence;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Operations;
@@ -221,7 +222,7 @@ public sealed class RiskAcceptanceWorkAuthorityTests
         var denied = await fixture.AcceptHttpAsync(fixture.Accept(pending, false), fixture.GuestUserId,
             RequestErrorKind.Forbidden);
         var source = await ProgramManagementServices.HydrateAsync(fixture.Operations.Provider,
-            new RiskEvaluation(fixture.Operations.TenantId, pending.RiskId));
+            new RiskEvaluationRules(fixture.Operations.TenantId, pending.RiskId));
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, denied.Error?.Kind);
@@ -259,6 +260,7 @@ public sealed class RiskAcceptanceWorkAuthorityTests
             void Configure(IServiceCollection services)
             {
                 services.AddSingleton(events);
+                services.AddSingleton<IImmutableContentStore>(operations.Content);
                 services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
                 services.AddSingleton<ISourceFactResolver>(new EventStoreSourceFactResolver((IDomainEventReader)events));
                 services.AddScoped<ISeparationOfDutiesWaiverProofResolver, SeparationOfDutiesWaiverProofResolver>();
@@ -269,9 +271,9 @@ public sealed class RiskAcceptanceWorkAuthorityTests
                 services.AddSingleton<IRiskDraftDirectoryReader>(operations.Risks);
                 if (projected)
                 {
-                    services.AddScoped<FitzRiskEvaluationDirectory>(_ => new(client));
+                    services.AddScoped<FitzRiskEvaluationDirectory>(provider => new(client, provider.GetRequiredService<RiskEvaluationReader>()));
                     services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                        new RiskAcceptanceWorkItemDirectory(provider.GetRequiredService<IAggregateReader>(), provider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), operations.Risks, null, provider.GetRequiredService<FitzRiskEvaluationDirectory>()));
+                        new RiskAcceptanceWorkItemDirectory(provider.GetRequiredService<IAggregateReader>(), provider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), operations.Risks, null, provider.GetRequiredService<FitzRiskEvaluationDirectory>(), provider.GetRequiredService<RiskEvaluationReader>(), provider.GetRequiredService<RiskMethodReader>()));
                 }
             }
             ServiceProvider provider;
@@ -334,17 +336,17 @@ public sealed class RiskAcceptanceWorkAuthorityTests
         public async Task<Pending> SeedAsync(bool executive, int? appetiteThreshold = 20, Uuid? assessorMemberId = null)
         {
             var now = DateTimeOffset.UtcNow.AddMinutes(-5);
-            var riskId = Uuid.CreateVersion4();
+            var riskId = RiskDraft.IdFor(Operations.TenantId, Operations.ProgramId, "R-AUTH");
             var residualId = Uuid.CreateVersion4();
             await ProgramManagementServices.SeedAsync(Operations.Provider,
-                new RiskDraft(Operations.TenantId, riskId), risk => risk.Create(Operations.ProgramId,
-                    Uuid.CreateVersion4(), "R-AUTH", new RiskDraftContent("Data exposure", "Customer data exposure",
+                new RiskDraftRules(Operations.TenantId, riskId), risk => risk.Create(Operations.ProgramId,
+                    riskId, "R-AUTH", new RiskDraftContent("Data exposure", "Customer data exposure",
                         "Loss of trust", null), Operations.LeadMemberId, "Lead", now));
             Operations.Risks.Add(new RiskDraftView(Operations.TenantId, Operations.ProgramId, riskId, "R-AUTH", 1,
                 "assessed", "resolved", new RiskDraftContent("Data exposure", "Customer data exposure", "Loss of trust", null),
                 Operations.LeadMemberId, "Lead", now));
             var method = await ProgramManagementServices.HydrateAsync(Operations.Provider,
-                new RiskMethod(Operations.TenantId, Operations.ProgramId));
+                new RiskMethodRules(Operations.TenantId, Operations.ProgramId));
             if (method.Current is null)
             {
                 await ProgramManagementServices.SeedAsync(Operations.Provider, method, source =>
@@ -356,10 +358,10 @@ public sealed class RiskAcceptanceWorkAuthorityTests
                     return Result.Success;
                 });
                 method = await ProgramManagementServices.HydrateAsync(Operations.Provider,
-                    new RiskMethod(Operations.TenantId, Operations.ProgramId));
+                    new RiskMethodRules(Operations.TenantId, Operations.ProgramId));
             }
             await ProgramManagementServices.SeedAsync(Operations.Provider,
-                new RiskEvaluation(Operations.TenantId, riskId), evaluation =>
+                new RiskEvaluationRules(Operations.TenantId, riskId), evaluation =>
                 {
                     Assert.Null(evaluation.RecordAssessment(Operations.ProgramId, 0, Uuid.CreateVersion4(),
                         method.Current!, RiskEvaluation.Inherent, 2, 2, "Baseline exposure", Operations.LeadMemberId,

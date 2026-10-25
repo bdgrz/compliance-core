@@ -35,12 +35,13 @@ public static class TrainingRequirementRules
             ComplianceCoreJsonContext.Default.TrainingRequirementContent)));
 
     /// <summary>Reads the exact version of a requirement, or the latest one, from its verified content.</summary>
-    public static async ValueTask<TrainingRequirementView?> ViewAsync(IImmutableContentStore store,
+    public static async ValueTask<TrainingRequirementView?> ViewAsync(IImmutableContentStore store, IDomainEventReader events,
         TrainingRequirement requirement, long? version, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(requirement);
-        var fact = version is { } exact ? requirement.FactOf(exact) : requirement.Latest;
+        var facts = await TrainingRequirementHistory.FactsAsync(events, requirement, ct).ConfigureAwait(false);
+        var fact = version is { } exact ? facts.FirstOrDefault(value => value.Version == exact) : requirement.Latest;
         return fact is null ? null : await ViewAsync(store, fact, requirement.CurrentVersion, ct).ConfigureAwait(false);
     }
 
@@ -48,8 +49,15 @@ public static class TrainingRequirementRules
     public static async ValueTask<TrainingRequirementView> ViewAsync(IImmutableContentStore store,
         TrainingRequirementDefined fact, long latestVersion, CancellationToken ct)
     {
+        if (fact.ContentContent.Schema != PolicyCampaignContent.TrainingContentSchema ||
+            fact.ContentContent.MediaType != ImmutableContentStoreExtensions.JsonMediaType)
+            throw new ImmutableContentIntegrityException("The requirement version has another body schema or media type.");
         var content = await store.ReadJsonAsync<TrainingRequirementContent>(PolicyCampaignContent.Realm(fact.TenantId),
             fact.ContentContent, ct).ConfigureAwait(false);
+        if (Validate(content) is not null || Hash(content) != fact.ContentSha256 ||
+            Hash(Clean(content)) != Hash(content) || fact.Version < 1 || latestVersion < fact.Version ||
+            fact.Actor != fact.Operation.Actor || fact.ChangedAt != fact.Operation.AcceptedAt)
+            throw new ImmutableContentIntegrityException("The requirement body differs from its exact original version.");
         return new TrainingRequirementView(fact.TenantId, fact.ProgramId, fact.RequirementId, fact.Identifier,
             fact.Version, latestVersion, content, fact.ContentSha256, TrainingRequirement.Cadence, fact.Actor,
             fact.ChangedAt);
