@@ -32,7 +32,7 @@ public sealed class RecordAuditPackageBuildResultHandlerTests
         Assert.IsType<ReceiverOutcome.Replayed>(retry.Value);
         Assert.Equal("built", saved.Current!.Status);
         var owner = await fixture.OwnerAsync();
-        var built = Assert.Single(owner.Facts.OfType<AuditPackageBuilt>());
+        var built = Assert.Single((await AuditPackageManifestHistory.ReadAsync(fixture.Inner.PeriodEvents, owner)).Facts.OfType<AuditPackageBuilt>());
         Assert.NotNull(built.OperationResult);
         var terminal = await fixture.Inner.ContentStore.ReadJsonAsync<MutationResultContent>(fixture.Inner.TenantId.ToString(),
             built.OperationResult);
@@ -60,7 +60,7 @@ public sealed class RecordAuditPackageBuildResultHandlerTests
         Assert.Equal(RequestErrorKind.Forbidden, forbidden.Error?.Kind);
         Assert.Equal(RequestErrorKind.Conflict, mismatched.Error?.Kind);
         Assert.False(mismatched.Error!.IsTransient);
-        Assert.Empty((await fixture.OwnerAsync()).Facts.OfType<AuditPackageBuilt>());
+        Assert.Empty((await fixture.HistoryAsync()).Facts.OfType<AuditPackageBuilt>());
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public sealed class RecordAuditPackageBuildResultHandlerTests
         // Assert
         Assert.True(absent.Error!.IsTransient);
         Assert.Null(pendingOutput);
-        Assert.Empty(before.Facts.OfType<AuditPackageBuilt>());
+        Assert.Empty((await AuditPackageManifestHistory.ReadAsync(fixture.Inner.PeriodEvents, before)).Facts.OfType<AuditPackageBuilt>());
         Assert.Equal(2, before.Revision);
         Assert.IsType<ReceiverOutcome.Performed>(resumed.Value);
         Assert.IsType<ReceiverOutcome.Applied>(committed.Value);
@@ -104,7 +104,7 @@ public sealed class RecordAuditPackageBuildResultHandlerTests
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.False(result.Error!.IsTransient);
-        Assert.Empty((await fixture.OwnerAsync()).Facts.OfType<AuditPackageBuilt>());
+        Assert.Empty((await fixture.HistoryAsync()).Facts.OfType<AuditPackageBuilt>());
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public sealed class RecordAuditPackageBuildResultHandlerTests
 
         // Assert
         Assert.IsType<ReceiverOutcome.Applied>(result.Value);
-        Assert.Single((await fixture.OwnerAsync()).Facts.OfType<AuditPackageBuilt>());
+        Assert.Single((await fixture.HistoryAsync()).Facts.OfType<AuditPackageBuilt>());
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public sealed class RecordAuditPackageBuildResultHandlerTests
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.False(result.Error!.IsTransient);
-        Assert.Empty((await fixture.OwnerAsync()).Facts.OfType<AuditPackageBuilt>());
+        Assert.Empty((await fixture.HistoryAsync()).Facts.OfType<AuditPackageBuilt>());
     }
 
     [Fact]
@@ -163,7 +163,7 @@ public sealed class RecordAuditPackageBuildResultHandlerTests
 
         // Assert
         Assert.IsType<ReceiverOutcome.Replayed>(replay.Value);
-        Assert.Single((await fixture.OwnerAsync()).Facts.OfType<AuditPackageBuilt>());
+        Assert.Single((await fixture.HistoryAsync()).Facts.OfType<AuditPackageBuilt>());
     }
 
     internal sealed class Fixture : IAsyncDisposable
@@ -188,18 +188,18 @@ public sealed class RecordAuditPackageBuildResultHandlerTests
                 rules = await Inner.ReadPackageAsync(PackageId);
             Assert.Null(rules.RequestBuild(rules.Revision, key, RbacIds.Member(Inner.TenantId, Inner.UserId), "Author",
                 Now.AddMinutes(2)));
-            await PackageSeeds.AppendAsync(Inner.Reader, Inner.Writer, Inner.ContentStore, rules.Current!);
+            await PackageSeeds.AppendAsync(Inner.Reader, Inner.Writer, Inner.PeriodEvents, Inner.ContentStore, rules.Current!);
             if (storeSources)
                 await Inner.SeedSourceBytesAsync();
             owner = await OwnerAsync();
-            var admitted = owner.Facts.OfType<AuditPackageBuildRequested>().Last();
+            var admitted = (await AuditPackageManifestHistory.ReadAsync(Inner.PeriodEvents, owner)).Facts.OfType<AuditPackageBuildRequested>().Last();
             return new StartAuditPackageBuild(EffectIdentity.CommandId(admitted.Metadata.EventId, $"{AuditPackageBuildProcess.Name}:{nameof(StartAuditPackageBuild)}", owner.Stream.ToString(), admitted.Operation.Episode),
                 NativeFactReference.Of(owner.Stream, admitted), owner.Stream, admitted.Operation.LogicalId, 1, null,
                 admitted.Change, PackageId, admitted.Operation.LogicalId, 1);
         }
 
         public ValueTask<Result<ReceiverOutcome>> StartAsync(StartAuditPackageBuild command) =>
-            new StartAuditPackageBuildHandler(new AuditPackageSourceVerifier(Inner.Reader, Inner.ContentStore),
+            new StartAuditPackageBuildHandler(new AuditPackageSourceVerifier(Inner.Reader, Inner.ContentStore, Inner.PeriodEvents),
                 new AuditPackageArchiveBuilder(Inner.ArtifactStore), Outputs, Inner.ContentStore).HandleAsync(
                 new Cntryl.Portia.RequestContext<StartAuditPackageBuild>(command,
                     new RequestDispatchContext(RequestActor.System)), CancellationToken.None);
@@ -215,10 +215,12 @@ public sealed class RecordAuditPackageBuildResultHandlerTests
         }
 
         public ValueTask<Result<ReceiverOutcome>> RecordAsync(RecordAuditPackageBuildResult command) =>
-            new RecordAuditPackageBuildResultHandler(new AuditPackageSourceVerifier(Inner.Reader, Inner.ContentStore),
+            new RecordAuditPackageBuildResultHandler(new AuditPackageSourceVerifier(Inner.Reader, Inner.ContentStore, Inner.PeriodEvents),
                 Inner.Reader, new ReceiverAppend(Inner.Executor), Outputs, Inner.ContentStore, Inner.ArtifactStore,
-                TimeProvider.System).HandleAsync(new Cntryl.Portia.RequestContext<RecordAuditPackageBuildResult>(command,
+                TimeProvider.System, Inner.PeriodEvents).HandleAsync(new Cntryl.Portia.RequestContext<RecordAuditPackageBuildResult>(command,
                     new RequestDispatchContext(RequestActor.System)), CancellationToken.None);
+        public async Task<AuditPackageManifestHistorySnapshot> HistoryAsync() =>
+            await AuditPackageManifestHistory.ReadAsync(Inner.PeriodEvents, await OwnerAsync());
         public ValueTask<AuditPackageManifest> OwnerAsync() =>
             Inner.Reader.HydrateAsync(new AuditPackageManifest(Inner.TenantId, PackageId));
         public ValueTask DisposeAsync() => Inner.DisposeAsync();

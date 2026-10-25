@@ -54,7 +54,7 @@ public sealed class RecordManagementAssertionHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         var sources = await fixture.SeedSourcesAsync();
-        var packages = new AuditPackageReader(fixture.Reader, new FailingPackageContentStore(unavailable));
+        var packages = new AuditPackageReader(fixture.Reader, new FailingPackageContentStore(unavailable), fixture.PeriodEvents);
         var handler = new RecordManagementAssertionHandler(fixture.Executor, fixture.Reader, packages, fixture.Periods, fixture.Clock, fixture.Descriptions);
 
         // Act
@@ -249,6 +249,7 @@ public sealed class RecordManagementAssertionHandlerTests
         {
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(PeriodEvents);
+            services.AddSingleton<IDomainEventReader>(PeriodEvents);
             ContentStore = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
             services.AddSingleton(ContentStore);
             services.AddScoped<AuditPackageReader>();
@@ -332,7 +333,7 @@ public sealed class RecordManagementAssertionHandlerTests
             if (validatePackage)
                 Assert.Null(package.RecordValidation(package.Revision, 1, "assertion-validation", [],
                     ReviewerMemberId, "Independent reviewer", Now.AddMinutes(7)));
-            await PackageSeeds.WriteAsync(Writer, ContentStore, package.Current!);
+            await PackageSeeds.WriteAsync(Reader, Writer, PeriodEvents, ContentStore, package.Current!);
 
             var wordingArtifactId = Uuid.CreateVersion4();
             var wordingArtifact = new EvidenceArtifact(TenantId, wordingArtifactId);

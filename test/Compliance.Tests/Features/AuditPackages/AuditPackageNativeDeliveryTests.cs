@@ -21,7 +21,7 @@ public sealed class AuditPackageNativeDeliveryTests
         await using var fixture = new AuditPackageCommandHandlerTests.Fixture();
         var (packageId, _, _) = await AdmitAsync(fixture);
         var owner = await OwnerAsync(fixture, packageId);
-        var admitted = Assert.Single(owner.Facts.OfType<AuditPackageDeliveryAdmitted>());
+        var admitted = Assert.Single((await AuditPackageManifestHistory.ReadAsync(fixture.PeriodEvents, owner)).Facts.OfType<AuditPackageDeliveryAdmitted>());
         var child = await fixture.Reader.HydrateAsync(new AuditPackageDelivery(fixture.TenantId, packageId, 1,
             admitted.Operation.LogicalId));
 
@@ -35,7 +35,7 @@ public sealed class AuditPackageNativeDeliveryTests
         Assert.True(owner.IsFrozen(1));
         Assert.False(child.IsMaterialized);
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Single((await OwnerAsync(fixture, packageId)).Facts.OfType<AuditPackageBuildRequested>());
+        Assert.Single((await AuditPackageManifestHistory.ReadAsync(fixture.PeriodEvents, await OwnerAsync(fixture, packageId))).Facts.OfType<AuditPackageBuildRequested>());
     }
 
     [Fact]
@@ -45,13 +45,13 @@ public sealed class AuditPackageNativeDeliveryTests
         await using var fixture = new AuditPackageCommandHandlerTests.Fixture();
         var (packageId, request, acknowledgment) = await AdmitAsync(fixture);
         var owner = await OwnerAsync(fixture, packageId);
-        var admitted = Assert.Single(owner.Facts.OfType<AuditPackageDeliveryAdmitted>());
+        var admitted = Assert.Single((await AuditPackageManifestHistory.ReadAsync(fixture.PeriodEvents, owner)).Facts.OfType<AuditPackageDeliveryAdmitted>());
         var rules = await fixture.ReadPackageAsync(packageId);
         var prior = rules.Current!.Versions[0];
         Assert.Null(rules.Amend(rules.Revision, "A later exact manifest version", prior.SourceSnapshotId,
             prior.SourceSnapshotSha256, prior.SelectedContent.Take(1).ToArray(), prior.CreatedByMemberId,
             prior.CreatedByDisplay, HandoffAt.AddMinutes(1)));
-        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.ContentStore, rules.Current!);
+        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.PeriodEvents, fixture.ContentStore, rules.Current!);
         var command = Materialize(fixture, packageId, admitted, owner.Stream);
         var handler = Handler(fixture);
 
@@ -92,12 +92,12 @@ public sealed class AuditPackageNativeDeliveryTests
         await using var fixture = new AuditPackageCommandHandlerTests.Fixture();
         var (packageId, _, _) = await AdmitAsync(fixture);
         var owner = await OwnerAsync(fixture, packageId);
-        var admitted = Assert.Single(owner.Facts.OfType<AuditPackageDeliveryAdmitted>());
+        var admitted = Assert.Single((await AuditPackageManifestHistory.ReadAsync(fixture.PeriodEvents, owner)).Facts.OfType<AuditPackageDeliveryAdmitted>());
         var command = Materialize(fixture, packageId, admitted, owner.Stream);
         var broken = new UnreadableIntent(fixture.ContentStore, admitted.Intent.ContentId, unavailable);
         var handler = new MaterializeRecordedAuditPackageDeliveryHandler(
-            new AuditPackageSourceVerifier(fixture.Reader, broken), fixture.Reader,
-            new ReceiverAppend(fixture.Executor), fixture.ContentStore, TimeProvider.System);
+            new AuditPackageSourceVerifier(fixture.Reader, broken, fixture.PeriodEvents), fixture.Reader,
+            new ReceiverAppend(fixture.Executor), fixture.ContentStore, TimeProvider.System, fixture.PeriodEvents);
 
         // Act
         var result = await handler.HandleAsync(System(command), CancellationToken.None);
@@ -117,7 +117,7 @@ public sealed class AuditPackageNativeDeliveryTests
         await using var fixture = new AuditPackageCommandHandlerTests.Fixture();
         var (packageId, _, _) = await AdmitAsync(fixture);
         var owner = await OwnerAsync(fixture, packageId);
-        var admitted = Assert.Single(owner.Facts.OfType<AuditPackageDeliveryAdmitted>());
+        var admitted = Assert.Single((await AuditPackageManifestHistory.ReadAsync(fixture.PeriodEvents, owner)).Facts.OfType<AuditPackageDeliveryAdmitted>());
         var command = Materialize(fixture, packageId, admitted, owner.Stream) with
         {
             Source = new NativeFactReference(owner.Stream, admitted.Metadata.EventId,
@@ -139,7 +139,7 @@ public sealed class AuditPackageNativeDeliveryTests
         await using var fixture = new AuditPackageCommandHandlerTests.Fixture();
         var (packageId, _, _) = await AdmitAsync(fixture);
         var owner = await OwnerAsync(fixture, packageId);
-        var admitted = Assert.Single(owner.Facts.OfType<AuditPackageDeliveryAdmitted>());
+        var admitted = Assert.Single((await AuditPackageManifestHistory.ReadAsync(fixture.PeriodEvents, owner)).Facts.OfType<AuditPackageDeliveryAdmitted>());
         var intent = await fixture.ContentStore.ReadJsonAsync<PackageDeliveryRecordingIntent>(fixture.TenantId.ToString(),
             admitted.Intent);
         var package = await fixture.ReadPackageAsync(packageId);
@@ -184,8 +184,8 @@ public sealed class AuditPackageNativeDeliveryTests
             new AuditPackageDelivery(fixture.TenantId, packageId, 1, admitted.Operation.LogicalId).Stream,
             admitted.Operation.LogicalId, 1, null, admitted.Intent, packageId, admitted.Operation.LogicalId, 1);
     static MaterializeRecordedAuditPackageDeliveryHandler Handler(AuditPackageCommandHandlerTests.Fixture fixture) =>
-        new(new AuditPackageSourceVerifier(fixture.Reader, fixture.ContentStore), fixture.Reader,
-            new ReceiverAppend(fixture.Executor), fixture.ContentStore, TimeProvider.System);
+        new(new AuditPackageSourceVerifier(fixture.Reader, fixture.ContentStore, fixture.PeriodEvents), fixture.Reader,
+            new ReceiverAppend(fixture.Executor), fixture.ContentStore, TimeProvider.System, fixture.PeriodEvents);
     static Cntryl.Portia.RequestContext<T> System<T>(T request) where T : IRequestBase =>
         new(request, new RequestDispatchContext(RequestActor.System));
 

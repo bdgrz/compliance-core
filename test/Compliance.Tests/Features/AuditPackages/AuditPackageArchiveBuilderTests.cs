@@ -11,7 +11,7 @@ public sealed class AuditPackageArchiveBuilderTests
         // Arrange
         await using var fixture = new RecordAuditPackageBuildResultHandlerTests.Fixture();
         var command = await fixture.StartBuildAsync();
-        var source = await new AuditPackageSourceVerifier(fixture.Inner.Reader, fixture.Inner.ContentStore).BuildAsync(
+        var source = await new AuditPackageSourceVerifier(fixture.Inner.Reader, fixture.Inner.ContentStore, fixture.Inner.PeriodEvents).BuildAsync(
             fixture.Inner.TenantId, fixture.PackageId, command.BuildId, 1, command.OperationId, command.Source,
             command.Intent, CancellationToken.None);
         var manifest = source.Value!.Manifest;
@@ -36,7 +36,7 @@ public sealed class AuditPackageArchiveBuilderTests
         // Arrange
         await using var fixture = new RecordAuditPackageBuildResultHandlerTests.Fixture();
         var command = await fixture.StartBuildAsync();
-        var source = await new AuditPackageSourceVerifier(fixture.Inner.Reader, fixture.Inner.ContentStore).BuildAsync(
+        var source = await new AuditPackageSourceVerifier(fixture.Inner.Reader, fixture.Inner.ContentStore, fixture.Inner.PeriodEvents).BuildAsync(
             fixture.Inner.TenantId, fixture.PackageId, command.BuildId, 1, command.OperationId, command.Source,
             command.Intent, CancellationToken.None);
         var otherTenant = Uuid.CreateVersion4();
@@ -56,7 +56,7 @@ public sealed class AuditPackageArchiveBuilderTests
         // Arrange
         await using var fixture = new RecordAuditPackageBuildResultHandlerTests.Fixture();
         var command = await fixture.StartBuildAsync();
-        var source = await new AuditPackageSourceVerifier(fixture.Inner.Reader, fixture.Inner.ContentStore).BuildAsync(
+        var source = await new AuditPackageSourceVerifier(fixture.Inner.Reader, fixture.Inner.ContentStore, fixture.Inner.PeriodEvents).BuildAsync(
             fixture.Inner.TenantId, fixture.PackageId, command.BuildId, 1, command.OperationId, command.Source,
             command.Intent, CancellationToken.None);
         var manifest = source.Value!.Manifest;

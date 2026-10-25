@@ -9,17 +9,18 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
 /// <summary>Verifies source facts on their authoritative owner, then binds every frozen build/delivery field.</summary>
-public sealed class AuditPackageSourceVerifier(IAggregateReader reader, IImmutableContentStore content)
+public sealed class AuditPackageSourceVerifier(IAggregateReader reader, IImmutableContentStore content, IDomainEventReader events)
 {
     public async ValueTask<Result<VerifiedPackageBuild>> BuildAsync(Uuid tenant, Uuid packageId, Uuid buildId,
         long version, Uuid operationId, NativeFactReference source, ImmutableContentRef reference, CancellationToken ct)
     {
         if (reference.Schema != PackageBuildIntent.Schema)
             return BuildFailure("The build intent has another schema.");
-        var owner = await reader.HydrateAsync(new AuditPackageManifest(tenant, packageId), ct).ConfigureAwait(false);
+        var owner = await reader.HydrateAsync(new AuditPackageManifest(tenant, packageId, selectedVersion: version), ct).ConfigureAwait(false);
+        var history = await AuditPackageManifestHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
         if (source.Stream != owner.Stream)
             return BuildFailure("The build proof belongs to another manifest owner.");
-        var sourceFact = owner.FactById(source.EventId);
+        var sourceFact = history.FactById(source.EventId);
         if (sourceFact is null)
             return BuildFailure("The exact admitted build is not visible yet.", true);
         if (sourceFact is not AuditPackageBuildRequested admitted)
@@ -47,7 +48,7 @@ public sealed class AuditPackageSourceVerifier(IAggregateReader reader, IImmutab
             intent.Selection.ItemSchema != "audit-package-selection-entry.v1" ||
             intent.Selection.Content.Schema != intent.Selection.ItemSchema || !selection.SequenceEqual(expected))
             return BuildFailure("The complete build manifest and selection do not match their admitted identity.");
-        return Result<VerifiedPackageBuild>.Success(new VerifiedPackageBuild(owner, admitted, intent, manifest));
+        return Result<VerifiedPackageBuild>.Success(new VerifiedPackageBuild(owner, admitted, intent, manifest, history));
     }
 
     public async ValueTask<Result<PackageDeliveryRecordingIntent>> DeliveryAsync(Uuid tenant, Uuid packageId,
@@ -56,10 +57,11 @@ public sealed class AuditPackageSourceVerifier(IAggregateReader reader, IImmutab
     {
         if (reference.Schema != PackageDeliveryRecordingIntent.Schema)
             return DeliveryFailure("The delivery intent has another schema.");
-        var owner = await reader.HydrateAsync(new AuditPackageManifest(tenant, packageId), ct).ConfigureAwait(false);
+        var owner = await reader.HydrateAsync(new AuditPackageManifest(tenant, packageId, selectedVersion: version), ct).ConfigureAwait(false);
+        var history = await AuditPackageManifestHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
         if (source.Stream != owner.Stream)
             return DeliveryFailure("The handoff proof belongs to another manifest owner.");
-        var sourceFact = owner.FactById(source.EventId);
+        var sourceFact = history.FactById(source.EventId);
         if (sourceFact is null)
             return DeliveryFailure("The exact delivery admission is not visible yet.", true);
         if (sourceFact is not AuditPackageDeliveryAdmitted admitted)
@@ -78,7 +80,7 @@ public sealed class AuditPackageSourceVerifier(IAggregateReader reader, IImmutab
             deliveryId != AuditPackageCommandIdentity.Delivery(packageId, version, intent.Recipient, intent.DeliveryReference))
             return DeliveryFailure("The delivery differs from its exact admitted personal handoff.");
         if (intent.DisclosureApproval.Stream != owner.Stream ||
-            owner.FactById(intent.DisclosureApproval.EventId) is not AuditPackageDisclosureApproved approvalFact ||
+            history.FactById(intent.DisclosureApproval.EventId) is not AuditPackageDisclosureApproved approvalFact ||
             approvalFact.Metadata.AggregateVersion != intent.DisclosureApproval.AggregateVersion ||
             approvalFact.PackageVersion != version || approvalFact.Revision >= admitted.Revision)
             return DeliveryFailure("The handoff does not pin an earlier disclosure on this exact manifest.");
@@ -91,11 +93,11 @@ public sealed class AuditPackageSourceVerifier(IAggregateReader reader, IImmutab
             intent.ValidationProofs.Content, ct).ConfigureAwait(false);
         if (proofs.Count == 0 || intent.ValidationProofs.Count != proofs.Count ||
             intent.ValidationProofs.ItemsSha256 != intent.ValidationProofs.Content.Sha256 ||
-            proofs.Any(proof => proof.Stream != owner.Stream || owner.FactById(proof.EventId) is not IAuditPackageManifestFact fact ||
+            proofs.Any(proof => proof.Stream != owner.Stream || history.FactById(proof.EventId) is not IAuditPackageManifestFact fact ||
                 fact.PackageVersion != version || fact.Revision >= admitted.Revision ||
                 ((DomainEvent)fact).Metadata.AggregateVersion != proof.AggregateVersion))
             return DeliveryFailure("The complete validation proof manifest does not match this handoff admission.");
-        var latest = owner.Facts.OfType<AuditPackageValidated>().LastOrDefault(fact =>
+        var latest = history.Facts.OfType<AuditPackageValidated>().LastOrDefault(fact =>
             fact.PackageVersion == version && fact.Revision < admitted.Revision);
         if (latest is null || proofs.All(proof => proof.EventId != latest.Metadata.EventId))
             return DeliveryFailure("The handoff omits the latest applicable validation.");
@@ -106,7 +108,7 @@ public sealed class AuditPackageSourceVerifier(IAggregateReader reader, IImmutab
         var overrides = new List<AuditPackageValidationOverrideView>();
         foreach (var proof in proofs.Where(proof => proof.EventId != latest.Metadata.EventId))
         {
-            if (owner.FactById(proof.EventId) is not AuditPackageValidationOverrideApproved fact)
+            if (history.FactById(proof.EventId) is not AuditPackageValidationOverrideApproved fact)
                 return DeliveryFailure("The validation manifest contains an unrelated native fact.");
             var change = await PackageContent.ReadAsync<AuditPackageValidationOverrideChange>(content, tenant,
                 fact.Change, ct).ConfigureAwait(false);
@@ -121,7 +123,7 @@ public sealed class AuditPackageSourceVerifier(IAggregateReader reader, IImmutab
                 !overrides.Any(approved => approved.FindingId == finding.FindingId)))
             return DeliveryFailure("The handoff has an unresolved blocking validation finding.");
         var exactBuild = false;
-        foreach (var builtFact in owner.Facts.OfType<AuditPackageBuilt>().Where(fact =>
+        foreach (var builtFact in history.Facts.OfType<AuditPackageBuilt>().Where(fact =>
                      fact.PackageVersion == version && fact.Revision < admitted.Revision))
         {
             var built = await PackageContent.ReadAsync<AuditPackageBuiltChange>(content, tenant, builtFact.Change, ct)

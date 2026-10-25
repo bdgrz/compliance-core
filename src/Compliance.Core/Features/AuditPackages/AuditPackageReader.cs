@@ -6,18 +6,22 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
 /// <summary>Composes immutable owner deltas and independently materialized deliveries for read consumers.</summary>
-public sealed class AuditPackageReader(IAggregateReader reader, IImmutableContentStore content)
+public sealed class AuditPackageReader(IAggregateReader reader, IImmutableContentStore content, IDomainEventReader events)
 {
-    public async ValueTask<AuditPackageSnapshot> ReadAsync(Uuid tenantId, Uuid programId, Uuid packageId,
-        CancellationToken ct, Uuid selectedLogicalId = default, string? selectedCommandKind = null)
+    public ValueTask<AuditPackageSnapshot> ReadAsync(Uuid tenantId, Uuid programId, Uuid packageId,
+        CancellationToken ct) => ReadAsync(tenantId, programId, packageId, default, null, 0, ct);
+
+    internal async ValueTask<AuditPackageSnapshot> ReadAsync(Uuid tenantId, Uuid programId, Uuid packageId,
+        Uuid selectedLogicalId, string? selectedCommandKind, long selectedVersion, CancellationToken ct)
     {
         var owner = await reader.HydrateAsync(new AuditPackageManifest(tenantId, packageId, selectedLogicalId,
-            selectedCommandKind), ct).ConfigureAwait(false);
+            selectedCommandKind, selectedVersion), ct).ConfigureAwait(false);
+        var history = await AuditPackageManifestHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
         if (!owner.IsCreated || owner.ProgramId != programId)
-            return new AuditPackageSnapshot(owner, null);
+            return new AuditPackageSnapshot(owner, null, history);
         var versions = new List<AuditPackageVersionView>();
         AuditPackageView? view = null;
-        foreach (var domainEvent in owner.Facts)
+        foreach (var domainEvent in history.Facts)
         {
             var fact = (IAuditPackageManifestFact)domainEvent;
             var versionNumber = checked((int)fact.PackageVersion);
@@ -33,9 +37,11 @@ public sealed class AuditPackageReader(IAggregateReader reader, IImmutableConten
                             fact.Change, ct).ConfigureAwait(false);
                         if (value.ProgramId != programId || value.Manifest.TenantId != tenantId ||
                             value.Manifest.ProgramId != programId || value.Manifest.AuditPackageId != packageId ||
-                            value.Manifest.PackageVersion != versionNumber || value.Content.ExaminationId == Uuid.Empty)
+                            value.Manifest.PackageVersion != versionNumber || value.Content.ExaminationId == Uuid.Empty ||
+                            value.CreatedBy != actor || value.CreatedAt != fact.OccurredAt ||
+                            value.CreatedBy.Kind != "member" || !Uuid.TryParse(value.CreatedBy.Id, CultureInfo.InvariantCulture,
+                                out var creator) || creator == Uuid.Empty)
                             throw new ImmutableContentIntegrityException("A manifest version differs from its exact owner.");
-                        var creator = Uuid.Parse(value.CreatedBy.Id, CultureInfo.InvariantCulture);
                         versions.Add(new AuditPackageVersionView(versionNumber, "draft", value.Content.SourceSnapshotId,
                             value.Content.SourceSnapshotKind, value.Content.SourceSnapshotSha256, value.Content.SelectedContent,
                             value.Manifest, [], [], [], [], value.AmendsVersion, value.AmendmentReason, creator,
@@ -170,6 +176,6 @@ public sealed class AuditPackageReader(IAggregateReader reader, IImmutableConten
                     UpdatedAt = fact.OccurredAt
                 };
         }
-        return new AuditPackageSnapshot(owner, view);
+        return new AuditPackageSnapshot(owner, view, history);
     }
 }

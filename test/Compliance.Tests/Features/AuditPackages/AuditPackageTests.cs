@@ -212,15 +212,16 @@ public sealed class AuditPackageTests
 
         // Act
         var services = new ServiceCollection();
-        services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        var events = new InMemoryEventStore();
+        services.AddSingleton<IEventStore>(events);
         services.AddPortia();
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
         var content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
         var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        await PackageSeeds.WriteAsync(writer, content, package.Current!);
-        var replay = await new AuditPackageReader(reader, content).ReadAsync(TenantId, ProgramId, PackageId,
+        await PackageSeeds.WriteAsync(reader, writer, events, content, package.Current!);
+        var replay = await new AuditPackageReader(reader, content, events).ReadAsync(TenantId, ProgramId, PackageId,
             CancellationToken.None);
         var packageState = package.Current!;
         var replayedState = replay.View!;

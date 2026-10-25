@@ -36,12 +36,13 @@ public sealed class AuditPackageRootOperation(IAggregateReader reader, AuditPack
             var operation = new OperationProvenance(logicalId, logicalId, null, kind,
                 ActorReference.ForMember(member, display), owner.Stream, version.ToString(CultureInfo.InvariantCulture),
                 expectedRevision is { } expected ? (ulong)expected : null, AuthoredIntentDigest.Compute(context.Request),
-                now, owner.Stream, owner.Stream);
+                now, owner.Stream, owner.Stream, owner.Stream);
             var binding = AcceptedOperationBinding.Of(operation);
             PreparedPackageDelta? delta = null;
+            AuditPackagePreparedCut? cut = null;
             ImmutableContentRef? result = null;
             return await operations.ExecuteAsync(new NativeOperation<AuditPackageManifest>(binding,
-                () => new AuditPackageManifest(tenant, packageId, logicalId, kind), aggregate => aggregate.Acceptance,
+                () => new AuditPackageManifest(tenant, packageId, logicalId, kind, version), aggregate => aggregate.Acceptance,
                 async (aggregate, token) =>
                 {
                     try
@@ -49,11 +50,12 @@ public sealed class AuditPackageRootOperation(IAggregateReader reader, AuditPack
                         var valid = guard(aggregate);
                         if (!valid.IsSuccess)
                             return Result<FirstResponseDescriptor>.Failure(valid.Error!);
-                        var snapshot = await packages.ReadAsync(tenant, program, packageId, token, logicalId, kind)
+                        var snapshot = await packages.ReadAsync(tenant, program, packageId, logicalId, kind, version, token)
                             .ConfigureAwait(false);
                         valid = guard(snapshot.Owner);
                         if (!valid.IsSuccess)
                             return Result<FirstResponseDescriptor>.Failure(valid.Error!);
+                        cut = AuditPackagePreparedCut.Capture(snapshot.Owner);
                         var prepared = await prepare(snapshot, operation, token).ConfigureAwait(false);
                         if (!prepared.IsSuccess)
                             return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
@@ -85,7 +87,10 @@ public sealed class AuditPackageRootOperation(IAggregateReader reader, AuditPack
                     }
                 },
                 (aggregate, frozen) => guard(aggregate) is { IsSuccess: false } invalid
-                    ? invalid : apply(aggregate, operation, delta!, frozen, result!)), context, ct).ConfigureAwait(false);
+                    ? invalid : cut is null || !cut.Matches(aggregate)
+                    ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The exact package source changed while its candidate was prepared; retry the operation.", true))
+                    : apply(aggregate, operation, delta!, frozen, result!)), context, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentUnavailableException exception)
         {

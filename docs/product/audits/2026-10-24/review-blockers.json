@@ -233,10 +233,14 @@
     "advisor-history-file-triage.json",
     "advisor-history-integration-jev.json",
     "advisor-history-qualification.json",
-    "advisor-native-version-reconciliation.json"
+    "advisor-native-version-reconciliation.json",
+    "package-campaign-file-reviews.json",
+    "package-campaign-file-triage.json",
+    "package-campaign-integration-jev.json",
+    "package-campaign-qualification.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
-  "reviewSignalsTriaged": 105,
+  "reviewSignalsTriaged": 107,
   "findingArtifacts": [
     "implementation-file-triage-versioned.json",
     "implementation-file-triage-foundations.json",
@@ -618,11 +622,20 @@
     },
     {
       "id": "advisor-history-and-auditor-prefix",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "qualificationArtifact": "advisor-history-qualification.json",
       "fileReviews": 56,
       "genuineRedFailed": 9,
-      "positivePassed": 2
+      "positivePassed": 2,
+      "pr": 1124,
+      "mergeCommit": "9cddd1a6be8d0443503ad0f770d9e35d5fe17930"
+    },
+    {
+      "id": "package-history-and-campaign-prefixes",
+      "status": "locally_verified_pending_merge",
+      "qualificationArtifact": "package-campaign-qualification.json",
+      "fileReviews": 20,
+      "genuineRedFailed": 9
     }
   ],
   "resolved": [

@@ -1,0 +1,31 @@
+{
+  "reviewed": 20,
+  "blockedReviews": 0,
+  "signalsTriaged": 2,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/AuditPackages/RecordAuditPackageDeliveryHandler.cs",
+      "sha256": "084e0d022ed98d974857132328f7d58e524de8d1ce96a7c816913e61fba70997",
+      "signals": {
+        "authority_gap": 0.54,
+        "invariant_gap": 0.66,
+        "recovery_gap": 0.6,
+        "incomplete_path": 0.28
+      },
+      "classification": "exact_selected_version_and_prepared_delivery_proof",
+      "evidence": "Native root operation resolves acceptance before source/archive/immutable work, selects request version and checks current original revision/version/frozen policy. Full explicit History provides exact build, disclosure and latest validation/override tuples. Actual archive length/hash/manifest verification, independent disclosure and delivered-at ordering remain. Unpublished prepared proof binds complete observed native payload/immutable metadata cut plus selected native proof membership, and actual appender checks it before admission. Later child materialization uses explicit selected historical version; no permission, arbitrary historical-new-admission or delivery schema expansion.324focused includes build/delivery/override/source/archive/TypeII and new stale-cut cases."
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs",
+      "sha256": "a863cbcfd2fade6866fb954b9ae74c77525e342bb7868233ede00fb36b708cf7",
+      "signals": {
+        "authority_gap": 0.59,
+        "invariant_gap": 0.59,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.36
+      },
+      "classification": "narrow_launching_member_binding_only",
+      "evidence": "Only new native replay guard binds separately persisted launch ActorMemberId to a nonempty parseable member Actor.Id and exact Operation.Actor. Real producer already derives both together. Six genuine default/real-executor raw corruptions accepted wrong member/nonmember/malformed identity before guard; now rejected before delegate with original native metadata/header/intent preserved. Existing SourceUse live/selected state, audience/admission/closure history and exact typed facts untouched. Whole campaign/participant history is explicitly unfinished and being prepared separately; not claimed complete."
+    }
+  ]
+}

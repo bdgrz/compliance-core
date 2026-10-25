@@ -13,18 +13,21 @@ public sealed class AuditPackageManifest : Aggregate
 {
     public const string Area = "audit-packages";
     readonly Uuid _tenantId;
-    readonly List<DomainEvent> _facts = [];
-    readonly Dictionary<long, ImmutableContentRef> _versions = [];
-    readonly HashSet<long> _frozenVersions = [];
+    readonly long _selectedVersion;
+    ImmutableContentRef? _currentContent;
+    ImmutableContentRef? _selectedContent;
+    bool _currentFrozen;
+    bool _selectedFrozen;
     Uuid _programId;
     long _revision;
     long _currentVersion;
 
     public AuditPackageManifest(Uuid tenantId, Uuid packageId, Uuid selectedLogicalId = default,
-        string? selectedCommandKind = null)
+        string? selectedCommandKind = null, long selectedVersion = 0)
         : base(packageId, new EventStreamAddress(tenantId.ToString(), Area, packageId.ToString()))
     {
         _tenantId = tenantId;
+        _selectedVersion = selectedVersion;
         Acceptance = new NativeAcceptance(selectedLogicalId, selectedCommandKind);
         On<AuditPackageCreated>(ApplyFact);
         On<AuditPackageAmended>(ApplyFact);
@@ -41,10 +44,17 @@ public sealed class AuditPackageManifest : Aggregate
     public long Revision => _revision;
     public long CurrentVersion => _currentVersion;
     public Uuid ProgramId => _programId;
-    public IReadOnlyList<DomainEvent> Facts => _facts;
-    public ImmutableContentRef? VersionContent(long version) => _versions.GetValueOrDefault(version);
-    public bool IsFrozen(long version) => _frozenVersions.Contains(version);
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+    public Uuid TenantId => _tenantId;
+    public DomainEvent? Latest { get; private set; }
+    internal AuditPackageReplayCut ReplayCut { get; } = new();
+    public bool HasVersion(long version) => version >= 1 && version <= _currentVersion;
+    public ImmutableContentRef? CurrentContent => _currentContent;
+    public ImmutableContentRef? SelectedContent => _selectedVersion == _currentVersion ? _currentContent : _selectedContent;
+    public long SelectedVersion => _selectedVersion;
+    public bool IsFrozen(long version) => KnownFrozen(version) ?? throw new InvalidOperationException(
+        "Historical frozen authority requires explicit manifest-version selection at hydration.");
+    bool? KnownFrozen(long version) => version == _currentVersion ? _currentFrozen :
+        version == _selectedVersion ? _selectedFrozen : null;
 
     public Result PrepareCreate(Uuid programId) => IsCreated
         ? Fail(RequestErrorKind.Conflict, "The audit package identity already exists.")
@@ -59,7 +69,7 @@ public sealed class AuditPackageManifest : Aggregate
             return Fail(RequestErrorKind.NotFound, "The audit package was not found in this program.");
         if (expectedRevision != _revision)
             return Fail(RequestErrorKind.Conflict, "The audit package manifest revision is stale.");
-        if (!_versions.ContainsKey(packageVersion) || !allowHistorical && packageVersion != _currentVersion)
+        if (!HasVersion(packageVersion) || !allowHistorical && packageVersion != _currentVersion)
             return Fail(RequestErrorKind.Conflict, "The command must name the exact current manifest version.");
         if (!allowFrozen && IsFrozen(packageVersion))
             return Fail(RequestErrorKind.Conflict, "A delivery-admitted version is immutable; amend to create another version.");
@@ -74,6 +84,8 @@ public sealed class AuditPackageManifest : Aggregate
             return prepared;
         if (operation.LogicalId != Id || !Root(operation, nameof(CreateAuditPackage), null) || !Owns(operation, 1))
             return Fail(RequestErrorKind.Validation, "Creation must be the package's own root operation.");
+        if (Require(operation) is { IsSuccess: false } unverified)
+            return unverified;
         RaiseEvent(new AuditPackageCreated(_tenantId, Id, programId, 1, 1, change,
             operation.AcceptedAt, operation, firstResponse, operationResult, Member(operation)));
         return Result.Success;
@@ -87,6 +99,8 @@ public sealed class AuditPackageManifest : Aggregate
             return prepared;
         if (!Owns(operation, _currentVersion + 1) || !Root(operation, nameof(AmendAuditPackage), expectedRevision))
             return Fail(RequestErrorKind.Validation, "An amendment must name its new manifest version.");
+        if (Require(operation) is { IsSuccess: false } unverified)
+            return unverified;
         RaiseEvent(new AuditPackageAmended(_tenantId, Id, programId, _revision + 1, _currentVersion + 1,
             change, operation.AcceptedAt, operation, firstResponse, operationResult, Member(operation)));
         return Result.Success;
@@ -100,24 +114,28 @@ public sealed class AuditPackageManifest : Aggregate
             return prepared;
         if (!Owns(operation, version) || !Root(operation, nameof(RequestAuditPackageBuild), expectedRevision))
             return Fail(RequestErrorKind.Validation, "The build must be bound to this exact manifest version.");
+        if (Require(operation) is { IsSuccess: false } unverified)
+            return unverified;
         RaiseEvent(new AuditPackageBuildRequested(_tenantId, Id, programId, _revision + 1, version,
             intent, operation.AcceptedAt, operation, firstResponse, null, Member(operation)));
         return Result.Success;
     }
 
-    public Result RecordBuilt(Uuid programId, long expectedRevision, long version, OperationProvenance operation,
-        NativeFactReference request, ImmutableContentRef verifiedOutput, ImmutableContentRef operationResult)
+    internal Result RecordBuilt(Uuid programId, long expectedRevision, long version, OperationProvenance operation,
+        NativeFactReference request, ImmutableContentRef verifiedOutput, ImmutableContentRef operationResult,
+        AuditPackagePreparedProof proof)
     {
         var prepared = PrepareWrite(programId, expectedRevision, version, allowHistorical: true);
         if (!prepared.IsSuccess)
             return prepared;
-        if (!Owns(operation, version) || operation.CommandKind != nameof(RecordAuditPackageBuildResult) || request.Stream != Stream ||
-            FactById(request.EventId) is not AuditPackageBuildRequested admitted ||
-            admitted.Metadata.AggregateVersion != request.AggregateVersion || admitted.PackageVersion != version ||
-            admitted.Operation.RootOperationId != operation.RootOperationId || operation.CausationEventId != request.EventId)
-            return Fail(RequestErrorKind.Conflict, "The successful archive must follow its exact admitted build.");
-        if (_facts.OfType<AuditPackageBuilt>().Any(fact => fact.Operation.RootOperationId == operation.RootOperationId))
-            return Fail(RequestErrorKind.Conflict, "This logical build already has a successful native result.");
+        if (!proof.MatchesCut(this))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact package source changed after build proof verification; retry the callback.", true));
+        if (!Owns(operation, version) || operation.CommandKind != nameof(RecordAuditPackageBuildResult) ||
+            operation.CausationEventId != request.EventId || !proof.MatchesBuild(this, operation, request, version))
+            return Fail(RequestErrorKind.Conflict, "The successful archive must follow its exact selected admitted build cut.");
+        if (Require(operation) is { IsSuccess: false } unverified)
+            return unverified;
         RaiseEvent(new AuditPackageBuilt(_tenantId, Id, programId, _revision + 1, version,
             verifiedOutput, operation.AcceptedAt, operation, null, operationResult, Member(operation)));
         return Result.Success;
@@ -141,22 +159,18 @@ public sealed class AuditPackageManifest : Aggregate
             new AuditPackageDisclosureApproved(_tenantId, Id, programId, _revision + 1, version, change,
                 operation.AcceptedAt, operation, firstResponse, operationResult, Member(operation)));
 
-    public Result AdmitDelivery(Uuid programId, long expectedRevision, long version, OperationProvenance operation,
+    internal Result AdmitDelivery(Uuid programId, long expectedRevision, long version, OperationProvenance operation,
         ImmutableContentRef intent, NativeFactReference build, NativeFactReference disclosure,
-        IReadOnlyList<NativeFactReference> validations, ImmutableContentRef firstResponse)
+        IReadOnlyList<NativeFactReference> validations, ImmutableContentRef firstResponse, AuditPackagePreparedProof proof)
     {
         var prepared = PrepareWrite(programId, expectedRevision, version, allowFrozen: true);
         if (!prepared.IsSuccess)
             return prepared;
         if (!Owns(operation, version) || !Root(operation, nameof(RecordAuditPackageDelivery), expectedRevision) ||
-            !Contains<AuditPackageBuilt>(build, version) ||
-            !Contains<AuditPackageDisclosureApproved>(disclosure, version) || validations.Count == 0 ||
-            validations.Any(proof => !Contains<AuditPackageValidated>(proof, version) &&
-                                    !Contains<AuditPackageValidationOverrideApproved>(proof, version)))
-            return Fail(RequestErrorKind.Conflict, "Delivery requires this version's exact built archive and approval proofs.");
-        var latest = _facts.OfType<AuditPackageValidated>().LastOrDefault(fact => fact.PackageVersion == version);
-        if (latest is null || validations.All(proof => proof.EventId != latest.Metadata.EventId))
-            return Fail(RequestErrorKind.Conflict, "Delivery must pin the latest applicable validation.");
+            !proof.MatchesDelivery(this, version, build, disclosure, validations))
+            return Fail(RequestErrorKind.Conflict, "Delivery requires this exact manifest cut's built archive and approval proofs.");
+        if (Require(operation) is { IsSuccess: false } unverified)
+            return unverified;
         RaiseEvent(new AuditPackageDeliveryAdmitted(Stream, _revision + 1, version, intent, null, operation,
             firstResponse, null, _tenantId, Id, programId, version, operation.AcceptedAt, Member(operation)));
         return Result.Success;
@@ -181,13 +195,13 @@ public sealed class AuditPackageManifest : Aggregate
         };
         if (!Root(operation, kind, expectedRevision))
             return Fail(RequestErrorKind.Validation, "The decision differs from its exact authored command kind.");
+        if (Require(operation) is { IsSuccess: false } unverified)
+            return unverified;
         RaiseEvent(accepted);
         return Result.Success;
     }
 
-    bool Contains<T>(NativeFactReference proof, long version) where T : DomainEvent, IAuditPackageManifestFact =>
-        proof.Stream == Stream && FactById(proof.EventId) is T fact && fact.PackageVersion == version &&
-        fact.Metadata.AggregateVersion == proof.AggregateVersion;
+    Result Require(OperationProvenance operation) => ReplayCut.Require(this, Acceptance, operation);
 
     static Uuid? Member(OperationProvenance operation) => operation.Actor.Kind == "member" &&
         Uuid.TryParse(operation.Actor.Id, CultureInfo.InvariantCulture, out var member) ? member : null;
@@ -233,7 +247,7 @@ public sealed class AuditPackageManifest : Aggregate
                 throw new InvalidOperationException("A manifest is created once in its authoritative program.");
             _programId = fact.ProgramId;
             _currentVersion = 1;
-            _versions.Add(1, fact.Change);
+            _currentContent = fact.Change;
         }
         else
         {
@@ -244,18 +258,27 @@ public sealed class AuditPackageManifest : Aggregate
                 if (fact.PackageVersion != _currentVersion + 1)
                     throw new InvalidOperationException("An amendment must create the next manifest version.");
                 _currentVersion = fact.PackageVersion;
-                _versions.Add(_currentVersion, fact.Change);
+                _currentContent = fact.Change;
+                _currentFrozen = false;
             }
-            else if (!_versions.ContainsKey(fact.PackageVersion))
+            else if (!HasVersion(fact.PackageVersion))
                 throw new InvalidOperationException("A fact cannot refer to an uncreated manifest version.");
             if (domainEvent is AuditPackageDeliveryAdmitted)
-                _frozenVersions.Add(fact.PackageVersion);
-            else if (domainEvent is not AuditPackageAmended && IsFrozen(fact.PackageVersion))
+            {
+                if (fact.PackageVersion == _currentVersion)
+                    _currentFrozen = true;
+                if (fact.PackageVersion == _selectedVersion)
+                    _selectedFrozen = true;
+            }
+            else if (domainEvent is not AuditPackageAmended && KnownFrozen(fact.PackageVersion) == true)
                 throw new InvalidOperationException("A delivery-admitted version cannot be changed.");
         }
+        if ((domainEvent is AuditPackageCreated or AuditPackageAmended) && fact.PackageVersion == _selectedVersion)
+            _selectedContent = fact.Change;
         Acceptance.Observe(domainEvent);
         _revision = fact.Revision;
-        _facts.Add(domainEvent);
+        Latest = domainEvent;
+        ReplayCut.Observe(domainEvent);
     }
 
     static Result Fail(RequestErrorKind kind, string message) => Result.Failure(new RequestError(kind, message));

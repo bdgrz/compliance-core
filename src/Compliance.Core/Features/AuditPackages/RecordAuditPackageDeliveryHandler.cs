@@ -51,7 +51,7 @@ public sealed class RecordAuditPackageDeliveryHandler(AuditPackageRootOperation 
                 NativeFactReference? disclosureProof = null;
                 var validationProofs = new List<NativeFactReference>();
                 var validation = version.Validations[^1];
-                foreach (var fact in snapshot.Owner.Facts)
+                foreach (var fact in snapshot.History.Facts)
                 {
                     if (fact is not IAuditPackageManifestFact native || native.PackageVersion != request.PackageVersion)
                         continue;
@@ -90,6 +90,10 @@ public sealed class RecordAuditPackageDeliveryHandler(AuditPackageRootOperation 
                 }
                 if (buildProof is null || disclosureProof is null || validationProofs.Count == 0)
                     return PackageChanges.Conflict("The package's exact native approval proofs are incomplete.");
+                var local = AuditPackagePreparedProof.ForDelivery(snapshot.History, request.PackageVersion,
+                    buildProof, disclosureProof, validationProofs);
+                if (!local.IsSuccess)
+                    return Result<PreparedPackageDelta>.Failure(local.Error!);
                 var proofs = await PackageContent.WriteAsync<IReadOnlyList<NativeFactReference>>(content,
                     request.TenantId, "audit-package-validation-proof.v1", validationProofs, token).ConfigureAwait(false);
                 var intent = new PackageDeliveryRecordingIntent(PackageContent.Header(operation), request.DeliveryId,
@@ -101,10 +105,10 @@ public sealed class RecordAuditPackageDeliveryHandler(AuditPackageRootOperation 
                 var frozen = await PackageContent.WriteAsync(content, request.TenantId,
                     PackageDeliveryRecordingIntent.Schema, intent, token).ConfigureAwait(false);
                 return Result<PreparedPackageDelta>.Success(new PreparedPackageDelta(frozen, buildProof, disclosureProof,
-                    validationProofs));
+                    validationProofs, local.Value));
             }, (owner, operation, delta, response, _) => owner.AdmitDelivery(request.ProgramId,
                 request.ExpectedManifestRevision, request.PackageVersion, operation, delta.Content, delta.Build!,
-                delta.Disclosure!, delta.Validations!, response), true, ct).ConfigureAwait(false);
+                delta.Disclosure!, delta.Validations!, response, delta.Proof!), true, ct).ConfigureAwait(false);
         return await operations.AcknowledgmentAsync(request.TenantId, outcome, ct).ConfigureAwait(false);
     }
 }

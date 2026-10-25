@@ -129,7 +129,7 @@ public sealed class SnapshotSourcePublicationTests
                 baseline.ContentSha256, "Actual workforce package", [new AuditPackageSelectionEntry("workforce",
                     "roster", source.Kind, source.RecordId, source.Revision, source.Content.FileExtension,
                     source.ContentSha256, source.Content.Bytes, "product_calculated", source.VersionId)]));
-        var packages = new AuditPackageReader(fixture.Reader, fixture.Content);
+        var packages = new AuditPackageReader(fixture.Reader, fixture.Content, fixture.PeriodEvents);
         var root = new AuditPackageRootOperation(fixture.Reader, packages,
             new NativeOperationExecutor(fixture.Reader, fixture.Executor, fixture.Content), fixture.Content, fixture.Clock);
         var created = await new CreateAuditPackageHandler(root, new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods,
@@ -140,7 +140,7 @@ public sealed class SnapshotSourcePublicationTests
                 packageId, "type_i", "canonical-rows", 1, 1)), CancellationToken.None);
         Assert.True(requested.IsSuccess, requested.Error?.Message);
         var owner = await fixture.Reader.HydrateAsync(new AuditPackageManifest(fixture.TenantId, packageId));
-        var admitted = Assert.Single(owner.Facts.OfType<AuditPackageBuildRequested>());
+        var admitted = Assert.Single((await AuditPackageManifestHistory.ReadAsync(fixture.PeriodEvents, owner)).Facts.OfType<AuditPackageBuildRequested>());
         var proof = NativeFactReference.Of(owner.Stream, admitted);
         var outputs = new FitzKvAuditPackageBuildOutputs(fixture.Kv);
         var start = new StartAuditPackageBuild(EffectIdentity.CommandId(proof.EventId,
@@ -150,7 +150,7 @@ public sealed class SnapshotSourcePublicationTests
 
         // Act
         var built = await new StartAuditPackageBuildHandler(new AuditPackageSourceVerifier(fixture.Reader,
-            fixture.Content), new AuditPackageArchiveBuilder(fixture.Artifacts), outputs, fixture.Content).HandleAsync(
+            fixture.Content, fixture.PeriodEvents), new AuditPackageArchiveBuilder(fixture.Artifacts), outputs, fixture.Content).HandleAsync(
             System(start), CancellationToken.None);
         Assert.True(built.IsSuccess, built.Error?.Message);
         var outputProof = await outputs.ReadAsync(fixture.TenantId, start.BuildId, CancellationToken.None);
@@ -240,6 +240,7 @@ public sealed class SnapshotSourcePublicationTests
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
+            PackageSeeds.Configure(services, PeriodEvents);
             _kernel = services.BuildServiceProvider();
             _scope = _kernel.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();

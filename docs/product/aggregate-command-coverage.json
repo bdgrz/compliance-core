@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "9e103349081a3c6204e3b1e57ec9c2f7e79d9432",
+  "sourceCommit": "9cddd1a6be8d0443503ad0f770d9e35d5fe17930",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -1632,6 +1632,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
         "test/Compliance.Tests/Testing/PackageSeeds.cs"
@@ -1652,6 +1653,7 @@
         "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
         "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
@@ -1671,6 +1673,7 @@
         "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/AuditPackageReadHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/AuditPackageReadHttpTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs"
@@ -5464,6 +5467,7 @@
         "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignLaunchPreparationRaceTests.cs",
         "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
@@ -5537,6 +5541,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignLaunchPreparationRaceTests.cs",
         "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
@@ -9643,13 +9648,14 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageManifestHistoryBoundaryTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/AuditPackageReadHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/AuditPackageReadHttpTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
-        "test/Compliance.Tests/Testing/PackageSeeds.cs"
+        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -13052,6 +13058,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPackages/AmendAuditPackageHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeHistoryTests.cs",
         "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
@@ -21212,6 +21219,7 @@
         "PolicyReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignLaunchPreparationRaceTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs"
       ],
@@ -24322,9 +24330,7 @@
         }
       ],
       "handlerRegistration": true,
-      "helperServices": [
-        "AuditPackageSourceVerifier"
-      ],
+      "helperServices": [],
       "directAggregateReferences": [
         "AuditPackageDelivery",
         "AuditPackageManifest"
@@ -26075,10 +26081,9 @@
         "AuditPackageManifest"
       ],
       "aggregateTargets": [],
-      "helperServices": [
-        "AuditPackageSourceVerifier"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
         "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
@@ -31000,9 +31005,7 @@
         }
       ],
       "handlerRegistration": true,
-      "helperServices": [
-        "AuditPackageSourceVerifier"
-      ],
+      "helperServices": [],
       "directAggregateReferences": [
         "AuditPackageManifest"
       ],
@@ -31597,7 +31600,7 @@
       "fact": "AuditPackageBuilt",
       "aggregate": "AuditPackageManifest",
       "method": "RecordBuilt",
-      "methodArgumentCount": 7,
+      "methodArgumentCount": 8,
       "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs",
       "callerSources": [],
       "classification": "no_registered_request_route",

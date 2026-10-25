@@ -1,0 +1,41 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "AuditPackageManifest compact history/current+selected versions and complete build/delivery consumers; independent CampaignLaunch preparation recovery and launching-member scalar binding.",
+  "validation": {
+    "genuineOldApiManifestRedFailed": 1,
+    "genuineOldApiCampaignLaunchRedFailed": 2,
+    "genuineCurrentApiCampaignMemberRedFailed": 6,
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 324,
+    "productionHttpPassed": 49,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "backendUnitPassed": 6315,
+    "backendUnitFailed": 0
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 20,
+    "signalsTriaged": 2,
+    "mergeProbability": 0.58,
+    "adopted": "merge scoped repair after final local checks; continue remaining families"
+  },
+  "parentRefinements": [
+    "Composed36Manifest+2LaunchPrepare+2memberbinding as40 unique paths. Preserved Calendar/SourceUse/Mapping/Advisor/Auditor wrappers and added Manifest last with distinct opaque key.",
+    "Selected clean-stage Campaign race test and retained qualified concrete RuntimeRequestContext analyzer refinement; other prepared source/fixtures built firstpass without changes.",
+    "Initial draft-only Manifest RED failed beforeAct because Amend requires generated predecessor; discarded. Corrected32builtversions/96actualnativefacts setup succeeds then shows128retainedentries.",
+    "Six launch-member corruptions preserve actual Metadata/coherent Actor+Operation.Actor/header/typed-intent hash but previously reached default/realexecutor. New replay guard rejects wrong-member/nonmember/malformedUUID before delegate."
+  ],
+  "qualification": [
+    "Manifest owner retains current+selected version refs/frozen flags, selected acceptance/latest and rolling commitment. Complete native history is explicit transient data with raw prefix/root/logical-ID/frozen-version/build-causation validation for explicit and executor hydration. No hidden Facts/version map/set shim.",
+    "Unpublished exact-cut proof tokens bind build/delivery selection, arbitrary real validation overrides, selected root/version/generation and native proof tuples. Prepared cut checked at actual append; callbacks/materialization select exact historical versions and original build root.",
+    "All existing native facts/tags/payloads/DTOs/routes/source/receipt/archive/publisher bytes and scoped read contracts remain. New producers/real seeds explicitly FirstOwner; optional legacy null normalizes only for unchanged persisted native facts. Public current personal authorization stays before accepted replay.",
+    "CampaignLaunch actual resolver/guards/allimmutable writes now inside recovery-aware NativeOperation Prepare. Original200/registration/native first response or requested cancellation survives actual winner commit before losing Teams write failure.",
+    "Campaign reducer change only binds independently persisted launching MemberId to actual nonempty member Actor and matching Operation.Actor. Existing SourceUse/live reservations/frozen audience/admission/closure protocol untouched; whole campaign/participant history is still being prepared.",
+    "No SDKsnapshot compatibility/retained migration, constant-time/SDKmemory claim, new global result lookup, deployment or live broker qualification. Qualified Examination2future regressions retained separately."
+  ]
+}

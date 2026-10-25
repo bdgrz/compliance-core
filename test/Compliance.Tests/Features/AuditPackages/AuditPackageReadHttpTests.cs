@@ -168,6 +168,7 @@ public sealed class AuditPackageReadHttpTests
             await SeedProgramAsync(Program);
             await using var scope = _factory.Services.CreateAsyncScope();
             var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+            var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
             var package = new AuditPackageRules(Tenant, Program, Uuid.CreateVersion4());
             Assert.Null(package.Create(new AuditPackageContent(Uuid.CreateVersion4(), "type_i", "type_i_baseline",
@@ -175,7 +176,7 @@ public sealed class AuditPackageReadHttpTests
                 [new AuditPackageSelectionEntry("system_description", "source", "system_description",
                     Uuid.CreateVersion4(), 1, "snapshot", new string('b', 64), 100, "management",
                     Uuid.CreateVersion4())]), Member, "Package author", Now));
-            await PackageSeeds.WriteAsync(writer, content, package.Current!);
+            await PackageSeeds.WriteAsync(reader, writer, _events, content, package.Current!);
             var projection = scope.ServiceProvider.GetRequiredService<IAuditPackageDirectoryProjection>();
             var identity = new CheckpointIdentity(FitzAuditPackageDirectory.ProjectorName,
                 EventStreamPattern.ForPattern(Tenant.ToString(), AuditPackageManifest.Area));

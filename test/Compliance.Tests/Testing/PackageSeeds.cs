@@ -6,23 +6,56 @@ using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Testing;
 
 /// <summary>Explicit native fixture construction from a rule-composed view; no runtime legacy read/write adapter exists.</summary>
 static class PackageSeeds
 {
-    public static Task WriteAsync(IAggregateWriter writer, IImmutableContentStore content, AuditPackageView view,
-        CancellationToken ct = default) => SaveAsync(null, writer, content, view, ct);
-    public static Task AppendAsync(IAggregateReader reader, IAggregateWriter writer, IImmutableContentStore content,
-        AuditPackageView view, CancellationToken ct = default) => SaveAsync(reader, writer, content, view, ct);
+    public static Task WriteAsync(IAggregateReader reader, IAggregateWriter writer, IDomainEventReader events,
+        IImmutableContentStore content, AuditPackageView view, CancellationToken ct = default) =>
+        SaveAsync(reader, writer, events, content, view, ct);
+    public static Task AppendAsync(IAggregateReader reader, IAggregateWriter writer, IDomainEventReader events,
+        IImmutableContentStore content, AuditPackageView view, CancellationToken ct = default) =>
+        SaveAsync(reader, writer, events, content, view, ct);
 
-    static async Task SaveAsync(IAggregateReader? reader, IAggregateWriter writer, IImmutableContentStore content,
-        AuditPackageView view, CancellationToken ct)
+    public static void Configure(IServiceCollection services, IDomainEventReader events)
+    {
+        var original = services.Last(item => !item.IsKeyedService && item.ServiceType == typeof(IAggregateReader));
+        var key = new object();
+        services.Remove(original);
+        if (original.ImplementationInstance is { } instance)
+            services.Add(ServiceDescriptor.KeyedSingleton(typeof(IAggregateReader), key, instance));
+        else if (original.ImplementationFactory is { } factory)
+            services.Add(ServiceDescriptor.DescribeKeyed(typeof(IAggregateReader), key,
+                (provider, _) => factory(provider), original.Lifetime));
+        else
+            services.Add(ServiceDescriptor.DescribeKeyed(typeof(IAggregateReader), key,
+                original.ImplementationType!, original.Lifetime));
+        services.Add(ServiceDescriptor.Describe(typeof(IAggregateReader), provider =>
+            new AuditPackageManifestAggregateReader(provider.GetRequiredKeyedService<IAggregateReader>(key), events),
+            original.Lifetime));
+    }
+
+    static async Task SaveAsync(IAggregateReader reader, IAggregateWriter writer, IDomainEventReader events,
+        IImmutableContentStore content, AuditPackageView view, CancellationToken ct)
     {
         var tenant = view.TenantId;
-        var owner = reader is null ? new AuditPackageManifest(tenant, view.AuditPackageId) :
-            await reader.HydrateAsync(new AuditPackageManifest(tenant, view.AuditPackageId), ct);
+        var owner = await reader.HydrateAsync(new AuditPackageManifest(tenant, view.AuditPackageId), ct);
+        var history = await AuditPackageManifestHistory.ReadAsync(events, owner, ct);
+        async Task SelectAsync(OperationProvenance operation, long version)
+        {
+            owner = await reader.HydrateAsync(new AuditPackageManifest(tenant, view.AuditPackageId,
+                operation.LogicalId, operation.CommandKind, version), ct);
+            history = await AuditPackageManifestHistory.ReadAsync(events, owner, ct);
+        }
+        async Task SaveOwnerAsync()
+        {
+            await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System), ct);
+            owner = await reader.HydrateAsync(new AuditPackageManifest(tenant, view.AuditPackageId), ct);
+            history = await AuditPackageManifestHistory.ReadAsync(events, owner, ct);
+        }
         var unit = await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(), UnitResult.Schema,
             new UnitResult(), ct);
         var unitResult = await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(),
@@ -32,7 +65,7 @@ static class PackageSeeds
         foreach (var version in view.Versions)
         {
             var actor = ActorReference.ForMember(version.CreatedByMemberId, version.CreatedByDisplay);
-            if (owner.VersionContent(version.PackageVersion) is null)
+            if (!owner.HasVersion(version.PackageVersion))
             {
                 var operation = Root(version.PackageVersion == 1 ? view.AuditPackageId : Uuid.CreateVersion4(),
                     version.PackageVersion == 1 ? nameof(CreateAuditPackage) : nameof(AmendAuditPackage), actor,
@@ -44,14 +77,15 @@ static class PackageSeeds
                     version.PackageVersion == 1 ? "AuditPackageCreated.change.v1" : "AuditPackageAmended.change.v1",
                     new AuditPackageManifestVersionContent(view.ProgramId, data, version.Manifest,
                         version.AmendsVersion, version.AmendmentReason, actor, version.CreatedAt), ct);
+                await SelectAsync(operation, version.PackageVersion);
                 Assert.True((version.PackageVersion == 1
                     ? owner.Create(view.ProgramId, operation, change, response, unitResult)
                     : owner.Amend(view.ProgramId, owner.Revision, operation, change, response, unitResult)).IsSuccess);
-                await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System), ct);
+                await SaveOwnerAsync();
             }
             foreach (var build in version.BuildAttempts)
             {
-                var admitted = owner.Facts.OfType<AuditPackageBuildRequested>().FirstOrDefault(fact =>
+                var admitted = history.Facts.OfType<AuditPackageBuildRequested>().FirstOrDefault(fact =>
                     fact.Operation.LogicalId == build.BuildAttemptId);
                 if (admitted is null)
                 {
@@ -71,12 +105,13 @@ static class PackageSeeds
                             SelectionOrder.CanonicalKey, selection.Sha256));
                     var frozen = await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(),
                         PackageBuildIntent.Schema, intent, ct);
+                    await SelectAsync(operation, version.PackageVersion);
                     Assert.True(owner.AdmitBuild(view.ProgramId, owner.Revision, version.PackageVersion, operation,
                         frozen, response).IsSuccess);
-                    await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System), ct);
-                    admitted = owner.Facts.OfType<AuditPackageBuildRequested>().Last();
+                    await SaveOwnerAsync();
+                    admitted = history.Facts.OfType<AuditPackageBuildRequested>().Last();
                 }
-                if (build.Status != "built" || owner.Facts.OfType<AuditPackageBuilt>().Any(fact =>
+                if (build.Status != "built" || history.Facts.OfType<AuditPackageBuilt>().Any(fact =>
                         fact.Operation.RootOperationId == build.BuildAttemptId))
                     continue;
                 var source = NativeFactReference.Of(owner.Stream, admitted);
@@ -89,14 +124,17 @@ static class PackageSeeds
                 var successful = await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(),
                     "AuditPackageBuilt.change.v1", new AuditPackageBuiltChange(build.BuildAttemptId, output,
                         build.CompletedAt ?? build.UpdatedAt), ct);
+                await SelectAsync(operationBuilt, version.PackageVersion);
+                var buildProof = AuditPackagePreparedProof.ForBuild(history, source, version.PackageVersion, build.BuildAttemptId);
+                Assert.True(buildProof.IsSuccess);
                 Assert.True(owner.RecordBuilt(view.ProgramId, owner.Revision, version.PackageVersion, operationBuilt,
-                    source, successful, unitResult).IsSuccess);
-                await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System), ct);
+                    source, successful, unitResult, buildProof.Value!).IsSuccess);
+                await SaveOwnerAsync();
             }
             foreach (var validation in version.Validations)
             {
                 var existing = new List<AuditPackageValidated>();
-                foreach (var fact in owner.Facts.OfType<AuditPackageValidated>())
+                foreach (var fact in history.Facts.OfType<AuditPackageValidated>())
                 {
                     var data = await content.ReadJsonAsync<AuditPackageValidationView>(tenant.ToString(), fact.Change, ct);
                     if (data.AuditPackageValidationId == validation.AuditPackageValidationId)
@@ -114,14 +152,15 @@ static class PackageSeeds
                     };
                     var change = await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(),
                         "AuditPackageValidated.change.v1", initial, ct);
+                    await SelectAsync(operation, version.PackageVersion);
                     Assert.True(owner.RecordValidation(view.ProgramId, owner.Revision, version.PackageVersion,
                         operation, change, response, unitResult).IsSuccess);
-                    await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System), ct);
+                    await SaveOwnerAsync();
                 }
                 foreach (var approved in validation.Overrides)
                 {
                     var duplicate = false;
-                    foreach (var fact in owner.Facts.OfType<AuditPackageValidationOverrideApproved>())
+                    foreach (var fact in history.Facts.OfType<AuditPackageValidationOverrideApproved>())
                     {
                         var data = await content.ReadJsonAsync<AuditPackageValidationOverrideChange>(tenant.ToString(),
                             fact.Change, ct);
@@ -135,15 +174,16 @@ static class PackageSeeds
                     var change = await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(),
                         "AuditPackageValidationOverrideApproved.change.v1",
                         new AuditPackageValidationOverrideChange(validation.AuditPackageValidationId, approved), ct);
+                    await SelectAsync(operation, version.PackageVersion);
                     Assert.True(owner.ApproveOverride(view.ProgramId, owner.Revision, version.PackageVersion,
                         operation, change, response, unitResult).IsSuccess);
-                    await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System), ct);
+                    await SaveOwnerAsync();
                 }
             }
             foreach (var approval in version.DisclosureApprovals)
             {
                 var duplicate = false;
-                foreach (var fact in owner.Facts.OfType<AuditPackageDisclosureApproved>())
+                foreach (var fact in history.Facts.OfType<AuditPackageDisclosureApproved>())
                 {
                     var data = await content.ReadJsonAsync<AuditPackageDisclosureApprovalView>(tenant.ToString(),
                         fact.Change, ct);
@@ -156,25 +196,26 @@ static class PackageSeeds
                     version.PackageVersion, approval.ApprovedAt);
                 var change = await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(),
                     "AuditPackageDisclosureApproved.change.v1", approval, ct);
+                await SelectAsync(operation, version.PackageVersion);
                 Assert.True(owner.ApproveDisclosure(view.ProgramId, owner.Revision, version.PackageVersion,
                     operation, change, response, unitResult).IsSuccess);
-                await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System), ct);
+                await SaveOwnerAsync();
             }
             foreach (var delivery in version.Deliveries)
             {
-                var admission = owner.Facts.OfType<AuditPackageDeliveryAdmitted>().FirstOrDefault(fact =>
+                var admission = history.Facts.OfType<AuditPackageDeliveryAdmitted>().FirstOrDefault(fact =>
                     fact.Operation.LogicalId == delivery.AuditPackageDeliveryId);
                 PackageDeliveryRecordingIntent intent;
                 if (admission is null)
                 {
-                    var disclosure = owner.Facts.OfType<AuditPackageDisclosureApproved>().Last(fact =>
+                    var disclosure = history.Facts.OfType<AuditPackageDisclosureApproved>().Last(fact =>
                         fact.PackageVersion == version.PackageVersion);
-                    var build = owner.Facts.OfType<AuditPackageBuilt>().Last(fact =>
+                    var build = history.Facts.OfType<AuditPackageBuilt>().Last(fact =>
                         fact.PackageVersion == version.PackageVersion);
-                    var latest = owner.Facts.OfType<AuditPackageValidated>().Last(fact =>
+                    var latest = history.Facts.OfType<AuditPackageValidated>().Last(fact =>
                         fact.PackageVersion == version.PackageVersion);
                     IReadOnlyList<NativeFactReference> proofs = [NativeFactReference.Of(owner.Stream, latest),
-                        .. owner.Facts.OfType<AuditPackageValidationOverrideApproved>().Where(fact =>
+                        .. history.Facts.OfType<AuditPackageValidationOverrideApproved>().Where(fact =>
                             fact.PackageVersion == version.PackageVersion && fact.Revision > latest.Revision)
                             .Select(fact => NativeFactReference.Of(owner.Stream, fact))];
                     var proofManifest = await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(),
@@ -190,19 +231,22 @@ static class PackageSeeds
                             "audit-package-validation-proof.v1", proofs.Count, SelectionOrder.CanonicalKey, proofManifest.Sha256));
                     var frozen = await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(),
                         PackageDeliveryRecordingIntent.Schema, intent, ct);
+                    await SelectAsync(operation, version.PackageVersion);
+                    var deliveryProof = AuditPackagePreparedProof.ForDelivery(history, version.PackageVersion,
+                        NativeFactReference.Of(owner.Stream, build), NativeFactReference.Of(owner.Stream, disclosure), proofs);
+                    Assert.True(deliveryProof.IsSuccess);
                     Assert.True(owner.AdmitDelivery(view.ProgramId, owner.Revision, version.PackageVersion, operation,
                         frozen, NativeFactReference.Of(owner.Stream, build), NativeFactReference.Of(owner.Stream, disclosure),
-                        proofs, response).IsSuccess);
-                    await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System), ct);
-                    admission = owner.Facts.OfType<AuditPackageDeliveryAdmitted>().Last();
+                        proofs, response, deliveryProof.Value!).IsSuccess);
+                    await SaveOwnerAsync();
+                    admission = history.Facts.OfType<AuditPackageDeliveryAdmitted>().Last();
                 }
                 else
                     intent = await content.ReadJsonAsync<PackageDeliveryRecordingIntent>(tenant.ToString(), admission.Intent, ct);
                 var commandId = Uuid.CreateVersion5(admission.Metadata.EventId, "seed-materialization");
                 var child = new AuditPackageDelivery(tenant, view.AuditPackageId, version.PackageVersion,
                     delivery.AuditPackageDeliveryId, commandId);
-                if (reader is not null)
-                    child = await reader.HydrateAsync(child, ct);
+                child = await reader.HydrateAsync(child, ct);
                 if (child.IsMaterialized)
                     continue;
                 var source = NativeFactReference.Of(owner.Stream, admission);
@@ -217,7 +261,7 @@ static class PackageSeeds
     static OperationProvenance Root(Uuid logicalId, string kind, ActorReference actor, AuditPackageManifest owner,
         long version, DateTimeOffset at) => new(logicalId, logicalId, null, kind, actor, owner.Stream,
         version.ToString(CultureInfo.InvariantCulture), owner.Revision == 0 ? null : (ulong)owner.Revision,
-        new string('a', 64), at, owner.Stream, owner.Stream);
+        new string('a', 64), at, owner.Stream, owner.Stream, owner.Stream);
     static DurableIntentHeader Header(OperationProvenance operation) => new(operation.RootOperationId, operation.Owner,
         operation.AffectedOwner, operation.ExpectedRevisionOwner, operation.Actor, operation.Episode,
         operation.OriginalExpectedRevision, operation.AuthoredIntentSha256, operation.AcceptedAt);

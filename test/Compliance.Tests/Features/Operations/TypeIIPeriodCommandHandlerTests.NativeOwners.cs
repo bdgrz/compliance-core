@@ -200,7 +200,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             close.ContentSha256, "Exact previous close package", [new AuditPackageSelectionEntry("sources", "frozen-source",
                 source.SourceType, source.RecordId, source.Version, "json", source.ContentSha256, 2, "product_calculated", source.VersionId)], period.PeriodId);
         Assert.Null(package.Create(input, fixture.ActorMemberId, "Package recorder", fixture.CloseClock.GetUtcNow()));
-        await PackageSeeds.WriteAsync(fixture.Writer, fixture.Host.Content, package.Current!);
+        await PackageSeeds.WriteAsync(fixture.Reader, fixture.Writer, fixture.Host.Events, fixture.Host.Content, package.Current!);
         return package.Current!.Versions[^1].Manifest;
     }
 
