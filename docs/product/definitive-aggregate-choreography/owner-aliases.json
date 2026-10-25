@@ -1,0 +1,1215 @@
+{
+  "schemaVersion": 1,
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "architectureAuthority": {
+    "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+    "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+    "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+    "model": "jev-1.14.0",
+    "implementationHalted": true
+  },
+  "businessOwnerCount": 129,
+  "declaredTechnicalOwnerCount": 13,
+  "additionalLogicalTechnicalResponsibilities": [
+    "WeeklyScheduling"
+  ],
+  "joinRules": [
+    "Use exact selected event ownership before an earlier split-parent label.",
+    "canonicalOwner=null is deliberate: typed union, split allocation, transient rules or logical technical process; never pick the first child.",
+    "Technical native-journal/emitter placement and business authority are separate; do not force a KV rewrite.",
+    "Projection/legacy aliasing is semantic classification, not authorization to re-emit/convert stored facts or reuse old identities."
+  ],
+  "aliases": {
+    "AccessCampaignParticipant": {
+      "canonicalOwner": "AccessReviewItem",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AccessExpectation": {
+      "canonicalOwner": "AccessExpectation",
+      "disposition": "selected_business_authority"
+    },
+    "AccessExpectationException": {
+      "canonicalOwner": "AccessExpectation",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "AccessExpectationScopeGuard": {
+      "canonicalOwner": "AccessExpectation",
+      "disposition": "selected_explicit_override_absorbed",
+      "decisionId": "OWNER_AccessExpectationScopeGuard"
+    },
+    "AccessGrant": {
+      "canonicalOwner": "AccessGrant",
+      "disposition": "selected_business_authority"
+    },
+    "AccessPopulation": {
+      "canonicalOwner": "AccessPopulation",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "AccessPopulation",
+        "AccessPrincipalClassification"
+      ]
+    },
+    "AccessPopulationException": {
+      "canonicalOwner": "AccessPopulationException",
+      "disposition": "selected_business_authority"
+    },
+    "AccessPrincipalClassification": {
+      "canonicalOwner": "AccessPrincipalClassification",
+      "disposition": "selected_business_authority"
+    },
+    "AccessReviewCampaign": {
+      "canonicalOwner": "AccessReviewCampaign",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "AccessReviewCampaign",
+        "AccessReviewItem",
+        "AccessReviewDecisionBatch"
+      ]
+    },
+    "AccessReviewDecision": {
+      "canonicalOwner": "AccessReviewItem",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AccessReviewDecisionBatch": {
+      "canonicalOwner": "AccessReviewDecisionBatch",
+      "disposition": "selected_business_authority"
+    },
+    "AccessReviewItem": {
+      "canonicalOwner": "AccessReviewItem",
+      "disposition": "selected_business_authority"
+    },
+    "AccessReviewSystemLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "AccessExpectation",
+        "AccessPopulationException"
+      ]
+    },
+    "AdvisorFeedback": {
+      "canonicalOwner": "AdvisorFeedbackThread",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AdvisorFeedbackThread": {
+      "canonicalOwner": "AdvisorFeedbackThread",
+      "disposition": "selected_business_authority"
+    },
+    "AdvisorHandoff": {
+      "canonicalOwner": "AdvisorHandoff",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "AdvisorHandoff",
+        "AdvisorFeedbackThread"
+      ]
+    },
+    "ApplicationImportBatch": {
+      "canonicalOwner": "ApplicationImportBatch",
+      "disposition": "selected_business_authority"
+    },
+    "ApplicationImportCoordinator": {
+      "canonicalOwner": "ApplicationImportSource",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ApplicationImportExecution": {
+      "canonicalOwner": "ApplicationImportBatch",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ApplicationImportLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "ApplicationImportSource",
+        "ApplicationImportBatch"
+      ]
+    },
+    "ApplicationImportPlan": {
+      "canonicalOwner": "ApplicationImportBatch",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ApplicationImportSource": {
+      "canonicalOwner": "ApplicationImportSource",
+      "disposition": "selected_business_authority"
+    },
+    "ApplicationImportSourceGuard": {
+      "canonicalOwner": "ApplicationImportSource",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ApplicationRelationship": {
+      "canonicalOwner": "ApplicationRelationship",
+      "disposition": "selected_business_authority"
+    },
+    "ApplicationSourceClaim": {
+      "canonicalOwner": "ApplicationImportSource",
+      "disposition": "selected_explicit_override_absorbed",
+      "decisionId": "OWNER_ApplicationSourceClaim"
+    },
+    "ArtifactDisclosure": {
+      "canonicalOwner": "ArtifactDisclosure",
+      "disposition": "selected_business_authority"
+    },
+    "ArtifactDisposition": {
+      "canonicalOwner": "ArtifactDisposition",
+      "disposition": "selected_business_authority"
+    },
+    "ArtifactDownloadGrant": {
+      "canonicalOwner": "ArtifactDownloadGrant",
+      "disposition": "selected_business_authority"
+    },
+    "ArtifactEngagementHold": {
+      "canonicalOwner": "ArtifactEngagementHold",
+      "disposition": "selected_business_authority"
+    },
+    "ArtifactLegalHold": {
+      "canonicalOwner": "ArtifactLegalHold",
+      "disposition": "selected_business_authority"
+    },
+    "ArtifactRetention": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "ArtifactRetentionBasis",
+        "ArtifactLegalHold"
+      ]
+    },
+    "ArtifactRetentionBasis": {
+      "canonicalOwner": "ArtifactRetentionBasis",
+      "disposition": "selected_business_authority"
+    },
+    "AssuranceReport": {
+      "canonicalOwner": "ProviderAssuranceReport",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AuditObservation": {
+      "canonicalOwner": "AuditObservation",
+      "disposition": "selected_business_authority"
+    },
+    "AuditOutcome": {
+      "canonicalOwner": "AuditOutcome",
+      "disposition": "selected_business_authority"
+    },
+    "AuditPackage": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "AuditPackageManifest",
+        "AuditPackageBuildProcess",
+        "AuditPackageDelivery"
+      ]
+    },
+    "AuditPackageBuild": {
+      "canonicalOwner": "AuditPackageBuildProcess",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AuditPackageBuildProcess": {
+      "canonicalOwner": "AuditPackageBuildProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "AuditPackageDelivery": {
+      "canonicalOwner": "AuditPackageDelivery",
+      "disposition": "selected_business_authority"
+    },
+    "AuditPackageManifest": {
+      "canonicalOwner": "AuditPackageManifest",
+      "disposition": "selected_business_authority"
+    },
+    "AuditPackageRecipient": {
+      "canonicalOwner": "AuditPackageDelivery",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AuditPackageVersion": {
+      "canonicalOwner": "AuditPackageManifest",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "AuditPopulation": {
+      "canonicalOwner": "AuditPopulation",
+      "disposition": "selected_business_authority"
+    },
+    "AuditPopulationExportProcess": {
+      "canonicalOwner": "AuditPopulationExportProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "AuditPopulationRowDecision": {
+      "canonicalOwner": "AuditPopulation",
+      "disposition": "selected_explicit_override_absorbed",
+      "decisionId": "OWNER_AuditPopulationRowDecision"
+    },
+    "AuditPopulationVersion": {
+      "canonicalOwner": "AuditPopulation",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "AuditTestException": {
+      "canonicalOwner": "AuditObservation",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AuditorFeedbackThread": {
+      "canonicalOwner": "AuditorFeedbackThread",
+      "disposition": "selected_business_authority"
+    },
+    "AuditorRequest": {
+      "canonicalOwner": "AuditorRequest",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "AuditorRequest",
+        "AuditorFeedbackThread",
+        "AuditorSampleSelection",
+        "AuditorResponse"
+      ]
+    },
+    "AuditorResponse": {
+      "canonicalOwner": "AuditorResponse",
+      "disposition": "selected_business_authority"
+    },
+    "AuditorSampleSelection": {
+      "canonicalOwner": "AuditorSampleSelection",
+      "disposition": "selected_business_authority"
+    },
+    "CampaignParticipant": {
+      "canonicalOwner": "PolicyCampaignParticipant",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "CampaignReconciliation": {
+      "canonicalOwner": "PolicyDistributionCampaign",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "ClientExport": {
+      "canonicalOwner": "ClientExport",
+      "disposition": "selected_business_authority"
+    },
+    "ClientIndependenceDecision": {
+      "canonicalOwner": "ClientIndependenceDecision",
+      "disposition": "selected_business_authority"
+    },
+    "ClientService": {
+      "canonicalOwner": "ClientService",
+      "disposition": "selected_business_authority"
+    },
+    "ClientServiceIndependence": {
+      "canonicalOwner": "ClientServiceIndependence",
+      "disposition": "selected_business_authority"
+    },
+    "CommitmentDraft": {
+      "canonicalOwner": "CommitmentDraft",
+      "disposition": "selected_business_authority"
+    },
+    "CommitmentVersion": {
+      "canonicalOwner": "CommitmentDraft",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "ComplianceIncident": {
+      "canonicalOwner": "ComplianceIncident",
+      "disposition": "selected_business_authority"
+    },
+    "ComplianceIncidentVersion": {
+      "canonicalOwner": "ComplianceIncident",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "ComplianceProgram": {
+      "canonicalOwner": "ComplianceProgram",
+      "disposition": "selected_business_authority"
+    },
+    "ControlCriterionMapping": {
+      "canonicalOwner": "ControlCriterionMapping",
+      "disposition": "selected_business_authority"
+    },
+    "ControlCriterionMappingLedger": {
+      "canonicalOwner": "ControlCriterionMapping",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "ControlDraft": {
+      "canonicalOwner": "ControlDraft",
+      "disposition": "selected_business_authority"
+    },
+    "ControlDueWorkItem": {
+      "canonicalOwner": "ControlOccurrence",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ControlEvaluation": {
+      "canonicalOwner": "ControlEvaluation",
+      "disposition": "selected_business_authority"
+    },
+    "ControlEvaluationLedger": {
+      "canonicalOwner": "ControlEvaluation",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "ControlEvaluationPlan": {
+      "canonicalOwner": "ControlEvaluationPlan",
+      "disposition": "selected_business_authority"
+    },
+    "ControlEvaluationPlanVersion": {
+      "canonicalOwner": "ControlEvaluationPlan",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "ControlOccurrence": {
+      "canonicalOwner": "ControlOccurrence",
+      "disposition": "selected_business_authority"
+    },
+    "ControlOperatingPlan": {
+      "canonicalOwner": "ControlOperatingPlan",
+      "disposition": "selected_business_authority"
+    },
+    "ControlOperationsLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "ControlOperatingPlan",
+        "ControlOccurrence"
+      ]
+    },
+    "ControlPerformanceOccurrence": {
+      "canonicalOwner": "ControlOccurrence",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ControlPlanReassignment": {
+      "canonicalOwner": null,
+      "disposition": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "ControlOperatingPlan",
+        "ControlOccurrence"
+      ]
+    },
+    "ControlVersion": {
+      "canonicalOwner": "ControlDraft",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "CorrectiveAction": {
+      "canonicalOwner": "CorrectiveAction",
+      "disposition": "selected_business_authority"
+    },
+    "CriteriaTextOverlay": {
+      "canonicalOwner": "CriteriaTextOverlay",
+      "disposition": "selected_business_authority"
+    },
+    "CriteriaTextOverlayEntry": {
+      "canonicalOwner": "CriteriaTextOverlay",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "CriteriaTextOverlayLedger": {
+      "canonicalOwner": "CriteriaTextOverlay",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "CriterionApplicability": {
+      "canonicalOwner": "CriterionApplicability",
+      "disposition": "selected_business_authority"
+    },
+    "CriterionApplicabilityLedger": {
+      "canonicalOwner": "CriterionApplicability",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "DataFlow": {
+      "canonicalOwner": "DataFlow",
+      "disposition": "selected_business_authority"
+    },
+    "DeclaredApplication": {
+      "canonicalOwner": "DeclaredApplication",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "DeclaredApplication",
+        "ApplicationRelationship"
+      ]
+    },
+    "DeclaredSystemInstance": {
+      "canonicalOwner": "DeclaredSystemInstance",
+      "disposition": "selected_business_authority"
+    },
+    "DueControlWorkItem": {
+      "canonicalOwner": "ControlOccurrence",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "EmailAddress": {
+      "canonicalOwner": "EmailAddress",
+      "disposition": "selected_business_authority"
+    },
+    "EmailChallengeDeliveryLedger": {
+      "canonicalOwner": "EmailChallengeDeliveryLedger",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "EngagementManagementAcknowledgement": {
+      "canonicalOwner": "EngagementManagementAcknowledgement",
+      "disposition": "selected_business_authority"
+    },
+    "EngagementManagementAcknowledgement|PartnerIndependenceDecision": {
+      "canonicalOwner": null,
+      "disposition": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "EngagementManagementAcknowledgement",
+        "PartnerIndependenceDecision"
+      ]
+    },
+    "EvidenceArtifact": {
+      "canonicalOwner": "EvidenceArtifact",
+      "disposition": "selected_business_authority"
+    },
+    "EvidenceHandlingPolicy": {
+      "canonicalOwner": "EvidenceHandlingPolicy",
+      "disposition": "selected_business_authority"
+    },
+    "EvidenceRedaction": {
+      "canonicalOwner": "EvidenceRedaction",
+      "disposition": "selected_business_authority"
+    },
+    "EvidenceRequest": {
+      "canonicalOwner": "EvidenceRequest",
+      "disposition": "selected_business_authority"
+    },
+    "EvidenceRequestLedger": {
+      "canonicalOwner": "EvidenceRequest",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "EvidenceSupport": {
+      "canonicalOwner": "EvidenceSupport",
+      "disposition": "selected_business_authority"
+    },
+    "ExaminationBaseline": {
+      "canonicalOwner": "ExaminationEngagement",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "ExaminationEngagement": {
+      "canonicalOwner": "ExaminationEngagement",
+      "disposition": "selected_business_authority"
+    },
+    "ExaminationSignOff": {
+      "canonicalOwner": "ExaminationSignOff",
+      "disposition": "selected_business_authority"
+    },
+    "FindingAggregate": {
+      "canonicalOwner": "FindingAggregate",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "FindingAggregate",
+        "CorrectiveAction"
+      ]
+    },
+    "FindingMigrationAggregate": {
+      "canonicalOwner": "FindingMigrationAggregate",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "FirmProfessionalDutyCatalog": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "FirmProfessionalDutyDesignation",
+        "ProfessionalAssertionIdentityClaim"
+      ]
+    },
+    "FirmProfessionalDutyDesignation": {
+      "canonicalOwner": "FirmProfessionalDutyDesignation",
+      "disposition": "selected_business_authority"
+    },
+    "FirmProfessionalDutyScopeGuard": {
+      "canonicalOwner": "FirmProfessionalDutyDesignation",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "FirmStaffDirectory": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "FirmStaffRecord",
+        "FirmStaffIdentityClaim"
+      ]
+    },
+    "FirmStaffIdentityClaim": {
+      "canonicalOwner": "FirmStaffIdentityClaim",
+      "disposition": "selected_business_authority"
+    },
+    "FirmStaffMember": {
+      "canonicalOwner": "FirmStaffRecord",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "FirmStaffRecord": {
+      "canonicalOwner": "FirmStaffRecord",
+      "disposition": "selected_business_authority"
+    },
+    "FirmStaffUserReservation": {
+      "canonicalOwner": "FirmStaffIdentityClaim",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "HandoffFeedback": {
+      "canonicalOwner": "AdvisorFeedbackThread",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "IdentityRecovery": {
+      "canonicalOwner": "IdentityRecovery",
+      "disposition": "selected_business_authority"
+    },
+    "IdentityRecoveryNoticeProcess": {
+      "canonicalOwner": "IdentityRecoveryNoticeProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "ImmutableSnapshot": {
+      "canonicalOwner": "ImmutableSnapshot",
+      "disposition": "selected_business_authority"
+    },
+    "ImportExecution": {
+      "canonicalOwner": "ApplicationImportBatch",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "IndependenceCommitment": {
+      "canonicalOwner": "PracticeIndependenceCommitment",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "IndependenceEvaluation": {
+      "canonicalOwner": null,
+      "disposition": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "ClientIndependenceDecision",
+        "PartnerIndependenceDecision"
+      ]
+    },
+    "IndependenceLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "PracticeIndependenceCommitment",
+        "ServiceEngagementIndependence",
+        "ClientServiceIndependence",
+        "ClientIndependenceDecision",
+        "PartnerIndependenceDecision",
+        "EngagementManagementAcknowledgement"
+      ]
+    },
+    "IndependenceRuleCatalog": {
+      "canonicalOwner": "IndependenceRuleCatalog",
+      "disposition": "selected_business_authority"
+    },
+    "IndependenceRuleRatification": {
+      "canonicalOwner": "IndependenceRuleRatificationCatalog",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "IndependenceRuleRatificationCatalog": {
+      "canonicalOwner": "IndependenceRuleRatificationCatalog",
+      "disposition": "selected_business_authority"
+    },
+    "IndependenceRuleVersion": {
+      "canonicalOwner": "IndependenceRuleCatalog",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "InformationAsset": {
+      "canonicalOwner": "InformationAsset",
+      "disposition": "selected_business_authority"
+    },
+    "Kind switch: AccessGrant or TeamMember (exact old episode only)": {
+      "canonicalOwner": null,
+      "disposition": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "AccessGrant",
+        "TeamMember"
+      ]
+    },
+    "Location": {
+      "canonicalOwner": "Location",
+      "disposition": "selected_business_authority"
+    },
+    "LocationNameClaim": {
+      "canonicalOwner": "LocationNameClaim",
+      "disposition": "selected_business_authority"
+    },
+    "LocationNameReservation": {
+      "canonicalOwner": "LocationNameClaim",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "LocationRegister": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "Location",
+        "LocationNameClaim"
+      ]
+    },
+    "ManagementAssertion": {
+      "canonicalOwner": "ManagementAssertion",
+      "disposition": "selected_business_authority"
+    },
+    "ManagementAssertionVersion": {
+      "canonicalOwner": "ManagementAssertion",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "ManagementRepresentationLetter": {
+      "canonicalOwner": "ManagementRepresentationLetter",
+      "disposition": "selected_business_authority"
+    },
+    "Member": {
+      "canonicalOwner": "Member",
+      "disposition": "selected_business_authority"
+    },
+    "Member|TeamMember": {
+      "canonicalOwner": null,
+      "disposition": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "Member",
+        "TeamMember"
+      ]
+    },
+    "MethodologyTemplate": {
+      "canonicalOwner": "MethodologyTemplate",
+      "disposition": "selected_business_authority"
+    },
+    "MethodologyTemplateContribution": {
+      "canonicalOwner": "MethodologyTemplateContribution",
+      "disposition": "selected_business_authority"
+    },
+    "MethodologyTemplateVersion": {
+      "canonicalOwner": "MethodologyTemplate",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "OperationalProcess": {
+      "canonicalOwner": "OperationalProcess",
+      "disposition": "selected_business_authority"
+    },
+    "OperationalProcessNameClaim": {
+      "canonicalOwner": "OperationalProcessNameClaim",
+      "disposition": "selected_business_authority"
+    },
+    "OperationalProcessNameReservation": {
+      "canonicalOwner": "OperationalProcessNameClaim",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "OperationalProcessRegister": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "OperationalProcess",
+        "OperationalProcessNameClaim"
+      ]
+    },
+    "PackageBuildAttempt": {
+      "canonicalOwner": "AuditPackageBuildProcess",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "PackageDeliveryAuthorization": {
+      "canonicalOwner": "AuditPackageDelivery",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "PartnerIndependenceDecision": {
+      "canonicalOwner": "PartnerIndependenceDecision",
+      "disposition": "selected_business_authority"
+    },
+    "Person": {
+      "canonicalOwner": "Person",
+      "disposition": "selected_business_authority"
+    },
+    "PlatformOperatorGrant": {
+      "canonicalOwner": "PlatformOperatorRoster",
+      "disposition": "selected_explicit_override_absorbed",
+      "decisionId": "OWNER_PlatformOperatorGrant"
+    },
+    "PlatformOperatorRoster": {
+      "canonicalOwner": "PlatformOperatorRoster",
+      "disposition": "selected_business_authority"
+    },
+    "Policy": {
+      "canonicalOwner": "Policy",
+      "disposition": "selected_business_authority"
+    },
+    "PolicyCampaignParticipant": {
+      "canonicalOwner": "PolicyCampaignParticipant",
+      "disposition": "selected_business_authority"
+    },
+    "PolicyDistributionCampaign": {
+      "canonicalOwner": "PolicyDistributionCampaign",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "PolicyDistributionCampaign",
+        "PolicyCampaignParticipant"
+      ]
+    },
+    "PolicyVersion": {
+      "canonicalOwner": "Policy",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "PopulationSnapshot": {
+      "canonicalOwner": "PopulationSnapshot",
+      "disposition": "selected_business_authority"
+    },
+    "PopulationSnapshotChunk": {
+      "canonicalOwner": "PopulationSnapshotChunk",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "PracticeIndependenceCommitment": {
+      "canonicalOwner": "PracticeIndependenceCommitment",
+      "disposition": "selected_business_authority"
+    },
+    "ProfessionalAssertionIdentityClaim": {
+      "canonicalOwner": "ProfessionalAssertionIdentityClaim",
+      "disposition": "selected_business_authority"
+    },
+    "ProgramReadiness": {
+      "canonicalOwner": "ProgramReadiness",
+      "disposition": "selected_business_authority"
+    },
+    "ProgramRollover": {
+      "canonicalOwner": "ProgramRollover",
+      "disposition": "selected_business_authority"
+    },
+    "ProgramScopeSnapshotProcess": {
+      "canonicalOwner": "ProgramScopeSnapshotProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "Provider": {
+      "canonicalOwner": "Provider",
+      "disposition": "selected_business_authority"
+    },
+    "ProviderAssuranceGap": {
+      "canonicalOwner": "ProviderAssuranceGap",
+      "disposition": "selected_business_authority"
+    },
+    "ProviderAssuranceRegister": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "ProviderAssuranceReport",
+        "ProviderAssuranceReview",
+        "ProviderAssuranceGap",
+        "ProviderRiskAcceptance"
+      ]
+    },
+    "ProviderAssuranceReport": {
+      "canonicalOwner": "ProviderAssuranceReport",
+      "disposition": "selected_business_authority"
+    },
+    "ProviderAssuranceReview": {
+      "canonicalOwner": "ProviderAssuranceReview",
+      "disposition": "selected_business_authority"
+    },
+    "ProviderCoverageGap": {
+      "canonicalOwner": "ProviderAssuranceGap",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ProviderDueDiligenceReview": {
+      "canonicalOwner": "ProviderAssuranceReview",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ProviderNameClaim": {
+      "canonicalOwner": "ProviderNameClaim",
+      "disposition": "selected_business_authority"
+    },
+    "ProviderNameRegistry": {
+      "canonicalOwner": "ProviderNameClaim",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ProviderNameReservation": {
+      "canonicalOwner": "ProviderNameClaim",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ProviderRegister": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "Provider",
+        "ProviderNameClaim"
+      ]
+    },
+    "ProviderRiskAcceptance": {
+      "canonicalOwner": "ProviderRiskAcceptance",
+      "disposition": "selected_business_authority"
+    },
+    "ReadinessAssessment": {
+      "canonicalOwner": "ReadinessAssessment",
+      "disposition": "selected_business_authority"
+    },
+    "ReadinessEntryGate": {
+      "canonicalOwner": "ProgramReadiness",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ReadinessGap": {
+      "canonicalOwner": "ReadinessGapPlan",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ReadinessGapPlan": {
+      "canonicalOwner": "ReadinessGapPlan",
+      "disposition": "selected_business_authority"
+    },
+    "ReadinessLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "ReadinessAssessment",
+        "ReadinessGapPlan",
+        "ProgramReadiness"
+      ]
+    },
+    "ReadinessResponsePlan": {
+      "canonicalOwner": "ReadinessGapPlan",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "RecordType switch: ControlDraft, CommitmentDraft, SystemBoundary (same owner atomic scope)": {
+      "canonicalOwner": null,
+      "disposition": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "ControlDraft",
+        "CommitmentDraft",
+        "SystemBoundary"
+      ]
+    },
+    "RemediationMigrationFenceAggregate": {
+      "canonicalOwner": "RemediationMigrationFenceAggregate",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "RiskAcceptance": {
+      "canonicalOwner": "RiskEvaluation",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "RiskAssessment": {
+      "canonicalOwner": "RiskEvaluation",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "RiskDraft": {
+      "canonicalOwner": "RiskDraft",
+      "disposition": "selected_business_authority"
+    },
+    "RiskEvaluation": {
+      "canonicalOwner": "RiskEvaluation",
+      "disposition": "selected_business_authority"
+    },
+    "RiskGovernance": {
+      "canonicalOwner": "RiskGovernance",
+      "disposition": "selected_business_authority"
+    },
+    "RiskGovernanceLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "RiskGovernance",
+        "RiskTreatmentAssertion",
+        "RiskTreatmentAction"
+      ]
+    },
+    "RiskMethod": {
+      "canonicalOwner": "RiskMethod",
+      "disposition": "selected_business_authority"
+    },
+    "RiskMethodVersion": {
+      "canonicalOwner": "RiskMethod",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "RiskReassessmentTrigger": {
+      "canonicalOwner": "RiskGovernance",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "RiskTreatmentAction": {
+      "canonicalOwner": "RiskTreatmentAction",
+      "disposition": "selected_business_authority"
+    },
+    "RiskTreatmentAssertion": {
+      "canonicalOwner": "RiskTreatmentAssertion",
+      "disposition": "selected_business_authority"
+    },
+    "Role": {
+      "canonicalOwner": "Role",
+      "disposition": "selected_business_authority"
+    },
+    "RolePermission": {
+      "canonicalOwner": "RolePermission",
+      "disposition": "selected_business_authority"
+    },
+    "SeparationOfDutiesWaiver": {
+      "canonicalOwner": "SeparationOfDutiesWaiver",
+      "disposition": "selected_business_authority"
+    },
+    "ServiceAssignment": {
+      "canonicalOwner": "ServiceEngagementIndependence",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "ServiceEngagement": {
+      "canonicalOwner": "ServiceEngagementIndependence",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ServiceEngagementAcceptance": {
+      "canonicalOwner": "ServiceEngagementIndependence",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "ServiceEngagementIndependence": {
+      "canonicalOwner": "ServiceEngagementIndependence",
+      "disposition": "selected_business_authority"
+    },
+    "ServiceIdentity": {
+      "canonicalOwner": "ServiceIdentity",
+      "disposition": "selected_business_authority"
+    },
+    "SignificantChange": {
+      "canonicalOwner": "SignificantChange",
+      "disposition": "selected_business_authority"
+    },
+    "SignificantChangeVersion": {
+      "canonicalOwner": "SignificantChange",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "StaffIndependenceWall": {
+      "canonicalOwner": "PracticeIndependenceCommitment",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "SystemBoundary": {
+      "canonicalOwner": "SystemBoundary",
+      "disposition": "selected_business_authority"
+    },
+    "SystemBoundaryVersion": {
+      "canonicalOwner": "SystemBoundary",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "SystemDescription": {
+      "canonicalOwner": "SystemDescription",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "SystemDescription",
+        "SystemDescriptionExportProcess"
+      ]
+    },
+    "SystemDescriptionExportProcess": {
+      "canonicalOwner": "SystemDescriptionExportProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "SystemDescriptionVersion": {
+      "canonicalOwner": "SystemDescription",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "SystemInstanceAccessReviewScope": {
+      "canonicalOwner": "SystemInstanceAccessReviewScope",
+      "disposition": "selected_business_authority"
+    },
+    "Team": {
+      "canonicalOwner": "Team",
+      "disposition": "selected_business_authority"
+    },
+    "TeamMember": {
+      "canonicalOwner": "TeamMember",
+      "disposition": "selected_business_authority"
+    },
+    "TeamRole": {
+      "canonicalOwner": "TeamRole",
+      "disposition": "selected_business_authority"
+    },
+    "TechnologyComponent": {
+      "canonicalOwner": "TechnologyComponent",
+      "disposition": "selected_business_authority"
+    },
+    "TemplateApplication": {
+      "canonicalOwner": "TemplateApplication",
+      "disposition": "selected_business_authority"
+    },
+    "TemplateApplicationDraftReceipt": {
+      "canonicalOwner": "TemplateApplication",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "TemplateApplicationSuccessorDecision": {
+      "canonicalOwner": "TemplateApplication",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "Tenant": {
+      "canonicalOwner": "Tenant",
+      "disposition": "selected_business_authority"
+    },
+    "TenantIdentityProvider": {
+      "canonicalOwner": "TenantIdentityProvider",
+      "disposition": "selected_business_authority"
+    },
+    "TenantInvitation": {
+      "canonicalOwner": "TenantInvitation",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "TenantInvitation",
+        "TenantInvitationMailboxClaim",
+        "TenantInvitationDeliveryProcess"
+      ]
+    },
+    "TenantInvitationDeliveryProcess": {
+      "canonicalOwner": "TenantInvitationDeliveryProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "TenantInvitationMailboxClaim": {
+      "canonicalOwner": "TenantInvitationMailboxClaim",
+      "disposition": "selected_business_authority"
+    },
+    "TenantManagerGuard": {
+      "canonicalOwner": "TenantManagerGuard",
+      "disposition": "selected_business_authority"
+    },
+    "TenantSlug": {
+      "canonicalOwner": "TenantSlug",
+      "disposition": "selected_business_authority"
+    },
+    "TrainingCatalog": {
+      "canonicalOwner": "TrainingRequirement",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "TrainingRequirement": {
+      "canonicalOwner": "TrainingRequirement",
+      "disposition": "selected_business_authority"
+    },
+    "TypeIIObservationCalendar": {
+      "canonicalOwner": "TypeIIObservationCalendar",
+      "disposition": "selected_business_authority"
+    },
+    "TypeIIPeriod": {
+      "canonicalOwner": "TypeIIPeriod",
+      "disposition": "selected_business_authority"
+    },
+    "TypeIIPeriodReservation": {
+      "canonicalOwner": "TypeIIObservationCalendar",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "TypeIIPlan": {
+      "canonicalOwner": "TypeIIPlan",
+      "disposition": "selected_business_authority"
+    },
+    "TypeIIPlanVersion": {
+      "canonicalOwner": "TypeIIPlan",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "UserIdentity": {
+      "canonicalOwner": "UserIdentity",
+      "disposition": "selected_business_authority"
+    },
+    "WeeklyScheduling": {
+      "canonicalOwner": null,
+      "disposition": "logical_technical_capture_page_result_journal",
+      "physicalOwnerNotForced": true
+    },
+    "WeeklyWorkDigest": {
+      "canonicalOwner": "WeeklyWorkDigest",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "WorkDigestDispatch": {
+      "canonicalOwner": "WorkDigestDispatch",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "WorkDigestPreference": {
+      "canonicalOwner": "WorkDigestPreference",
+      "disposition": "selected_business_authority"
+    },
+    "WorkDigestScheduleCursor": {
+      "canonicalOwner": null,
+      "disposition": "technical_schedule_cursor_role_not_business_owner",
+      "relatedTechnicalRoles": [
+        "WeeklyScheduling",
+        "WeeklyWorkDigest",
+        "WorkDigestDispatch"
+      ]
+    },
+    "WorkItemAssignment": {
+      "canonicalOwner": "WorkItemAssignment",
+      "disposition": "selected_business_authority"
+    },
+    "WorkRelationship": {
+      "canonicalOwner": "WorkRelationship",
+      "disposition": "selected_business_authority"
+    },
+    "WorkforceObservationResolution": {
+      "canonicalOwner": "WorkforceObservationResolution",
+      "disposition": "selected_business_authority"
+    },
+    "WorkforceRosterSnapshotProcess": {
+      "canonicalOwner": "WorkforceRosterSnapshotProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "WorkforceSourceObservation": {
+      "canonicalOwner": "WorkforceSourceObservation",
+      "disposition": "selected_business_authority"
+    }
+  },
+  "excludedFromCanonicalAliasJoin": {
+    "abstractTransientOrWriterPruned": [
+      "AccessClassificationRules",
+      "AccessExpectationRules",
+      "AccessReviewCampaignCompletionProcess",
+      "AccessReviewLaunchFanOut",
+      "AccessReviewRules",
+      "AdministratorTransitionProcess",
+      "AdvisorHandoffRules",
+      "ApplicationImportExecutionProcess",
+      "ApplicationImportRowRules",
+      "ArtifactDownloadProcess",
+      "ArtifactRetentionRules",
+      "AssuranceRules",
+      "AuditPackageDeliveryRecordingProcess",
+      "AuditPackageRules",
+      "AuditorRequestResolutionProcess",
+      "AuditorRequestRules",
+      "BoundaryRules",
+      "BulkAccessDecisionProcess",
+      "CampaignRules",
+      "ClientIndependencePreviewProcess",
+      "CommitmentRules",
+      "ComplianceIncidentRules",
+      "ControlCriterionMappingRules",
+      "ControlEvaluationPlanRules",
+      "ControlEvaluationRules",
+      "ControlOccurrenceFanOut",
+      "ControlOperationRules",
+      "ControlRules",
+      "CriteriaTextOverlayRules",
+      "CriterionApplicabilityRules",
+      "EmailChallengeDeliveryProcess",
+      "EngagementAcceptanceProcess",
+      "EngagementPersonalDecisionProcess",
+      "EvidenceRedactionRules",
+      "EvidenceRequestRules",
+      "EvidenceRules",
+      "ExaminationEngagementRules",
+      "FindingClosureProcess",
+      "FindingRules",
+      "FirmStaffRegistrationProcess",
+      "IdentityRecoveryProcess",
+      "ImportBatch",
+      "IndependenceRuleCatalogRules",
+      "IndependenceRuleRatificationRules",
+      "IndependentChildMaterialization",
+      "InventoryRegisterRules",
+      "LegacyWorkAssignmentLedger",
+      "LocationNameChangeProcess",
+      "MethodologyTemplateContributionRules",
+      "MethodologyTemplateRules",
+      "NameClaim",
+      "NamedRecord",
+      "NativeAcceptance",
+      "NativeReplayCommitment",
+      "OperationalProcessNameChangeProcess",
+      "PlatformOperatorRosterRules",
+      "PolicyCampaignClosureProcess",
+      "PolicyRules",
+      "ProfessionalDutyChangeProcess",
+      "ProfessionalDutyRules",
+      "ProgramRules",
+      "ProviderChangeImpactRules",
+      "ProviderCoverageGapRules",
+      "ProviderNameChangeProcess",
+      "ProviderReviewProcess",
+      "ProviderRules",
+      "REMOVE",
+      "ReadinessDecisionProcess",
+      "ReadinessDecisionRules",
+      "ReadinessRules",
+      "ReadinessRunProcess",
+      "RemediationLedger",
+      "RiskActionCompletionReviewProcess",
+      "RiskDraftRules",
+      "RiskEvaluationRules",
+      "RiskMethodRules",
+      "RiskTreatmentAssertionRules",
+      "ServiceEngagementRules",
+      "SignificantChangeRules",
+      "SourceUseClaimState",
+      "SystemDescriptionRules",
+      "SystemInstanceAccessReviewScopeRules",
+      "TechnologyInventoryRules",
+      "TemplateApplicationRules",
+      "TenantManagerGuardRules",
+      "TenantOwner",
+      "TrainingRequirementRules",
+      "TypeIICalendarRules",
+      "TypeIIPeriodRules",
+      "TypeIIRangeProcess",
+      "VersionedRecordRules",
+      "WeeklyWorkDigestRules",
+      "WorkDigestDispatchRules"
+    ],
+    "rule": "These classifications remain in full evidence only; they are not canonical business/technical alias join candidates."
+  }
+}

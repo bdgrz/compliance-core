@@ -1,0 +1,1130 @@
+{
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "decisionBasis": {
+    "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+    "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+    "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+    "decisionIds": [
+      "ARTIFACT_DOWNLOAD",
+      "PROOF_CARRIERS",
+      "EFFECT_IDENTITIES"
+    ],
+    "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+  },
+  "verification": {
+    "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+    "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+    "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+    "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+    "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+  },
+  "effectIdentityPolicy": {
+    "decisionId": "EFFECT_IDENTITIES",
+    "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+    "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+    "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission.",
+    "newArtifactAlgorithm": {
+      "version": "effect-identity-v2",
+      "namespace": "actual committed EvidenceArtifactDownloadRequested.Metadata.EventId",
+      "fieldsInOrder": [
+        "effectKind (canonical receiver command kind)",
+        "canonical target EventStreamAddress",
+        "episode (exact selected value, initial when absent)"
+      ],
+      "bytes": "UTF8(effect-identity:v2) followed by each field UTF8 bytes prefixed by its unsigned32-bit big-endian byte length; UUIDv5 over these exact name bytes and the actual source EventId namespace.",
+      "rule": "Use only for this new unoccupied process identity domain; occupied v1 algorithms/target-key selections remain unchanged. Implementation must provide fixed byte/UUID vectors before activation."
+    }
+  },
+  "proofSetsBySelectedRow": {
+    "T000": [
+      {
+        "factKinds": [
+          "FirmStaffProfessionalDutyUseAuthorized"
+        ],
+        "role": "matching active canonical staff grant held through designation record",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "recording only; revocation has no staff use",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T001": [
+      {
+        "factKinds": [
+          "FirmStaffProfessionalDutyUseAuthorized"
+        ],
+        "role": "matching active canonical staff grant held through designation record",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "recording only; revocation has no staff use",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "ProfessionalAssertionIdentityClaimed"
+        ],
+        "role": "permanent exact signed-assertion identity claim",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T003": [
+      {
+        "factKinds": [
+          "FirmStaffIdentityClaimed"
+        ],
+        "role": "permanent exact canonical-user/staff claim",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T005": [
+      {
+        "factKinds": [
+          "EngagementPracticeCommitmentsAuthorized"
+        ],
+        "role": "actual irreversible complete-grant authorization",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T006": [
+      {
+        "factKinds": [
+          "EngagementPracticeCommitmentsAuthorized"
+        ],
+        "role": "actual irreversible complete-grant authorization",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "PracticeIndependenceCommitted"
+        ],
+        "role": "every permanent commitment from the complete frozen subject set",
+        "quantifier": "all_frozen_targets",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T082": [
+      {
+        "factKinds": [
+          "EngagementPracticeCommitmentsAuthorized"
+        ],
+        "role": "actual irreversible complete-grant authorization",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "PracticeIndependenceCommitted"
+        ],
+        "role": "every permanent commitment from the complete frozen subject set",
+        "quantifier": "all_frozen_targets",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T084": [
+      {
+        "factKinds": [
+          "EngagementServiceEpochAuthorized",
+          "FirmStaffRecordEngagementUseAuthorized",
+          "FirmProfessionalDutyDesignationEngagementUseAuthorized",
+          "IndependenceRuleCatalogEngagementUseAuthorized",
+          "IndependenceRuleRatificationCatalogEngagementUseAuthorized",
+          "PracticeIndependenceReserved"
+        ],
+        "role": "complete exact grants/reservations required by the frozen acceptance or assignment manifest",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T007": [
+      {
+        "factKinds": [
+          "ServiceEngagementAcceptanceRecorded",
+          "ServiceEngagementStaffAssigned",
+          "ServiceEngagementAcceptanceRejected",
+          "ServiceEngagementStaffAssignmentRejected"
+        ],
+        "role": "actual matching completion/rejection terminal authority; never an absent grant",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T085": [
+      {
+        "factKinds": [
+          "ServiceEngagementAcceptanceRecorded",
+          "ServiceEngagementStaffAssigned",
+          "ServiceEngagementAcceptanceRejected",
+          "ServiceEngagementStaffAssignmentRejected"
+        ],
+        "role": "actual matching completion/rejection terminal authority; never an absent grant",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T090": [
+      {
+        "factKinds": [
+          "ServiceEngagementAcceptanceRecorded",
+          "ServiceEngagementStaffAssigned",
+          "ServiceEngagementAcceptanceRejected",
+          "ServiceEngagementStaffAssignmentRejected"
+        ],
+        "role": "matching acceptance/assignment terminal disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "EngagementAcceptanceProcess",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "EngagementPersonalDecisionAuthorized",
+          "EngagementPersonalDecisionCanceled"
+        ],
+        "role": "actual irreversible/canceled personal-decision disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "EngagementPersonalDecisionProcess",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T092": [
+      {
+        "factKinds": [
+          "ServiceEngagementAcceptanceRecorded",
+          "ServiceEngagementStaffAssigned",
+          "ServiceEngagementAcceptanceRejected",
+          "ServiceEngagementStaffAssignmentRejected"
+        ],
+        "role": "matching acceptance/assignment terminal disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "EngagementAcceptanceProcess",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "EngagementPersonalDecisionAuthorized",
+          "EngagementPersonalDecisionCanceled"
+        ],
+        "role": "actual irreversible/canceled personal-decision disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "EngagementPersonalDecisionProcess",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T094": [
+      {
+        "factKinds": [
+          "ServiceEngagementAcceptanceRecorded",
+          "ServiceEngagementStaffAssigned",
+          "ServiceEngagementAcceptanceRejected",
+          "ServiceEngagementStaffAssignmentRejected"
+        ],
+        "role": "matching acceptance/assignment terminal disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "EngagementAcceptanceProcess",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "EngagementPersonalDecisionAuthorized",
+          "EngagementPersonalDecisionCanceled"
+        ],
+        "role": "actual irreversible/canceled personal-decision disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "EngagementPersonalDecisionProcess",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T096": [
+      {
+        "factKinds": [
+          "ServiceEngagementAcceptanceRecorded",
+          "ServiceEngagementStaffAssigned",
+          "ServiceEngagementAcceptanceRejected",
+          "ServiceEngagementStaffAssignmentRejected"
+        ],
+        "role": "matching acceptance/assignment terminal disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "EngagementAcceptanceProcess",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "EngagementPersonalDecisionAuthorized",
+          "EngagementPersonalDecisionCanceled"
+        ],
+        "role": "actual irreversible/canceled personal-decision disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "EngagementPersonalDecisionProcess",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T009": [
+      {
+        "factKinds": [
+          "AccessReviewDecisionBatchAccepted"
+        ],
+        "role": "actual materialized batch bound to campaign admission",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T010": [
+      {
+        "factKinds": [
+          "AccessReviewDecisionBatchAccepted"
+        ],
+        "role": "actual materialized batch bound to campaign admission",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "AccessReviewItemDecisionAuthorized"
+        ],
+        "role": "matching item reservation at frozen item head",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T011": [
+      {
+        "factKinds": [
+          "AccessReviewDecisionBatchAccepted"
+        ],
+        "role": "actual materialized batch bound to campaign admission",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "AccessReviewItemDecisionAuthorized",
+          "AccessDecisionsRecorded"
+        ],
+        "role": "complete hold and provisional decision proofs for every frozen selected item",
+        "quantifier": "all_frozen_targets",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T012": [
+      {
+        "factKinds": [
+          "AccessReviewDecisionBatchCancellationAccepted"
+        ],
+        "role": "actual cancellation acceptance fence",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T079": [
+      {
+        "factKinds": [
+          "AccessReviewDecisionBatchCancellationAccepted"
+        ],
+        "role": "actual cancellation acceptance fence",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "AccessReviewItemDecisionCanceled"
+        ],
+        "role": "complete cancellation-fence proofs for every selected item, including never-held items",
+        "quantifier": "all_frozen_targets",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T080": [
+      {
+        "factKinds": [
+          "AccessReviewDecisionBatchPublished",
+          "AccessReviewDecisionBatchCanceled"
+        ],
+        "role": "actual batch terminal publication/cancellation and exact disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T015": [
+      {
+        "factKinds": [
+          "ApplicationImportExecutionAuthorized"
+        ],
+        "role": "actual native execution authorization bound to original sealed plan",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T016": [
+      {
+        "factKinds": [
+          "ApplicationImportExecutionAuthorized"
+        ],
+        "role": "actual native execution authorization bound to original sealed plan",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "ApplicationImportTargetAuthorized"
+        ],
+        "role": "matching canonical target-group reservation",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T017": [
+      {
+        "factKinds": [
+          "ApplicationImportExecutionAuthorized"
+        ],
+        "role": "actual native execution authorization bound to original sealed plan",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "ApplicationImportEffectPending"
+        ],
+        "role": "complete actual preflighted native group/row effect proofs",
+        "quantifier": "all_frozen_groups_and_rows",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T018": [
+      {
+        "factKinds": [
+          "ApplicationImportCancellationAccepted"
+        ],
+        "role": "actual canceled-generation admission",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T019": [
+      {
+        "factKinds": [
+          "ApplicationImportCancellationAccepted"
+        ],
+        "role": "actual canceled-generation admission",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "ApplicationImportEffectCanceled"
+        ],
+        "role": "complete actual target fences before cancellation completion",
+        "quantifier": "all_frozen_targets",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T020": [
+      {
+        "factKinds": [
+          "ApplicationImportCommitted",
+          "ApplicationImportCanceled",
+          "ApplicationImportFailed"
+        ],
+        "role": "actual matching terminal batch authority",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T021": [
+      {
+        "factKinds": [
+          "ApplicationImportCommitted",
+          "ApplicationImportCanceled",
+          "ApplicationImportFailed"
+        ],
+        "role": "actual matching terminal batch authority",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T023": [
+      {
+        "factKinds": [
+          "ProviderNameClaimed"
+        ],
+        "role": "actual desired-name permanent/active generation claim",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T024": [
+      {
+        "factKinds": [
+          "ProviderRecorded",
+          "ProviderRevised",
+          "ProviderChangeCanceled"
+        ],
+        "role": "actual apply/cancel proof; release only matching old inactive/new canceled claim",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T026": [
+      {
+        "factKinds": [
+          "LocationNameClaimed"
+        ],
+        "role": "actual desired name claim",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T027": [
+      {
+        "factKinds": [
+          "LocationRevisionRecorded",
+          "LocationChangeCanceled"
+        ],
+        "role": "matching applied/canceled generation proof",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T029": [
+      {
+        "factKinds": [
+          "OperationalProcessNameClaimed"
+        ],
+        "role": "actual desired name claim",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T030": [
+      {
+        "factKinds": [
+          "OperationalProcessRevisionRecorded",
+          "OperationalProcessChangeCanceled"
+        ],
+        "role": "matching applied/canceled generation proof",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T035": [
+      {
+        "factKinds": [
+          "AuditorResponseRequestResolutionUseAuthorized"
+        ],
+        "role": "all exact frozen response grants",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T037": [
+      {
+        "factKinds": [
+          "CorrectiveActionFindingClosureUseAuthorized"
+        ],
+        "role": "all exact corrective-action closure grants",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T038": [
+      {
+        "factKinds": [
+          "PolicyCampaignParticipantCampaignClosureUseAuthorized"
+        ],
+        "role": "complete admitted participant result/closure grant set and exact ParticipantProofManifest command term",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T039": [
+      {
+        "factKinds": [
+          "ReadinessAssessmentRecorded"
+        ],
+        "role": "actual computed assessment plus exact pending adoption generation",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T041": [
+      {
+        "factKinds": [
+          "IdentityRecoveryPrepared"
+        ],
+        "role": "actual preparation of exact claimed challenge/account/old+replacement slots",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T097": [
+      {
+        "factKinds": [
+          "IdentityRecoveryPrepared"
+        ],
+        "role": "actual preparation of exact claimed challenge/account/old+replacement slots",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "RecoveryIdentityProtected"
+        ],
+        "role": "both old and replacement protected slots in canonical order",
+        "quantifier": "both_exact_identity_slots",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T042": [
+      {
+        "factKinds": [
+          "IdentityRecoveryAccepted"
+        ],
+        "role": "actual irreversible accepted recovery swap",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "RecoveryIdentityProtected"
+        ],
+        "role": "both exact identity protection proofs",
+        "quantifier": "both_exact_identity_slots",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T043": [
+      {
+        "factKinds": [
+          "IdentityRecoveryAccepted"
+        ],
+        "role": "actual irreversible accepted recovery swap",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "UserIdentityRegistered"
+        ],
+        "role": "authoritative exact replacement identity on same account",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T044": [
+      {
+        "factKinds": [
+          "IdentityRecoveryAccepted"
+        ],
+        "role": "actual irreversible accepted recovery swap",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "UserIdentityRegistered"
+        ],
+        "role": "authoritative exact replacement identity on same account",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "UserIdentityRevoked"
+        ],
+        "role": "actual old-identity revocation bound to replacement",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T045": [
+      {
+        "factKinds": [
+          "IdentityRecoveryCompleted"
+        ],
+        "role": "actual completed accepted swap",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "IdentityRecoveryChallengeCompleted"
+        ],
+        "role": "actual completion of original claimed email challenge before independent notice",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T058": [
+      {
+        "factKinds": [
+          "IdentityRecoveryCompleted"
+        ],
+        "role": "actual completed accepted swap",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T050": [
+      {
+        "factKinds": [
+          "MemberSuspended",
+          "MemberDeprovisioned",
+          "TeamMemberRemoved"
+        ],
+        "role": "actual selected withdrawal apply proof",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T052": [
+      {
+        "factKinds": [
+          "MemberReinstated",
+          "TeamMemberAssigned"
+        ],
+        "role": "actual selected restoration apply and exact eligibility proof",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T054": [
+      {
+        "factKinds": [
+          "TypeIIPeriodRangeAuthorized"
+        ],
+        "role": "actual calendar old/new range and generation authorization",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T055": [
+      {
+        "factKinds": [
+          "ObservationPeriodStarted",
+          "ObservationPeriodAmended",
+          "ObservationPeriodCloseFrozen",
+          "TypeIIPeriodAmendmentCanceled",
+          "TypeIIPeriodOpeningRejected"
+        ],
+        "role": "actual applied/closed/canceled/rejected period range authority",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T057": [
+      {
+        "factKinds": [
+          "IdentityRecoveryCompleted",
+          "IdentityRecoveryPreparationRejected"
+        ],
+        "role": "actual recovery terminal proof; no cancellation from missing slots",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T060": [
+      {
+        "factKinds": [
+          "AccessReviewCampaignCompleted",
+          "AccessReviewCampaignCompletionCanceled"
+        ],
+        "role": "actual closed/canceled completion authority, including recovery reactor path",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T062": [
+      {
+        "factKinds": [
+          "AuditorRequestResolved",
+          "AuditorRequestResolutionCanceled"
+        ],
+        "role": "actual request terminal proof",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T064": [
+      {
+        "factKinds": [
+          "FindingClosedV2",
+          "FindingClosureCanceled"
+        ],
+        "role": "actual finding terminal proof",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T066": [
+      {
+        "factKinds": [
+          "ReadinessDecisionRecorded",
+          "TypeIEntryDecisionRecorded",
+          "ReadinessDecisionCanceled"
+        ],
+        "role": "actual readiness decision terminal proof",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T068": [
+      {
+        "factKinds": [
+          "PolicyCampaignClosed",
+          "PolicyCampaignClosureCanceled"
+        ],
+        "role": "actual campaign closure/cancellation proof",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T070": [
+      {
+        "factKinds": [
+          "ProviderReviewRecorded",
+          "ProviderReviewCanceled"
+        ],
+        "role": "actual review terminal proof",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T072": [
+      {
+        "factKinds": [
+          "RiskTreatmentActionCompletionReviewed",
+          "RiskTreatmentActionCompletionReviewCanceled"
+        ],
+        "role": "actual action-review terminal proof",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T073": [
+      {
+        "factKinds": [
+          "AccessReviewItemCampaignCompletionUseAuthorized"
+        ],
+        "role": "complete exact campaign item completion grants and supplied proof-manifest binding",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T074": [
+      {
+        "factKinds": [
+          "ReadinessGapPlanReadinessDecisionUseAuthorized"
+        ],
+        "role": "all required selected gap-plan grants",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T075": [
+      {
+        "factKinds": [
+          "ReadinessGapPlanReadinessDecisionUseAuthorized"
+        ],
+        "role": "all required selected gap-plan grants",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T077": [
+      {
+        "factKinds": [
+          "ProviderAssuranceReportProviderReviewUseAuthorized"
+        ],
+        "role": "exact admitted report grant",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "admitted review requires report source",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T078": [
+      {
+        "factKinds": [
+          "EvidenceRequestActionCompletionUseAuthorized"
+        ],
+        "role": "complete exact action completion evidence grants",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T088": [
+      {
+        "factKinds": [
+          "RiskAccepted"
+        ],
+        "role": "actual captured historical risk+acceptance tuple at native scoped locator; no new live-risk/expiry gate",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T108": [
+      {
+        "factKinds": [
+          "EngagementPersonalDecisionAuthorized"
+        ],
+        "role": "actual irreversible personal-decision authorization",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "ClientServicePersonalDecisionUseAuthorized",
+          "FirmStaffRecordEngagementUseAuthorized",
+          "FirmProfessionalDutyDesignationEngagementUseAuthorized",
+          "IndependenceRuleCatalogEngagementUseAuthorized",
+          "IndependenceRuleRatificationCatalogEngagementUseAuthorized"
+        ],
+        "role": "complete kind-specific required source-use set from immutable admitted manifest",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T109": [
+      {
+        "factKinds": [
+          "EngagementPersonalDecisionAuthorized"
+        ],
+        "role": "actual irreversible personal-decision authorization",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "ClientServicePersonalDecisionUseAuthorized",
+          "FirmStaffRecordEngagementUseAuthorized",
+          "FirmProfessionalDutyDesignationEngagementUseAuthorized",
+          "IndependenceRuleCatalogEngagementUseAuthorized",
+          "IndependenceRuleRatificationCatalogEngagementUseAuthorized"
+        ],
+        "role": "complete kind-specific required source-use set from immutable admitted manifest",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T112": [
+      {
+        "factKinds": [
+          "ClientServicePersonalDecisionUseAuthorized",
+          "FirmStaffRecordEngagementUseAuthorized",
+          "FirmProfessionalDutyDesignationEngagementUseAuthorized",
+          "IndependenceRuleCatalogEngagementUseAuthorized",
+          "IndependenceRuleRatificationCatalogEngagementUseAuthorized"
+        ],
+        "role": "complete kind-specific required source-use set from immutable admitted manifest",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T110": [
+      {
+        "factKinds": [
+          "EngagementManagementAcknowledged",
+          "PartnerIndependenceEvaluationRecorded"
+        ],
+        "role": "the exact child selected by personal decision kind",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T111": [
+      {
+        "factKinds": [
+          "EngagementPersonalDecisionAuthorized",
+          "EngagementPersonalDecisionCanceled"
+        ],
+        "role": "actual irreversible/canceled personal decision disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T114": [
+      {
+        "factKinds": [
+          "FirmProfessionalDutyDesignationRecorded",
+          "ProfessionalDutyChangeRejected"
+        ],
+        "role": "actual recording/rejection terminal disposition",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "recording admitted a staff use",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T099": [
+      {
+        "factKinds": [
+          "EvidenceArtifactDownloadRequested"
+        ],
+        "role": "actual artifact admission simultaneously installed matching local availability reservation",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T100": [
+      {
+        "factKinds": [
+          "EvidenceArtifactDownloadRequested"
+        ],
+        "role": "actual artifact admission simultaneously installed matching local availability reservation",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T101": [
+      {
+        "factKinds": [
+          "EvidenceArtifactDownloadRequested"
+        ],
+        "role": "actual artifact admission simultaneously installed matching local availability reservation",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "AdvisorArtifactDownloadUseAuthorized"
+        ],
+        "role": "exact optional handoff grant",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "root selected consultant/handoff scope",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      },
+      {
+        "factKinds": [
+          "ArtifactHandlingDownloadUseAuthorized"
+        ],
+        "role": "exact explicit/default immutable handling-policy grant",
+        "quantifier": "all_required_manifest_entries",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+      }
+    ],
+    "T102": [
+      {
+        "factKinds": [
+          "EvidenceArtifactDownloadIssued",
+          "ArtifactDownloadGrantCanceled"
+        ],
+        "role": "actual receiving grant terminal proof, never legacy artifact-issued v1",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority.",
+        "factContractVersions": {
+          "EvidenceArtifactDownloadIssued": 2
+        }
+      }
+    ],
+    "T103": [
+      {
+        "factKinds": [
+          "EvidenceArtifactDownloadIssued",
+          "ArtifactDownloadGrantCanceled"
+        ],
+        "role": "actual receiving grant terminal proof, never legacy artifact-issued v1",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority.",
+        "factContractVersions": {
+          "EvidenceArtifactDownloadIssued": 2
+        }
+      }
+    ],
+    "T104": [
+      {
+        "factKinds": [
+          "EvidenceArtifactDownloadIssued",
+          "ArtifactDownloadGrantCanceled"
+        ],
+        "role": "actual receiving grant terminal proof, never legacy artifact-issued v1",
+        "quantifier": "exactly_one_selected_variant",
+        "condition": "always",
+        "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority.",
+        "factContractVersions": {
+          "EvidenceArtifactDownloadIssued": 2
+        }
+      }
+    ]
+  }
+}

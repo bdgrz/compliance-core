@@ -1,0 +1,1892 @@
+{
+  "scope": "SELECTED physical target: retain exact existing65/28 plus planned Artifact root1/process1; reuse existing worker activation/common drivers. No implementation authorized.",
+  "reactors": [
+    {
+      "type": "TenantRegistrationReactor",
+      "workloadNameExpression": "\"TenantRegistration\"",
+      "workloadName": "TenantRegistration",
+      "scope": "Global",
+      "sourceEvents": [
+        "TenantRegistered",
+        "TenantSlugChangeRequested",
+        "TenantSlugChanged",
+        "TenantSlugSurrenderRequested"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs",
+        "sha256": "2941818487b53291a94f9e54569fe58560a109eb0dbfa84e344c824f36c316dd"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1724,
+      "exactRegistrationExpression": ".AddReactor<TenantRegistrationReactor>(\"TenantRegistration\", WorkloadScope.Global)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S030",
+        "S031",
+        "S032",
+        "S033"
+      ]
+    },
+    {
+      "type": "TenantInvitationReactor",
+      "workloadNameExpression": "\"TenantInvitation\"",
+      "workloadName": "TenantInvitation",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TenantInvitationAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Tenants/TenantInvitationReactor.cs",
+        "sha256": "1f3779f08cab78d7fb40586753ab4928b3a1a38073ec8c3b427807c836c4f88b"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1725,
+      "exactRegistrationExpression": ".AddReactor<TenantInvitationReactor>(\"TenantInvitation\", WorkloadScope.PerTenant, options =>\n            {\n                // Activation can wait for membership and permission projectors on another host.\n                // Keep replay gaps short after the local transient retry window expires. A long\n                // outage for one tenant must never fault the worker host (#430); permanent\n                // failures are bounded by TenantActivationPolicy instead.\n                options.MaximumFailureDelay = TimeSpan.FromSeconds(2);\n                options.FailureAttemptLimit = TenantActivationPolicy.WorkloadFailureAttemptLimit;\n            })",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S026",
+        "S027",
+        "S028",
+        "S029"
+      ]
+    },
+    {
+      "type": "TenantInvitationDeliveryProcessReactor",
+      "workloadNameExpression": "\"TenantInvitationDeliveryProcessV1\"",
+      "workloadName": "TenantInvitationDeliveryProcessV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TenantMemberInvited"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryProcessReactor.cs",
+        "sha256": "015dc8cb66a0958099dcd6daeebf2191a165fffb19994a493ba3b8e89ded729a"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1734,
+      "exactRegistrationExpression": ".AddReactor<TenantInvitationDeliveryProcessReactor>(\"TenantInvitationDeliveryProcessV1\",\n                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T117",
+        "T118",
+        "T119"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "EvidenceArtifactInspectionEffectsReactor",
+      "workloadNameExpression": "EvidenceArtifactInspectionEffectsReactor.WorkloadName",
+      "workloadName": "EvidenceArtifactInspectionEffectsV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "EvidenceArtifactInspected"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Evidence/EvidenceArtifactInspectionEffectsReactor.cs",
+        "sha256": "9f42615698ca4ed46f640c7b67aa6e7bf8d2ed36395c5ca7041113c08c6bf000"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1736,
+      "exactRegistrationExpression": ".AddReactor<EvidenceArtifactInspectionEffectsReactor>(\n                EvidenceArtifactInspectionEffectsReactor.WorkloadName, WorkloadScope.PerTenant)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S000"
+      ]
+    },
+    {
+      "type": "EmailReservationReactor",
+      "workloadNameExpression": "\"EmailReservation\"",
+      "workloadName": "EmailReservation",
+      "scope": "Global",
+      "sourceEvents": [
+        "UserIdentityRegistered"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/UserIdentities/EmailReservationReactor.cs",
+        "sha256": "54df9b2bd2979e80ed61f766fa95f94be0e30fb42713e1109fbf2f2f2d3f4a33"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1738,
+      "exactRegistrationExpression": ".AddReactor<EmailReservationReactor>(\"EmailReservation\", WorkloadScope.Global)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S035"
+      ]
+    },
+    {
+      "type": "EmailChallengeDeliveryReactor",
+      "workloadNameExpression": "\"EmailChallengeDeliveryV1\"",
+      "workloadName": "EmailChallengeDeliveryV1",
+      "scope": "Global",
+      "sourceEvents": [
+        "EmailChallengeIssued",
+        "IdentityRecoveryChallengeIssued"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+        "sha256": "aa2e1084d4a513404ff39ae541f8f0d9b201658fc4ce6adc51cafb9c598e095c"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1739,
+      "exactRegistrationExpression": ".AddReactor<EmailChallengeDeliveryReactor>(\"EmailChallengeDeliveryV1\", WorkloadScope.Global,\n                options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T115",
+        "T116"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "IdentityRecoveryAcceptanceReactor",
+      "workloadNameExpression": "\"IdentityRecoveryAcceptanceV1\"",
+      "workloadName": "IdentityRecoveryAcceptanceV1",
+      "scope": "Global",
+      "sourceEvents": [
+        "IdentityRecoveryChallengeClaimed"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/UserIdentities/IdentityRecoveryAcceptanceReactor.cs",
+        "sha256": "0d2fd83ffa693c954d68e157cd95fbb9ca02eedc96316164cef045a2eaef138c"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1741,
+      "exactRegistrationExpression": ".AddReactor<IdentityRecoveryAcceptanceReactor>(\"IdentityRecoveryAcceptanceV1\", WorkloadScope.Global,\n                options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T041",
+        "T042",
+        "T043",
+        "T044",
+        "T045",
+        "T056",
+        "T057",
+        "T058",
+        "T097"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "TenantRbacBootstrapReactor",
+      "workloadNameExpression": "\"TenantRbacBootstrap\"",
+      "workloadName": "TenantRbacBootstrap",
+      "scope": "Global",
+      "sourceEvents": [
+        "TenantRegistered"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+        "sha256": "63c50627f2de825bc2d66e3cfcb4756d9b5178902c3817b5dde3be62dafd3a52"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1750,
+      "exactRegistrationExpression": ".AddReactor<TenantRbacBootstrapReactor>(\"TenantRbacBootstrap\", WorkloadScope.Global)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016"
+      ]
+    },
+    {
+      "type": "TenantSelfServiceActivationReactor",
+      "workloadNameExpression": "\"TenantSelfServiceActivationV1\"",
+      "workloadName": "TenantSelfServiceActivationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TeamMemberAssigned"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Tenants/TenantSelfServiceActivationReactor.cs",
+        "sha256": "c2f0250f66cf33e946201f4789c200abcb1cabf4ec74316fa29251c52773ba3a"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1753,
+      "exactRegistrationExpression": ".AddReactor<TenantSelfServiceActivationReactor>(\"TenantSelfServiceActivationV1\",\n                WorkloadScope.PerTenant, options =>\n                {\n                    options.MaximumFailureDelay = TimeSpan.FromSeconds(2);\n                    options.FailureAttemptLimit = TenantActivationPolicy.WorkloadFailureAttemptLimit;\n                })",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S034"
+      ]
+    },
+    {
+      "type": "FirmStaffRegistrationReactor",
+      "workloadNameExpression": "FirmStaffRegistrationReactor.WorkloadName",
+      "workloadName": "FirmStaffRegistrationV1",
+      "scope": "Global",
+      "sourceEvents": [
+        "FirmStaffRegistrationAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/FirmStaffRegistrationReactor.cs",
+        "sha256": "eb9c9373c5a83c0652972dafa364e4d8e5a64f4b1b7c2897ba721dfefc7315f7"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1759,
+      "exactRegistrationExpression": ".AddReactor<FirmStaffRegistrationReactor>(FirmStaffRegistrationReactor.WorkloadName, WorkloadScope.Global,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T002",
+        "T003"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "ProfessionalDutyChangeReactor",
+      "workloadNameExpression": "ProfessionalDutyChangeReactor.WorkloadName",
+      "workloadName": "ProfessionalDutyChangeV1",
+      "scope": "Global",
+      "sourceEvents": [
+        "ProfessionalDutyChangeAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/ProfessionalDutyChangeReactor.cs",
+        "sha256": "75046a31f8da456b5550c6504774b5638a842c6e6fc8b193c4d2e47e613a948d"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1761,
+      "exactRegistrationExpression": ".AddReactor<ProfessionalDutyChangeReactor>(ProfessionalDutyChangeReactor.WorkloadName, WorkloadScope.Global,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T000",
+        "T001",
+        "T113",
+        "T114"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "ClientIndependencePreviewReactor",
+      "workloadNameExpression": "ClientIndependencePreviewReactor.WorkloadName",
+      "workloadName": "ClientIndependencePreviewV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ClientIndependenceEvaluationAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/ClientIndependencePreviewReactor.cs",
+        "sha256": "2900c9ec016a51effa1cd629fad4507ff3d14451c4c6c4706d66eb4c8cbf3ea8"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1763,
+      "exactRegistrationExpression": ".AddReactor<ClientIndependencePreviewReactor>(ClientIndependencePreviewReactor.WorkloadName,\n                WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T106"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "EngagementPersonalDecisionReactor",
+      "workloadNameExpression": "EngagementPersonalDecisionReactor.WorkloadName",
+      "workloadName": "EngagementPersonalDecisionV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "EngagementPersonalDecisionAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/EngagementPersonalDecisionReactor.cs",
+        "sha256": "5aa2a965c045f7ec32ec0ef7f5ef7d55d90154a986a5b647a8d21f9314900d21"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1766,
+      "exactRegistrationExpression": ".AddReactor<EngagementPersonalDecisionReactor>(EngagementPersonalDecisionReactor.WorkloadName,\n                WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T089",
+        "T090",
+        "T091",
+        "T092",
+        "T093",
+        "T094",
+        "T095",
+        "T096",
+        "T107",
+        "T108",
+        "T109",
+        "T110",
+        "T111",
+        "T112"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "EngagementAcceptanceReactor",
+      "workloadNameExpression": "EngagementAcceptanceReactor.WorkloadName",
+      "workloadName": "EngagementAcceptanceV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/EngagementAcceptanceReactor.cs",
+        "sha256": "26b9e23a4e6a68ad069ea74c91c3ea185dfe9951b8f3c464e996164270524e37"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1769,
+      "exactRegistrationExpression": ".AddReactor<EngagementAcceptanceReactor>(EngagementAcceptanceReactor.WorkloadName,\n                WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T004",
+        "T005",
+        "T006",
+        "T007",
+        "T082",
+        "T083",
+        "T084",
+        "T085",
+        "T089",
+        "T090",
+        "T091",
+        "T092",
+        "T093",
+        "T094",
+        "T095",
+        "T096"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "TypeIIRangeReactor",
+      "workloadNameExpression": "TypeIIRangeReactor.WorkloadName",
+      "workloadName": "TypeIIRangeV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TypeIIPeriodOpeningAccepted",
+        "TypeIIPeriodAmendmentAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Operations/TypeIIRangeReactor.cs",
+        "sha256": "cd953117aee41b18f48128f5f2a8ccb5b27f230320540c30084693417246aa50"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1772,
+      "exactRegistrationExpression": ".AddReactor<TypeIIRangeReactor>(TypeIIRangeReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T053",
+        "T054",
+        "T055"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "TypeIIRangeReleaseReactor",
+      "workloadNameExpression": "TypeIIRangeReleaseReactor.WorkloadName",
+      "workloadName": "TypeIIRangeReleaseV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TypeIIPeriodAmendmentCanceled",
+        "TypeIIPeriodOpeningRejected",
+        "ObservationPeriodCloseFrozen"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Operations/TypeIIRangeReleaseReactor.cs",
+        "sha256": "ce7d044d727d9e66c257d5a363c97797961d54e45f9fa9886727593e07609628"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1774,
+      "exactRegistrationExpression": ".AddReactor<TypeIIRangeReleaseReactor>(TypeIIRangeReleaseReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T055"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "ControlOccurrenceFanOutReactor",
+      "workloadNameExpression": "ControlOccurrenceFanOutReactor.WorkloadName",
+      "workloadName": "ControlOccurrenceFanOutV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "DueControlOccurrencesGenerated"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Operations/ControlOccurrenceFanOutReactor.cs",
+        "sha256": "48c19fc40d1e48c035049f3faf65a3cf0af190ad54ee01186cfe7bb97d9ce561"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1776,
+      "exactRegistrationExpression": ".AddReactor<ControlOccurrenceFanOutReactor>(ControlOccurrenceFanOutReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T040"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "ReadinessRunReactor",
+      "workloadNameExpression": "ReadinessRunReactor.WorkloadName",
+      "workloadName": "ReadinessRunV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ReadinessAssessmentRequested"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Readiness/ReadinessRunReactor.cs",
+        "sha256": "961f00ce463639fd45907ee337456fa2474f24073e0020b3bfeabd2c95ccab5c"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1778,
+      "exactRegistrationExpression": ".AddReactor<ReadinessRunReactor>(ReadinessRunReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T039",
+        "T087"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "ReadinessDecisionReactor",
+      "workloadNameExpression": "ReadinessDecisionReactor.WorkloadName",
+      "workloadName": "ReadinessDecisionV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ReadinessDecisionAccepted",
+        "TypeIEntryDecisionAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Readiness/ReadinessDecisionReactor.cs",
+        "sha256": "ff862288a1db1e182210985e865399d78dfa43b04ba182823b775bb7797ed8dc"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1780,
+      "exactRegistrationExpression": ".AddReactor<ReadinessDecisionReactor>(ReadinessDecisionReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T065",
+        "T066",
+        "T074",
+        "T075"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AccessReviewLaunchFanOutReactor",
+      "workloadNameExpression": "AccessReviewLaunchFanOutReactor.WorkloadName",
+      "workloadName": "AccessReviewLaunchFanOutV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AccessReviewCampaignLaunched"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessReviews/AccessReviewLaunchFanOutReactor.cs",
+        "sha256": "29b0b9b88f19566d5b0f0045db330ba300b7e5f908b3e05f6224ec42b19284d8"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1782,
+      "exactRegistrationExpression": ".AddReactor<AccessReviewLaunchFanOutReactor>(AccessReviewLaunchFanOutReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T008"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AccessReviewCompletionReactor",
+      "workloadNameExpression": "AccessReviewCompletionReactor.WorkloadName",
+      "workloadName": "AccessReviewCampaignCompletionV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AccessReviewCampaignCompletionAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessReviews/AccessReviewCompletionReactor.cs",
+        "sha256": "346cd77fe4749f869b98ecd04ae3c059da2981beb10727489c5df97c6ea29a5f"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1784,
+      "exactRegistrationExpression": ".AddReactor<AccessReviewCompletionReactor>(AccessReviewCompletionReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T059",
+        "T060",
+        "T073"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AccessReviewCompletionSettlementReactor",
+      "workloadNameExpression": "AccessReviewCompletionSettlementReactor.WorkloadName",
+      "workloadName": "AccessReviewCompletionSettlementV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AccessReviewCampaignCompletionCanceled"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessReviews/AccessReviewCompletionSettlementReactor.cs",
+        "sha256": "d8a5786dbe443d4092f743d5dd03cc61e34bd1e1d199ac68d350d8226c0126fc"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1786,
+      "exactRegistrationExpression": ".AddReactor<AccessReviewCompletionSettlementReactor>(AccessReviewCompletionSettlementReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T060"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AuditPackageBuildProcessReactor",
+      "workloadNameExpression": "AuditPackageBuildProcessReactor.WorkloadName",
+      "workloadName": "AuditPackageBuildProcessV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AuditPackageBuildRequested"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AuditPackages/AuditPackageBuildProcessReactor.cs",
+        "sha256": "138b495d27059e7259904898a3e3b84adb5bdbc5db0ea86ca8b1fc1f5ce0ae0d"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1788,
+      "exactRegistrationExpression": ".AddReactor<AuditPackageBuildProcessReactor>(AuditPackageBuildProcessReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T031",
+        "T032"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AuditPackageDeliveryAdmissionReactor",
+      "workloadNameExpression": "AuditPackageDeliveryAdmissionReactor.WorkloadName",
+      "workloadName": "AuditPackageDeliveryAdmissionV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AuditPackageDeliveryAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AuditPackages/AuditPackageDeliveryAdmissionReactor.cs",
+        "sha256": "6e70d64ce58375608e1f354d715cc770556ba13e021ace5e2542f58630ede4c1"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1790,
+      "exactRegistrationExpression": ".AddReactor<AuditPackageDeliveryAdmissionReactor>(AuditPackageDeliveryAdmissionReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T081"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "FindingClosureReactor",
+      "workloadNameExpression": "FindingClosureReactor.WorkloadName",
+      "workloadName": "FindingClosureV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "FindingClosureAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Remediation/FindingClosureReactor.cs",
+        "sha256": "ce1203e3b8a3b3c65618370f7ac021a3e4c67f63f733c1e11b5b23b36fa972aa"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1792,
+      "exactRegistrationExpression": ".AddReactor<FindingClosureReactor>(FindingClosureReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T037",
+        "T063",
+        "T064"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AuditorRequestResolutionReactor",
+      "workloadNameExpression": "AuditorRequestResolutionReactor.WorkloadName",
+      "workloadName": "AuditorRequestResolutionV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AuditorRequestResolutionAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AuditorRequests/AuditorRequestResolutionReactor.cs",
+        "sha256": "4e37e28fc94b8efdbb4ec29f5dee6e477f43ceb99a32bf1091f653f1d4ac976e"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1794,
+      "exactRegistrationExpression": ".AddReactor<AuditorRequestResolutionReactor>(AuditorRequestResolutionReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T035",
+        "T061",
+        "T062"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AuditorResponseMaterializationReactor",
+      "workloadNameExpression": "AuditorResponseMaterializationReactor.WorkloadName",
+      "workloadName": "AuditorResponseMaterializationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AuditorResponseAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AuditorRequests/AuditorResponseMaterializationReactor.cs",
+        "sha256": "c1f277de4484569b4bc40eca8de2f2d0295b8862e86bf498fa87720650071522"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1796,
+      "exactRegistrationExpression": ".AddReactor<AuditorResponseMaterializationReactor>(AuditorResponseMaterializationReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T033"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AuditorCommentMaterializationReactor",
+      "workloadNameExpression": "AuditorCommentMaterializationReactor.WorkloadName",
+      "workloadName": "AuditorCommentMaterializationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AuditorCommentAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AuditorRequests/AuditorCommentMaterializationReactor.cs",
+        "sha256": "d1056eff74ba8d10fa15b4209ca978aa1d16a80e9f277e7fa1c06a3d7e78df74"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1798,
+      "exactRegistrationExpression": ".AddReactor<AuditorCommentMaterializationReactor>(AuditorCommentMaterializationReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T034"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AuditorSampleSelectionMaterializationReactor",
+      "workloadNameExpression": "AuditorSampleSelectionMaterializationReactor.WorkloadName",
+      "workloadName": "AuditorSampleSelectionMaterializationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AuditorSampleSelectionAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AuditorRequests/AuditorSampleSelectionMaterializationReactor.cs",
+        "sha256": "beb3ede8a5bcd0d307992c647e4b1f38223a25ae88606d4e24d7f9b61222ce04"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1800,
+      "exactRegistrationExpression": ".AddReactor<AuditorSampleSelectionMaterializationReactor>(AuditorSampleSelectionMaterializationReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T105"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "CorrectiveActionMaterializationReactor",
+      "workloadNameExpression": "CorrectiveActionMaterializationReactor.WorkloadName",
+      "workloadName": "CorrectiveActionMaterializationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "CorrectiveActionAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Remediation/CorrectiveActionMaterializationReactor.cs",
+        "sha256": "7c7bb536a626aafdce06c16e8669961acb1ef9163663705b5d4dfb14546fcee0"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1802,
+      "exactRegistrationExpression": ".AddReactor<CorrectiveActionMaterializationReactor>(CorrectiveActionMaterializationReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T036"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "PolicyParticipantResultReactor",
+      "workloadNameExpression": "PolicyParticipantResultReactor.WorkloadName",
+      "workloadName": "PolicyParticipantResultV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "PolicyParticipantResultAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyParticipantResultReactor.cs",
+        "sha256": "0148215ca27c8e0da64dce1e0364d6005bb9ab9e2828cde3490a203682c9d158"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1804,
+      "exactRegistrationExpression": ".AddReactor<PolicyParticipantResultReactor>(PolicyParticipantResultReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T076"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "PolicyCampaignClosureReactor",
+      "workloadNameExpression": "PolicyCampaignClosureReactor.WorkloadName",
+      "workloadName": "PolicyCampaignClosureV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "PolicyCampaignClosureAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignClosureReactor.cs",
+        "sha256": "ee4f06ac9fba7d85f9706d9ffe99015780a065e6af3be878b19ecd142e4716c7"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1806,
+      "exactRegistrationExpression": ".AddReactor<PolicyCampaignClosureReactor>(PolicyCampaignClosureReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T038",
+        "T067",
+        "T068"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AccessReviewBulkAdmissionReactor",
+      "workloadNameExpression": "AccessReviewBulkAdmissionReactor.WorkloadName",
+      "workloadName": "AccessReviewDecisionBatchAdmissionV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AccessReviewDecisionBatchAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessReviews/AccessReviewBulkAdmissionReactor.cs",
+        "sha256": "c0f8cadbefa832b15905036305a045ad7175618c368f11111e97f405fb81c629"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1808,
+      "exactRegistrationExpression": ".AddReactor<AccessReviewBulkAdmissionReactor>(AccessReviewBulkAdmissionReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T009",
+        "T010",
+        "T011",
+        "T080",
+        "T086"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AccessReviewBulkCancellationReactor",
+      "workloadNameExpression": "AccessReviewBulkCancellationReactor.WorkloadName",
+      "workloadName": "AccessReviewBulkCancellationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AccessReviewDecisionBatchCancellationAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessReviews/AccessReviewBulkCancellationReactor.cs",
+        "sha256": "3609b6dbddf2d214d2c2ca1ce01b90869cb1d7c841ccef47cca378446452bcfc"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1810,
+      "exactRegistrationExpression": ".AddReactor<AccessReviewBulkCancellationReactor>(AccessReviewBulkCancellationReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T012"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AccessReviewBulkCancellationCompletionReactor",
+      "workloadNameExpression": "AccessReviewBulkCancellationCompletionReactor.WorkloadName",
+      "workloadName": "AccessReviewBulkCancellationCompletionV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AccessReviewDecisionBatchCancellationAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessReviews/AccessReviewBulkCancellationCompletionReactor.cs",
+        "sha256": "fbb563f9f57e9732075dfdad965d8bb07552113356c0f424c5ef2e4965b01383"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1812,
+      "exactRegistrationExpression": ".AddReactor<AccessReviewBulkCancellationCompletionReactor>(AccessReviewBulkCancellationCompletionReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T079"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AccessReviewBulkSettlementReactor",
+      "workloadNameExpression": "AccessReviewBulkSettlementReactor.WorkloadName",
+      "workloadName": "AccessReviewBulkSettlementV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AccessReviewDecisionBatchPublished",
+        "AccessReviewDecisionBatchCanceled"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessReviews/AccessReviewBulkSettlementReactor.cs",
+        "sha256": "111b6733a09078ce0204d184a997958527e3d703a8a0580653c62c84b3b64fa5"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1814,
+      "exactRegistrationExpression": ".AddReactor<AccessReviewBulkSettlementReactor>(AccessReviewBulkSettlementReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T080"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AdvisorFeedbackMaterializationReactor",
+      "workloadNameExpression": "AdvisorFeedbackMaterializationReactor.WorkloadName",
+      "workloadName": "AdvisorFeedbackMaterializationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AdvisorFeedbackAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorFeedbackMaterializationReactor.cs",
+        "sha256": "1288bcc314d5cfff892420679519c354e600b9e81898c72df26d0bd09af228c0"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1816,
+      "exactRegistrationExpression": ".AddReactor<AdvisorFeedbackMaterializationReactor>(AdvisorFeedbackMaterializationReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T013"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "FirmStaffStatusReevaluationReactor",
+      "workloadNameExpression": "FirmStaffStatusReevaluationReactor.WorkloadName",
+      "workloadName": "FirmStaffStatusReevaluationV1",
+      "scope": "Global",
+      "sourceEvents": [
+        "FirmStaffChangeRecorded"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/FirmStaffStatusReevaluationReactor.cs",
+        "sha256": "70f0313f728446ba739d8ea9f562c430af872e4f2592b319e36a62d7cc03b7a9"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1818,
+      "exactRegistrationExpression": ".AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S017"
+      ]
+    },
+    {
+      "type": "AcceptedStaffDirectoryReconciliationReactor",
+      "workloadNameExpression": "AcceptedStaffDirectoryReconciliationReactor.WorkloadName",
+      "workloadName": "AcceptedStaffDirectoryReconciliationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ServiceEngagementAcceptanceRecorded",
+        "ServiceEngagementStaffAssigned"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/AcceptedStaffDirectoryReconciliationReactor.cs",
+        "sha256": "08e8eb8c8bd92c93914d786d465b378b678b0799c6113982ed95efdbc5928b4e"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1820,
+      "exactRegistrationExpression": ".AddReactor<AcceptedStaffDirectoryReconciliationReactor>(AcceptedStaffDirectoryReconciliationReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S018"
+      ]
+    },
+    {
+      "type": "ImportSourceAdmissionReactor",
+      "workloadNameExpression": "ImportSourceAdmissionReactor.WorkloadName",
+      "workloadName": "ImportSourceAdmissionV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ApplicationImportPlanSealed"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Applications/ImportSourceAdmissionReactor.cs",
+        "sha256": "e983c9f2070008fb3c1257ab3181fe24574d23bd1c49d5bc298781db8f49b05c"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1822,
+      "exactRegistrationExpression": ".AddReactor<ImportSourceAdmissionReactor>(ImportSourceAdmissionReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T014",
+        "T015",
+        "T016",
+        "T017",
+        "T020",
+        "T021"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "ImportCancellationReactor",
+      "workloadNameExpression": "ImportCancellationReactor.WorkloadName",
+      "workloadName": "ImportCancellationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ApplicationImportCancellationAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Applications/ImportCancellationReactor.cs",
+        "sha256": "90434bc8bccb1c22711f56e23581fe1a8d4487e24944c7608a4776676c4bd7d0"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1824,
+      "exactRegistrationExpression": ".AddReactor<ImportCancellationReactor>(ImportCancellationReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T018",
+        "T019",
+        "T020",
+        "T021"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "TenantSlugReactor",
+      "workloadNameExpression": "\"TenantSlug\"",
+      "workloadName": "TenantSlug",
+      "scope": "Global",
+      "sourceEvents": [
+        "TenantSlugRegistered",
+        "TenantSlugRegistrationRejected",
+        "TenantSlugSurrendered",
+        "TenantSlugSurrenderRejected"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs",
+        "sha256": "ecb6c614e2855aeeae40af602f427aec4a48ee2d3f4d99ad608e949cb4bdeb93"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1826,
+      "exactRegistrationExpression": ".AddReactor<TenantSlugReactor>(\"TenantSlug\", WorkloadScope.Global)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S022",
+        "S023",
+        "S024",
+        "S025"
+      ]
+    },
+    {
+      "type": "RiskMethodReassessmentReactor",
+      "workloadNameExpression": "RiskMethodReassessmentReactor.WorkloadName",
+      "workloadName": "RiskMethodReassessmentV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "RiskMethodVersionPublished"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Risks/RiskMethodReassessmentReactor.cs",
+        "sha256": "bf866292161bd4515aa1b860547f97cbac811c1afb1c515e0d21478c668b2804"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1827,
+      "exactRegistrationExpression": ".AddReactor<RiskMethodReassessmentReactor>(RiskMethodReassessmentReactor.WorkloadName,\n                WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S036"
+      ]
+    },
+    {
+      "type": "BoundaryRiskReassessmentReactor",
+      "workloadNameExpression": "BoundaryRiskReassessmentReactor.WorkloadName",
+      "workloadName": "BoundaryRiskReassessmentV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "BoundaryApproved"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Risks/BoundaryRiskReassessmentReactor.cs",
+        "sha256": "fbfa782471738af612c21fe9cab4f34acc719311909f62c27839636aaf016940"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1830,
+      "exactRegistrationExpression": ".AddReactor<BoundaryRiskReassessmentReactor>(BoundaryRiskReassessmentReactor.WorkloadName,\n                WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S037"
+      ]
+    },
+    {
+      "type": "RiskActionCompletionReviewReactor",
+      "workloadNameExpression": "RiskActionCompletionReviewReactor.WorkloadName",
+      "workloadName": "RiskActionCompletionReviewV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "RiskTreatmentActionCompletionReviewAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Risks/RiskActionCompletionReviewReactor.cs",
+        "sha256": "7369dac83041fffb1315e529858cbe4aa801720d1d2c1ceb5fab91deffe8997c"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1833,
+      "exactRegistrationExpression": ".AddReactor<RiskActionCompletionReviewReactor>(RiskActionCompletionReviewReactor.WorkloadName,\n                WorkloadScope.PerTenant,\n                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })",
+      "selectedEdgeIds": [
+        "T071",
+        "T072",
+        "T078"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "TeamCleanupReactor",
+      "workloadNameExpression": "\"TeamCleanup\"",
+      "workloadName": "TeamCleanup",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TeamDeleted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/TeamCleanupReactor.cs",
+        "sha256": "54d93bbfeb20c563d4d06e6962aeb6c2ca203560887fd860b3b67c4197842528"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1836,
+      "exactRegistrationExpression": ".AddReactor<TeamCleanupReactor>(\"TeamCleanup\", WorkloadScope.PerTenant)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S010"
+      ]
+    },
+    {
+      "type": "ProviderChangeAcceptedReactor",
+      "workloadNameExpression": "\"ProviderChangeAcceptedV1\"",
+      "workloadName": "ProviderChangeAcceptedV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ProviderChangeAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Providers/ProviderChangeAcceptedReactor.cs",
+        "sha256": "2515aef759e511192f73eb2a0c71cc700e0f70a83f8f17926a346a8577d9df46"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1837,
+      "exactRegistrationExpression": ".AddReactor<ProviderChangeAcceptedReactor>(\"ProviderChangeAcceptedV1\", WorkloadScope.PerTenant,\n                options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T022",
+        "T023",
+        "T024"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "LocationChangeAcceptedReactor",
+      "workloadNameExpression": "\"LocationChangeAcceptedV1\"",
+      "workloadName": "LocationChangeAcceptedV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "LocationChangeAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/TechnologyInventory/LocationChangeAcceptedReactor.cs",
+        "sha256": "902d2f249d138d10f5e64fd26db30950dd7dbe5fd70bac001ab5cf808fef906d"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1839,
+      "exactRegistrationExpression": ".AddReactor<LocationChangeAcceptedReactor>(\"LocationChangeAcceptedV1\", WorkloadScope.PerTenant,\n                options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T025",
+        "T026",
+        "T027"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "OperationalProcessChangeAcceptedReactor",
+      "workloadNameExpression": "\"OperationalProcessChangeAcceptedV1\"",
+      "workloadName": "OperationalProcessChangeAcceptedV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "OperationalProcessChangeAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessChangeAcceptedReactor.cs",
+        "sha256": "daaecec56e8d263e0e7de28edf066e6734e6a1a70e86f94ab48ea7fab82681a9"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1841,
+      "exactRegistrationExpression": ".AddReactor<OperationalProcessChangeAcceptedReactor>(\"OperationalProcessChangeAcceptedV1\",\n                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T028",
+        "T029",
+        "T030"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "ProviderReviewReactor",
+      "workloadNameExpression": "ProviderReviewReactor.WorkloadName",
+      "workloadName": "ProviderReviewV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ProviderReviewRequested"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Providers/ProviderReviewReactor.cs",
+        "sha256": "ca27fa45f25d6512b9b737ebe0ab1284941bfc5c500254a572a2520ea4b3263d"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1843,
+      "exactRegistrationExpression": ".AddReactor<ProviderReviewReactor>(ProviderReviewReactor.WorkloadName, WorkloadScope.PerTenant,\n                options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T069",
+        "T070",
+        "T077"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "ProviderRiskAcceptanceLinkReactor",
+      "workloadNameExpression": "ProviderRiskAcceptanceLinkReactor.WorkloadName",
+      "workloadName": "ProviderRiskAcceptanceLinkV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ProviderCoverageGapRiskAcceptanceAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Providers/ProviderRiskAcceptanceLinkReactor.cs",
+        "sha256": "a150ad7aa12bb5553a531280061d36fb29410ee98f0750200b54b52c2d70be85"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1845,
+      "exactRegistrationExpression": ".AddReactor<ProviderRiskAcceptanceLinkReactor>(ProviderRiskAcceptanceLinkReactor.WorkloadName,\n                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T088"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AdministratorWithdrawalReactor",
+      "workloadNameExpression": "\"AdministratorWithdrawalV1\"",
+      "workloadName": "AdministratorWithdrawalV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TenantManagerWithdrawalAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/AdministratorWithdrawalReactor.cs",
+        "sha256": "2ea5a5547a0e1e50ce725767dd74a8df925691c42b48a8f98279dd1759039933"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1847,
+      "exactRegistrationExpression": ".AddReactor<AdministratorWithdrawalReactor>(\"AdministratorWithdrawalV1\", WorkloadScope.PerTenant,\n                options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T046",
+        "T050"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AdministratorAssignmentWithdrawalReactor",
+      "workloadNameExpression": "\"AdministratorAssignmentWithdrawalV1\"",
+      "workloadName": "AdministratorAssignmentWithdrawalV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TenantManagerWithdrawalAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/AdministratorAssignmentWithdrawalReactor.cs",
+        "sha256": "59407812ea0defc8eec14732c84139bda3fea260c8d410074026a2f132686159"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1849,
+      "exactRegistrationExpression": ".AddReactor<AdministratorAssignmentWithdrawalReactor>(\"AdministratorAssignmentWithdrawalV1\",\n                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T047",
+        "T050"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AdministratorRestorationReactor",
+      "workloadNameExpression": "\"AdministratorRestorationV1\"",
+      "workloadName": "AdministratorRestorationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TenantManagerRestorationAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/AdministratorRestorationReactor.cs",
+        "sha256": "6516ea804648a85e4bd846242e18247635c2ff23764782a1512096ebd981ef08"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1851,
+      "exactRegistrationExpression": ".AddReactor<AdministratorRestorationReactor>(\"AdministratorRestorationV1\", WorkloadScope.PerTenant,\n                options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T051",
+        "T052"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AdministratorAssignmentRestorationReactor",
+      "workloadNameExpression": "\"AdministratorAssignmentRestorationV1\"",
+      "workloadName": "AdministratorAssignmentRestorationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TenantManagerRestorationAccepted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/AdministratorAssignmentRestorationReactor.cs",
+        "sha256": "0be18fd6ff7b86bbd1e44d725b27f7531f9404702360a499a034fe26c96babf4"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1853,
+      "exactRegistrationExpression": ".AddReactor<AdministratorAssignmentRestorationReactor>(\"AdministratorAssignmentRestorationV1\",\n                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T052",
+        "T098"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AdministratorNeutralMemberMutationReactor",
+      "workloadNameExpression": "\"AdministratorNeutralMemberMutationV1\"",
+      "workloadName": "AdministratorNeutralMemberMutationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TenantManagerSourceMutationAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/AdministratorNeutralMemberMutationReactor.cs",
+        "sha256": "e14c8152265469e4c90089c0866127e7cdd3fe4a08f4174d6c36fb15de1a68c0"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1855,
+      "exactRegistrationExpression": ".AddReactor<AdministratorNeutralMemberMutationReactor>(\"AdministratorNeutralMemberMutationV1\",\n                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T048"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "AdministratorNeutralAssignmentMutationReactor",
+      "workloadNameExpression": "\"AdministratorNeutralAssignmentMutationV1\"",
+      "workloadName": "AdministratorNeutralAssignmentMutationV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TenantManagerSourceMutationAdmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/AdministratorNeutralAssignmentMutationReactor.cs",
+        "sha256": "65f8d06aafd061235ba9c22273fb818e91bc2fba6487249dbc00b5b93df22ad6"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1857,
+      "exactRegistrationExpression": ".AddReactor<AdministratorNeutralAssignmentMutationReactor>(\"AdministratorNeutralAssignmentMutationV1\",\n                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [
+        "T049"
+      ],
+      "supplementalEdgeIds": []
+    },
+    {
+      "type": "MemberRetirementReactor",
+      "workloadNameExpression": "\"MemberRetirementV1\"",
+      "workloadName": "MemberRetirementV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "MemberDeprovisioned"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/MemberRetirementReactor.cs",
+        "sha256": "e6e31259e46b14b43a4974f5d6f2c1a528c80b84d455559ad821c5cc940e6680"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1859,
+      "exactRegistrationExpression": ".AddReactor<MemberRetirementReactor>(\"MemberRetirementV1\", WorkloadScope.PerTenant,\n                options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S003",
+        "S004",
+        "S005"
+      ]
+    },
+    {
+      "type": "RetiredTeamAssignmentReactor",
+      "workloadNameExpression": "\"RetiredTeamAssignmentV1\"",
+      "workloadName": "RetiredTeamAssignmentV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "TeamMemberAssigned"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/RetiredTeamAssignmentReactor.cs",
+        "sha256": "303ea979b17fcb6089a6e98e16b8e7b580bb53627e263edf7149563e6bf450cf"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1861,
+      "exactRegistrationExpression": ".AddReactor<RetiredTeamAssignmentReactor>(\"RetiredTeamAssignmentV1\", WorkloadScope.PerTenant,\n                options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S007"
+      ]
+    },
+    {
+      "type": "RetiredMemberGrantReactor",
+      "workloadNameExpression": "\"RetiredMemberGrantV1\"",
+      "workloadName": "RetiredMemberGrantV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "AccessGrantIssued"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/RetiredMemberGrantReactor.cs",
+        "sha256": "fedc88c3261356f2831cab274b58465f1bffc9f58fcc607b188096e54346c2ae"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1863,
+      "exactRegistrationExpression": ".AddReactor<RetiredMemberGrantReactor>(\"RetiredMemberGrantV1\", WorkloadScope.PerTenant,\n                options => options.FailureAttemptLimit = int.MaxValue)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S006"
+      ]
+    },
+    {
+      "type": "RoleCleanupReactor",
+      "workloadNameExpression": "\"RoleCleanup\"",
+      "workloadName": "RoleCleanup",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "RoleDeleted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/RoleCleanupReactor.cs",
+        "sha256": "7d5920fa98741e0e4966f4742ad6ad040e89026ccddbbdd0ab0ce2f93d372b46"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1865,
+      "exactRegistrationExpression": ".AddReactor<RoleCleanupReactor>(\"RoleCleanup\", WorkloadScope.PerTenant)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S008",
+        "S009"
+      ]
+    },
+    {
+      "type": "ControlOccurrenceFindingReactor",
+      "workloadNameExpression": "ControlOccurrenceFindingReactor.WorkloadName",
+      "workloadName": "ControlOccurrenceFindingsV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ControlOccurrenceAttested",
+        "ControlOccurrenceReviewed"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Remediation/ControlOccurrenceFindingReactor.cs",
+        "sha256": "a287ba7cae4eb9b419255484d35a77d8b683d0ba1c6d736562ddad9cb6f25387"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1866,
+      "exactRegistrationExpression": ".AddReactor<ControlOccurrenceFindingReactor>(\n                ControlOccurrenceFindingReactor.WorkloadName, WorkloadScope.PerTenant)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S002"
+      ]
+    },
+    {
+      "type": "LinkImpactReviewWorkReactor",
+      "workloadNameExpression": "LinkImpactReviewWorkReactor.WorkloadName",
+      "workloadName": "SignificantChangeImpactWorkLinksV2",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "SignificantChangeImpactAssessed"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Changes/LinkImpactReviewWorkReactor.cs",
+        "sha256": "38933660120cf39e3a854d65f21829b2bdc35ffdadb5489986e7a43f52c8e82c"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1868,
+      "exactRegistrationExpression": ".AddReactor<LinkImpactReviewWorkReactor>(\n                LinkImpactReviewWorkReactor.WorkloadName, WorkloadScope.PerTenant)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S019"
+      ]
+    },
+    {
+      "type": "SystemDescriptionDecisionReactor",
+      "workloadNameExpression": "SystemDescriptionDecisionReactor.WorkloadName",
+      "workloadName": "SystemDescriptionImpactDecisionsV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "SystemDescriptionApproved",
+        "SystemDescriptionNoChangeRecorded"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs",
+        "sha256": "01d86289e70d3be0f7c0506fa70a9811abdaa4ffe7183497816e5b39a7d2c87b"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1870,
+      "exactRegistrationExpression": ".AddReactor<SystemDescriptionDecisionReactor>(\n                SystemDescriptionDecisionReactor.WorkloadName, WorkloadScope.PerTenant)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S020",
+        "S021"
+      ]
+    },
+    {
+      "type": "ControlEvaluationDeviationFindingReactor",
+      "workloadNameExpression": "ControlEvaluationDeviationFindingReactor.WorkloadName",
+      "workloadName": "ControlEvaluationDeviationFindingsV1",
+      "scope": "PerTenant",
+      "sourceEvents": [
+        "ControlEvaluationSubmitted"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Evaluations/ControlEvaluationDeviationFindingReactor.cs",
+        "sha256": "2fe5c10c6e1137e1641c773dbe71f835279a8ce962af37c6c648bc8dba1a9ed6"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1872,
+      "exactRegistrationExpression": ".AddReactor<ControlEvaluationDeviationFindingReactor>(\n                ControlEvaluationDeviationFindingReactor.WorkloadName, WorkloadScope.PerTenant)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S001"
+      ]
+    }
+  ],
+  "processDefinitionTypes": 28,
+  "registeredDefinitionTypes": [
+    "AuditPackageBuildProcess",
+    "AuditPackageDeliveryRecordingProcess",
+    "AdministratorTransitionProcess",
+    "IdentityRecoveryProcess",
+    "EmailChallengeDeliveryProcess",
+    "FirmStaffRegistrationProcess",
+    "ClientIndependencePreviewProcess",
+    "EngagementPersonalDecisionProcess",
+    "EngagementAcceptanceProcess",
+    "ProfessionalDutyChangeProcess",
+    "TypeIIRangeProcess",
+    "ControlOccurrenceFanOut",
+    "ReadinessRunProcess",
+    "ReadinessDecisionProcess",
+    "ApplicationImportExecutionProcess",
+    "AccessReviewLaunchFanOut",
+    "AccessReviewCompletionProcess",
+    "BulkAccessDecisionProcess",
+    "FindingClosureProcess",
+    "AuditorRequestResolutionProcess",
+    "PolicyCampaignClosureProcess",
+    "RiskActionCompletionReviewProcess",
+    "TenantInvitationDeliveryProcess",
+    "ProviderNameChangeProcess",
+    "LocationNameChangeProcess",
+    "OperationalProcessNameChangeProcess",
+    "ProviderReviewProcess",
+    "IndependentChildMaterializationProcess"
+  ],
+  "processAliases": {
+    "AccessReviewCampaignCompletionProcess": "AccessReviewCompletionProcess",
+    "IndependentChildMaterialization": "IndependentChildMaterializationProcess"
+  },
+  "processInfrastructure": {
+    "common": [
+      "ProcessRootReaction",
+      "ProcessCatalog",
+      "ProcessDriver",
+      "IProcessRecordStore/FitzKvProcessRecordStore",
+      "ProcessSweep"
+    ],
+    "processRootRule": "Persist exact process record and frozen complete targets before reactor checkpoint advance; thereafter driver and worker sweep recover independently.",
+    "driverRule": "Stable root/receiver/target/episode command identity; lease + record CAS; record actual produced source fact; transient retry, invalid-proof quarantine, explicit abort fences before settlement. A crash after append before CAS replays the same command.",
+    "workerRegistration": "Compliance.App Program.cs AddWorkers plus hosted ProcessSweep only in worker-running modes; API-only registration does not activate processing.",
+    "workerSource": [
+      {
+        "path": "src/Compliance.Core/Features/Processes/ProcessRootReaction.cs",
+        "sha256": "90619f9b06bc1a4cec7eeb8f7e241ff701c88b100265e83313682fcd047cf383"
+      },
+      {
+        "path": "src/Compliance.Core/Features/Processes/ProcessDriver.cs",
+        "sha256": "caf9efd04bfbe35fd179564ae092e3fcf12e84997911b77dbf8f6a1c28dfd6c3"
+      },
+      {
+        "path": "src/Compliance.Core/Features/Processes/ProcessSweep.cs",
+        "sha256": "195efcb4b2ba8187fa92994f7637214fc219753fa0fb7d11173ac2348228b6e1"
+      },
+      {
+        "path": "src/Compliance.Core/Features/Processes/ProcessCatalog.cs",
+        "sha256": "a486d675a44e96c54f20dc856ffb7603f355e833664b9ce0c3a9ca20a8bf28c1"
+      }
+    ]
+  },
+  "hostActivation": [
+    {
+      "host": "API/standalone when hostMode.RunsWorkers()",
+      "source": "src/Compliance.App/Program.cs",
+      "lines": [
+        414,
+        416,
+        418
+      ],
+      "effects": [
+        "portia.AddWorkers()",
+        "AddHostedService<ProcessSweep>()",
+        "AddHostedService<WorkDigestDispatchBackgroundService>()"
+      ]
+    },
+    {
+      "host": "worker-only app branch",
+      "source": "src/Compliance.App/Program.cs",
+      "lines": [
+        3158,
+        3160,
+        3162
+      ],
+      "effects": [
+        "AddCompliance(...).AddWorkers()",
+        "AddHostedService<ProcessSweep>()",
+        "AddHostedService<WorkDigestDispatchBackgroundService>()"
+      ]
+    }
+  ],
+  "otherTechnicalOrchestrations": [
+    {
+      "type": "SystemDescriptionExportProcess",
+      "registration": "Scoped technical process plus ISystemDescriptionExportProcesses singleton",
+      "entry": "GenerateSystemDescriptionExport handler, internal; no added public route/MCP and no ExportGenerated domain event",
+      "authority": "Freezes exact independently approved description version/content/source/approval into immutable intent; own technical CAS record and artifact output; accepted retry never reselects newer source.",
+      "recovery": "Completed original technical result replays; incomplete same accepted record resumes on invocation. Not a ProcessDefinition or ProcessSweep entry.",
+      "sources": [
+        {
+          "path": "src/Compliance.Core/Features/SystemDescription/SystemDescriptionExportProcess.cs",
+          "sha256": "9410003cd0475bab5a0012443bf0fa954c8685a0fa4d127de2515e01455139a3"
+        },
+        {
+          "path": "src/Compliance.Core/Features/SystemDescription/FitzKvSystemDescriptionExportProcesses.cs",
+          "sha256": "986fe0ca41a40edebe7f823a9be128047cde5bdb15e509b58f71e9402a372cb7"
+        }
+      ]
+    },
+    {
+      "type": "WorkDigestDispatchBackgroundService",
+      "entry": "Hosted only in worker-running modes and only when delivery settings ready",
+      "callPath": [
+        "WorkDigestDispatchSweep.RunOnceAsync",
+        "WorkDigestDispatchProcessor.ProcessMemberAsync",
+        "IAggregateExecutor<WorkDigestDispatch>",
+        "IWorkDigestDelivery.SendAsync"
+      ],
+      "authority": "Current tenant/member discovery, local-time due schedule, durable per-member/week dispatch state and exact attempt claim; external outcome recorded on actual WorkDigestDispatch owner. This is distinct from typed WeeklyWorkDigest Schedule/Deliver commands.",
+      "recovery": "Pending dispatch resumes before considering a new schedule; unknown transport remains unknown and is not automatically resent; source state and attempt OCC fence competing workers.",
+      "sources": [
+        {
+          "path": "src/Compliance.App/Hosting/WorkDigestDispatchBackgroundService.cs",
+          "sha256": "bb4b2d6a2e61df8aad0ff5dc9617b84779aae6cb4dcd0bfca7d2ceb746208051"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Work/WorkDigestDispatchSweep.cs",
+          "sha256": "300322e5e9956b3f74e96b665c536eb18b62140852c14b5bcde3fe13830fbb9e"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
+          "sha256": "3365a6b7fbcb21f4104372aab73df4304be934d1e3f59d538344e8ae14e7244f"
+        }
+      ]
+    },
+    {
+      "type": "ScheduleWeeklyWorkDigest",
+      "entry": "Registered named system scheduler command; no public HTTP/MCP or new scheduler worker selected",
+      "authority": "Required authoritative complete captured tenant/week/ScheduleKey plan, original page result and terminal actual scheduled proofs; current handler is only implementation evidence and fails qualified old-API regressions.",
+      "acceptedFutureRequirements": "Technical complete authoritative tenant/week/ScheduleKey capture and per-page original-result/effect journal; IAuthoritativeSnapshotReader mandatory; canonical full member/recipient discovery, complete frozen preexisting business headers, cursor/limit binding, pending resume and actual scheduled source proof before page completion. Keep current named-worker auth and original business source.",
+      "status": "SELECTED_TECHNICAL_CAPTURE_ROLE_UNIMPLEMENTED",
+      "sources": [
+        {
+          "path": "src/Compliance.Core/Features/Work/ScheduleWeeklyWorkDigestHandler.cs",
+          "sha256": "b57131cbba30bea81dafc45fd2d64a22270de3511b86916e46e17dbe40a9397b"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs",
+          "sha256": "7ce69d377d9d13101810009d2139cf89bed1e0df6edc806ec05e60c3362dfdf4"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Work/WeeklyDigestSources.cs",
+          "sha256": "97a1b4a2e9a9bc23bb6040fd0f63a458d26770bd9ef0d77781bde4aa6d0703cf"
+        }
+      ],
+      "savedArtifact": "/tmp/compliance-weekly-schedule-native-prepared/design-outline.md"
+    }
+  ],
+  "sourceManifest": [
+    {
+      "path": "src/Compliance.App/Program.cs",
+      "sha256": "5e826d1493194f762d495241cf1d6c22a54f5fd87306631d136a544f9f3ebca2"
+    },
+    {
+      "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+      "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "decisionBasis": {
+    "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+    "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+    "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+    "decisionIds": [
+      "ARTIFACT_DOWNLOAD",
+      "PROOF_CARRIERS",
+      "EFFECT_IDENTITIES"
+    ],
+    "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+  },
+  "implementationStatus": "Exact current registrations are evidence, not conformance qualification; planned rows are absent.",
+  "selectedCounts": {
+    "existingRegisteredReactors": 65,
+    "plannedAdditionalArtifactRootStarters": 1,
+    "selectedTotalPhysicalRootReactorsAfterImplementation": 66,
+    "existingRegisteredProcessDefinitions": 28,
+    "plannedAdditionalArtifactDefinitions": 1,
+    "selectedTotalProcessDefinitionsAfterImplementation": 29,
+    "additionalProcessDriverTypes": 0,
+    "additionalHostedWorkerTypes": 0
+  },
+  "plannedArtifactRootStarter": {
+    "role": "one committed EvidenceArtifactDownloadRequested@v1 root subscriber",
+    "plannedTypeName": "ArtifactDownloadRequestedReactor",
+    "plannedWorkloadName": "ArtifactDownloadRequestedV1",
+    "scope": "WorkloadScope.PerTenant",
+    "existingRegistration": false,
+    "eventPattern": "exact tenant EvidenceArtifact area",
+    "authority": "Verify actual Requested root/local availability reservation and complete immutable scope; persist exact ArtifactDownloadProcess record with full frozen canonical targets before advancing checkpoint.",
+    "processDefinition": "ArtifactDownloadProcess",
+    "recovery": "Existing ProcessRootReaction + ProcessDriver + IProcessRecordStore and worker ProcessSweep; no per-stage subscriber classes.",
+    "implementationStatus": "UNIMPLEMENTED_REQUIRED_TARGET",
+    "identityCompatibility": "New unoccupied versioned workload; every existing checkpoint/workload identity remains unchanged."
+  },
+  "plannedArtifactProcess": {
+    "definition": "ArtifactDownloadProcess",
+    "rootSourceEvents": [
+      "EvidenceArtifactDownloadRequested"
+    ],
+    "ordered": true,
+    "stages": [
+      {
+        "stage": "acquire",
+        "receivers": [
+          "AuthorizeAdvisorArtifactDownloadUse",
+          "AuthorizeArtifactHandlingDownloadUse"
+        ],
+        "rule": "Acquire exactly complete foreign uses; handoff receiver skipped only when root selected no consultant/handoff scope. No separate availability acquire command: local Requested admission already owns it."
+      },
+      {
+        "stage": "issue",
+        "receivers": [
+          "IssueProtectedArtifactDownloadGrant"
+        ],
+        "requiredActualTypedProofs": [
+          "EvidenceArtifactDownloadRequested@v1 on exact artifact proving local available-content reservation",
+          "AdvisorArtifactDownloadUseAuthorized for exact selected handoff, iff required",
+          "ArtifactHandlingDownloadUseAuthorized for exact selected explicit/default immutable policy"
+        ],
+        "rule": "Verify complete exact proof set and original personal root; freeze server issue DecisionAt/IssuedAt and check every temporal assertion/waiver interval then. Request AcceptedAt never authorizes delayed issuance after expiry."
+      },
+      {
+        "stage": "settle",
+        "receivers": [
+          "SettleAdvisorArtifactDownloadUse",
+          "SettleArtifactHandlingDownloadUse",
+          "SettleArtifactDownloadAvailabilityUse"
+        ],
+        "requiredActualTypedProofs": [
+          "EvidenceArtifactDownloadIssued@v2 on exact receiving grant OR ArtifactDownloadGrantCanceled on exact receiving grant"
+        ],
+        "rule": "Actual published terminal fact proves exact disposition/key/generation. Settlement fences held and not-yet-held keys as selected; no inferred absence/release."
+      }
+    ],
+    "abort": [
+      "CancelProtectedArtifactDownloadGrant"
+    ],
+    "localAvailabilityStage": "No extra acquire command/event; Requested atomically installs the actual local reservation. No proof of future preappend Requested.",
+    "receiverEffectIdentity": {
+      "version": "effect-identity-v2",
+      "namespace": "actual committed EvidenceArtifactDownloadRequested.Metadata.EventId",
+      "fieldsInOrder": [
+        "effectKind (canonical receiver command kind)",
+        "canonical target EventStreamAddress",
+        "episode (exact selected value, initial when absent)"
+      ],
+      "bytes": "UTF8(effect-identity:v2) followed by each field UTF8 bytes prefixed by its unsigned32-bit big-endian byte length; UUIDv5 over these exact name bytes and the actual source EventId namespace.",
+      "rule": "Use only for this new unoccupied process identity domain; occupied v1 algorithms/target-key selections remain unchanged. Implementation must provide fixed byte/UUID vectors before activation."
+    },
+    "implementationStatus": "UNIMPLEMENTED_REQUIRED_TARGET; definition/receivers/owner/content/DI/JSON/wire implementation required"
+  },
+  "plannedAdditionalRegistration": {
+    "status": "SELECTED_UNIMPLEMENTED",
+    "process": "ArtifactDownloadProcess",
+    "rootEvent": "EvidenceArtifactDownloadRequested@v1",
+    "rootType": "ArtifactDownloadRequestedReactor",
+    "workloadName": "ArtifactDownloadRequestedV1",
+    "noPerStageClassExpansion": true,
+    "decisionId": "ARTIFACT_DOWNLOAD"
+  }
+}

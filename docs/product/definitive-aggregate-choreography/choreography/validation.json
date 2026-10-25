@@ -1,0 +1,19 @@
+{
+  "status": "STATIC_SELECTED_TARGET_VALIDATED_NO_RUNTIME_CLAIM",
+  "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+  "adoptedDecisionSha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+  "all12DecisionsAdopted": true,
+  "architectureRows": 185,
+  "uniqueArchitectureIds": 185,
+  "existingPhysicalReactors": 65,
+  "plannedAdditionalArtifactRootStarters": 1,
+  "existingProcessDefinitions": 28,
+  "plannedAdditionalArtifactDefinitions": 1,
+  "pendingOwnerOrProtocolDecisions": [],
+  "frozenPredecessorManifestFilesVerified": 14,
+  "frozenPredecessorFileChanges": [],
+  "applicationWrites": 0,
+  "toolingCodeWrites": 0,
+  "pendingWrites": [],
+  "runtimeTests": "not run; implementation halted"
+}

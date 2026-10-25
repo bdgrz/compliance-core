@@ -1,0 +1,2923 @@
+{
+  "status": "FINAL_SELECTED_CANONICAL_ALIAS_RECONCILIATION",
+  "aliases": [
+    {
+      "name": "AccessCampaignParticipant",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "AccessReviewItem"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/4/targetOwners/1",
+          "line": 484,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/1",
+          "selection": "AccessReviewItem",
+          "evidence": "One frozen campaign item owns its reviewer decision, reassignment, remediation verification, exception and history, keyed by campaign+item."
+        }
+      ]
+    },
+    {
+      "name": "AccessExpectationException",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "AccessExpectation"
+      ],
+      "reason": "Selected final AccessExpectationExceptionRecorded is owned by AccessExpectation; missing-population exceptions remain a distinct AccessPopulationException owner.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/73",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "AccessReviewSystemLedger",
+          "action": "split_independent_records",
+          "mechanism": "Expectation lineage per expectation ID; individual immutable exception decisions. Preserve exact predecessor/supersession and system overlap through narrow reservation guard rather than retaining all histories."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/5/targetOwners/0",
+          "line": 593,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "AccessExpectationScopeGuard",
+      "status": "SELECTED_EXPLICIT_NEW_OVERRIDE_ABSORBED",
+      "canonicalOwners": [
+        "AccessExpectation"
+      ],
+      "reason": "Required exclusion is predecessor/successor competition within the same expectation lineage. Different lines may coexist, including different policies on one system. Explicitly supersede the older unspecified cross-line governor; adding a future cross-line ban is a separately reviewed product/design change with a precise predicate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/73",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "AccessReviewSystemLedger",
+          "action": "split_independent_records",
+          "mechanism": "Expectation lineage per expectation ID; individual immutable exception decisions. Preserve exact predecessor/supersession and system overlap through narrow reservation guard rather than retaining all histories."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/5/targetOwners/0",
+          "line": 593,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+          "jsonPointer": "/decisions/3",
+          "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+          "decisionId": "OWNER_AccessExpectationScopeGuard",
+          "choice": "line_authority_explicit_scope_override",
+          "rationale": "Required exclusion is predecessor/successor competition within the same expectation lineage. Different lines may coexist, including different policies on one system. Explicitly supersede the older unspecified cross-line governor; adding a future cross-line ban is a separately reviewed product/design change with a precise predicate.",
+          "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+        }
+      ],
+      "supersedesEarlierLockedProposal": true
+    },
+    {
+      "name": "AccessReviewDecision",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "AccessReviewItem"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/4/targetOwners/1",
+          "line": 484,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/1",
+          "selection": "AccessReviewItem",
+          "evidence": "One frozen campaign item owns its reviewer decision, reassignment, remediation verification, exception and history, keyed by campaign+item."
+        }
+      ]
+    },
+    {
+      "name": "AccessReviewSystemLedger",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "AccessExpectation",
+        "AccessPopulationException"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/73",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "AccessReviewSystemLedger",
+          "action": "split_independent_records",
+          "mechanism": "Expectation lineage per expectation ID; individual immutable exception decisions. Preserve exact predecessor/supersession and system overlap through narrow reservation guard rather than retaining all histories."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/5"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "AccessExpectation",
+        "AccessPopulationException"
+      ]
+    },
+    {
+      "name": "AdvisorFeedback",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "AdvisorFeedbackThread"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/74",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "AdvisorHandoff",
+          "action": "strip_history_preserve_revocation_gate",
+          "mechanism": "Handoff retains access/admission generation and selected immutable source selection; independent feedback thread current state. Every append needs source-bound admission generation; close/revoke fence must prevent later admission. Historical responses/corrections fold."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/6/targetOwners/1",
+          "line": 714,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/6",
+          "selection": "AdvisorFeedbackThread",
+          "evidence": "A handoff keeps selection/readiness/revocation admission authority; each feedback contribution plus corrections/responses is independently owned."
+        }
+      ]
+    },
+    {
+      "name": "ApplicationImportCoordinator",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ApplicationImportSource"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/7/targetOwners/0",
+          "line": 820,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/0",
+          "selection": "ApplicationImportSource",
+          "evidence": "Owns tenant+normalized source key+namespace uniqueness, one accepted batch in progress and one complete publication gate. It is a business admission owner; batch execution belongs to ImportBatch."
+        }
+      ]
+    },
+    {
+      "name": "ApplicationImportExecution",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ApplicationImportBatch"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/88",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ApplicationImportLedger",
+          "action": "split_with_source_commit_authority",
+          "mechanism": "Batch owns frozen plan/execution progress/failure/cancel; per-source-record claim owns stable mapping. Source guard retains one accepting batch/current committed generation. Frozen plan/effect chunks plus terminal commit gate preserve atomic result visibility. Migrate cancellation consistently from both old addresses."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/7/targetOwners/1",
+          "line": 832,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "ApplicationImportLedger",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "ApplicationImportSource",
+        "ApplicationImportBatch"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/88",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ApplicationImportLedger",
+          "action": "split_with_source_commit_authority",
+          "mechanism": "Batch owns frozen plan/execution progress/failure/cancel; per-source-record claim owns stable mapping. Source guard retains one accepting batch/current committed generation. Frozen plan/effect chunks plus terminal commit gate preserve atomic result visibility. Migrate cancellation consistently from both old addresses."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/7"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "ApplicationImportSource",
+        "ApplicationImportBatch"
+      ]
+    },
+    {
+      "name": "ApplicationImportPlan",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ApplicationImportBatch"
+      ],
+      "reason": "Selected import-batch naming explicitly chooses the complete ApplicationImportBatch lifecycle over its worker-phase or frozen-plan alternatives.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/3",
+          "selection": "ApplicationImportBatch",
+          "evidence": "One frozen source batch owns rows, revisions, execution/recovery and terminal outcome; a separate ApplicationImportSource owner enforces uniqueness/publication."
+        }
+      ]
+    },
+    {
+      "name": "ApplicationImportSourceGuard",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ApplicationImportSource"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/88",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ApplicationImportLedger",
+          "action": "split_with_source_commit_authority",
+          "mechanism": "Batch owns frozen plan/execution progress/failure/cancel; per-source-record claim owns stable mapping. Source guard retains one accepting batch/current committed generation. Frozen plan/effect chunks plus terminal commit gate preserve atomic result visibility. Migrate cancellation consistently from both old addresses."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/7/targetOwners/0",
+          "line": 820,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "ApplicationSourceClaim",
+      "status": "SELECTED_EXPLICIT_NEW_OVERRIDE_ABSORBED",
+      "canonicalOwners": [
+        "ApplicationImportSource"
+      ],
+      "reason": "Source-wide exact revision/generation and published-batch ordering already own mutable replace/remove mappings. Explicitly absorb the earlier per-record-root role into ApplicationImportSource; preserve full verified mapping authority, immutable plans and publication gates.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/88",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ApplicationImportLedger",
+          "action": "split_with_source_commit_authority",
+          "mechanism": "Batch owns frozen plan/execution progress/failure/cancel; per-source-record claim owns stable mapping. Source guard retains one accepting batch/current committed generation. Frozen plan/effect chunks plus terminal commit gate preserve atomic result visibility. Migrate cancellation consistently from both old addresses."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+          "jsonPointer": "/decisions/0",
+          "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+          "decisionId": "OWNER_ApplicationSourceClaim",
+          "choice": "absorb_in_source_authority",
+          "rationale": "Source-wide exact revision/generation and published-batch ordering already own mutable replace/remove mappings. Explicitly absorb the earlier per-record-root role into ApplicationImportSource; preserve full verified mapping authority, immutable plans and publication gates.",
+          "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+        }
+      ],
+      "supersedesEarlierLockedProposal": true
+    },
+    {
+      "name": "ArtifactRetention",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ArtifactRetentionBasis"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/90",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ArtifactRetention",
+          "action": "split_holds_preserve_disposition_gate",
+          "mechanism": "Source retention root retains basis and active-hold gate/counter/generation plus at most one pending hold transition; each hold identity owns placed/released state. Receipt protocol must update count exactly once and prevent disposition while pending. Historical releases fold."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/23/targetOwners/0",
+          "line": 2460,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/23"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "ArtifactRetentionBasis",
+        "ArtifactLegalHold"
+      ]
+    },
+    {
+      "name": "AssuranceReport",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ProviderAssuranceReport"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/98",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ProviderAssuranceRegister",
+          "action": "split_independent_records",
+          "mechanism": "Report current revision per report, immutable due-diligence review per review ID, coverage gap current state per gap. Exact provider/report/evidence/acceptance references; summaries project. Provider-level count caps are not tenant bounds."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/19/targetOwners/0",
+          "line": 2025,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "AuditPackage",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "AuditPackageManifest"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/75",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "AuditPackage",
+          "action": "split_immutable_version_and_current_execution",
+          "mechanism": "Package header/current amendment ref; immutable selection/manifest chunks per version; one current build/effect identity per attempt/job, exact disclosure/delivery identity. Validation/override history belongs to exact version/validation identity; terminal commit gate binds full frozen manifest."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/9/targetOwners/0",
+          "line": 1073,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/9"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "AuditPackageManifest",
+        "AuditPackageBuildProcess",
+        "AuditPackageDelivery"
+      ]
+    },
+    {
+      "name": "AuditPackageBuild",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "AuditPackageBuildProcess"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/75",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "AuditPackage",
+          "action": "split_immutable_version_and_current_execution",
+          "mechanism": "Package header/current amendment ref; immutable selection/manifest chunks per version; one current build/effect identity per attempt/job, exact disclosure/delivery identity. Validation/override history belongs to exact version/validation identity; terminal commit gate binds full frozen manifest."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/9/targetOwners/1",
+          "line": 1100,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/5",
+          "selection": "AuditPackageBuildProcess",
+          "evidence": "Technical build attempts, validation results and archive evidence are independent from business manifest approval and recipient delivery."
+        }
+      ]
+    },
+    {
+      "name": "AuditPackageRecipient",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "AuditPackageDelivery"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/9/targetOwners/2",
+          "line": 1112,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/4",
+          "selection": "AuditPackageDelivery",
+          "evidence": "One business delivery is keyed by package, manifest version and recipient; its authorization binds exact archive, validation and recipient approval."
+        }
+      ]
+    },
+    {
+      "name": "AuditPackageVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "AuditPackageManifest"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/75",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "AuditPackage",
+          "action": "split_immutable_version_and_current_execution",
+          "mechanism": "Package header/current amendment ref; immutable selection/manifest chunks per version; one current build/effect identity per attempt/job, exact disclosure/delivery identity. Validation/override history belongs to exact version/validation identity; terminal commit gate binds full frozen manifest."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/9/targetOwners/0",
+          "line": 1073,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "AuditPopulationRowDecision",
+      "status": "SELECTED_EXPLICIT_NEW_OVERRIDE_ABSORBED",
+      "canonicalOwners": [
+        "AuditPopulation"
+      ],
+      "reason": "Classification, reconciliation invalidation, complete-source proof and freeze seal are one conflict set on AuditPopulation. Immutable row/version bodies are values, not separate owners. Explicitly supersede the earlier row-root proposal; remove lifetime history coupling without splitting the seal.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/76",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "AuditPopulation",
+          "action": "split_snapshot_and_row_decisions",
+          "mechanism": "Definition header/current revision; immutable chunked source/row snapshot per version; independent row classification/reconciliation decisions. Freeze commits exact manifest after completeness proof. Historical exports/amendments fold."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/13",
+          "line": 9107,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        },
+        {
+          "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+          "jsonPointer": "/decisions/2",
+          "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+          "decisionId": "OWNER_AuditPopulationRowDecision",
+          "choice": "parent_owns_current_reconciliation",
+          "rationale": "Classification, reconciliation invalidation, complete-source proof and freeze seal are one conflict set on AuditPopulation. Immutable row/version bodies are values, not separate owners. Explicitly supersede the earlier row-root proposal; remove lifetime history coupling without splitting the seal.",
+          "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+        }
+      ],
+      "supersedesEarlierLockedProposal": true
+    },
+    {
+      "name": "AuditPopulationVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "AuditPopulation"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/76",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "AuditPopulation",
+          "action": "split_snapshot_and_row_decisions",
+          "mechanism": "Definition header/current revision; immutable chunked source/row snapshot per version; independent row classification/reconciliation decisions. Freeze commits exact manifest after completeness proof. Historical exports/amendments fold."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/13",
+          "line": 9107,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "AuditTestException",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "AuditObservation"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/10",
+          "line": 7406,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        },
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/finalVocabularyJevResponse/answers/auditor_owner_name",
+          "selection": "AuditObservation"
+        }
+      ]
+    },
+    {
+      "name": "CampaignParticipant",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "PolicyCampaignParticipant"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/81",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "PolicyDistributionCampaign",
+          "action": "split_with_reconciliation_gate",
+          "mechanism": "Header binds exact material/frozen audience snapshot and current reconciliation/close gate; participant owns delivery/acknowledgement/completion/exception. Snapshot reconciliation chunks plus source-bound terminal gate preserve membership and close semantics."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/17/targetOwners/1",
+          "line": 1880,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "CampaignReconciliation",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "PolicyDistributionCampaign"
+      ],
+      "reason": "Current reconciliation/close business gate remains on campaign; frozen selection/cursors and child effects are technical continuation/proofs.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/81",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "PolicyDistributionCampaign",
+          "action": "split_with_reconciliation_gate",
+          "mechanism": "Header binds exact material/frozen audience snapshot and current reconciliation/close gate; participant owns delivery/acknowledgement/completion/exception. Snapshot reconciliation chunks plus source-bound terminal gate preserve membership and close semantics."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/17/targetOwners/0",
+          "line": 1857,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "CommitmentVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "CommitmentDraft"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/54",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "CommitmentDraft",
+          "action": "strip_versions_and_decisions",
+          "mechanism": "Retain current draft/review/current approved version and finite current responsibility slots. Exact historical immutable versions, effective-date lookups and decisions use folds/version roots. Never retain every responsibility decision."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/17",
+          "line": 13194,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "ComplianceIncidentVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "ComplianceIncident"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/55",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ComplianceIncident",
+          "action": "strip_version_and_assessment_history",
+          "mechanism": "Keep current incident version/current impact/description decision/resolution; immutable former content and assessments fold. Resolve only against authoritative exact follow-up completion proof."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/18",
+          "line": 14573,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "ControlCriterionMappingLedger",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "ControlCriterionMapping"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/56",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ControlCriterionMappingLedger",
+          "action": "split_deterministic_identity",
+          "mechanism": "Deterministic identity tenant+program+control+edition+criterion. Current proposed/reviewed/retired version only; all older versions/decisions folded. Uniqueness follows identity."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/11"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "ControlCriterionMapping"
+      ]
+    },
+    {
+      "name": "ControlDueWorkItem",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ControlOccurrence"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/16/targetOwners/1",
+          "line": 1765,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/2",
+          "selection": "ControlOccurrence",
+          "evidence": "One control performance window has one deterministic identity across all generators and carries plan-bound attestation/review facts. Existing domain vocabulary includes ControlOccurrenceAttested and ControlOccurrenceReviewed."
+        }
+      ]
+    },
+    {
+      "name": "ControlEvaluationLedger",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "ControlEvaluation"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/58",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ControlEvaluationLedger",
+          "action": "split_independent_records",
+          "mechanism": "One evaluation ID owns frozen procedure/control references, current round/steps/deviation status. Fold old rounds/reviews; independent deviation action identities if action population cannot be bounded by fixed procedure."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/14"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "ControlEvaluation"
+      ]
+    },
+    {
+      "name": "ControlEvaluationPlanVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "ControlEvaluationPlan"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/59",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ControlEvaluationPlan",
+          "action": "strip_versions_same_identity",
+          "mechanism": "Plan header keeps latest immutable procedure version reference; store each exact procedure version once; historical version lookup uses authoritative fold/version root."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/23",
+          "line": 19358,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "ControlOperationsLedger",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "ControlOperatingPlan",
+        "ControlOccurrence"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/60",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ControlOperationsLedger",
+          "action": "split_with_reassignment_gate",
+          "mechanism": "One control plan current/pending authority and one occurrence current attestation/review round. Versioned approval binds immutable reassignment selection and completion gate; preserve existing atomic owner change or explicitly approve async contract before split."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/16"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "ControlOperatingPlan",
+        "ControlOccurrence"
+      ]
+    },
+    {
+      "name": "ControlPerformanceOccurrence",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ControlOccurrence"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/16/targetOwners/1",
+          "line": 1765,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/2",
+          "selection": "ControlOccurrence",
+          "evidence": "One control performance window has one deterministic identity across all generators and carries plan-bound attestation/review facts. Existing domain vocabulary includes ControlOccurrenceAttested and ControlOccurrenceReviewed."
+        }
+      ]
+    },
+    {
+      "name": "ControlPlanReassignment",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "ControlOperatingPlan",
+        "ControlOccurrence"
+      ],
+      "reason": "Selected plan approval/reassignment protocol is a parent gate and exact occurrence effects; frozen manifest/progress is not an additional business root.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/60",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ControlOperationsLedger",
+          "action": "split_with_reassignment_gate",
+          "mechanism": "One control plan current/pending authority and one occurrence current attestation/review round. Versioned approval binds immutable reassignment selection and completion gate; preserve existing atomic owner change or explicitly approve async contract before split."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/16/targetOwners/0",
+          "line": 1749,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/16/targetOwners/1",
+          "line": 1765,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "ControlVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "ControlDraft"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/57",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ControlDraft",
+          "action": "strip_versions_and_decisions",
+          "mechanism": "Current draft, accepted review, current approved version/retirement and finite current responsibility/person-owner slots remain atomic. Immutable approved versions/effective intervals/historical decisions move to exact source fold/version roots."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/21",
+          "line": 16334,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "CriteriaTextOverlayEntry",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "CriteriaTextOverlay"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/10",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "CriteriaTextOverlayLedger",
+          "action": "split_deterministic_identity",
+          "mechanism": "Identity tenant+edition+criterion identifier; current text/license revision and selected request receipt only. Edition-wide catalog and history project/fold; do not rely on assumption identifiers are finite without validating against catalog."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/13/targetOwners/0",
+          "line": 1535,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "CriteriaTextOverlayLedger",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "CriteriaTextOverlay"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/10",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "CriteriaTextOverlayLedger",
+          "action": "split_deterministic_identity",
+          "mechanism": "Identity tenant+edition+criterion identifier; current text/license revision and selected request receipt only. Edition-wide catalog and history project/fold; do not rely on assumption identifiers are finite without validating against catalog."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/13"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "CriteriaTextOverlay"
+      ]
+    },
+    {
+      "name": "CriterionApplicabilityLedger",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "CriterionApplicability"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/61",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "CriterionApplicabilityLedger",
+          "action": "split_deterministic_identity",
+          "mechanism": "Deterministic identity tenant+program+edition+criterion; current proposal/decision/withdrawal only. Preserve exact review and coverage rules."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/12"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "CriterionApplicability"
+      ]
+    },
+    {
+      "name": "DueControlWorkItem",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ControlOccurrence"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/16/targetOwners/1",
+          "line": 1765,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "EvidenceRequestLedger",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "EvidenceRequest"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/62",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "EvidenceRequestLedger",
+          "action": "split_independent_records",
+          "mechanism": "One request ID owns current terms/assignee/due/fulfillment/cancel state. Historical support assertions and former terms fold outside; exact immutable support identities referenced."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/15"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "EvidenceRequest"
+      ]
+    },
+    {
+      "name": "ExaminationBaseline",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "ExaminationEngagement"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/78",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ExaminationEngagement",
+          "action": "strip_baseline_history",
+          "mechanism": "Engagement current terms/current baseline reference and amendment gate; one immutable baseline snapshot identity per freeze/amendment. Historical baselines fold; source selections chunk with digest and explicit lineage."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/36",
+          "line": 26584,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "FirmProfessionalDutyCatalog",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "FirmProfessionalDutyDesignation",
+        "ProfessionalAssertionIdentityClaim"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/92",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "FirmProfessionalDutyCatalog",
+          "action": "split_preserve_authority_uniqueness",
+          "mechanism": "One designation current signed assertion/continuity revision; scope key user+duty+tenant owns active designation uniqueness. Assertion-ID replay protection uses deterministic assertion identity or selected source receipt; no global seen assertion set/history."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/0"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "FirmProfessionalDutyDesignation",
+        "ProfessionalAssertionIdentityClaim"
+      ]
+    },
+    {
+      "name": "FirmProfessionalDutyScopeGuard",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "FirmProfessionalDutyDesignation"
+      ],
+      "reason": "Final exact canonical-user+duty+nullable-tenant-scope designation identity itself owns active tuple uniqueness; signed assertion reuse is ProfessionalAssertionIdentityClaim.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/92",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "FirmProfessionalDutyCatalog",
+          "action": "split_preserve_authority_uniqueness",
+          "mechanism": "One designation current signed assertion/continuity revision; scope key user+duty+tenant owns active designation uniqueness. Assertion-ID replay protection uses deterministic assertion identity or selected source receipt; no global seen assertion set/history."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/0/targetOwners/0",
+          "line": 23,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "FirmStaffDirectory",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "FirmStaffRecord",
+        "FirmStaffIdentityClaim"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/93",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "FirmStaffDirectory",
+          "action": "split_preserve_canonical_user_uniqueness",
+          "mechanism": "One immutable canonical staff identity/practice and current active revision per staff. Global user-key reservation prevents duplicate canonical user; directory sequence/staff lists move to authoritative versioned source index/fold. Selected-request receipts replace unbounded decisions."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/1"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "FirmStaffRecord",
+        "FirmStaffIdentityClaim"
+      ]
+    },
+    {
+      "name": "FirmStaffMember",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "FirmStaffRecord"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/93",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "FirmStaffDirectory",
+          "action": "split_preserve_canonical_user_uniqueness",
+          "mechanism": "One immutable canonical staff identity/practice and current active revision per staff. Global user-key reservation prevents duplicate canonical user; directory sequence/staff lists move to authoritative versioned source index/fold. Selected-request receipts replace unbounded decisions."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/1/targetOwners/0",
+          "line": 92,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "FirmStaffUserReservation",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "FirmStaffIdentityClaim"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/93",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "FirmStaffDirectory",
+          "action": "split_preserve_canonical_user_uniqueness",
+          "mechanism": "One immutable canonical staff identity/practice and current active revision per staff. Global user-key reservation prevents duplicate canonical user; directory sequence/staff lists move to authoritative versioned source index/fold. Selected-request receipts replace unbounded decisions."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/1/targetOwners/1",
+          "line": 107,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "HandoffFeedback",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "AdvisorFeedbackThread"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/6/targetOwners/1",
+          "line": 714,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/6",
+          "selection": "AdvisorFeedbackThread",
+          "evidence": "A handoff keeps selection/readiness/revocation admission authority; each feedback contribution plus corrections/responses is independently owned."
+        }
+      ]
+    },
+    {
+      "name": "ImportExecution",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ApplicationImportBatch"
+      ],
+      "reason": "Selected import-batch naming explicitly chooses the complete ApplicationImportBatch lifecycle over its worker-phase or frozen-plan alternatives.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/3",
+          "selection": "ApplicationImportBatch",
+          "evidence": "One frozen source batch owns rows, revisions, execution/recovery and terminal outcome; a separate ApplicationImportSource owner enforces uniqueness/publication."
+        }
+      ]
+    },
+    {
+      "name": "IndependenceCommitment",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "PracticeIndependenceCommitment"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/0",
+          "line": 180,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/8",
+          "selection": "PracticeIndependenceCommitment",
+          "evidence": "Permanent staff/user practice authority survives assignment removal and engagement closure. It cannot be reactivated by reevaluation."
+        }
+      ]
+    },
+    {
+      "name": "IndependenceEvaluation",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "ClientIndependenceDecision",
+        "PartnerIndependenceDecision"
+      ],
+      "reason": "Final typed personal/client decision variants have separate exact identities; do not retain an ambiguous generic evaluation owner.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/95",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "IndependenceLedger",
+          "action": "retain_narrow_client_authority_extract_history",
+          "mechanism": "Client-wide service/practice exclusion and observed authority sequence remain one coordinator. Independently versioned engagement/acceptance/assignment/evaluation records hold current facts; source snapshot commitments and one pending mutation gate preserve atomic exclusion across engagements. Historical reevaluation/source receipts fold. Do not split before protocol proof."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/3",
+          "line": 236,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/4",
+          "line": 247,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "IndependenceLedger",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "PracticeIndependenceCommitment",
+        "ClientServiceIndependence",
+        "ServiceEngagementIndependence",
+        "ClientIndependenceDecision",
+        "PartnerIndependenceDecision",
+        "EngagementManagementAcknowledgement"
+      ],
+      "reason": "Final selected split replaces old tenant-wide ledger with permanent walls, service epoch, engagement gate and independent decisions.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/95",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "IndependenceLedger",
+          "action": "retain_narrow_client_authority_extract_history",
+          "mechanism": "Client-wide service/practice exclusion and observed authority sequence remain one coordinator. Independently versioned engagement/acceptance/assignment/evaluation records hold current facts; source snapshot commitments and one pending mutation gate preserve atomic exclusion across engagements. Historical reevaluation/source receipts fold. Do not split before protocol proof."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/0",
+          "line": 180,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/2",
+          "line": 222,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/1",
+          "line": 192,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/3",
+          "line": 236,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/4",
+          "line": 247,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/5",
+          "line": 258,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "PracticeIndependenceCommitment",
+        "ServiceEngagementIndependence",
+        "ClientServiceIndependence",
+        "ClientIndependenceDecision",
+        "PartnerIndependenceDecision",
+        "EngagementManagementAcknowledgement"
+      ]
+    },
+    {
+      "name": "IndependenceRuleRatification",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "IndependenceRuleRatificationCatalog"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/21",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "IndependenceRuleRatificationCatalog",
+          "action": "strip_history_preserve_monotonicity",
+          "mechanism": "Coordinator retains sequence/latest active rule version/ratification ref. Each immutable personal ratification keyed by ID and unique rule version; replay checks monotonicity without full list. Historical ID retry via selected receipt; no lifetime ratification count cap."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/46",
+          "line": 32140,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "IndependenceRuleVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "IndependenceRuleCatalog"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/20",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "IndependenceRuleCatalog",
+          "action": "strip_versions_and_receipts",
+          "mechanism": "Catalog retains current sequence/latest draft reference; immutable rules per version/digest. Historical retrieval from authoritative version records. Current command-specific receipt observer avoids all-request dictionary; remove publication-count cap only after design acceptance."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/45",
+          "line": 31997,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "LocationNameReservation",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "LocationNameClaim"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/96",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "LocationRegister",
+          "action": "split_with_name_reservation",
+          "mechanism": "One inventory item current state per location ID. Active normalized name claim/release serialized by name key if uniqueness is required; historical revisions fold."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/26/targetOwners/1",
+          "line": 2849,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "LocationRegister",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "Location",
+        "LocationNameClaim"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/96",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "LocationRegister",
+          "action": "split_with_name_reservation",
+          "mechanism": "One inventory item current state per location ID. Active normalized name claim/release serialized by name key if uniqueness is required; historical revisions fold."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/26"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "Location",
+        "LocationNameClaim"
+      ]
+    },
+    {
+      "name": "ManagementAssertionVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "ManagementAssertion"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/79",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ManagementAssertion",
+          "action": "strip_versions_and_approvals",
+          "mechanism": "Current wording/version and required current sign-off approvals remain one decision; old versions/approval attempts fold. Exact source/material sets chunk under immutable snapshot."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/50",
+          "line": 32920,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "MethodologyTemplateVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "MethodologyTemplate"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/80",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "MethodologyTemplate",
+          "action": "strip_versions_same_identity",
+          "mechanism": "Header retains latest draft/approved/retirement state and current contribution reference; immutable de-identified versions separately stored with exact provenance; histories fold."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/53",
+          "line": 34501,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "OperationalProcessNameReservation",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "OperationalProcessNameClaim"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/97",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "OperationalProcessRegister",
+          "action": "split_with_name_reservation",
+          "mechanism": "One process current state per process ID; name-key reservation when required. Historical revisions and boundary uses stay source-linked folds/projections."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/27/targetOwners/1",
+          "line": 2920,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "OperationalProcessRegister",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "OperationalProcess",
+        "OperationalProcessNameClaim"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/97",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "OperationalProcessRegister",
+          "action": "split_with_name_reservation",
+          "mechanism": "One process current state per process ID; name-key reservation when required. Historical revisions and boundary uses stay source-linked folds/projections."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/27"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "OperationalProcess",
+        "OperationalProcessNameClaim"
+      ]
+    },
+    {
+      "name": "PackageBuildAttempt",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "AuditPackageBuildProcess"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/9/targetOwners/1",
+          "line": 1100,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/5",
+          "selection": "AuditPackageBuildProcess",
+          "evidence": "Technical build attempts, validation results and archive evidence are independent from business manifest approval and recipient delivery."
+        }
+      ]
+    },
+    {
+      "name": "PackageDeliveryAuthorization",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "AuditPackageDelivery"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/9/targetOwners/2",
+          "line": 1112,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/4",
+          "selection": "AuditPackageDelivery",
+          "evidence": "One business delivery is keyed by package, manifest version and recipient; its authorization binds exact archive, validation and recipient approval."
+        }
+      ]
+    },
+    {
+      "name": "PlatformOperatorGrant",
+      "status": "SELECTED_EXPLICIT_NEW_OVERRIDE_ABSORBED",
+      "canonicalOwners": [
+        "PlatformOperatorRoster"
+      ],
+      "reason": "Keep exact active operator identities/assignment episodes and acting-operator/last-operator checks in one atomic roster decision. Explicitly supersede the earlier per-user split; never reduce authority to a count or cap current membership.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/28",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "PlatformOperatorRoster",
+          "action": "split_preserve_last_operator_coordinator",
+          "mechanism": "Per-user operator membership owns current grant state; roster retains initialized flag, exact active count/generation and one pending grant/revoke. Bound each transition to authoritative actor/subject proof and a recoverable count update; refuse last revoke. Migrate legacy seed/list through immutable snapshot and explicit count baseline; replay duplicate legacy grants/revokes without double counting. Do not derive cardinality by blindly incrementing old grant events."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/57",
+          "line": 36265,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        },
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/finalVocabularyJevResponse/answers/roster_boundary",
+          "selection": "membership_and_count_gate"
+        },
+        {
+          "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+          "jsonPointer": "/decisions/1",
+          "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+          "decisionId": "OWNER_PlatformOperatorGrant",
+          "choice": "one_roster_authority",
+          "rationale": "Keep exact active operator identities/assignment episodes and acting-operator/last-operator checks in one atomic roster decision. Explicitly supersede the earlier per-user split; never reduce authority to a count or cap current membership.",
+          "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+        }
+      ],
+      "supersedesEarlierLockedProposal": true
+    },
+    {
+      "name": "PolicyVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "Policy"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/63",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "Policy",
+          "action": "strip_versions_and_decisions",
+          "mechanism": "Current draft/current approved version/review/retirement remain one policy identity. Immutable versions and old decisions fold; exact effective interval lookups are fenced to owning stream head."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/58",
+          "line": 36653,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "ProviderAssuranceRegister",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "ProviderAssuranceReport",
+        "ProviderAssuranceReview",
+        "ProviderAssuranceGap",
+        "ProviderRiskAcceptance"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/98",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ProviderAssuranceRegister",
+          "action": "split_independent_records",
+          "mechanism": "Report current revision per report, immutable due-diligence review per review ID, coverage gap current state per gap. Exact provider/report/evidence/acceptance references; summaries project. Provider-level count caps are not tenant bounds."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/19"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "ProviderAssuranceReport",
+        "ProviderAssuranceReview",
+        "ProviderAssuranceGap",
+        "ProviderRiskAcceptance"
+      ]
+    },
+    {
+      "name": "ProviderCoverageGap",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ProviderAssuranceGap"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/98",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ProviderAssuranceRegister",
+          "action": "split_independent_records",
+          "mechanism": "Report current revision per report, immutable due-diligence review per review ID, coverage gap current state per gap. Exact provider/report/evidence/acceptance references; summaries project. Provider-level count caps are not tenant bounds."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/19/targetOwners/2",
+          "line": 2055,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "ProviderDueDiligenceReview",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ProviderAssuranceReview"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/98",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ProviderAssuranceRegister",
+          "action": "split_independent_records",
+          "mechanism": "Report current revision per report, immutable due-diligence review per review ID, coverage gap current state per gap. Exact provider/report/evidence/acceptance references; summaries project. Provider-level count caps are not tenant bounds."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/19/targetOwners/1",
+          "line": 2041,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "ProviderNameRegistry",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ProviderNameClaim"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/20/targetOwners/1",
+          "line": 2161,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/7",
+          "selection": "ProviderNameClaim",
+          "evidence": "Authoritative normalized tenant-scoped active name uniqueness; the claim is reserved and released as provider identity changes."
+        }
+      ]
+    },
+    {
+      "name": "ProviderNameReservation",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ProviderNameClaim"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/99",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ProviderRegister",
+          "action": "split_with_name_reservation",
+          "mechanism": "Provider current state per provider ID; normalized active name reservation per tenant+name with durable claim/release choreography. Keep historical names in folds; no tenant dictionary."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/20/targetOwners/1",
+          "line": 2161,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/7",
+          "selection": "ProviderNameClaim",
+          "evidence": "Authoritative normalized tenant-scoped active name uniqueness; the claim is reserved and released as provider identity changes."
+        }
+      ]
+    },
+    {
+      "name": "ProviderRegister",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "Provider",
+        "ProviderNameClaim"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/99",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ProviderRegister",
+          "action": "split_with_name_reservation",
+          "mechanism": "Provider current state per provider ID; normalized active name reservation per tenant+name with durable claim/release choreography. Keep historical names in folds; no tenant dictionary."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/20"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "Provider",
+        "ProviderNameClaim"
+      ]
+    },
+    {
+      "name": "ReadinessEntryGate",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ProgramReadiness"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/64",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ReadinessLedger",
+          "action": "split_preserving_entry_gate",
+          "mechanism": "Immutable assessment binds source snapshot chunks/digest. Stable gap ID owns current plan/annotation state. Program gate stores latest assessment and initial Type I entry decision/current continuation; preserve first-entry atomicity and acknowledgement set via snapshot reference."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/21/targetOwners/2",
+          "line": 2251,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "ReadinessGap",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ReadinessGapPlan"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/64",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ReadinessLedger",
+          "action": "split_preserving_entry_gate",
+          "mechanism": "Immutable assessment binds source snapshot chunks/digest. Stable gap ID owns current plan/annotation state. Program gate stores latest assessment and initial Type I entry decision/current continuation; preserve first-entry atomicity and acknowledgement set via snapshot reference."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/21/targetOwners/1",
+          "line": 2235,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/9",
+          "selection": "ReadinessGapPlan",
+          "evidence": "A stable gap gets an independently revised response plan; program entry remains a narrow coordinator that requires all current plans."
+        }
+      ]
+    },
+    {
+      "name": "ReadinessLedger",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "ReadinessAssessment",
+        "ReadinessGapPlan",
+        "ProgramReadiness"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/64",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "ReadinessLedger",
+          "action": "split_preserving_entry_gate",
+          "mechanism": "Immutable assessment binds source snapshot chunks/digest. Stable gap ID owns current plan/annotation state. Program gate stores latest assessment and initial Type I entry decision/current continuation; preserve first-entry atomicity and acknowledgement set via snapshot reference."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/21"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "ReadinessAssessment",
+        "ReadinessGapPlan",
+        "ProgramReadiness"
+      ]
+    },
+    {
+      "name": "ReadinessResponsePlan",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ReadinessGapPlan"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/21/targetOwners/1",
+          "line": 2235,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/9",
+          "selection": "ReadinessGapPlan",
+          "evidence": "A stable gap gets an independently revised response plan; program entry remains a narrow coordinator that requires all current plans."
+        }
+      ]
+    },
+    {
+      "name": "RiskAcceptance",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "RiskEvaluation"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/66",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "RiskEvaluation",
+          "action": "strip_history_same_identity",
+          "mechanism": "Current inherent/residual assessment refs, selected acceptance and treatment decision remain on risk. Immutable assessments/acceptances store payload once and are folded/projected for history; source-bound selected acceptance validation."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/69",
+          "line": 43462,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "RiskAssessment",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "RiskEvaluation"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/66",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "RiskEvaluation",
+          "action": "strip_history_same_identity",
+          "mechanism": "Current inherent/residual assessment refs, selected acceptance and treatment decision remain on risk. Immutable assessments/acceptances store payload once and are folded/projected for history; source-bound selected acceptance validation."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/69",
+          "line": 43462,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "RiskGovernanceLedger",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "RiskGovernance",
+        "RiskTreatmentAssertion",
+        "RiskTreatmentAction"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/67",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "RiskGovernanceLedger",
+          "action": "split_independent_records",
+          "mechanism": "Per-risk current owner/summary; independent treatment assertion/action/trigger identities retain their own revision, approval/completion and exact source. Retain risk-level residual eligibility gate with bounded digest/count, not all actions/history."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/24"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "RiskGovernance",
+        "RiskTreatmentAssertion",
+        "RiskTreatmentAction"
+      ]
+    },
+    {
+      "name": "RiskMethodVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "RiskMethod"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/68",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "RiskMethod",
+          "action": "strip_versions_same_identity",
+          "mechanism": "Method header stores latest version/current publication gate. Each immutable published method retains version+digest once; no list of every method version."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/71",
+          "line": 45611,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "RiskReassessmentTrigger",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "RiskGovernance"
+      ],
+      "reason": "Final RiskReassessmentTriggered event owner is RiskGovernance; a historical trigger fact is not a newly selected root.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/67",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "RiskGovernanceLedger",
+          "action": "split_independent_records",
+          "mechanism": "Per-risk current owner/summary; independent treatment assertion/action/trigger identities retain their own revision, approval/completion and exact source. Retain risk-level residual eligibility gate with bounded digest/count, not all actions/history."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/24/targetOwners/0",
+          "line": 2561,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "ServiceAssignment",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "ServiceEngagementIndependence"
+      ],
+      "reason": "Final engagement owner explicitly owns proposed/actual assignments and epoch bindings; separate assignment history values are not additional roots.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/95",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "IndependenceLedger",
+          "action": "retain_narrow_client_authority_extract_history",
+          "mechanism": "Client-wide service/practice exclusion and observed authority sequence remain one coordinator. Independently versioned engagement/acceptance/assignment/evaluation records hold current facts; source snapshot commitments and one pending mutation gate preserve atomic exclusion across engagements. Historical reevaluation/source receipts fold. Do not split before protocol proof."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/1",
+          "line": 192,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "ServiceEngagement",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "ServiceEngagementIndependence"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/95",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "IndependenceLedger",
+          "action": "retain_narrow_client_authority_extract_history",
+          "mechanism": "Client-wide service/practice exclusion and observed authority sequence remain one coordinator. Independently versioned engagement/acceptance/assignment/evaluation records hold current facts; source snapshot commitments and one pending mutation gate preserve atomic exclusion across engagements. Historical reevaluation/source receipts fold. Do not split before protocol proof."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/1",
+          "line": 192,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "ServiceEngagementAcceptance",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "ServiceEngagementIndependence"
+      ],
+      "reason": "Irreversible practice-commitment authorization and accepted epoch remain on the exact engagement gate; personal decisions are independent children.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/95",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "IndependenceLedger",
+          "action": "retain_narrow_client_authority_extract_history",
+          "mechanism": "Client-wide service/practice exclusion and observed authority sequence remain one coordinator. Independently versioned engagement/acceptance/assignment/evaluation records hold current facts; source snapshot commitments and one pending mutation gate preserve atomic exclusion across engagements. Historical reevaluation/source receipts fold. Do not split before protocol proof."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/1",
+          "line": 192,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "SignificantChangeVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "SignificantChange"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/69",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "SignificantChange",
+          "action": "strip_version_and_assessment_history",
+          "mechanism": "Keep current content/current impact/current exact work and description decision; old versions/assessments/link decisions fold. Large current affected-record lists bind snapshot chunks."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/76",
+          "line": 47130,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "StaffIndependenceWall",
+      "status": "canonical_rename_or_nonselected_candidate",
+      "canonicalOwners": [
+        "PracticeIndependenceCommitment"
+      ],
+      "reason": "Later selected naming/split vocabulary owns this responsibility; do not create both names.",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/2/targetOwners/0",
+          "line": 180,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/naming-design-jev-request.json",
+          "jsonPointer": "/state/choices/8",
+          "selection": "PracticeIndependenceCommitment",
+          "evidence": "Permanent staff/user practice authority survives assignment removal and engagement closure. It cannot be reactivated by reevaluation."
+        }
+      ]
+    },
+    {
+      "name": "SystemBoundaryVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "SystemBoundary"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/70",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "SystemBoundary",
+          "action": "strip_versions_and_responsibilities",
+          "mechanism": "Current draft/current approved boundary and finite responsibility slots remain atomic. Historical approved versions and responsibilities/decisions fold; version/source snapshot content stored once under bounded chunks."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/77",
+          "line": 47839,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "SystemDescriptionVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "SystemDescription"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/83",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "SystemDescription",
+          "action": "strip_versions_and_work_history",
+          "mechanism": "Current narrative version/review/approval/source binding and pending period change decision remain in one owner. Exact historical sections/source sets/exports store immutable version refs and chunked content; old decisions fold."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/25/targetOwners/0",
+          "line": 2714,
+          "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+        }
+      ]
+    },
+    {
+      "name": "TemplateApplicationDraftReceipt",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "TemplateApplication"
+      ],
+      "reason": "Per-entry creation receipts/progress are technical continuation referring to actual draft-owner facts, not duplicate business authority.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/84",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "TemplateApplication",
+          "action": "split_receipts_and_successor_decisions",
+          "mechanism": "Application header binds exact immutable template version and current activation/progress. Deterministic per-entry draft receipt identity prevents duplicates; successor decision identity owns explicit acceptance. Header retains cursor/digest, not all receipts."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/84",
+          "line": 52143,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "TemplateApplicationSuccessorDecision",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "TemplateApplication"
+      ],
+      "reason": "Selected existing owner/signatures keep one pending successor proposal and independent disposition together. Later catalog only requires another admission owner if decisions are actually split.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/84",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "TemplateApplication",
+          "action": "split_receipts_and_successor_decisions",
+          "mechanism": "Application header binds exact immutable template version and current activation/progress. Deterministic per-entry draft receipt identity prevents duplicates; successor decision identity owns explicit acceptance. Header retains cursor/digest, not all receipts."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/84",
+          "line": 52143,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "TrainingCatalog",
+      "status": "selected_current_root_split_replacement",
+      "canonicalOwners": [
+        "TrainingRequirement"
+      ],
+      "reason": "Later selected29\u219265 split replaces this current root with the exact listed ownership boundaries; do not retain it as another target business aggregate.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/85",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "TrainingCatalog",
+          "action": "split_deterministic_identity",
+          "mechanism": "One stable training requirement; current version only plus exact material/course reference. Immutable versions folded/stored once; program index is projection."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+          "jsonPointer": "/splitOwners/18"
+        }
+      ],
+      "currentRootReplacementOwners": [
+        "TrainingRequirement"
+      ]
+    },
+    {
+      "name": "TypeIIPeriodReservation",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "TypeIIObservationCalendar"
+      ],
+      "reason": "Later103 catalog explicitly retains program-wide active ranges/pending holds for non-overlap; reservation values/selected terminal facts do not require another independently mutable root.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/100",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "TypeIIObservationCalendar",
+          "action": "narrow_reservation_authority",
+          "mechanism": "Individual period reservation retains its interval/generation. Program coordinator serializes overlap decisions against exact authoritative reservation snapshot/root hash, selected conflicting interval proof and one pending change; release closed ranges and move history out. Do not trust a lagging projection for non-overlap."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/92",
+          "line": 56307,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "TypeIIPlanVersion",
+      "status": "immutable_value_or_verified_history_not_separate_root",
+      "canonicalOwners": [
+        "TypeIIPlan"
+      ],
+      "reason": "Root decision authority notes explicitly permit immutable historical values as native facts/verified folds rather than new aggregate classes; later selected owner remains the declared destination.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/87",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "TypeIIPlan",
+          "action": "strip_versions_and_approvals",
+          "mechanism": "Current proposal/review/approval and frozen Type I/source references only. Immutable planned controls/gaps/content stored in chunked version snapshot; old versions/reviews fold."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/94",
+          "line": 57796,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "WorkDigestScheduleCursor",
+      "status": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "WorkDigestDispatch",
+        "WeeklyWorkDigest"
+      ],
+      "reason": "Technical schedule/dispatch cursor or CAS journal; retained recipient-week identity and exact outcomes are not a new business aggregate. See explicit schedule placement correction.",
+      "earlierRootEvidence": [
+        {
+          "path": "docs/product/domain-event-aggregate-decisions.json",
+          "jsonPointer": "/rootDecisions/48",
+          "sha256": "f8e5081c42960a5a09129aba24c6cc4959d27fb71faf242dd058f9c3097ddf02",
+          "currentRoot": "WorkDigestDispatch",
+          "action": "split_dispatch_and_schedule_cursor",
+          "mechanism": "Identity tenant+member+week for current dispatch/retry/unknown reconciliation. Member schedule cursor retains only latest reserved week and one pending creation; older dates project/fold. Unknown outcomes require explicit evidence-bound retry decision."
+        }
+      ],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/97",
+          "line": 59193,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+          "jsonPointer": "/aggregates/96",
+          "line": 58666,
+          "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+        }
+      ]
+    },
+    {
+      "name": "REMOVE",
+      "status": "non_owner_selector_or_removal",
+      "canonicalOwners": [],
+      "reason": "obsolete command removal disposition",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+          "jsonPointer": "/commands/70/owner"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+          "jsonPointer": "/commands/92/owner"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+          "jsonPointer": "/commands/117/owner"
+        }
+      ]
+    },
+    {
+      "name": "RecordType switch: ControlDraft, CommitmentDraft, SystemBoundary (same owner atomic scope)",
+      "status": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "ControlDraft",
+        "CommitmentDraft",
+        "SystemBoundary"
+      ],
+      "reason": "closed record-kind dispatch, not a new global owner",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+          "jsonPointer": "/contracts/26/owner"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+          "jsonPointer": "/contracts/189/owner"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/operation-outcome-contracts.json",
+          "jsonPointer": "/contracts/184/firstOwner"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/operation-outcome-contracts.json",
+          "jsonPointer": "/contracts/343/firstOwner"
+        }
+      ]
+    },
+    {
+      "name": "Kind switch: AccessGrant or TeamMember (exact old episode only)",
+      "status": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "AccessGrant",
+        "TeamMember"
+      ],
+      "reason": "exact old-episode typed receiver dispatch",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+          "jsonPointer": "/contracts/36/owner"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/operation-outcome-contracts.json",
+          "jsonPointer": "/contracts/194/firstOwner"
+        }
+      ]
+    },
+    {
+      "name": "Member|TeamMember",
+      "status": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "Member",
+        "TeamMember"
+      ],
+      "reason": "typed receiver union",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+          "jsonPointer": "/reactors/50/sourceOwner"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+          "jsonPointer": "/reactors/52/sourceOwner"
+        }
+      ]
+    },
+    {
+      "name": "EngagementManagementAcknowledgement|PartnerIndependenceDecision",
+      "status": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "EngagementManagementAcknowledgement",
+        "PartnerIndependenceDecision"
+      ],
+      "reason": "typed receiver union",
+      "earlierRootEvidence": [],
+      "selectedEvidence": [
+        {
+          "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+          "jsonPointer": "/reactors/110/sourceOwner"
+        }
+      ]
+    }
+  ],
+  "decisionRequired": [],
+  "coverage": {
+    "oldRootDecisionTargets": 160,
+    "unmatchedNamesReconciled": 94,
+    "decisionRequiredCount": 0,
+    "unmappedCurrentClrDeclarations": []
+  },
+  "sourcePrecedence": "Later selected split/naming/protocol/command/event contracts resolve earlier generic or superseded names; do not count version values, technical journals, typed unions, or obsolete commands as business aggregates. When the mapping is not source-backed, retain DECISION_REQUIRED.",
+  "baseline103ToSplit65Replacements": [
+    {
+      "baselineOwner": "FirmProfessionalDutyCatalog",
+      "canonicalTargets": [
+        "FirmProfessionalDutyDesignation",
+        "ProfessionalAssertionIdentityClaim"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/0",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "FirmStaffDirectory",
+      "canonicalTargets": [
+        "FirmStaffRecord",
+        "FirmStaffIdentityClaim"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/1",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "IndependenceLedger",
+      "canonicalTargets": [
+        "PracticeIndependenceCommitment",
+        "ServiceEngagementIndependence",
+        "ClientServiceIndependence",
+        "ClientIndependenceDecision",
+        "PartnerIndependenceDecision",
+        "EngagementManagementAcknowledgement"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/2",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "AccessPopulation",
+      "canonicalTargets": [
+        "AccessPopulation",
+        "AccessPrincipalClassification"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/3",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "AccessReviewCampaign",
+      "canonicalTargets": [
+        "AccessReviewCampaign",
+        "AccessReviewItem",
+        "AccessReviewDecisionBatch"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/4",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "AccessReviewSystemLedger",
+      "canonicalTargets": [
+        "AccessExpectation",
+        "AccessPopulationException"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/5",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "AdvisorHandoff",
+      "canonicalTargets": [
+        "AdvisorHandoff",
+        "AdvisorFeedbackThread"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/6",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "ApplicationImportLedger",
+      "canonicalTargets": [
+        "ApplicationImportSource",
+        "ApplicationImportBatch"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/7",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "DeclaredApplication",
+      "canonicalTargets": [
+        "DeclaredApplication",
+        "ApplicationRelationship"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/8",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "AuditPackage",
+      "canonicalTargets": [
+        "AuditPackageManifest",
+        "AuditPackageBuildProcess",
+        "AuditPackageDelivery"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/9",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "AuditorRequest",
+      "canonicalTargets": [
+        "AuditorRequest",
+        "AuditorFeedbackThread",
+        "AuditorSampleSelection",
+        "AuditorResponse"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/10",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "ControlCriterionMappingLedger",
+      "canonicalTargets": [
+        "ControlCriterionMapping"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/11",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "CriterionApplicabilityLedger",
+      "canonicalTargets": [
+        "CriterionApplicability"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/12",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "CriteriaTextOverlayLedger",
+      "canonicalTargets": [
+        "CriteriaTextOverlay"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/13",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "ControlEvaluationLedger",
+      "canonicalTargets": [
+        "ControlEvaluation"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/14",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "EvidenceRequestLedger",
+      "canonicalTargets": [
+        "EvidenceRequest"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/15",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "ControlOperationsLedger",
+      "canonicalTargets": [
+        "ControlOperatingPlan",
+        "ControlOccurrence"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/16",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "PolicyDistributionCampaign",
+      "canonicalTargets": [
+        "PolicyDistributionCampaign",
+        "PolicyCampaignParticipant"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/17",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "TrainingCatalog",
+      "canonicalTargets": [
+        "TrainingRequirement"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/18",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "ProviderAssuranceRegister",
+      "canonicalTargets": [
+        "ProviderAssuranceReport",
+        "ProviderAssuranceReview",
+        "ProviderAssuranceGap",
+        "ProviderRiskAcceptance"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/19",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "ProviderRegister",
+      "canonicalTargets": [
+        "Provider",
+        "ProviderNameClaim"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/20",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "ReadinessLedger",
+      "canonicalTargets": [
+        "ReadinessAssessment",
+        "ReadinessGapPlan",
+        "ProgramReadiness"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/21",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "FindingAggregate",
+      "canonicalTargets": [
+        "FindingAggregate",
+        "CorrectiveAction"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/22",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "ArtifactRetention",
+      "canonicalTargets": [
+        "ArtifactRetentionBasis",
+        "ArtifactLegalHold"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/23",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "RiskGovernanceLedger",
+      "canonicalTargets": [
+        "RiskGovernance",
+        "RiskTreatmentAssertion",
+        "RiskTreatmentAction"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/24",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "SystemDescription",
+      "canonicalTargets": [
+        "SystemDescription",
+        "SystemDescriptionExportProcess"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/25",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "LocationRegister",
+      "canonicalTargets": [
+        "Location",
+        "LocationNameClaim"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/26",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "OperationalProcessRegister",
+      "canonicalTargets": [
+        "OperationalProcess",
+        "OperationalProcessNameClaim"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/27",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    },
+    {
+      "baselineOwner": "TenantInvitation",
+      "canonicalTargets": [
+        "TenantInvitation",
+        "TenantInvitationMailboxClaim",
+        "TenantInvitationDeliveryProcess"
+      ],
+      "identityAndInvariantSource": {
+        "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+        "jsonPointer": "/splitOwners/28",
+        "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+      }
+    }
+  ],
+  "precedenceCorrection": "The four role absorptions are explicit adopted new overrides, not inference from omission/current source. Retain earlier evidence and rationale.",
+  "architectureAuthority": {
+    "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+    "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+    "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+    "model": "jev-1.14.0",
+    "implementationHalted": true
+  }
+}

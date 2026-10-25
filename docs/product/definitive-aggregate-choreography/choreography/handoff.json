@@ -1,0 +1,26 @@
+{
+  "status": "FROZEN_SELECTED_TARGET_NO_IMPLEMENTATION_AUTHORIZED",
+  "artifact": "/tmp/compliance-definitive-inventory/reactors/selected-v2",
+  "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+  "manifest": "/tmp/compliance-definitive-inventory/reactors/selected-v2/manifest.json",
+  "manifestSha256": "2767c0ed5832b0d30a016888a4883fdf75cc1d3aac258d7b8879971dabf5ee8a",
+  "selectedGraph": "/tmp/compliance-definitive-inventory/reactors/selected-v2/selected-graph.json",
+  "physicalPlan": "/tmp/compliance-definitive-inventory/reactors/selected-v2/physical-plan.json",
+  "artifactRows": "/tmp/compliance-definitive-inventory/reactors/selected-v2/artifact-entry-read-rows.json",
+  "artifactProtocol": "/tmp/compliance-definitive-inventory/reactors/selected-v2/artifact-download-selected.json",
+  "readme": "/tmp/compliance-definitive-inventory/reactors/selected-v2/README.md",
+  "counts": {
+    "reactionOrRegularStages": 161,
+    "abortBindings": 22,
+    "artifactPersonalAdmission": 1,
+    "artifactScopedRead": 1,
+    "totalArchitectureRows": 185,
+    "existingPhysicalReactors": 65,
+    "plannedArtifactRootStarters": 1,
+    "existingProcessDefinitions": 28,
+    "plannedArtifactDefinitions": 1
+  },
+  "pendingOwnerOrProtocolDecisions": [],
+  "implementationHalted": true,
+  "applicationOrToolingCodeWritten": false
+}

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "status": "DEFINITIVE_TARGET_DEFINITION_EXISTING_WIP_INTEGRATION",
+  "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+  "createdUtc": "2026-10-25T12:23:06.272709+00:00",
+  "counts": {
+    "businessAuthorityAggregates": 129,
+    "declaredTechnicalStateOwners": 13,
+    "additionalWeeklySchedulingTechnicalRole": 1,
+    "canonicalEmittedSemanticEvents": 492,
+    "businessSemanticEvents": 480,
+    "technicalEmissions": 9,
+    "auditEmissions": 2,
+    "migrationImportEmissions": 1,
+    "rawEventNamesReconciled": 558,
+    "nonEmittedCompatibilityOrExcludedNames": 66,
+    "regularReactionOrStageEdges": 161,
+    "abortOrFenceBindings": 22,
+    "admissionAndReadRows": 2,
+    "architectureRows": 185,
+    "existingReactors": 65,
+    "plannedReactors": 1,
+    "intendedPhysicalReactors": 66,
+    "existingProcessDefinitions": 28,
+    "plannedProcessDefinitions": 1,
+    "intendedProcessDefinitions": 29,
+    "newHostedWorkers": 0
+  },
+  "catalogs": {
+    "aggregates": "aggregates.json",
+    "events": "events.json",
+    "allEventDispositions": "event-reconciliation.json",
+    "choreography": "choreography.json",
+    "physicalPlan": "choreography/physical-plan.json",
+    "decisions": "decisions.json",
+    "validation": "validation.json",
+    "preservation": "preservation.json"
+  },
+  "remainingOwnerOrProtocolDecisions": [],
+  "qualification": "Definitive intended scope, ownership, fact vocabulary and causal requirements. Existing unfinished WIP is integrated by explicit user direction. Source/wire/runtime conformance is not marked complete."
+}

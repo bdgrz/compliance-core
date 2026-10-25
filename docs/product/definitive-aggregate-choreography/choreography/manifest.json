@@ -1,0 +1,83 @@
+{
+  "status": "FROZEN_SELECTED_TARGET_NO_IMPLEMENTATION_AUTHORIZED",
+  "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+  "adoptedDecisionSha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+  "predecessorHandoff": {
+    "path": "/tmp/compliance-definitive-inventory/reactors/handoff.json",
+    "sha256": "e5810cb6d1f27431b49aedddf01082d73ab157f76d744114b16c0103310cad05"
+  },
+  "counts": {
+    "reactionOrRegularStages": 161,
+    "abortBindings": 22,
+    "artifactPersonalAdmission": 1,
+    "artifactScopedRead": 1,
+    "totalArchitectureRows": 185,
+    "existingPhysicalReactors": 65,
+    "plannedArtifactRootStarters": 1,
+    "existingProcessDefinitions": 28,
+    "plannedArtifactDefinitions": 1
+  },
+  "pendingOwnerOrProtocolDecisions": [],
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "8739e176100397cd03f2052eed4bf1426706994dfa4ad44adc2c5de1db8b2306",
+      "bytes": 4755
+    },
+    {
+      "path": "abort-bindings.json",
+      "sha256": "41704fd9c0fd5ade32a43ebca3f93c78a17aae9bbbddd285d496ba1d64c36672",
+      "bytes": 134918
+    },
+    {
+      "path": "adopted-decisions.json",
+      "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+      "bytes": 13811
+    },
+    {
+      "path": "artifact-download-selected.json",
+      "sha256": "e5945381d832f2113452a54f99fa4f1a1fa5bca455cbecf5d721bdf7e5f2904c",
+      "bytes": 19079
+    },
+    {
+      "path": "artifact-entry-read-rows.json",
+      "sha256": "ed573acc05078a3187032fca18892d4285b3da9d98acac00c0d073f68530b65d",
+      "bytes": 11490
+    },
+    {
+      "path": "authority-policy.json",
+      "sha256": "e6f69b88150bf55d4284606dbaac2ad94b057e07f8c7716ec9adf89306b79c71",
+      "bytes": 58665
+    },
+    {
+      "path": "intended-choreography.json",
+      "sha256": "669da0798acde213d8b6959ed29ae86f5acfe7b0a8e0bab7b3a0391eeff1240e",
+      "bytes": 1028552
+    },
+    {
+      "path": "physical-plan.json",
+      "sha256": "97fa1c3382aa2142367f29b7ae23605764b844925251de849eeaaefe824a2f5a",
+      "bytes": 85752
+    },
+    {
+      "path": "selected-decisions.json",
+      "sha256": "ce5d3db40ba017cc99c88de3cb69c643a52fc4b83587a4df2e241ae84d3de8f4",
+      "bytes": 7295
+    },
+    {
+      "path": "selected-graph.json",
+      "sha256": "201ff70882094d5f9a1c0981337e586d59efd1e53be0da432eabf3d08a713a1b",
+      "bytes": 1019689
+    },
+    {
+      "path": "supplemental-choreography.json",
+      "sha256": "798ae0a64939d6a2569ce53520a722eca450b974fa0feef11b716665aa0ab8e6",
+      "bytes": 219719
+    },
+    {
+      "path": "validation.json",
+      "sha256": "72de42fea0e050daca81ec38d342d53884ab3240bce562ee241b0508018fbbd6",
+      "bytes": 736
+    }
+  ]
+}

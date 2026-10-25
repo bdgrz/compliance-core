@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "status": "TARGET_DECISIONS_ADOPTED_NO_IMPLEMENTATION_AUTHORIZED",
+  "createdUtc": "2026-10-25T12:02:44.797945+00:00",
+  "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+  "model": "jev-1.14.0",
+  "implementationHalted": true,
+  "noNewGithubIssues": true,
+  "decisions": [
+    {
+      "id": "OWNER_ApplicationSourceClaim",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "absorb_in_source_authority",
+      "rationale": "Source-wide exact revision/generation and published-batch ordering already own mutable replace/remove mappings. Explicitly absorb the earlier per-record-root role into ApplicationImportSource; preserve full verified mapping authority, immutable plans and publication gates.",
+      "jev": {
+        "type": "choice",
+        "choice": "absorb_in_source_authority",
+        "confidence": 1,
+        "probabilities": {
+          "independent_record_claim_owner": 0,
+          "absorb_in_source_authority": 1,
+          "require_business_policy": 0
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "OWNER_PlatformOperatorGrant",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "one_roster_authority",
+      "rationale": "Keep exact active operator identities/assignment episodes and acting-operator/last-operator checks in one atomic roster decision. Explicitly supersede the earlier per-user split; never reduce authority to a count or cap current membership.",
+      "jev": {
+        "type": "choice",
+        "choice": "one_roster_authority",
+        "confidence": 1,
+        "probabilities": {
+          "per_user_grant_and_roster_gate": 0,
+          "one_roster_authority": 1,
+          "require_business_policy": 0
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "OWNER_AuditPopulationRowDecision",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "parent_owns_current_reconciliation",
+      "rationale": "Classification, reconciliation invalidation, complete-source proof and freeze seal are one conflict set on AuditPopulation. Immutable row/version bodies are values, not separate owners. Explicitly supersede the earlier row-root proposal; remove lifetime history coupling without splitting the seal.",
+      "jev": {
+        "type": "choice",
+        "choice": "parent_owns_current_reconciliation",
+        "confidence": 1,
+        "probabilities": {
+          "independent_row_decisions_with_freeze_holds": 0,
+          "parent_owns_current_reconciliation": 1,
+          "require_business_policy": 0
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "OWNER_AccessExpectationScopeGuard",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "line_authority_explicit_scope_override",
+      "rationale": "Required exclusion is predecessor/successor competition within the same expectation lineage. Different lines may coexist, including different policies on one system. Explicitly supersede the older unspecified cross-line governor; adding a future cross-line ban is a separately reviewed product/design change with a precise predicate.",
+      "jev": {
+        "type": "choice",
+        "choice": "line_authority_explicit_scope_override",
+        "confidence": 0.98,
+        "probabilities": {
+          "independent_scope_governor": 0,
+          "line_authority_explicit_scope_override": 0.99,
+          "require_business_policy": 0.01
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "EV_D01",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "adopt_recommended",
+      "rationale": "A professional assertion identity binding is permanent and non-recyclable. Exclude the stale release label.",
+      "jev": {
+        "type": "choice",
+        "choice": "adopt_recommended",
+        "confidence": 1,
+        "probabilities": {
+          "adopt_recommended": 1,
+          "retain_separate_event": 0,
+          "require_business_policy": 0
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "EV_D02",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "adopt_recommended",
+      "rationale": "Canonical package delivery is manifest Admitted then independent child Delivered. Exclude redundant Authorized; add no automated send authority.",
+      "jev": {
+        "type": "choice",
+        "choice": "adopt_recommended",
+        "confidence": 1,
+        "probabilities": {
+          "adopt_recommended": 1,
+          "retain_separate_event": 0,
+          "require_business_policy": 0
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "EV_D03",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "adopt_recommended",
+      "rationale": "The selected directed source/type/target UUID identity is the relationship uniqueness boundary. Exclude separate identity claim.",
+      "jev": {
+        "type": "choice",
+        "choice": "adopt_recommended",
+        "confidence": 1,
+        "probabilities": {
+          "adopt_recommended": 1,
+          "retain_separate_event": 0,
+          "require_business_policy": 0
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "EV_D04",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "adopt_recommended",
+      "rationale": "Relationship removal records lifecycle, never releases/recycles canonical tuple identity. Exclude separate identity release.",
+      "jev": {
+        "type": "choice",
+        "choice": "adopt_recommended",
+        "confidence": 1,
+        "probabilities": {
+          "adopt_recommended": 1,
+          "retain_separate_event": 0,
+          "require_business_policy": 0
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "EV_D05",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "adopt_recommended",
+      "rationale": "Recorded is the canonical authored preference decision, including accepted NoChange. ChangedAt advances only for actual value changes. Old Changed v1 remains read-only compatibility, with no replay conversion.",
+      "jev": {
+        "type": "choice",
+        "choice": "adopt_recommended",
+        "confidence": 1,
+        "probabilities": {
+          "adopt_recommended": 1,
+          "retain_separate_event": 0,
+          "require_business_policy": 0
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "ARTIFACT_DOWNLOAD",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "artifact_first_202_qualified_grant_v2",
+      "rationale": "Ratify the selected artifact-first Pending202 protocol: stable caller CommandId, atomic local available-artifact reservation in Requested, artifact-qualified derived receiving grant, ordered source-use acquisition, encrypted original ticket before native issuance, terminal settlement/cancellation fencing, current original-actor scoped read, unchanged original expiry, and receiving-issued v2 preserving old artifact-issued v1 decoder.",
+      "jev": {
+        "type": "choice",
+        "choice": "artifact_first_202_qualified_grant_v2",
+        "confidence": 0.97,
+        "probabilities": {
+          "artifact_first_202_qualified_grant_v2": 0.98,
+          "immediate_200": 0,
+          "require_protocol_choice": 0.02
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "PROOF_CARRIERS",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "admission_reference_and_verified_stage_proofs",
+      "rationale": "Registered root subscription, logical prerequisite fact and continuation carrier are separate. Canonical continuation retains original admission reference and root-derived identity, but receiver must materialize/verify every required typed intermediate/terminal proof and exact immutable intent before effect or early replay where binding does not cover terms. A bare NativeFactReference never grants authority. Selected typed-source tables are corrected to this normative admission-plus-prerequisite model; installed carrier presence is not proof of conformance.",
+      "jev": {
+        "type": "choice",
+        "choice": "admission_reference_and_verified_stage_proofs",
+        "confidence": 0.89,
+        "probabilities": {
+          "admission_reference_and_verified_stage_proofs": 0.9299999999999999,
+          "literal_intermediate_typed_source": 0.03,
+          "require_protocol_choice": 0.04
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "EFFECT_IDENTITIES",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "retain_occupied_v1_version_new_algorithm",
+      "rationale": "Retain exact occupied v1 effect UUID byte algorithm and each process frozen target-key/episode selection. Do not silently replace IDs. Explicitly version and domain-separate any new length-prefixed algorithm; new or ambiguous target/episode domains require a selected injective encoding and compatibility/fencing before use.",
+      "jev": {
+        "type": "choice",
+        "choice": "retain_occupied_v1_version_new_algorithm",
+        "confidence": 0.8,
+        "probabilities": {
+          "retain_occupied_v1_version_new_algorithm": 0.87,
+          "migrate_all_to_length_prefixed": 0.01,
+          "require_identity_policy": 0.12
+        }
+      },
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    }
+  ],
+  "artifactDownloadDetails": "reactors/artifact-download-decision.json optionA with explicit original-actor/current-rights read and no generic operation lookup",
+  "proofPolicy": "admission reference + independently verified required typed prerequisite/terminal facts; source pointer alone is never proof",
+  "effectIdentityPolicy": "occupied v1 compatibility is frozen; new algorithms must be explicitly versioned/injective",
+  "qualification": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work.",
+  "newArtifactEffectIdentity": {
+    "version": "effect-identity-v2",
+    "namespace": "actual committed EvidenceArtifactDownloadRequested.Metadata.EventId",
+    "fieldsInOrder": [
+      "effectKind (canonical receiver command kind)",
+      "canonical target EventStreamAddress",
+      "episode (exact selected value, initial when absent)"
+    ],
+    "bytes": "UTF8(effect-identity:v2) followed by each field UTF8 bytes prefixed by its unsigned32-bit big-endian byte length; UUIDv5 over these exact name bytes and the actual source EventId namespace.",
+    "rule": "Use only for this new unoccupied process identity domain; occupied v1 algorithms/target-key selections remain unchanged. Implementation must provide fixed byte/UUID vectors before activation."
+  },
+  "downloadReadActorRule": "Same original personal actor plus all current exact artifact/advisor rights; no admin-by-inference or generic operation status. Return original protected ticket bytes and original expiry; no renewal under same root.",
+  "scope": "Definitive target owners, emitted semantic facts, causal/prerequisite graph and proof/identity rules. Current source mapping and field/wire-schema reconciliation are implementation evidence, not alternate target ownership."
+}

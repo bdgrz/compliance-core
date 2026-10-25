@@ -1,0 +1,43 @@
+{
+  "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+  "rawNameUnion": 558,
+  "baselineRawNames": 418,
+  "currentRawDomainEventNames": 516,
+  "selectedSchemaNames": 295,
+  "intendedEmittedCanonicalSemanticEvents": 492,
+  "businessSemanticEvents": 480,
+  "businessOwnerCount": 129,
+  "retainedTechnicalSemanticEmissions": 9,
+  "retainedTechnicalEmissionOwnerCount": 3,
+  "declaredTechnicalOwnerLabels": 13,
+  "additionalWeeklySchedulingCaptureJournalRole": true,
+  "auditSemanticEmissions": 2,
+  "migrationImportSemanticEmissions": 1,
+  "nonEmittedRawCompatibilityOrExcludedNames": 66,
+  "rawNameDispositionCounts": {
+    "audit_only": 2,
+    "excluded_redundant_or_contradictory_split_name": 4,
+    "intended_business": 480,
+    "legacy_decoder_only": 2,
+    "legacy_protocol_replaced": 6,
+    "legacy_version_or_name_alias": 17,
+    "migration_cutover_only": 4,
+    "migration_import_fact": 1,
+    "projection_only_compatibility": 1,
+    "pruned_future_writer": 3,
+    "retained_technical_emission": 9,
+    "superseded_vocabulary_or_decision": 17,
+    "technical_process_only": 12
+  },
+  "selected295WithinBusinessSemantics": 295,
+  "businessSemanticNamesOutsideSelected295": 185,
+  "newAdoptedConcreteTypeAliasesOutside558RawUnion": [
+    "EvidenceArtifactDownloadIssuedV2"
+  ],
+  "sameSemanticNewWireAliasDoesNotAddBusinessFact": true,
+  "schemaAndRuntimeImplementationQualified": false,
+  "architectureAuthoritySha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+  "canonicalOwnerMapSha256": "16810bae3968518a4526d32754b47e836c605e4157782b602f8803bec7f59f86",
+  "ownerAliasesSha256": "ebbc06df8e2d399022d415b9d045a2f1fe2ff41940b132d21f681efb06983847",
+  "compactCanonicalOwnerMapSha256": "8ea1499bf7384ac3b926c1987d063b9c0ed23595b7533843e0c119faecc3e9da"
+}
