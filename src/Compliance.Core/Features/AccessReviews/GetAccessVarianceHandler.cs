@@ -4,7 +4,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
 /// <summary>Explains an accepted population with the expectations effective when it was observed.</summary>
-public sealed class GetAccessVarianceHandler(IAggregateReader reader, IImmutableContentStore content,
+public sealed class GetAccessVarianceHandler(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content,
     AccessExpectationsReader expectations, RestrictedApplicationVisibility visibility)
     : IRequestHandler<GetAccessVariance, AccessVarianceView>
 {
@@ -25,7 +25,7 @@ public sealed class GetAccessVarianceHandler(IAggregateReader reader, IImmutable
             .ConfigureAwait(false))
             return AccessReviewOutcome.Failure<AccessVarianceView>(RequestErrorKind.NotFound,
                 "The population was not found.");
-        var loaded = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId,
+        var loaded = await AcceptedAccessPopulation.LoadAsync(reader, events, content, request.TenantId,
             request.PopulationId, ct).ConfigureAwait(false);
         if (!loaded.IsSuccess)
             return Result<AccessVarianceView>.Failure(loaded.Error);

@@ -28,9 +28,17 @@ public sealed record AcceptedAccessPopulation(AccessPopulation Population,
     public string ClassificationOf(string providerSubjectId) =>
         CurrentClassification(providerSubjectId)?.Classification ?? AccessReviewVocabulary.Unclassified;
 
-    public static async ValueTask<Result<AcceptedAccessPopulation>> LoadAsync(
+    public static ValueTask<Result<AcceptedAccessPopulation>> LoadAsync(
+        IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content, Uuid tenantId,
+        Uuid populationId, CancellationToken ct) => LoadCoreAsync(reader, events, content, tenantId, populationId, true, ct);
+
+    public static ValueTask<Result<AcceptedAccessPopulation>> LoadAsync(
         IAggregateReader reader, IImmutableContentStore content, Uuid tenantId, Uuid populationId,
-        CancellationToken ct, bool withClassifications = true)
+        CancellationToken ct) => LoadCoreAsync(reader, null, content, tenantId, populationId, false, ct);
+
+    static async ValueTask<Result<AcceptedAccessPopulation>> LoadCoreAsync(
+        IAggregateReader reader, IDomainEventReader? events, IImmutableContentStore content, Uuid tenantId,
+        Uuid populationId, bool withClassifications, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(reader);
         ArgumentNullException.ThrowIfNull(content);
@@ -50,10 +58,19 @@ public sealed record AcceptedAccessPopulation(AccessPopulation Population,
         if (header.PopulationId != populationId)
             return Failure(RequestErrorKind.Conflict,
                 "The accepted population snapshot belongs to another population.");
-        var classifications = withClassifications
-            ? await AccessClassifications.ReadAsync(reader, content, tenantId, populationId, facts.Principals, ct)
-                .ConfigureAwait(false)
-            : new Dictionary<string, IReadOnlyList<AccessPrincipalClassificationView>>();
+        IReadOnlyDictionary<string, IReadOnlyList<AccessPrincipalClassificationView>> classifications;
+        try
+        {
+            classifications = withClassifications
+                ? await AccessClassifications.ReadAsync(reader, events!, content, tenantId, populationId, facts.Principals, ct)
+                    .ConfigureAwait(false)
+                : new Dictionary<string, IReadOnlyList<AccessPrincipalClassificationView>>();
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<AcceptedAccessPopulation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact classification source cannot be verified.", error is ImmutableContentUnavailableException));
+        }
         return Result<AcceptedAccessPopulation>.Success(new AcceptedAccessPopulation(population,
             snapshot, header, facts, AccessPopulationAnalysis.Derive(facts), classifications));
     }

@@ -23,7 +23,8 @@ public sealed class AccessPrincipalClassification : Aggregate
     readonly Uuid _tenantId;
     readonly Uuid _populationId;
     readonly string _providerSubjectId;
-    readonly List<AccessPrincipalClassified> _decisions = [];
+    AccessPrincipalClassified? _latest;
+    long _revision;
 
     /// <summary>Opens the classification of one principal, selecting the logical operation to resolve.</summary>
     public AccessPrincipalClassification(Uuid tenantId, Uuid populationId, string providerSubjectId,
@@ -47,10 +48,10 @@ public sealed class AccessPrincipalClassification : Aggregate
     public string ProviderSubjectId => _providerSubjectId;
 
     /// <summary>The logical revision: the number of decisions recorded for this principal.</summary>
-    public long Revision => _decisions.Count;
+    public long Revision => _revision;
 
-    /// <summary>Every decision fact in order.</summary>
-    public IReadOnlyList<AccessPrincipalClassified> Decisions => _decisions;
+    /// <summary>The latest immutable decision fact; full history belongs to read composition.</summary>
+    public AccessPrincipalClassified? Latest => _latest;
 
     /// <summary>The identity of one principal's classification, exact and ordinal in the provider subject id.</summary>
     public static Uuid IdentityOf(Uuid tenantId, Uuid populationId, string providerSubjectId)
@@ -87,9 +88,11 @@ public sealed class AccessPrincipalClassification : Aggregate
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || ev.PopulationId != _populationId ||
             !string.Equals(ev.ProviderSubjectId, _providerSubjectId, StringComparison.Ordinal) ||
-            ev.Operation.Owner != Stream || ev.FirstResponse is null)
+            ev.FirstResponse is null || ev.OperationResult is null ||
+            !NativeOwnerHistory.IsOwnRoot(this, ev.Operation, nameof(ClassifyAccessPrincipal), (ulong)_revision))
             throw new InvalidOperationException(
                 "A classification follows the previous decision of its own principal.");
-        _decisions.Add(ev);
+        _revision++;
+        _latest = ev;
     }
 }

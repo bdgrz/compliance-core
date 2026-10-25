@@ -69,7 +69,7 @@ public sealed class AttestRiskManagementWriteWallTests
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
             source.Accept(residual.Value.AssessmentId, null), Context(source.ApproverUserId), CancellationToken.None);
         var retained = await ProgramManagementServices.HydrateAsync(provider,
-            new RiskEvaluation(source.TenantId, source.RiskId));
+            new RiskEvaluationRules(source.TenantId, source.RiskId));
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
@@ -116,7 +116,7 @@ public sealed class AttestRiskManagementWriteWallTests
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
             source.Accept(residual.Value.AssessmentId, null), context, CancellationToken.None);
         var retained = await ProgramManagementServices.HydrateAsync(provider,
-            new RiskEvaluation(source.TenantId, source.RiskId));
+            new RiskEvaluationRules(source.TenantId, source.RiskId));
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -141,7 +141,7 @@ public sealed class AttestRiskManagementWriteWallTests
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
             source.Accept(residual.Value.AssessmentId, null), context, CancellationToken.None);
         var retained = await ProgramManagementServices.HydrateAsync(provider,
-            new RiskEvaluation(source.TenantId, source.RiskId));
+            new RiskEvaluationRules(source.TenantId, source.RiskId));
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);

@@ -17,7 +17,7 @@ public sealed class RiskDraftTests
     {
         // Arrange
         var requestId = Uuid.CreateVersion4();
-        var risk = new RiskDraft(TenantId, RiskDraft.IdFor(TenantId, ProgramId, "R-01"));
+        var risk = new RiskDraftRules(TenantId, RiskDraft.IdFor(TenantId, ProgramId, "R-01"));
         Assert.True(risk.Create(ProgramId, requestId, "R-01", Content(), ActorId, "Original author", Now).IsSuccess);
 
         // Act
@@ -50,7 +50,7 @@ public sealed class RiskDraftTests
         // Arrange
         var requestId = Uuid.CreateVersion4();
         var riskId = RiskDraft.IdFor(TenantId, ProgramId, "R-01");
-        var risk = new RiskDraft(TenantId, riskId);
+        var risk = new RiskDraftRules(TenantId, riskId);
         Assert.True(risk.Create(ProgramId, requestId, "r-01", Content(), ActorId,
             "Author", Now).IsSuccess);
         Assert.True(risk.Revise(ProgramId, 1, Content() with { Scenario = "Changed" },
@@ -73,16 +73,16 @@ public sealed class RiskDraftTests
         Assert.Equal(CommandFailureCode.MissingRecord,
             Assert.IsType<CommandFailure>(wrongProgram).Code);
         Assert.Equal(2, risk.Revision);
-        Assert.Collection(new AggregateScenario<RiskDraft>(risk).PendingEvents,
-            ev => Assert.Equal(ActorId, Assert.IsType<RiskDraftCreated>(ev).ActorMemberId),
-            ev => Assert.Equal("Editor", Assert.IsType<RiskDraftRevised>(ev).ActorDisplay));
+        Assert.Collection(risk.PendingChanges,
+            ev => Assert.Equal(ActorId, Assert.IsType<RiskDraftCreatedContent>(ev).ActorMemberId),
+            ev => Assert.Equal("Editor", Assert.IsType<RiskDraftRevisedContent>(ev).ActorDisplay));
     }
 
     [Fact]
     public void ShouldRejectInvalidAndOversizeDraftBeforeAppendGivenNewRisk()
     {
         // Arrange
-        var risk = new RiskDraft(TenantId, Uuid.CreateVersion4());
+        var risk = new RiskDraftRules(TenantId, Uuid.CreateVersion4());
         var requestId = Uuid.CreateVersion4();
 
         // Act
@@ -98,7 +98,7 @@ public sealed class RiskDraftTests
         Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(identifier.Error).Kind);
         Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(blank.Error).Kind);
         Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(huge.Error).Kind);
-        Assert.Empty(new AggregateScenario<RiskDraft>(risk).PendingEvents);
+        Assert.Empty(risk.PendingChanges);
     }
 
     static RiskDraftContent Content() => new("Provider outage",

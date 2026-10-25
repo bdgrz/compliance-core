@@ -38,9 +38,9 @@ static class RiskReassessmentFanOut
             {
                 var evaluation = await reader.HydrateAsync(new RiskEvaluation(tenantId, risk.RiskId), ct)
                     .ConfigureAwait(false);
-                if (evaluation.Latest(RiskEvaluation.Inherent) is not { } inherent)
+                if (evaluation.Header?.InherentMethodVersionId is not { } inherentMethod)
                     continue;
-                if (methodVersionId is { } method && inherent.MethodVersionId == method)
+                if (methodVersionId is { } method && inherentMethod == method)
                     continue;
                 await bus.SendReactionAsync(Command(sourceEventId, tenantId, programId, risk.RiskId, triggerKind,
                     sourceReference, raisedAt, methodVersionId), context, ct).ConfigureAwait(false);

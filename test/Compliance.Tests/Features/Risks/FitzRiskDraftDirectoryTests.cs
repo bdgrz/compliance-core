@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -10,7 +12,8 @@ public sealed class FitzRiskDraftDirectoryTests
     public async Task ShouldKeepTenantAndProgramPagesSeparateGivenSharedProjection()
     {
         // Arrange
-        var directory = new FitzRiskDraftDirectory(new InMemoryKvClient());
+        await using var native = new RiskDraftSourceFixture();
+        var directory = new FitzRiskDraftDirectory(new InMemoryKvClient(), native.Content, native.Drafts);
         var tenantId = Uuid.CreateVersion4();
         var otherTenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
@@ -19,8 +22,8 @@ public sealed class FitzRiskDraftDirectoryTests
                          Identity(tenantId), ProjectionCheckpoint.Start)))
         {
             foreach (var index in Enumerable.Range(1, 201))
-                await directory.ApplyAsync(Created(tenantId, programId, $"R-{index:D3}"));
-            await directory.ApplyAsync(Created(tenantId, otherProgramId, "OTHER"));
+                await directory.ApplyAsync(await CreatedAsync(native, tenantId, programId, $"R-{index:D3}"));
+            await directory.ApplyAsync(await CreatedAsync(native, tenantId, otherProgramId, "OTHER"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -42,18 +45,17 @@ public sealed class FitzRiskDraftDirectoryTests
     public async Task ShouldRollBackCurrentAndHistoryGivenInvalidRevision()
     {
         // Arrange
-        var directory = new FitzRiskDraftDirectory(new InMemoryKvClient());
+        await using var native = new RiskDraftSourceFixture();
+        var directory = new FitzRiskDraftDirectory(new InMemoryKvClient(), native.Content, native.Drafts);
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        RiskDraftCreated created = new(tenantId, programId,
-            RiskDraft.IdFor(tenantId, programId, "R-01"), Uuid.CreateVersion4(),
-            "R-01", new RiskDraftContent("Provider outage", "Provider unavailable",
-                "Service outage", "Management observation"), Uuid.CreateVersion4(),
-            "Author", new DateTimeOffset(2026, 9, 20, 12, 0, 0, TimeSpan.Zero));
-        RiskDraftRevised invalid = new(tenantId, programId, created.RiskId, 3,
-            new RiskDraftContent("Provider outage", "Changed", "Service outage",
-                "Management observation"), created.ActorMemberId,
-            "Editor", created.ChangedAt.AddMinutes(1));
+        var created = await CreatedAsync(native, tenantId, programId, "R-01");
+        var rules = (await native.Drafts.ReadAsync(tenantId, programId, created.RiskId)).Rules;
+        var change = new RiskDraftRevisedContent(tenantId, programId, created.RiskId, 3,
+            new RiskDraftContent("Provider outage", "Changed", "Service outage", "Management observation"),
+            created.ActorMemberId, "Editor", created.ChangedAt.AddMinutes(1));
+        rules.Apply(change);
+        var invalid = DomainEventSeed.Attach(await RiskDraftSeeds.FreezeAsync(native.Content, rules, change, 3), created.RiskId, 3);
 
         // Act
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
@@ -80,13 +82,15 @@ public sealed class FitzRiskDraftDirectoryTests
         Assert.Equal(1, (await directory.GetAsync(tenantId, created.RiskId))?.Revision);
     }
 
-    static CheckpointIdentity Identity(Uuid tenantId) => new("RiskDraftDirectory",
-        EventStreamPattern.ForPattern(tenantId.ToString(), "risks"));
+    static CheckpointIdentity Identity(Uuid tenantId) => new(FitzRiskDraftDirectory.ProjectorName,
+        EventStreamPattern.ForPattern(tenantId.ToString(), RiskDraft.Area));
 
-    static RiskDraftCreated Created(Uuid tenantId, Uuid programId, string identifier) =>
-        new(tenantId, programId, RiskDraft.IdFor(tenantId, programId, identifier),
-            Uuid.CreateVersion4(), identifier,
-            new RiskDraftContent("Provider outage", "Provider unavailable",
-                "Service outage", "Management observation"), Uuid.CreateVersion4(),
-            "Author", new DateTimeOffset(2026, 9, 20, 12, 0, 0, TimeSpan.Zero));
+    static async Task<RiskDraftCreated> CreatedAsync(RiskDraftSourceFixture native, Uuid tenantId, Uuid programId, string identifier)
+    {
+        var rules = new RiskDraftRules(tenantId, RiskDraft.IdFor(tenantId, programId, identifier));
+        Assert.True(rules.Create(programId, rules.Id, identifier, new RiskDraftContent("Provider outage", "Provider unavailable",
+            "Service outage", "Management observation"), Uuid.CreateVersion4(), "Author",
+            new DateTimeOffset(2026, 9, 20, 12, 0, 0, TimeSpan.Zero)).IsSuccess);
+        return Assert.IsType<RiskDraftCreated>(Assert.Single(await native.PublishAsync(rules)));
+    }
 }

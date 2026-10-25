@@ -61,7 +61,7 @@ public sealed class ProposeRiskControlTreatmentHandler(NativeOperationExecutor o
                     "A control treatment must name the control's current approved version."));
             var evaluation = await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RiskId), ct)
                 .ConfigureAwait(false);
-            if (evaluation.Treatment?.Kind != "mitigate")
+            if (evaluation.Header?.TreatmentKind != "mitigate")
                 return Fail(CommandFailure.StateConflict(
                     "Choose the mitigate treatment before asserting a control treatment.").ToRequestError());
             var treatments = await governanceReader.ComposeTreatmentsAsync(request.TenantId, snapshot, ct)

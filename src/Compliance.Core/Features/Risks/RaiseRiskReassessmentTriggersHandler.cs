@@ -31,8 +31,8 @@ public sealed class RaiseRiskReassessmentTriggersHandler(NativeOperationExecutor
             return risk;
         var evaluation = await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RiskId), ct)
             .ConfigureAwait(false);
-        if (evaluation.Latest(RiskEvaluation.Inherent) is not { } inherent ||
-            request.MethodVersionId is { } method && inherent.MethodVersionId == method)
+        if (evaluation.Header?.InherentMethodVersionId is not { } inherentMethod ||
+            request.MethodVersionId is { } method && inherentMethod == method)
             return Result.Success;
         var triggerId = RiskGovernance.TriggerIdFor(request.ProgramId, request.RiskId, request.TriggerKind,
             request.SourceReference);

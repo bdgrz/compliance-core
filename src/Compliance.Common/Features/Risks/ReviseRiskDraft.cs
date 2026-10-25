@@ -8,4 +8,7 @@ namespace Bdgrz.Compliance.Features.Risks;
 public sealed record ReviseRiskDraft(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid RiskId,
     long ExpectedRevision, string Title, string Scenario, string PotentialEffect,
     string? SourceNote = null) : IRequest,
-    IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

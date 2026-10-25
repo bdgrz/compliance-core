@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -7,47 +8,52 @@ namespace Bdgrz.Compliance.Tests.Features.Risks;
 public sealed class RiskDraftCreationIdentityTests
 {
     [Fact]
-    public void ShouldRetainOriginalRegistrationGivenTypedCreationRetryAfterRevision()
+    public async Task ShouldRetainOriginalRegistrationGivenTypedCreationRetryAfterRevision()
     {
         // Arrange
+        await using var fixture = new RiskDraftSourceFixture();
         var tenant = Uuid.CreateVersion4();
         var program = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
         var id = RiskDraft.IdFor(tenant, program, "R-01");
-        var actor = Uuid.CreateVersion4();
-        var now = DateTimeOffset.UtcNow;
+        await fixture.SeedProgramAsync(tenant, program, RbacIds.Member(tenant, user));
         var request = new CreateRiskDraft(id, tenant, program, "r-01", "Original title", "Scenario", "Effect");
-        var risk = new RiskDraft(tenant, id);
-        Assert.True(risk.Create(request, actor, "Author", now).IsSuccess);
-        Assert.Null(risk.Revise(program, 1, new("Later title", "Later scenario", "Effect", null), actor, "Editor", now));
-        var facts = new AggregateScenario<RiskDraft>(risk).PendingEvents.ToArray();
-        var reloaded = new AggregateScenario<RiskDraft>(new(tenant, id)).Given(facts);
+        var create = new CreateRiskDraftHandler(fixture.Operations());
+        Assert.True((await create.HandleAsync(RiskDraftSourceFixture.Context(request, user), CancellationToken.None)).IsSuccess);
+        var revise = new ReviseRiskDraftHandler(fixture.Operations());
+        Assert.True((await revise.HandleAsync(RiskDraftSourceFixture.Context(new ReviseRiskDraft(Uuid.CreateVersion4(), tenant, program, id,
+            1, "Later title", "Later scenario", "Effect"), user), CancellationToken.None)).IsSuccess);
 
         // Act
-        var original = reloaded.Aggregate.Create(request, actor, "Updated profile", now.AddDays(1));
-        var changedActor = reloaded.Aggregate.Create(request, Uuid.CreateVersion4(), "Other author", now);
-        var changedIntent = reloaded.Aggregate.Create(request with { Title = "Different creation" }, actor, "Author", now);
+        var original = await create.HandleAsync(RiskDraftSourceFixture.Context(request, user, "Updated profile"), CancellationToken.None);
+        var changedActor = await create.HandleAsync(RiskDraftSourceFixture.Context(request, Uuid.CreateVersion4()), CancellationToken.None);
+        var changedIntent = await create.HandleAsync(RiskDraftSourceFixture.Context(request with { Title = "Different creation" }, user), CancellationToken.None);
+        var reloaded = await fixture.Reader.HydrateAsync(new RiskDraft(tenant, id, id));
 
         // Assert
         Assert.True(original.IsSuccess, original.Error?.Message);
         Assert.Equal(new RiskRegistration(id, "R-01", 1), original.Value);
         Assert.Equal(RequestErrorKind.Conflict, changedActor.Error?.Kind);
         Assert.Equal(RequestErrorKind.Conflict, changedIntent.Error?.Kind);
-        Assert.Equal(2, reloaded.Aggregate.Revision);
-        Assert.Empty(reloaded.PendingEvents);
+        Assert.Equal(2, reloaded.Revision);
+        Assert.Empty(new AggregateScenario<RiskDraft>(reloaded).PendingEvents);
+        Assert.Equal(2, (await fixture.FactsAsync(tenant, id)).Count);
     }
 
     [Fact]
-    public void ShouldRejectWithoutAppendGivenAuthoredIdentityDiffersFromNormalizedIdentifierIdentity()
+    public async Task ShouldRejectWithoutAppendGivenAuthoredIdentityDiffersFromNormalizedIdentifierIdentity()
     {
         // Arrange
+        await using var fixture = new RiskDraftSourceFixture();
         var tenant = Uuid.CreateVersion4();
         var program = Uuid.CreateVersion4();
         var wrong = Uuid.CreateVersion4();
-        var risk = new RiskDraft(tenant, wrong);
         var request = new CreateRiskDraft(wrong, tenant, program, "R-01", "Title", "Scenario", "Effect");
+        var handler = new CreateRiskDraftHandler(fixture.Operations());
 
         // Act
-        var result = risk.Create(request, Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow);
+        var result = await handler.HandleAsync(RiskDraftSourceFixture.Context(request, Uuid.CreateVersion4()), CancellationToken.None);
+        var risk = await fixture.Reader.HydrateAsync(new RiskDraft(tenant, wrong));
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);

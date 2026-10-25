@@ -6,7 +6,7 @@ namespace Bdgrz.Compliance.Features.Work;
 /// <summary>Builds risk acceptance work from the existing risk evaluation projection.</summary>
 sealed class RiskAcceptanceWorkItemDirectory(IAggregateReader reader, RiskGovernanceReader governanceReader,
     IRiskDraftDirectoryReader risks, RiskDraftListReadConsistency? riskConsistency,
-    IRiskEvaluationDirectoryReader evaluations) : IAccountableWorkItemDirectoryReader
+    IRiskEvaluationDirectoryReader evaluations, RiskEvaluationReader evaluationSources, RiskMethodReader methodSources) : IAccountableWorkItemDirectoryReader
 {
     public string ProjectorName => FitzRiskEvaluationDirectory.ProjectorName;
 
@@ -34,6 +34,6 @@ sealed class RiskAcceptanceWorkItemDirectory(IAggregateReader reader, RiskGovern
     {
         _ = horizon;
         return RiskAcceptanceWork.LoadProjectedAsync(reader, governanceReader, risks, riskConsistency, evaluations,
-            tenantId, programId, now, workItemId, ct);
+            tenantId, programId, now, workItemId, evaluationSources, methodSources, ct);
     }
 }

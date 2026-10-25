@@ -489,10 +489,21 @@
     },
     {
       "id": "typeii-calendar-native",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "fullUnitPassed": 5910,
       "focusedPassed": 98,
-      "qualificationArtifact": "calendar-qualification.json"
+      "qualificationArtifact": "calendar-qualification.json",
+      "pullRequest": 1115,
+      "mergeCommit": "d3ad9fd6ea4a4c853b7892dca45db78442bfd631"
+    },
+    {
+      "id": "risk-owner-batch-native",
+      "status": "locally_verified_pending_merge",
+      "fullUnitPassed": 5993,
+      "focusedPassed": 401,
+      "productionHttpPassed": 3,
+      "directJevProductionFilesReviewed": 111,
+      "qualificationArtifact": "risk-owner-batch-qualification.json"
     }
   ],
   "resolved": [

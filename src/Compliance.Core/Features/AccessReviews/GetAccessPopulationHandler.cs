@@ -32,7 +32,7 @@ public sealed class GetAccessPopulationHandler(IAggregateReader reader, IImmutab
         if (population.IsAccepted)
         {
             var accepted = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId,
-                request.PopulationId, ct, withClassifications: false).ConfigureAwait(false);
+                request.PopulationId, ct).ConfigureAwait(false);
             if (!accepted.IsSuccess)
                 return Result<AccessPopulationView>.Failure(accepted.Error);
             facts = accepted.Value.Facts;

@@ -253,6 +253,284 @@ public sealed class NativeOperationExecutorTests
         Assert.Equal(202, committed.Response.HttpStatus);
     }
 
+    [Theory]
+    [InlineData("read")]
+    [InlineData("write")]
+    [InlineData("freeze")]
+    public async Task ShouldReplayOriginalTypedResponseGivenEqualWinnerCommitsBeforeImmutablePreparationThrows(string stage)
+    {
+        // Arrange
+        await using var state = await PreparationRaceAsync(stage,
+            new ImmutableContentUnavailableException("The losing immutable preparation is unavailable."));
+
+        // Act
+        var result = await state.Loser.ExecuteAsync(state.Operation, Context(), CancellationToken.None);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var replay = Assert.IsType<AcceptedAppendResult.Replayed>(result.Value);
+        var winner = Assert.IsType<AcceptedAppendResult.Committed>(state.Winner());
+        var body = Assert.IsType<StandardResponseBody>(replay.Response.Body);
+        var typed = await state.Content.ReadJsonAsync<OperationAcceptedResponse>(Owner.Realm, body.Content);
+        var exact = await state.Content.ReadVerifiedAsync(Owner.Realm, body.Content);
+
+        // Assert
+        Assert.Equal(winner.Response, replay.Response);
+        Assert.Equal(winner.FirstResponse, replay.FirstResponse);
+        Assert.Equal(winner.FirstFact, replay.FirstFact);
+        Assert.Equal(202, replay.Response.HttpStatus);
+        Assert.Equal(new OperationAcceptedResponse(Logical, "/winner", At), typed);
+        Assert.Equal((await state.Content.ReadVerifiedAsync(Owner.Realm, state.WinnerBody)).ToArray(), exact.ToArray());
+        Assert.Equal(1, await CountAsync(state.Events));
+        Assert.Equal(0, state.Transport.Classifications);
+        Assert.Same(replay, state.Transport.Observed);
+    }
+
+    [Theory]
+    [InlineData("read", true)]
+    [InlineData("read", false)]
+    [InlineData("write", true)]
+    [InlineData("write", false)]
+    [InlineData("freeze", true)]
+    [InlineData("freeze", false)]
+    public async Task ShouldPreserveTypedPreparationFailureGivenNoConcurrentWinner(string stage, bool unavailable)
+    {
+        // Arrange
+        var fault = unavailable
+            ? new ImmutableContentUnavailableException("The original preparation is not visible yet.")
+            : new ImmutableContentIntegrityException("The original preparation cannot be verified.");
+        await using var state = await PreparationRaceAsync(stage, fault, commitWinner: false);
+
+        // Act
+        var result = await state.Loser.ExecuteAsync(state.Operation, Context(), CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(unavailable, result.Error!.IsTransient);
+        Assert.Same(fault, state.Transport.Classified);
+        Assert.Equal(1, state.Transport.Classifications);
+        Assert.Null(state.Transport.Observed);
+        Assert.Equal(2, state.Reader.Calls);
+        Assert.Equal(0, await CountAsync(state.Events));
+    }
+
+    [Theory]
+    [InlineData("read")]
+    [InlineData("write")]
+    [InlineData("freeze")]
+    public async Task ShouldRethrowOriginalExpectedFailureGivenNoWinnerAndNoTransportClassifier(string stage)
+    {
+        // Arrange
+        var fault = new ImmutableContentIntegrityException("Exact original failure object.");
+        await using var state = await PreparationRaceAsync(stage, fault, commitWinner: false, observeFailures: false);
+
+        // Act
+        var failure = await Record.ExceptionAsync(() => state.Loser.ExecuteAsync(state.Operation, Context(),
+            CancellationToken.None).AsTask());
+
+        // Assert
+        Assert.Same(fault, failure);
+        Assert.Equal(2, state.Reader.Calls);
+        Assert.Equal(0, await CountAsync(state.Events));
+    }
+
+    [Theory]
+    [InlineData("read")]
+    [InlineData("freeze")]
+    public async Task ShouldReturnConflictGivenDifferentIntentWinnerAndThrownPreparationFailure(string stage)
+    {
+        // Arrange
+        await using var state = await PreparationRaceAsync(stage,
+            new ImmutableContentUnavailableException("Losing preparation."), changedIntent: true);
+
+        // Act
+        var result = await state.Loser.ExecuteAsync(state.Operation, Context(), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.IsType<AcceptedAppendResult.Conflict>(result.Value);
+        Assert.Equal(0, state.Transport.Classifications);
+        Assert.Null(state.Transport.Observed);
+        Assert.Equal(2, state.Reader.Calls);
+        Assert.Equal(1, await CountAsync(state.Events));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldPassRequestedCancellationWithoutRecheckGivenExpectedPreparationFailure(bool winner)
+    {
+        // Arrange
+        using var cancellation = new CancellationTokenSource();
+        await using var state = await PreparationRaceAsync("read", new ImmutableContentUnavailableException("Losing read."),
+            commitWinner: winner, beforeFailure: cancellation.Cancel);
+
+        // Act
+        var failure = await Record.ExceptionAsync(() => state.Loser.ExecuteAsync(state.Operation, Context(),
+            cancellation.Token).AsTask());
+
+        // Assert
+        var canceled = Assert.IsAssignableFrom<OperationCanceledException>(failure);
+        Assert.Equal(cancellation.Token, canceled.CancellationToken);
+        Assert.Equal(1, state.Reader.Calls);
+        Assert.Equal(0, state.Transport.Classifications);
+        Assert.Null(state.Transport.Observed);
+        Assert.Equal(winner ? 1 : 0, await CountAsync(state.Events));
+    }
+
+    [Fact]
+    public async Task ShouldPreserveProgrammerFaultWithoutRecheckGivenConcurrentWinnerDuringPreparation()
+    {
+        // Arrange
+        var fault = new InvalidOperationException("A programmer fault is not a source-content failure.");
+        await using var state = await PreparationRaceAsync("read", fault);
+
+        // Act
+        var failure = await Record.ExceptionAsync(() => state.Loser.ExecuteAsync(state.Operation, Context(),
+            CancellationToken.None).AsTask());
+
+        // Assert
+        Assert.Same(fault, failure);
+        Assert.Equal(1, state.Reader.Calls);
+        Assert.Equal(0, state.Transport.Classifications);
+        Assert.Null(state.Transport.Observed);
+        Assert.Equal(1, await CountAsync(state.Events));
+    }
+
+    [Fact]
+    public async Task ShouldPreserveUnrequestedCancellationWithoutRecheckGivenConcurrentWinnerDuringPreparation()
+    {
+        // Arrange
+        var fault = new OperationCanceledException("The prepare operation canceled itself.");
+        await using var state = await PreparationRaceAsync("write", fault);
+
+        // Act
+        var failure = await Record.ExceptionAsync(() => state.Loser.ExecuteAsync(state.Operation, Context(),
+            CancellationToken.None).AsTask());
+
+        // Assert
+        Assert.Same(fault, failure);
+        Assert.Equal(1, state.Reader.Calls);
+        Assert.Equal(0, state.Transport.Classifications);
+        Assert.Null(state.Transport.Observed);
+        Assert.Equal(1, await CountAsync(state.Events));
+    }
+
+    static async Task<PreparationRace> PreparationRaceAsync(string stage, Exception failure,
+        bool commitWinner = true, bool changedIntent = false, Action? beforeFailure = null, bool observeFailures = true)
+    {
+        var (provider, events, _) = Build();
+        var content = provider.GetRequiredService<IImmutableContentStore>();
+        var winnerBody = await content.WriteJsonAsync(Owner.Realm, Uuid.CreateVersion4(), "winner-response.v1",
+            new OperationAcceptedResponse(Logical, "/winner", At));
+        var candidate = await content.WriteJsonAsync(Owner.Realm, Uuid.CreateVersion4(), "loser-response.v1",
+            new OperationAcceptedResponse(Logical, "/loser", At.AddHours(1)));
+        var source = await content.WriteJsonAsync(Owner.Realm, Uuid.CreateVersion4(), "prepare-source.v1", new UnitResult());
+        AcceptedAppendResult? accepted = null;
+        async Task CompeteAsync()
+        {
+            if (commitWinner)
+            {
+                await using var scope = provider.CreateAsyncScope();
+                var binding = changedIntent ? Provenance() with { AuthoredIntentSha256 = new string('e', 64) } : Provenance();
+                var operation = Operation(binding, 202, "winner") with
+                {
+                    Prepare = (_, _) => ValueTask.FromResult(Result<FirstResponseDescriptor>.Success(new(202,
+                        "application/json", winnerBody.Schema, new StandardResponseBody(winnerBody))))
+                };
+                var native = new NativeOperationExecutor(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                    scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content);
+                var result = await native.ExecuteAsync(operation, Context(), CancellationToken.None);
+                Assert.True(result.IsSuccess, result.Error?.Message);
+                accepted = result.Value;
+            }
+            beforeFailure?.Invoke();
+        }
+        var faulty = new PreparationFaultStore(content, stage, failure, CompeteAsync);
+        var transport = new PreparationTransport();
+        // Retain the real execution scope until this test's returned race state is disposed.
+        var execution = provider.CreateAsyncScope();
+        var observedReader = new PreparationReader(execution.ServiceProvider.GetRequiredService<IAggregateReader>());
+        var loser = new NativeOperationExecutor(observedReader,
+            execution.ServiceProvider.GetRequiredService<IAggregateExecutor>(), faulty, observeFailures ? transport : null);
+        var losing = Operation(Provenance(), 202, "loser") with
+        {
+            Prepare = async (_, ct) =>
+            {
+                if (stage == "read")
+                    await faulty.ReadVerifiedAsync(Owner.Realm, source, ct);
+                else if (stage == "write")
+                    await faulty.WriteJsonAsync(Owner.Realm, Uuid.CreateVersion4(), "prepare-source.v1", new UnitResult(), ct);
+                return Result<FirstResponseDescriptor>.Success(new(202, "application/json", candidate.Schema,
+                    new StandardResponseBody(candidate)));
+            }
+        };
+        return new(provider, events, content, winnerBody, loser, losing, () => accepted, transport, execution, observedReader);
+    }
+
+    sealed record PreparationRace(ServiceProvider Provider, InMemoryEventStore Events, IImmutableContentStore Content,
+        ImmutableContentRef WinnerBody, NativeOperationExecutor Loser, NativeOperation<AcceptanceProbe> Operation,
+        Func<AcceptedAppendResult?> Winner, PreparationTransport Transport, AsyncServiceScope Execution, PreparationReader Reader) : IAsyncDisposable
+    {
+        public async ValueTask DisposeAsync()
+        {
+            await Execution.DisposeAsync();
+            await Provider.DisposeAsync();
+        }
+    }
+
+    sealed class PreparationTransport : INativeOperationTransportObserver
+    {
+        public int Classifications { get; private set; }
+        public ImmutableContentIntegrityException? Classified { get; private set; }
+        public AcceptedAppendResult? Observed { get; private set; }
+        public RequestError? ClassifyFailure(AcceptedOperationBinding binding, IExecutionContext context,
+            ImmutableContentIntegrityException exception)
+        {
+            Classifications++;
+            Classified = exception;
+            return new RequestError(RequestErrorKind.Conflict, exception.Message,
+                exception is ImmutableContentUnavailableException);
+        }
+        public void Observe(AcceptedOperationBinding binding, IExecutionContext context, AcceptedAppendResult accepted) =>
+            Observed = accepted;
+    }
+
+    sealed class PreparationReader(IAggregateReader inner) : IAggregateReader
+    {
+        public int Calls { get; private set; }
+        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate, CancellationToken ct = default)
+            where TAggregate : Aggregate
+        {
+            Calls++;
+            return inner.HydrateAsync(aggregate, ct);
+        }
+    }
+
+    sealed class PreparationFaultStore(IImmutableContentStore inner, string stage, Exception failure,
+        Func<Task> beforeFailure) : IImmutableContentStore
+    {
+        public async Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema,
+            string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
+        {
+            if (stage == "write" && schema == "prepare-source.v1" || stage == "freeze" && schema == FirstResponses.Schema)
+            {
+                await beforeFailure();
+                throw failure;
+            }
+            return await inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+        }
+        public async Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default)
+        {
+            if (stage == "read" && reference.Schema == "prepare-source.v1")
+            {
+                await beforeFailure();
+                throw failure;
+            }
+            return await inner.ReadVerifiedAsync(realm, reference, ct);
+        }
+    }
+
     const string ContentRoute = "kv://bdgrz/immutable-content/tenant-a-";
 
     static OperationProvenance Provenance(DateTimeOffset? acceptedAt = null) => new(Logical, Logical, null, "Admit",

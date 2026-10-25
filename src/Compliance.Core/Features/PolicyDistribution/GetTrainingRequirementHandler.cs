@@ -3,7 +3,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.PolicyDistribution;
 
-public sealed class GetTrainingRequirementHandler(IAggregateReader reader, IImmutableContentStore content)
+public sealed class GetTrainingRequirementHandler(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)
     : IRequestHandler<GetTrainingRequirement, TrainingRequirementView>
 {
     public async ValueTask<Result<TrainingRequirementView>> HandleAsync(
@@ -17,16 +17,16 @@ public sealed class GetTrainingRequirementHandler(IAggregateReader reader, IImmu
                 "The training requirement was not found."));
         try
         {
-            return await TrainingRequirementRules.ViewAsync(content, requirement, request.Version, ct)
+            return await TrainingRequirementRules.ViewAsync(content, events, requirement, request.Version, ct)
                     .ConfigureAwait(false) is { } view
                 ? Result<TrainingRequirementView>.Success(view)
                 : Result<TrainingRequirementView>.Failure(new RequestError(RequestErrorKind.NotFound,
                     "The training requirement was not found."));
         }
-        catch (ImmutableContentIntegrityException)
+        catch (ImmutableContentIntegrityException error)
         {
             return Result<TrainingRequirementView>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The training requirement content cannot be verified yet.", true));
+                "The training requirement content cannot be verified.", error is ImmutableContentUnavailableException));
         }
     }
 }

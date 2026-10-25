@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -30,13 +31,13 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
         using var emptyResponse = await owner.GetAsync(path);
 
         // Act
-        using var createdResponse = await owner.PostAsJsonAsync(path, Draft("r-01"));
+        using var createdResponse = await RiskDraftHttpRequests.CreateAsync(owner, path, Draft("r-01"));
         var registration = await ReadAsync(createdResponse);
         var riskId = registration.GetProperty("risk_id").GetString();
         var draftPath = $"{path}/{riskId}/draft";
-        using var duplicate = await owner.PostAsJsonAsync(path, Draft("R-01"));
+        using var duplicate = await RiskDraftHttpRequests.CreateAsync(owner, path, Draft("R-01"));
         var original = await WaitForRevisionAsync(owner, draftPath, 1);
-        using var revisedResponse = await owner.PutAsJsonAsync(draftPath, new
+        using var revisedResponse = await RiskDraftHttpRequests.ReviseAsync(owner, draftPath, new
         {
             expected_revision = 1,
             title = "Provider outage",
@@ -44,7 +45,7 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
             potential_effect = "Service requests cannot be processed",
             source_note = "Management observation",
         });
-        using var staleResponse = await owner.PutAsJsonAsync(draftPath, new
+        using var staleResponse = await RiskDraftHttpRequests.ReviseAsync(owner, draftPath, new
         {
             expected_revision = 1,
             title = "Stale",
@@ -68,7 +69,7 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
         using var outsiderRead = await outsider.GetAsync(draftPath);
         using var outsiderList = await outsider.GetAsync(path);
         using var outsiderHistory = await outsider.GetAsync(historyPath);
-        using var outsiderWrite = await outsider.PostAsJsonAsync(path, Draft("R-02"));
+        using var outsiderWrite = await RiskDraftHttpRequests.CreateAsync(outsider, path, Draft("R-02"));
         using var otherProgram = await owner.GetAsync(
             $"/api/v1/tenants/{tenantId}/programs/{Guid.NewGuid()}/risks/{riskId}/draft");
         var otherTenant = await CreateProgramAsync(owner);
@@ -88,7 +89,7 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
         Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
         Assert.Equal("draft_unassessed", original.GetProperty("status").GetString());
         Assert.Equal("unresolved", original.GetProperty("owner_resolution").GetString());
-        Assert.Equal(HttpStatusCode.NoContent, revisedResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, revisedResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, staleResponse.StatusCode);
         Assert.Equal("Provider becomes unavailable", revised.GetProperty("content")
             .GetProperty("scenario").GetString());
@@ -124,6 +125,7 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
             {
                 ["tenant_id"] = tenantId,
                 ["program_id"] = programId,
+                ["risk_id"] = RiskDraftHttpRequests.IdForCollection(path, "R-02").ToString(),
                 ["identifier"] = "R-02",
                 ["title"] = "Change failure",
                 ["scenario"] = "A release fails",
@@ -179,6 +181,7 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
                 .GetProperty("isTransient").GetBoolean());
             _ = await mcp.When("bdgrz.risk.draft.revise", new Dictionary<string, object?>
             {
+                ["command_id"] = Uuid.CreateVersion4().ToString(),
                 ["tenant_id"] = tenantId,
                 ["program_id"] = programId,
                 ["risk_id"] = riskId,
@@ -209,7 +212,7 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
                     ["risk_id"] = riskId,
                 }).ExpectFailure();
         }
-        using var secondRisk = await owner.PostAsJsonAsync(path, Draft("R-03"));
+        using var secondRisk = await RiskDraftHttpRequests.CreateAsync(owner, path, Draft("R-03"));
         Assert.Equal(HttpStatusCode.OK, secondRisk.StatusCode);
         var secondRiskId = (await ReadAsync(secondRisk)).GetProperty("risk_id").GetString();
         _ = await WaitForRevisionAsync(owner, $"{path}/{secondRiskId}/draft", 1);
@@ -271,7 +274,7 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
         await worker.StopAsync();
 
         // Act
-        using var created = await owner.PostAsJsonAsync(path, Draft("R-01"));
+        using var created = await RiskDraftHttpRequests.CreateAsync(owner, path, Draft("R-01"));
         var riskId = (await ReadAsync(created)).GetProperty("risk_id").GetString();
         var draftPath = $"{path}/{riskId}/draft";
         var historyPath = $"{draftPath}/revisions";
@@ -301,7 +304,7 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
             Assert.Equal([1L], history.GetProperty("items").EnumerateArray()
                 .Select(item => item.GetProperty("revision").GetInt64()));
             await restarted.StopAsync();
-            using var revised = await owner.PutAsJsonAsync(draftPath, new
+            using var revised = await RiskDraftHttpRequests.ReviseAsync(owner, draftPath, new
             {
                 expected_revision = 1,
                 title = "Provider outage",
@@ -311,7 +314,7 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
             });
             using var staleHistory = await owner.GetAsync(
                 $"{historyPath}?minimum_risk_revision=2");
-            Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
             Assert.Equal(HttpStatusCode.Conflict, staleHistory.StatusCode);
             Assert.Equal("true", staleHistory.Headers.GetValues("Portia-Transient").Single());
             using var resumed = BuildWorker(applicationName);

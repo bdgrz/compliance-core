@@ -1,24 +1,28 @@
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Risks;
 
-[Discriminator("bdgrz.risk.draft.revised", 1)]
-public sealed record RiskDraftRevised(Uuid TenantId, Uuid ProgramId, Uuid RiskId,
-    long Revision, RiskDraftContent Content, Uuid ActorMemberId,
-    string ActorDisplay, DateTimeOffset ChangedAt) : DomainEvent
+[Discriminator("bdgrz.risk.draft.revised", 2)]
+public sealed record RiskDraftRevised(RiskDraftAuthorityHeader Header, ImmutableContentRef Content,
+    long NativeSequence, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult) : DomainEvent, IRiskDraftFact
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public Uuid? CommandId { get; init; }
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public long? OriginalExpectedRevision { get; init; }
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? AuthoredIntentSha256 { get; init; }
-
-    [JsonPropertyName("actor")]
-    public ActorReference? StoredActor { get; init; }
-
+    public Uuid TenantId => Header.TenantId;
+    public Uuid ProgramId => Header.ProgramId;
+    public Uuid RiskId => Header.RiskId;
+    public string Identifier => Header.Identifier;
+    public long Revision => Header.Revision;
+    public Uuid ActorMemberId => Header.ActorMemberId;
+    public string ActorDisplay => Header.ActorDisplay;
+    public DateTimeOffset ChangedAt => Header.ChangedAt;
+    public ActorReference Actor => Header.Actor;
     [JsonIgnore]
-    public ActorReference Actor => StoredActor ?? ActorReference.ForMember(ActorMemberId, ActorDisplay);
+    public ActorReference StoredActor => Header.Actor;
+    public string AuthoredIntentSha256 => Operation.AuthoredIntentSha256;
+    public Uuid? CommandId => Operation.LogicalId;
+    public long? OriginalExpectedRevision => Operation.OriginalExpectedRevision is { } revision ? checked((long)revision) : null;
 }

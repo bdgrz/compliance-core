@@ -17,7 +17,7 @@ namespace Bdgrz.Compliance.Features.Providers;
 /// </summary>
 public sealed class LinkProviderCoverageGapRiskAcceptanceHandler(NativeOperationExecutor operations,
     IAggregateReader reader, AssuranceReferences references, ProviderReadConsistency providerConsistency,
-    ISourceFactResolver resolver, IImmutableContentStore content, TimeProvider clock)
+    ISourceFactResolver resolver, IImmutableContentStore content, TimeProvider clock, RiskEvaluationReader evaluations)
     : IRequestHandler<LinkProviderCoverageGapRiskAcceptance, OperationAcceptedResponse>
 {
     const string CommandKind = nameof(LinkProviderCoverageGapRiskAcceptance);
@@ -99,8 +99,15 @@ public sealed class LinkProviderCoverageGapRiskAcceptanceHandler(NativeOperation
             .ConfigureAwait(false);
         if (!draft.IsCreated || draft.ProgramId != request.ProgramId)
             return Failed(new RequestError(RequestErrorKind.NotFound, "The risk was not found in this program."));
-        var risk = await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RiskId), ct)
-            .ConfigureAwait(false);
+        RiskEvaluationReadSnapshot risk;
+        try
+        {
+            risk = await evaluations.ReadAsync(request.TenantId, request.ProgramId, request.RiskId, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Failed(RiskEvaluationReadFailure.Of(failure));
+        }
         var acceptance = risk.ProgramId == request.ProgramId ? risk.FindAcceptance(request.AcceptanceId) : null;
         if (acceptance is null || risk.AcceptanceFact(request.AcceptanceId) is not { } fact ||
             acceptance.AcceptedAt > now || acceptance.ExpiresAt <= now)

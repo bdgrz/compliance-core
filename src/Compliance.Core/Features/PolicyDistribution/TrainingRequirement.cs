@@ -19,7 +19,7 @@ public sealed class TrainingRequirement : Aggregate
     public const string Cadence = "hire_within_30_days_then_annual";
 
     readonly Uuid _tenantId;
-    readonly List<TrainingRequirementDefined> _versions = [];
+    TrainingRequirementDefined? _latest;
 
     /// <summary>Opens the requirement with a known id, selecting the logical operation to resolve.</summary>
     public TrainingRequirement(Uuid tenantId, Uuid requirementId, Uuid selectedLogicalId = default)
@@ -27,44 +27,26 @@ public sealed class TrainingRequirement : Aggregate
     {
         _tenantId = tenantId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
-        On<TrainingRequirementDefined>(ev =>
-        {
-            Acceptance.Observe(ev);
-            var first = _versions.Count == 0;
-            if (ev.TenantId != _tenantId || ev.RequirementId != Id || ev.Operation.Owner != Stream ||
-                ev.Version != _versions.Count + 1 || ev.FirstResponse is null ||
-                first && TrainingRequirementIdentity.IdFor(ev.TenantId, ev.ProgramId, ev.Identifier) != Id ||
-                !first && (ev.Identifier != _versions[0].Identifier || ev.ProgramId != _versions[0].ProgramId))
-                throw new InvalidOperationException(
-                    "A requirement defines sequential versions of its own normalized identifier.");
-            _versions.Add(ev);
-        });
+        On<TrainingRequirementDefined>(Apply);
     }
 
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
 
     /// <summary>True once the first version was defined.</summary>
-    public bool IsDefined => _versions.Count > 0;
+    public bool IsDefined => _latest is not null;
 
     /// <summary>The program of the requirement, once defined.</summary>
-    public Uuid ProgramId => _versions.Count > 0 ? _versions[0].ProgramId : Uuid.Empty;
+    public Uuid ProgramId => _latest?.ProgramId ?? Uuid.Empty;
 
     /// <summary>The immutable normalized identifier, once defined.</summary>
-    public string Identifier => _versions.Count > 0 ? _versions[0].Identifier : string.Empty;
+    public string Identifier => _latest?.Identifier ?? string.Empty;
 
     /// <summary>The logical version: the number of defined versions.</summary>
-    public long CurrentVersion => _versions.Count;
+    public long CurrentVersion => _latest?.Version ?? 0;
 
     /// <summary>The latest defined version fact, once defined.</summary>
-    public TrainingRequirementDefined? Latest => _versions.Count > 0 ? _versions[^1] : null;
-
-    /// <summary>The fact that defined an exact version, or null.</summary>
-    public TrainingRequirementDefined? FactOf(long version) =>
-        version >= 1 && version <= _versions.Count ? _versions[(int)version - 1] : null;
-
-    /// <summary>Every defined version in order.</summary>
-    public IReadOnlyList<TrainingRequirementDefined> Versions => _versions;
+    public TrainingRequirementDefined? Latest => _latest;
 
     /// <summary>Checks the creation guards without raising anything.</summary>
     public Result PrepareDefine() => IsDefined
@@ -110,10 +92,26 @@ public sealed class TrainingRequirement : Aggregate
         var prepared = PrepareRevise((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
-        var first = _versions[0];
-        RaiseEvent(new TrainingRequirementDefined(_tenantId, first.ProgramId, Id, first.Identifier, CurrentVersion + 1,
+        RaiseEvent(new TrainingRequirementDefined(_tenantId, ProgramId, Id, Identifier, CurrentVersion + 1,
             content, contentSha256, operation.LogicalId, actor, changedAt, operation, firstResponse,
             operationResult));
         return Result.Success;
+    }
+
+    void Apply(TrainingRequirementDefined ev)
+    {
+        Acceptance.Observe(ev);
+        var first = _latest is null;
+        if (ev.TenantId != _tenantId || ev.RequirementId != Id || ev.Version != CurrentVersion + 1 ||
+            ev.FirstResponse is null || ev.OperationResult is null ||
+            !NativeOwnerHistory.IsOwnRoot(this, ev.Operation,
+                first ? nameof(DefineTrainingRequirement) : nameof(ReviseTrainingRequirement),
+                first ? null : (ulong)CurrentVersion) || ev.DefineRequestId != ev.Operation.LogicalId ||
+            ev.Actor != ev.Operation.Actor || ev.ChangedAt != ev.Operation.AcceptedAt ||
+            first && (ev.Operation.LogicalId != Id ||
+                TrainingRequirementIdentity.IdFor(ev.TenantId, ev.ProgramId, ev.Identifier) != Id) ||
+            !first && (ev.Identifier != Identifier || ev.ProgramId != ProgramId))
+            throw new InvalidOperationException("A requirement defines sequential native versions of its own normalized identifier.");
+        _latest = ev;
     }
 }

@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution;
 ///     command id is the logical operation identity, so an exact retry replays the original registration even after
 ///     later revisions; launched campaigns keep the version they pinned.
 /// </summary>
-public sealed class ReviseTrainingRequirementHandler(NativeOperationExecutor operations, IAggregateReader reader,
+public sealed class ReviseTrainingRequirementHandler(NativeOperationExecutor operations,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ReviseTrainingRequirement, TrainingRequirementRegistration>
 {
@@ -29,57 +29,47 @@ public sealed class ReviseTrainingRequirementHandler(NativeOperationExecutor ope
         var now = clock.GetUtcNow();
         var stream = new TrainingRequirement(request.TenantId, request.RequirementId).Stream;
         var provenance = PolicyCampaignContent.Provenance(request.CommandId, CommandKind, stream, stream,
-            actor.Reference, request.ExpectedVersion, AuthoredIntentDigest.Compute(request), now);
+            actor.Reference, request.ExpectedVersion, AuthoredIntentDigest.Compute(request), now) with
+        { FirstOwner = stream };
         var binding = AcceptedOperationBinding.Of(provenance);
-        var current = await reader.HydrateAsync(new TrainingRequirement(request.TenantId, request.RequirementId,
-            request.CommandId), ct).ConfigureAwait(false);
-
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? definition = null;
         ImmutableContentRef? result = null;
-        TrainingRequirementContent? clean = null;
-        if (current.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        string? definitionSha = null;
+
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(TrainingRequirement requirement,
+            CancellationToken token)
         {
-            if (!current.IsDefined || current.ProgramId != request.ProgramId)
-                return Failure(RequestErrorKind.NotFound, "The training requirement was not found.");
-            var prepared = current.PrepareRevise(request.ExpectedVersion);
+            if (!requirement.IsDefined || requirement.ProgramId != request.ProgramId)
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound,
+                    "The training requirement was not found."));
+            var prepared = requirement.PrepareRevise(request.ExpectedVersion);
             if (!prepared.IsSuccess)
-                return Result<TrainingRequirementRegistration>.Failure(prepared.Error!);
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
             if (TrainingRequirementRules.Validate(request.Content) is { } error)
-                return Failure(RequestErrorKind.Validation, error);
-            clean = TrainingRequirementRules.Clean(request.Content);
-            var registration = new TrainingRequirementRegistration(request.RequirementId, current.Identifier,
-                current.CurrentVersion + 1);
-            definition = await TrainingRequirementRules.WriteContentAsync(content, request.TenantId, clean, ct)
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation, error));
+            var clean = TrainingRequirementRules.Clean(request.Content);
+            definitionSha = TrainingRequirementRules.Hash(clean);
+            var registration = new TrainingRequirementRegistration(request.RequirementId, requirement.Identifier,
+                requirement.CurrentVersion + 1);
+            definition = await TrainingRequirementRules.WriteContentAsync(content, request.TenantId, clean, token)
                 .ConfigureAwait(false);
             var body = await PolicyCampaignContent.WriteAsync(content, request.TenantId,
-                PolicyCampaignContent.TrainingRegistrationSchema, registration, ct).ConfigureAwait(false);
+                PolicyCampaignContent.TrainingRegistrationSchema, registration, token).ConfigureAwait(false);
             result = await PolicyCampaignContent.WriteResultAsync(content, request.TenantId,
-                PolicyCampaignContent.TrainingRegistrationSchema, body, ct).ConfigureAwait(false);
-            response = PolicyCampaignContent.OkResponse(PolicyCampaignContent.TrainingRegistrationSchema, body);
+                PolicyCampaignContent.TrainingRegistrationSchema, body, token).ConfigureAwait(false);
+            return Result<FirstResponseDescriptor>.Success(
+                PolicyCampaignContent.OkResponse(PolicyCampaignContent.TrainingRegistrationSchema, body));
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<TrainingRequirement>(binding,
             () => new TrainingRequirement(request.TenantId, request.RequirementId, request.CommandId),
             requirement => requirement.Acceptance,
-            requirement => Prepare(requirement, request.ExpectedVersion, response),
+            PrepareAsync,
             (TrainingRequirement requirement, ImmutableContentRef frozen) => requirement.Revise(provenance,
-                definition!, TrainingRequirementRules.Hash(clean!), actor.Reference, now, frozen, result!)),
+                definition!, definitionSha!, actor.Reference, now, frozen, result!)),
             context, ct).ConfigureAwait(false);
         return await PolicyCampaignContent.ResponseAsync<TrainingRequirementRegistration>(content, request.TenantId,
             outcome, ct).ConfigureAwait(false);
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(TrainingRequirement requirement, long expectedVersion,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = requirement.PrepareRevise(expectedVersion);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The training requirement changed while the revision was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static Result<TrainingRequirementRegistration> Failure(RequestErrorKind kind, string message) =>

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Content;
 
 namespace Bdgrz.Compliance.Features.Snapshots;
 
@@ -27,6 +28,13 @@ static class SnapshotSourceCapture
     {
         if (Current.Value is { } scope)
             scope.Population(kind, rows, logicalSha256);
+    }
+
+    public static void Risk(string logicalSha256, ReadOnlySpan<byte> source,
+        IReadOnlyList<SnapshotSourceContentBlob> blobs)
+    {
+        if (blobs.Count > 0 && Current.Value is { } scope)
+            scope.Risk(logicalSha256, source, blobs);
     }
 
     internal sealed class Scope : IDisposable
@@ -116,6 +124,58 @@ static class SnapshotSourceCapture
                 var descriptor = new SnapshotSourceBlob(physical, input.Length,
                     "application/vnd.bdgrz.population-snapshot-source.v1+json", "json",
                     "Complete canonical population rows and their verified logical Merkle identity.");
+                _materials.Add(logicalSha256, new Material(path, descriptor));
+            }
+        }
+
+        public void Risk(string logicalSha256, ReadOnlySpan<byte> source,
+            IReadOnlyList<SnapshotSourceContentBlob> blobs)
+        {
+            if (Convert.ToHexStringLower(SHA256.HashData(source)) != logicalSha256)
+                throw new ImmutableContentIntegrityException("A risk source envelope differs from its exact logical preimage.");
+            var unique = new Dictionary<Uuid, SnapshotSourceContentBlob>();
+            foreach (var blob in blobs)
+            {
+                if (blob.Reference.ContentId == Uuid.Empty || blob.Reference.Bytes != blob.Bytes.LongLength ||
+                    Convert.ToHexStringLower(SHA256.HashData(blob.Bytes)) != blob.Reference.Sha256 ||
+                    unique.TryGetValue(blob.Reference.ContentId, out var prior) && prior.Reference != blob.Reference)
+                    throw new ImmutableContentIntegrityException("A risk source blob differs from its exact immutable reference.");
+                unique.TryAdd(blob.Reference.ContentId, blob);
+            }
+            lock (_gate)
+            {
+                if (_materials.TryGetValue(logicalSha256, out var existing))
+                {
+                    File.Delete(existing.Path);
+                    _materials.Remove(logicalSha256);
+                }
+                var path = Path.Combine(_directory, logicalSha256 + ".source");
+                using (var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                using (var writer = new Utf8JsonWriter(output, SnapshotContentIdentity.CanonicalWriterOptions))
+                {
+                    writer.WriteStartObject();
+                    writer.WriteNumber("format_version", 1);
+                    writer.WriteString("logical_content_sha256", logicalSha256);
+                    writer.WriteBase64String("source_base64", source);
+                    writer.WriteStartArray("content_blobs");
+                    foreach (var blob in unique.Values.OrderBy(item => item.Reference.ContentId.ToString(), StringComparer.Ordinal))
+                    {
+                        writer.WriteStartObject();
+                        writer.WritePropertyName("reference");
+                        var reference = JsonSerializer.SerializeToElement(blob.Reference,
+                            ComplianceCoreJsonContext.Default.ImmutableContentRef);
+                        SnapshotContentIdentity.WriteCanonical(writer, reference);
+                        writer.WriteBase64String("base64", blob.Bytes);
+                        writer.WriteEndObject();
+                    }
+                    writer.WriteEndArray();
+                    writer.WriteEndObject();
+                }
+                using var input = File.OpenRead(path);
+                var physical = Convert.ToHexStringLower(SHA256.HashData(input));
+                var descriptor = new SnapshotSourceBlob(physical, input.Length,
+                    "application/vnd.bdgrz.risk-snapshot-source.v1+json", "json",
+                    "Exact canonical risk source proof and its digest-verified immutable business content bytes.");
                 _materials.Add(logicalSha256, new Material(path, descriptor));
             }
         }

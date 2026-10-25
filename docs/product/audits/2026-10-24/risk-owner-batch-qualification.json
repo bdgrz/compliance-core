@@ -1,0 +1,48 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Compact RiskDraft, RiskEvaluation, RiskMethod, access classification, criteria overlay and training requirement owner history; verified risk source archive bytes and central native prepare-failure winner replay.",
+  "validation": {
+    "genuineRedFailures": {
+      "riskNative": 2,
+      "smallHistoryCompactions": 4,
+      "riskMethodRetry": 1,
+      "riskSourceArchive": 1,
+      "nativePrepareRace": 3
+    },
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 401,
+    "productionHttpPassed": 3,
+    "backendUnitPassed": 5993,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "coverageExport": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 111,
+    "signalsTriaged": 4,
+    "integrationMergeProbability": 0.49,
+    "integrationRefineProbability": 0.5,
+    "adoptedDecision": "merge scoped repair and continue remaining owners",
+    "adjudication": "Jev probabilities remained split (refine .50 / merge .49; confidence .25), with no concrete identified defect. Treat as an uncertainty signal rather than a proved failure. All four elevated per-file signals were checked against source ownership and executable authorization, binding, malformed history, replay, preparation race and archive regressions; strict/local suites pass. User explicitly authorized rapid squash merge without waiting for CI."
+  },
+  "parentRefinements": [
+    "Composed latest all-source native risk receipt validation and physical risk body archive closure before method migration.",
+    "Fixed strict C# analyzer/nullable/constructor migrations and existing fixtures to share the actual immutable content store and new projector identities.",
+    "Corrected audit fixture to an independent audit-session stream; installed SDK rejects audit facts in aggregate state replay.",
+    "Centralized prepare/read/write/freeze winner recovery instead of adding a RiskMethod-only handler workaround.",
+    "Preserved exact old-API failure evidence before final implementations."
+  ],
+  "qualification": [
+    "Original request authorization still executes before accepted HTTP replay.",
+    "Existing public fields/routes/response shapes remain; method publication slot is explicitly identified from tenant/program/original expected version.",
+    "Changed native risk event payloads advance schema versions. No retained wide-fact converter, reset, deployment or production broker qualification.",
+    "History validation/composition may perform transient O(N) reads. Compact runtime command owners do not retain complete lifetime business history.",
+    "Pure Rules classes are historical/transient validators, not aggregate command authorities.",
+    "Other owner, receiver and reactor families remain separate work; this batch does not declare repository completion."
+  ]
+}

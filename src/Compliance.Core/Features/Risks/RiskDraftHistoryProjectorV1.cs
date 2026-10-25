@@ -5,7 +5,7 @@ namespace Bdgrz.Compliance.Features.Risks;
 public sealed partial class RiskDraftHistoryProjectorV1(
     IRiskDraftHistoryDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant("risks"),
-            "RiskDraftHistoryDirectoryV1"),
+            FitzRiskDraftHistoryDirectoryV1.ProjectorName),
       IProjectorHandler<RiskDraftCreated>, IProjectorHandler<RiskDraftRevised>
 {
     public ValueTask HandleAsync(RiskDraftCreated ev, IProjectorContext context,

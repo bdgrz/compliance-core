@@ -7,4 +7,7 @@ namespace Bdgrz.Compliance.Features.Risks;
 [Discriminator("bdgrz.risk.treatment.choose", 1)]
 public sealed record ChooseRiskTreatment(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid RiskId,
     long ExpectedRevision, string Kind, string Rationale)
-    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

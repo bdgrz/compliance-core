@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Fitz.Testing;
@@ -17,8 +18,9 @@ public sealed class FitzRiskEvaluationDirectoryTests
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var riskId = Uuid.CreateVersion4();
-        var directory = new FitzRiskEvaluationDirectory(new InMemoryKvClient());
-        var events = Events(tenantId, programId, riskId);
+        await using var native = new RiskEvaluationSourceFixture();
+        var directory = new FitzRiskEvaluationDirectory(native.Kv, native.Evaluations);
+        var events = await EventsAsync(native, tenantId, programId, riskId);
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
                          Identity(tenantId), ProjectionCheckpoint.Start)))
         {
@@ -50,8 +52,9 @@ public sealed class FitzRiskEvaluationDirectoryTests
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
-        var directory = new FitzRiskEvaluationDirectory(new InMemoryKvClient());
-        var events = Events(tenantId, Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        await using var native = new RiskEvaluationSourceFixture();
+        var directory = new FitzRiskEvaluationDirectory(native.Kv, native.Evaluations);
+        var events = await EventsAsync(native, tenantId, Uuid.CreateVersion4(), Uuid.CreateVersion4());
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
             Identity(tenantId), ProjectionCheckpoint.Start));
 
@@ -63,12 +66,12 @@ public sealed class FitzRiskEvaluationDirectoryTests
         Assert.IsType<InvalidOperationException>(failure);
     }
 
-    static List<DomainEvent> Events(Uuid tenantId, Uuid programId, Uuid riskId)
+    static async Task<IReadOnlyList<DomainEvent>> EventsAsync(RiskEvaluationSourceFixture native, Uuid tenantId, Uuid programId, Uuid riskId)
     {
-        var method = new RiskMethod(tenantId, programId);
+        var method = new RiskMethodRules(tenantId, programId);
         Assert.Null(method.Publish(programId, 0, RiskMethodTests.Scale(), RiskMethodTests.Scale(),
             12, ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), Now));
-        var evaluation = new RiskEvaluation(tenantId, riskId);
+        var evaluation = new RiskEvaluationRules(tenantId, riskId);
         var assessor = Uuid.CreateVersion4();
         Assert.Null(evaluation.RecordAssessment(programId, 0, Uuid.CreateVersion4(),
             method.Current!, "inherent", 4, 4, "High", assessor, "Assessor", Now));
@@ -76,9 +79,10 @@ public sealed class FitzRiskEvaluationDirectoryTests
             "Assessor", Now));
         Assert.Null(evaluation.RecordAssessment(programId, 2, Uuid.CreateVersion4(),
             method.Current!, "residual", 2, 2, "Low", assessor, "Assessor", Now));
-        return [.. new AggregateScenario<RiskEvaluation>(evaluation).PendingEvents];
+        await native.SeedAsync(evaluation);
+        return await native.FactsAsync(tenantId, riskId);
     }
 
-    static CheckpointIdentity Identity(Uuid tenantId) => new("RiskEvaluationDirectoryV1",
+    static CheckpointIdentity Identity(Uuid tenantId) => new("RiskEvaluationDirectoryV2",
         EventStreamPattern.ForPattern(tenantId.ToString(), "risk-evaluations"));
 }

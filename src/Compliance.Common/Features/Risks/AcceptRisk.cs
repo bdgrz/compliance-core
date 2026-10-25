@@ -13,4 +13,7 @@ namespace Bdgrz.Compliance.Features.Risks;
 public sealed record AcceptRisk(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid RiskId,
     long ExpectedRevision, Uuid ResidualAssessmentId, string ApproverAuthority,
     DateTimeOffset ExpiresAt, string Rationale, Uuid? SeparationOfDutiesWaiverId = null)
-    : IRequest<RiskAcceptanceView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest<RiskAcceptanceView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

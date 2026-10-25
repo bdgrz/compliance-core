@@ -14,8 +14,7 @@ namespace Bdgrz.Compliance.Features.Criteria;
 ///     first response, so an exact retry returns the original revision even after later edits and a changed intent
 ///     under the same command id conflicts.
 /// </summary>
-public sealed class SetCriteriaTextOverlayHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    ICriteriaCatalog catalog, IImmutableContentStore content, TimeProvider clock)
+public sealed class SetCriteriaTextOverlayHandler(NativeOperationExecutor operations, ICriteriaCatalog catalog, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<SetCriteriaTextOverlay, CriteriaTextOverlayRegistration>
 {
     const string CommandKind = "SetCriteriaTextOverlay";
@@ -35,48 +34,37 @@ public sealed class SetCriteriaTextOverlayHandler(NativeOperationExecutor operat
         var stream = new CriteriaTextOverlay(request.TenantId, request.EditionId, entry.Identifier).Stream;
         var provenance = RootOperation.Provenance(request.CommandId, CommandKind, stream,
             ActorReference.ForMember(actor.MemberId, actor.Display), request.ExpectedRevision,
-            AuthoredIntentDigest.Compute(request), now);
+            AuthoredIntentDigest.Compute(request), now) with
+        { FirstOwner = stream };
         var binding = AcceptedOperationBinding.Of(provenance);
-        var current = await reader.HydrateAsync(new CriteriaTextOverlay(request.TenantId, request.EditionId,
-            entry.Identifier, request.CommandId), ct).ConfigureAwait(false);
-
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? overlay = null;
         ImmutableContentRef? result = null;
-        if (current.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(CriteriaTextOverlay overlayLine,
+            CancellationToken token)
         {
             if (CriteriaTextOverlayRules.Clean(request.Content) is not { } cleaned)
-                return Failure(RequestErrorKind.Validation,
-                    "An overlay requires bounded supplied text, supplier, license and member attribution.");
-            var prepared = current.PrepareSet(request.ExpectedRevision);
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
+                    "An overlay requires bounded supplied text, supplier, license and member attribution."));
+            var prepared = overlayLine.PrepareSet(request.ExpectedRevision);
             if (!prepared.IsSuccess)
-                return Result<CriteriaTextOverlayRegistration>.Failure(prepared.Error!);
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
             overlay = await NativeContent.WriteAsync(content, request.TenantId, CriteriaTextOverlay.ContentSchema,
-                cleaned, ct).ConfigureAwait(false);
-            (response, result) = await NativeContent.FreezeAsync(content, request.TenantId,
+                cleaned, token).ConfigureAwait(false);
+            var frozen = await NativeContent.FreezeAsync(content, request.TenantId,
                 CriteriaTextOverlay.RegistrationSchema, new CriteriaTextOverlayRegistration(request.EditionId,
-                    request.Identifier, request.ExpectedRevision + 1), ct).ConfigureAwait(false);
+                    request.Identifier, request.ExpectedRevision + 1), token).ConfigureAwait(false);
+            result = frozen.Result;
+            return Result<FirstResponseDescriptor>.Success(frozen.Response);
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<CriteriaTextOverlay>(binding,
             () => new CriteriaTextOverlay(request.TenantId, request.EditionId, entry.Identifier, request.CommandId),
-            overlayLine => overlayLine.Acceptance, overlayLine => Prepare(overlayLine, request.ExpectedRevision, response),
+            overlayLine => overlayLine.Acceptance, PrepareAsync,
             (CriteriaTextOverlay overlayLine, ImmutableContentRef frozen) => overlayLine.Set(provenance, overlay!,
                 frozen, result!)), context, ct).ConfigureAwait(false);
         return await NativeContent.ResponseAsync<CriteriaTextOverlayRegistration>(content, request.TenantId, outcome,
             ct).ConfigureAwait(false);
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(CriteriaTextOverlay overlay, long expectedRevision,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = overlay.PrepareSet(expectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The overlay changed while the revision was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static Result<CriteriaTextOverlayRegistration> Failure(RequestErrorKind kind, string message) =>

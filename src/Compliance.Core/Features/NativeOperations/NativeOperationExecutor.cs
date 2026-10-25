@@ -54,11 +54,29 @@ public sealed class NativeOperationExecutor(IAggregateReader reader, IAggregateE
             var decided = await DecideAsync(operation, hydrated, acceptance, ct).ConfigureAwait(false);
             if (decided is not null)
                 return Result<AcceptedAppendResult>.Success(decided);
-            var prepared = await operation.Prepare(hydrated, ct).ConfigureAwait(false);
+            Result<FirstResponseDescriptor> prepared;
+            ImmutableContentRef? candidate = null;
+            try
+            {
+                prepared = await operation.Prepare(hydrated, ct).ConfigureAwait(false);
+                if (prepared.IsSuccess)
+                    candidate = await FirstResponses.FreezeAsync(content, operation.Binding.Realm, prepared.Value!, ct)
+                        .ConfigureAwait(false);
+            }
+            catch (ImmutableContentIntegrityException)
+            {
+                // An equal writer may have committed while this candidate's immutable preparation failed.
+                // Recheck only this expected failure; cancellation and programmer faults keep their own meaning.
+                ct.ThrowIfCancellationRequested();
+                var resolved = await RecheckAsync(operation, ct).ConfigureAwait(false);
+                if (resolved is not null)
+                    return Result<AcceptedAppendResult>.Success(resolved);
+                throw;
+            }
             if (!prepared.IsSuccess)
                 return await ResolveFailureAsync(operation, prepared.Error!, ct).ConfigureAwait(false);
-            var frozen = await FirstResponses.FreezeAsync(content, operation.Binding.Realm, prepared.Value!, ct)
-                .ConfigureAwait(false);
+            var frozen = candidate ?? throw new InvalidOperationException(
+                "Successful preparation must freeze one first-response reference.");
             TAggregate? committed = null;
             try
             {

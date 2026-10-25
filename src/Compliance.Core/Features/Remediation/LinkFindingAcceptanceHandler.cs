@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -14,7 +15,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     after the fact.
 /// </summary>
 public sealed class LinkFindingAcceptanceHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    FindingReader findings, IImmutableContentStore content, TimeProvider clock)
+    FindingReader findings, IImmutableContentStore content, TimeProvider clock, RiskEvaluationReader evaluations)
     : IRequestHandler<LinkFindingAcceptance, FindingView>
 {
     public async ValueTask<Result<FindingView>> HandleAsync(IRequestContext<LinkFindingAcceptance> context,
@@ -73,27 +74,33 @@ public sealed class LinkFindingAcceptanceHandler(NativeOperationExecutor operati
 
     async ValueTask<Result<DateTimeOffset>> ExpiryAsync(LinkFindingAcceptance request, CancellationToken ct)
     {
-        DateTimeOffset? expiresAt = null;
-        if (request.Kind == FindingStates.RiskAcceptance && request.DecisionId is { } decision)
+        try
         {
-            var risk = await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RecordId), ct)
-                .ConfigureAwait(false);
-            if (risk.ProgramId == request.ProgramId && risk.FindAcceptance(decision) is { } accepted)
-                expiresAt = accepted.ExpiresAt;
+            DateTimeOffset? expiresAt = null;
+            if (request.Kind == FindingStates.RiskAcceptance && request.DecisionId is { } decision)
+            {
+                var risk = await evaluations.ReadAsync(request.TenantId, request.ProgramId, request.RecordId, ct).ConfigureAwait(false);
+                if (risk.ProgramId == request.ProgramId && risk.FindAcceptance(decision) is { } accepted)
+                    expiresAt = accepted.ExpiresAt;
+            }
+            else if (request.Kind == FindingStates.Waiver && request.DecisionId is null)
+            {
+                var waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, request.RecordId), ct)
+                    .ConfigureAwait(false);
+                if (waiver.IsRecorded && waiver.ApprovedAt is not null)
+                    expiresAt = waiver.ExpiresAt;
+            }
+            else
+                return Result<DateTimeOffset>.Failure(new RequestError(RequestErrorKind.Validation,
+                    "Link a risk_acceptance with its risk and acceptance IDs, or an approved waiver by its ID."));
+            return expiresAt is { } resolved
+                ? Result<DateTimeOffset>.Success(resolved)
+                : Result<DateTimeOffset>.Failure(new RequestError(RequestErrorKind.Validation,
+                    "The acceptance was not found or is not approved in this program."));
         }
-        else if (request.Kind == FindingStates.Waiver && request.DecisionId is null)
+        catch (ImmutableContentIntegrityException failure)
         {
-            var waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, request.RecordId), ct)
-                .ConfigureAwait(false);
-            if (waiver.IsRecorded && waiver.ApprovedAt is not null)
-                expiresAt = waiver.ExpiresAt;
+            return Result<DateTimeOffset>.Failure(RiskEvaluationReadFailure.Of(failure));
         }
-        else
-            return Result<DateTimeOffset>.Failure(new RequestError(RequestErrorKind.Validation,
-                "Link a risk_acceptance with its risk and acceptance IDs, or an approved waiver by its ID."));
-        return expiresAt is { } resolved
-            ? Result<DateTimeOffset>.Success(resolved)
-            : Result<DateTimeOffset>.Failure(new RequestError(RequestErrorKind.Validation,
-                "The acceptance was not found or is not approved in this program."));
     }
 }

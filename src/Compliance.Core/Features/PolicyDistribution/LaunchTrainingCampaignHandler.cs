@@ -4,7 +4,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.PolicyDistribution;
 
 /// <summary>Launches completion tracking for the exact latest training requirement version.</summary>
-sealed class LaunchTrainingCampaignHandler(CampaignLaunch launch, IAggregateReader reader,
+sealed class LaunchTrainingCampaignHandler(CampaignLaunch launch, IAggregateReader reader, IDomainEventReader events,
     IImmutableContentStore content) : IRequestHandler<LaunchTrainingCampaign, CampaignRegistration>
 {
     public ValueTask<Result<CampaignRegistration>> HandleAsync(IRequestContext<LaunchTrainingCampaign> context,
@@ -19,7 +19,7 @@ sealed class LaunchTrainingCampaignHandler(CampaignLaunch launch, IAggregateRead
             var requirement = await reader.HydrateAsync(new TrainingRequirement(request.TenantId,
                 request.RequirementId), token).ConfigureAwait(false);
             if (!requirement.IsDefined || requirement.ProgramId != request.ProgramId ||
-                requirement.FactOf(request.RequirementVersion) is null)
+                request.RequirementVersion < 1 || request.RequirementVersion > requirement.CurrentVersion)
                 return Result<CampaignLaunchTerms>.Failure(new RequestError(
                     RequestErrorKind.NotFound, "The training requirement version was not found."));
             if (request.RequirementVersion != requirement.CurrentVersion)
@@ -32,13 +32,14 @@ sealed class LaunchTrainingCampaignHandler(CampaignLaunch launch, IAggregateRead
             TrainingRequirementView view;
             try
             {
-                view = (await TrainingRequirementRules.ViewAsync(content, requirement, request.RequirementVersion,
+                view = (await TrainingRequirementRules.ViewAsync(content, events, requirement, request.RequirementVersion,
                     token).ConfigureAwait(false))!;
             }
             catch (ImmutableContentIntegrityException exception)
             {
                 return Result<CampaignLaunchTerms>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    $"The training requirement content cannot be verified yet: {exception.Message}", true));
+                    $"The training requirement content cannot be verified: {exception.Message}",
+                    exception is ImmutableContentUnavailableException));
             }
 
             var teams = view.Content.AudienceTeams ?? [];

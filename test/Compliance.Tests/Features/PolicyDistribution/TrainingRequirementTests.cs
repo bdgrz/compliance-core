@@ -1,11 +1,15 @@
+using System.Collections;
 using System.Globalization;
+using System.Reflection;
+using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
+using Cntryl.Fitz;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,6 +22,64 @@ public sealed class TrainingRequirementTests
 
     static readonly TrainingRequirementContent Content = new("Security Awareness", "Annual course",
         PolicyAudience.CoreSecurity, null, "manual");
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldReturnPendingOnlyForMissingContentGivenTrainingRequirementQuery(bool unavailable)
+    {
+        // Arrange
+        await using var host = new CampaignHost();
+        await host.SeedAsync();
+        var id = await TrainingSeed.DefineAsync(host.Provider, host.Tenant, host.Program, "TR-SEC", Content,
+            host.ManagerActor, host.Clock.GetUtcNow());
+        var owner = await ProgramManagementServices.HydrateAsync(host.Provider, new TrainingRequirement(host.Tenant, id));
+        var store = new FaultedContent(host.Content, owner.Latest!.ContentContent.ContentId, unavailable);
+        var handler = new GetTrainingRequirementHandler(host.Scope.ServiceProvider.GetRequiredService<IAggregateReader>(), host.Events, store);
+        var context = new InventoryRequestContext<GetTrainingRequirement>(new GetTrainingRequirement(host.Tenant,
+            host.Program, id), new ClaimsPrincipal());
+
+        // Act
+        var result = await handler.HandleAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
+        Assert.Equal(unavailable, result.Error.IsTransient);
+    }
+
+    [Fact]
+    public async Task ShouldKeepRequirementAuthorityBoundedGivenManyNativeVersions()
+    {
+        // Arrange
+        await using var host = new CampaignHost();
+        await host.SeedAsync();
+        var id = TrainingRequirementIdentity.IdFor(host.Tenant, host.Program, "TR-SEC");
+        var defined = await host.SendAsync(new DefineTrainingRequirement(id, host.Tenant, host.Program, "TR-SEC", Content),
+            host.Manager);
+        Assert.True(defined.IsSuccess, defined.Error?.Message);
+        for (var version = 1; version < 32; version++)
+        {
+            var revised = await host.SendAsync(new ReviseTrainingRequirement(Uuid.CreateVersion4(), host.Tenant,
+                host.Program, id, version, Content with { CourseName = $"Course version {version + 1}" }), host.Manager);
+            Assert.True(revised.IsSuccess, revised.Error?.Message);
+        }
+
+        // Act
+        var requirement = await ProgramManagementServices.HydrateAsync(host.Provider,
+            new TrainingRequirement(host.Tenant, id));
+        var pinned = await host.SendAsync(new GetTrainingRequirement(host.Tenant, host.Program, id, 1), host.Manager);
+
+        // Assert
+        Assert.Equal(32, requirement.CurrentVersion);
+        Assert.True(pinned.IsSuccess, pinned.Error?.Message);
+        Assert.Equal("Security Awareness", pinned.Value.Content.CourseName);
+        Assert.Equal(32, pinned.Value.LatestVersion);
+        Assert.All(typeof(TrainingRequirement).GetFields(
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly), field =>
+            Assert.False(field.GetValue(requirement) is ICollection { Count: > 2 },
+                $"The requirement command owner retains lifetime version history in {field.Name}."));
+    }
 
     [Theory]
     [InlineData("TR-SEC", "7d484654-8238-5ea8-a5bf-69a4931b7349")]
@@ -102,7 +164,8 @@ public sealed class TrainingRequirementTests
         var requirement = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new TrainingRequirement(host.Tenant, id));
         Assert.Equal(2, requirement.CurrentVersion);
-        Assert.Equal(2, requirement.Versions.Count);
+        Assert.Equal(2, (await TrainingRequirementHistory.FactsAsync(
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), requirement)).Count);
         Assert.Equal("TR-SEC", requirement.Identifier);
     }
 
@@ -209,7 +272,8 @@ public sealed class TrainingRequirementTests
         var requirement = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new TrainingRequirement(harness.TenantId, id));
         var pinned = await TrainingRequirementRules.ViewAsync(
-            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), requirement, 1, CancellationToken.None);
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(),
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), requirement, 1, CancellationToken.None);
 
         // Assert
         Assert.Equal(subject.ContentSha256, state.Campaign.Subject!.ContentSha256);
@@ -259,5 +323,19 @@ public sealed class TrainingRequirementTests
         Assert.Equal(2, changed.Version);
         Assert.Equal(2, changed.LatestVersion);
         Assert.Empty(otherProgram.Items);
+    }
+
+    sealed class FaultedContent(IImmutableContentStore inner, Uuid selected, bool unavailable) : IImmutableContentStore
+    {
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema, string mediaType,
+            ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
+            inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => reference.ContentId != selected
+            ? inner.ReadVerifiedAsync(realm, reference, ct)
+            : throw (unavailable
+                ? new ImmutableContentUnavailableException("Selected source has not become visible.")
+                : new ImmutableContentIntegrityException("Selected source is corrupt."));
     }
 }

@@ -1,10 +1,12 @@
+using System.Collections;
+using System.Reflection;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Criteria;
@@ -18,6 +20,35 @@ public sealed class SetCriteriaTextOverlayHandlerTests
     static readonly DateTimeOffset Now = new(2026, 10, 3, 12, 0, 0, TimeSpan.Zero);
     static readonly CriteriaTextOverlayContent Content = new("Synthetic supplied text",
         "Test supplier", "Test license", new CriteriaOverlayUsageFlags(true, true));
+
+    [Fact]
+    public async Task ShouldKeepOverlayAuthorityBoundedGivenManySuppliedTextRevisions()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        for (var revision = 0; revision < 32; revision++)
+        {
+            var result = await scenario.HandleAsync(scenario.Request(Uuid.CreateVersion4(), revision,
+                Content with { Text = $"Supplied source revision {revision + 1}" }));
+            Assert.True(result.IsSuccess, result.Error?.Message);
+        }
+
+        // Act
+        var owner = await scenario.OwnerAsync();
+        var events = await scenario.ReadEventsAsync();
+        var first = await scenario.ReadContentAsync(Assert.IsType<CriteriaTextOverlayEntryRevised>(events[0].Event).OverlayContent);
+        var latest = await scenario.ReadContentAsync(Assert.IsType<CriteriaTextOverlayEntryRevised>(events[^1].Event).OverlayContent);
+
+        // Assert
+        Assert.Equal(32, owner.Revision);
+        Assert.Equal(32, events.Count);
+        Assert.Equal("Supplied source revision 1", first.Text);
+        Assert.Equal("Supplied source revision 32", latest.Text);
+        Assert.All(typeof(CriteriaTextOverlay).GetFields(
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly), field =>
+            Assert.False(field.GetValue(owner) is ICollection { Count: > 2 },
+                $"The overlay command owner retains lifetime supplied-text history in {field.Name}."));
+    }
 
     [Fact]
     public async Task ShouldReturnOriginalRevisionGivenReplayAfterLaterRevision()
@@ -214,9 +245,16 @@ public sealed class SetCriteriaTextOverlayHandlerTests
             await using var scope = _provider.CreateAsyncScope();
             var services = scope.ServiceProvider;
             var handler = new SetCriteriaTextOverlayHandler(services.GetRequiredService<NativeOperationExecutor>(),
-                services.GetRequiredService<IAggregateReader>(), CriteriaCatalog.Platform,
+                CriteriaCatalog.Platform,
                 services.GetRequiredService<IImmutableContentStore>(), new FixedTimeProvider(Now));
             return await handler.HandleAsync(context, CancellationToken.None);
+        }
+
+        public async Task<CriteriaTextOverlay> OwnerAsync()
+        {
+            await using var scope = _provider.CreateAsyncScope();
+            return await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+                .HydrateAsync(new CriteriaTextOverlay(TenantId, CriteriaCatalog.Platform.Edition.EditionId, "CC6.1"));
         }
 
         public EventStreamAddress StreamOf(string identifier) => new CriteriaTextOverlay(TenantId,

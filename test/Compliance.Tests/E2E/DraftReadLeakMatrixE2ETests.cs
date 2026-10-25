@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -278,7 +279,7 @@ public sealed class DraftReadLeakMatrixE2ETests(BrokerStackFixture broker)
                         potential_effect = "Service requests remain unavailable",
                         source_note = "Observed during projection recovery test",
                     });
-                    Assert.Equal(HttpStatusCode.NoContent, risk.StatusCode);
+                    Assert.Equal(HttpStatusCode.OK, risk.StatusCode);
                     using var staleRisk = await owner.GetAsync(riskPath + "?minimum_revision=3");
                     Assert.Equal(HttpStatusCode.Conflict, staleRisk.StatusCode);
                 }
@@ -452,7 +453,7 @@ public sealed class DraftReadLeakMatrixE2ETests(BrokerStackFixture broker)
             commitments[index] = Guid.Parse((await ReadAsync(commitment))
                 .GetProperty("draft_id").GetString()!);
 
-            using var risk = await owner.PostAsJsonAsync(prefix + "/risks", new
+            using var risk = await RiskDraftHttpRequests.CreateAsync(owner, prefix + "/risks", new
             {
                 identifier = $"R-{label}-{index}",
                 title = $"Provider risk {label} {index}",
@@ -481,7 +482,7 @@ public sealed class DraftReadLeakMatrixE2ETests(BrokerStackFixture broker)
                        source_reference = "Contract section 5",
                    }))
             Assert.Equal(HttpStatusCode.NoContent, commitment.StatusCode);
-        using (var risk = await owner.PutAsJsonAsync(
+        using (var risk = await RiskDraftHttpRequests.ReviseAsync(owner,
                    $"{prefix}/risks/{risks[0]}/draft", new
                    {
                        expected_revision = 1,
@@ -490,7 +491,7 @@ public sealed class DraftReadLeakMatrixE2ETests(BrokerStackFixture broker)
                        potential_effect = "Service requests cannot be processed",
                        source_note = "Management observation",
                    }))
-            Assert.Equal(HttpStatusCode.NoContent, risk.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, risk.StatusCode);
 
         var seed = new Seed(label, tenantId, programId, controls, commitments, risks);
         foreach (var spec in ExactSpecs(seed).Where(spec => spec.Revision == 2))

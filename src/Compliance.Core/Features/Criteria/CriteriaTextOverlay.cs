@@ -25,7 +25,7 @@ public sealed class CriteriaTextOverlay : Aggregate
     readonly Uuid _tenantId;
     readonly Uuid _editionId;
     readonly string _identifier;
-    readonly List<CriteriaTextOverlayEntryRevised> _revisions = [];
+    CriteriaTextOverlayEntryRevised? _latest;
 
     /// <summary>Opens the overlay line of one criterion, selecting the logical operation to resolve.</summary>
     public CriteriaTextOverlay(Uuid tenantId, Uuid editionId, string identifier, Uuid selectedLogicalId = default)
@@ -41,13 +41,10 @@ public sealed class CriteriaTextOverlay : Aggregate
     public NativeAcceptance Acceptance { get; }
 
     /// <summary>The revision of the latest fact; 0 before the first set.</summary>
-    public long Revision => _revisions.Count == 0 ? 0 : _revisions[^1].Revision;
+    public long Revision => _latest?.Revision ?? 0;
 
     /// <summary>The latest revision fact, once set.</summary>
-    public CriteriaTextOverlayEntryRevised? Latest => _revisions.Count == 0 ? null : _revisions[^1];
-
-    /// <summary>Every revision of the line in order.</summary>
-    public IReadOnlyList<CriteriaTextOverlayEntryRevised> Revisions => _revisions;
+    public CriteriaTextOverlayEntryRevised? Latest => _latest;
 
     /// <summary>The identity of the overlay of one criterion.</summary>
     public static Uuid IdentityOf(Uuid tenantId, Uuid editionId, string identifier) =>
@@ -81,9 +78,10 @@ public sealed class CriteriaTextOverlay : Aggregate
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || ev.EditionId != _editionId ||
             !string.Equals(ev.Identifier, _identifier, StringComparison.Ordinal) || ev.Revision != Revision + 1 ||
-            ev.Operation.Owner != Stream || ev.FirstResponse is null)
+            ev.FirstResponse is null || ev.OperationResult is null ||
+            !NativeOwnerHistory.IsOwnRoot(this, ev.Operation, nameof(SetCriteriaTextOverlay), (ulong)Revision))
             throw new InvalidOperationException(
                 "An overlay revision must follow its owning tenant, edition, criterion and predecessor.");
-        _revisions.Add(ev);
+        _latest = ev;
     }
 }
