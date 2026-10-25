@@ -51,8 +51,8 @@ public sealed class ApplicationImportRetirementTests
         var before = await host.Reader.HydrateApplicationAsync(host.TenantId, fixture.Omitted);
         var run = await host.RunProcessAsync(fixture.Batch.Id);
         var after = await host.ApplicationAsync(fixture.Omitted);
-        var view = await ApplicationImportSourceView.LoadAsync(host.Reader, host.Content, host.TenantId, "manual",
-            "applications", CancellationToken.None);
+        var view = await ApplicationImportSourceView.LoadAsync(host.Reader, host.Content, host.Events, host.TenantId, "manual",
+            "applications", ct: CancellationToken.None);
 
         // Assert
         Assert.False(before.IsRetired);

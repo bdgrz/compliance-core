@@ -41,6 +41,8 @@ static class ApplicationImportContent
         ImmutableSelectionManifest manifest, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(manifest);
+        if (manifest.ItemSchema != manifest.Content.Schema || !Enum.IsDefined(manifest.Order))
+            throw new ImmutableContentIntegrityException("The complete import selection has another content schema or ordering contract.");
         var items = await ReadAsync<IReadOnlyList<T>>(content, tenantId, manifest.Content, ct).ConfigureAwait(false);
         if (items.Count != manifest.Count || !string.Equals(manifest.ItemsSha256, manifest.Content.Sha256,
                 StringComparison.Ordinal))

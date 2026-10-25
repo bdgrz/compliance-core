@@ -118,6 +118,27 @@
       "status": "contract_selection_gap",
       "evidence": "No selected trusted Incident approved_successor producer/receiver/permit source-use pair exists. Existing no_change receiver and historical native source correlation are retained.",
       "nextWork": "Select actual approval source-use protocol before claiming current-held successor proof; continue independent work. No GitHub issue."
+    },
+    {
+      "id": "application-import-automatic-abort-trust-mismatch",
+      "kind": "selected_import_abort_trust_mismatch",
+      "status": "local qualification; independent compaction and selected producers complete offline",
+      "source": [
+        "src/Compliance.Core/Features/Applications/ApplicationImportExecutionProcess.cs: process declares CancelApplicationImport abort, Receiver explicitly returns null",
+        "src/Compliance.Core/Features/Applications/CancelApplicationImportHandler.cs: personal HTTP guard",
+        "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs: retains Failed reducer but no emitting Fail method",
+        "docs/product/audits/2026-10-23/target-command-contracts.json:3242 client-origin personal_http Cancel; fields have no trusted source/failure proof",
+        "docs/product/audits/2026-10-23/target-command-contracts.json:6321 trusted Execute emits ExecutionAuthorized only",
+        "docs/product/audits/2026-10-23/target-reactor-contracts.json:1640 trusted CompleteCancellation requires SourceFactProof<ApplicationImportCancellationAccepted>",
+        "docs/product/audits/2026-10-23/target-reactor-contracts.json:10767 selected process abort lists CancelApplicationImport",
+        "docs/product/audits/2026-10-23/target-event-contracts.json:5894 ApplicationImportFailed selected event and terminal Unit envelope rule",
+        "docs/product/audits/2026-10-23/remaining-command-identities.json: no Cancel/Fail import entry"
+      ],
+      "no_invention": "No synthetic personal actor, new public lookup, implicit trusted callback or permit is introduced.",
+      "independent_done": "Source34 and Batch26 compaction/native histories/current consumers; real personal cancellation proof/fence/settlement; verified actual commit/cancel original Unit result envelopes.",
+      "other_follow_on": "Parent owns custom receiver preflight/freeze failure acceptance recheck; current source/receiver verifier reads still precede existing accepted receiver resolution.",
+      "legacy": "Existing occupied v2 tags are preserved. New strict batch history requires the selected nonnull terminal MutationResultContent; persisted older null-result terminal histories are unqualified rather than reconstructed from current state.",
+      "github": "No issue created. Parent maintains local blocker ledger."
     }
   ],
   "remainingSlices": [
@@ -694,7 +715,7 @@
     },
     {
       "id": "policy-campaign-participant-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "policy-campaign-qualification.json",
       "fileReviews": 36,
       "signalsTriaged": 6,
@@ -703,7 +724,20 @@
       "focusedPassed": 244,
       "httpPassed": 59,
       "unitPassed": 6396,
-      "mandatoryCompleteBinding": "required intent/source-use bytes remain before receipt replay; extra manifest command term is not bound by native scalar receipt"
+      "mandatoryCompleteBinding": "required intent/source-use bytes remain before receipt replay; extra manifest command term is not bound by native scalar receipt",
+      "pr": 1130,
+      "mergeCommit": "8ed73180d648a2b1acbacbf6dfb050160f916c6f"
+    },
+    {
+      "id": "application-import-source-batch-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "import-source-batch-qualification.json",
+      "fileReviews": 36,
+      "focusedPassed": 151,
+      "rootRequestedCancellationRedFailed": 2,
+      "processQualification": "automatic abort/trusted failure mismatch remains local; personal cancellation process retained",
+      "httpPassed": 113,
+      "unitPassed": 6413
     }
   ],
   "resolved": [

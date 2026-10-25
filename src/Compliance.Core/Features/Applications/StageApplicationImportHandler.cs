@@ -22,6 +22,20 @@ public sealed class StageApplicationImportHandler(NativeOperationExecutor operat
     public async ValueTask<Result<ApplicationImportRegistration>> HandleAsync(
         IRequestContext<StageApplicationImport> context, CancellationToken ct)
     {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<ApplicationImportRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact import batch source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<ApplicationImportRegistration>> HandleCoreAsync(IRequestContext<StageApplicationImport> context, CancellationToken ct)
+    {
         var request = context.Request;
         var (memberId, display) = ApplicationActor.From(context);
         var batchId = request.TenantId != Uuid.Empty && request.SourceKey is not null && request.SourceNamespace is not null
@@ -34,7 +48,7 @@ public sealed class StageApplicationImportHandler(NativeOperationExecutor operat
             request.SubmissionId), ct).ConfigureAwait(false);
         var provenance = new OperationProvenance(request.SubmissionId, request.SubmissionId, null, CommandKind,
             ActorReference.ForMember(memberId, display), snapshot.Stream, InitialEpisode, null,
-            AuthoredIntentDigest.Compute(request), now, snapshot.Stream, snapshot.Stream);
+            AuthoredIntentDigest.Compute(request), now, snapshot.Stream, snapshot.Stream, snapshot.Stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         // A submission that was already accepted resolves from the owner's facts before any guard is evaluated.
@@ -43,51 +57,51 @@ public sealed class StageApplicationImportHandler(NativeOperationExecutor operat
         ImmutableContentRef? result = null;
         string? digest = null;
         var invalid = 0;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            if (!ApplicationImportRowRules.ValidRequest(request))
-                return Invalid();
-            var duplicated = ApplicationImportRowRules.Duplicated(request.Rows);
-            var staged = request.Rows.Select((row, index) => new ApplicationImportStagedRow(
-                ApplicationImportEffects.RowId(batchId, index + 1), index + 1, row.SourceRecordId, row.Name,
-                row.Purpose, row.OwnerReference, ApplicationImportRowRules.Findings(row, duplicated))).ToArray();
-            var manifest = new ApplicationImportRowsManifest(staged);
-            if (ApplicationImportContent.Size(manifest) > ApplicationImportBatch.MaximumStagedBytes)
-                return Result<ApplicationImportRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
-                    "The import observation exceeds the bounded immutable content size."));
-            digest = ApplicationImportBatch.ObservationSha256(request);
-            invalid = staged.Count(row => row.ValidationFindings.Count > 0);
-            rows = await ApplicationImportContent.WriteAsync(content, request.TenantId,
-                ApplicationImportRowsManifest.Schema, manifest, ct).ConfigureAwait(false);
-            var registration = await ApplicationImportContent.WriteAsync(content, request.TenantId,
-                ApplicationImportContent.RegistrationSchema, new ApplicationImportRegistration(batchId, 1, digest), ct)
-                .ConfigureAwait(false);
-            result = await ApplicationImportContent.WriteResultAsync(content, request.TenantId,
-                ApplicationImportContent.RegistrationSchema, registration, ct).ConfigureAwait(false);
-            response = ApplicationImportContent.OkResponse(ApplicationImportContent.RegistrationSchema, registration);
-        }
+        ApplicationImportBatchPreparedCut? preparedCut = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<ApplicationImportBatch>(binding,
             () => new ApplicationImportBatch(request.TenantId, batchId, request.SubmissionId),
             batch => batch.Acceptance,
-            batch => Prepare(batch, response),
-            (ApplicationImportBatch batch, ImmutableContentRef frozen) => batch.Stage(provenance,
+            async (batch, prepareCt) =>
+            {
+                var prepared = batch.PrepareStage();
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                if (!ApplicationImportRowRules.ValidRequest(request))
+                    return Result<FirstResponseDescriptor>.Failure(Invalid().Error!);
+                var duplicated = ApplicationImportRowRules.Duplicated(request.Rows);
+                var staged = request.Rows.Select((row, index) => new ApplicationImportStagedRow(
+                    ApplicationImportEffects.RowId(batchId, index + 1), index + 1, row.SourceRecordId, row.Name,
+                    row.Purpose, row.OwnerReference, ApplicationImportRowRules.Findings(row, duplicated))).ToArray();
+                var manifest = new ApplicationImportRowsManifest(staged);
+                if (ApplicationImportContent.Size(manifest) > ApplicationImportBatch.MaximumStagedBytes)
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
+                        "The import observation exceeds the bounded immutable content size."));
+                digest = ApplicationImportBatch.ObservationSha256(request);
+                invalid = staged.Count(row => row.ValidationFindings.Count > 0);
+                rows = await ApplicationImportContent.WriteAsync(content, request.TenantId,
+                    ApplicationImportRowsManifest.Schema, manifest, prepareCt).ConfigureAwait(false);
+                var registration = await ApplicationImportContent.WriteAsync(content, request.TenantId,
+                    ApplicationImportContent.RegistrationSchema, new ApplicationImportRegistration(batchId, 1, digest), prepareCt)
+                    .ConfigureAwait(false);
+                result = await ApplicationImportContent.WriteResultAsync(content, request.TenantId,
+                    ApplicationImportContent.RegistrationSchema, registration, prepareCt).ConfigureAwait(false);
+                response = ApplicationImportContent.OkResponse(ApplicationImportContent.RegistrationSchema, registration);
+
+                preparedCut = ApplicationImportBatchPreparedCut.Capture(batch);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (ApplicationImportBatch batch, ImmutableContentRef frozen) =>
+            {
+                if (preparedCut?.Matches(batch) != true)
+                    return ApplicationImportBatchPreparedCut.Changed();
+                return batch.Stage(provenance,
                 request.SubmissionId, request.SourceKey!, request.SourceNamespace!, request.Coverage, digest!, rows!,
-                request.Rows.Count, invalid, memberId, display, now, frozen, result!)), context, ct)
+                request.Rows.Count, invalid, memberId, display, now, frozen, result!);
+            }), context, ct)
             .ConfigureAwait(false);
         return await ApplicationImportContent.ResponseAsync<ApplicationImportRegistration>(content, request.TenantId,
             outcome, ct).ConfigureAwait(false);
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(ApplicationImportBatch batch, FirstResponseDescriptor? response)
-    {
-        var prepared = batch.PrepareStage();
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The batch changed while the observation was prepared; retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static Result<ApplicationImportRegistration> Invalid() => Result<ApplicationImportRegistration>.Failure(

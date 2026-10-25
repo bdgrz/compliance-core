@@ -3,14 +3,14 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-public sealed class GetApplicationImportOmissionProposalHandler(IAggregateReader reader, IImmutableContentStore content)
+public sealed class GetApplicationImportOmissionProposalHandler(IAggregateReader reader, IImmutableContentStore content, IDomainEventReader events)
     : IRequestHandler<GetApplicationImportOmissionProposal, ApplicationImportOmissionProposalView>
 {
     public async ValueTask<Result<ApplicationImportOmissionProposalView>> HandleAsync(
         IRequestContext<GetApplicationImportOmissionProposal> context, CancellationToken ct)
     {
         var request = context.Request;
-        var loaded = await ApplicationImportOmissionSources.LoadAsync(reader, content, request.TenantId,
+        var loaded = await ApplicationImportOmissionSources.LoadAsync(reader, content, events, request.TenantId,
             request.BatchId, ct).ConfigureAwait(false);
         if (!loaded.IsSuccess)
             return Result<ApplicationImportOmissionProposalView>.Failure(loaded.Error);
@@ -34,7 +34,7 @@ public sealed class GetApplicationImportOmissionProposalHandler(IAggregateReader
             proposal.ContentSha256 != batch.ContentDigest)
             return Result<ApplicationImportOmissionProposalView>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The import has no still-current durable omission proposal.", isTransient: true));
-        if (!await ApplicationImportOmissionSources.UnchangedAsync(reader, content, request.TenantId, batch, source, ct)
+        if (!await ApplicationImportOmissionSources.UnchangedAsync(reader, content, events, request.TenantId, batch, source, ct)
                 .ConfigureAwait(false))
             return Result<ApplicationImportOmissionProposalView>.Failure(ApplicationImportOmissionSources.Changed());
         return Result<ApplicationImportOmissionProposalView>.Success(new(request.TenantId, batch.Id, proposal.SourceKey,

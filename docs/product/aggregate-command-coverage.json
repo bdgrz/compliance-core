@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "d9ac4ce0bc61003d29855ae143474f89fcd35543",
+  "sourceCommit": "8ed73180d648a2b1acbacbf6dfb050160f916c6f",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -963,7 +963,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceHistoryProofTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -995,7 +997,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportBatchHistoryProofTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -1030,7 +1034,8 @@
         "src/Compliance.Core/Features/Applications/ApplicationImportSource.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceHistoryProofTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9464,14 +9469,14 @@
         "ExecuteApplicationImport"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportBatchHistoryProofTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportBatchNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportBatchTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportTransportTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportVisibilityReadConsistencyTests.cs",
-        "test/Compliance.Tests/Features/Applications/FitzApplicationImportDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportTransportTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9489,6 +9494,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportSourceTests.cs",
         "test/Compliance.Tests/Testing/ApplicationImportHost.cs",
         "test/Compliance.Tests/Testing/ApplicationImportProcessSupport.cs"
@@ -12642,6 +12648,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportAcceptPreparationReplayTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportPagingTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
@@ -15365,6 +15372,7 @@
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProjectionTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceHistoryProofTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportSourceTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs",
         "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
@@ -31025,13 +31033,13 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportAcceptPreparationReplayTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportBatchTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportPagingTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs"
       ],
       "note": ""
     },

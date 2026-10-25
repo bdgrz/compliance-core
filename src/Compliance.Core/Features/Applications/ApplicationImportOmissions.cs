@@ -14,7 +14,7 @@ static class ApplicationImportOmissions
     ///     A target shared by several claims, or a target a present row of this batch is correlated to, cannot be
     ///     retired by an omission: the omitted alias is not the only observation of that application.
     /// </summary>
-    public static bool HasSharedOrPresentAlias(ApplicationImportBatch batch, ApplicationImportSourceView view,
+    public static bool HasSharedOrPresentAlias(ApplicationImportBatchHistorySnapshot history, ApplicationImportSourceView view,
         IReadOnlyList<ApplicationImportSourceClaimRecord> missing, IReadOnlyList<ApplicationImportStagedRow> rows)
     {
         if (missing.Any(claim => view.Claims.Count(other => other.Observation.ApplicationId ==
@@ -23,6 +23,6 @@ static class ApplicationImportOmissions
         var targets = missing.Select(claim => claim.Observation.ApplicationId).ToHashSet();
         var present = rows.Select(row => row.SourceRecordId).ToHashSet(StringComparer.Ordinal);
         return rows.Any(row => present.Contains(row.SourceRecordId) &&
-            batch.GetCorrelation(row.RowId) is { } choice && targets.Contains(choice.ApplicationId));
+            history.GetCorrelation(row.RowId) is { } choice && targets.Contains(choice.ApplicationId));
     }
 }

@@ -156,7 +156,7 @@ public sealed class ApplicationImportBatchTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        var choice = after.GetCorrelation(rowId)!;
+        var choice = (await host.BatchHistoryAsync(after)).GetCorrelation(rowId)!;
         Assert.Equal("create_new", choice.Decision);
         Assert.Equal(host.ActorMemberId, choice.ActorMemberId);
         Assert.Equal("Reviewed identity", choice.Reason);

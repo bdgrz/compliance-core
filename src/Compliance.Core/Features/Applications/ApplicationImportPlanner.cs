@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Applications;
 /// </summary>
 static class ApplicationImportPlanner
 {
-    public static Result<IReadOnlyList<ApplicationImportPlannedRow>> PlanRows(ApplicationImportBatch batch,
+    public static Result<IReadOnlyList<ApplicationImportPlannedRow>> PlanRows(ApplicationImportBatch batch, ApplicationImportBatchHistorySnapshot history,
         IReadOnlyList<ApplicationImportStagedRow> staged, ApplicationImportSourceView source,
         ApplicationImportOmissionProposalContent? proposal, string? proposalSha256,
         IReadOnlyDictionary<Uuid, ApplicationChangePreview>? retirementImpacts)
@@ -20,6 +20,8 @@ static class ApplicationImportPlanner
         ArgumentNullException.ThrowIfNull(batch);
         ArgumentNullException.ThrowIfNull(staged);
         ArgumentNullException.ThrowIfNull(source);
+        if (!history.Matches(batch))
+            return Fail(RequestErrorKind.Conflict, "The complete row choices belong to another prepared batch cut.");
         var tenantId = Uuid.Parse(batch.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
         var missing = source.Missing(batch, staged);
         var retirementRows = new List<ApplicationImportPlannedRow>();
@@ -63,7 +65,7 @@ static class ApplicationImportPlanner
         var planned = new List<ApplicationImportPlannedRow>(staged.Count + retirementRows.Count);
         foreach (var row in staged)
         {
-            var choice = batch.GetCorrelation(row.RowId);
+            var choice = history.GetCorrelation(row.RowId);
             var claim = row.SourceRecordId is not null ? source.Find(row.SourceRecordId) : null;
             if (row.ValidationFindings.Count > 0 || (choice is null && claim is null))
                 return Fail(RequestErrorKind.Conflict, "Every import row must be valid and explicitly correlated.");

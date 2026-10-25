@@ -15,13 +15,27 @@ namespace Bdgrz.Compliance.Features.Applications;
 ///     own revision.
 /// </summary>
 public sealed class CorrelateApplicationImportRowHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content, TimeProvider clock) : IRequestHandler<CorrelateApplicationImportRow>
+    IImmutableContentStore content, TimeProvider clock, IDomainEventReader events) : IRequestHandler<CorrelateApplicationImportRow>
 {
     const string CommandKind = "CorrelateApplicationImportRow";
     const string InitialEpisode = "initial";
 
     public async ValueTask<Result> HandleAsync(IRequestContext<CorrelateApplicationImportRow> context,
         CancellationToken ct)
+    {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact import source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<CorrelateApplicationImportRow> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation ||
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _) || RequestActor.IsSystem(context.Actor))
@@ -38,30 +52,41 @@ public sealed class CorrelateApplicationImportRowHandler(NativeOperationExecutor
             request.CommandId), ct).ConfigureAwait(false);
         var provenance = new OperationProvenance(request.CommandId, request.CommandId, null, CommandKind,
             ActorReference.ForMember(memberId, display), snapshot.Stream, InitialEpisode, (ulong)request.ExpectedRevision,
-            AuthoredIntentDigest.Compute(request), now, snapshot.Stream, snapshot.Stream);
+            AuthoredIntentDigest.Compute(request), now, snapshot.Stream, snapshot.Stream, snapshot.Stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         string? sourceRecordId = null;
         Uuid targetId = default;
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var checkedRow = await CheckAsync(request, snapshot, ct).ConfigureAwait(false);
-            if (!checkedRow.IsSuccess)
-                return Result.Failure(checkedRow.Error!);
-            (sourceRecordId, targetId) = checkedRow.Value;
-            var unit = await ApplicationImportContent.UnitAsync(content, request.TenantId, ct).ConfigureAwait(false);
-            (response, result) = (unit.Response, unit.Result);
-        }
+        ApplicationImportBatchPreparedCut? preparedCut = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<ApplicationImportBatch>(binding,
             () => new ApplicationImportBatch(request.TenantId, request.BatchId, request.CommandId),
             batch => batch.Acceptance,
-            batch => Prepare(batch, request.ExpectedRevision, response),
-            (ApplicationImportBatch batch, ImmutableContentRef frozen) => batch.Correlate(provenance, request.RowId,
+            async (batch, prepareCt) =>
+            {
+                var prepared = batch.PrepareCorrelation(request.ExpectedRevision);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                var checkedRow = await CheckAsync(request, batch, prepareCt).ConfigureAwait(false);
+                if (!checkedRow.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(checkedRow.Error!);
+                (sourceRecordId, targetId) = checkedRow.Value;
+                var unit = await ApplicationImportContent.UnitAsync(content, request.TenantId, prepareCt).ConfigureAwait(false);
+                (response, result) = (unit.Response, unit.Result);
+
+                preparedCut = ApplicationImportBatchPreparedCut.Capture(batch);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (ApplicationImportBatch batch, ImmutableContentRef frozen) =>
+            {
+                if (preparedCut?.Matches(batch) != true)
+                    return ApplicationImportBatchPreparedCut.Changed();
+                return batch.Correlate(provenance, request.RowId,
                 sourceRecordId!, request.Decision, targetId, request.ExpectedApplicationRevision,
-                request.Reason.Trim(), memberId, display, now, frozen, result!)), context, ct).ConfigureAwait(false);
+                request.Reason.Trim(), memberId, display, now, frozen, result!);
+            }), context, ct).ConfigureAwait(false);
         return ApplicationImportContent.UnitOutcome(outcome);
     }
 
@@ -70,15 +95,15 @@ public sealed class CorrelateApplicationImportRowHandler(NativeOperationExecutor
     {
         if (!batch.IsCreated || batch.Staged is not { } staged)
             return Fail(RequestErrorKind.NotFound, "The import batch was not found.");
+        var history = await ApplicationImportBatchHistory.ReadAsync(events, batch, ct).ConfigureAwait(false);
         IReadOnlyList<ApplicationImportStagedRow> rows;
         try
         {
-            rows = (await ApplicationImportContent.ReadAsync<ApplicationImportRowsManifest>(content,
-                request.TenantId, staged.RowsManifest, ct).ConfigureAwait(false)).Rows;
+            rows = await ApplicationImportBatchRows.ReadAsync(content, batch, history, ct).ConfigureAwait(false);
         }
-        catch (ImmutableContentIntegrityException)
+        catch (ImmutableContentIntegrityException error)
         {
-            return Fail(RequestErrorKind.Conflict, "The staged rows cannot be verified yet.", true);
+            return Fail(RequestErrorKind.Conflict, "The staged rows cannot be verified.", error is ImmutableContentUnavailableException);
         }
 
         var row = rows.FirstOrDefault(candidate => candidate.RowId == request.RowId);
@@ -95,8 +120,8 @@ public sealed class CorrelateApplicationImportRowHandler(NativeOperationExecutor
             return Fail(RequestErrorKind.Validation,
                 "Correlation requires an explicit bounded decision and target revision for an existing application.");
         var targetId = request.ApplicationId ?? ApplicationImportEffects.CreatedApplicationId(batch.Id, row.RowId);
-        var source = await ApplicationImportSourceView.LoadAsync(reader, content, request.TenantId, batch.SourceKey!,
-            batch.SourceNamespace!, ct).ConfigureAwait(false);
+        var source = await ApplicationImportSourceView.LoadAsync(reader, content, events, request.TenantId, batch.SourceKey!,
+            batch.SourceNamespace!, ct: ct).ConfigureAwait(false);
         if (!source.IsSuccess)
             return Result<(string, Uuid)>.Failure(source.Error!);
         if (source.Value!.Find(row.SourceRecordId!) is { } claim &&
@@ -119,18 +144,6 @@ public sealed class CorrelateApplicationImportRowHandler(NativeOperationExecutor
         }
 
         return Result<(string, Uuid)>.Success((row.SourceRecordId!, targetId));
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(ApplicationImportBatch batch, long expectedRevision,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = batch.PrepareCorrelation(expectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The batch changed while the decision was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static Result<(string SourceRecordId, Uuid TargetId)> Fail(RequestErrorKind kind, string message,

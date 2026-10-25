@@ -1,0 +1,53 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Coherent application import Source34 + Batch26: compact native authority/full external histories/current choices; five owning public command preparations; verified source/effect/cancellation physical cuts.",
+  "validation": {
+    "genuineOldApiSourceRedFailed": 2,
+    "genuineOldApiBatchRedFailed": 1,
+    "sourceAcceptanceRaceRed": "qualified in earlier central source batch",
+    "rootRequestedCancellationRedFailed": 2,
+    "focusedPassed": 151,
+    "backendUnit": {
+      "passed": 6413,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "productionHttpPassed": 113,
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "exactFileAndDependencyHashes": "verified",
+    "coverageExport": "pass",
+    "format": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 36,
+    "earlierSignalsTriaged": 1,
+    "finalSignalsAtOrAbove065": 0,
+    "integration": "merge scoped repair recommended",
+    "mergeProbability": 0.74,
+    "introducedRegressionProbability": 0.32,
+    "scopeMisrepresentationProbability": 0.19,
+    "adopted": "merge after remaining local gates, no CI wait per user direction; continue independent families"
+  },
+  "qualification": [
+    "Source retains one active and one explicitly selected historical batch/acceptance, scalar revision/head and ordered raw cut. Batch retains scalar lifecycle/proposal/plan/auth/cancel/terminal heads, exact cut, one selected row/acceptance. Full native chronology/choices/publication/fences compose outside owners without lifetime cap.",
+    "Default and executor reader decorators verify the actual hydrated native payload and immutable metadata prefix plus complete selected metadata at exact physical cut, including audit offsets. All existing wrapper lifetimes preserved through fresh opaque keys.",
+    "All five public root mutations prepare complete bodies inside NativeOperationExecutor after exact acceptance resolution and bind full prepared batch cut through append. Full external rows, omission/current-choice/read/projection/retirement/preview consumers preserve actual data and original acceptance.",
+    "Actual stored target effect and cancellation fence compare captured physical prefix payload/full metadata; native version is never treated as physical offset. Actual Commit and Cancel freeze the predeclared deterministic Unit MutationResultContent envelope.",
+    "Current public DTO/routes/native tags/versions remain. Strict terminal reader requires selected result envelope; older persisted null-result terminal histories are unqualified. No legacy reconstruction, reset, deployment, broker, migration/replay or SDKsnapshot claim."
+  ],
+  "rootRefinements": [
+    "Composed source then batch exact prerequisite and preserved all current Policy/EX/Access/Evaluation/other reader wrappers before appending Source+Batch.",
+    "Fixed two test compile errors by selecting concrete terminal OperationResult before common envelope read.",
+    "Qualified initial-native-read requested cancellation against both missing and corrupt expected failures (RED2), then gave requested cancellation priority in five new outer handler source classifiers."
+  ],
+  "remainingWork": [
+    "Selected automatic import abort/trusted-failure producer mismatch is documented locally with exact catalogs; existing personal cancel/fence/complete/settle remains. No synthetic actor/callback is introduced.",
+    "Custom import receiver preparation failure/recheck remains separate follow-on; compact/public owning preparation is not global receiver recovery completion.",
+    "Digest history/native/weekly, Provider, Staff/Duty/Practice/Client/Engagement and remaining owner/command/reactor inventory continue. No new issues."
+  ]
+}

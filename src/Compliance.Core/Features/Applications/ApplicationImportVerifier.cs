@@ -27,11 +27,18 @@ sealed class ApplicationImportVerifier(IAggregateReader reader, IImmutableConten
         {
             plan = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, tenant,
                 batch.Plan.FrozenPlan, ct).ConfigureAwait(false);
+            ApplicationImportIntentBindings.Require(plan.Header, batch.Plan.Operation);
+            if (plan.Rows.ItemSchema != "import-planned-row.v1" || plan.Rows.Order != SelectionOrder.Authored ||
+                plan.TargetGroups.ItemSchema != ImportTargetGroupIntent.Schema || plan.TargetGroups.Order != SelectionOrder.CanonicalKey ||
+                plan.SourceClaims.ItemSchema != ApplicationImportSourceClaimRecord.ItemSchema || plan.SourceClaims.Order != SelectionOrder.CanonicalKey ||
+                plan.Rows.Count != batch.Plan.RowCount || plan.TargetGroups.Count != batch.Plan.TargetGroupCount ||
+                batch.Plan.PlanSha256 != batch.Plan.FrozenPlan.Sha256)
+                throw new ImmutableContentIntegrityException("The complete plan counts/digest differ from native admission.");
         }
         catch (ImmutableContentIntegrityException exception)
         {
             return Result<ApplicationImportContext>.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen import plan cannot be verified yet: {exception.Message}", true));
+                $"The frozen import plan cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         return plan.BatchId != batchId || plan.SourceKey != batch.SourceKey || plan.SourceNamespace != batch.SourceNamespace
@@ -53,7 +60,7 @@ sealed class ApplicationImportVerifier(IAggregateReader reader, IImmutableConten
         catch (ImmutableContentIntegrityException exception)
         {
             return Result<IReadOnlyList<ImportTargetGroupIntent>>.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen target groups cannot be verified yet: {exception.Message}", true));
+                $"The frozen target groups cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
     }
 
@@ -70,7 +77,7 @@ sealed class ApplicationImportVerifier(IAggregateReader reader, IImmutableConten
         catch (ImmutableContentIntegrityException exception)
         {
             return Result<IReadOnlyList<ApplicationImportPlannedRow>>.Failure(new RequestError(
-                RequestErrorKind.Conflict, $"The frozen import rows cannot be verified yet: {exception.Message}", true));
+                RequestErrorKind.Conflict, $"The frozen import rows cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
     }
 

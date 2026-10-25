@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
@@ -15,7 +16,7 @@ namespace Bdgrz.Compliance.Features.Applications;
 ///     exists, is aborted first so no forward stage starts again.
 /// </summary>
 sealed partial class ImportCancellationReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus,
-    IAggregateReader reader, IImmutableContentStore content, ProcessDriver driver)
+    IAggregateReader reader, IImmutableContentStore content, ProcessDriver driver, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(ApplicationImportBatch.Area), WorkloadName),
         IReactorHandler<ApplicationImportCancellationAccepted>
 {
@@ -24,6 +25,8 @@ sealed partial class ImportCancellationReactor(IProjectionCheckpointStore checkp
     public async ValueTask HandleAsync(IReactorContext<ApplicationImportCancellationAccepted> context,
         CancellationToken ct)
     {
+        await ApplicationImportReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
+            .ConfigureAwait(false);
         var accepted = context.Trigger;
         var stream = context.Source.Stream;
         var tenant = Uuid.Parse(stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
@@ -39,6 +42,10 @@ sealed partial class ImportCancellationReactor(IProjectionCheckpointStore checkp
         {
             cancellation = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, tenant,
                 accepted.Intent, ct).ConfigureAwait(false);
+            ApplicationImportIntentBindings.Require(cancellation.Header, accepted.Operation);
+            if (cancellation.BatchId != batchId || cancellation.SourceKey != batch.SourceKey ||
+                cancellation.SourceNamespace != batch.SourceNamespace)
+                throw new ImmutableContentIntegrityException("The cancellation intent belongs to another batch source identity.");
             if (batch.Plan is { } sealedPlan)
             {
                 var plan = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, tenant,
@@ -49,7 +56,8 @@ sealed partial class ImportCancellationReactor(IProjectionCheckpointStore checkp
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            throw Transient($"The cancellation cannot be verified yet: {exception.Message}");
+            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
+                $"The cancellation cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         if (batch.Plan is { } sealedFact)
