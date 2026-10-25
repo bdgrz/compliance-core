@@ -36,6 +36,20 @@ static class FirmStaffContent
         intent.CanonicalUserId, intent.Practice, intent.SourceReference, true, 1, intent.Header.OriginalActor,
         intent.Header.AcceptedAt);
 
+    public static void RequireIntent(FirmStaffRecord owner, FirmStaffRegistrationIntent intent)
+    {
+        if (owner.Accepted is not { } accepted || intent.StaffMemberId != owner.StaffMemberId ||
+            intent.CanonicalUserId == Uuid.Empty || intent.Practice is not ("advisory" or "attest") ||
+            !Bounded(intent.SourceReference, 2000) || intent.InitialStatus != FirmStaffRegistrationIntent.ActiveStatus ||
+            intent.Header.RootOperationId != owner.StaffMemberId || intent.Header.FirstOwner != owner.Stream ||
+            intent.Header.AffectedOwner != owner.Stream || intent.Header.ExpectedRevisionOwner != owner.Stream ||
+            intent.Header.OriginalActor != accepted.Operation.Actor || intent.Header.Episode != accepted.Operation.Episode ||
+            intent.Header.OriginalExpectedRevision != accepted.Operation.OriginalExpectedRevision ||
+            intent.Header.AuthoredIntentSha256 != accepted.Operation.AuthoredIntentSha256 ||
+            intent.Header.AcceptedAt != accepted.Operation.AcceptedAt)
+            throw new ImmutableContentIntegrityException("The immutable staff identity differs from its exact native registration admission.");
+    }
+
     /// <summary>Bounded text: non-blank, trimmed, no control characters.</summary>
     public static bool Bounded(string? value, int maximum) => !string.IsNullOrWhiteSpace(value) &&
         value.Length <= maximum && !value.Any(char.IsControl) && value == value.Trim();

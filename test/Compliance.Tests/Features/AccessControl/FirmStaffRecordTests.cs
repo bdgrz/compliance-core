@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.SourceFacts;
+using System.Collections;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -20,6 +23,115 @@ public sealed class FirmStaffRecordTests
     static readonly Uuid Operator = Uuid.CreateVersion4();
 
     static ClaimsPrincipal Actor => ActorFor(Operator);
+
+    [Fact]
+    public async Task ShouldKeepBoundedStaffAuthorityGivenRepeatedStatusChanges()
+    {
+        // Arrange
+        await using var host = new Host();
+        var staff = Uuid.CreateVersion4();
+        Assert.True((await FirmStaffFacts.RegisterThroughProcessAsync(host.Provider, Actor,
+            Register(staff, Uuid.CreateVersion4()))).IsSuccess);
+        for (var index = 0; index < 48; index++)
+        {
+            var response = await host.Bus.SendAsync(new SetFirmStaffStatus(Uuid.CreateVersion4(), staff,
+                index % 2 != 0, $"Reviewed status change {index + 1}", index + 1), Actor);
+            Assert.True(response.IsSuccess, response.Error?.Message);
+        }
+
+        // Act
+        var owner = await host.HydrateAsync(new FirmStaffRecord(staff));
+        var retained = typeof(FirmStaffRecord).GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+            .Where(field => field.GetValue(owner) is ICollection { Count: > 1 }).ToArray();
+
+        // Assert
+        Assert.Empty(retained);
+        Assert.Equal(49UL, owner.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldReplayEqualStatusWinnerGivenLosingImmutableStaffWriteUnavailable()
+    {
+        // Arrange
+        LosingStaffStore content = null!;
+        await using var host = new Host(configureContent: inner => content = new LosingStaffStore(inner));
+        var staff = Uuid.CreateVersion4();
+        Assert.True((await FirmStaffFacts.RegisterThroughProcessAsync(host.Provider, Actor,
+            Register(staff, Uuid.CreateVersion4()))).IsSuccess);
+        var command = new SetFirmStaffStatus(Uuid.CreateVersion4(), staff, false, "Reviewed inactive status", 1);
+        Result<FirmStaffMemberView> winner = default;
+        content.Arm(async () => winner = await host.Bus.SendAsync(command, Actor));
+        Result<FirmStaffMemberView> actual = default;
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => actual = await host.Bus.SendAsync(command, Actor));
+
+        // Assert
+        Assert.True(content.Failed);
+        Assert.True(winner.IsSuccess, winner.Error?.Message);
+        Assert.Null(failure);
+        Assert.True(actual.IsSuccess, actual.Error?.Message);
+        Assert.Equal(WireJson.Of(winner.Value), WireJson.Of(actual.Value));
+        Assert.Equal(2UL, (await host.HydrateAsync(new FirmStaffRecord(staff))).Revision);
+    }
+
+    [Fact]
+    public async Task ShouldReplayCompletedRegistrationGivenEqualWinnerBeforeLosingStaffWriteUnavailable()
+    {
+        // Arrange
+        LosingStaffStore content = null!;
+        await using var host = new Host(configureContent: inner => content = new LosingStaffStore(inner));
+        var staff = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
+        Assert.True((await host.Bus.SendAsync(Register(staff, user), Actor)).IsSuccess);
+        var owner = await host.HydrateAsync(new FirmStaffRecord(staff));
+        var source = NativeFactReference.Of(owner.Stream, owner.Accepted!);
+        var record = ProcessRecord.Start(ProcessKey.ForRoot(FirmStaffEffects.ProcessName, staff, source), source,
+            owner.Accepted!.Operation.Episode, owner.Accepted.Intent, [user.ToString()], DateTimeOffset.UtcNow);
+        var catalog = host.Provider.GetRequiredService<ProcessCatalog>().Get(FirmStaffEffects.ProcessName);
+        var claim = (ClaimFirmStaffIdentity)(await catalog.CreateReceiver(new ProcessStep(record, "claim",
+            nameof(ClaimFirmStaffIdentity), user.ToString(), FirmStaffEffects.ReceiverCommandId(source.EventId,
+                nameof(ClaimFirmStaffIdentity), user.ToString(), record.Episode)), host.Provider, CancellationToken.None))!;
+        Assert.True((await host.Bus.SendAsync(claim, RequestActor.System)).IsSuccess);
+        var command = (CompleteFirmStaffRegistration)(await catalog.CreateReceiver(new ProcessStep(record, "complete",
+            nameof(CompleteFirmStaffRegistration), null, FirmStaffEffects.ReceiverCommandId(source.EventId,
+                nameof(CompleteFirmStaffRegistration), null, record.Episode)), host.Provider, CancellationToken.None))!;
+        Result<ReceiverOutcome> winner = default;
+        content.Arm(async () => winner = await host.Bus.SendAsync(command, RequestActor.System));
+        Result<ReceiverOutcome> actual = default;
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => actual = await host.Bus.SendAsync(command, RequestActor.System));
+
+        // Assert
+        Assert.True(content.Failed);
+        Assert.Null(failure);
+        Assert.True(winner.IsSuccess, winner.Error?.Message);
+        Assert.True(actual.IsSuccess, actual.Error?.Message);
+        Assert.Equal(Assert.IsType<ReceiverOutcome.Applied>(winner.Value).Fact,
+            Assert.IsType<ReceiverOutcome.Replayed>(actual.Value).Fact);
+        Assert.Equal(1UL, (await host.HydrateAsync(new FirmStaffRecord(staff))).Revision);
+    }
+
+    sealed class LosingStaffStore(IImmutableContentStore inner) : IImmutableContentStore
+    {
+        Func<Task>? _admit;
+        public bool Failed { get; private set; }
+        public void Arm(Func<Task> admit) => _admit = admit;
+        public async Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema,
+            string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
+        {
+            if (!Failed && _admit is { } admit && schema == "FirmStaffChangeRecorded.StaffContent.v1")
+            {
+                Failed = true;
+                await admit();
+                throw new ImmutableContentUnavailableException("The losing staff status candidate write is unavailable.");
+            }
+            return await inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+        }
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => inner.ReadVerifiedAsync(realm, reference, ct);
+    }
 
     [Theory]
     [InlineData(false)]
@@ -438,6 +550,7 @@ public sealed class FirmStaffRecordTests
             var events = new InMemoryEventStore();
             services.AddSingleton<IEventStore>(events);
             services.AddSingleton<IDomainEventReader>(events);
+            services.AddSingleton<ISourceFactResolver, EventStoreSourceFactResolver>();
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
             _users = new Users(!unknownUsers);
             services.AddSingleton<IPlatformUserDirectoryReader>(_users);

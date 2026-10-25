@@ -39,20 +39,29 @@ public sealed class FirmStaffRetainedStatusTests
         // Act
         var retained = await ProgramManagementServices.HydrateAsync(provider, new FirmStaffRecord(staffId));
 
+        await using var scope = provider.CreateAsyncScope();
+        var history = await FirmStaffHistory.ReadAsync(scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), retained);
+
         // Assert
         Assert.Equal(3UL, retained.Revision);
-        Assert.True(retained.MatchesRetainedChange(cause));
-        Assert.False(retained.MatchesRetainedChange(cause with { Reason = "Another status reason" }));
-        Assert.False(retained.MatchesRetainedChange(cause with { ChangeKind = "register" }));
-        Assert.False(retained.MatchesRetainedChange(cause with { Revision = 3 }));
-        Assert.False(retained.MatchesRetainedChange(cause with
+        Assert.True(history.Matches(cause));
+        Assert.False(Matches(cause with { Reason = "Another status reason" }));
+        Assert.False(Matches(cause with { ChangeKind = "register" }));
+        Assert.False(Matches(cause with { Revision = 3 }));
+        Assert.False(Matches(cause with
         {
             StaffContent = cause.StaffContent with { Sha256 = new string('f', 64) },
         }));
-        Assert.False(retained.MatchesRetainedChange(cause with
+        Assert.False(Matches(cause with
         {
             Operation = cause.Operation with { LogicalId = Uuid.CreateVersion4() },
         }));
+
+        bool Matches(FirmStaffChangeRecorded candidate)
+        {
+            candidate.AttachMetadata(cause.Metadata);
+            return history.Matches(candidate);
+        }
     }
 
     static async Task<FirmStaffChangeRecorded> ReadStatusChangeAsync(IServiceProvider provider, Uuid staffId,

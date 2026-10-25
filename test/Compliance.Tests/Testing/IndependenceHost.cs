@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
@@ -34,6 +35,7 @@ sealed class IndependenceHost : IAsyncDisposable
         var events = new InMemoryEventStore();
         services.AddSingleton<IEventStore>(events);
         services.AddSingleton<IDomainEventReader>(events);
+        services.AddSingleton<ISourceFactResolver, EventStoreSourceFactResolver>();
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<IPermissionAuthorizer>(new RecordingPermissionAuthorizer(permitted));
         services.AddSingleton<IPlatformUserDirectoryReader>(new AnyPlatformUserDirectory());

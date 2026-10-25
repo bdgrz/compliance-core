@@ -85,13 +85,16 @@ sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregat
         foreach (var staffMemberId in source.Assignees.Select(staff => staff.StaffMemberId).Distinct())
         {
             var record = await reader.HydrateAsync(new FirmStaffRecord(staffMemberId), ct).ConfigureAwait(false);
+            var history = await FirmStaffHistory.ReadAsync(events, record, ct).ConfigureAwait(false);
             await foreach (var directory in events.ReadAsync(record.Stream, 0, ct).WithCancellation(ct).ConfigureAwait(false))
             {
+                if (directory.ResourceOffset >= record.CommittedStreamPosition)
+                    break;
                 if (directory.Stream != record.Stream)
                     throw new InvalidOperationException("A staff cause must originate on its authoritative record stream.");
                 if (directory.Event is not FirmStaffChangeRecorded { ChangeKind: "status" } change)
                     continue;
-                if (!record.MatchesRetainedChange(change))
+                if (!history.Matches(change))
                     throw Pending("Staff source history changed while accepted assignments were reconciled.");
                 var changed = await staffViews.ReadAsync(change, ct).ConfigureAwait(false);
                 foreach (var staff in source.Assignees.Where(staff =>
