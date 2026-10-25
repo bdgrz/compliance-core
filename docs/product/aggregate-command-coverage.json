@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "d88b9aaed691e5251bc47ca63722f9616ebc770b",
+  "sourceCommit": "8ece7f2ea4a1ceedaac214a744045eb05a0bcc73",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -307,6 +307,7 @@
         "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessCompletionReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTraceTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignFacts.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
@@ -346,6 +347,7 @@
         "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessCompletionReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -5776,6 +5778,7 @@
         "src/Compliance.Core/Features/AccessControl/PracticeIndependenceCommitment.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/PracticeCommitmentNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/PracticeIndependenceCommitmentTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -5809,7 +5812,9 @@
       "emitters": [
         "src/Compliance.Core/Features/AccessControl/PracticeIndependenceCommitment.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/PracticeCommitmentNativeHistoryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -11206,6 +11211,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/PracticeCommitmentNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/PracticeIndependenceCommitmentTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementStaffAssignmentTests.cs",
@@ -12444,6 +12450,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessCompletionReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReceiverPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionFailureBindingTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
       ],
@@ -13363,6 +13371,8 @@
         "AccessReviewItem"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessBulkReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReceiverPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTraceTests.cs"
       ],
@@ -14605,6 +14615,7 @@
         "AccessReviewCompletionVerifier"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessCompletionReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionFailureBindingTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs",
         "test/Compliance.Tests/Features/Content/SourceUseReceiverContractTests.cs"
@@ -15077,6 +15088,8 @@
         "AccessReviewDecisionBatch"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessBulkReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReceiverPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs"
       ],
       "note": ""
@@ -15897,6 +15910,8 @@
         "PopulationSnapshotFreezer"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessCompletionReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReceiverPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
       ],
       "note": "System-only completion receiver; verifies every held item and its decision, remediation and exception proof, freezes the final snapshot and appends the completion. No HTTP/MCP route."
@@ -15924,7 +15939,10 @@
       "aggregateTargets": [
         "AccessReviewDecisionBatch"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessBulkReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReceiverPreparationSafetyTests.cs"
+      ],
       "note": ""
     },
     {
@@ -17948,6 +17966,8 @@
         "AccessReviewItem"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessBulkReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReceiverPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs"
       ],
       "note": ""
@@ -24066,6 +24086,8 @@
         "AccessReviewDecisionBatch"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessBatchReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessBulkReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTraceTests.cs"
       ],
@@ -24093,6 +24115,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessItemReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignFacts.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewLaunchFanOutTests.cs",
@@ -25606,6 +25629,8 @@
         "AccessReviewDecisionBatch"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessBulkReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReceiverPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs"
       ],
       "note": ""
@@ -28434,6 +28459,7 @@
         "AccessReviewItem"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessBulkReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTraceTests.cs"
       ],
@@ -30908,6 +30934,7 @@
         "EngagementAcceptanceVerifier"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/PracticeIndependenceCommitmentTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
         "test/Compliance.Tests/Testing/PracticeCommitmentFacts.cs"
       ],

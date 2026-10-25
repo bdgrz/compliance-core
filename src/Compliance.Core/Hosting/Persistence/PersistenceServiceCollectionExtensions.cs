@@ -57,6 +57,8 @@ static class PersistenceServiceCollectionExtensions
             new ProfessionalDutyAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IAggregateReader>(services, (provider, inner) =>
             new WorkDigestAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
+        Decorate<IAggregateReader>(services, (provider, inner) =>
+            new PracticeCommitmentAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IRequestBus>(services, (_, inner) => new PersistenceValidationRequestBus(inner));
     }
 

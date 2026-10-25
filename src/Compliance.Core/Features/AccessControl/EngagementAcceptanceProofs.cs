@@ -70,9 +70,10 @@ static class EngagementAcceptanceProofs
                 var proofs = new List<NativeFactReference>(subjects.Count);
                 foreach (var subject in subjects)
                 {
+                    var key = EngagementAcceptanceEffects.UseKey(operationId, root.Stream, subject.Stream);
                     var owner = await reader.HydrateAsync(new PracticeIndependenceCommitment(tenantId, subject.Kind,
-                        subject.SubjectId), ct).ConfigureAwait(false);
-                    proofs.Add(owner.CommitmentOf(operationId) is { } committed
+                        subject.SubjectId, selectedReservation: key), ct).ConfigureAwait(false);
+                    proofs.Add(owner.CommitmentOf(key) is { } committed
                         ? NativeFactReference.Of(owner.Stream, committed)
                         : throw new SourceFactVerificationException(
                             $"The commitment of {subject.Key} has not been produced yet."));

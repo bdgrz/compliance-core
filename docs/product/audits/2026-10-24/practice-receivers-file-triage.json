@@ -1,0 +1,15 @@
+{
+  "model": "jev-1.14.0",
+  "files": 23,
+  "threshold": 0.65,
+  "signals": [],
+  "exactSourceAndDependencyHashes": "verified",
+  "manualReview": [
+    "Practice exact full ReservationKey includes root+first owner+generation+purpose; permanent first-practice/citation authority never released. Complete history remains external, only live commitments and one explicit selected receipt remain on owner. Installed full raw/native cut gate and actual source-use envelope vs ParentIntent binding retained.",
+    "All nine Access manual receivers resolve actual native scoped source before preparation. Same interpreted source/root/intent/causation/first-owner bindings accompany native receipts; new attempts still require complete original immutable selection/proof/hold/fence/OCC checks.",
+    "Complete Access closure must read ClosureIntent and require incoming ItemProofs == intent.SourceUses.Content before receipt decision; completed derived proof set is distinct. Exact accepted retry can skip full drain/item selection and result construction only after required bind.",
+    "Same-ref abort/cancel receipts may skip failure bytes. Alternate valid abort/cancel proofs retain old validation path; published/completed-cancel irreversible receipts keep original returned proof/result and legacy alternate-witness retry semantics. No blanket all-optional-fields claim.",
+    "Requested cancellation wins; expected missing/corrupt failure rechecks equal native winner; no-winner missing transient/corrupt permanent; programmer faults propagate. Generic Access SourceUse pairs remain separately queued."
+  ],
+  "adopted": "proceed exact scoped integration review and final local gates; no global remaining-owner completion claim"
+}

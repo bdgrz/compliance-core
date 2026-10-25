@@ -12,6 +12,11 @@ public sealed class ClientCompartmentIndependenceGuard(IAggregateReader reader)
             return false;
         var user = await reader.HydrateAsync(new PracticeIndependenceCommitment(tenantId,
             PracticeSubjectKind.CanonicalUser, canonicalUserId), ct).ConfigureAwait(false);
-        return !IndependenceCompartments.IsBlockedByWall(tenantId, user.Assignments(), compartment);
+        return compartment switch
+        {
+            RecordCompartment.AdvisoryWorkingNotes => !user.Serves(PracticeIndependenceCommitment.Attest),
+            RecordCompartment.AttestInternal => !user.Serves(PracticeIndependenceCommitment.Advisory),
+            _ => true,
+        };
     }
 }

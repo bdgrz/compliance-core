@@ -122,10 +122,12 @@ sealed class EngagementAcceptanceVerifier(IAggregateReader reader, IImmutableCon
         if (disposition == SourceUseSettlementDisposition.IrreversibleDecision &&
             target.Area == PracticeIndependenceCommitment.Area && PracticeSubjects.Parse(target.Resource) is { } parsed)
         {
+            var key = EngagementAcceptanceEffects.UseKey(operationId, owner.Stream, target);
             var subject = await reader.HydrateAsync(new PracticeIndependenceCommitment(
-                EngagementIndependenceIntent.TenantOf(intent.Header), parsed.Kind, parsed.SubjectId), ct)
+                EngagementIndependenceIntent.TenantOf(intent.Header), parsed.Kind, parsed.SubjectId,
+                selectedReservation: key), ct)
                 .ConfigureAwait(false);
-            if (subject.CommitmentOf(operationId) is null)
+            if (subject.CommitmentOf(key) is null)
                 return Result<SourceUseSource>.Failure(Transient(
                     "The permanent commitment of a completed operation is not visible yet."));
         }

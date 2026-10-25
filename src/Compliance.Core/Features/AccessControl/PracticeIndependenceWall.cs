@@ -8,7 +8,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     for a client can serve the opposite one. Every read hydrates only the subjects it asks about, so no
 ///     client-wide history is read and no count bounds the wall.
 /// </summary>
-public sealed class PracticeIndependenceWall(IAggregateReader reader)
+public sealed class PracticeIndependenceWall(IAggregateReader reader, IDomainEventReader events)
 {
     /// <summary>
     ///     Decides whether a candidate assignment is allowed: it is refused when the staff member or the canonical
@@ -34,7 +34,7 @@ public sealed class PracticeIndependenceWall(IAggregateReader reader)
             : new IndependenceDecision(IndependenceDecisionCode.PersonPracticeConflict,
                 ruleId: IndependenceCompartments.PersonExclusivityRuleId,
                 conflictingAssignment: new EngagementAssignment(tenantId,
-                    conflicting.Commitments[0].EngagementId, candidate.FirmStaffMemberId, candidate.UserId,
+                    conflicting.FirstCommitment!.EngagementId, candidate.FirmStaffMemberId, candidate.UserId,
                     ServiceEngagementRules.PracticeOf(conflicting.Practice!)));
     }
 
@@ -49,7 +49,8 @@ public sealed class PracticeIndependenceWall(IAggregateReader reader)
             return [];
         var user = await reader.HydrateAsync(new PracticeIndependenceCommitment(tenantId,
             PracticeSubjectKind.CanonicalUser, userId), ct).ConfigureAwait(false);
-        return user.Assignments();
+        var history = await PracticeCommitmentHistory.ReadAsync(events, user, ct).ConfigureAwait(false);
+        return history.Assignments();
     }
 
     /// <summary>True when the canonical user permanently serves exactly this practice for the client.</summary>

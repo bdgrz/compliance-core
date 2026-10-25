@@ -32,66 +32,38 @@ sealed class CancelAccessReviewDecisionBatchHandler(IAggregateReader reader, IAg
             command.DecisionBatchId, command.CommandId), ct).ConfigureAwait(false);
         if (batch.Accepted is not { } accepted)
             return SourceUseReceiverSupport.Transient("The batch is not materialized yet.");
-        BulkAccessDecisionIntent intent;
-        AccessReviewBulkFailure failure;
-        try
-        {
-            intent = await AccessReviewContent.ReadAsync<BulkAccessDecisionIntent>(content, tenant, accepted.Intent, ct)
-                .ConfigureAwait(false);
-            failure = await AccessReviewContent.ReadAsync<AccessReviewBulkFailure>(content, tenant, command.FailureProof, ct)
-                .ConfigureAwait(false);
-        }
-        catch (ImmutableContentUnavailableException exception)
-        {
-            return SourceUseReceiverSupport.Transient($"The frozen bulk decision cannot be verified: {exception.Message}");
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return SourceUseReceiverSupport.Permanent($"The frozen bulk decision cannot be verified: {exception.Message}");
-        }
-
-        if (intent.Header.RootOperationId != command.DecisionBatchId || intent.CampaignId != command.CampaignId ||
-            command.ExpectedRevision != accepted.Revision)
+        if (command.ExpectedRevision != accepted.Revision)
             return SourceUseReceiverSupport.Permanent("The cancel differs from the materialized batch.");
-        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, command.CampaignId, selectedRootId: command.DecisionBatchId), ct)
-            .ConfigureAwait(false);
+        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, command.CampaignId,
+            selectedRootId: command.DecisionBatchId), ct).ConfigureAwait(false);
         if (campaign.AdmittedFor(command.DecisionBatchId) is not { } admitted)
             return SourceUseReceiverSupport.Transient("The admitted bulk decision is not visible yet.");
-        if (admitted.Intent != accepted.Intent || failure.Evidence != NativeFactReference.Of(campaign.Stream, admitted))
-            return SourceUseReceiverSupport.Permanent("The failure proof belongs to another admitted bulk decision.");
-        if (failure.ItemId is { } failedItem)
-        {
-            try
-            {
-                var selected = await new AccessReviewManifests(content).BulkItemsAsync(command.Target.Realm,
-                    intent.Items, ct).ConfigureAwait(false);
-                if (!selected.Values.Any(item => item.ItemId == failedItem))
-                    return SourceUseReceiverSupport.Permanent("The failure proof names an item outside the frozen selection.");
-            }
-            catch (ImmutableContentUnavailableException exception)
-            {
-                return SourceUseReceiverSupport.Transient($"The frozen selection cannot be verified: {exception.Message}");
-            }
-            catch (ImmutableContentIntegrityException exception)
-            {
-                return SourceUseReceiverSupport.Permanent($"The frozen selection cannot be verified: {exception.Message}");
-            }
-        }
+        if (admitted.Intent != accepted.Intent || accepted.Operation.RootOperationId != command.DecisionBatchId ||
+            accepted.Operation.CausationEventId != admitted.Metadata.EventId)
+            return SourceUseReceiverSupport.Permanent("The materialized batch belongs to another exact admitted bulk decision.");
         var provenance = SourceUseReceiverSupport.Child(command.CommandId, nameof(CancelAccessReviewDecisionBatch),
-            accepted.Metadata!.EventId, intent.Header, batch.Stream, clock.GetUtcNow());
+            accepted.Metadata.EventId, AccessReviewIntentBindings.HeaderOf(admitted.Operation), batch.Stream, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
+        var preparation = await NativeReceiverPreparation.PrepareAsync<AccessReviewDecisionBatch, Verified>(reader,
+            () => new AccessReviewDecisionBatch(tenant, command.CampaignId, command.DecisionBatchId, command.CommandId),
+            owner => Decide(owner, binding, command, false),
+            (_, token) => PrepareAsync(tenant, campaign, admitted, command, token), ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
         for (var attempt = 1; ; attempt++)
         {
             try
             {
                 var current = await reader.HydrateAsync(new AccessReviewDecisionBatch(tenant, command.CampaignId,
                     command.DecisionBatchId, command.CommandId), ct).ConfigureAwait(false);
-                if (Decide(current, binding) is { } early)
+                if (Decide(current, binding, command, true) is { } early)
                     return early;
                 var step = await executor.ExecuteAsync(new AccessReviewDecisionBatch(tenant, command.CampaignId,
                     command.DecisionBatchId, command.CommandId), fresh =>
                     {
-                        if (Decide(fresh, binding) is { } decided)
+                        if (Decide(fresh, binding, command, true) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
                         var raised = fresh.AcceptCancellation(provenance, command.FailureProof);
                         return raised.IsSuccess
@@ -109,8 +81,43 @@ sealed class CancelAccessReviewDecisionBatchHandler(IAggregateReader reader, IAg
         }
     }
 
-    static Result<ReceiverOutcome>? Decide(AccessReviewDecisionBatch batch, AcceptedOperationBinding binding)
+    async ValueTask<Result<Verified>> PrepareAsync(Uuid tenant, AccessReviewCampaign campaign,
+        AccessReviewDecisionBatchAdmitted admitted, CancelAccessReviewDecisionBatch command, CancellationToken ct)
     {
+        try
+        {
+            var intent = await AccessReviewContent.ReadAsync<BulkAccessDecisionIntent>(content, tenant, admitted.Intent, ct)
+                .ConfigureAwait(false);
+            var failure = await AccessReviewContent.ReadAsync<AccessReviewBulkFailure>(content, tenant,
+                command.FailureProof, ct).ConfigureAwait(false);
+            AccessReviewIntentBindings.Require(intent.Header, admitted.Operation);
+            if (intent.Header.RootOperationId != command.DecisionBatchId || intent.CampaignId != command.CampaignId ||
+                failure.Evidence != NativeFactReference.Of(campaign.Stream, admitted))
+                return Result<Verified>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The failure proof belongs to another admitted bulk decision.", false));
+            if (failure.ItemId is { } failedItem)
+            {
+                var selected = await new AccessReviewManifests(content).BulkItemsAsync(command.Target.Realm,
+                    intent.Items, ct).ConfigureAwait(false);
+                if (!selected.Values.Any(item => item.ItemId == failedItem))
+                    return Result<Verified>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The failure proof names an item outside the frozen selection.", false));
+            }
+            return Result<Verified>.Success(new Verified());
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<Verified>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen bulk decision cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    static Result<ReceiverOutcome>? Decide(AccessReviewDecisionBatch batch, AcceptedOperationBinding binding,
+        CancelAccessReviewDecisionBatch command, bool prepared)
+    {
+        if (!prepared && batch.CancellationAccepted?.SourceProofs != command.FailureProof)
+            return null;
         if (BulkReceiverSupport.Decide(batch.Acceptance, batch.Stream, binding) is { } accepted)
             return accepted;
         if (batch.Published is { } published)
@@ -120,6 +127,8 @@ sealed class CancelAccessReviewDecisionBatchHandler(IAggregateReader reader, IAg
             ? SourceUseReceiverSupport.Replayed(BulkReceiverSupport.Fact(batch.Stream, canceled))
             : null;
     }
+
+    sealed record Verified;
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);
 }

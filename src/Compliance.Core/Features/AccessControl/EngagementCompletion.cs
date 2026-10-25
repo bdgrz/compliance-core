@@ -53,9 +53,10 @@ sealed class EngagementCompletion(IAggregateReader reader, IAggregateExecutor ex
                 "The proofs do not cover exactly the frozen practice subjects."));
         foreach (var subject in loaded.Subjects)
         {
+            var key = EngagementAcceptanceEffects.UseKey(operationId, loaded.Owner.Stream, subject.Stream);
             var owner = await reader.HydrateAsync(new PracticeIndependenceCommitment(tenantId, subject.Kind,
-                subject.SubjectId), ct).ConfigureAwait(false);
-            if (owner.CommitmentOf(operationId) is not { } committed)
+                subject.SubjectId, selectedReservation: key), ct).ConfigureAwait(false);
+            if (owner.CommitmentOf(key) is not { } committed)
                 return LoadedOperation.Failed(EngagementAcceptanceVerifier.Transient(
                     "A permanent commitment is not visible yet; completion waits for the complete set."));
             if (!commitments.Contains(NativeFactReference.Of(owner.Stream, committed)))

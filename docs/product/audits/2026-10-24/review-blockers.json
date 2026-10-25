@@ -757,27 +757,54 @@
     },
     {
       "id": "provider-gap-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "provider-gap-qualification.json",
       "combinedProductionFileReviews": 63,
       "focusedAndHttpPassed": 1927,
-      "unitPassed": 6499
+      "unitPassed": 6499,
+      "pr": 1133,
+      "mergeCommit": "8ece7f2ea4a1ceedaac214a744045eb05a0bcc73"
     },
     {
       "id": "professional-duty-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "professional-duty-qualification.json",
       "combinedProductionFileReviews": 63,
       "focusedAndHttpPassed": 1927,
-      "unitPassed": 6499
+      "unitPassed": 6499,
+      "pr": 1133,
+      "mergeCommit": "8ece7f2ea4a1ceedaac214a744045eb05a0bcc73"
     },
     {
       "id": "digest-history-and-operator-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "digest-history-operator-qualification.json",
       "combinedProductionFileReviews": 63,
       "focusedAndHttpPassed": 1927,
-      "unitPassed": 6499
+      "unitPassed": 6499,
+      "pr": 1133,
+      "mergeCommit": "8ece7f2ea4a1ceedaac214a744045eb05a0bcc73"
+    },
+    {
+      "id": "practice-full-key-native-history",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "practice-native-qualification.json",
+      "genuineOldApiRedFailed": 2,
+      "combinedProductionFileReviews": 23,
+      "focusedPassed": 1236,
+      "httpPassed": 128,
+      "unitPassed": 6565
+    },
+    {
+      "id": "access-manual-receiver-preparation",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "access-receiver-preparation-qualification.json",
+      "genuineOldApiRedFailed": 29,
+      "combinedProductionFileReviews": 23,
+      "focusedPassed": 1236,
+      "httpPassed": 128,
+      "unitPassed": 6565,
+      "remaining": "Generic Access SourceUse pairs unchanged/queued."
     }
   ],
   "resolved": [

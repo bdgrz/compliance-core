@@ -1,4 +1,5 @@
 using System.Globalization;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceUse;
@@ -13,7 +14,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     outcome: nothing in this owner removes it.
 /// </summary>
 sealed class CommitPracticeIndependenceHandler(IAggregateExecutor executor, TimeProvider clock,
-    EngagementAcceptanceVerifier verifier)
+    EngagementAcceptanceVerifier verifier, IAggregateReader reader, IImmutableContentStore content)
     : IRequestHandler<CommitPracticeIndependence, ReceiverOutcome>
 {
     const int MaximumAttempts = 4;
@@ -40,12 +41,63 @@ sealed class CommitPracticeIndependenceHandler(IAggregateExecutor executor, Time
         var provenance = EngagementAcceptanceEffects.Child(command.CommandId, nameof(CommitPracticeIndependence),
             command.Source.EventId, intent, command.Target, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
+        var key = EngagementAcceptanceEffects.UseKey(command.OperationId, owner.Stream, command.Target);
+        Result<ReceiverOutcome>? Decide(PracticeIndependenceCommitment target)
+        {
+            switch (target.Acceptance.Decide(binding))
+            {
+                case NativeAcceptanceDecision.Replayed:
+                    return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(target.Stream, target.Acceptance.SelectedFact!));
+                case NativeAcceptanceDecision.Conflict:
+                    return Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
+            }
+            if (target.CommitmentOf(key) is not { } existing)
+                return null;
+            return existing.Intent == command.Intent && existing.Practice == command.Practice && existing.EngagementId == engagementId
+                ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(target.Stream, existing))
+                : SourceUseReceiverSupport.Permanent("The permanent commitment differs from the exact frozen authorization.");
+        }
+        var prepared = await NativeReceiverPreparation.PrepareAsync<PracticeIndependenceCommitment, PreparedCut>(reader,
+            () => new PracticeIndependenceCommitment(tenantId, subject.Kind, subject.SubjectId,
+                command.CommandId, selectedReservation: key).ForSourceUses(key), Decide,
+            async (target, token) =>
+            {
+                if (target.Uses.Find(key) is not { IsActive: true, GrantFact: PracticeIndependenceReserved grant })
+                    return Result<PreparedCut>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The exact live practice reservation is not visible yet.", true));
+                if (grant.Intent.Schema != SourceUseAuthorizationIntent.Schema)
+                    return Result<PreparedCut>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The live practice grant has another source-use schema."));
+                var frozen = await content.ReadJsonAsync<SourceUseAuthorizationIntent>(command.Target.Realm, grant.Intent, token)
+                    .ConfigureAwait(false);
+                if (frozen.Header != intent.Header ||
+                    frozen.ParentIntent != command.Intent || frozen.Reservation != key || frozen.Grant is not null ||
+                    frozen.Disposition is not null || frozen.Requirement is null || frozen.Requirement.SourceOwner != command.Target ||
+                    frozen.Requirement.Purpose != SourceUsePurpose.ActualStaffAssignment ||
+                    frozen.Requirement.ContentEvent != new NativeFactReference(command.Target, Uuid.Empty, 0) ||
+                    frozen.Requirement.ResourceRevision != 0 || frozen.Requirement.RequiredFacts is null ||
+                    frozen.Requirement.RequiredFacts.Schema != PracticeSubjectIntent.Schema)
+                    return Result<PreparedCut>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The live practice grant is not the exact authorization's source-use envelope."));
+                var frozenSubject = await content.ReadJsonAsync<PracticeSubjectIntent>(command.Target.Realm,
+                    frozen.Requirement.RequiredFacts, token).ConfigureAwait(false);
+                if (frozenSubject != subject)
+                    return Result<PreparedCut>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The live practice grant names another frozen subject or practice."));
+                return Result<PreparedCut>.Success(new PreparedCut(target.Version, target.CommittedStreamPosition,
+                    target.ReplayCut.Digest));
+            }, ct).ConfigureAwait(false);
+        if (!prepared.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(prepared.Error!);
+        if (prepared.Value!.Outcome is { } known)
+            return known;
+        var cut = prepared.Value.Value!;
         for (var attempt = 1; ; attempt++)
         {
             try
             {
                 var step = await executor.ExecuteAsync(new PracticeIndependenceCommitment(tenantId, subject.Kind,
-                    subject.SubjectId, command.CommandId), fresh =>
+                    subject.SubjectId, command.CommandId, selectedReservation: key), fresh =>
                     {
                         switch (fresh.Acceptance.Decide(binding))
                         {
@@ -56,9 +108,15 @@ sealed class CommitPracticeIndependenceHandler(IAggregateExecutor executor, Time
                                 return AggregateOutcome.Discard(Result<Step>.Failure(AcceptedAppendResult.ConflictError));
                         }
 
-                        if (fresh.CommitmentOf(command.OperationId) is { } existing)
-                            return AggregateOutcome.Discard(Result<Step>.Success(
-                                new Step(NativeFactReference.Of(fresh.Stream, existing), false)));
+                        if (fresh.CommitmentOf(key) is { } existing)
+                            return existing.Intent == command.Intent && existing.Practice == command.Practice && existing.EngagementId == engagementId
+                                ? AggregateOutcome.Discard(Result<Step>.Success(new Step(NativeFactReference.Of(fresh.Stream, existing), false)))
+                                : AggregateOutcome.Discard(Result<Step>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                    "The permanent commitment differs from the exact frozen authorization.")));
+                        if ((fresh.Version, fresh.CommittedStreamPosition, fresh.ReplayCut.Digest) !=
+                            (cut.Version, cut.Position, cut.Digest))
+                            return AggregateOutcome.Discard(Result<Step>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                "The prepared practice reservation prefix changed before commitment.", true)));
                         var committed = fresh.Commit(provenance, command.Intent, command.Generation, command.Practice,
                             engagementId);
                         return committed.IsSuccess
@@ -78,6 +136,8 @@ sealed class CommitPracticeIndependenceHandler(IAggregateExecutor executor, Time
             }
         }
     }
+
+    sealed record PreparedCut(ulong Version, ulong Position, string Digest);
 
     sealed record Step(NativeFactReference Fact, bool Applied);
 }

@@ -17,44 +17,70 @@ sealed class AccessReviewCompletionVerifier(IAggregateReader reader, IImmutableC
     public async ValueTask<AccessReviewCompletion> VerifyAsync(Uuid tenantId, Uuid campaignId, NativeFactReference source,
         ImmutableContentRef intentReference, Uuid operationId, Uuid selectedLogicalId, CancellationToken ct)
     {
+        var native = await ReadNativeAsync(tenantId, campaignId, source, intentReference, operationId, selectedLogicalId, ct)
+            .ConfigureAwait(false);
+        return native.Error is not null ? native : await PrepareAsync(tenantId, native, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Verifies the actual scoped native source before immutable binding and receiver decisions.</summary>
+    public async ValueTask<AccessReviewCompletion> ReadNativeAsync(Uuid tenantId, Uuid campaignId,
+        NativeFactReference source, ImmutableContentRef intentReference, Uuid operationId, Uuid selectedLogicalId,
+        CancellationToken ct)
+    {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(intentReference);
-        ClosureIntent intent;
-        try
-        {
-            intent = await AccessReviewContent.ReadAsync<ClosureIntent>(content, tenantId, intentReference, ct)
-                .ConfigureAwait(false);
-        }
-        catch (ImmutableContentUnavailableException exception)
-        {
-            return AccessReviewCompletion.Failed(Transient($"The frozen completion is not readable yet: {exception.Message}"));
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return AccessReviewCompletion.Failed(Permanent($"The frozen completion cannot be verified: {exception.Message}"));
-        }
-
-        if (intent.Header.RootOperationId != operationId || intent.ParentKind != ClosureParentKind.AccessReviewCampaign ||
-            intent.ParentId != campaignId || intent.ParentGeneration != (ulong)AccessReviewEffects.Generation)
-            return AccessReviewCompletion.Failed(Permanent("The command differs from the frozen completion intent."));
         var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenantId, campaignId, selectedLogicalId, operationId), ct)
             .ConfigureAwait(false);
         if (campaign.AcceptedFor(operationId) is not { } accepted)
             return AccessReviewCompletion.Failed(Transient("The accepted completion is not visible yet."));
-        if (source.Stream != campaign.Stream || accepted.Metadata!.EventId != source.EventId ||
-            accepted.Metadata.AggregateVersion != source.AggregateVersion || accepted.Intent != intentReference)
-            return AccessReviewCompletion.Failed(Permanent("The source is not the accepted completion of this campaign."));
+        return source.Stream != campaign.Stream || accepted.Metadata.EventId != source.EventId ||
+            accepted.Metadata.AggregateVersion != source.AggregateVersion || accepted.Intent != intentReference ||
+            accepted.Operation.RootOperationId != operationId
+            ? AccessReviewCompletion.Failed(Permanent("The source is not the accepted completion of this campaign."))
+            : new AccessReviewCompletion(campaign, accepted, null, null);
+    }
+
+    /// <summary>Binds immutable command terms absent from the native receipt, including the required use-manifest identity.</summary>
+    public async ValueTask<AccessReviewCompletion> BindAsync(Uuid tenantId, AccessReviewCompletion native, CancellationToken ct)
+    {
+        var campaign = native.Campaign!;
+        var accepted = native.Accepted!;
         try
         {
+            var intent = await AccessReviewContent.ReadAsync<ClosureIntent>(content, tenantId, accepted.Intent, ct)
+                .ConfigureAwait(false);
+            if (intent.Header is null || intent.Header.RootOperationId != accepted.Operation.RootOperationId ||
+                intent.ParentKind != ClosureParentKind.AccessReviewCampaign || intent.ParentId != campaign.Id ||
+                intent.ParentGeneration != (ulong)AccessReviewEffects.Generation || intent.SourceUses is null)
+                return AccessReviewCompletion.Failed(Permanent("The command differs from the frozen completion intent."));
             AccessReviewIntentBindings.Require(intent.Header, accepted.Operation);
-            await RequireCompleteSelectionAsync(tenantId, campaign, accepted, intent, ct).ConfigureAwait(false);
+            return native with { Intent = intent };
         }
         catch (ImmutableContentIntegrityException error)
         {
+            ct.ThrowIfCancellationRequested();
             return AccessReviewCompletion.Failed(new RequestError(RequestErrorKind.Conflict, error.Message,
                 error is ImmutableContentUnavailableException));
         }
-        return new AccessReviewCompletion(campaign, accepted, intent, null);
+    }
+
+    /// <summary>Verifies the complete frozen selection only for a new receiver's feasibility.</summary>
+    public async ValueTask<AccessReviewCompletion> PrepareAsync(Uuid tenantId, AccessReviewCompletion native, CancellationToken ct)
+    {
+        var bound = native.Intent is null ? await BindAsync(tenantId, native, ct).ConfigureAwait(false) : native;
+        if (bound.Error is not null)
+            return bound;
+        try
+        {
+            await RequireCompleteSelectionAsync(tenantId, bound.Campaign!, bound.Accepted!, bound.Intent!, ct).ConfigureAwait(false);
+            return bound;
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return AccessReviewCompletion.Failed(new RequestError(RequestErrorKind.Conflict, error.Message,
+                error is ImmutableContentUnavailableException));
+        }
     }
 
     async Task RequireCompleteSelectionAsync(Uuid tenant, AccessReviewCampaign campaign,

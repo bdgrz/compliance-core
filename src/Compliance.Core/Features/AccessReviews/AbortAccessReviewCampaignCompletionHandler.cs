@@ -34,59 +34,37 @@ sealed class AbortAccessReviewCampaignCompletionHandler(IAggregateReader reader,
             .ConfigureAwait(false);
         if (campaign.AcceptedFor(command.OperationId) is not { } accepted)
             return SourceUseReceiverSupport.Transient("The accepted completion is not visible yet.");
-        ClosureIntent intent;
-        AccessReviewCompletionFailure failure;
-        try
-        {
-            intent = await AccessReviewContent.ReadAsync<ClosureIntent>(content, tenant, accepted.Intent, ct)
-                .ConfigureAwait(false);
-            failure = await AccessReviewContent.ReadAsync<AccessReviewCompletionFailure>(content, tenant, command.FailureProof,
-                ct).ConfigureAwait(false);
-            AccessReviewIntentBindings.Require(intent.Header, accepted.Operation);
-        }
-        catch (ImmutableContentUnavailableException exception)
-        {
-            return SourceUseReceiverSupport.Transient($"The frozen completion cannot be verified: {exception.Message}");
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return SourceUseReceiverSupport.Permanent($"The frozen completion cannot be verified: {exception.Message}");
-        }
-
-        if (intent.Header.RootOperationId != command.OperationId || command.ExpectedRevision != accepted.Revision ||
-            failure.Evidence != NativeFactReference.Of(campaign.Stream, accepted))
+        if (command.ExpectedRevision != accepted.Revision)
             return SourceUseReceiverSupport.Permanent("The abort differs from the frozen completion admission.");
-        if (failure.ItemId is { } failedItem)
-        {
-            try
-            {
-                var requirements = await new AccessReviewManifests(content).RequirementsAsync(command.Target.Realm,
-                    intent.SourceUses, ct).ConfigureAwait(false);
-                if (!requirements.ContainsKey(AccessReviewEffects.ItemStream(tenant, campaignId, failedItem).Resource))
-                    return SourceUseReceiverSupport.Permanent("The completion failure names an item outside its exact frozen selection.");
-            }
-            catch (ImmutableContentIntegrityException error)
-            {
-                return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict, error.Message,
-                    error is ImmutableContentUnavailableException));
-            }
-        }
+        var header = AccessReviewIntentBindings.HeaderOf(accepted.Operation);
         var provenance = SourceUseReceiverSupport.Child(command.CommandId, nameof(AbortAccessReviewCampaignCompletion),
-            accepted.Metadata!.EventId, intent.Header, campaign.Stream, clock.GetUtcNow());
+            accepted.Metadata.EventId, header, campaign.Stream, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var preparedCut = AccessReviewPreparedCut.Capture(campaign);
+        var preparation = await NativeReceiverPreparation.PrepareAsync<AccessReviewCampaign, AccessReviewPreparedCut>(reader,
+            () => new AccessReviewCampaign(tenant, campaignId, command.CommandId, command.OperationId),
+            owner => Decide(owner, binding, command, false), async (owner, token) =>
+            {
+                var verified = await PrepareAsync(tenant, campaign, accepted, command, token).ConfigureAwait(false);
+                return verified.IsSuccess ? Result<AccessReviewPreparedCut>.Success(AccessReviewPreparedCut.Capture(owner))
+                    : Result<AccessReviewPreparedCut>.Failure(verified.Error!);
+            }, ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
+        var preparedCut = preparation.Value.Value!;
         for (var attempt = 1; ; attempt++)
         {
             try
             {
                 var current = await reader.HydrateAsync(new AccessReviewCampaign(tenant, campaignId, command.CommandId, command.OperationId), ct)
                     .ConfigureAwait(false);
-                if (Decide(current, binding, command.OperationId) is { } early)
+                if (Decide(current, binding, command, true) is { } early)
                     return early;
                 var step = await executor.ExecuteAsync(new AccessReviewCampaign(tenant, campaignId, command.CommandId, command.OperationId),
                     fresh =>
                     {
-                        if (Decide(fresh, binding, command.OperationId) is { } decided)
+                        if (Decide(fresh, binding, command, true) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
                         if (!preparedCut.Matches(fresh))
                             return AggregateOutcome.Discard(Result<Decided>.Failure(AccessReviewPreparedCut.Changed().Error!));
@@ -106,9 +84,44 @@ sealed class AbortAccessReviewCampaignCompletionHandler(IAggregateReader reader,
         }
     }
 
-    static Result<ReceiverOutcome>? Decide(AccessReviewCampaign campaign, AcceptedOperationBinding binding,
-        Uuid operationId)
+    async ValueTask<Result<Verified>> PrepareAsync(Uuid tenant, AccessReviewCampaign campaign,
+        AccessReviewCampaignCompletionAccepted accepted, AbortAccessReviewCampaignCompletion command, CancellationToken ct)
     {
+        try
+        {
+            var intent = await AccessReviewContent.ReadAsync<ClosureIntent>(content, tenant, accepted.Intent, ct)
+                .ConfigureAwait(false);
+            var failure = await AccessReviewContent.ReadAsync<AccessReviewCompletionFailure>(content, tenant,
+                command.FailureProof, ct).ConfigureAwait(false);
+            AccessReviewIntentBindings.Require(intent.Header, accepted.Operation);
+            if (intent.Header.RootOperationId != command.OperationId ||
+                failure.Evidence != NativeFactReference.Of(campaign.Stream, accepted))
+                return Result<Verified>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The abort differs from the frozen completion admission.", false));
+            if (failure.ItemId is { } failedItem)
+            {
+                var requirements = await new AccessReviewManifests(content).RequirementsAsync(command.Target.Realm,
+                    intent.SourceUses, ct).ConfigureAwait(false);
+                if (!requirements.ContainsKey(AccessReviewEffects.ItemStream(tenant, campaign.Id, failedItem).Resource))
+                    return Result<Verified>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The completion failure names an item outside its exact frozen selection.", false));
+            }
+            return Result<Verified>.Success(new Verified());
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<Verified>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen completion cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    static Result<ReceiverOutcome>? Decide(AccessReviewCampaign campaign, AcceptedOperationBinding binding,
+        AbortAccessReviewCampaignCompletion command, bool prepared)
+    {
+        var canceled = campaign.CanceledFor(command.OperationId);
+        if (!prepared && canceled?.SourceProofs != command.FailureProof)
+            return null;
         switch (campaign.Acceptance.Decide(binding))
         {
             case NativeAcceptanceDecision.Replayed:
@@ -117,14 +130,14 @@ sealed class AbortAccessReviewCampaignCompletionHandler(IAggregateReader reader,
             case NativeAcceptanceDecision.Conflict:
                 return Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
         }
-
-        if (campaign.ClosedFor(operationId) is { } closed)
-            return SourceUseReceiverSupport.Superseded("The completion already closed the campaign; it recovers forward.",
-                NativeFactReference.Of(campaign.Stream, closed));
-        return campaign.CanceledFor(operationId) is { } canceled
-            ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(campaign.Stream, canceled))
-            : null;
+        if (canceled is not null)
+            return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(campaign.Stream, canceled));
+        return prepared && campaign.ClosedFor(command.OperationId) is { } closed
+            ? SourceUseReceiverSupport.Superseded("The completion already closed the campaign; it recovers forward.",
+                NativeFactReference.Of(campaign.Stream, closed)) : null;
     }
+
+    sealed record Verified;
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);
 }
