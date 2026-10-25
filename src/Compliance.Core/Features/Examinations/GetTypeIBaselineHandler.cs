@@ -5,7 +5,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Examinations;
 
 public sealed class GetTypeIBaselineHandler(IExaminationEngagementDirectoryReader directory, IDomainEventReader events,
-    IImmutableContentStore? content = null)
+    ExaminationEngagementReader examinations, IImmutableContentStore? content = null)
     : IRequestHandler<GetTypeIBaseline, TypeIBaselineView>
 {
     public async ValueTask<Result<TypeIBaselineView>> HandleAsync(
@@ -32,15 +32,37 @@ public sealed class GetTypeIBaselineHandler(IExaminationEngagementDirectoryReade
         if (matches.Count > 1)
             return Result<TypeIBaselineView>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The baseline identity belongs to more than one examination in the requested program."));
-        var baseline = matches.Count == 0 ? null : await directory.GetBaselineAsync(request.TenantId,
-            matches[0].ExaminationEngagementId, request.TypeIBaselineId, ct).ConfigureAwait(false);
-        if (baseline is not { } view || view.TenantId != request.TenantId ||
-            view.ProgramId != request.ProgramId || view.TypeIBaselineId != request.TypeIBaselineId ||
-            view.ExaminationEngagementId != matches[0].ExaminationEngagementId)
+        if (matches.Count == 0)
             return Result<TypeIBaselineView>.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The Type I baseline was not found."));
+        TypeIBaselineView? view;
+        try
+        {
+            var snapshot = await examinations.ReadAsync(request.TenantId, request.ProgramId,
+                matches[0].ExaminationEngagementId, ct).ConfigureAwait(false);
+            if (snapshot.Owner.Header is { } header && header.ProgramId != request.ProgramId)
+                return Result<TypeIBaselineView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The baseline locator contradicts its exact native program binding."));
+            view = snapshot.View is null ? null : snapshot.Rules.BaselineHistory.SingleOrDefault(
+                item => item.TypeIBaselineId == request.TypeIBaselineId);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<TypeIBaselineView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact baseline source cannot be verified: " + exception.Message,
+                exception is ImmutableContentUnavailableException));
+        }
+        if (view is null)
+            return Result<TypeIBaselineView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The located baseline has not reached its exact native source.", true));
+        async ValueTask<Result<TypeIBaselineView>> CompleteAsync(TypeIBaselineView value)
+        {
+            var final = await directory.LoadCheckpointAsync(request.TenantId, ct).ConfigureAwait(false);
+            return final != before || await HasPendingSourceAsync(request.TenantId, final, ct).ConfigureAwait(false)
+                ? BehindSource() : Result<TypeIBaselineView>.Success(value);
+        }
         if (view.SourceContentManifest is null)
-            return Result<TypeIBaselineView>.Success(view);
+            return await CompleteAsync(view).ConfigureAwait(false);
         if (content is null)
             return Result<TypeIBaselineView>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The frozen source byte proof cannot be verified."));
@@ -60,7 +82,7 @@ public sealed class GetTypeIBaselineHandler(IExaminationEngagementDirectoryReade
                     throw new ImmutableContentIntegrityException("The baseline omits an exact physical source proof.");
                 enriched.Add(source with { Content = physical });
             }
-            return Result<TypeIBaselineView>.Success(view with { Sources = enriched });
+            return await CompleteAsync(view with { Sources = enriched }).ConfigureAwait(false);
         }
         catch (ImmutableContentUnavailableException exception)
         {

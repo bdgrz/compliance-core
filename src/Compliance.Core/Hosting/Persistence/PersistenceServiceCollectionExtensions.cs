@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.AuditorRequests;
 using Bdgrz.Compliance.Features.Operations;
@@ -35,6 +36,8 @@ static class PersistenceServiceCollectionExtensions
             new AccessReviewAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IAggregateReader>(services, (provider, inner) =>
             new EvaluationAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
+        Decorate<IAggregateReader>(services, (provider, inner) =>
+            new ExaminationEngagementAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IRequestBus>(services, (_, inner) => new PersistenceValidationRequestBus(inner));
     }
 

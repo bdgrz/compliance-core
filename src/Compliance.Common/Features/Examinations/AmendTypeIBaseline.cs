@@ -9,4 +9,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 public sealed record AmendTypeIBaseline(Uuid TenantId, Uuid ProgramId, Uuid ExaminationId,
     Uuid BaselineId, long ExpectedRevision, string Reason, IReadOnlyList<Uuid> ChangedRecordIds,
     string ExpectedPreviewSha256, IReadOnlyList<Uuid> AffectedPackageMaterialIds)
-    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => BaselineId;
+}

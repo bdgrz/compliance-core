@@ -158,6 +158,7 @@ public sealed class AmendAuditPackageHandlerTests
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public InMemoryEventStore PeriodEvents { get; } = new();
         public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, ContentStore);
+        public ExaminationEngagementReader Examinations => new(Reader, PeriodEvents, ContentStore);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -181,6 +182,7 @@ public sealed class AmendAuditPackageHandlerTests
                 _artifactRoot, null, ArtifactContentLimits.MaxContentLength), _clock);
             services.AddSingleton(ArtifactStore);
             services.AddPortia();
+            ExaminationSeeds.Configure(services, PeriodEvents);
             PackageSeeds.Configure(services, PeriodEvents);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
@@ -190,7 +192,7 @@ public sealed class AmendAuditPackageHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public AmendAuditPackageHandler Handler() => new(RootOperation, new AuditPackageSourceBuilder(Reader, Periods), ContentStore);
+        public AmendAuditPackageHandler Handler() => new(RootOperation, new AuditPackageSourceBuilder(Examinations, Periods), ContentStore);
 
         public async Task SeedSourceBytesAsync()
         {
@@ -201,7 +203,7 @@ public sealed class AmendAuditPackageHandlerTests
         public async Task<TypeIBaselineView> SeedBaselineAsync()
         {
             var memberId = RbacIds.Member(TenantId, UserId);
-            var engagement = new ExaminationEngagement(TenantId, ProgramId, ExaminationId);
+            var engagement = new ExaminationEngagementRules(TenantId, ProgramId, ExaminationId);
             var boundaryId = Uuid.CreateVersion4();
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i",
                 "Independent Audit LLP", new DateOnly(2026, 9, 30), null, ["security"],
@@ -216,7 +218,7 @@ public sealed class AmendAuditPackageHandlerTests
             Assert.Null(engagement.FreezeBaseline(engagement.Revision, BaselineId, preview,
                 "Confirmed the exact Type I source snapshot.", memberId, "Engagement lead",
                 Now.AddMinutes(1)));
-            await Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
+            await ExaminationSeeds.WriteAsync(Reader, Writer, PeriodEvents, ContentStore, engagement);
             return engagement.Baseline!;
         }
 

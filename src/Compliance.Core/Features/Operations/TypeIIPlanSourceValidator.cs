@@ -6,7 +6,6 @@ using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.AuditOutcome;
-using ExaminationEngagementAggregate = Bdgrz.Compliance.Features.Examinations.ExaminationEngagement;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
@@ -14,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 static class TypeIIPlanSourceValidator
 {
     public static async ValueTask<Result<TypeIIPlanSourceValidation>> ValidateAsync(
-        IAggregateReader reader, ControlReader controlSources, FindingReader findings, ControlOperationsReader operating, SystemDescriptionReader descriptions, Uuid tenantId,
+        IAggregateReader reader, ExaminationEngagementReader examinations, ControlReader controlSources, FindingReader findings, ControlOperationsReader operating, SystemDescriptionReader descriptions, Uuid tenantId,
         Uuid programId, Uuid examinationId, TypeIIPlanContent content, DateTimeOffset proposedAt, CancellationToken ct)
     {
         if (content is null || content.ExaminationId != examinationId ||
@@ -33,9 +32,8 @@ static class TypeIIPlanSourceValidator
             return Failure(RequestErrorKind.Validation,
                 "The Type II plan content must identify the examination and include complete source and planning collections.");
 
-        var engagement = await reader.HydrateAsync(new ExaminationEngagementAggregate(tenantId,
-            programId, examinationId), ct).ConfigureAwait(false);
-        if (engagement.Current is not { } engagementView || engagement.Baseline is not { } baseline)
+        var engagement = await examinations.ReadAsync(tenantId, programId, examinationId, ct).ConfigureAwait(false);
+        if (engagement.View is not { } engagementView || engagement.Baseline is not { } baseline)
             return Failure(RequestErrorKind.NotFound,
                 "The Type I examination and its frozen baseline were not found.");
         if (engagementView.TenantId != tenantId || engagementView.ProgramId != programId ||

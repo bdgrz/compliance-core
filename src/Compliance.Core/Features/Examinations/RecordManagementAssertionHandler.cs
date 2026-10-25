@@ -10,9 +10,13 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Records management wording against its exact validated examination sources.</summary>
 public sealed class RecordManagementAssertionHandler(IAggregateExecutor executor,
-    IAggregateReader reader, AuditPackageReader packages, TypeIIPeriodReader periods, TimeProvider clock, SystemDescriptionReader descriptions) : IRequestHandler<RecordManagementAssertion>
+    IAggregateReader reader, AuditPackageReader packages, TypeIIPeriodReader periods, TimeProvider clock, SystemDescriptionReader descriptions, ExaminationEngagementReader examinations) : IRequestHandler<RecordManagementAssertion>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<RecordManagementAssertion> context,
+    public ValueTask<Result> HandleAsync(IRequestContext<RecordManagementAssertion> context,
+        CancellationToken ct) =>
+        ExaminationSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<RecordManagementAssertion> context,
         CancellationToken ct)
     {
         var request = context.Request;
@@ -151,14 +155,13 @@ public sealed class RecordManagementAssertionHandler(IAggregateExecutor executor
         if (packageVersion.SourceSnapshotKind == "type_i_baseline" &&
             packageVersion.SourcePeriodId == Uuid.Empty)
         {
-            var engagement = await reader.HydrateAsync(new ExaminationEngagement(tenantId,
-                programId, examinationId), ct).ConfigureAwait(false);
-            if (engagement.Current is null)
+            var engagement = await examinations.ReadAsync(tenantId, programId, examinationId, ct).ConfigureAwait(false);
+            if (engagement.View is null)
                 return (null, new RequestError(RequestErrorKind.NotFound,
                     "The Type I examination engagement was not found."));
-            var baseline = engagement.BaselineHistory.SingleOrDefault(item =>
+            var baseline = engagement.Rules.BaselineHistory.SingleOrDefault(item =>
                 item.TypeIBaselineId == packageVersion.SourceSnapshotId);
-            if (baseline is not { Status: "frozen" } || baseline.ExaminationEngagementId != examinationId ||
+            if (baseline is not { Status: "frozen" or "amended" } || baseline.ExaminationEngagementId != examinationId ||
                 !HashEquals(baseline.ContentSha256, packageVersion.SourceSnapshotSha256))
                 return (null, new RequestError(RequestErrorKind.Conflict,
                     "The package must use an exact frozen Type I baseline for this examination."));

@@ -14,7 +14,6 @@ using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.AuditOutcome;
-using ExaminationEngagementAggregate = Bdgrz.Compliance.Features.Examinations.ExaminationEngagement;
 using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
 
@@ -296,6 +295,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         public DateOnly PeriodEnd { get; } = new(2027, 9, 30);
         public MutableTimeProvider Clock { get; } = new(Now);
         public TypeIIRangeHost Host { get; }
+        public ExaminationEngagementReader Examinations => new(Reader, Host.Events, Host.Content);
         public IAggregateReader Reader => Host.Reader;
         public IAggregateWriter Writer => Host.Writer;
         public TypeIIPeriodReader Periods => Host.Periods;
@@ -400,7 +400,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
                 new("system_description", DescriptionId, DescriptionVersionId, 1,
                     descriptionVersion.ContentSha256),
             ];
-            var engagement = new ExaminationEngagementAggregate(TenantId, ProgramId, EngagementId);
+            var engagement = new ExaminationEngagementRules(TenantId, ProgramId, EngagementId);
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i", "Audit Firm",
                 new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, []),
                 AuthorId, "Examiner", Now.AddMinutes(-12)));
@@ -411,7 +411,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
                 "Examiner", Now.AddMinutes(-7)));
             Assert.Null(description.BindToExamination(1, ExaminationId, "type_i_baseline", BaselineId,
                 ExecutiveId, "Chief Executive", Now.AddMinutes(-6)));
-            await Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
+            await ExaminationSeeds.WriteAsync(Reader, Writer, Host.Events, Host.Content, engagement);
             await DescriptionSeeds.WriteAsync(Writer, Host.Content, description);
 
             var baseline = engagement.Baseline!;

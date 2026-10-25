@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Runtime.CompilerServices;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Examinations;
@@ -67,13 +68,13 @@ public sealed partial class SystemDescriptionDraftCommandHandlerTests
         Assert.True(created.IsSuccess, created.Error?.Message);
         var source = await fixture.Descriptions.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.DescriptionId);
         var proof = source.Owner.SourceSnapshotContent;
-        var engagement = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId));
+        var engagement = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
         var replacement = new TypeIBaselineSourceReference("approved_boundary", fixture.BoundaryId, Uuid.CreateVersion4(), 3, new string('b', 64));
         var preview = Bdgrz.Compliance.Tests.Features.Examinations.TypeIBaselinePreviewTestFactory.Create(fixture.TenantId, fixture.ProgramId,
             fixture.ExaminationId, [replacement]);
-        Assert.Null(engagement.AmendBaseline(engagement.Revision, Uuid.CreateVersion4(), preview, [fixture.BoundaryId], [], "Updated baseline source",
+        Assert.Null(engagement.Rules.AmendBaseline(engagement.Owner.Revision, Uuid.CreateVersion4(), preview, [fixture.BoundaryId], [], "Updated baseline source",
             fixture.UserMemberId, "Baseline author", Now.AddMinutes(5)));
-        await fixture.Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
+        await ExaminationSeeds.WriteAsync(fixture.Reader, fixture.Writer, fixture.PeriodEvents, fixture.PeriodContent, engagement.Rules);
         var review = new ReviewSystemDescription(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.DescriptionId, 1, "approve", "Reviewed historical exact snapshot", 1);
         var reviewed = await new ReviewSystemDescriptionHandler(fixture.Operations).HandleAsync(FixtureMemberContext(review, fixture.ReviewerId), CancellationToken.None);
         Assert.True(reviewed.IsSuccess, reviewed.Error?.Message);

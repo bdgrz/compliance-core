@@ -97,7 +97,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
                 reference.Version, physical.FileExtension, reference.ContentSha256, physical.Bytes, "product_calculated", reference.VersionId);
             var input = new AuditPackageContent(fixture.ExaminationId, "type_ii", "type_ii_close_snapshot", snapshot.CloseSnapshotId,
                 snapshot.ContentSha256, "Verified period close", [selected], fixture.PeriodId);
-            var resolved = await new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods, fixture.Host.Content).ResolveAsync(fixture.TenantId, fixture.ProgramId,
+            var resolved = await new AuditPackageSourceBuilder(new ExaminationEngagementReader(fixture.Reader, fixture.Events, fixture.Host.Content), fixture.Periods, fixture.Host.Content).ResolveAsync(fixture.TenantId, fixture.ProgramId,
                 input, CancellationToken.None);
             Assert.True(resolved.IsSuccess, resolved.Error?.Message);
             var rules = new AuditPackageRules(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4());

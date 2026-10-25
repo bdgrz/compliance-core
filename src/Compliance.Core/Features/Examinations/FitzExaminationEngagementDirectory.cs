@@ -1,14 +1,15 @@
 using System.Globalization;
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-sealed class FitzExaminationEngagementDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/examination-engagement-directory/projection-v3",
+sealed class FitzExaminationEngagementDirectory(IKvClient client, IImmutableContentStore content)
+    : FitzKvProjectionStore(client, "kv://bdgrz/examination-engagement-directory/projection-v4",
         ProjectorName), IExaminationEngagementDirectoryReader, IExaminationEngagementDirectoryProjection
 {
-    public const string ProjectorName = "ExaminationEngagementDirectoryV3";
+    public const string ProjectorName = "ExaminationEngagementDirectoryV4";
 
     Uuid? _batchTenantId;
 
@@ -30,23 +31,23 @@ sealed class FitzExaminationEngagementDirectory(IKvClient client)
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
-        var (tenantId, engagement, baseline) = domainEvent switch
-        {
-            ExaminationEngagementOpened opened => (opened.TenantId, opened.Engagement, null),
-            ExaminationEngagementRevised revised => (revised.TenantId, revised.Engagement, null),
-            TypeIBaselineFrozen frozen => (frozen.TenantId, frozen.Engagement, frozen.Baseline),
-            TypeIBaselineAmended amended => (amended.TenantId, amended.Engagement, amended.Baseline),
-            _ => (Uuid.Empty, null, null),
-        };
-        if (engagement is null)
-        {
-            if (domainEvent is ExaminationEngagementOpened or ExaminationEngagementRevised or
-                TypeIBaselineFrozen or TypeIBaselineAmended)
-                throw new InvalidOperationException("The examination engagement projection event is invalid.");
+        if (domainEvent is not IExaminationEngagementFact source)
             return;
+        ExaminationEngagementState state;
+        try
+        {
+            state = await ExaminationEngagementContentReader.ReadAsync(content, domainEvent, ct).ConfigureAwait(false);
         }
-        if ((domainEvent is TypeIBaselineFrozen or TypeIBaselineAmended) && baseline is null)
-            throw new InvalidOperationException("The Type I baseline projection event is invalid.");
+        catch (ImmutableContentIntegrityException exception) when (exception is not ImmutableContentUnavailableException)
+        {
+            throw new InvalidOperationException("The immutable engagement projection source is invalid.", exception);
+        }
+        var tenantId = source.TenantId;
+        var engagement = state.Engagement;
+        var baseline = state.Baseline;
+        if (source.SubjectId != domainEvent.Metadata.AggregateId || source.Operation.Owner !=
+            new ExaminationEngagement(tenantId, source.ProgramId, source.SubjectId).Stream)
+            throw new InvalidOperationException("The engagement projection source differs from its exact native owner.");
         if (tenantId == Uuid.Empty || _batchTenantId != tenantId || engagement.TenantId != tenantId ||
             engagement.ProgramId == Uuid.Empty || engagement.ExaminationEngagementId == Uuid.Empty ||
             engagement.Revision <= 0 || engagement.UpdatedAt == default)

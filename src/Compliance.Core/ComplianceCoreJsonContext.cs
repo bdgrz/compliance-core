@@ -6,6 +6,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance;
 
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ExaminationEngagementState))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.ComplianceIncidentAuthorityHeader))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.ComplianceIncidentAssessmentToken))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.ComplianceIncidentCurrentAuthority))]

@@ -9,4 +9,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 public sealed record FreezeTypeIBaseline(Uuid TenantId, Uuid ProgramId, Uuid ExaminationId,
     Uuid BaselineId, long ExpectedRevision, string ConfirmationRationale,
     string ExpectedPreviewSha256) : IRequest, IProgramScopedRequest,
-    IClientManagementMutationRequest, ICallable;
+    IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => BaselineId;
+}

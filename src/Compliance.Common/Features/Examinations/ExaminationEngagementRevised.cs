@@ -1,16 +1,12 @@
-using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Records a complete successor revision of an unfrozen engagement.</summary>
-[Discriminator("bdgrz.examinations.examination-engagement-revised", 1)]
-public sealed record ExaminationEngagementRevised(
-    Uuid TenantId,
-    ExaminationEngagementView Engagement,
-    DateTimeOffset OccurredAt) : DomainEvent
-{
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public OperationProvenance? Operation { get; init; }
-}
+/// <summary>One exact attributed native engagement transition; complete business bytes stay immutable.</summary>
+[Discriminator("bdgrz.examinations.examination-engagement-revised", 2)]
+public sealed record ExaminationEngagementRevised(Uuid TenantId, Uuid SubjectId, Uuid ProgramId, long Revision,
+    string EngagementType, Uuid BoundaryId, Uuid? BaselineId, long BaselineRevision, ImmutableContentRef Change,
+    DateTimeOffset OccurredAt, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult, Uuid ActorMemberId) : DomainEvent, IExaminationEngagementFact;

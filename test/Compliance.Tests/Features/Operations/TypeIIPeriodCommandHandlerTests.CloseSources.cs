@@ -104,10 +104,10 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
     static async Task SeedCloseEngagementAsync(Fixture fixture, Uuid boundaryId)
     {
-        var engagement = new ExaminationEngagement(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
+        var engagement = new ExaminationEngagementRules(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
         Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i", "Audit Firm", fixture.PeriodStart, null,
             ["security", "availability"], boundaryId, []), fixture.ProposerMemberId, "Engagement manager", StartedAt.AddDays(-4)));
-        await fixture.Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
+        await ExaminationSeeds.WriteAsync(fixture.Reader, fixture.Writer, fixture.Events, fixture.Host.Content, engagement);
     }
 
     // Explicit family-reader scaffolding: native occurrence/history reconciliation and physical publication above are production services.

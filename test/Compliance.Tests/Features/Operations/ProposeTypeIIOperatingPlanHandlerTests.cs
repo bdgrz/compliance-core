@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Tests.Features.SystemDescription;
 using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Hosting.Persistence;
@@ -16,7 +17,6 @@ using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.AuditOutcome;
-using ExaminationEngagementAggregate = Bdgrz.Compliance.Features.Examinations.ExaminationEngagement;
 using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
 
@@ -436,6 +436,9 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
         public DateOnly PeriodStart { get; } = new(2026, 11, 1);
         public DateOnly PeriodEnd { get; } = new(2027, 10, 31);
         public MutableTimeProvider Clock { get; } = new(Now);
+        public InMemoryEventStore Events { get; } = new();
+        public IImmutableContentStore Content => scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        public ExaminationEngagementReader Examinations => new(Reader, Events, Content);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -448,12 +451,13 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
                 [new Claim("iss", "bdgrz"), new Claim("sub", UserId.ToString()),
                     new Claim("name", "Plan author")], "BdgrzSession"));
             var services = new ServiceCollection();
-            var events = new InMemoryEventStore();
+            var events = Events;
             services.AddSingleton<IEventStore>(events);
             services.AddSingleton<IDomainEventReader>(events);
             services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
                 new PersistenceKvClient(new InMemoryKvClient())));
             services.AddPortia();
+            ExaminationSeeds.Configure(services, Events);
             provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             scope = provider.CreateAsyncScope();
             Reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
@@ -463,7 +467,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
             Handler = new ProposeTypeIIOperatingPlanHandler(Executor, Reader, new ControlReader(Reader, events, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()), Findings,
                 new ControlOperationsReader(Reader, events,
                     scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()), Clock,
-                new SystemDescriptionReader(Reader, events, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()));
+                new SystemDescriptionReader(Reader, events, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()), Examinations);
         }
 
         public ProposeTypeIIOperatingPlan Request(TypeIIPlanContent content) =>
@@ -554,7 +558,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
                 new TypeIBaselineSourceReference("system_description", DescriptionId,
                     DescriptionVersionId, 1, descriptionVersion.ContentSha256),
             };
-            var engagement = new ExaminationEngagementAggregate(TenantId, ProgramId, ExaminationId);
+            var engagement = new ExaminationEngagementRules(TenantId, ProgramId, ExaminationId);
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i", "Audit Firm",
                 new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, []),
                 AuthorId, "Examiner", Now.AddMinutes(-12)));
@@ -565,7 +569,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
                 "Examiner", Now.AddMinutes(-7)));
             Assert.Null(description.BindToExamination(1, ExaminationId, "type_i_baseline",
                 BaselineId, ExecutiveId, "Chief Executive", Now.AddMinutes(-6)));
-            await Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
+            await ExaminationSeeds.WriteAsync(Reader, Writer, Events, Content, engagement);
             await DescriptionSeeds.WriteAsync(Writer, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), description);
 
             var outcome = new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId);

@@ -1,0 +1,42 @@
+{
+  "model": "jev-1.14.0",
+  "files": 50,
+  "threshold": 0.65,
+  "signals": [
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagementOperations.cs",
+      "kind": "recovery_gap",
+      "probability": 0.68
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagementRules.cs",
+      "kind": "recovery_gap",
+      "probability": 0.72
+    }
+  ],
+  "exactSourceAndDependencyHashes": "verified",
+  "dispositions": [
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagementOperations.cs",
+      "kind": "recovery_gap",
+      "decision": "no demonstrated unresolved in-scope recovery defect after executable source review",
+      "evidence": [
+        "NativeOperationExecutor resolves exact selected logical/command-kind acceptance before guard, full business-history reads, readiness/contact/preview work and all immutable Unit/result/descriptor writes. Expected immutable failure rechecks native acceptance; requested cancellation retains priority.",
+        "The full prepared snapshot native version/physical cut/ordered commitment is captured and required again inside executor Apply; current tenant/program/person authority remains in the installed request pipeline and actor guard. No cross-owner held-current readiness/member permit is claimed.",
+        "Existing/new exact no-op after later terms, original revision retry with unavailable old business bodies, equal winning Create/source failure, lost append response and actual HTTP current-permission regressions passed among613focused and39HTTP tests."
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagementRules.cs",
+      "kind": "recovery_gap",
+      "decision": "rules are transient complete business composition; native owner/executor owns command recovery",
+      "evidence": [
+        "Extracted Rules remains a non-Aggregate read/preparation object, preserving existing content/source/coverage/actor/rationale/changed-record/impact tests. It does not own durable command acceptance or expose a legacy production writer.",
+        "Complete native immutable history is verified independently before current/selected views; accepted retries can replay original Unit without reading all historical business bodies. Missing historical bytes may defer new preparation/read; corruption is permanent.",
+        "Former depth8 inline-lineage guard is removed in this targeted history refactor; current supported256-source validation remains, and actual12-baseline native lineage preserves the first exact baseline/digest. Generic snapshot delta-chain bounds in existing snapshot ADRs are unchanged.",
+        "Native v2 ref facts replace incompatible occupied inlinev1 payloads; no converter or persisted-history qualification is invented. The freshv4 projection requires actual authoritative replay before query qualification; no replay/deploy is claimed here."
+      ]
+    }
+  ],
+  "adopted": "proceed to exact integration review and final local gates; typed probabilities remain advisory"
+}

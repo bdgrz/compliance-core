@@ -29,9 +29,9 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IDo
         try
         {
             var operatingReceipts = receiptCuts.Create(current.TenantId, operation.AcceptedAt);
-            var engagement = await reader.HydrateAsync(new ExaminationEngagement(current.TenantId, current.ProgramId,
-                current.ExaminationId), ct).ConfigureAwait(false);
-            if (engagement.Current is not { } terms || terms.TenantId != current.TenantId || terms.ProgramId != current.ProgramId)
+            var engagement = await new ExaminationEngagementReader(reader, events, content).ReadAsync(current.TenantId,
+                current.ProgramId, current.ExaminationId, ct).ConfigureAwait(false);
+            if (engagement.View is not { } terms || terms.TenantId != current.TenantId || terms.ProgramId != current.ProgramId)
                 return Failure(RequestErrorKind.NotFound, "The period examination engagement was not found.");
             // Family readers still select versions effective on this date. History readers independently honor the receipt cutoff.
             var read = await sourceFamilies.ReadClosingAsync(terms with { PeriodStart = current.PeriodEnd, PeriodEnd = null },

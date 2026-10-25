@@ -40,8 +40,7 @@ public sealed class SnapshotSourcePublicationTests
             fixture.BaselineId, fixture.Engagement!.Revision, "Confirmed actual source bodies", preview.Value.ContentSha256);
 
         // Act
-        var frozen = await new FreezeTypeIBaselineHandler(fixture.Reader, fixture.Executor, fixture.Directory,
-            fixture.Previews, fixture.Clock).HandleAsync(fixture.Context(request), CancellationToken.None);
+        var frozen = await new FreezeTypeIBaselineHandler(fixture.Operations, fixture.Directory, fixture.Previews).HandleAsync(fixture.Context(request), CancellationToken.None);
         var expected = fixture.BoundaryBytes();
         var sha = Convert.ToHexStringLower(SHA256.HashData(expected));
         Assert.Equal(preview.Value.Sources.Single(source => source.Kind == "approved_boundary").ContentSha256, sha);
@@ -55,8 +54,7 @@ public sealed class SnapshotSourcePublicationTests
         using var received = new MemoryStream();
         await bytes.CopyToAsync(received);
         Assert.Equal(expected, received.ToArray());
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.ExaminationId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
         Assert.NotNull(saved.Baseline!.SourceContentManifest);
         Assert.All(saved.Baseline.Sources, source => Assert.Null(source.Content));
     }
@@ -71,19 +69,17 @@ public sealed class SnapshotSourcePublicationTests
         await fixture.SeedAsync();
         var reader = new PublishedTypeIBaselinePreviewReader(fixture.Sources, fixture.Artifacts,
             new UnreadablePublicationContent(fixture.Content, unavailable));
-        var before = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.ExaminationId));
+        var before = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
 
         // Act
         var result = await reader.ReadAsync(fixture.Engagement!, fixture.UserId);
-        var after = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.ExaminationId));
+        var after = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Equal(unavailable, result.Error!.IsTransient);
         Assert.Null(after.Baseline);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.Owner.CommittedStreamPosition, after.Owner.CommittedStreamPosition);
     }
 
     [Fact]
@@ -117,7 +113,7 @@ public sealed class SnapshotSourcePublicationTests
         var baseline = await fixture.FreezeAsync();
         var directory = fixture.Directory;
         directory.Baseline = baseline;
-        var baselineRead = await new GetTypeIBaselineHandler(directory, fixture.PeriodEvents, fixture.Content).HandleAsync(
+        var baselineRead = await new GetTypeIBaselineHandler(directory, fixture.PeriodEvents, fixture.Examinations, fixture.Content).HandleAsync(
             fixture.Context(new GetTypeIBaseline(fixture.TenantId, fixture.ProgramId, fixture.BaselineId)),
             CancellationToken.None);
         var source = baselineRead.Value!.Sources.Single(row => row.Kind == "workforce_roster_snapshot");
@@ -132,7 +128,7 @@ public sealed class SnapshotSourcePublicationTests
         var packages = new AuditPackageReader(fixture.Reader, fixture.Content, fixture.PeriodEvents);
         var root = new AuditPackageRootOperation(fixture.Reader, packages,
             new NativeOperationExecutor(fixture.Reader, fixture.Executor, fixture.Content), fixture.Content, fixture.Clock);
-        var created = await new CreateAuditPackageHandler(root, new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods,
+        var created = await new CreateAuditPackageHandler(root, new AuditPackageSourceBuilder(fixture.Examinations, fixture.Periods,
             fixture.Content), fixture.Content).HandleAsync(fixture.Context(create), CancellationToken.None);
         Assert.True(created.IsSuccess, created.Error?.Message);
         var requested = await new RequestAuditPackageBuildHandler(root, fixture.Content).HandleAsync(fixture.Context(
@@ -184,7 +180,7 @@ public sealed class SnapshotSourcePublicationTests
         await fixture.SeedAsync();
         var baseline = await fixture.FreezeAsync();
         fixture.Directory.Baseline = baseline;
-        var read = await new GetTypeIBaselineHandler(fixture.Directory, fixture.PeriodEvents, fixture.Content).HandleAsync(
+        var read = await new GetTypeIBaselineHandler(fixture.Directory, fixture.PeriodEvents, fixture.Examinations, fixture.Content).HandleAsync(
             fixture.Context(new GetTypeIBaseline(fixture.TenantId, fixture.ProgramId, fixture.BaselineId)),
             CancellationToken.None);
         var source = read.Value!.Sources.Single(row => row.Kind == "workforce_roster_snapshot");
@@ -195,7 +191,7 @@ public sealed class SnapshotSourcePublicationTests
             baseline.ContentSha256, "Exact sources", [selected]);
 
         // Act
-        var result = await new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods, fixture.Content).ResolveAsync(fixture.TenantId,
+        var result = await new AuditPackageSourceBuilder(fixture.Examinations, fixture.Periods, fixture.Content).ResolveAsync(fixture.TenantId,
             fixture.ProgramId, content, CancellationToken.None);
 
         // Assert
@@ -224,6 +220,9 @@ public sealed class SnapshotSourcePublicationTests
         public LocalArtifactContentStore Artifacts { get; }
         public InMemoryEventStore PeriodEvents { get; } = new();
         public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, Content);
+        public ExaminationEngagementReader Examinations => new(Reader, PeriodEvents, Content);
+        public ExaminationEngagementOperations Operations => new(new NativeOperationExecutor(Reader, Executor, Content),
+            Examinations, Content, Clock);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -240,6 +239,7 @@ public sealed class SnapshotSourcePublicationTests
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
+            ExaminationSeeds.Configure(services, PeriodEvents);
             PackageSeeds.Configure(services, PeriodEvents);
             _kernel = services.BuildServiceProvider();
             _scope = _kernel.CreateAsyncScope();
@@ -254,11 +254,11 @@ public sealed class SnapshotSourcePublicationTests
         public async Task SeedAsync()
         {
             var member = RbacIds.Member(TenantId, UserId);
-            var exam = new ExaminationEngagement(TenantId, ProgramId, ExaminationId);
+            var exam = new ExaminationEngagementRules(TenantId, ProgramId, ExaminationId);
             Assert.Null(exam.Create(new ExaminationEngagementContent("type_i", "Audit Firm",
                 DateOnly.FromDateTime(_now.UtcDateTime), null, ["security"], BoundaryId, [member]), member,
                 "Examiner", _now));
-            await Writer.SaveAsync(exam, new RequestDispatchContext(RequestActor.System));
+            await ExaminationSeeds.WriteAsync(Reader, Writer, PeriodEvents, Content, exam);
             Engagement = exam.Current;
             Directory.Engagement = Engagement;
             Boundary = new BoundaryVersionView(TenantId, BoundaryId, ProgramId, Uuid.CreateVersion4(), 2,
@@ -303,11 +303,11 @@ public sealed class SnapshotSourcePublicationTests
         {
             var preview = await Previews.ReadAsync(Engagement!, UserId);
             Assert.True(preview.IsSuccess, preview.Error?.Message);
-            var result = await new FreezeTypeIBaselineHandler(Reader, Executor, Directory, Previews, Clock).HandleAsync(
+            var result = await new FreezeTypeIBaselineHandler(Operations, Directory, Previews).HandleAsync(
                 Context(new FreezeTypeIBaseline(TenantId, ProgramId, ExaminationId, BaselineId,
                     Engagement!.Revision, "Freeze complete source bytes", preview.Value.ContentSha256)), CancellationToken.None);
             Assert.True(result.IsSuccess, result.Error?.Message);
-            return (await Reader.HydrateAsync(new ExaminationEngagement(TenantId, ProgramId, ExaminationId))).Baseline!;
+            return (await Examinations.ReadAsync(TenantId, ProgramId, ExaminationId)).Baseline!;
         }
 
         public byte[] BoundaryBytes()

@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 
@@ -64,7 +65,17 @@ public sealed class FitzExaminationEngagementDirectoryTests
             UpdatedAt = amended.UpdatedAt,
             ActorDisplay = amended.ActorDisplay,
         };
-        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
+        await using var scenario = new ExaminationScenario();
+        var rules = new ExaminationEngagementRules(tenantId, programId, engagementId);
+        rules.Replay(new ExaminationEngagementRuleOpened(tenantId, opened, now));
+        rules.Replay(new ExaminationEngagementRuleRevised(tenantId, revised, revised.UpdatedAt));
+        rules.Replay(new ExaminationEngagementRuleFrozen(tenantId, frozen, baseline, frozen.UpdatedAt));
+        rules.Replay(new ExaminationEngagementRuleAmended(tenantId, amendedEngagement, amended, amended.UpdatedAt));
+        await scenario.SaveAsync(rules);
+        var facts = await scenario.FactsAsync(rules);
+        var frozenEvent = Assert.IsType<TypeIBaselineFrozen>(facts[2]);
+        var amendedEvent = Assert.IsType<TypeIBaselineAmended>(facts[3]);
+        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient(), scenario.Content);
         var identity = new CheckpointIdentity(FitzExaminationEngagementDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "examinations"));
 
@@ -72,15 +83,10 @@ public sealed class FitzExaminationEngagementDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new ExaminationEngagementOpened(tenantId, opened, now));
-            await directory.ApplyAsync(new ExaminationEngagementRevised(tenantId, revised,
-                revised.UpdatedAt));
-            var frozenEvent = new TypeIBaselineFrozen(tenantId, frozen, baseline,
-                frozen.UpdatedAt);
+            await directory.ApplyAsync(facts[0]);
+            await directory.ApplyAsync(facts[1]);
             await directory.ApplyAsync(frozenEvent);
             await directory.ApplyAsync(frozenEvent);
-            var amendedEvent = new TypeIBaselineAmended(tenantId, amendedEngagement, amended,
-                amended.UpdatedAt);
             await directory.ApplyAsync(amendedEvent);
             await directory.ApplyAsync(amendedEvent);
             await batch.CommitAsync(ProjectionCheckpoint.Start);
@@ -103,16 +109,16 @@ public sealed class FitzExaminationEngagementDirectoryTests
         Assert.Equal(baseline.TypeIBaselineId, amendedBaseline?.AmendsBaselineId);
         Assert.Null(otherTenantBaseline);
 
-        var malformedEvent = new TypeIBaselineAmended(tenantId, amendedEngagement, null!,
-            amended.UpdatedAt);
+        var malformedEvent = await ExaminationScenario.ReplaceStateAsync(scenario.Content, amendedEvent,
+            new ExaminationEngagementState(amendedEngagement, null));
         await using (var invalidBatch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          ProjectionCheckpoint.Start)))
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 directory.ApplyAsync(malformedEvent).AsTask());
 
         var conflictingBaseline = baseline with { ConfirmationRationale = "Different rationale" };
-        var conflictingEvent = new TypeIBaselineFrozen(tenantId, frozen, conflictingBaseline,
-            frozen.UpdatedAt);
+        var conflictingEvent = await ExaminationScenario.ReplaceStateAsync(scenario.Content, frozenEvent,
+            new ExaminationEngagementState(frozen, conflictingBaseline));
         await using var conflictBatch = await directory.BeginAsync(new ProjectionBatchContext(identity,
             ProjectionCheckpoint.Start));
         await Assert.ThrowsAsync<InvalidOperationException>(() =>

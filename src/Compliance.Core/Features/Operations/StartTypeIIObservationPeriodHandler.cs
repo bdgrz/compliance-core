@@ -20,7 +20,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     acknowledgment even after the plan or the period changed.
 /// </summary>
 public sealed class StartTypeIIObservationPeriodHandler(NativeOperationExecutor operations, IAggregateReader reader, ControlReader controlSources,
-    FindingReader findings, ControlOperationsReader operating, IImmutableContentStore content, TimeProvider clock, SystemDescriptionReader descriptions)
+    FindingReader findings, ControlOperationsReader operating, IImmutableContentStore content, TimeProvider clock, SystemDescriptionReader descriptions, ExaminationEngagementReader examinations)
     : IRequestHandler<StartTypeIIObservationPeriod, OperationAcceptedResponse>
 {
     const string CommandKind = "StartTypeIIObservationPeriod";
@@ -102,7 +102,7 @@ public sealed class StartTypeIIObservationPeriodHandler(NativeOperationExecutor 
             return Fail(RequestErrorKind.Conflict, "The period must match the exact current approved Type II plan.");
 
         var planContent = planVersion.Content;
-        var checkedSources = await TypeIIPlanSourceValidator.ValidateAsync(reader, controlSources, findings, operating, descriptions,
+        var checkedSources = await TypeIIPlanSourceValidator.ValidateAsync(reader, examinations, controlSources, findings, operating, descriptions,
             request.TenantId, request.ProgramId, request.ExaminationId, planContent, now, ct)
             .ConfigureAwait(false);
         if (!checkedSources.IsSuccess)

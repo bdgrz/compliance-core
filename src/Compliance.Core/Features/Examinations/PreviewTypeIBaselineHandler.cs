@@ -2,11 +2,15 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-public sealed class PreviewTypeIBaselineHandler(IAggregateReader aggregateReader,
+public sealed class PreviewTypeIBaselineHandler(ExaminationEngagementReader examinations,
     IExaminationEngagementDirectoryReader directory, ITypeIBaselinePreviewReader previews)
     : IRequestHandler<PreviewTypeIBaseline, TypeIBaselinePreviewView>
 {
-    public async ValueTask<Result<TypeIBaselinePreviewView>> HandleAsync(
+    public ValueTask<Result<TypeIBaselinePreviewView>> HandleAsync(
+        IRequestContext<PreviewTypeIBaseline> context, CancellationToken ct) =>
+        ExaminationSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<TypeIBaselinePreviewView>> HandleCoreAsync(
         IRequestContext<PreviewTypeIBaseline> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -22,10 +26,9 @@ public sealed class PreviewTypeIBaselineHandler(IAggregateReader aggregateReader
             projected.ExaminationEngagementId != request.ExaminationId)
             return Failure(RequestErrorKind.NotFound, "The examination engagement was not found.");
 
-        var aggregate = await aggregateReader.HydrateAsync(new ExaminationEngagement(
-            request.TenantId, projected.ProgramId, request.ExaminationId), ct)
+        var aggregate = await examinations.ReadAsync(request.TenantId, projected.ProgramId, request.ExaminationId, ct)
             .ConfigureAwait(false);
-        if (aggregate.Current is not { } current)
+        if (aggregate.View is not { } current)
             return Failure(RequestErrorKind.Conflict,
                 "The examination engagement source has not reached its projection.", true);
         if (!ExaminationEngagementSourceMatch.Matches(projected, current))
@@ -44,10 +47,9 @@ public sealed class PreviewTypeIBaselineHandler(IAggregateReader aggregateReader
             return Failure(RequestErrorKind.Conflict,
                 "The baseline source reader returned a preview for a different engagement.");
 
-        var confirmed = await aggregateReader.HydrateAsync(new ExaminationEngagement(
-            request.TenantId, projected.ProgramId, request.ExaminationId), ct)
+        var confirmed = await examinations.ReadAsync(request.TenantId, projected.ProgramId, request.ExaminationId, ct)
             .ConfigureAwait(false);
-        if (confirmed.Current is not { } afterRead ||
+        if (confirmed.View is not { } afterRead ||
             !ExaminationEngagementSourceMatch.Matches(current, afterRead))
             return Failure(RequestErrorKind.Conflict,
                 "The examination engagement changed while its baseline preview was being read. Retry the preview.",

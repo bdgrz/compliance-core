@@ -8,7 +8,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
 /// <summary>Resolves selected package records against their frozen Type I or Type II snapshot.</summary>
-public sealed class AuditPackageSourceBuilder(IAggregateReader reader, TypeIIPeriodReader periods, IImmutableContentStore? content = null)
+public sealed class AuditPackageSourceBuilder(ExaminationEngagementReader examinations, TypeIIPeriodReader periods, IImmutableContentStore? content = null)
 {
     public async ValueTask<Result<AuditPackageContent>> ResolveAsync(Uuid tenantId, Uuid programId,
         AuditPackageContent requested, CancellationToken ct)
@@ -26,9 +26,8 @@ public sealed class AuditPackageSourceBuilder(IAggregateReader reader, TypeIIPer
         {
             if (requested.SourcePeriodId != Uuid.Empty)
                 return Invalid("A Type I package cannot identify a Type II period.");
-            var engagement = await reader.HydrateAsync(new ExaminationEngagement(tenantId, programId,
-                requested.ExaminationId), ct).ConfigureAwait(false);
-            if (engagement.Current is null || engagement.Baseline is not { Status: "frozen" } baseline)
+            var engagement = await examinations.ReadAsync(tenantId, programId, requested.ExaminationId, ct).ConfigureAwait(false);
+            if (engagement.View is null || engagement.Baseline is not { Status: "frozen" or "amended" } baseline)
                 return Result<AuditPackageContent>.Failure(new RequestError(RequestErrorKind.NotFound,
                     "The frozen Type I baseline was not found in this program."));
             if (requested.SourceSnapshotId != baseline.TypeIBaselineId ||
