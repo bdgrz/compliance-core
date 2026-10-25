@@ -11,7 +11,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     or ineligible source rejects the personal decision and fences the key through the abort path.
 /// </summary>
 sealed class AuthorizeIndependenceRuleCatalogEngagementUseHandler(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content, TimeProvider clock, EngagementUseVerifier verifier)
+    IImmutableContentStore content, TimeProvider clock, EngagementUseVerifier verifier, IndependenceRuleCatalogReader catalogs)
     : EngagementUseAuthorizeHandler<IndependenceRuleCatalog, AuthorizeIndependenceRuleCatalogEngagementUse>(reader, executor, content, clock, verifier)
 {
     protected override string CommandKind => nameof(AuthorizeIndependenceRuleCatalogEngagementUse);
@@ -35,15 +35,23 @@ sealed class AuthorizeIndependenceRuleCatalogEngagementUseHandler(IAggregateRead
             return Stale($"The pinned rule content cannot be verified: {exception.Message}");
         }
 
-        var draft = owner.Versions.SingleOrDefault(version => version.Version == rules.Version);
-        return draft is not null && IndependenceSourceDigest.RuleContent(draft.Content) ==
-            IndependenceSourceDigest.RuleContent(rules.Content)
-            ? Result.Success
-            : Stale("The pinned rule version is not the retained draft.");
+        try
+        {
+            var draft = await catalogs.FindVersionAsync(rules.Version, ct).ConfigureAwait(false);
+            return draft is not null && IndependenceSourceDigest.RuleContent(draft.Content) ==
+                IndependenceSourceDigest.RuleContent(rules.Content)
+                ? Result.Success
+                : Stale("The pinned rule version is not the retained draft.");
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result.Failure(IndependenceCatalogContent.Failure(error));
+        }
     }
 
     protected override bool IsPinned(IndependenceRuleCatalog owner, SourceUseRequirement requirement) =>
-        owner.LatestRevision is { } latest && latest.Metadata.EventId == requirement.ContentEvent.EventId &&
+        owner.LatestRevision is { } latest && requirement.ContentEvent.Stream == owner.Stream &&
+        latest.Metadata.EventId == requirement.ContentEvent.EventId && latest.Metadata.AggregateVersion == requirement.ContentEvent.AggregateVersion &&
         (ulong)owner.Sequence == requirement.ResourceRevision;
 
     protected override Func<IndependenceRuleCatalog, OperationProvenance, ImmutableContentRef, long, Result> GrantOperation() =>

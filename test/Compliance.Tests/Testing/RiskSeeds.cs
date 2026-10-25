@@ -30,7 +30,11 @@ static class RiskSeeds
         var view = new RiskOwnerView(person, member, rationale, actor, at);
         var body = await FindingContent.WriteAsync(content, tenant, RiskContent.OwnerSchema, view, CancellationToken.None);
         var (first, result) = await UnitAsync(content, tenant);
-        var operation = Operation(owner, Uuid.CreateVersion4(), (ulong)owner.Revision, actor, at, nameof(AssignRiskOwner), view);
+        var command = Uuid.CreateVersion4();
+        var request = new AssignRiskOwner(command, tenant, program, risk, owner.Revision, person, rationale);
+        var operation = RootOperation.Provenance(command, nameof(AssignRiskOwner), owner.Stream, actor,
+            owner.Revision, AuthoredIntentDigest.Compute(request), at) with
+        { FirstOwner = owner.Stream };
         await ProgramManagementServices.SeedAsync(provider, new RiskGovernance(tenant, program, risk),
             source => source.AssignOwner(operation, body, first, result));
     }

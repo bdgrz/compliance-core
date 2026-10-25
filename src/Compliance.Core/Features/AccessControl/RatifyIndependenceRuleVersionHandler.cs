@@ -2,64 +2,25 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-sealed class RatifyIndependenceRuleVersionHandler(IAggregateExecutor executor,
-    IAggregateReader reader, ProfessionalDutyAuthorityReader duties, TimeProvider clock)
+sealed class RatifyIndependenceRuleVersionHandler(IndependenceRuleRatificationOperations operations,
+    ProfessionalDutyAuthorityReader duties)
     : IRequestHandler<RatifyIndependenceRuleVersion, IndependenceRuleRatificationView>
 {
-    public async ValueTask<Result<IndependenceRuleRatificationView>> HandleAsync(
-        IRequestContext<RatifyIndependenceRuleVersion> context, CancellationToken ct)
+    public async ValueTask<Result<IndependenceRuleRatificationView>> HandleAsync(IRequestContext<RatifyIndependenceRuleVersion> context,
+        CancellationToken ct)
     {
         var request = context.Request;
         if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
-            return Refuse(RequestErrorKind.Validation,
-                "Ratification requires its command identity and exact authored catalog revision.");
+            return Result<IndependenceRuleRatificationView>.Failure(new RequestError(RequestErrorKind.Validation,
+                "Ratification requires its command identity and exact authored catalog revision."));
         if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
             throw new InvalidOperationException("IndependenceRuleRatificationAuthorizer must reject this actor.");
-        var currentDuty = await duties.ReadCurrentAsync(userId, FirmProfessionalDuty.RuleRatifier, null, ct)
-            .ConfigureAwait(false);
+        // Current professional authority is required even for an original historical response.
+        var currentDuty = await duties.ReadCurrentAsync(userId, FirmProfessionalDuty.RuleRatifier, null, ct).ConfigureAwait(false);
         if (currentDuty is null)
-            return Refuse(RequestErrorKind.Forbidden,
-                "The actor no longer has a current rule-ratifier designation.");
-
+            return Result<IndependenceRuleRatificationView>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "The actor no longer has a current rule-ratifier designation."));
         var actor = ActorReference.ForFirmStaff(userId, UserIdentityClaims.BdgrzDisplay(context.Actor, userId));
-        var ratifications = await reader.HydrateAsync(new IndependenceRuleRatificationCatalog(), ct)
-            .ConfigureAwait(false);
-        if (ratifications.Replay(request, actor) is { } original)
-            return original;
-        if (request.ExpectedRevision != request.ExpectedRatificationSequence)
-            return Refuse(RequestErrorKind.Validation,
-                "A new ratification must author the current owner revision and ratification sequence consistently.");
-
-        var rules = await reader.HydrateAsync(new IndependenceRuleCatalog(), ct).ConfigureAwait(false);
-        if (rules.Sequence != request.ExpectedRuleCatalogSequence || rules.Current is not { } version ||
-            version.Version != request.RuleVersion ||
-            IndependenceSourceDigest.RuleContent(version.Content) != request.ExpectedContentDigest)
-            return Refuse(RequestErrorKind.Conflict,
-                "The exact current draft changed; reload its immutable version and digest before ratifying.", true);
-
-        if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out userId))
-            throw new InvalidOperationException("IndependenceRuleRatificationAuthorizer must reject this actor.");
-        if (ratifications.Sequence != request.ExpectedRatificationSequence ||
-            request.RuleVersion <= (ratifications.Active?.RuleVersion ?? 0))
-            return Refuse(RequestErrorKind.Conflict,
-                "The ratification sequence changed or a newer version is already active; reload before ratifying.", true);
-        var confirmedDuty = await duties.ReadCurrentAsync(userId, FirmProfessionalDuty.RuleRatifier, null, ct)
-            .ConfigureAwait(false);
-        if (confirmedDuty is null ||
-            confirmedDuty.Staff.StaffMemberId != currentDuty.Staff.StaffMemberId ||
-            confirmedDuty.Staff.Revision != currentDuty.Staff.Revision ||
-            confirmedDuty.Designation.DesignationId != currentDuty.Designation.DesignationId ||
-            confirmedDuty.Designation.Revision != currentDuty.Designation.Revision)
-            return Refuse(RequestErrorKind.Conflict,
-                "The rule-ratifier authority changed during this request; reload before ratifying.", true);
-        return await executor.ExecuteAsync(new IndependenceRuleRatificationCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Ratify(request.CommandId, request.RatificationId,
-                request.RuleVersion, request.ExpectedRuleCatalogSequence, request.ExpectedRatificationSequence,
-                request.ExpectedContentDigest, request.SourceReference, confirmedDuty.Staff,
-                confirmedDuty.Designation, actor, clock.GetUtcNow())), context, ct).ConfigureAwait(false);
+        return await operations.RatifyAsync(context, currentDuty, actor, ct).ConfigureAwait(false);
     }
-
-    static Result<IndependenceRuleRatificationView> Refuse(RequestErrorKind kind, string message,
-        bool transient = false) => Result<IndependenceRuleRatificationView>.Failure(
-        new RequestError(kind, message, transient));
 }

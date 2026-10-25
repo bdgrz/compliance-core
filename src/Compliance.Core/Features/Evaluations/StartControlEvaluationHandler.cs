@@ -16,7 +16,7 @@ namespace Bdgrz.Compliance.Features.Evaluations;
 ///     the logical operation identity, so an exact retry returns the original view.
 /// </summary>
 public sealed class StartControlEvaluationHandler(NativeOperationExecutor operations,
-    ControlEvaluationReader evaluations, IAggregateReader reader, ControlReader controlSources, OperatingAuthority authority,
+    ControlEvaluationReader evaluations, IAggregateReader reader, IDomainEventReader events, ControlReader controlSources, OperatingAuthority authority,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<StartControlEvaluation, ControlEvaluationView>
 {
@@ -67,14 +67,14 @@ public sealed class StartControlEvaluationHandler(NativeOperationExecutor operat
                     request.ProgramId, ct).ConfigureAwait(false))
                 return Failure(RequestErrorKind.Forbidden,
                     "Only the control owner or a program manager may evaluate this control.");
-            var plan = await reader.HydrateAsync(new ControlEvaluationPlan(request.TenantId, request.ProgramId,
-                request.ControlId), ct).ConfigureAwait(false);
-            var planned = plan.FindVersion(request.PlanVersionId);
+            var plan = await ControlEvaluationPlanReader.ReadAsync(reader, events, content, request.TenantId,
+                request.ProgramId, request.ControlId, ct).ConfigureAwait(false);
+            var planned = plan.FirstOrDefault(version => version.PlanVersionId == request.PlanVersionId);
             if (planned is null)
                 return Failure(RequestErrorKind.NotFound, "The control evaluation plan version was not found.");
             if (planned.ControlVersionId != version.VersionId)
                 return Failure(RequestErrorKind.Conflict, "The evaluation plan is bound to a different control version.");
-            if (request.RetestOfEvaluationId is null && planned.Version != plan.Revision)
+            if (request.RetestOfEvaluationId is null && planned.Version != plan.Count)
                 return Failure(RequestErrorKind.Conflict,
                     "A new evaluation must use the current control evaluation plan version.");
             if (planned.TesterIndependenceRequired && version.OwnerMemberId == actor.MemberId)

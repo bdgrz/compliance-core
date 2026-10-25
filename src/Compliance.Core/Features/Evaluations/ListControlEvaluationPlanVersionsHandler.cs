@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evaluations;
 
-public sealed class ListControlEvaluationPlanVersionsHandler(IAggregateReader reader, ControlReader controlSources)
+public sealed class ListControlEvaluationPlanVersionsHandler(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content, ControlReader controlSources)
     : IRequestHandler<ListControlEvaluationPlanVersions, Page<ControlEvaluationPlanVersionView>>
 {
     public ValueTask<Result<Page<ControlEvaluationPlanVersionView>>> HandleAsync(
@@ -21,9 +22,9 @@ public sealed class ListControlEvaluationPlanVersionsHandler(IAggregateReader re
                 request.ProgramId, request.ControlId, ct).ConfigureAwait(false) is null)
             return Result<Page<ControlEvaluationPlanVersionView>>.Failure(
                 ControlOperationsSource.ControlNotFound());
-        var plan = await reader.HydrateAsync(new ControlEvaluationPlan(request.TenantId,
-            request.ProgramId, request.ControlId), ct).ConfigureAwait(false);
-        return ControlActivationSource.Paginate(plan.ReadVersions(), request.Limit,
+        var versions = await ControlEvaluationPlanReader.ReadAsync(reader, events, content, request.TenantId,
+            request.ProgramId, request.ControlId, ct).ConfigureAwait(false);
+        return ControlActivationSource.Paginate(versions, request.Limit,
             request.Cursor, "control evaluation plan versions");
     }
 }

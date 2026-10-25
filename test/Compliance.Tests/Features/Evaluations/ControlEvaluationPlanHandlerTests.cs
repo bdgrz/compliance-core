@@ -1,5 +1,9 @@
+using System.Collections;
+using System.Reflection;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Tests.Features.Operations;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Evaluations;
@@ -15,6 +19,80 @@ public sealed class ControlEvaluationPlanHandlerTests
             [new EvaluationInspectedItem("artifact", "exports/q3.csv", "sha256:ab12")],
             "Every leaver was removed."),
     ];
+
+    [Theory]
+    [InlineData("control_version")]
+    [InlineData("logical_id")]
+    [InlineData("content_digest")]
+    public async Task ShouldRejectContradictoryPlanBodyGivenNativeVersionSource(string fault)
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await fixture.DefineEvaluationPlanAsync(0, "Original objective", Steps);
+        var owner = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new ControlEvaluationPlan(fixture.TenantId, fixture.ProgramId, fixture.ControlId));
+        var fact = Assert.IsType<ControlEvaluationPlanVersionDefined>(owner.Latest);
+        var changed = fault switch
+        {
+            "control_version" => fact with { ControlVersionId = Uuid.CreateVersion4() },
+            "logical_id" => fact with { PlanVersionId = Uuid.CreateVersion4() },
+            "content_digest" => fact with { Content = fact.Content with { Sha256 = new string('f', 64) } },
+            _ => fact,
+        };
+
+        // Act
+        var error = await Record.ExceptionAsync(async () =>
+            await ControlEvaluationPlanReader.ReadVersionAsync(fixture.Content, changed));
+
+        // Assert
+        Assert.IsType<ImmutableContentIntegrityException>(error);
+    }
+
+    [Fact]
+    public async Task ShouldKeepEvaluationPlanAuthorityBoundedGivenManyDefinitionsWithHistoricalReads()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        ControlEvaluationPlanVersionView? first = null;
+        for (var version = 0; version < 32; version++)
+        {
+            var defined = await fixture.DefineEvaluationPlanAsync(version, $"Evaluation objective {version + 1}", Steps);
+            first ??= defined;
+        }
+
+        // Act
+        var owner = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new ControlEvaluationPlan(fixture.TenantId, fixture.ProgramId, fixture.ControlId));
+        var historical = await fixture.AsAsync(fixture.OutsiderUserId, new GetControlEvaluationPlanVersion(
+            fixture.TenantId, fixture.ProgramId, fixture.ControlId, first!.PlanVersionId));
+
+        // Assert
+        Assert.Equal(32, owner.Revision);
+        Assert.Equal("Evaluation objective 1", historical.Objective);
+        Assert.All(typeof(ControlEvaluationPlan).GetFields(
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly), field =>
+            Assert.False(field.GetValue(owner) is ICollection { Count: > 2 },
+                $"The evaluation plan owner retains lifetime definitions in {field.Name}."));
+    }
+
+    [Fact]
+    public async Task ShouldReplayOriginalPlanVersionGivenFreshTransportRequestAfterSuccessor()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var request = new DefineControlEvaluationPlan(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            fixture.ControlVersionId, 0, "Original evaluation objective", Steps, false);
+        var first = await fixture.AsAsync(fixture.LeadUserId, request);
+        await fixture.DefineEvaluationPlanAsync(1, "Successor objective", Steps);
+
+        // Act
+        var replay = await fixture.AsAsync(fixture.LeadUserId, request);
+
+        // Assert
+        Assert.Equal(System.Text.Json.JsonSerializer.Serialize(first, ComplianceCoreJsonContext.Default.ControlEvaluationPlanVersionView),
+            System.Text.Json.JsonSerializer.Serialize(replay, ComplianceCoreJsonContext.Default.ControlEvaluationPlanVersionView));
+        Assert.Equal(1, replay.Version);
+    }
 
     [Fact]
     public async Task ShouldReadStablePlanHistoryGivenManagerDefinesSuccessor()

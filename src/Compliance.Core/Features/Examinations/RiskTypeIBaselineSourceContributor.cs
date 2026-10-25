@@ -400,7 +400,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
                 histories.Add(riskId, history);
                 var governance = await reader.HydrateAsync(new RiskGovernance(tenantId, programId, riskId), ct)
                     .ConfigureAwait(false);
-                if (!await history.CaptureAsync(governance.Stream, governance.Facts, tenantId, content, through, context, ct)
+                if (!await history.CaptureAsync(governance.Stream, await governanceReader.ReadGovernanceFactsAsync(governance, ct).ConfigureAwait(false), tenantId, content, through, context, ct)
                         .ConfigureAwait(false))
                     return InvalidHistory<GovernanceHistory>();
                 foreach (var (_, controlId) in discovered.Lines.Where(line => line.Risk == riskId))

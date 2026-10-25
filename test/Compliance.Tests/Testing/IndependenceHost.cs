@@ -87,7 +87,7 @@ sealed class IndependenceHost : IAsyncDisposable
 
     /// <summary>Retains the first draft rule version, as the platform operator would author it.</summary>
     public Task SeedDraftRulesAsync(IndependenceRuleContent? content = null) =>
-        ProgramManagementServices.SeedAsync(Provider, new IndependenceRuleCatalog(), catalog => catalog.ReviseRules(
+        ProgramManagementServices.SeedAsync(Provider, new IndependenceRuleCatalogRules(), catalog => catalog.ReviseRules(
             Uuid.CreateVersion4(), catalog.Sequence, content ?? DefaultRules,
             ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator"), At));
 

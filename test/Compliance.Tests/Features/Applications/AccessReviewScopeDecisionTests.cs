@@ -1,8 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 
@@ -19,7 +18,7 @@ public sealed class AccessReviewScopeDecisionTests
     {
         // Arrange
         var instance = Instance();
-        var scope = new SystemInstanceAccessReviewScope(TenantId, instance.Id);
+        var scope = new SystemInstanceAccessReviewScopeRules(TenantId, instance.Id);
 
         // Act
         var included = scope.Decide(instance, 0, Uuid.CreateVersion4(), "included",
@@ -36,10 +35,8 @@ public sealed class AccessReviewScopeDecisionTests
         Assert.Equal(2, later.Decisions.Count);
         Assert.Equal("Production data", later.Decisions[0].Reason);
         Assert.Equal("unresolved", scope.ToView(ApplicationId, Now.AddDays(-1)).Status);
-        var events = new AggregateScenario<SystemInstanceAccessReviewScope>(scope).PendingEvents;
-        Assert.Equal([1L, 2L], events.Cast<AccessReviewScopeDecided>().Select(ev => ev.Sequence));
-        Assert.All(events.Cast<AccessReviewScopeDecided>(),
-            ev => Assert.Equal(1, ev.SystemInstanceRevision));
+        Assert.Equal([1L, 2L], scope.Decisions.Select(decision => decision.Sequence));
+        Assert.All(scope.Decisions, decision => Assert.Equal(1, decision.SystemInstanceRevision));
     }
 
     [Fact]
@@ -47,7 +44,7 @@ public sealed class AccessReviewScopeDecisionTests
     {
         // Arrange
         var instance = Instance();
-        var scope = new SystemInstanceAccessReviewScope(TenantId, instance.Id);
+        var scope = new SystemInstanceAccessReviewScopeRules(TenantId, instance.Id);
         var decisionId = Uuid.CreateVersion4();
         Assert.True(scope.Decide(instance, 0, decisionId, "included", "In boundary", Now,
             null, LeadId, "Lead", Now, null).IsSuccess);
@@ -71,7 +68,7 @@ public sealed class AccessReviewScopeDecisionTests
     {
         // Arrange
         var instance = Instance();
-        var scope = new SystemInstanceAccessReviewScope(TenantId, instance.Id);
+        var scope = new SystemInstanceAccessReviewScopeRules(TenantId, instance.Id);
         DateTimeOffset? reviewBy = reviewByDays == 0 ? null : Now.AddDays(reviewByDays);
 
         // Act
@@ -88,7 +85,7 @@ public sealed class AccessReviewScopeDecisionTests
     {
         // Arrange
         var instance = Instance();
-        var scope = new SystemInstanceAccessReviewScope(TenantId, instance.Id);
+        var scope = new SystemInstanceAccessReviewScopeRules(TenantId, instance.Id);
         Assert.True(scope.Decide(instance, 0, Uuid.CreateVersion4(), "included", "In boundary",
             Now, null, LeadId, "Lead", Now, null).IsSuccess);
 
@@ -105,7 +102,7 @@ public sealed class AccessReviewScopeDecisionTests
     {
         // Arrange
         var instance = Instance();
-        var scope = new SystemInstanceAccessReviewScope(TenantId, instance.Id);
+        var scope = new SystemInstanceAccessReviewScopeRules(TenantId, instance.Id);
 
         // Act
         var result = scope.Decide(instance, 0, Uuid.CreateVersion4(), "excluded", "Sandbox",
@@ -121,7 +118,7 @@ public sealed class AccessReviewScopeDecisionTests
     {
         // Arrange
         var instance = Instance();
-        var scope = new SystemInstanceAccessReviewScope(TenantId, instance.Id);
+        var scope = new SystemInstanceAccessReviewScopeRules(TenantId, instance.Id);
         var waiver = ApprovedWaiver(RegistrantId, new SeparationOfDutiesWaiverScope(
             SeparationOfDutiesRecordTypes.SystemInstanceAccessReviewScope, instance.Id,
             instance.Id, instance.Revision, SeparationOfDutiesActions.Approve));
@@ -140,7 +137,7 @@ public sealed class AccessReviewScopeDecisionTests
     {
         // Arrange
         var instance = Instance();
-        var scope = new SystemInstanceAccessReviewScope(TenantId, instance.Id);
+        var scope = new SystemInstanceAccessReviewScopeRules(TenantId, instance.Id);
         var waiver = ApprovedWaiver(LeadId, new SeparationOfDutiesWaiverScope(
             SeparationOfDutiesRecordTypes.SystemInstanceAccessReviewScope, instance.Id,
             instance.Id, instance.Revision, SeparationOfDutiesActions.Approve));
@@ -165,7 +162,7 @@ public sealed class AccessReviewScopeDecisionTests
     {
         // Arrange
         var instance = ScopedSystemInstance.From(Instance()) with { AccessOwnerMemberId = LeadId };
-        var scope = new SystemInstanceAccessReviewScope(TenantId, instance.Id);
+        var scope = new SystemInstanceAccessReviewScopeRules(TenantId, instance.Id);
         var waiverScope = new SeparationOfDutiesWaiverScope(
             SeparationOfDutiesRecordTypes.SystemInstanceAccessReviewScope, instance.Id,
             instance.Id, variant == "other_revision" ? instance.Revision + 1 : instance.Revision,
@@ -199,7 +196,7 @@ public sealed class AccessReviewScopeDecisionTests
         // Arrange
         var instance = Instance();
         Assert.Null(instance.Retire(1, Now, "Account closed", RegistrantId, "Registrant", Now));
-        var scope = new SystemInstanceAccessReviewScope(TenantId, instance.Id);
+        var scope = new SystemInstanceAccessReviewScopeRules(TenantId, instance.Id);
 
         // Act
         var result = scope.Decide(instance, 0, Uuid.CreateVersion4(), "excluded", "Closed",

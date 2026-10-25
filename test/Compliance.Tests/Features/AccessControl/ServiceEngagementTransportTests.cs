@@ -148,7 +148,7 @@ public sealed class ServiceEngagementTransportTests
         await using var factory = Factory();
         using var client = factory.CreateClient();
         await LoginAsync(client);
-        await ProgramManagementServices.SeedAsync(factory.Services, new IndependenceRuleCatalog(), catalog =>
+        await ProgramManagementServices.SeedAsync(factory.Services, new IndependenceRuleCatalogRules(), catalog =>
             catalog.ReviseRules(Uuid.CreateVersion4(), 0, IndependenceHost.DefaultRules,
                 ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator"), IndependenceHost.At));
         var tenant = Uuid.CreateVersion4();

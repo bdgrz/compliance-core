@@ -47,16 +47,16 @@ static class PersonalDecisionFacts
         var ratifierDuty = await ProfessionalDutyFacts.RecordAsync(provider, ratifierAssertion, ratifier,
             operatorActor, at);
         Assert.True(ratifierDuty.IsSuccess, ratifierDuty.Error?.Message);
-        await ProgramManagementServices.SeedAsync(provider, new IndependenceRuleCatalog(), catalog => catalog.ReviseRules(
+        await ProgramManagementServices.SeedAsync(provider, new IndependenceRuleCatalogRules(), catalog => catalog.ReviseRules(
             Uuid.CreateVersion4(), catalog.Sequence, content, operatorActor, IndependenceHost.At));
         await using var scope = provider.CreateAsyncScope();
-        var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-        var ratified = await executor.ExecuteAsync(new IndependenceRuleRatificationCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Ratify(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, 1,
-                catalog.Sequence, IndependenceSourceDigest.RuleContent(content), "Synthetic ratification evidence",
-                ratifier, ratifierDuty.Value!, ActorReference.ForFirmStaff(ratifierUser, "Synthetic ratifier"), at)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(ratified.IsSuccess, ratified.Error?.Message);
+        var ratificationId = Uuid.CreateVersion4();
+        await ProgramManagementServices.SeedAsync(provider, new IndependenceRuleRatificationRules(), catalog =>
+            catalog.Ratify(Uuid.CreateVersion4(), ratificationId, 1, 1, catalog.Sequence,
+                IndependenceSourceDigest.RuleContent(content), "Synthetic ratification evidence", ratifier,
+                ratifierDuty.Value!, ActorReference.ForFirmStaff(ratifierUser, "Synthetic ratifier"), at));
+        var ratified = await scope.ServiceProvider.GetRequiredService<IndependenceRuleRatificationReader>().ReadAsync();
+        Assert.Equal(ratificationId, ratified.Active!.RatificationId);
 
         var partnerUser = partnerUserId ?? Uuid.CreateVersion4();
         var staff = await FirmStaffFacts.RegisterAsync(provider, Uuid.CreateVersion4(), partnerUser, partnerPractice,

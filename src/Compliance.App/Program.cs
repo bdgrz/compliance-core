@@ -807,7 +807,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
     app.MapPortiaPut<ReviseIndependenceRules, IndependenceRuleVersionView>(
-            "/api/v1/platform/independence/rules", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseIndependenceRules>()
+            "/api/v1/platform/independence/rules/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseIndependenceRules>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
     app.MapPortiaPut<RatifyIndependenceRuleVersion, IndependenceRuleRatificationView>(

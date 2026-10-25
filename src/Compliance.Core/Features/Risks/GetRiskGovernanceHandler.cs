@@ -29,7 +29,7 @@ public sealed class GetRiskGovernanceHandler(IAggregateReader reader, RiskGovern
             catch (ImmutableContentIntegrityException exception)
             {
                 return Result<RiskGovernanceView>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    $"The risk governance content cannot be verified yet: {exception.Message}", true));
+                    "The exact risk governance content cannot be verified.", exception is ImmutableContentUnavailableException));
             }
 
             var evaluation = await evaluations.ReadAsync(request.TenantId, request.ProgramId, request.RiskId, ct).ConfigureAwait(false);

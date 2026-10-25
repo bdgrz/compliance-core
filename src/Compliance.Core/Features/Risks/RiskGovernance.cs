@@ -9,8 +9,8 @@ namespace Bdgrz.Compliance.Features.Risks;
 /// <summary>
 ///     One risk's owner and reassessment obligations. The logical revision counts the owner assignments and the
 ///     reassessment triggers of this risk only, so risks, control treatment lines and actions are independent owners
-///     and no program-wide ledger revision or cap exists. A trigger is recognized by the deterministic content id of its
-///     trigger identity, so a duplicate source never appends twice.
+///     and no program-wide ledger revision or cap exists. Semantic trigger deduplication is verified outside this bounded
+///     owner at an exact history cut, then fenced through append.
 /// </summary>
 public sealed class RiskGovernance : Aggregate
 {
@@ -23,9 +23,8 @@ public sealed class RiskGovernance : Aggregate
     readonly Uuid _tenantId;
     readonly Uuid _programId;
     readonly Uuid _riskId;
-    readonly List<RiskOwnerAssigned> _owners = [];
-    readonly List<RiskReassessmentTriggered> _triggers = [];
-    readonly List<DomainEvent> _facts = [];
+    RiskOwnerAssigned? _owner;
+    DomainEvent? _latest;
     long _revision;
 
     /// <summary>Opens one risk's governance, selecting the logical operation to resolve.</summary>
@@ -48,7 +47,7 @@ public sealed class RiskGovernance : Aggregate
         Uuid.CreateVersion5(Uuid.CreateVersion5(programId, "risk-reassessment-trigger"),
             riskId + "|" + triggerKind + "|" + sourceReference);
 
-    /// <summary>The content id the trigger's content is stored under, which is how the owner recognizes it.</summary>
+    /// <summary>The historical deterministic content convention, retained for source/test identity; new writes may use fresh verified blob ids.</summary>
     public static Uuid TriggerContentId(Uuid triggerId) => Uuid.CreateVersion5(triggerId, RiskContent.TriggerSchema);
 
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
@@ -61,20 +60,10 @@ public sealed class RiskGovernance : Aggregate
     public long Revision => _revision;
 
     /// <summary>The latest owner assignment, or null when no owner was assigned.</summary>
-    public RiskOwnerAssigned? Owner => _owners.Count == 0 ? null : _owners[^1];
-
-    /// <summary>Every reassessment trigger in the order raised.</summary>
-    public IReadOnlyList<RiskReassessmentTriggered> Triggers => _triggers;
-
-    /// <summary>Every fact in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
-
-    /// <summary>True when the trigger with this identity was already raised.</summary>
-    public bool HasTrigger(Uuid triggerId)
-    {
-        var contentId = TriggerContentId(triggerId);
-        return _triggers.Any(trigger => trigger.TriggerContent.ContentId == contentId);
-    }
+    public RiskOwnerAssigned? Owner => _owner;
+    public DomainEvent? Latest => _latest;
+    public Uuid TenantId => _tenantId;
+    public Uuid ProgramId => _programId;
 
     /// <summary>Checks that the owner can be assigned at the expected revision.</summary>
     public Result PrepareAssignOwner(long expectedRevision) => expectedRevision != _revision
@@ -82,11 +71,11 @@ public sealed class RiskGovernance : Aggregate
             .ToRequestError())
         : Result.Success;
 
-    /// <summary>Checks that the trigger can be raised: a duplicate is a retryable conflict the reaction resolves on replay.</summary>
-    public Result PrepareTrigger(Uuid triggerId) => HasTrigger(triggerId)
-        ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
-            "The reassessment trigger was already raised; retry to confirm it.", true))
-        : Result.Success;
+    /// <summary>Fences a source-history decision against the exact command owner cut it observed.</summary>
+    public Result PrepareTrigger(long expectedRevision, ulong expectedPhysicalPosition) =>
+        expectedRevision == Revision && expectedPhysicalPosition == CommittedStreamPosition
+            ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact risk governance cut changed; retry trigger admission.", true));
 
     /// <summary>Assigns the owner as the root native fact of its operation.</summary>
     public Result AssignOwner(OperationProvenance operation, ImmutableContentRef ownerContent,
@@ -107,14 +96,15 @@ public sealed class RiskGovernance : Aggregate
 
     /// <summary>Raises a reassessment trigger as the root native fact of its operation.</summary>
     public Result RaiseTrigger(OperationProvenance operation, Uuid triggerId, ImmutableContentRef triggerContent,
-        ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
+        ImmutableContentRef firstResponse, ImmutableContentRef operationResult,
+        long expectedRevision, ulong expectedPhysicalPosition)
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(triggerContent);
-        if (operation.Owner != Stream || triggerContent.ContentId != TriggerContentId(triggerId))
+        if (operation.Owner != Stream || triggerId == Uuid.Empty)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A trigger is a root operation of its own risk governance stored under its trigger identity."));
-        var prepared = PrepareTrigger(triggerId);
+                "A trigger requires its exact risk governance owner and semantic identity."));
+        var prepared = PrepareTrigger(expectedRevision, expectedPhysicalPosition);
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new RiskReassessmentTriggered(_tenantId, _programId, _riskId, _revision + 1, triggerContent,
@@ -124,30 +114,40 @@ public sealed class RiskGovernance : Aggregate
 
     void Apply(RiskOwnerAssigned ev)
     {
-        Acceptance.Observe(ev);
+        if (ev.Operation.CommandKind != nameof(AssignRiskOwner) || ev.OwnerContent.Schema != RiskContent.OwnerSchema ||
+            ev.FirstResponse is null || ev.OperationResult is null || ev.Operation.Actor.Kind != "member" ||
+            !Uuid.TryParse(ev.Operation.Actor.Id, out var member) || member == Uuid.Empty)
+            throw new InvalidOperationException("The owner assignment has another exact native kind or content schema.");
         EnsureNext(ev.TenantId, ev.ProgramId, ev.RiskId, ev.Revision, ev.Operation);
-        _owners.Add(ev);
+        Acceptance.Observe(ev);
+        _owner = ev;
         Advance(ev);
     }
 
     void Apply(RiskReassessmentTriggered ev)
     {
-        Acceptance.Observe(ev);
+        if (ev.Operation.CommandKind != nameof(RaiseRiskReassessmentTriggers) || ev.TriggerContent.Schema != RiskContent.TriggerSchema ||
+            ev.FirstResponse is null || ev.OperationResult is null || ev.Operation.Actor.Kind != "system_process")
+            throw new InvalidOperationException("The reassessment trigger has another exact native kind or content schema.");
         EnsureNext(ev.TenantId, ev.ProgramId, ev.RiskId, ev.Revision, ev.Operation);
-        _triggers.Add(ev);
+        Acceptance.Observe(ev);
         Advance(ev);
     }
 
     void EnsureNext(Uuid tenantId, Uuid programId, Uuid riskId, long revision, OperationProvenance operation)
     {
         if (tenantId != _tenantId || programId != _programId || riskId != _riskId || revision != _revision + 1 ||
-            operation.Owner != Stream)
+            operation.Owner != Stream || (operation.FirstOwner ?? operation.Owner) != Stream ||
+            !NativeOwnerHistory.IsOwnRoot(this, operation,
+                operation.CommandKind == nameof(AssignRiskOwner) ? nameof(AssignRiskOwner) : nameof(RaiseRiskReassessmentTriggers),
+                operation.CommandKind == nameof(AssignRiskOwner) ? (ulong)_revision : null) ||
+            operation.CommandKind is not (nameof(AssignRiskOwner) or nameof(RaiseRiskReassessmentTriggers)))
             throw new InvalidOperationException("A risk governance fact follows the previous one at the next revision.");
     }
 
     void Advance(DomainEvent fact)
     {
         _revision++;
-        _facts.Add(fact);
+        _latest = fact;
     }
 }

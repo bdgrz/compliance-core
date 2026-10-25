@@ -693,6 +693,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ProfessionalDutyAuthorityReader>();
         services.AddScoped<IndependenceRuleRatificationAuthorizer>();
         services.AddScoped<ProfessionalEngagementPartnerAuthorizer>();
+        services.AddScoped<IndependenceRuleCatalogReader>();
+        services.AddScoped<IndependenceRuleRatificationReader>();
+        services.AddScoped<IndependenceRuleCatalogOperations>();
+        services.AddScoped<IndependenceRuleRatificationOperations>();
         services.AddScoped<CurrentRatifiedIndependenceRulesReader>();
         services.TryAddScoped<IServiceEngagementAcceptanceEvidenceReader,
             EventSourcedServiceEngagementAcceptanceEvidenceReader>();

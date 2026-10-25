@@ -1,94 +1,67 @@
-using System.Collections.ObjectModel;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evaluations;
 
-/// <summary>Stores immutable, versioned evaluation procedures for one control.</summary>
+/// <summary>Bounded current authority of one control's evaluation-plan line; history is immutable read composition.</summary>
 public sealed class ControlEvaluationPlan : Aggregate
 {
-    const int MaximumObjectiveLength = 4000;
+    public const string Area = "control-evaluation-plans";
     readonly Uuid _tenantId;
-    readonly Uuid _programId;
-    readonly List<ControlEvaluationPlanVersionView> _versions = [];
+    ControlEvaluationPlanVersionDefined? _latest;
 
-    public Uuid TenantId => _tenantId;
-    public Uuid ProgramId => _programId;
-    public long Revision => _versions.LastOrDefault()?.Version ?? 0;
-    public ControlEvaluationPlanVersionView? CurrentVersion => _versions.LastOrDefault();
-
-    public ControlEvaluationPlan(Uuid tenantId, Uuid programId, Uuid controlId)
-        : base(controlId, new EventStreamAddress(tenantId.ToString(),
-            "control-evaluation-plans", controlId.ToString()))
+    public ControlEvaluationPlan(Uuid tenantId, Uuid programId, Uuid controlId, Uuid selectedLogicalId = default)
+        : base(controlId, new EventStreamAddress(tenantId.ToString(), Area, controlId.ToString()))
     {
         _tenantId = tenantId;
-        _programId = programId;
-        On<ControlEvaluationPlanVersionDefined>(ev =>
-        {
-            _versions.Add(new ControlEvaluationPlanVersionView(ev.TenantId, ev.ProgramId,
-                ev.ControlId, ev.ControlVersionId, ev.PlanVersionId, ev.Version, ev.Objective,
-                Normalize(ev.Steps),
-                ev.TesterIndependenceRequired, ev.AuthoredByMemberId, ev.Author, ev.DefinedAt));
-        });
+        RequestedProgramId = programId;
+        Acceptance = new NativeAcceptance(selectedLogicalId);
+        On<ControlEvaluationPlanVersionDefined>(ApplyFact);
     }
 
-    public IReadOnlyList<ControlEvaluationPlanVersionView> ReadVersions() => _versions.ToArray();
+    public Uuid TenantId => _tenantId;
+    public Uuid RequestedProgramId { get; }
+    public Uuid ProgramId => _latest?.ProgramId ?? RequestedProgramId;
+    public long Revision => _latest?.Version ?? 0;
+    public ControlEvaluationPlanVersionDefined? Latest => _latest;
+    public NativeAcceptance Acceptance { get; }
 
-    public ControlEvaluationPlanVersionView? FindVersion(Uuid planVersionId) =>
-        _versions.FirstOrDefault(version => version.PlanVersionId == planVersionId);
+    /// <summary>The stable operation identity for the existing wire contract's original expected version.</summary>
+    public static Uuid OperationId(Uuid tenant, Uuid program, Uuid control, long expectedVersion) =>
+        ControlEvaluationPlanIdentity.For(tenant, program, control, expectedVersion);
 
-    public CommandFailure? Define(long expectedVersion, Uuid controlVersionId,
-        Uuid planVersionId, string objective,
-        IReadOnlyList<EvaluationProcedureStep>? steps, bool testerIndependenceRequired,
-        Uuid authoredByMemberId, ActorReference author, DateTimeOffset definedAt)
+    public Result PrepareDefine(long expectedVersion) => ProgramId != RequestedProgramId
+        ? Result.Failure(new RequestError(RequestErrorKind.NotFound, "The control evaluation plan was not found."))
+        : expectedVersion != Revision
+            ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"Reload the control evaluation plan. Current version: {Revision}."))
+            : Result.Success;
+
+    public Result Define(OperationProvenance operation, Uuid controlVersionId, ImmutableContentRef content,
+        ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
-        ArgumentNullException.ThrowIfNull(author);
-        if (controlVersionId == Uuid.Empty || planVersionId == Uuid.Empty ||
-            authoredByMemberId == Uuid.Empty ||
-            string.IsNullOrWhiteSpace(objective) || objective.Trim().Length > MaximumObjectiveLength)
-            return CommandFailure.InvalidContent(
-                "An evaluation plan version requires an objective and an attributed author.");
-        if (ControlEvaluationRules.ValidateProcedure(steps) is { } invalid)
-            return invalid;
-        if (steps!.SelectMany(static step => step.InspectedItems).Any(item =>
-                item.Kind == "control" && (item.Reference != Id.ToString() ||
-                    item.Version != controlVersionId.ToString())))
-            return CommandFailure.InvalidContent(
-                "A control scope reference must match the plan control and exact control version.");
-
-        var existing = FindVersion(planVersionId);
-        if (existing is not null)
-            return existing.ControlVersionId == controlVersionId &&
-                   existing.Objective == objective.Trim() &&
-                   existing.TesterIndependenceRequired == testerIndependenceRequired &&
-                   existing.AuthoredByMemberId == authoredByMemberId &&
-                   SameSteps(existing.Steps, Normalize(steps))
-                ? null
-                : CommandFailure.StateConflict(
-                    "The evaluation plan version ID was already used for different content.");
-
-        if (expectedVersion != Revision)
-            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision(
-                "control evaluation plan", Revision));
-
-        RaiseEvent(new ControlEvaluationPlanVersionDefined(_tenantId, _programId, Id,
-            controlVersionId, planVersionId, Revision + 1, objective.Trim(), Normalize(steps),
-            testerIndependenceRequired, authoredByMemberId, author, definedAt));
-        return null;
+        if (operation.OriginalExpectedRevision is not { } expected || expected > (ulong)long.MaxValue)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The original native revision is required."));
+        var prepared = PrepareDefine((long)expected);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (!NativeOwnerHistory.IsOwnRoot(this, operation, nameof(DefineControlEvaluationPlan), (ulong)Revision))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The plan definition has another native root."));
+        RaiseEvent(new ControlEvaluationPlanVersionDefined(_tenantId, ProgramId, Id, controlVersionId,
+            operation.LogicalId, Revision + 1, content, operation, firstResponse, operationResult));
+        return Result.Success;
     }
 
-    static bool SameSteps(IReadOnlyList<EvaluationProcedureStep> left,
-        ReadOnlyCollection<EvaluationProcedureStep> right) => left.Count == right.Count &&
-        left.Zip(right).All(static pair => pair.First.Assertion == pair.Second.Assertion &&
-            pair.First.Method == pair.Second.Method &&
-            pair.First.ExpectedCondition == pair.Second.ExpectedCondition &&
-            pair.First.InspectedItems.SequenceEqual(pair.Second.InspectedItems));
-
-    static ReadOnlyCollection<EvaluationProcedureStep> Normalize(
-        IReadOnlyList<EvaluationProcedureStep>? steps) => Array.AsReadOnly((steps ?? []).Select(
-            static step => new EvaluationProcedureStep(step.Assertion, step.Method,
-                Array.AsReadOnly(step.InspectedItems.Select(static item =>
-                    new EvaluationInspectedItem(item.Kind.Trim(), item.Reference.Trim(),
-                        item.Version.Trim())).ToArray()), step.ExpectedCondition.Trim())).ToArray());
+    void ApplyFact(ControlEvaluationPlanVersionDefined fact)
+    {
+        Acceptance.Observe(fact);
+        if (fact.TenantId != _tenantId || fact.ControlId != Id || fact.ProgramId == Uuid.Empty ||
+            _latest is not null && fact.ProgramId != ProgramId || fact.ControlVersionId == Uuid.Empty ||
+            fact.PlanVersionId != fact.Operation.LogicalId || fact.Version != Revision + 1 ||
+            fact.FirstResponse is null || fact.OperationResult is null ||
+            !NativeOwnerHistory.IsOwnRoot(this, fact.Operation, nameof(DefineControlEvaluationPlan), (ulong)Revision))
+            throw new InvalidOperationException("A plan definition must advance its own exact native version line.");
+        _latest = fact;
+    }
 }

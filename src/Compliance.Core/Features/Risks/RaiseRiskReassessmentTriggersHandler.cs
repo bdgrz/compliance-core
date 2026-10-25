@@ -7,76 +7,70 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Risks;
 
-/// <summary>
-///     Raises the durable reassessment trigger of exactly one assessed risk. The reactor owns the complete fan-out and
-///     derives the command id from the source event and the risk, so this handler decides one risk and one trigger
-///     identity only. The trigger identity is stable, so a second source for the same risk, kind and reference appends
-///     nothing, and a risk that is not assessed on another method version has nothing to reassess.
-/// </summary>
+/// <summary>Admits one semantic trigger after verified cut-scoped deduplication; identical accepted commands replay first.</summary>
 public sealed class RaiseRiskReassessmentTriggersHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content, TimeProvider clock) : IRequestHandler<RaiseRiskReassessmentTriggers>
+    IImmutableContentStore content, TimeProvider clock, RiskGovernanceReader history) : IRequestHandler<RaiseRiskReassessmentTriggers>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<RaiseRiskReassessmentTriggers> context,
-        CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IRequestContext<RaiseRiskReassessmentTriggers> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (request.CommandId == Uuid.Empty || request.RiskId == Uuid.Empty ||
+        if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
+            request.CommandId == Uuid.Empty || request.RiskId == Uuid.Empty || request.RaisedAt == default ||
             request.TriggerKind is not (RiskStates.MethodChanged or RiskStates.BoundaryChanged) ||
-            string.IsNullOrWhiteSpace(request.SourceReference))
+            string.IsNullOrWhiteSpace(request.SourceReference) || request.SourceReference.Length > 4000)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A reassessment trigger requires a command id, a risk, a known kind and a source."));
-        var risk = await RiskOwnerResolution.RequireRiskAsync(reader, request.TenantId, request.ProgramId,
-            request.RiskId, ct).ConfigureAwait(false);
-        if (!risk.IsSuccess)
-            return risk;
-        var evaluation = await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RiskId), ct)
-            .ConfigureAwait(false);
-        if (evaluation.Header?.InherentMethodVersionId is not { } inherentMethod ||
-            request.MethodVersionId is { } method && inherentMethod == method)
-            return Result.Success;
-        var triggerId = RiskGovernance.TriggerIdFor(request.ProgramId, request.RiskId, request.TriggerKind,
-            request.SourceReference);
-        var workload = request.TriggerKind == RiskStates.MethodChanged
-            ? RiskMethodReassessmentReactor.WorkloadName
-            : BoundaryRiskReassessmentReactor.WorkloadName;
-        var actor = ActorReference.ForSystemProcess("reactor:" + workload, workload);
-        var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new RiskGovernance(request.TenantId, request.ProgramId,
-            request.RiskId, request.CommandId), ct).ConfigureAwait(false);
-        var provenance = FindingContent.Provenance(request.CommandId, "RaiseRiskReassessmentTriggers",
-            snapshot.Stream, actor, null, FindingCommands.Digest(request), now);
-        var binding = AcceptedOperationBinding.Of(provenance);
-
+                "A reassessment trigger requires its exact command, risk, kind, source and source time."));
+        var triggerId = RiskGovernance.TriggerIdFor(request.ProgramId, request.RiskId, request.TriggerKind, request.SourceReference);
+        var workload = request.TriggerKind == RiskStates.MethodChanged ? RiskMethodReassessmentReactor.WorkloadName : BoundaryRiskReassessmentReactor.WorkloadName;
+        var stream = new RiskGovernance(request.TenantId, request.ProgramId, request.RiskId).Stream;
+        var provenance = FindingContent.Provenance(request.CommandId, nameof(RaiseRiskReassessmentTriggers), stream,
+            ActorReference.ForSystemProcess("reactor:" + workload, workload), null, FindingCommands.Digest(request), clock.GetUtcNow())
+            with
+        { FirstOwner = stream };
+        var noChange = new RequestError(RequestErrorKind.Conflict, "The semantic reassessment obligation already exists or no longer applies.");
         ImmutableContentRef? triggerContent = null;
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        long revision = 0;
+        ulong physical = 0;
+        try
         {
-            if (snapshot.HasTrigger(triggerId))
+            var outcome = await operations.ExecuteAsync(new NativeOperation<RiskGovernance>(AcceptedOperationBinding.Of(provenance),
+                () => new RiskGovernance(request.TenantId, request.ProgramId, request.RiskId, request.CommandId), owner => owner.Acceptance,
+                async (owner, token) =>
+                {
+                    try
+                    {
+                        if (await history.FindTriggerAsync(owner, triggerId, token).ConfigureAwait(false) is not null)
+                            return Result<FirstResponseDescriptor>.Failure(noChange);
+                        var risk = await RiskOwnerResolution.RequireRiskAsync(reader, request.TenantId, request.ProgramId, request.RiskId, token).ConfigureAwait(false);
+                        if (!risk.IsSuccess)
+                            return Result<FirstResponseDescriptor>.Failure(risk.Error!);
+                        var evaluation = await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RiskId), token).ConfigureAwait(false);
+                        if (evaluation.Header?.InherentMethodVersionId is not { } inherent || request.MethodVersionId is { } method && inherent == method)
+                            return Result<FirstResponseDescriptor>.Failure(noChange);
+                        triggerContent = await FindingContent.WriteAsync(content, request.TenantId, RiskContent.TriggerSchema,
+                            new RiskReassessmentTriggerView(triggerId, request.RiskId, request.TriggerKind, request.SourceReference, request.RaisedAt), token).ConfigureAwait(false);
+                        var frozen = await RiskCommands.FreezeUnitAsync(content, request.TenantId, token).ConfigureAwait(false);
+                        result = frozen.Result;
+                        revision = owner.Revision;
+                        physical = owner.CommittedStreamPosition;
+                        return Result<FirstResponseDescriptor>.Success(frozen.Response);
+                    }
+                    catch (ImmutableContentIntegrityException error)
+                    {
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "The exact reassessment source cannot be verified.", error is ImmutableContentUnavailableException));
+                    }
+                }, (owner, first) => owner.RaiseTrigger(provenance, triggerId, triggerContent!, first, result!, revision, physical)), context, ct).ConfigureAwait(false);
+            // The executor rechecked exact acceptance/collision before exposing this existing semantic no-op.
+            if (!outcome.IsSuccess && ReferenceEquals(outcome.Error, noChange))
                 return Result.Success;
-            try
-            {
-                triggerContent = await FindingContent.WriteDeterministicAsync(content, request.TenantId, triggerId,
-                    RiskContent.TriggerSchema, new RiskReassessmentTriggerView(triggerId, request.RiskId,
-                        request.TriggerKind, request.SourceReference, request.RaisedAt), ct).ConfigureAwait(false);
-            }
-            catch (ImmutableContentConflictException)
-            {
-                // A concurrent source wrote this trigger identity with other bytes; the retry finds the trigger.
-                return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The reassessment trigger is being raised by another source; retry to confirm it.", true));
-            }
-
-            (response, result) = await RiskCommands.FreezeUnitAsync(content, request.TenantId, ct).ConfigureAwait(false);
+            return await RiskCommands.UnitAsync(content, request.TenantId, outcome, ct).ConfigureAwait(false);
         }
-
-        var outcome = await operations.ExecuteAsync(new NativeOperation<RiskGovernance>(binding,
-            () => new RiskGovernance(request.TenantId, request.ProgramId, request.RiskId, request.CommandId),
-            governance => governance.Acceptance,
-            governance => FindingCommands.Prepared(governance.PrepareTrigger(triggerId), response),
-            (RiskGovernance governance, ImmutableContentRef frozen) =>
-                governance.RaiseTrigger(provenance, triggerId, triggerContent!, frozen, result!)), context, ct)
-            .ConfigureAwait(false);
-        return await RiskCommands.UnitAsync(content, request.TenantId, outcome, ct).ConfigureAwait(false);
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact reassessment trigger history cannot be verified.", error is ImmutableContentUnavailableException));
+        }
     }
 }

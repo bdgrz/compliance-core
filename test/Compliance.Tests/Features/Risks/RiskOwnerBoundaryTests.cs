@@ -177,7 +177,9 @@ public sealed class RiskOwnerBoundaryTests
         var view = (await fixture.GovernanceAsync()).Owner!;
         Assert.Equal(personId, view.PersonId);
         Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.ApproverUserId), view.CorrelatedMemberId);
-        Assert.IsType<RiskOwnerAssigned>(Assert.Single(owner.Facts));
+        await using var ownerScope = provider.CreateAsyncScope();
+        Assert.IsType<RiskOwnerAssigned>(Assert.Single(await ownerScope.ServiceProvider.GetRequiredService<RiskGovernanceReader>()
+            .ReadGovernanceFactsAsync(owner)));
         Assert.Equal(1, owner.Revision);
     }
 
