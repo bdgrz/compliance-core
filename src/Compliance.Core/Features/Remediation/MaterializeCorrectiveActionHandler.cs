@@ -15,7 +15,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     is the admitted terms with the original actor and the admission instant, so the finding is never loaded again.
 /// </summary>
 sealed class MaterializeCorrectiveActionHandler(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content, TimeProvider clock)
+    IImmutableContentStore content, TimeProvider clock, IDomainEventReader events)
     : IRequestHandler<MaterializeCorrectiveAction, ReceiverOutcome>
 {
     const int MaximumAttempts = 4;
@@ -28,6 +28,18 @@ sealed class MaterializeCorrectiveActionHandler(IAggregateReader reader, IAggreg
             command.FindingId == Uuid.Empty || command.ExpectedRevision is not (null or 0) ||
             !Uuid.TryParse(command.Target.Realm, CultureInfo.InvariantCulture, out var tenant))
             return SourceUseReceiverSupport.Permanent("The materialization names another operation, action or realm.");
+
+        try
+        {
+            if (await CorrectiveActionMaterializationReplay.ResolveAsync(events, command, tenant, ct).ConfigureAwait(false)
+                is { } replay)
+                return replay;
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact materialization replay cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
 
         ChildAdmissionIntent intent;
         AddCorrectiveAction authored;
@@ -57,7 +69,8 @@ sealed class MaterializeCorrectiveActionHandler(IAggregateReader reader, IAggreg
 
         var parent = await reader.HydrateAsync(new FindingAggregate(tenant, authored.ProgramId, command.FindingId), ct)
             .ConfigureAwait(false);
-        if (parent.Facts.FirstOrDefault(fact => fact.Metadata?.EventId == command.Source.EventId) is not CorrectiveActionAdmitted admitted)
+        var history = await FindingHistory.ReadAsync(events, parent, ct).ConfigureAwait(false);
+        if (history.FactById(command.Source.EventId) is not CorrectiveActionAdmitted admitted)
             return SourceUseReceiverSupport.Transient("The action admission is not visible on its finding yet.");
         if (admitted.Metadata.AggregateVersion != command.Source.AggregateVersion || admitted.Intent != command.Intent ||
             admitted.Operation.LogicalId != command.ActionId || admitted.Operation.RootOperationId != command.OperationId)

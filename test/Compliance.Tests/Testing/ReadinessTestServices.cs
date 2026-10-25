@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Readiness;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Hosting.Persistence;
@@ -16,7 +17,8 @@ namespace Bdgrz.Compliance.Tests.Testing;
 /// <summary>Composes the production readiness owners and process workers over in-memory stores.</summary>
 static class ReadinessTestServices
 {
-    public static ServiceProvider Build(ICriteriaCatalog? catalog = null, IReadinessSourceReader? sources = null)
+    public static ServiceProvider Build(ICriteriaCatalog? catalog = null, IReadinessSourceReader? sources = null,
+        IImmutableContentStore? immutableContent = null)
     {
         var services = new ServiceCollection();
         services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
@@ -35,6 +37,8 @@ static class ReadinessTestServices
         services.AddSingleton<IProgramResourceScopeResolver>(ProgramManagementServices.ResourceScopes());
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(
             new RecordingPermissionAuthorizer(allowed: true)));
+        if (immutableContent is not null)
+            services.AddSingleton(immutableContent);
         if (catalog is not null)
             services.AddSingleton(catalog);
         if (sources is not null)

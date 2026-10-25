@@ -399,7 +399,7 @@ public sealed class AdvisorRecordVersionResolverTests
             Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Events = _scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
             Metadata = new EvidenceArtifactMetadataRead(Reader, Events);
-            Readiness = new ReadinessReader(Reader, _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            Readiness = new ReadinessReader(Reader, _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), Events);
         }
 
         public AdvisorRecordVersionResolver Resolver(IBoundaryDirectoryReader? boundaries = null,

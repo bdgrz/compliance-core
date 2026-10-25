@@ -4,6 +4,9 @@ using System.Text;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Programs;
@@ -101,6 +104,8 @@ public sealed class ControlOperatingTransportTests
         using var document = JsonDocument.Parse(approvedText);
         Assert.Equal("approved", document.RootElement.GetProperty("status").GetString());
         Assert.Equal(plan.ToString(), document.RootElement.GetProperty("plan_version_id").GetString());
+        await AssertFrozenResponseAsync(factory, fixture, nameof(ProposeControlOperatingPlan), proposed);
+        await AssertFrozenResponseAsync(factory, fixture, nameof(ApproveControlOperatingPlan), approved);
     }
 
     [Fact]
@@ -160,6 +165,10 @@ public sealed class ControlOperatingTransportTests
         Assert.Equal(HttpStatusCode.Conflict, changedCorrection.StatusCode);
         Assert.Equal("submitted", JsonDocument.Parse(correctedText).RootElement.GetProperty("state").GetString());
         Assert.Equal("returned", JsonDocument.Parse(reviewedText).RootElement.GetProperty("state").GetString());
+        var occurrenceId = Uuid.Parse(occurrence, CultureInfo.InvariantCulture);
+        await AssertFrozenResponseAsync(factory, fixture, nameof(AttestControlOccurrence), attested, occurrenceId);
+        await AssertFrozenResponseAsync(factory, fixture, nameof(ReviewControlOccurrence), reviewed, occurrenceId);
+        await AssertFrozenResponseAsync(factory, fixture, nameof(CorrectControlAttestation), corrected, occurrenceId);
     }
 
     [Fact]
@@ -204,6 +213,65 @@ public sealed class ControlOperatingTransportTests
             items[0].GetProperty("occurrence_id").GetString());
     }
 
+    [Fact]
+    public async Task ShouldRequireCurrentGrantBeforeFrozenReplayGivenProductionOperatingPlanRoute()
+    {
+        // Arrange
+        var permissions = new MutablePermissions();
+        await using var factory = Factory(permissions);
+        using var owner = factory.CreateClient();
+        using var approver = factory.CreateClient();
+        var fixture = await ArrangeAsync(factory, owner, approver);
+        var route = $"{fixture.ControlPath}/operating-plan/proposals/{Uuid.CreateVersion4()}";
+        var json = fixture.Proposal(0, "Original scoped proposal.");
+        using var first = await owner.PutAsync(route, Json(json));
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        await AssertFrozenResponseAsync(factory, fixture, nameof(ProposeControlOperatingPlan), first);
+        permissions.Allowed = false;
+
+        // Act
+        using var denied = await owner.PutAsync(route, Json(json));
+        using var anonymous = factory.CreateClient();
+        using var unauthorized = await anonymous.PutAsync(route, Json(json));
+        await using var scope = factory.Services.CreateAsyncScope();
+        var retained = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(
+            new ControlOperatingPlan(fixture.TenantId, fixture.ProgramId, fixture.ControlId));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
+        Assert.Equal(1, retained.Revision);
+    }
+
+    static async Task AssertFrozenResponseAsync(WebApplicationFactory<Program> factory, Arranged fixture,
+        string commandKind, HttpResponseMessage response, Uuid? occurrenceId = null)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var stream = occurrenceId is { } id
+            ? new ControlOccurrence(fixture.TenantId, fixture.ProgramId, fixture.ControlId, id).Stream
+            : new ControlOperatingPlan(fixture.TenantId, fixture.ProgramId, fixture.ControlId).Stream;
+        var matches = new List<INativeOperationFact>();
+        await foreach (var record in services.GetRequiredService<IDomainEventReader>().ReadAsync(stream, 0, CancellationToken.None))
+            if (!record.Event.Metadata.IsAudit && record.Event is INativeOperationFact native && native.Operation.CommandKind == commandKind)
+                matches.Add(native);
+        var fact = Assert.Single(matches);
+        var content = services.GetRequiredService<IImmutableContentStore>();
+        var descriptor = await FirstResponses.ReplayAsync(content, fixture.TenantId.ToString(), fact.FirstResponse!);
+        var frozen = await content.ReadVerifiedAsync(fixture.TenantId.ToString(), Assert.IsType<StandardResponseBody>(descriptor.Body).Content);
+        Assert.Equal(200, descriptor.HttpStatus);
+        Assert.Equal(descriptor.HttpStatus, (int)response.StatusCode);
+        Assert.Equal(frozen.ToArray(), await response.Content.ReadAsByteArrayAsync());
+        Assert.Equal(descriptor.ContentType, response.Content.Headers.ContentType?.ToString());
+    }
+
+    sealed class MutablePermissions : IPermissionAuthorizer
+    {
+        public bool Allowed { get; set; } = true;
+        public ValueTask<bool> IsAllowedAsync(Uuid tenantId, Uuid userId, Uuid memberId, string permission,
+            CancellationToken ct = default) => ValueTask.FromResult(Allowed);
+    }
+
     static async Task<Arranged> ArrangeAsync(WebApplicationFactory<Program> factory, HttpClient owner,
         HttpClient other)
     {
@@ -220,13 +288,13 @@ public sealed class ControlOperatingTransportTests
         await ControlOperationE2ETests.SeedAsync(factory, new Member(tenant, otherUser), member => member.Register());
         await ControlOperationE2ETests.SeedApprovedControlAsync(factory, tenant, program, controlId, ownerMember,
             effectiveFrom);
-        return new Arranged($"/api/v1/tenants/{tenant}/programs/{program}/controls/{controlId}", controlId,
+        return new Arranged($"/api/v1/tenants/{tenant}/programs/{program}/controls/{controlId}", tenant, program, controlId,
             ownerMember, otherMember, effectiveFrom);
     }
 
     static StringContent Json(string value) => new(value, Encoding.UTF8, "application/json");
 
-    static WebApplicationFactory<Program> Factory() =>
+    static WebApplicationFactory<Program> Factory(IPermissionAuthorizer? permissions = null) =>
         new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
@@ -252,13 +320,13 @@ public sealed class ControlOperatingTransportTests
                 services.AddSingleton<ITenantActivity, ActiveTenant>();
                 services.RemoveAll<IAccessGrantPermissionAuthorizer>();
                 services.AddSingleton<IAccessGrantPermissionAuthorizer>(
-                    new PermissionBackedAccessGrantPermissionAuthorizer(new RecordingPermissionAuthorizer(true)));
+                    new PermissionBackedAccessGrantPermissionAuthorizer(permissions ?? new RecordingPermissionAuthorizer(true)));
                 services.RemoveAll<IProgramResourceScopeResolver>();
                 services.AddSingleton(ProgramManagementServices.ResourceScopes());
             });
         });
 
-    sealed record Arranged(string ControlPath, Uuid ControlId, Uuid OwnerMember, Uuid ReviewerMember,
+    sealed record Arranged(string ControlPath, Uuid TenantId, Uuid ProgramId, Uuid ControlId, Uuid OwnerMember, Uuid ReviewerMember,
         DateOnly EffectiveFrom)
     {
         public string Proposal(long expectedRevision, string rationale, bool adHoc = false)

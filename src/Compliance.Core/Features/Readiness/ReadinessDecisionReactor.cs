@@ -36,7 +36,7 @@ sealed partial class ReadinessDecisionReactor(IProjectionCheckpointStore checkpo
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen decision cannot be verified yet: {exception.Message}", true));
+                $"The frozen decision cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         _ = await process.StartAsync(ReadinessEffects.DecisionProcessName, context, intentReference, targets,

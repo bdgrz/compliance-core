@@ -21,13 +21,12 @@ public sealed class FindingAggregate : Aggregate
     readonly Uuid _tenantId;
     readonly Uuid _programId;
     readonly Uuid _findingId;
-    readonly List<CorrectiveActionAdmitted> _admitted = [];
-    readonly HashSet<Uuid> _admittedIds = [];
-    readonly List<FindingAcceptanceLinkedV2> _acceptances = [];
-    readonly List<FindingClosedV2> _closures = [];
-    readonly Dictionary<Uuid, FindingClosureAccepted> _accepted = [];
-    readonly Dictionary<Uuid, DomainEvent> _terminal = [];
-    readonly List<DomainEvent> _facts = [];
+    readonly Uuid _selectedClosureRoot;
+    CorrectiveActionAdmitted? _selectedAdmission;
+    FindingClosureAccepted? _selectedClosure;
+    DomainEvent? _selectedTerminal;
+    DomainEvent? _latest;
+    long _admittedCount;
     FindingRaisedV2? _raised;
     FindingRevisedV2? _revised;
     FindingClosureAccepted? _pending;
@@ -36,7 +35,8 @@ public sealed class FindingAggregate : Aggregate
     long _generation;
 
     /// <summary>Opens one finding, selecting the logical operation to resolve.</summary>
-    public FindingAggregate(Uuid tenantId, Uuid programId, Uuid findingId, Uuid selectedLogicalId = default)
+    public FindingAggregate(Uuid tenantId, Uuid programId, Uuid findingId, Uuid selectedLogicalId = default,
+        Uuid selectedClosureRoot = default)
         : base(StreamId(programId, findingId), new EventStreamAddress(tenantId.ToString(), Area,
             StreamId(programId, findingId).ToString()))
     {
@@ -44,6 +44,7 @@ public sealed class FindingAggregate : Aggregate
             throw new ArgumentException("A finding stream needs tenant, program, and finding IDs.");
         (_tenantId, _programId, _findingId) = (tenantId, programId, findingId);
         Acceptance = new NativeAcceptance(selectedLogicalId);
+        _selectedClosureRoot = selectedClosureRoot;
         On<FindingRaisedV2>(Apply);
         On<FindingRevisedV2>(Apply);
         On<CorrectiveActionAdmitted>(Apply);
@@ -98,11 +99,8 @@ public sealed class FindingAggregate : Aggregate
     /// <summary>The current root cause.</summary>
     public string? RootCause => _revised?.RootCause;
 
-    /// <summary>The corrective actions admitted so far, in admission order, across every generation.</summary>
-    public IReadOnlyList<CorrectiveActionAdmitted> Admitted => _admitted;
-
-    /// <summary>The acceptance links in order.</summary>
-    public IReadOnlyList<FindingAcceptanceLinkedV2> Acceptances => _acceptances;
+    /// <summary>The number of admitted actions across this finding's generations.</summary>
+    public long AdmittedCount => _admittedCount;
 
     /// <summary>The closure accepted and not yet closed or canceled, which seals action admission.</summary>
     public FindingClosureAccepted? PendingClosure => _pending;
@@ -110,23 +108,27 @@ public sealed class FindingAggregate : Aggregate
     /// <summary>The closure fact of the current generation; null while open or after a reopen.</summary>
     public FindingClosedV2? Closed => _closed;
 
-    /// <summary>Every closure the finding ever recorded, across reopened generations.</summary>
-    public IReadOnlyList<FindingClosedV2> ClosureHistory => _closures;
+    /// <summary>The latest committed native fact of this owner.</summary>
+    public DomainEvent? Latest => _latest;
 
-    /// <summary>Every fact in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
+    /// <summary>The tenant of this finding.</summary>
+    public Uuid TenantId => _tenantId;
 
-    /// <summary>True when an action with this id was admitted.</summary>
-    public bool HasAdmitted(Uuid actionId) => _admittedIds.Contains(actionId);
+    /// <summary>Whether the selected logical action identity has already been admitted.</summary>
+    public bool HasAdmitted(Uuid actionId) => actionId == Acceptance.SelectedLogicalId
+        ? _selectedAdmission is not null
+        : throw new InvalidOperationException("Select the action identity before hydrating its admission guard.");
 
-    /// <summary>The closure accepted for a root operation, or null.</summary>
-    public FindingClosureAccepted? AcceptedClosure(Uuid rootOperationId) => _accepted.GetValueOrDefault(rootOperationId);
+    /// <summary>The pending or explicitly selected historical closure admission.</summary>
+    public FindingClosureAccepted? AcceptedClosure(Uuid rootOperationId) =>
+        _pending?.Operation.RootOperationId == rootOperationId ? _pending
+        : _selectedClosureRoot == rootOperationId ? _selectedClosure
+        : throw new InvalidOperationException("Select the historical closure root before hydrating it.");
 
-    /// <summary>The closed or canceled fact that ended a root operation, or null while it is pending.</summary>
-    public DomainEvent? TerminalClosure(Uuid rootOperationId) => _terminal.GetValueOrDefault(rootOperationId);
-
-    /// <summary>The fact with this event id.</summary>
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+    /// <summary>The explicitly selected closure terminal fact; absence is relative to this exact hydrated cut.</summary>
+    public DomainEvent? TerminalClosure(Uuid rootOperationId) => _selectedClosureRoot == rootOperationId
+        ? _selectedTerminal
+        : throw new InvalidOperationException("Select the historical closure root before hydrating its terminal fact.");
 
     /// <summary>Checks that the finding can take an ordinary write at the expected revision.</summary>
     public Result PrepareWrite(long expectedRevision)
@@ -149,7 +151,7 @@ public sealed class FindingAggregate : Aggregate
         var prepared = PrepareWrite(expectedRevision);
         if (!prepared.IsSuccess)
             return prepared;
-        return _admitted.Count == 0
+        return _admittedCount == 0
             ? Fail(CommandFailure.StateConflict(
                 "Closing a finding requires completed corrective work; an acceptance is not remediation."))
             : Result.Success;
@@ -231,7 +233,7 @@ public sealed class FindingAggregate : Aggregate
         var prepared = PrepareOwnWrite(operation);
         if (!prepared.IsSuccess)
             return prepared;
-        if (_admittedIds.Contains(operation.LogicalId))
+        if (HasAdmitted(operation.LogicalId))
             return Fail(CommandFailure.StateConflict("A corrective action identity cannot be reused."));
         RaiseEvent(new CorrectiveActionAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
             firstResponse, null));
@@ -307,7 +309,7 @@ public sealed class FindingAggregate : Aggregate
         _raised = ev;
         _revision = 1;
         _generation = 1;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
     void Apply(FindingRevisedV2 ev)
@@ -323,10 +325,12 @@ public sealed class FindingAggregate : Aggregate
         Acceptance.Observe(ev);
         if (_raised is null || _pending is not null || _closed is not null || ev.Owner != Stream ||
             ev.Revision != _revision + 1 || ev.Generation != _generation || ev.Operation.Owner != Stream ||
-            !_admittedIds.Add(ev.Operation.LogicalId))
+            ev.Operation.LogicalId == Acceptance.SelectedLogicalId && _selectedAdmission is not null)
             throw new InvalidOperationException(
                 "An action is admitted once, for the current open generation, at the next revision.");
-        _admitted.Add(ev);
+        _admittedCount = checked(_admittedCount + 1);
+        if (ev.Operation.LogicalId == Acceptance.SelectedLogicalId)
+            _selectedAdmission = ev;
         Advance(ev);
     }
 
@@ -334,20 +338,21 @@ public sealed class FindingAggregate : Aggregate
     {
         Acceptance.Observe(ev);
         EnsureWritable(ev.TenantId, ev.ProgramId, ev.FindingId, ev.Revision, ev.Operation);
-        _acceptances.Add(ev);
         Advance(ev);
     }
 
     void Apply(FindingClosureAccepted ev)
     {
         Acceptance.Observe(ev);
-        if (_raised is null || _pending is not null || _closed is not null || _admitted.Count == 0 ||
+        if (_raised is null || _pending is not null || _closed is not null || _admittedCount == 0 ||
             ev.Owner != Stream || ev.Revision != _revision + 1 || ev.Generation != _generation ||
             ev.Operation.Owner != Stream || ev.Operation.RootOperationId != ev.Operation.LogicalId ||
-            !_accepted.TryAdd(ev.Operation.RootOperationId, ev))
+            ev.Operation.RootOperationId == _selectedClosureRoot && _selectedClosure is not null)
             throw new InvalidOperationException(
                 "A closure is accepted once, with admitted actions, for the current open generation.");
         _pending = ev;
+        if (ev.Operation.RootOperationId == _selectedClosureRoot)
+            _selectedClosure = ev;
         Advance(ev);
     }
 
@@ -358,9 +363,9 @@ public sealed class FindingAggregate : Aggregate
             ev.Revision != _revision + 1 || ev.FindingGeneration != _generation || ev.Intent != _pending.Intent ||
             ev.Operation.RootOperationId != _pending.Operation.RootOperationId || ev.Operation.Owner != Stream)
             throw new InvalidOperationException("Only the exact pending closure of the current generation closes the finding.");
-        _terminal[ev.Operation.RootOperationId] = ev;
+        if (ev.Operation.RootOperationId == _selectedClosureRoot)
+            _selectedTerminal = ev;
         _closed = ev;
-        _closures.Add(ev);
         _pending = null;
         Advance(ev);
     }
@@ -372,7 +377,8 @@ public sealed class FindingAggregate : Aggregate
             ev.Intent != _pending.Intent || ev.Operation.RootOperationId != _pending.Operation.RootOperationId ||
             ev.Operation.Owner != Stream)
             throw new InvalidOperationException("Only the exact pending closure of the current generation is canceled.");
-        _terminal[ev.Operation.RootOperationId] = ev;
+        if (ev.Operation.RootOperationId == _selectedClosureRoot)
+            _selectedTerminal = ev;
         _pending = null;
         Advance(ev);
     }
@@ -399,7 +405,7 @@ public sealed class FindingAggregate : Aggregate
     void Advance(DomainEvent fact)
     {
         _revision++;
-        _facts.Add(fact);
+        _latest = fact;
     }
 
     Result PrepareOwnWrite(OperationProvenance operation)

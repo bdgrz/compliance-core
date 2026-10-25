@@ -208,10 +208,14 @@
     "calendar-file-reviews.json",
     "calendar-file-triage.json",
     "calendar-integration-jev.json",
-    "calendar-qualification.json"
+    "calendar-qualification.json",
+    "finding-operating-file-reviews.json",
+    "finding-operating-file-triage.json",
+    "finding-operating-integration-jev.json",
+    "finding-operating-qualification.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
-  "reviewSignalsTriaged": 91,
+  "reviewSignalsTriaged": 95,
   "findingArtifacts": [
     "implementation-file-triage-versioned.json",
     "implementation-file-triage-foundations.json",
@@ -555,12 +559,21 @@
     },
     {
       "id": "mapping-evidence-corrective-advisor-unit",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "fullUnitPassed": 6119,
       "focusedPassed": 446,
       "productionHttpPassed": 5,
       "directJevProductionFilesReviewed": 53,
-      "qualificationArtifact": "mapping-remediation-qualification.json"
+      "qualificationArtifact": "mapping-remediation-qualification.json",
+      "pr": 1120,
+      "mergeCommit": "4c3005dc2fa8e9ff5b365d3cb5e01c4d34e82341"
+    },
+    {
+      "id": "finding-operating-readiness-auditor-response",
+      "status": "locally_verified_pending_merge",
+      "qualificationArtifact": "finding-operating-qualification.json",
+      "fileReviews": 77,
+      "genuineOldApiRedFailed": 25
     }
   ],
   "resolved": [

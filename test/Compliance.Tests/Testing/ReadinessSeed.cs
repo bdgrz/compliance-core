@@ -71,7 +71,7 @@ static class ReadinessSeed
             await ReadinessContent.WriteAsync(content, tenantId, ReadinessContent.RegistrationSchema,
                 new ReadinessAssessmentRegistration(assessmentId, program.Revision + 1), CancellationToken.None),
             CancellationToken.None);
-        var adopted = await executor.ExecuteAsync(new ProgramReadiness(tenantId, programId, adopt.LogicalId),
+        var adopted = await executor.ExecuteAsync(new ProgramReadiness(tenantId, programId, adopt.LogicalId, assessmentId),
             (ProgramReadiness readiness) => AggregateOutcome.Commit(readiness.Adopt(adopt, intent, program.AdoptionGeneration,
                 proofs, result)), context, CancellationToken.None);
         Assert.True(adopted.IsSuccess, adopted.Error?.Message);
@@ -161,7 +161,7 @@ static class ReadinessSeed
         }
 
         var result = await ReadinessContent.WriteResultAsync(content, tenantId, resultSchema, body, CancellationToken.None);
-        var done = await executor.ExecuteAsync(new ProgramReadiness(tenantId, programId, recorded.LogicalId),
+        var done = await executor.ExecuteAsync(new ProgramReadiness(tenantId, programId, recorded.LogicalId, decisionId),
             (ProgramReadiness readiness) => AggregateOutcome.Commit(kind == ReadinessDecisionKind.Readiness
                 ? readiness.RecordReadinessDecision(recorded, body, assessmentId, proofs, intent, result)
                 : readiness.RecordTypeIEntryDecision(recorded, body, assessmentId, proofs, intent, result)),

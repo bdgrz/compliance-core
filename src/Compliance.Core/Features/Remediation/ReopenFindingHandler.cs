@@ -13,8 +13,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     earlier closure can never close the new generation. The frozen first response is the complete finding view after
 ///     the reopening.
 /// </summary>
-public sealed class ReopenFindingHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    FindingReader findings, IImmutableContentStore content, TimeProvider clock)
+public sealed class ReopenFindingHandler(NativeOperationExecutor operations, FindingReader findings, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ReopenFinding, FindingView>
 {
     public async ValueTask<Result<FindingView>> HandleAsync(IRequestContext<ReopenFinding> context, CancellationToken ct)
@@ -26,32 +25,34 @@ public sealed class ReopenFindingHandler(NativeOperationExecutor operations, IAg
         var actor = OperationsActor.From(context.Actor, request.TenantId);
         var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new FindingAggregate(request.TenantId, request.ProgramId,
-            request.FindingId, request.CommandId), ct).ConfigureAwait(false);
+        var snapshot = new FindingAggregate(request.TenantId, request.ProgramId,
+            request.FindingId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, "ReopenFinding", snapshot.Stream, actorReference,
-            (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now);
+            (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
 
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(FindingAggregate owner, CancellationToken token)
         {
-            var prepared = snapshot.PrepareReopen(request.ExpectedRevision);
+            var prepared = owner.PrepareReopen(request.ExpectedRevision);
             if (!prepared.IsSuccess)
-                return Result<FindingView>.Failure(prepared.Error!);
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
             if (!FindingRules.IsBoundedText(request.Reason, FindingRules.MaximumTextLength))
-                return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Validation,
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
                     "Reopening a finding requires a reason."));
-            var current = await findings.ComposeAsync(snapshot, now, ct).ConfigureAwait(false);
+            var current = await findings.ComposeAsync(owner, now, token).ConfigureAwait(false);
             (response, result) = await FindingContent.FreezeAsync(content, request.TenantId, FindingContent.ViewSchema,
-                FindingViews.WithReopen(current!, request.Reason.Trim(), snapshot.Revision + 1, actorReference, now, now),
-                ct).ConfigureAwait(false);
+                FindingViews.WithReopen(current!, request.Reason.Trim(), owner.Revision + 1, actorReference, now, now),
+                token).ConfigureAwait(false);
+            return Result<FirstResponseDescriptor>.Success(response!);
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<FindingAggregate>(binding,
             () => new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId, request.CommandId),
             finding => finding.Acceptance,
-            finding => FindingCommands.Prepared(finding.PrepareReopen(request.ExpectedRevision), response),
+            PrepareAsync,
             (FindingAggregate finding, ImmutableContentRef frozen) => finding.Reopen(provenance, request.Reason.Trim(),
                 actorReference, now, frozen, result!)), context, ct).ConfigureAwait(false);
         return await FindingContent.ResponseAsync<FindingView>(content, request.TenantId, outcome, ct)

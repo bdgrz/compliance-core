@@ -436,7 +436,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public CreateExaminationEngagementHandler CreateHandler() => new(Reader, Executor, new ReadinessReader(Reader, Content), Clock);
+        public CreateExaminationEngagementHandler CreateHandler() => new(Reader, Executor, new ReadinessReader(Reader, Content, Events), Clock);
 
         public ReviseExaminationEngagementHandler ReviseHandler() => new(Reader, Executor, Clock);
 

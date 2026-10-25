@@ -90,7 +90,7 @@ public sealed class ProgramStageProjectionTests
             new Dictionary<Uuid, ControlVersionView?>());
         await ReadinessSeed.AdoptAsync(fixture.Repository, fixture.Repository, content, tenantId, programId,
             assessmentId, evaluation, asOf, Runner, DateTimeOffset.UtcNow);
-        return (await new ReadinessReader(fixture.Repository, content).ReadViewAsync(tenantId, programId, assessmentId))!;
+        return (await new ReadinessReader(fixture.Repository, content, fixture.Store).ReadViewAsync(tenantId, programId, assessmentId))!;
     }
 
     static async Task DeferAsync(StoreFixture fixture, IImmutableContentStore content, Uuid tenantId, Uuid programId)

@@ -67,10 +67,11 @@ public sealed class FindingTypeIBaselineSourceContributor(
         {
             var finding = await aggregates.HydrateAsync(new FindingAggregate(engagement.TenantId, engagement.ProgramId,
                 findingId), ct).ConfigureAwait(false);
+            var source = await FindingHistory.ReadAsync(events, finding, ct).ConfigureAwait(false);
             var history = new List<FindingTypeIBaselineSourceEvent>();
             long asOfRevision = 0;
             var complete = true;
-            foreach (var fact in finding.Facts)
+            foreach (var fact in source.Facts)
             {
                 if (!(context.RecordedThrough is null ? InsideCutoff(fact, through) :
                     await context.IncludesAsync(finding.Stream, fact, ct).ConfigureAwait(false)))
@@ -87,7 +88,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
 
             if (asOfRevision == 0)
                 continue;
-            foreach (var admitted in finding.Admitted)
+            foreach (var admitted in source.Admitted)
             {
                 var action = await aggregates.HydrateAsync(new CorrectiveAction(engagement.TenantId,
                     engagement.ProgramId, findingId, admitted.Operation.LogicalId), ct).ConfigureAwait(false);

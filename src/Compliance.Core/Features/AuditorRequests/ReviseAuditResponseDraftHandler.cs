@@ -10,8 +10,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     complete new version is frozen as verified content; there is no lifetime cap on versions, and a delivered version
 ///     is immutable.
 /// </summary>
-sealed class ReviseAuditResponseDraftHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    AuditorResponseEvidence evidence, IImmutableContentStore content, TimeProvider clock)
+sealed class ReviseAuditResponseDraftHandler(NativeOperationExecutor operations, AuditorResponseEvidence evidence, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ReviseAuditResponseDraft>
 {
     const string CommandKind = "ReviseAuditResponseDraft";
@@ -27,38 +26,40 @@ sealed class ReviseAuditResponseDraftHandler(NativeOperationExecutor operations,
             return AuditorCommands.Validation(
                 "A response revision requires a command id, a response and a non-negative expected revision.");
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new AuditorResponse(request.TenantId, request.ProgramId,
-            request.RequestId, request.ResponseId, request.CommandId), ct).ConfigureAwait(false);
+        var snapshot = new AuditorResponse(request.TenantId, request.ProgramId,
+            request.RequestId, request.ResponseId, request.CommandId);
         var provenance = AuditorContent.Provenance(request.CommandId, CommandKind, snapshot.Stream,
             AuditorCommands.Actor(actorMemberId, actorDisplay), (ulong)request.ExpectedRevision,
-            AuditorCommands.Digest(request), now);
+            AuditorCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? version = null;
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(AuditorResponse owner, CancellationToken token)
         {
-            var prepared = snapshot.PrepareRevise(request.ExpectedRevision);
+            var prepared = owner.PrepareRevise(request.ExpectedRevision);
             if (!prepared.IsSuccess)
-                return prepared;
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
             if (AuditorRequestRules.Response(request.Summary, request.EvidenceArtifactIds) is not { } draft)
-                return AuditorCommands.Validation("A response revision needs bounded content and a supported version count.");
-            var available = await evidence.RequireAvailableAsync(context, request.TenantId, draft.EvidenceArtifactIds, ct)
+                return AuditorCommands.Validation<FirstResponseDescriptor>("A response revision needs bounded content and a supported version count.");
+            var available = await evidence.RequireAvailableAsync(context, request.TenantId, draft.EvidenceArtifactIds, token)
                 .ConfigureAwait(false);
             if (!available.IsSuccess)
-                return available;
+                return Result<FirstResponseDescriptor>.Failure(available.Error!);
             version = await AuditorContent.WriteAsync(content, request.TenantId, AuditorContent.VersionSchema,
-                new AuditorResponseVersionView((int)snapshot.BusinessVersion + 1, draft.Summary, draft.EvidenceArtifactIds,
-                    "draft", actorMemberId, actorDisplay, now, null, null, null), ct).ConfigureAwait(false);
-            (response, result) = await AuditorContent.UnitAsync(content, request.TenantId, ct).ConfigureAwait(false);
+                new AuditorResponseVersionView((int)owner.BusinessVersion + 1, draft.Summary, draft.EvidenceArtifactIds,
+                    "draft", actorMemberId, actorDisplay, now, null, null, null), token).ConfigureAwait(false);
+            (response, result) = await AuditorContent.UnitAsync(content, request.TenantId, token).ConfigureAwait(false);
+            return Result<FirstResponseDescriptor>.Success(response!);
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorResponse>(binding,
             () => new AuditorResponse(request.TenantId, request.ProgramId, request.RequestId, request.ResponseId,
                 request.CommandId),
             auditorResponse => auditorResponse.Acceptance,
-            auditorResponse => AuditorContent.Prepared(auditorResponse.PrepareRevise(request.ExpectedRevision), response),
+            PrepareAsync,
             (AuditorResponse auditorResponse, ImmutableContentRef frozen) =>
                 auditorResponse.Revise(provenance, version!, actorMemberId, now, frozen, result!)), context, ct)
             .ConfigureAwait(false);

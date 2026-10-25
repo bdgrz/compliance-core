@@ -38,11 +38,12 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             var artifacts = new LocalArtifactContentStore(new ArtifactContentStoreOptions(directory, new byte[32], ArtifactContentLimits.MaxContentLength), fixture.CloseClock);
             var contributors = TypeIBaselineSourceFamilies.Required.Select(family => new CloseFamily(family, boundaryId)).ToArray();
             var published = new PublishedTypeIBaselinePreviewReader(new TypeIBaselinePreviewReader(contributors), artifacts, fixture.Host.Content);
-            var source = new TypeIIPeriodCloseReconciliation(fixture.Reader, fixture.Host.Content,
+            var source = new TypeIIPeriodCloseReconciliation(fixture.Reader, fixture.Events, fixture.Host.Content,
                 fixture.Host.Services.GetRequiredService<ControlOperationsReader>(), fixture.Host.Services.GetRequiredService<FindingReader>(), published,
                 new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events, new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true)),
                     new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()),
-                new TypeIIPeriodCloseSourcePublication(artifacts, fixture.Host.Content));
+                new TypeIIPeriodCloseSourcePublication(artifacts, fixture.Host.Content),
+                new RecordedSourceReceiptCutFactory(fixture.Events, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()));
             var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
             var request = await CloseRequestAsync(fixture);
             var operation = RootOperation.Provenance(request.CommandId, nameof(RecordTypeIIPeriodCloseValidation), period.Stream,

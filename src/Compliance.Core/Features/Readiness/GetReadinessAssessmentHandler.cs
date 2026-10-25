@@ -26,5 +26,6 @@ public sealed class GetReadinessAssessmentHandler(ReadinessReader readiness)
     }
 
     internal static RequestError Unverified(ImmutableContentIntegrityException exception) => new(
-        RequestErrorKind.Conflict, $"The readiness content cannot be verified yet: {exception.Message}", true);
+        RequestErrorKind.Conflict, $"The readiness content cannot be verified: {exception.Message}",
+        exception is ImmutableContentUnavailableException);
 }

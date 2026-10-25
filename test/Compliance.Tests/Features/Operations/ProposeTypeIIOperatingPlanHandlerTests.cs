@@ -449,6 +449,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
             var services = new ServiceCollection();
             var events = new InMemoryEventStore();
             services.AddSingleton<IEventStore>(events);
+            services.AddSingleton<IDomainEventReader>(events);
             services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
                 new PersistenceKvClient(new InMemoryKvClient())));
             services.AddPortia();

@@ -65,7 +65,8 @@ sealed class CompleteFindingClosureHandler(IAggregateReader reader, IAggregateEx
             }
             catch (ImmutableContentIntegrityException exception)
             {
-                return SourceUseReceiverSupport.Permanent($"The frozen waiver proof cannot be verified: {exception.Message}");
+                return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    $"The frozen waiver proof cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
             }
 
             var verified = await waivers.VerifyAsync(proof, intent.Header.AcceptedAt, ct).ConfigureAwait(false);
@@ -90,7 +91,7 @@ sealed class CompleteFindingClosureHandler(IAggregateReader reader, IAggregateEx
             try
             {
                 var step = await executor.ExecuteAsync(new FindingAggregate(tenant, decision.ProgramId, finding.FindingId,
-                    command.CommandId), fresh =>
+                    command.CommandId, command.OperationId), fresh =>
                     {
                         if (Decide(fresh, binding, command.OperationId) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));

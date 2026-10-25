@@ -21,16 +21,25 @@ sealed partial class ControlOccurrenceFanOutReactor(IProjectionCheckpointStore c
     public async ValueTask HandleAsync(IReactorContext<DueControlOccurrencesGenerated> context, CancellationToken ct)
     {
         var selected = context.Trigger;
+        if (selected.Operation.Owner != context.Source.Stream ||
+            context.Source.Stream.Realm != selected.TenantId.ToString() || context.Source.Stream.Area != TypeIIPeriod.Area ||
+            context.Source.Stream.Resource != selected.SubjectId.ToString() ||
+            selected.Operation.RootOperationId != selected.Operation.LogicalId ||
+            selected.Operation.CommandKind != nameof(GenerateDueControlOccurrences))
+            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
+                "The occurrence selection belongs to another exact source owner or root operation.", false));
         ControlOccurrenceSelectionManifest manifest;
         try
         {
             manifest = await content.ReadJsonAsync<ControlOccurrenceSelectionManifest>(
                 context.Source.Stream.Realm, selected.CreationIntentManifest, ct).ConfigureAwait(false);
+            if (manifest.Selections is null)
+                throw new ImmutableContentIntegrityException("The occurrence selection manifest is incomplete.");
         }
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The selection manifest cannot be verified yet: {exception.Message}", true));
+                $"The selection manifest cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         _ = await process.StartAsync(ControlOccurrenceFanOut.ProcessName, context, selected.CreationIntentManifest,

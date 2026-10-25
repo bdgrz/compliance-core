@@ -57,7 +57,7 @@ public sealed class AuditorRequestTests
         Assert.True(delivered.IsSuccess, delivered.Error?.Message);
         Assert.Equal("delivered", response.Status);
         Assert.Equal(1, response.Delivery!.Version);
-        Assert.Contains(response.Facts, static fact => fact is AuditorResponseDelivered);
+        Assert.Contains(await fixture.ResponseHistoryAsync(requestId, responseId), static fact => fact is AuditorResponseDelivered);
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public sealed class AuditorRequestTests
         Assert.True(delivered.IsSuccess, delivered.Error?.Message);
         Assert.Equal(2, response.BusinessVersion);
         Assert.Equal(2, response.Delivery!.Version);
-        var reviews = response.Facts.OfType<AuditorResponseDisclosureReviewed>().ToArray();
+        var reviews = (await fixture.ResponseHistoryAsync(requestId, responseId)).OfType<AuditorResponseDisclosureReviewed>().ToArray();
         Assert.Equal("rejected", reviews[0].Outcome);
         Assert.Equal(1, reviews[0].Version);
         Assert.Equal("approved", reviews[1].Outcome);

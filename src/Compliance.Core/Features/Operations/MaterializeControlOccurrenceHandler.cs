@@ -15,7 +15,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     the same occurrence; different terms for one window are a permanent conflict. A fact that is not visible yet is
 ///     transient.
 /// </summary>
-sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IAggregateExecutor executor,
+sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IDomainEventReader events, IAggregateExecutor executor,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<MaterializeControlOccurrence, ReceiverOutcome>
 {
@@ -40,7 +40,7 @@ sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IAggre
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Permanent($"The frozen creation intent cannot be verified: {exception.Message}");
+            return ContentFailure("The frozen creation intent cannot be verified.", exception);
         }
 
         var canonical = ControlOccurrenceIdentity.Of(tenant, command.ProgramId, command.ControlId, command.BusinessWindow);
@@ -56,10 +56,26 @@ sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IAggre
         var source = await VerifySourceAsync(tenant, command, ct).ConfigureAwait(false);
         if (source is { } rejected)
             return rejected;
+        var now = clock.GetUtcNow();
+        var provenance = SourceUseReceiverSupport.Child(command.CommandId, nameof(MaterializeControlOccurrence),
+            command.Source.EventId, intent.Header, target, now);
+        var binding = AcceptedOperationBinding.Of(provenance);
+        var acceptedOwner = await reader.HydrateAsync(new ControlOccurrence(tenant, command.ProgramId,
+            command.ControlId, canonical, command.CommandId), ct).ConfigureAwait(false);
+        if (Decide(acceptedOwner, binding, provenance) is { } accepted)
+            return accepted;
         var planStream = new ControlOperatingPlan(tenant, command.ProgramId, command.ControlId).Stream;
         var plan = await reader.HydrateAsync(new ControlOperatingPlan(tenant, command.ProgramId, command.ControlId), ct)
             .ConfigureAwait(false);
-        var line = await ControlOperatingPlanLine.ReadAsync(plan, content, tenant, ct).ConfigureAwait(false);
+        ControlOperatingPlanLine line;
+        try
+        {
+            line = await ControlOperatingPlanLine.ReadAsync(plan, events, content, tenant, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return ContentFailure("The exact frozen plan history cannot be verified.", failure);
+        }
         if (line.Find(intent.PlanVersionId) is not { } version ||
             !line.Approvals.TryGetValue(intent.PlanVersionId, out var approval))
             return SourceUseReceiverSupport.Transient("The approved plan version is not visible yet.");
@@ -71,21 +87,17 @@ sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IAggre
             version.Cadence.Kind != ControlCadenceSchedule.Recurring || window.From < version.EffectiveFrom)
             return SourceUseReceiverSupport.Permanent("The creation intent differs from its approved plan version.");
 
-        var now = clock.GetUtcNow();
         var periodEnd = window.UntilExclusive.AddDays(-1);
         var terms = new ControlOccurrenceTerms(ControlOperationStates.Expected, version.ControlVersionId,
             version.PlanVersionId, window.From, periodEnd, periodEnd.AddDays(version.Cadence.DueWithinDays ?? 0), null,
             (line.Current ?? version).Owner, intent.Header.OriginalActor, now, window);
-        var provenance = SourceUseReceiverSupport.Child(command.CommandId, nameof(MaterializeControlOccurrence),
-            command.Source.EventId, intent.Header, target, now);
-        var binding = AcceptedOperationBinding.Of(provenance);
         for (var attempt = 1; ; attempt++)
         {
             try
             {
                 var current = await reader.HydrateAsync(new ControlOccurrence(tenant, command.ProgramId,
                     command.ControlId, canonical, command.CommandId), ct).ConfigureAwait(false);
-                if (Decide(current, binding) is { } early)
+                if (Decide(current, binding, provenance) is { } early)
                     return early;
                 if (current.Opened is { } existing)
                     return await SameTermsAsync(existing, intent, current.Stream, ct).ConfigureAwait(false);
@@ -93,7 +105,7 @@ sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IAggre
                 var step = await executor.ExecuteAsync(new ControlOccurrence(tenant, command.ProgramId,
                     command.ControlId, canonical, command.CommandId), occurrence =>
                     {
-                        if (Decide(occurrence, binding) is { } decided)
+                        if (Decide(occurrence, binding, provenance) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
                         if (occurrence.Opened is not null)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(
@@ -115,14 +127,24 @@ sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IAggre
     }
 
     /// <summary>An exact replay of this receiver command, or its conflict with different accepted intent.</summary>
-    static Result<ReceiverOutcome>? Decide(ControlOccurrence occurrence, AcceptedOperationBinding binding) =>
-        occurrence.Acceptance.Decide(binding) switch
+    static Result<ReceiverOutcome>? Decide(ControlOccurrence occurrence, AcceptedOperationBinding binding,
+        OperationProvenance candidate)
+    {
+        switch (occurrence.Acceptance.Decide(binding))
         {
-            NativeAcceptanceDecision.Replayed => SourceUseReceiverSupport.Replayed(Fact(occurrence.Stream,
-                occurrence.Acceptance.SelectedFact!)),
-            NativeAcceptanceDecision.Conflict => Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError),
-            _ => null,
-        };
+            case NativeAcceptanceDecision.Conflict:
+                return Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
+            case NativeAcceptanceDecision.Replayed:
+                var selected = occurrence.Acceptance.SelectedProvenance!;
+                if (selected.RootOperationId != candidate.RootOperationId ||
+                    selected.CausationEventId != candidate.CausationEventId ||
+                    (selected.FirstOwner ?? selected.Owner) != (candidate.FirstOwner ?? candidate.Owner))
+                    return Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
+                return SourceUseReceiverSupport.Replayed(Fact(occurrence.Stream, occurrence.Acceptance.SelectedFact!));
+            default:
+                return null;
+        }
+    }
 
     /// <summary>The selection that carries exactly this intent must be found on the authoritative period.</summary>
     async ValueTask<Result<ReceiverOutcome>?> VerifySourceAsync(Uuid tenant, MaterializeControlOccurrence command,
@@ -150,7 +172,7 @@ sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IAggre
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Transient($"The selection manifest cannot be verified yet: {exception.Message}");
+            return ContentFailure("The exact selection manifest cannot be verified.", exception);
         }
     }
 
@@ -168,10 +190,13 @@ sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IAggre
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Permanent(
-                $"The materialized creation intent cannot be verified: {exception.Message}");
+            return ContentFailure("The materialized creation intent cannot be verified.", exception);
         }
     }
+
+    static Result<ReceiverOutcome> ContentFailure(string message, ImmutableContentIntegrityException failure) =>
+        Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict, message,
+            failure is ImmutableContentUnavailableException));
 
     static NativeFactReference Fact(EventStreamAddress stream, DomainEvent fact) => NativeFactReference.Of(stream, fact);
 

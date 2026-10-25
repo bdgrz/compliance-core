@@ -30,7 +30,8 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
         var history = new List<(FindingHistoryEntryView Entry, int Order)>();
         FindingClosureView? closure = null;
         var order = 0;
-        foreach (var fact in finding.Facts)
+        var source = await FindingHistory.ReadAsync(events, finding, ct).ConfigureAwait(false);
+        foreach (var fact in source.Facts)
         {
             switch (fact)
             {
@@ -113,7 +114,7 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
         catch (ImmutableContentIntegrityException exception)
         {
             return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The finding content cannot be verified yet: {exception.Message}", true));
+                $"The finding content cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
     }
 
@@ -141,7 +142,8 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
                     continue;
                 views.Add(view);
                 var history = new List<FindingClosureView>();
-                foreach (var closed in finding.ClosureHistory)
+                var source = await FindingHistory.ReadAsync(events, finding, ct).ConfigureAwait(false);
+                foreach (var closed in source.ClosureHistory)
                     history.Add(await FindingContent.ReadAsync<FindingClosureView>(content, tenantId,
                         closed.ClosureContent, ct).ConfigureAwait(false));
                 closures.Add(id, history);
@@ -150,7 +152,7 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
         catch (ImmutableContentIntegrityException exception)
         {
             return Result<FindingReadSnapshot>.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The finding content cannot be verified yet: {exception.Message}", true));
+                $"The finding content cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         return Result<FindingReadSnapshot>.Success(new FindingReadSnapshot(Array.AsReadOnly(views

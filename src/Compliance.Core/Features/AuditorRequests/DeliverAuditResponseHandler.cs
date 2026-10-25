@@ -9,8 +9,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     Records the intentional delivery of the exact response version. When the request required an independent review
 ///     (frozen in the admitted draft), the version must be approved; a delivery receipt is immutable.
 /// </summary>
-sealed class DeliverAuditResponseHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content, TimeProvider clock) : IRequestHandler<DeliverAuditResponse>
+sealed class DeliverAuditResponseHandler(NativeOperationExecutor operations, IImmutableContentStore content, TimeProvider clock) : IRequestHandler<DeliverAuditResponse>
 {
     const string CommandKind = "DeliverAuditResponse";
 
@@ -27,41 +26,42 @@ sealed class DeliverAuditResponseHandler(NativeOperationExecutor operations, IAg
             return AuditorCommands.Validation(
                 "A delivery requires a command id, a response and a non-negative expected revision.");
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new AuditorResponse(request.TenantId, request.ProgramId,
-            request.RequestId, request.ResponseId, request.CommandId), ct).ConfigureAwait(false);
+        var snapshot = new AuditorResponse(request.TenantId, request.ProgramId,
+            request.RequestId, request.ResponseId, request.CommandId);
         var provenance = AuditorContent.Provenance(request.CommandId, CommandKind, snapshot.Stream,
             AuditorCommands.Actor(actorMemberId, actorDisplay), (ulong)request.ExpectedRevision,
-            AuditorCommands.Digest(request), now);
+            AuditorCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? delivery = null;
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
         var requiresReview = true;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(AuditorResponse owner, CancellationToken token)
         {
-            var policy = await AuditorCommands.RequiresReviewAsync(content, request.TenantId, snapshot, ct)
+            var policy = await AuditorCommands.RequiresReviewAsync(content, request.TenantId, owner, token)
                 .ConfigureAwait(false);
             if (!policy.IsSuccess)
-                return Result.Failure(policy.Error!);
+                return Result<FirstResponseDescriptor>.Failure(policy.Error!);
             requiresReview = policy.Value;
-            var prepared = snapshot.PrepareDeliver(request.ExpectedRevision, request.Version, requiresReview);
+            var prepared = owner.PrepareDeliver(request.ExpectedRevision, request.Version, requiresReview);
             if (!prepared.IsSuccess)
-                return prepared;
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
             if (AuditorRequestRules.Delivery(request.Recipient, request.DeliveryReference) is not { } receipt)
-                return AuditorCommands.Validation("Intentional response delivery requires a recipient and delivery reference.");
+                return AuditorCommands.Validation<FirstResponseDescriptor>("Intentional response delivery requires a recipient and delivery reference.");
             delivery = await AuditorContent.WriteAsync(content, request.TenantId, AuditorContent.DeliverySchema,
                 new AuditorResponseDeliveryView(versionNumber, receipt.Recipient, receipt.Reference, actorMemberId,
-                    actorDisplay, now), ct).ConfigureAwait(false);
-            (response, result) = await AuditorContent.UnitAsync(content, request.TenantId, ct).ConfigureAwait(false);
+                    actorDisplay, now), token).ConfigureAwait(false);
+            (response, result) = await AuditorContent.UnitAsync(content, request.TenantId, token).ConfigureAwait(false);
+            return Result<FirstResponseDescriptor>.Success(response!);
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorResponse>(binding,
             () => new AuditorResponse(request.TenantId, request.ProgramId, request.RequestId, request.ResponseId,
                 request.CommandId),
             auditorResponse => auditorResponse.Acceptance,
-            auditorResponse => AuditorContent.Prepared(
-                auditorResponse.PrepareDeliver(request.ExpectedRevision, request.Version, requiresReview), response),
+            PrepareAsync,
             (AuditorResponse auditorResponse, ImmutableContentRef frozen) => auditorResponse.Deliver(provenance,
                 request.Version, requiresReview, delivery!, actorMemberId, now, frozen, result!)), context, ct)
             .ConfigureAwait(false);

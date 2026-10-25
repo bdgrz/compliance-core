@@ -39,9 +39,13 @@ sealed class IndependentChildMaterialization : IChildMaterializationReceiver
             authored = await FindingContent.ReadAsync<AddCorrectiveAction>(content, tenant,
                 intent.CanonicalAuthoredContent, ct).ConfigureAwait(false);
         }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            throw new SourceFactUnavailableException($"The frozen admission is not available yet: {exception.Message}");
+        }
         catch (ImmutableContentIntegrityException exception)
         {
-            throw new SourceFactVerificationException($"The frozen admission cannot be verified yet: {exception.Message}");
+            throw new SourceFactVerificationException($"The frozen admission cannot be verified: {exception.Message}");
         }
 
         var target = new CorrectiveAction(tenant, authored.ProgramId, intent.ParentId, intent.ChildId).Stream;

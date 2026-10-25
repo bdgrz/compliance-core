@@ -146,7 +146,8 @@ public sealed class SourceUseCancellationRecoveryTests
         var program = await reader.HydrateAsync(new ProgramReadiness(tenant, programId));
         var generation = ProgramReadiness.DecisionTerms(program.AcceptedDecision(request.CommandId))!.Value.Generation;
         var proof = await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(), ReadinessContent.FailureSchema,
-            new ReadinessDecisionFailureProof(programId, assessmentId, "The decision can no longer proceed.", null));
+            new ReadinessDecisionFailureProof(programId, assessmentId, "The decision can no longer proceed.", null,
+                record.Source, request.CommandId, generation, record.Intent));
         var aborted = Assert.IsType<ReceiverOutcome.Applied>((await SendAsync(provider, new AbortReadinessDecision(
             CommandId(record, nameof(AbortReadinessDecision), null), request.CommandId, program.Stream, generation, 0,
             proof))).Value);

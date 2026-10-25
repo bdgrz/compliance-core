@@ -5,6 +5,8 @@ using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Tests.Features.Operations;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -17,7 +19,9 @@ public sealed class OccurrenceFindingTests
     static readonly Uuid TenantId = Uuid.CreateVersion4();
     static readonly Uuid ProgramId = Uuid.CreateVersion4();
     static readonly Uuid ControlId = Uuid.CreateVersion4();
-    static readonly Uuid OccurrenceId = Uuid.CreateVersion4();
+    static readonly ControlBusinessWindow Window = new ControlCalendarWindow(new DateOnly(2026, 10, 1),
+        new DateOnly(2026, 11, 1));
+    static readonly Uuid OccurrenceId = ControlOccurrenceIdentity.Of(TenantId, ProgramId, ControlId, Window);
     static readonly IImmutableContentStore Content = new FitzKvImmutableContentStore(
         new PersistenceKvClient(new InMemoryKvClient()));
 
@@ -26,12 +30,12 @@ public sealed class OccurrenceFindingTests
     {
         // Arrange
         var attestation = Attestation("failed", "Export tool was down.");
-        var scenario = new ReactorScenario(new TenantId(TenantId.ToString()))
-            .Given(await AttestedAsync(attestation, 2));
+        var attested = await AttestedAsync(attestation, 2);
+        var scenario = new ReactorScenario(new TenantId(TenantId.ToString()));
 
         // Act
         await scenario.RunAsync(new ControlOccurrenceFindingReactor(
-            new InMemoryProjectionCheckpointStore(), scenario.Requests, Content));
+            new InMemoryProjectionCheckpointStore(), scenario.Requests, Content, await SourcesAsync(scenario, attested)));
 
         // Assert
         var request = Assert.IsType<RaiseOccurrenceFinding>(Assert.Single(scenario.SentRequests));
@@ -47,14 +51,14 @@ public sealed class OccurrenceFindingTests
         // Arrange
         var attestation = Attestation("skipped", "Not performed this month.");
         var attested = await AttestedAsync(attestation, 2);
-        var first = new ReactorScenario(new TenantId(TenantId.ToString())).Given(attested);
-        var replay = new ReactorScenario(new TenantId(TenantId.ToString())).Given(attested);
+        var first = new ReactorScenario(new TenantId(TenantId.ToString()));
+        var replay = new ReactorScenario(new TenantId(TenantId.ToString()));
 
         // Act
         await first.RunAsync(new ControlOccurrenceFindingReactor(new InMemoryProjectionCheckpointStore(),
-            first.Requests, Content));
+            first.Requests, Content, await SourcesAsync(first, attested)));
         await replay.RunAsync(new ControlOccurrenceFindingReactor(new InMemoryProjectionCheckpointStore(),
-            replay.Requests, Content));
+            replay.Requests, Content, await SourcesAsync(replay, attested)));
 
         // Assert
         var original = Assert.IsType<RaiseOccurrenceFinding>(Assert.Single(first.SentRequests));
@@ -68,13 +72,13 @@ public sealed class OccurrenceFindingTests
     public async Task ShouldIgnoreCompleteAndNotApplicableResultsGivenAttestation()
     {
         // Arrange
-        var scenario = new ReactorScenario(new TenantId(TenantId.ToString()))
-            .Given(await AttestedAsync(Attestation("complete", null), 2))
-            .Given(await AttestedAsync(Attestation("not_applicable", "No changes shipped."), 3));
+        var complete = await AttestedAsync(Attestation("complete", null), 2);
+        var notApplicable = await AttestedAsync(Attestation("not_applicable", "No changes shipped."), 3);
+        var scenario = new ReactorScenario(new TenantId(TenantId.ToString()));
 
         // Act
         await scenario.RunAsync(new ControlOccurrenceFindingReactor(
-            new InMemoryProjectionCheckpointStore(), scenario.Requests, Content));
+            new InMemoryProjectionCheckpointStore(), scenario.Requests, Content, await SourcesAsync(scenario, complete, notApplicable)));
 
         // Assert
         Assert.Empty(scenario.SentRequests);
@@ -91,13 +95,13 @@ public sealed class OccurrenceFindingTests
                 ["Automate removal.", "Train managers."], Uuid.CreateVersion4(),
                 ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer"), DateTimeOffset.UtcNow),
             CancellationToken.None);
-        var scenario = new ReactorScenario(new TenantId(TenantId.ToString())).Given(
-            new ControlOccurrenceReviewed(TenantId, ProgramId, ControlId, OccurrenceId, 3, review, Provenance(),
-                review, null));
+        var reviewed = DomainEventSeed.Attach(new ControlOccurrenceReviewed(TenantId, ProgramId, ControlId,
+            OccurrenceId, 3, review, Provenance(), review, null), OccurrenceId, 3);
+        var scenario = new ReactorScenario(new TenantId(TenantId.ToString()));
 
         // Act
         await scenario.RunAsync(new ControlOccurrenceFindingReactor(
-            new InMemoryProjectionCheckpointStore(), scenario.Requests, Content));
+            new InMemoryProjectionCheckpointStore(), scenario.Requests, Content, await SourcesAsync(scenario, reviewed)));
 
         // Assert
         var requests = scenario.SentRequests.Cast<RaiseOccurrenceFinding>().ToArray();
@@ -192,14 +196,15 @@ public sealed class OccurrenceFindingTests
 
         // Act
         var stream = await fixture.FindingStreamAsync(findingId);
+        var source = await fixture.FindingHistoryAsync(findingId);
         var before = await fixture.GetFindingAsync(findingId);
         await fixture.MaterializeAsync(findingId);
         var after = await fixture.GetFindingAsync(findingId);
 
         // Assert
         Assert.Equal(2, stream.Revision);
-        Assert.Equal(["FindingRaisedV2", "CorrectiveActionAdmitted"], stream.Facts.Select(fact => fact.GetType().Name));
-        Assert.Equal(FindingRules.RoutedActionId(findingId), Assert.Single(stream.Admitted).Operation.LogicalId);
+        Assert.Equal(["FindingRaisedV2", "CorrectiveActionAdmitted"], source.Facts.Select(fact => fact.GetType().Name));
+        Assert.Equal(FindingRules.RoutedActionId(findingId), Assert.Single(source.Admitted).Operation.LogicalId);
         Assert.Equal(0, Assert.Single(before.CorrectiveActions).Revision);
         Assert.Equal(1, Assert.Single(after.CorrectiveActions).Revision);
         Assert.Equal("system_process", Assert.Single(after.CorrectiveActions).AddedBy.Kind);
@@ -209,8 +214,28 @@ public sealed class OccurrenceFindingTests
     {
         var content = await ControlOperatingContent.WriteAsync(Content, TenantId,
             ControlOperatingContent.AttestationSchema, attestation, CancellationToken.None);
-        return new ControlOccurrenceAttested(TenantId, ProgramId, ControlId, OccurrenceId, revision, content,
-            Provenance(), content, null);
+        return DomainEventSeed.Attach(new ControlOccurrenceAttested(TenantId, ProgramId, ControlId, OccurrenceId,
+            revision, content, Provenance(), content, null), OccurrenceId, (ulong)revision);
+    }
+
+    static async Task<ISourceFactResolver> SourcesAsync(ReactorScenario scenario, params DomainEvent[] triggers)
+    {
+        var owner = new ControlOccurrence(TenantId, ProgramId, ControlId, OccurrenceId);
+        var now = DateTimeOffset.UtcNow;
+        var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Owner");
+        var terms = new ControlOccurrenceTerms("recurring", Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31), new DateOnly(2026, 11, 5), null,
+            new OperatingHolder("member", Uuid.CreateVersion4()), actor, now, Window);
+        Assert.True(owner.Materialize(NativeFacts.Root(owner, Uuid.CreateVersion4(),
+            nameof(MaterializeControlOccurrence), null), terms, NativeFacts.Ref()).IsSuccess);
+        var prefix = new List<DomainEvent>(new AggregateScenario<ControlOccurrence>(owner).PendingEvents);
+        if (triggers[0] is ControlOccurrenceReviewed)
+            prefix.Add(await AttestedAsync(Attestation("complete", null), 2));
+        prefix.AddRange(triggers);
+        var store = new InMemoryEventStore();
+        await store.AppendAsync(owner.Stream, 0, prefix.ToArray(), CancellationToken.None);
+        scenario.Given(prefix.ToArray());
+        return new EventStoreSourceFactResolver(store);
     }
 
     static OperationProvenance Provenance()

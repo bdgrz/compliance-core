@@ -53,8 +53,9 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
                 new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content,
                     fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content,
                 fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>());
-            var reconciliation = new TypeIIPeriodCloseReconciliation(fixture.Reader, fixture.Host.Content, operating,
-                fixture.Host.Services.GetRequiredService<FindingReader>(), families, history, publisher);
+            var reconciliation = new TypeIIPeriodCloseReconciliation(fixture.Reader, fixture.Events, fixture.Host.Content, operating,
+                fixture.Host.Services.GetRequiredService<FindingReader>(), families, history, publisher,
+                new RecordedSourceReceiptCutFactory(fixture.Events, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()));
             var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
             var request = await CloseRequestAsync(fixture);
             var operation = RootOperation.Provenance(request.CommandId, nameof(RecordTypeIIPeriodCloseValidation),

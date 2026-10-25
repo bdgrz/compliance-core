@@ -31,28 +31,31 @@ public sealed class ReviewControlOccurrenceHandler(NativeOperationExecutor opera
             return Result<ControlOccurrenceView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A review requires a command id and a non-negative expected revision."));
         var now = clock.GetUtcNow();
-        var today = DateOnly.FromDateTime(now.UtcDateTime);
-        var control = await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId, request.ProgramId,
-            request.ControlId, ct).ConfigureAwait(false);
-        if (control is null)
-            return Result<ControlOccurrenceView>.Failure(ControlOperationsSource.ControlNotFound());
-        var windows = OperatingAuthority.VersionWindows(control);
-        var snapshot = await operatingReader.ReadOccurrenceAsync(request.TenantId, request.ProgramId,
-            request.ControlId, request.OccurrenceId, ct).ConfigureAwait(false);
-        if (snapshot.ReadOccurrence(request.ControlId, request.OccurrenceId, windows, today) is not { } occurrence ||
-            snapshot.FindPlan(request.ControlId, occurrence.PlanVersionId) is not { } plan)
-            return Result<ControlOccurrenceView>.Failure(ControlOperationsSource.OccurrenceNotFound());
         var actor = OperationsActor.From(context.Actor, request.TenantId);
-        var reviewer = (snapshot.CurrentPlan(request.ControlId) ?? plan).ReviewerMemberId;
-        if (actor.MemberId != reviewer && !await authority.ManagesProgramAsync(request.TenantId, actor,
-                request.ProgramId, ct).ConfigureAwait(false))
-            return Result<ControlOccurrenceView>.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Only the assigned reviewer or a program manager may review this occurrence."));
-        SeparationOfDutiesWaiver? waiver = null;
-        if (request.SeparationOfDutiesWaiverId is { } waiverId)
-            waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, waiverId), ct)
-                .ConfigureAwait(false);
-        return await OccurrenceProofs.ReviewAsync(operations, reader, content, context, request,
-            AuthoredIntentDigest.Compute(request), occurrence, actor, waiver, now, ct).ConfigureAwait(false);
+        return await OccurrenceProofs.ReviewAsync(operations, content, context, request,
+            AuthoredIntentDigest.Compute(request), actor, async token =>
+            {
+                var today = DateOnly.FromDateTime(now.UtcDateTime);
+                var control = await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId, request.ProgramId,
+                    request.ControlId, token).ConfigureAwait(false);
+                if (control is null)
+                    return Result<PreparedOccurrenceReview>.Failure(ControlOperationsSource.ControlNotFound());
+                var windows = OperatingAuthority.VersionWindows(control);
+                var snapshot = await operatingReader.ReadOccurrenceAsync(request.TenantId, request.ProgramId,
+                    request.ControlId, request.OccurrenceId, token).ConfigureAwait(false);
+                if (snapshot.ReadOccurrence(request.ControlId, request.OccurrenceId, windows, today) is not { } occurrence ||
+                    snapshot.FindPlan(request.ControlId, occurrence.PlanVersionId) is not { } plan)
+                    return Result<PreparedOccurrenceReview>.Failure(ControlOperationsSource.OccurrenceNotFound());
+                var reviewer = (snapshot.CurrentPlan(request.ControlId) ?? plan).ReviewerMemberId;
+                if (actor.MemberId != reviewer && !await authority.ManagesProgramAsync(request.TenantId, actor,
+                        request.ProgramId, token).ConfigureAwait(false))
+                    return Result<PreparedOccurrenceReview>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                        "Only the assigned reviewer or a program manager may review this occurrence."));
+                SeparationOfDutiesWaiver? waiver = null;
+                if (request.SeparationOfDutiesWaiverId is { } waiverId)
+                    waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, waiverId), token)
+                        .ConfigureAwait(false);
+                return Result<PreparedOccurrenceReview>.Success(new PreparedOccurrenceReview(occurrence, waiver));
+            }, now, ct).ConfigureAwait(false);
     }
 }

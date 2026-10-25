@@ -56,7 +56,7 @@ sealed class AdoptReadinessAssessmentHandler(IAggregateReader reader, IAggregate
         {
             try
             {
-                var program = await reader.HydrateAsync(new ProgramReadiness(tenant, intent.ProgramId, command.CommandId),
+                var program = await reader.HydrateAsync(new ProgramReadiness(tenant, intent.ProgramId, command.CommandId, command.OperationId),
                     ct).ConfigureAwait(false);
                 if (Decide(program, binding, command) is { } early)
                     return early;
@@ -67,7 +67,7 @@ sealed class AdoptReadinessAssessmentHandler(IAggregateReader reader, IAggregate
                     .ConfigureAwait(false);
                 var result = await ReadinessContent.WriteResultAsync(content, tenant, ReadinessContent.RegistrationSchema,
                     registration, ct).ConfigureAwait(false);
-                var step = await executor.ExecuteAsync(new ProgramReadiness(tenant, intent.ProgramId, command.CommandId),
+                var step = await executor.ExecuteAsync(new ProgramReadiness(tenant, intent.ProgramId, command.CommandId, command.OperationId),
                     fresh =>
                     {
                         if (Decide(fresh, binding, command) is { } decided)

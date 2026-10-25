@@ -22,7 +22,7 @@ static class FindingContent
     public const string RegistrationSchema = "Finding.FindingRegistration.v1";
     public const string ActionFactsSchema = "CorrectiveAction.ClosureFacts.v1";
     public const string ProofsSchema = "FindingClosedV2.ActionCompletionProofs.v1";
-    public const string FailureSchema = "FindingClosureCanceled.FailureProof.v1";
+    public const string FailureSchema = "FindingClosureCanceled.FailureProof.v2";
     public const string AdmittedChildSchema = "admitted-child.v1";
     public const string AcknowledgmentSchema = "operation-accepted-response.v1";
 

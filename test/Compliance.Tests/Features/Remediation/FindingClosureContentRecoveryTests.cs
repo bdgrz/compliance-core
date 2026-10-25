@@ -37,14 +37,14 @@ public sealed class FindingClosureContentRecoveryTests
         var content = new WithheldContent(fixture.Content, schema);
         var handler = new AuthorizeCorrectiveActionFindingClosureUseHandler(reader,
             services.GetRequiredService<IAggregateExecutor>(), content, TimeProvider.System,
-            new FindingClosureVerifier(reader, content), services.GetRequiredService<FindingClosureFences>());
+            new FindingClosureVerifier(reader, content, services.GetRequiredService<IDomainEventReader>()), services.GetRequiredService<FindingClosureFences>());
         var before = await fixture.ActionAsync(finding.FindingId, request.SourceOwnerId);
         var context = new Cntryl.Portia.RequestContext<AuthorizeCorrectiveActionFindingClosureUse>(request,
             new RequestDispatchContext(RequestActor.System));
 
         // Act
         var waiting = await handler.HandleAsync(context, CancellationToken.None);
-        var pending = await fixture.FindingStreamAsync(finding.FindingId);
+        var pending = await fixture.FindingStreamAsync(finding.FindingId, close.CommandId);
         var heldWhileUnavailable = await fixture.ActionAsync(finding.FindingId, request.SourceOwnerId);
         content.Withhold = false;
         var resumed = await handler.HandleAsync(context, CancellationToken.None);

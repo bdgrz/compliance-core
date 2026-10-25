@@ -19,7 +19,7 @@ public sealed class ControlOperatingPlan : Aggregate
     readonly Uuid _tenantId;
     readonly Uuid _programId;
     readonly Uuid _controlId;
-    readonly List<DomainEvent> _facts = [];
+    DomainEvent? _latest;
     long _revision;
     Uuid? _pending;
 
@@ -38,6 +38,9 @@ public sealed class ControlOperatingPlan : Aggregate
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
 
+    /// <summary>The tenant of this exact owner.</summary>
+    public Uuid TenantId => _tenantId;
+
     /// <summary>The program this line belongs to.</summary>
     public Uuid ProgramId => _programId;
 
@@ -50,8 +53,8 @@ public sealed class ControlOperatingPlan : Aggregate
     /// <summary>The plan version waiting for approval, once proposed.</summary>
     public Uuid? PendingPlanVersionId => _pending;
 
-    /// <summary>Every fact of the line in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
+    /// <summary>The latest exact native fact at this command cut.</summary>
+    public DomainEvent? Latest => _latest;
 
     /// <summary>Checks the proposal guards without raising anything.</summary>
     public Result PrepareProposal(long expectedRevision)
@@ -120,7 +123,7 @@ public sealed class ControlOperatingPlan : Aggregate
                 "A plan proposal follows the previous revision of its own line while no plan is pending.");
         _revision = ev.Revision;
         _pending = ev.Operation.LogicalId;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
     void Apply(ControlOperatingPlanApproved ev)
@@ -133,7 +136,7 @@ public sealed class ControlOperatingPlan : Aggregate
                 "A plan approval follows the previous revision of its own line and names the pending plan version.");
         _revision = ev.Revision;
         _pending = null;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
     Result Stale() => Result.Failure(VersionedRecordRules.StaleRevision("control operating plan", _revision)

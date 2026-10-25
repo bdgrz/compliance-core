@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Tests.Features.Readiness;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Remediation;
@@ -25,7 +26,10 @@ public sealed class FindingProcessReactorTests
         var record = await AdmissionRecordAsync(fixture, stream);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reactor = new CorrectiveActionMaterializationReactor(new InMemoryProjectionCheckpointStore(),
-            scope.ServiceProvider.GetRequiredService<ProcessRootReaction>());
+            scope.ServiceProvider.GetRequiredService<ProcessRootReaction>(),
+            scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Content.IImmutableContentStore>(),
+            scope.ServiceProvider.GetRequiredService<ISourceFactResolver>());
+        await new ReactorScenario(new TenantId(fixture.TenantId.ToString())).RunAsync(reactor);
 
         // Act
         await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<CorrectiveActionAdmitted>(record),
@@ -61,7 +65,9 @@ public sealed class FindingProcessReactorTests
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reactor = new FindingClosureReactor(new InMemoryProjectionCheckpointStore(),
             scope.ServiceProvider.GetRequiredService<ProcessRootReaction>(),
-            scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Content.IImmutableContentStore>());
+            scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Content.IImmutableContentStore>(),
+            scope.ServiceProvider.GetRequiredService<ISourceFactResolver>());
+        await new ReactorScenario(new TenantId(fixture.TenantId.ToString())).RunAsync(reactor);
 
         // Act
         await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<FindingClosureAccepted>(record!),
@@ -76,7 +82,7 @@ public sealed class FindingProcessReactorTests
         // Assert
         Assert.NotNull(closedOnce.Closed);
         Assert.Equal(closedOnce.Version, closedTwice.Version);
-        Assert.Single(closedTwice.ClosureHistory);
+        Assert.Single((await fixture.FindingHistoryAsync(finding.FindingId)).ClosureHistory);
         Assert.Equal(ProcessState.Completed, process!.State);
         Assert.Single(process.Targets);
     }

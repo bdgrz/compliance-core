@@ -31,11 +31,19 @@ sealed class AbortFindingClosureHandler(IAggregateReader reader, IAggregateExecu
             proof = await FindingContent.ReadAsync<FindingClosureFailureProof>(content, tenant, command.FailureProof, ct)
                 .ConfigureAwait(false);
         }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            return SourceUseReceiverSupport.Transient($"The failure proof is not available yet: {exception.Message}");
+        }
         catch (ImmutableContentIntegrityException exception)
         {
             return SourceUseReceiverSupport.Permanent($"The failure proof cannot be verified: {exception.Message}");
         }
 
+        if (command.FailureProof.Schema != FindingContent.FailureSchema || proof.ProgramId == Uuid.Empty ||
+            proof.FindingId == Uuid.Empty || proof.RootOperationId != command.OperationId ||
+            proof.Generation != command.Generation || string.IsNullOrWhiteSpace(proof.Reason))
+            return SourceUseReceiverSupport.Permanent("The failure proof is not bound to this exact closure operation.");
         var stream = new FindingAggregate(tenant, proof.ProgramId, proof.FindingId).Stream;
         if (stream != command.Target)
             return SourceUseReceiverSupport.Permanent("The failure proof names another finding.");
@@ -44,7 +52,7 @@ sealed class AbortFindingClosureHandler(IAggregateReader reader, IAggregateExecu
             try
             {
                 var finding = await reader.HydrateAsync(new FindingAggregate(tenant, proof.ProgramId, proof.FindingId,
-                    command.CommandId), ct).ConfigureAwait(false);
+                    command.CommandId, command.OperationId), ct).ConfigureAwait(false);
                 if (finding.AcceptedClosure(command.OperationId) is not { } accepted)
                     return SourceUseReceiverSupport.Transient("The accepted closure is not visible yet.");
                 ClosureIntent intent;
@@ -55,19 +63,39 @@ sealed class AbortFindingClosureHandler(IAggregateReader reader, IAggregateExecu
                 }
                 catch (ImmutableContentIntegrityException exception)
                 {
-                    return SourceUseReceiverSupport.Permanent($"The frozen closure cannot be verified: {exception.Message}");
+                    return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        $"The frozen closure cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
                 }
 
-                if (accepted.Generation != command.Generation ||
-                    intent.Header.RootOperationId != command.OperationId)
-                    return SourceUseReceiverSupport.Permanent("The abort differs from the accepted closure.");
+                if (accepted.Generation != command.Generation || intent.Header.RootOperationId != command.OperationId ||
+                    proof.Admission != NativeFactReference.Of(finding.Stream, accepted) || proof.Intent != accepted.Intent ||
+                    intent.Header.FirstOwner != finding.Stream || intent.ParentKind != ClosureParentKind.Finding ||
+                    intent.ParentId != proof.FindingId || intent.ParentGeneration != (ulong)command.Generation)
+                    return SourceUseReceiverSupport.Permanent("The abort differs from the exact accepted closure proof.");
+                if (proof.ActionId is { } actionId)
+                {
+                    IReadOnlyList<AdmittedChild> children;
+                    try
+                    {
+                        children = await ImmutableSelectionManifests.ReadAsync<AdmittedChild>(content, tenant.ToString(),
+                            intent.AdmittedChildren, ct).ConfigureAwait(false);
+                    }
+                    catch (ImmutableContentIntegrityException exception)
+                    {
+                        return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            $"The frozen admitted action set cannot be verified: {exception.Message}",
+                            exception is ImmutableContentUnavailableException));
+                    }
+                    if (children.All(child => child.ChildId != actionId))
+                        return SourceUseReceiverSupport.Permanent("The failure proof action is outside the frozen closure selection.");
+                }
                 var provenance = FindingClosureEffects.Child(command.CommandId, nameof(AbortFindingClosure),
                     accepted.Metadata.EventId, intent.Header, finding.Stream, clock.GetUtcNow());
                 var binding = AcceptedOperationBinding.Of(provenance);
                 if (Decide(finding, binding, command.OperationId) is { } early)
                     return early;
                 var step = await executor.ExecuteAsync(new FindingAggregate(tenant, proof.ProgramId, proof.FindingId,
-                    command.CommandId), fresh =>
+                    command.CommandId, command.OperationId), fresh =>
                     {
                         if (Decide(fresh, binding, command.OperationId) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));

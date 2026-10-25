@@ -1,0 +1,55 @@
+{
+  "reviewed": 77,
+  "blockedReviews": 0,
+  "signalsTriaged": 4,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/AuditorRequests/AuthorizeAuditorResponseRequestResolutionUseHandler.cs",
+      "sha256": "84eb9c0bfc58223201814fd42e36a6b0721e0e25a807221ce0c4db76cb7cb576",
+      "signals": {
+        "authority_gap": 0.38,
+        "invariant_gap": 0.42,
+        "recovery_gap": 0.48,
+        "incomplete_path": 0.74
+      },
+      "classification": "existing_response_resolution_receiver_with_compact_history",
+      "evidence": "Preserves accepted resolution verifier and frozen child manifest membership, delivered-version external acceptance, exact current content fact/revision, selected source-use key, finalized native/physical cut, refusal/fence path and closed-parent supersession. Unmaterialized child waits transiently; unavailable manifest/facts are transient and integrity errors permanent. AuditorResponse now retains first permanent fence plus selected lifecycle and live/selected SourceUse state. Full request owner migration is a queued separate slice; it is not claimed complete."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Readiness/ReadinessDecisionAdmission.cs",
+      "sha256": "935bbd1c932a0d2d3c800eed4aba3f4916c8e60a0f5f45bf423241e35b31e347",
+      "signals": {
+        "authority_gap": 0.44,
+        "invariant_gap": 0.65,
+        "recovery_gap": 0.54,
+        "incomplete_path": 0.26
+      },
+      "classification": "exact_admission_and_frozen_plan_set",
+      "evidence": "Native Prepare checks expected revision and latest adoption before reading adopted immutable assessment/gaps. Decision validates current plans, complete acknowledgments, independent runner or exact assessment/revision waiver and kind-specific rules; then freezes exact typed assessment locator, gap-plan selections and canonical stream order. Existing source-use acquisition rechecks those plans before completion. Old unbound/foreign cancellation proof and mismatched immutable plan gap/actor/time/revision regressions now reject without cancellation or release. Equal winner after preparation failure and historical completion tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Remediation/AuthorizeCorrectiveActionFindingClosureUseHandler.cs",
+      "sha256": "12700b650aab03684e2667a573a09c5ddb09cb6bbebd9e2959ea9a7f48a97d08",
+      "signals": {
+        "authority_gap": 0.46,
+        "invariant_gap": 0.42,
+        "recovery_gap": 0.44,
+        "incomplete_path": 0.72
+      },
+      "classification": "actual_corrective_action_closure_receiver",
+      "evidence": "Preserves actual finding closure verifier, exact admitted child manifest and history membership, immutable original action owner, completed fact and closer/owner/completer separation with exact waiver proof. Source-use receiver pins current lifecycle event/revision and installed verified physical/native cut; missing materialization/admission bytes wait transiently, corruption fails permanently. Selected terminal history and first irreversible parent fence survive owner compaction. Existing missing child, unfinished action cancellation, waiver, completion crash and source-use settlement tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Remediation/RaiseFindingHandler.cs",
+      "sha256": "c097cf0ae19569334e60dd8c94587ef5abf39cd5a3d5b4bbef4ac753c4b42d6b",
+      "signals": {
+        "authority_gap": 0.51,
+        "invariant_gap": 0.69,
+        "recovery_gap": 0.58,
+        "incomplete_path": 0.26
+      },
+      "classification": "native_prepare_with_current_source_and_member_checks",
+      "evidence": "New findings validate governed source within the same tenant/program through readiness history/adoption or operating occurrence directory, active owner and domain terms inside native Prepare. Exact native binding is finding ID/command kind/owner/actor/digest/first owner; accepted retry resolves before volatile source reads. Auth and tenant/program scope remain in the request pipeline. All async content writes precede append under central equal-winner recovery; immutable links and frozen original registration persist. Missing stronger current-source held protocol is a separately recorded contract gap, not an invented permit."
+    }
+  ]
+}

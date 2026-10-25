@@ -1,4 +1,5 @@
 using System.Globalization;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Proofs;
@@ -13,7 +14,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     tenant and their verified attestation and review content; the finding ids derive from those exact ids.
 /// </summary>
 public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpointStore checkpoints,
-    IRequestBus bus, IImmutableContentStore content)
+    IRequestBus bus, IImmutableContentStore content, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(ControlOccurrence.Area), WorkloadName),
       IReactorHandler<ControlOccurrenceAttested>, IReactorHandler<ControlOccurrenceReviewed>
 {
@@ -23,6 +24,8 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
         CancellationToken ct)
     {
         var ev = context.Trigger;
+        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
+            new ControlOccurrence(ev.TenantId, ev.ProgramId, ev.ControlId, ev.OccurrenceId).Stream, ct).ConfigureAwait(false);
         var attestation = await ReadAsync<ControlAttestationView>(context, ev.AttestationContent, ct)
             .ConfigureAwait(false);
         if (attestation.Result is not (ControlOperationStates.Failed or ControlOperationStates.Skipped))
@@ -37,6 +40,8 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
         CancellationToken ct)
     {
         var ev = context.Trigger;
+        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
+            new ControlOccurrence(ev.TenantId, ev.ProgramId, ev.ControlId, ev.OccurrenceId).Stream, ct).ConfigureAwait(false);
         var review = await ReadAsync<ControlOccurrenceReviewView>(context, ev.ReviewContent, ct)
             .ConfigureAwait(false);
         if (review.Outcome != ControlOperationStates.ActionRequested)
@@ -59,7 +64,7 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The occurrence content cannot be verified yet: {exception.Message}", true));
+                $"The occurrence content cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
     }
 }

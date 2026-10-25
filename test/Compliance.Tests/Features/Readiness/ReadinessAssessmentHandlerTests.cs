@@ -255,7 +255,7 @@ public sealed class ReadinessAssessmentHandlerTests
         await ReadinessSeed.AdoptAsync(reader, scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content,
             foreignTenantId, fixture.ProgramId, foreignAssessmentId, evaluation, asOf,
             RbacIds.Member(foreignTenantId, Uuid.CreateVersion4()), DateTimeOffset.UtcNow);
-        Assert.NotNull(await new ReadinessReader(reader, content).ReadViewAsync(foreignTenantId,
+        Assert.NotNull(await new ReadinessReader(reader, content, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadViewAsync(foreignTenantId,
             fixture.ProgramId, foreignAssessmentId));
 
         // Act
@@ -268,8 +268,10 @@ public sealed class ReadinessAssessmentHandlerTests
             new ProgramReadiness(fixture.TenantId, fixture.ProgramId));
         var foreignAfter = await ProgramManagementServices.HydrateAsync(fixture.Provider,
             new ProgramReadiness(foreignTenantId, fixture.ProgramId));
-        Assert.Empty(localAfter.EntryDecisions);
-        Assert.Empty(foreignAfter.EntryDecisions);
+        Assert.Empty(await scope.ServiceProvider.GetRequiredService<ReadinessReader>()
+            .ReadEntryDecisionsAsync(fixture.TenantId, localAfter));
+        Assert.Empty(await scope.ServiceProvider.GetRequiredService<ReadinessReader>()
+            .ReadEntryDecisionsAsync(foreignTenantId, foreignAfter));
     }
 
     [Fact]

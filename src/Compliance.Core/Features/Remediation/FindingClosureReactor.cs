@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
@@ -12,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     unverified closure.
 /// </summary>
 sealed partial class FindingClosureReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process,
-    IImmutableContentStore content)
+    IImmutableContentStore content, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(FindingAggregate.Area), WorkloadName),
         IReactorHandler<FindingClosureAccepted>
 {
@@ -21,6 +22,8 @@ sealed partial class FindingClosureReactor(IProjectionCheckpointStore checkpoint
     public async ValueTask HandleAsync(IReactorContext<FindingClosureAccepted> context, CancellationToken ct)
     {
         var accepted = context.Trigger;
+        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context, accepted.Owner, ct)
+            .ConfigureAwait(false);
         var tenant = Uuid.Parse(context.Source.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
         IReadOnlyList<AdmittedChild> children;
         ClosureIntent intent;
@@ -37,7 +40,7 @@ sealed partial class FindingClosureReactor(IProjectionCheckpointStore checkpoint
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen closure cannot be verified yet: {exception.Message}", true));
+                $"The frozen closure cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         _ = await process.StartAsync(FindingClosureEffects.ProcessName, context, accepted.Intent,
