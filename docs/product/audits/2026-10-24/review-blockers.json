@@ -228,10 +228,15 @@
     "auditor-request-file-reviews.json",
     "auditor-request-file-triage.json",
     "auditor-request-integration-jev.json",
-    "auditor-request-qualification.json"
+    "auditor-request-qualification.json",
+    "advisor-history-file-reviews.json",
+    "advisor-history-file-triage.json",
+    "advisor-history-integration-jev.json",
+    "advisor-history-qualification.json",
+    "advisor-native-version-reconciliation.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
-  "reviewSignalsTriaged": 102,
+  "reviewSignalsTriaged": 105,
   "findingArtifacts": [
     "implementation-file-triage-versioned.json",
     "implementation-file-triage-foundations.json",
@@ -603,11 +608,21 @@
     },
     {
       "id": "auditor-request-native-and-scoped-reads",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "qualificationArtifact": "auditor-request-qualification.json",
       "fileReviews": 50,
       "oldApiRedFailed": 7,
-      "actorRedFailed": 2
+      "actorRedFailed": 2,
+      "pr": 1123,
+      "mergeCommit": "9e103349081a3c6204e3b1e57ec9c2f7e79d9432"
+    },
+    {
+      "id": "advisor-history-and-auditor-prefix",
+      "status": "locally_verified_pending_merge",
+      "qualificationArtifact": "advisor-history-qualification.json",
+      "fileReviews": 56,
+      "genuineRedFailed": 9,
+      "positivePassed": 2
     }
   ],
   "resolved": [

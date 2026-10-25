@@ -1,0 +1,43 @@
+{
+  "reviewed": 56,
+  "blockedReviews": 0,
+  "signalsTriaged": 3,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/AdvisorCollaboration/FitzAdvisorFeedbackWorkItemDirectory.cs",
+      "sha256": "73b01c2dab9fd91c8edb6492b177872c2336eb3c792a3536cb9cadcdb6aaa738",
+      "signals": {
+        "authority_gap": 0.71,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.32
+      },
+      "classification": "derived_projection_not_mutation_authority",
+      "evidence": "Preserves tenant-batch, exact composite tenant/program/handoff/feedback/work identity, native metadata sequence/event id and transactional row/checkpoint behavior. Reads full canonical authored values through native reference verifier before writing rows; current work filters resolved/validated as before. Same native event replay is a projection no-op, never a new source permit. Actual rollback/substituted immutable body, two-owner local-ID identity and out-of-order/scope tests pass;355focused and44HTTP include current permissions and original native response."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AdvisorCollaboration/FitzAdvisorHandoffDirectory.cs",
+      "sha256": "48a9353dfd541a2ccb122ebf159450505900071326105d0dd40f483c35e25b28",
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.52,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.38
+      },
+      "classification": "transactional_derived_handoff_discovery",
+      "evidence": "Preserves tenant batch/native identity, exact actor/time/revision lifecycle transitions and current selection digest/record membership. New canonical authored DTO references are verified before row changes; missing/corrupt content aborts transaction/checkpoint, and replay identity rules remain existing projection policy. Current authoritative handoff/feedback reads use verified owner/history; this directory is discovery, not an approval or mutable source-use authority."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AdvisorCollaboration/ListAdvisorFeedbackHandler.cs",
+      "sha256": "6dfacfe8fe03c1da0dfacdfd62174749d2e875a36ff94b4a8674faa31881c1db",
+      "signals": {
+        "authority_gap": 0.65,
+        "invariant_gap": 0.46,
+        "recovery_gap": 0.49,
+        "incomplete_path": 0.21
+      },
+      "classification": "existing_client_scoped_history_and_source_currentness",
+      "evidence": "Existing request pipeline provides current client tenant/program read authorization. Handler verifies exact handoff program, explicit admitted feedback membership and composite native thread scope/history; original corrections/responses/terminal attribution preserved. Existing source resolver is used only to report currentness of still-selected supported records, with transient failures refusing whole page. Historical feedback remains client-owned history after unshare/closure by existing policy; no external-auditor/guest authority or invented through-append source-use hold. Currentness/cross-handoff/tenant/program and actual current permission HTTP checks pass."
+    }
+  ]
+}

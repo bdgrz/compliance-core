@@ -8,7 +8,11 @@ public sealed class PreviewAdvisorHandoffHandler(AdvisorHandoffReader aggregates
     TimeProvider clock)
     : IRequestHandler<PreviewAdvisorHandoff, AdvisorHandoffPreviewView>
 {
-    public async ValueTask<Result<AdvisorHandoffPreviewView>> HandleAsync(
+    public ValueTask<Result<AdvisorHandoffPreviewView>> HandleAsync(
+        IRequestContext<PreviewAdvisorHandoff> context, CancellationToken ct) =>
+        AdvisorFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<AdvisorHandoffPreviewView>> HandleCoreAsync(
         IRequestContext<PreviewAdvisorHandoff> context, CancellationToken ct)
     {
         var request = context.Request;

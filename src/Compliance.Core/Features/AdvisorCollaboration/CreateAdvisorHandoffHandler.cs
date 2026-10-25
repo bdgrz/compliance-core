@@ -16,7 +16,10 @@ public sealed class CreateAdvisorHandoffHandler(AdvisorUnitOperation operation, 
 {
     const string CommandKind = "CreateAdvisorHandoff";
 
-    public async ValueTask<Result> HandleAsync(IRequestContext<CreateAdvisorHandoff> context, CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<CreateAdvisorHandoff> context, CancellationToken ct) =>
+        AdvisorFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<CreateAdvisorHandoff> context, CancellationToken ct)
     {
         var request = context.Request;
         if (!AdvisorHandoffCommandActor.TryGet(context, request.TenantId, out var actor))
@@ -36,6 +39,7 @@ public sealed class CreateAdvisorHandoffHandler(AdvisorUnitOperation operation, 
         var provenance = AdvisorContent.Provenance(request.HandoffId, CommandKind, owner, actor, null,
             AuthoredIntentDigest.Compute(canonical), now);
         ImmutableContentRef? manifest = null;
+        ImmutableContentRef? authored = null;
 
         return await operation.ExecuteAsync<AdvisorHandoff>(context, request.TenantId, provenance,
             () => new AdvisorHandoff(request.TenantId, request.ProgramId, request.HandoffId, request.HandoffId),
@@ -68,10 +72,11 @@ public sealed class CreateAdvisorHandoffHandler(AdvisorUnitOperation operation, 
 
                 manifest = await AdvisorContent.WriteSelectionAsync(content, request.TenantId,
                     AdvisorContent.CreatedSelectionSchema, request.RecordVersions, token).ConfigureAwait(false);
+                authored = await AdvisorAuthored.WriteAsync(content, request.TenantId, canonical, token).ConfigureAwait(false);
                 return Result.Success;
             },
             handoff => handoff.PrepareCreate(),
-            (handoff, frozen, result) => handoff.Create(provenance, manifest!, canonical.Purpose, request.ExpiresOn,
+            (handoff, frozen, result) => handoff.Create(provenance, manifest!, authored!, request.ExpiresOn,
                 actor, now, request.ComparedToHandoffId, frozen, result), ct).ConfigureAwait(false);
     }
 }

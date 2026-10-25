@@ -16,13 +16,16 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 ///     shares the handoff stream with revocation and closure, so one of two racing commands is refused by the
 ///     stream's revision, and feedback admitted first is never discarded by a later revocation.
 /// </summary>
-public sealed class RecordAdvisorFeedbackHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    AdvisorHandoffReader handoffs, IImmutableContentStore content, TimeProvider clock)
+public sealed class RecordAdvisorFeedbackHandler(NativeOperationExecutor operations, AdvisorHandoffReader handoffs, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<RecordAdvisorFeedback, OperationAcceptedResponse>
 {
     const string CommandKind = "RecordAdvisorFeedback";
 
-    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+    public ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+        IRequestContext<RecordAdvisorFeedback> context, CancellationToken ct) =>
+        AdvisorFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<OperationAcceptedResponse>> HandleCoreAsync(
         IRequestContext<RecordAdvisorFeedback> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -42,52 +45,53 @@ public sealed class RecordAdvisorFeedbackHandler(NativeOperationExecutor operati
         var now = clock.GetUtcNow();
         var today = DateOnly.FromDateTime(now.UtcDateTime);
         var canonical = request with { Body = request.Body.Trim() };
-        var snapshot = await reader.HydrateAsync(new AdvisorHandoff(request.TenantId, request.ProgramId,
-            request.HandoffId, request.FeedbackId), ct).ConfigureAwait(false);
-        var provenance = AdvisorContent.Provenance(request.FeedbackId, CommandKind, snapshot.Stream, actor,
+        var owner = new AdvisorHandoff(request.TenantId, request.ProgramId, request.HandoffId).Stream;
+        var provenance = AdvisorContent.Provenance(request.FeedbackId, CommandKind, owner, actor,
             (ulong)request.ExpectedHandoffRevision, AuthoredIntentDigest.Compute(canonical), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? intent = null;
-        FirstResponseDescriptor? response = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            if (!AdvisorHandoffRules.InProgram(snapshot, request.ProgramId))
-                return Failure(RequestErrorKind.NotFound, "The advisor handoff was not found in the requested program.");
-            var prepared = snapshot.PrepareAdmit(request.ExpectedHandoffRevision, today);
-            if (!prepared.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(prepared.Error!);
-            if (snapshot.HasAdmitted(request.FeedbackId))
-                return Failure(RequestErrorKind.Conflict, "The feedback identifier already has different content.");
-            if (!AdvisorHandoffRules.FeedbackKinds.Contains(request.Kind) || !sourceVersion.HasValidIdentity)
-                return Failure(RequestErrorKind.Validation,
-                    "Feedback must target a selected exact version and include a supported kind, body, and author.");
-            // The revision equals the expected one, so this is the selection the admission is accepted against.
-            var current = await handoffs.ReadAsync(snapshot, request.TenantId, ct).ConfigureAwait(false);
-            if (!current.Selection.Contains(sourceVersion))
-                return Failure(RequestErrorKind.Validation,
-                    "Feedback must target a selected exact version and include a supported kind, body, and author.");
-
-            var authored = await AdvisorContent.WriteAsync(content, request.TenantId,
-                AdvisorContent.FeedbackAuthoredSchema, canonical, ct).ConfigureAwait(false);
-            intent = await AdvisorContent.WriteAsync(content, request.TenantId,
-                ChildAdmissionIntent.Schema, new ChildAdmissionIntent(AdvisorContent.Header(provenance, now),
-                    request.HandoffId, (ulong)snapshot.Generation, AdmittedChildKind.AdvisorFeedback,
-                    request.FeedbackId, authored,
-                    await AdvisorContent.EmptyProofsAsync(content, request.TenantId, request.FeedbackId, ct)
-                        .ConfigureAwait(false), (ulong)request.ExpectedHandoffRevision + 1), ct).ConfigureAwait(false);
-            response = await AdvisorContent.AcceptedResponseAsync(content, request.TenantId, request.FeedbackId,
-                RegisterFirmStaffHandler.StatusUrlTemplate, now, ct)
-                .ConfigureAwait(false);
-        }
-
+        AdvisorPreparedCut? preparedCut = null;
         var outcome = await operations.ExecuteAsync(new NativeOperation<AdvisorHandoff>(binding,
             () => new AdvisorHandoff(request.TenantId, request.ProgramId, request.HandoffId, request.FeedbackId),
             handoff => handoff.Acceptance,
-            handoff => AdvisorContent.Prepared(handoff.PrepareAdmit(request.ExpectedHandoffRevision, today), response),
+            async (handoff, token) =>
+            {
+                preparedCut = AdvisorPreparedCut.Capture(handoff);
+                if (!AdvisorHandoffRules.InProgram(handoff, request.ProgramId))
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound,
+                        "The advisor handoff was not found in the requested program."));
+                var prepared = handoff.PrepareAdmit(request.ExpectedHandoffRevision, today);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                if (!AdvisorHandoffRules.FeedbackKinds.Contains(request.Kind) || !sourceVersion.HasValidIdentity)
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
+                        "Feedback must target a selected exact version and include a supported kind, body, and author."));
+                var current = await handoffs.ReadAsync(handoff, request.TenantId, token).ConfigureAwait(false);
+                if (!current.Selection.Contains(sourceVersion))
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
+                        "Feedback must target a selected exact version and include a supported kind, body, and author."));
+                var authored = await AdvisorContent.WriteAsync(content, request.TenantId,
+                    AdvisorContent.FeedbackAuthoredSchema, canonical, token).ConfigureAwait(false);
+                intent = await AdvisorContent.WriteAsync(content, request.TenantId,
+                    ChildAdmissionIntent.Schema, new ChildAdmissionIntent(AdvisorContent.Header(provenance, now),
+                        request.HandoffId, (ulong)handoff.Generation, AdmittedChildKind.AdvisorFeedback,
+                        request.FeedbackId, authored,
+                        await AdvisorContent.EmptyProofsAsync(content, request.TenantId, request.FeedbackId, token)
+                            .ConfigureAwait(false), (ulong)request.ExpectedHandoffRevision + 1), token).ConfigureAwait(false);
+                return Result<FirstResponseDescriptor>.Success(await AdvisorContent.AcceptedResponseAsync(content,
+                    request.TenantId, request.FeedbackId, RegisterFirmStaffHandler.StatusUrlTemplate, now, token)
+                    .ConfigureAwait(false));
+            },
             (AdvisorHandoff handoff, ImmutableContentRef acknowledgment) =>
-                handoff.AdmitFeedback(provenance, intent!, today, acknowledgment)), context, ct)
-            .ConfigureAwait(false);
+            {
+                var guarded = handoff.PrepareAdmit(request.ExpectedHandoffRevision, today);
+                if (!guarded.IsSuccess)
+                    return guarded;
+                return preparedCut is null || !preparedCut.Matches(handoff)
+                    ? AdvisorPreparedCut.Changed()
+                    : handoff.AdmitFeedback(provenance, intent!, today, acknowledgment);
+            }), context, ct).ConfigureAwait(false);
         return await AdvisorContent.AcknowledgmentAsync(content, request.TenantId, outcome, ct).ConfigureAwait(false);
     }
 

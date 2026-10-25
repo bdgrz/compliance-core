@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
@@ -9,11 +10,15 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
 {
     public const string ProjectorName = "AdvisorHandoffDirectoryV1";
     readonly IKvClient _directoryClient;
+    readonly IImmutableContentStore _content;
     Uuid? _batchTenantId;
 
-    public FitzAdvisorHandoffDirectory(IKvClient client)
-        : base(client, "kv://bdgrz/advisor-handoff-directory/projection-v1", ProjectorName) =>
+    public FitzAdvisorHandoffDirectory(IKvClient client, IImmutableContentStore content)
+        : base(client, "kv://bdgrz/advisor-handoff-directory/projection-v1", ProjectorName)
+    {
         _directoryClient = client;
+        _content = content;
+    }
 
     public new ValueTask<IProjectionBatch> BeginAsync(ProjectionBatchContext context,
         CancellationToken ct = default) => BeginTenantBatchAsync(context, ct);
@@ -55,14 +60,16 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
         switch (domainEvent)
         {
             case AdvisorHandoffCreated created:
-                await ApplyCreatedAsync(created, selection ?? throw InvalidEvent(), ct).ConfigureAwait(false);
+                var creation = await AdvisorAuthored.ReadAsync(_content, created, ct).ConfigureAwait(false);
+                await ApplyCreatedAsync(created, creation, selection ?? throw InvalidEvent(), ct).ConfigureAwait(false);
                 break;
             case AdvisorHandoffSelectionRevised revised:
+                var revision = await AdvisorAuthored.ReadAsync(_content, revised, ct).ConfigureAwait(false);
                 if (!ValidIdentity(revised.TenantId, revised.ProgramId, revised.HandoffId,
                         revised.RevisedAt) ||
-                    !ValidSelection(selection) ||
-                    string.IsNullOrWhiteSpace(revised.ChangeReason) ||
-                    revised.ChangeReason.Trim() != revised.ChangeReason || !ValidActor(revised.RevisedBy))
+                    !ValidSelection(selection) || !selection!.SequenceEqual(revision.RecordVersions) ||
+                    string.IsNullOrWhiteSpace(revision.ChangeReason) ||
+                    revision.ChangeReason.Trim() != revision.ChangeReason || !ValidActor(revised.RevisedBy))
                     throw InvalidEvent();
                 await ApplyLifecycleAsync(revised, revised.TenantId, revised.ProgramId, revised.HandoffId,
                     revised.Revision, revised.RevisedAt, "draft", ["draft", "ready_for_review"],
@@ -78,18 +85,20 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
                     .ConfigureAwait(false);
                 break;
             case AdvisorHandoffClosed closed:
+                var closure = await AdvisorAuthored.ReadAsync(_content, closed, ct).ConfigureAwait(false);
                 if (!ValidIdentity(closed.TenantId, closed.ProgramId, closed.HandoffId,
-                        closed.ClosedAt) || string.IsNullOrWhiteSpace(closed.Rationale) ||
-                    closed.Rationale.Trim() != closed.Rationale || !ValidActor(closed.ClosedBy))
+                        closed.ClosedAt) || string.IsNullOrWhiteSpace(closure.Rationale) ||
+                    closure.Rationale.Trim() != closure.Rationale || !ValidActor(closed.ClosedBy))
                     throw InvalidEvent();
                 await ApplyLifecycleAsync(closed, closed.TenantId, closed.ProgramId, closed.HandoffId,
                     closed.Revision, closed.ClosedAt, "closed", ["draft", "ready_for_review"], ct)
                     .ConfigureAwait(false);
                 break;
             case AdvisorHandoffRevoked revoked:
+                var revocation = await AdvisorAuthored.ReadAsync(_content, revoked, ct).ConfigureAwait(false);
                 if (!ValidIdentity(revoked.TenantId, revoked.ProgramId, revoked.HandoffId,
-                        revoked.RevokedAt) || string.IsNullOrWhiteSpace(revoked.Rationale) ||
-                    revoked.Rationale.Trim() != revoked.Rationale || !ValidActor(revoked.RevokedBy))
+                        revoked.RevokedAt) || string.IsNullOrWhiteSpace(revocation.Rationale) ||
+                    revocation.Rationale.Trim() != revocation.Rationale || !ValidActor(revoked.RevokedBy))
                     throw InvalidEvent();
                 await ApplyLifecycleAsync(revoked, revoked.TenantId, revoked.ProgramId, revoked.HandoffId,
                     revoked.Revision, revoked.RevokedAt, "revoked", ["draft", "ready_for_review"], ct)
@@ -113,12 +122,13 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
                 "An advisor handoff event must belong to its tenant projection batch.");
     }
 
-    async ValueTask ApplyCreatedAsync(AdvisorHandoffCreated ev, IReadOnlyList<AdvisorRecordVersion> selection,
+    async ValueTask ApplyCreatedAsync(AdvisorHandoffCreated ev, CreateAdvisorHandoff authored,
+        IReadOnlyList<AdvisorRecordVersion> selection,
         CancellationToken ct)
     {
         if (!ValidIdentity(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.CreatedAt) ||
-            string.IsNullOrWhiteSpace(ev.Purpose) || ev.Purpose.Trim() != ev.Purpose ||
-            !ValidSelection(selection) ||
+            string.IsNullOrWhiteSpace(authored.Purpose) || authored.Purpose.Trim() != authored.Purpose ||
+            !ValidSelection(selection) || !selection.SequenceEqual(authored.RecordVersions) ||
             (ev.ComparedToHandoffId is { } comparedTo &&
              (comparedTo == Uuid.Empty || comparedTo == ev.HandoffId)) ||
             ev.ExpiresOn < DateOnly.FromDateTime(ev.CreatedAt.UtcDateTime) || !ValidActor(ev.CreatedBy))
@@ -140,7 +150,7 @@ sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
 
         await AdvisorHandoffDirectorySchema.Handoffs.InsertAsync(Transaction,
             new AdvisorHandoffDirectoryEntry(ev.TenantId, ev.ProgramId, ev.HandoffId,
-                ev.Purpose, "draft", ev.CreatedAt, ev.ExpiresOn, 1,
+                authored.Purpose, "draft", ev.CreatedAt, ev.ExpiresOn, 1,
                 selection.ToArray(), [], metadata.EventId,
                 metadata.AggregateVersion, ev.ComparedToHandoffId), ct)
             .ConfigureAwait(false);

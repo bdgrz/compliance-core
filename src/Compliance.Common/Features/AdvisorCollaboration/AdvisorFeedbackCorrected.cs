@@ -6,8 +6,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>A linked correction was appended to a feedback thread; the original contribution is preserved.</summary>
-[Discriminator("bdgrz.advisor-feedback.corrected", 1)]
+[Discriminator("bdgrz.advisor-feedback.corrected", 2)]
 public sealed record AdvisorFeedbackCorrected(Uuid TenantId, Uuid ProgramId, Uuid HandoffId, Uuid FeedbackId,
-    Uuid CorrectionId, string CorrectedBody, string CorrectionReason, ActorReference CorrectedBy,
+    Uuid CorrectionId, ImmutableContentRef Authored, ActorReference CorrectedBy,
     DateTimeOffset CorrectedAt, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
     ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

@@ -16,12 +16,15 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 ///     loaded again and a revoked or closed handoff still materializes what it admitted.
 /// </summary>
 public sealed class MaterializeAdvisorFeedbackHandler(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content, TimeProvider clock)
+    AdvisorHandoffReader handoffs, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<MaterializeAdvisorFeedback, ReceiverOutcome>
 {
     const int MaximumAttempts = 4;
 
-    public async ValueTask<Result<ReceiverOutcome>> HandleAsync(IRequestContext<MaterializeAdvisorFeedback> context,
+    public ValueTask<Result<ReceiverOutcome>> HandleAsync(IRequestContext<MaterializeAdvisorFeedback> context,
+        CancellationToken ct) => AdvisorFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<ReceiverOutcome>> HandleCoreAsync(IRequestContext<MaterializeAdvisorFeedback> context,
         CancellationToken ct)
     {
         var command = context.Request;
@@ -41,10 +44,12 @@ public sealed class MaterializeAdvisorFeedbackHandler(IAggregateReader reader, I
         }
         catch (ImmutableContentUnavailableException exception)
         {
+            ct.ThrowIfCancellationRequested();
             return SourceUseReceiverSupport.Transient($"The frozen admission cannot be verified: {exception.Message}");
         }
         catch (ImmutableContentIntegrityException exception)
         {
+            ct.ThrowIfCancellationRequested();
             return SourceUseReceiverSupport.Permanent($"The frozen admission cannot be verified: {exception.Message}");
         }
 
@@ -59,14 +64,20 @@ public sealed class MaterializeAdvisorFeedbackHandler(IAggregateReader reader, I
 
         var parent = await reader.HydrateAsync(new AdvisorHandoff(tenant, authored.ProgramId, command.HandoffId), ct)
             .ConfigureAwait(false);
-        if (parent.FactById(command.Source.EventId) is not AdvisorFeedbackAdmitted admitted)
+        if (await handoffs.FindFactAsync(parent, command.Source.EventId, ct).ConfigureAwait(false) is not AdvisorFeedbackAdmitted admitted)
             return SourceUseReceiverSupport.Transient("The feedback admission is not visible on its handoff yet.");
         if (admitted.Metadata.AggregateVersion != command.Source.AggregateVersion || admitted.Intent != command.Intent ||
-            admitted.Operation.LogicalId != command.FeedbackId || admitted.Operation.RootOperationId != command.OperationId)
+            admitted.Operation.LogicalId != command.FeedbackId || admitted.Operation.RootOperationId != command.OperationId ||
+            intent.Header != AdvisorContent.Header(admitted.Operation, admitted.Operation.AcceptedAt) ||
+            intent.ParentGeneration != (ulong)admitted.Generation || intent.ParentAdmissionRevision != (ulong)admitted.Revision)
             return SourceUseReceiverSupport.Permanent("The source differs from the admission of this feedback.");
 
         var provenance = SourceUseReceiverSupport.Child(command.CommandId, nameof(MaterializeAdvisorFeedback),
             command.Source.EventId, intent.Header, target, clock.GetUtcNow());
+        _ = await AdvisorFeedbackReader.ReadRecordedAsync(content, new AdvisorFeedbackRecorded(tenant,
+            authored.ProgramId, command.HandoffId, command.FeedbackId, authored.RecordId, authored.RecordVersionId,
+            authored.Kind, intent.Header.OriginalActor, intent.Header.AcceptedAt, provenance, command.Intent, null, null)
+        { SelectedSource = authored.SelectedSource }, ct).ConfigureAwait(false);
         var binding = AcceptedOperationBinding.Of(provenance);
         for (var attempt = 1; ; attempt++)
         {

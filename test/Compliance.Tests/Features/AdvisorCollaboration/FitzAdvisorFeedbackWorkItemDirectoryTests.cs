@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Tests.Testing;
@@ -16,28 +17,30 @@ public sealed class FitzAdvisorFeedbackWorkItemDirectoryTests
 
     static readonly ActorReference Author = ActorReference.ForMember(Uuid.CreateVersion4(), "Assigned Advisor");
 
-    static AdvisorFeedbackRecorded Recorded(Uuid tenantId, Uuid programId, Uuid handoffId, Uuid feedbackId,
-        AdvisorRecordVersion source, string kind, string body, ulong version = 1) => WithMetadata(
-        AdvisorEvents.Recorded(tenantId, programId, handoffId, feedbackId, source, kind, body, Author, Now.AddMinutes(2)),
+    static async Task<AdvisorFeedbackRecorded> Recorded(IImmutableContentStore content, Uuid tenantId,
+        Uuid programId, Uuid handoffId, Uuid feedbackId, AdvisorRecordVersion source, string kind, string body,
+        ulong version = 1) => WithMetadata(
+        await AdvisorEvents.Recorded(content, tenantId, programId, handoffId, feedbackId, source, kind, body, Author, Now.AddMinutes(2)),
         tenantId, programId, handoffId, feedbackId, version);
 
     [Fact]
     public async Task ShouldMoveAttributedFeedbackWorkFromResponseToResolutionGivenOrderedEvents()
     {
         // Arrange
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var handoffId = Uuid.CreateVersion4();
         var feedbackId = Uuid.CreateVersion4();
         var source = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var feedback = Recorded(tenantId, programId, handoffId, feedbackId, source, "change_request",
+        var feedback = await Recorded(content, tenantId, programId, handoffId, feedbackId, source, "change_request",
             "Clarify ownership.");
-        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient(), content);
 
         // Act
         await ApplyAsync(directory, tenantId, feedback);
         var recorded = await directory.LoadProgramAsync(tenantId, programId);
-        var respondedEvent = WithMetadata(AdvisorEvents.Responded(tenantId, programId, handoffId, feedbackId,
+        var respondedEvent = WithMetadata(await AdvisorEvents.Responded(content, tenantId, programId, handoffId, feedbackId,
             "We updated the control draft.", Manager, Now.AddMinutes(3)), tenantId, programId, handoffId, feedbackId, 2);
         await ApplyAsync(directory, tenantId, respondedEvent);
         var responded = await directory.LoadProgramAsync(tenantId, programId);
@@ -66,16 +69,17 @@ public sealed class FitzAdvisorFeedbackWorkItemDirectoryTests
     public async Task ShouldExcludeValidationFromActionableWorkGivenFeedbackKinds()
     {
         // Arrange
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var handoffId = Uuid.CreateVersion4();
         var source = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient(), content);
 
         // Act
         await ApplyAsync(directory, tenantId,
-            Recorded(tenantId, programId, handoffId, Uuid.CreateVersion4(), source, "comment", "Clarify ownership."),
-            Recorded(tenantId, programId, handoffId, Uuid.CreateVersion4(), source, "validated",
+            await Recorded(content, tenantId, programId, handoffId, Uuid.CreateVersion4(), source, "comment", "Clarify ownership."),
+            await Recorded(content, tenantId, programId, handoffId, Uuid.CreateVersion4(), source, "validated",
                 "The control is well designed."));
         var page = await directory.LoadProgramAsync(tenantId, programId);
 
@@ -89,17 +93,18 @@ public sealed class FitzAdvisorFeedbackWorkItemDirectoryTests
     public async Task ShouldRetainCorrectedActionableFeedbackGivenLaterCorrection()
     {
         // Arrange
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var handoffId = Uuid.CreateVersion4();
         var feedbackId = Uuid.CreateVersion4();
         var source = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient(), content);
 
         // Act
         await ApplyAsync(directory, tenantId,
-            Recorded(tenantId, programId, handoffId, feedbackId, source, "change_request", "Clarify ownership."),
-            WithMetadata(AdvisorEvents.Corrected(tenantId, programId, handoffId, feedbackId,
+            await Recorded(content, tenantId, programId, handoffId, feedbackId, source, "change_request", "Clarify ownership."),
+            WithMetadata(await AdvisorEvents.Corrected(content, tenantId, programId, handoffId, feedbackId,
                 "Clarify the control owner.", "The first wording was unclear.", Author, Now.AddMinutes(3)),
                 tenantId, programId, handoffId, feedbackId, 2));
         var work = await directory.LoadProgramAsync(tenantId, programId);
@@ -114,18 +119,19 @@ public sealed class FitzAdvisorFeedbackWorkItemDirectoryTests
     public async Task ShouldIgnoreExactReplayAndRejectConflictingReplayGivenProjectedFeedback()
     {
         // Arrange
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var handoffId = Uuid.CreateVersion4();
         var feedbackId = Uuid.CreateVersion4();
         var source = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient());
-        var feedback = Recorded(tenantId, programId, handoffId, feedbackId, source, "comment", "Clarify ownership.");
+        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient(), content);
+        var feedback = await Recorded(content, tenantId, programId, handoffId, feedbackId, source, "comment", "Clarify ownership.");
         await ApplyAsync(directory, tenantId, feedback);
 
         // Act
         await ApplyAsync(directory, tenantId, feedback);
-        var conflictingReplay = Recorded(tenantId, programId, handoffId, feedbackId, source, "comment",
+        var conflictingReplay = await Recorded(content, tenantId, programId, handoffId, feedbackId, source, "comment",
             "Different event at the same revision.");
         await Assert.ThrowsAsync<InvalidOperationException>(() => ApplyAsync(directory, tenantId, conflictingReplay));
         var work = await directory.LoadProgramAsync(tenantId, programId);
@@ -140,14 +146,15 @@ public sealed class FitzAdvisorFeedbackWorkItemDirectoryTests
     public async Task ShouldRejectForeignTenantEventGivenTenantScopedProjectionBatch()
     {
         // Arrange
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
         var foreignTenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var handoffId = Uuid.CreateVersion4();
         var feedbackId = Uuid.CreateVersion4();
         var source = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var foreign = Recorded(foreignTenantId, programId, handoffId, feedbackId, source, "comment", "Foreign.");
-        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient());
+        var foreign = await Recorded(content, foreignTenantId, programId, handoffId, feedbackId, source, "comment", "Foreign.");
+        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient(), content);
         var identity = new CheckpointIdentity(FitzAdvisorFeedbackWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), AdvisorFeedbackThread.Area));
 
@@ -163,18 +170,19 @@ public sealed class FitzAdvisorFeedbackWorkItemDirectoryTests
     public async Task ShouldRejectFollowUpFromAnotherProgramGivenThreadProjectionState()
     {
         // Arrange
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var otherProgramId = Uuid.CreateVersion4();
         var handoffId = Uuid.CreateVersion4();
         var feedbackId = Uuid.CreateVersion4();
         var source = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzAdvisorFeedbackWorkItemDirectory(new InMemoryKvClient(), content);
         await ApplyAsync(directory, tenantId,
-            Recorded(tenantId, programId, handoffId, feedbackId, source, "change_request", "Clarify ownership."));
+            await Recorded(content, tenantId, programId, handoffId, feedbackId, source, "change_request", "Clarify ownership."));
         var identity = new CheckpointIdentity(FitzAdvisorFeedbackWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), AdvisorFeedbackThread.Area));
-        var foreignFollowUp = WithMetadata(AdvisorEvents.Responded(tenantId, otherProgramId, handoffId, feedbackId,
+        var foreignFollowUp = WithMetadata(await AdvisorEvents.Responded(content, tenantId, otherProgramId, handoffId, feedbackId,
             "Update.", Manager, Now.AddMinutes(3)), tenantId, programId, handoffId, feedbackId, 2);
 
         // Act

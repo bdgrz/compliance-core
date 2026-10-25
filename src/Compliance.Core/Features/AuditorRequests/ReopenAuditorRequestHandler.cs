@@ -31,6 +31,7 @@ public sealed class ReopenAuditorRequestHandler(NativeOperationExecutor operatio
 
         ImmutableContentRef? reopen = null;
         FirstResponseDescriptor? response = null;
+        AuditorRequestPreparedCut? preparedCut = null;
         ImmutableContentRef? result = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorRequest>(binding,
@@ -51,10 +52,15 @@ public sealed class ReopenAuditorRequestHandler(NativeOperationExecutor operatio
                 reopen = await AuditorContent.WriteAsync(content, request.TenantId, AuditorContent.ReopenSchema, new AuditorRequestReopenContent(reason, actorMemberId, actorDisplay, now), prepareCt)
                 .ConfigureAwait(false);
                 (response, result) = await AuditorContent.UnitAsync(content, request.TenantId, prepareCt).ConfigureAwait(false);
+                preparedCut = AuditorRequestPreparedCut.Capture(snapshot);
                 return Result<FirstResponseDescriptor>.Success(response!);
             },
             (AuditorRequest auditorRequest, ImmutableContentRef frozen) =>
-                auditorRequest.Reopen(provenance, reopen!, actorMemberId, now, frozen, result!)), context, ct)
+            {
+                if (preparedCut?.Matches(auditorRequest) != true)
+                    return AuditorRequestPreparedCut.Changed();
+                return auditorRequest.Reopen(provenance, reopen!, actorMemberId, now, frozen, result!);
+            }), context, ct)
             .ConfigureAwait(false);
         return AuditorContent.UnitOutcome(outcome);
     }

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
@@ -29,16 +30,15 @@ public sealed class AdvisorHandoff : Aggregate
     public const string Revoked = "revoked";
 
     readonly Uuid _tenantId;
+    readonly AdvisorReplayCut _cut = new();
     readonly Uuid _handoffId;
-    readonly List<AdvisorFeedbackAdmitted> _admitted = [];
-    readonly HashSet<Uuid> _admittedIds = [];
-    readonly List<DomainEvent> _facts = [];
     AdvisorHandoffCreated? _createdFact;
     ImmutableContentRef? _manifest;
     Uuid _programId;
     string _status = "missing";
     long _revision;
     long _generation;
+    long _admissionCount;
     DateTimeOffset? _updatedAt;
     bool _wasReadyForReview;
 
@@ -55,6 +55,8 @@ public sealed class AdvisorHandoff : Aggregate
         On<AdvisorHandoffRevoked>(Apply);
         On<AdvisorFeedbackAdmitted>(Apply);
     }
+
+    internal AdvisorReplayCut ReplayCut => _cut;
 
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
@@ -73,9 +75,6 @@ public sealed class AdvisorHandoff : Aggregate
 
     /// <summary>The selection generation: one at creation, plus one for every selection revision.</summary>
     public long Generation => _generation;
-
-    /// <summary>The purpose stated at creation.</summary>
-    public string? Purpose => _createdFact?.Purpose;
 
     /// <summary>The last day the handoff stays shared.</summary>
     public DateOnly ExpiresOn => _createdFact?.ExpiresOn ?? default;
@@ -98,17 +97,10 @@ public sealed class AdvisorHandoff : Aggregate
     /// <summary>The verified content of the current selection, once created.</summary>
     public ImmutableContentRef? SelectionManifest => _manifest;
 
-    /// <summary>The feedback admitted so far, in admission order.</summary>
-    public IReadOnlyList<AdvisorFeedbackAdmitted> Admitted => _admitted;
-
-    /// <summary>Every fact in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
-
-    /// <summary>True when feedback with this id was admitted.</summary>
-    public bool HasAdmitted(Uuid feedbackId) => _admittedIds.Contains(feedbackId);
-
-    /// <summary>The fact with this event id.</summary>
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+    /// <summary>The count of accepted admissions, independent of selection generation.</summary>
+    public long AdmissionCount => _admissionCount;
+    public Uuid TenantId => _tenantId;
+    internal AdvisorHandoffCreated? CreatedFact => _createdFact;
 
     /// <summary>True while the handoff can still change: it was created and is neither closed nor revoked.</summary>
     public bool IsOpen => IsCreated && _status is Draft or ReadyForReview;
@@ -172,7 +164,7 @@ public sealed class AdvisorHandoff : Aggregate
     }
 
     /// <summary>Creates the handoff as the root native fact of its operation.</summary>
-    public Result Create(OperationProvenance operation, ImmutableContentRef manifest, string purpose,
+    public Result Create(OperationProvenance operation, ImmutableContentRef manifest, ImmutableContentRef authored,
         DateOnly expiresOn, ActorReference createdBy, DateTimeOffset createdAt, Uuid? comparedToHandoffId,
         ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
@@ -184,13 +176,16 @@ public sealed class AdvisorHandoff : Aggregate
         var prepared = PrepareCreate();
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AdvisorHandoffCreated(_tenantId, _programId, _handoffId, manifest, purpose, expiresOn,
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
+        RaiseEvent(new AdvisorHandoffCreated(_tenantId, _programId, _handoffId, manifest, authored, expiresOn,
             createdBy, createdAt, comparedToHandoffId, operation, firstResponse, operationResult));
         return Result.Success;
     }
 
     /// <summary>Revises the selection as the root native fact of its operation; the generation advances.</summary>
-    public Result ReviseSelection(OperationProvenance operation, ImmutableContentRef manifest, string changeReason,
+    public Result ReviseSelection(OperationProvenance operation, ImmutableContentRef manifest, ImmutableContentRef authored,
         ActorReference revisedBy, DateTimeOffset revisedAt, ImmutableContentRef firstResponse,
         ImmutableContentRef operationResult)
     {
@@ -199,8 +194,11 @@ public sealed class AdvisorHandoff : Aggregate
         var prepared = PrepareOwn(operation, PrepareRevise);
         if (!prepared.IsSuccess)
             return prepared;
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new AdvisorHandoffSelectionRevised(_tenantId, _programId, _handoffId, _revision + 1, manifest,
-            changeReason, revisedBy, revisedAt, operation, firstResponse, operationResult));
+            authored, revisedBy, revisedAt, operation, firstResponse, operationResult));
         return Result.Success;
     }
 
@@ -212,33 +210,42 @@ public sealed class AdvisorHandoff : Aggregate
         var prepared = PrepareOwn(operation, expected => PrepareReady(expected, DateOnly.FromDateTime(readiedAt.UtcDateTime)));
         if (!prepared.IsSuccess)
             return prepared;
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new AdvisorHandoffReadiedForReview(_tenantId, _programId, _handoffId, _revision + 1, readiedBy,
             readiedAt, operation, firstResponse, operationResult));
         return Result.Success;
     }
 
     /// <summary>Closes the handoff as the root native fact of its operation.</summary>
-    public Result Close(OperationProvenance operation, string rationale, ActorReference closedBy,
+    public Result Close(OperationProvenance operation, ImmutableContentRef authored, ActorReference closedBy,
         DateTimeOffset closedAt, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
         var prepared = PrepareOwn(operation, PrepareEnd);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AdvisorHandoffClosed(_tenantId, _programId, _handoffId, _revision + 1, rationale, closedBy,
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
+        RaiseEvent(new AdvisorHandoffClosed(_tenantId, _programId, _handoffId, _revision + 1, authored, closedBy,
             closedAt, operation, firstResponse, operationResult));
         return Result.Success;
     }
 
     /// <summary>Revokes the handoff as the root native fact of its operation.</summary>
-    public Result Revoke(OperationProvenance operation, string rationale, ActorReference revokedBy,
+    public Result Revoke(OperationProvenance operation, ImmutableContentRef authored, ActorReference revokedBy,
         DateTimeOffset revokedAt, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
         var prepared = PrepareOwn(operation, PrepareEnd);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AdvisorHandoffRevoked(_tenantId, _programId, _handoffId, _revision + 1, rationale, revokedBy,
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
+        RaiseEvent(new AdvisorHandoffRevoked(_tenantId, _programId, _handoffId, _revision + 1, authored, revokedBy,
             revokedAt, operation, firstResponse, operationResult));
         return Result.Success;
     }
@@ -252,20 +259,31 @@ public sealed class AdvisorHandoff : Aggregate
         var prepared = PrepareOwn(operation, expected => PrepareAdmit(expected, today));
         if (!prepared.IsSuccess)
             return prepared;
-        if (_admittedIds.Contains(operation.LogicalId))
-            return Conflict("The feedback identifier already has different content.");
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new AdvisorFeedbackAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
             firstResponse, null));
         return Result.Success;
     }
 
+    protected override void Apply(DomainEvent ev)
+    {
+        _cut.Observe(ev);
+        base.Apply(ev);
+    }
+
     void Apply(AdvisorHandoffCreated ev)
     {
+        if (ev.Operation is null)
+            throw new ImmutableContentIntegrityException("The advisor native fact lacks operation provenance.");
+        if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+            throw new ImmutableContentIntegrityException("The selected advisor native operation occurs more than once.");
         Acceptance.Observe(ev);
         if (_createdFact is not null || ev.TenantId != _tenantId || ev.HandoffId != _handoffId ||
             ev.ProgramId == Uuid.Empty || ev.Operation.Owner != Stream || ev.Operation.LogicalId != _handoffId ||
             ev.ComparedToHandoffId is { } comparedTo && (comparedTo == Uuid.Empty || comparedTo == _handoffId))
-            throw new InvalidOperationException("A handoff stream is created once, by its own operation.");
+            throw new ImmutableContentIntegrityException("A handoff stream is created once, by its own operation.");
         _createdFact = ev;
         _programId = ev.ProgramId;
         _manifest = ev.RecordVersionsManifest;
@@ -273,69 +291,87 @@ public sealed class AdvisorHandoff : Aggregate
         _generation = 1;
         _status = Draft;
         _updatedAt = ev.CreatedAt;
-        _facts.Add(ev);
     }
 
     void Apply(AdvisorHandoffSelectionRevised ev)
     {
+        if (ev.Operation is null)
+            throw new ImmutableContentIntegrityException("The advisor native fact lacks operation provenance.");
+        if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+            throw new ImmutableContentIntegrityException("The selected advisor native operation occurs more than once.");
         Acceptance.Observe(ev);
         EnsureOpen(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.Revision, ev.Operation);
         _manifest = ev.RecordVersionsManifest;
         _generation++;
         _status = Draft;
-        Advance(ev, ev.RevisedAt);
+        Advance(ev.RevisedAt);
     }
 
     void Apply(AdvisorHandoffReadiedForReview ev)
     {
+        if (ev.Operation is null)
+            throw new ImmutableContentIntegrityException("The advisor native fact lacks operation provenance.");
+        if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+            throw new ImmutableContentIntegrityException("The selected advisor native operation occurs more than once.");
         Acceptance.Observe(ev);
         EnsureOpen(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.Revision, ev.Operation);
         if (_status != Draft)
-            throw new InvalidOperationException("Only a draft handoff is readied for review.");
+            throw new ImmutableContentIntegrityException("Only a draft handoff is readied for review.");
         _status = ReadyForReview;
         _wasReadyForReview = true;
-        Advance(ev, ev.ReadiedAt);
+        Advance(ev.ReadiedAt);
     }
 
     void Apply(AdvisorHandoffClosed ev)
     {
+        if (ev.Operation is null)
+            throw new ImmutableContentIntegrityException("The advisor native fact lacks operation provenance.");
+        if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+            throw new ImmutableContentIntegrityException("The selected advisor native operation occurs more than once.");
         Acceptance.Observe(ev);
         EnsureOpen(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.Revision, ev.Operation);
         _status = Closed;
-        Advance(ev, ev.ClosedAt);
+        Advance(ev.ClosedAt);
     }
 
     void Apply(AdvisorHandoffRevoked ev)
     {
+        if (ev.Operation is null)
+            throw new ImmutableContentIntegrityException("The advisor native fact lacks operation provenance.");
+        if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+            throw new ImmutableContentIntegrityException("The selected advisor native operation occurs more than once.");
         Acceptance.Observe(ev);
         EnsureOpen(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.Revision, ev.Operation);
         _status = Revoked;
-        Advance(ev, ev.RevokedAt);
+        Advance(ev.RevokedAt);
     }
 
     void Apply(AdvisorFeedbackAdmitted ev)
     {
+        if (ev.Operation is null)
+            throw new ImmutableContentIntegrityException("The advisor native fact lacks operation provenance.");
+        if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == ev.Operation.LogicalId)
+            throw new ImmutableContentIntegrityException("The selected advisor native operation occurs more than once.");
         Acceptance.Observe(ev);
         if (!IsCreated || _status != ReadyForReview || ev.Owner != Stream || ev.Revision != _revision + 1 ||
-            ev.Generation != _generation || ev.Operation.Owner != Stream || !_admittedIds.Add(ev.Operation.LogicalId))
-            throw new InvalidOperationException(
+            ev.Generation != _generation || ev.Operation.Owner != Stream)
+            throw new ImmutableContentIntegrityException(
                 "Feedback is admitted once, for the current ready generation, at the next revision.");
-        _admitted.Add(ev);
-        Advance(ev, ev.Operation.AcceptedAt);
+        _admissionCount++;
+        Advance(ev.Operation.AcceptedAt);
     }
 
     void EnsureOpen(Uuid tenantId, Uuid programId, Uuid handoffId, long revision, OperationProvenance operation)
     {
         if (!IsOpen || tenantId != _tenantId || programId != _programId || handoffId != _handoffId ||
             revision != _revision + 1 || operation.Owner != Stream)
-            throw new InvalidOperationException("A handoff fact follows the creation at the next revision of an open handoff.");
+            throw new ImmutableContentIntegrityException("A handoff fact follows the creation at the next revision of an open handoff.");
     }
 
-    void Advance(DomainEvent fact, DateTimeOffset occurredAt)
+    void Advance(DateTimeOffset occurredAt)
     {
         _revision++;
         _updatedAt = occurredAt;
-        _facts.Add(fact);
     }
 
     Result PrepareOwn(OperationProvenance operation, Func<long, Result> prepare)

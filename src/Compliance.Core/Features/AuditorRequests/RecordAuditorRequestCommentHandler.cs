@@ -38,6 +38,7 @@ public sealed class RecordAuditorRequestCommentHandler(NativeOperationExecutor o
 
         ImmutableContentRef? intent = null;
         FirstResponseDescriptor? response = null;
+        AuditorRequestPreparedCut? preparedCut = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorRequest>(binding,
             () => new AuditorRequest(request.TenantId, request.ProgramId, request.RequestId, request.CommentId),
@@ -64,10 +65,15 @@ public sealed class RecordAuditorRequestCommentHandler(NativeOperationExecutor o
                         .ConfigureAwait(false), (ulong)request.ExpectedRequestRevision + 1), prepareCt).ConfigureAwait(false);
                 response = await AuditorContent.AcceptedResponseAsync(content, request.TenantId, request.CommentId, now, prepareCt)
                 .ConfigureAwait(false);
+                preparedCut = AuditorRequestPreparedCut.Capture(snapshot);
                 return Result<FirstResponseDescriptor>.Success(response!);
             },
             (AuditorRequest auditorRequest, ImmutableContentRef acknowledgment) =>
-                auditorRequest.AdmitComment(provenance, intent!, acknowledgment)), context, ct).ConfigureAwait(false);
+            {
+                if (preparedCut?.Matches(auditorRequest) != true)
+                    return AuditorRequestPreparedCut.Changed();
+                return auditorRequest.AdmitComment(provenance, intent!, acknowledgment);
+            }), context, ct).ConfigureAwait(false);
         return await AuditorContent.ResponseAsync<OperationAcceptedResponse>(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
     }

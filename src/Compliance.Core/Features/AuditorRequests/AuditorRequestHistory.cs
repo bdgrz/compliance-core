@@ -14,6 +14,7 @@ public static class AuditorRequestHistory
         CancellationToken ct = default)
     {
         var facts = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, owner, ct).ConfigureAwait(false);
+        var digest = AuditorRequestReplayDigest.Empty;
         var logicalIds = new HashSet<Uuid>();
         var responses = new HashSet<Uuid>();
         var comments = new HashSet<Uuid>();
@@ -30,6 +31,11 @@ public static class AuditorRequestHistory
                 native.Operation.Actor is not { Kind: "member" } actor ||
                 !Uuid.TryParse(actor.Id, CultureInfo.InvariantCulture, out var memberId) || memberId == Uuid.Empty)
                 throw Invalid("A request history contains another owner or repeats a logical operation.");
+            digest = AuditorRequestReplayDigest.Append(digest, fact);
+            if (native.Operation.LogicalId == owner.Acceptance.SelectedLogicalId &&
+                (owner.Acceptance.SelectedFact is not { } selected || selected.GetType() != fact.GetType() ||
+                    !selected.Equals(fact) || selected.Metadata != fact.Metadata))
+                throw Invalid("The selected request acceptance differs from its actual native payload and complete metadata.");
             var operation = native.Operation;
             var writable = revision > 0 && pending is null && resolved is null;
             bool valid;
@@ -113,6 +119,8 @@ public static class AuditorRequestHistory
             (facts.Count == 0) != (owner.Latest is null) || facts.Count != 0 &&
             ContentDigest.Sha256(facts[^1], facts[^1].GetType()) != ContentDigest.Sha256(owner.Latest!, owner.Latest!.GetType()))
             throw Invalid("The verified request history differs from compact current authority.");
+        owner.ReplayCut.Confirm(owner, digest);
+        ct.ThrowIfCancellationRequested();
         return new AuditorRequestHistorySnapshot(owner, facts);
 
         bool Admission(EventStreamAddress stream, long next, long atGeneration) =>

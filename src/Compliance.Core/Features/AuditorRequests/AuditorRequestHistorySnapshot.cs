@@ -12,10 +12,12 @@ public sealed class AuditorRequestHistorySnapshot
     readonly ulong _version;
     readonly ulong _position;
     readonly string? _latestSha256;
+    readonly string _prefixDigest;
 
     internal AuditorRequestHistorySnapshot(AuditorRequest owner, IReadOnlyList<DomainEvent> facts)
     {
         _stream = owner.Stream;
+        _prefixDigest = owner.ReplayCut.Digest;
         _version = owner.Version;
         _position = owner.CommittedStreamPosition;
         _latestSha256 = owner.Latest is { } latest ? ContentDigest.Sha256(latest, latest.GetType()) : null;
@@ -66,7 +68,7 @@ public sealed class AuditorRequestHistorySnapshot
     }
 
     bool Matches(AuditorRequest owner) => owner.Stream == _stream && owner.Version == _version &&
-        owner.CommittedStreamPosition == _position && _latestSha256 == (owner.Latest is { } latest
+        owner.CommittedStreamPosition == _position && owner.ReplayCut.Digest == _prefixDigest && _latestSha256 == (owner.Latest is { } latest
             ? ContentDigest.Sha256(latest, latest.GetType()) : null);
     static Result Stale() => Result.Failure(new RequestError(RequestErrorKind.Conflict,
         "The verified request history no longer matches its admission cut; retry.", true));

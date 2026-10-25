@@ -10,8 +10,8 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 ///     <paramref name="RecordVersionsManifest" /> is the complete exact selection as verified content
 ///     (<c>AdvisorHandoffSelectionRevised.RecordVersionsManifest.v1</c>).
 /// </summary>
-[Discriminator("bdgrz.advisor-handoff.selection-revised", 1)]
+[Discriminator("bdgrz.advisor-handoff.selection-revised", 2)]
 public sealed record AdvisorHandoffSelectionRevised(Uuid TenantId, Uuid ProgramId, Uuid HandoffId, long Revision,
-    ImmutableContentRef RecordVersionsManifest, string ChangeReason, ActorReference RevisedBy,
+    ImmutableContentRef RecordVersionsManifest, ImmutableContentRef Authored, ActorReference RevisedBy,
     DateTimeOffset RevisedAt, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
     ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

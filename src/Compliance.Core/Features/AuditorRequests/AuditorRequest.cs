@@ -17,6 +17,7 @@ public sealed class AuditorRequest : Aggregate
     /// <summary>Stream area of every auditor request (the realm is the tenant).</summary>
     public const string Area = "auditor-requests";
 
+    readonly AuditorRequestReplayCut _cut = new();
     readonly Uuid _tenantId;
     readonly Uuid _programId;
     readonly Uuid _selectedResolutionId;
@@ -55,6 +56,8 @@ public sealed class AuditorRequest : Aggregate
 
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
+
+    internal AuditorRequestReplayCut ReplayCut => _cut;
 
     /// <summary>The program the request belongs to.</summary>
     public Uuid ProgramId => _programId;
@@ -174,9 +177,8 @@ public sealed class AuditorRequest : Aggregate
         var prepared = PrepareRecord();
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AuditorRequestRecorded(_tenantId, Id, 1, actorMemberId, terms, at, operation, firstResponse,
+        return Append(operation, new AuditorRequestRecorded(_tenantId, Id, 1, actorMemberId, terms, at, operation, firstResponse,
             operationResult));
-        return Result.Success;
     }
 
     /// <summary>Records a terms revision as the root native fact of its operation.</summary>
@@ -186,9 +188,8 @@ public sealed class AuditorRequest : Aggregate
         var prepared = PrepareOwnWrite(operation, "A resolved auditor request must be reopened before revision.");
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AuditorRequestRevised(_tenantId, Id, _revision + 1, actorMemberId, terms, at, operation,
+        return Append(operation, new AuditorRequestRevised(_tenantId, Id, _revision + 1, actorMemberId, terms, at, operation,
             firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Records an assignment as the root native fact of its operation.</summary>
@@ -198,9 +199,8 @@ public sealed class AuditorRequest : Aggregate
         var prepared = PrepareOwnWrite(operation, "A resolved auditor request must be reopened before reassignment.");
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AuditorRequestAssigned(_tenantId, Id, _revision + 1, actorMemberId, terms, at, operation,
+        return Append(operation, new AuditorRequestAssigned(_tenantId, Id, _revision + 1, actorMemberId, terms, at, operation,
             firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Admits one response draft for the current generation as the root native fact of its operation.</summary>
@@ -210,9 +210,8 @@ public sealed class AuditorRequest : Aggregate
         var prepared = PrepareOwnWrite(operation, "A response can only be drafted for an open request.");
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AuditorResponseAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
+        return Append(operation, new AuditorResponseAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
             firstResponse, null));
-        return Result.Success;
     }
 
     /// <summary>Admits one comment for the current generation as the root native fact of its operation.</summary>
@@ -222,9 +221,8 @@ public sealed class AuditorRequest : Aggregate
         var prepared = PrepareOwnWrite(operation, "Discussion can only be added to an open request.");
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AuditorCommentAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
+        return Append(operation, new AuditorCommentAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
             firstResponse, null));
-        return Result.Success;
     }
 
     /// <summary>Admits one sample selection for the current generation as the root native fact of its operation.</summary>
@@ -241,9 +239,8 @@ public sealed class AuditorRequest : Aggregate
             populationVersion, history);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AuditorSampleSelectionAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
+        return Append(operation, new AuditorSampleSelectionAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
             firstResponse, null, populationId, populationVersion, supersedesSelectionId));
-        return Result.Success;
     }
 
     /// <summary>Accepts a resolution as the root native fact of its operation; it seals admission for the generation.</summary>
@@ -258,9 +255,8 @@ public sealed class AuditorRequest : Aggregate
         var prepared = PrepareResolution((long)expected, responseIds, history);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AuditorRequestResolutionAccepted(Stream, _revision + 1, _generation, intent, null, operation,
+        return Append(operation, new AuditorRequestResolutionAccepted(Stream, _revision + 1, _generation, intent, null, operation,
             firstResponse, null));
-        return Result.Success;
     }
 
     /// <summary>Appends the resolution of the pending operation; the caller proved every held response.</summary>
@@ -272,9 +268,8 @@ public sealed class AuditorRequest : Aggregate
             _pending.Intent != intent || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending resolution can resolve the request.", false));
-        RaiseEvent(new AuditorRequestResolved(_tenantId, Id, _revision + 1, actorMemberId, intent,
+        return Append(operation, new AuditorRequestResolved(_tenantId, Id, _revision + 1, actorMemberId, intent,
             operation.AcceptedAt, operation, _generation, responseDispositionProofs, null, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Cancels the pending resolution of the operation and fences its delayed completion.</summary>
@@ -285,9 +280,8 @@ public sealed class AuditorRequest : Aggregate
             operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending resolution can be canceled.", false));
-        RaiseEvent(new AuditorRequestResolutionCanceled(Stream, _revision + 1, _generation, _pending.Intent,
+        return Append(operation, new AuditorRequestResolutionCanceled(Stream, _revision + 1, _generation, _pending.Intent,
             failureProof, operation, null, null));
-        return Result.Success;
     }
 
     /// <summary>Reopens the resolved request as the root native fact of its operation; the generation advances.</summary>
@@ -301,8 +295,23 @@ public sealed class AuditorRequest : Aggregate
         var prepared = PrepareReopen((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AuditorRequestReopened(_tenantId, Id, _revision + 1, actorMemberId, reopen, at, operation,
+        return Append(operation, new AuditorRequestReopened(_tenantId, Id, _revision + 1, actorMemberId, reopen, at, operation,
             firstResponse, operationResult));
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        if (!ev.Metadata.IsAudit)
+            _cut.Observe(ev);
+        base.Apply(ev);
+    }
+
+    Result Append(OperationProvenance operation, DomainEvent fact)
+    {
+        var finalized = _cut.Require(this, Acceptance, operation);
+        if (!finalized.IsSuccess)
+            return finalized;
+        RaiseEvent(fact);
         return Result.Success;
     }
 

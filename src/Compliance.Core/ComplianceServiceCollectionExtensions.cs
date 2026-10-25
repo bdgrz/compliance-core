@@ -691,6 +691,7 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzAdvisorHandoffDirectory>());
         services.AddScoped<AdvisorHandoffListReadConsistency>();
         services.AddScoped<AdvisorHandoffReader>();
+        services.AddScoped<AdvisorFeedbackReader>();
         services.AddScoped<AdvisorUnitOperation>();
         services.AddSingleton<IChildMaterializationReceiver, AdvisorFeedbackMaterializationReceiver>();
         services.AddScoped<FitzAdvisorFeedbackWorkItemDirectory>();

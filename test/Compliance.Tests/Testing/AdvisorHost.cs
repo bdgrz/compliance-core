@@ -84,6 +84,8 @@ sealed class AdvisorHost : IAsyncDisposable
 
     public IDomainEventReader Events => Services.GetRequiredService<IDomainEventReader>();
 
+    public AdvisorFeedbackReader Threads => Services.GetRequiredService<AdvisorFeedbackReader>();
+
     public AdvisorHandoffReader Handoffs => Services.GetRequiredService<AdvisorHandoffReader>();
 
     public ActorReference Lead => ActorReference.ForMember(RbacIds.Member(TenantId, UserId), "Compliance lead");
@@ -108,22 +110,22 @@ sealed class AdvisorHost : IAsyncDisposable
 
     public MarkAdvisorHandoffReadyForReviewHandler ReadyHandler => new(Unit, Handoffs, Resolver, Clock);
 
-    public CloseAdvisorHandoffHandler CloseHandler => new(Unit, Clock);
+    public CloseAdvisorHandoffHandler CloseHandler => new(Unit, Content, Clock);
 
-    public RevokeAdvisorHandoffHandler RevokeHandler => new(Unit, Clock);
+    public RevokeAdvisorHandoffHandler RevokeHandler => new(Unit, Content, Clock);
 
-    public RecordAdvisorFeedbackHandler RecordHandler => new(Operations, Reader, Handoffs, Content, Clock);
+    public RecordAdvisorFeedbackHandler RecordHandler => new(Operations, Handoffs, Content, Clock);
 
-    public CorrectAdvisorFeedbackHandler CorrectHandler => new(Unit, Reader, Clock);
+    public CorrectAdvisorFeedbackHandler CorrectHandler => new(Unit, Threads, Content, Clock);
 
-    public RespondToAdvisorFeedbackHandler RespondHandler => new(Unit, Reader, Clock);
+    public RespondToAdvisorFeedbackHandler RespondHandler => new(Unit, Threads, Content, Clock);
 
-    public ResolveAdvisorFeedbackHandler ResolveHandler => new(Unit, Reader, Clock);
+    public ResolveAdvisorFeedbackHandler ResolveHandler => new(Unit, Threads, Clock);
 
     public MaterializeAdvisorFeedbackHandler MaterializeHandler => new(Reader,
-        Services.GetRequiredService<IAggregateExecutor>(), Content, Clock);
+        Services.GetRequiredService<IAggregateExecutor>(), Handoffs, Content, Clock);
 
-    public ListAdvisorFeedbackHandler ListFeedbackHandler => new(Reader, Handoffs, Resolver);
+    public ListAdvisorFeedbackHandler ListFeedbackHandler => new(Threads, Handoffs, Resolver);
 
     public IProcessRecordStore Records => Services.GetRequiredService<IProcessRecordStore>();
 
@@ -206,7 +208,7 @@ sealed class AdvisorHost : IAsyncDisposable
     /// <summary>Starts and drives the materialization process of every feedback the handoff admitted.</summary>
     public async Task<IReadOnlyList<ProcessRecord>> MaterializeAsync(Uuid handoffId)
     {
-        var handoff = await Reader.HydrateAsync(new AdvisorHandoff(TenantId, ProgramId, handoffId));
+        var handoff = await Handoffs.ReadAsync(TenantId, ProgramId, handoffId);
         var driven = new List<ProcessRecord>();
         foreach (var admitted in handoff.Admitted)
         {
@@ -223,14 +225,14 @@ sealed class AdvisorHost : IAsyncDisposable
         return driven;
     }
 
-    public async Task<AdvisorHandoff> HandoffAsync(Uuid handoffId) =>
-        await Reader.HydrateAsync(new AdvisorHandoff(TenantId, ProgramId, handoffId));
+    public async Task<AdvisorHandoffSnapshot> HandoffAsync(Uuid handoffId) =>
+        await Handoffs.ReadAsync(TenantId, ProgramId, handoffId);
 
     public async Task<AdvisorHandoffSnapshot> SnapshotAsync(Uuid handoffId) =>
         await Handoffs.ReadAsync(TenantId, ProgramId, handoffId);
 
-    public async Task<AdvisorFeedbackThread> ThreadAsync(Uuid handoffId, Uuid feedbackId) =>
-        await Reader.HydrateAsync(new AdvisorFeedbackThread(TenantId, ProgramId, handoffId, feedbackId));
+    public async Task<AdvisorFeedbackThreadSnapshot> ThreadAsync(Uuid handoffId, Uuid feedbackId) =>
+        await Threads.ReadAsync(TenantId, ProgramId, handoffId, feedbackId);
 
     public async Task<List<TEvent>> EventsAsync<TEvent>(EventStreamAddress stream) where TEvent : DomainEvent
     {

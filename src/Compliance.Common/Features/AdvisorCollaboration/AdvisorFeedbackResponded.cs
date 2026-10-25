@@ -6,7 +6,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>The client responded on a feedback thread.</summary>
-[Discriminator("bdgrz.advisor-feedback.responded", 1)]
+[Discriminator("bdgrz.advisor-feedback.responded", 2)]
 public sealed record AdvisorFeedbackResponded(Uuid TenantId, Uuid ProgramId, Uuid HandoffId, Uuid FeedbackId,
-    string Response, ActorReference RespondedBy, DateTimeOffset RespondedAt, OperationProvenance Operation,
+    ImmutableContentRef Authored, ActorReference RespondedBy, DateTimeOffset RespondedAt, OperationProvenance Operation,
     ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

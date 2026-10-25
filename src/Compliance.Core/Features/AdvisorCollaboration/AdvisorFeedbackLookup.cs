@@ -9,14 +9,13 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 static class AdvisorFeedbackLookup
 {
     /// <summary>Success when the thread exists; a retryable conflict when it is admitted; otherwise not found.</summary>
-    public static async ValueTask<Result> RequireMaterializedAsync(IAggregateReader reader, AdvisorFeedbackThread thread,
+    public static async ValueTask<Result> RequireMaterializedAsync(AdvisorFeedbackReader threads, AdvisorFeedbackThread thread,
         Uuid tenantId, Uuid programId, Uuid handoffId, Uuid feedbackId, CancellationToken ct)
     {
         if (thread.IsMaterialized)
             return Result.Success;
-        var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId, handoffId), ct)
-            .ConfigureAwait(false);
-        return AdvisorHandoffRules.InProgram(handoff, programId) && handoff.HasAdmitted(feedbackId)
+        var admitted = await threads.HasAdmissionAsync(tenantId, programId, handoffId, feedbackId, ct).ConfigureAwait(false);
+        return admitted
             ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The advisor feedback is not materialized yet; retry shortly.", true))
             : Result.Failure(new RequestError(RequestErrorKind.NotFound, "The advisor feedback was not found."));

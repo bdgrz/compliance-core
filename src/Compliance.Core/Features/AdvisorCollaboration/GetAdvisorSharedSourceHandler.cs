@@ -13,7 +13,11 @@ public sealed class GetAdvisorSharedSourceHandler(AdvisorHandoffReader aggregate
         AdvisorRecordVersion.ReadinessGapKind, AdvisorRecordVersion.BoundaryQuestionKind,
     };
 
-    public async ValueTask<Result<AdvisorSharedSourceView>> HandleAsync(
+    public ValueTask<Result<AdvisorSharedSourceView>> HandleAsync(
+        IRequestContext<GetAdvisorSharedSource> context, CancellationToken ct) =>
+        AdvisorFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<AdvisorSharedSourceView>> HandleCoreAsync(
         IRequestContext<GetAdvisorSharedSource> context, CancellationToken ct)
     {
         var request = context.Request;

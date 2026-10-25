@@ -39,6 +39,7 @@ sealed class CreateAuditResponseDraftHandler(NativeOperationExecutor operations,
 
         ImmutableContentRef? intent = null;
         FirstResponseDescriptor? response = null;
+        AuditorRequestPreparedCut? preparedCut = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorRequest>(binding,
             () => new AuditorRequest(request.TenantId, request.ProgramId, request.RequestId, request.ResponseId),
@@ -71,10 +72,15 @@ sealed class CreateAuditResponseDraftHandler(NativeOperationExecutor operations,
                         .ConfigureAwait(false), (ulong)request.ExpectedRequestRevision + 1), prepareCt).ConfigureAwait(false);
                 response = await AuditorContent.AcceptedResponseAsync(content, request.TenantId, request.ResponseId, now, prepareCt)
                 .ConfigureAwait(false);
+                preparedCut = AuditorRequestPreparedCut.Capture(snapshot);
                 return Result<FirstResponseDescriptor>.Success(response!);
             },
             (AuditorRequest auditorRequest, ImmutableContentRef acknowledgment) =>
-                auditorRequest.AdmitResponse(provenance, intent!, acknowledgment)), context, ct).ConfigureAwait(false);
+            {
+                if (preparedCut?.Matches(auditorRequest) != true)
+                    return AuditorRequestPreparedCut.Changed();
+                return auditorRequest.AdmitResponse(provenance, intent!, acknowledgment);
+            }), context, ct).ConfigureAwait(false);
         return await AuditorContent.ResponseAsync<OperationAcceptedResponse>(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
     }

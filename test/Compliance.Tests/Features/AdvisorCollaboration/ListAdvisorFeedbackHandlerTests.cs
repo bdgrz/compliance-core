@@ -15,7 +15,7 @@ public sealed class ListAdvisorFeedbackHandlerTests
         Uuid.CreateVersion4(), 1);
 
     static ListAdvisorFeedbackHandler Handler(AdvisorHost host, IAdvisorRecordVersionResolver? resolver = null) =>
-        new(host.Reader, host.Handoffs, resolver ?? new AcceptCurrent());
+        new(host.Threads, host.Handoffs, resolver ?? new AcceptCurrent());
 
     static RequestContext<ListAdvisorFeedback> Context(ListAdvisorFeedback request) =>
         new(request, new ClaimsPrincipal());

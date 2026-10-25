@@ -14,7 +14,11 @@ public sealed class MarkAdvisorHandoffReadyForReviewHandler(AdvisorUnitOperation
 {
     const string CommandKind = "MarkAdvisorHandoffReadyForReview";
 
-    public async ValueTask<Result> HandleAsync(IRequestContext<MarkAdvisorHandoffReadyForReview> context,
+    public ValueTask<Result> HandleAsync(IRequestContext<MarkAdvisorHandoffReadyForReview> context,
+        CancellationToken ct) =>
+        AdvisorFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<MarkAdvisorHandoffReadyForReview> context,
         CancellationToken ct)
     {
         var request = context.Request;

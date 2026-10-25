@@ -28,7 +28,7 @@ public sealed class AdvisorPreparationRaceTests
         var native = new NativeOperationExecutor(host.Reader, host.Services.GetRequiredService<IAggregateExecutor>(),
             faulty, transport);
         var loser = new RespondToAdvisorFeedbackHandler(new AdvisorUnitOperation(native, faulty),
-            host.Reader, host.Clock);
+            host.Threads, faulty, host.Clock);
         var actual = Result.Failure(new RequestError(RequestErrorKind.Conflict, "No losing response yet."));
 
         // Act
@@ -69,7 +69,7 @@ public sealed class AdvisorPreparationRaceTests
         var native = new NativeOperationExecutor(host.Reader, host.Services.GetRequiredService<IAggregateExecutor>(),
             faulty, transport);
         var loser = new RespondToAdvisorFeedbackHandler(new AdvisorUnitOperation(native, faulty),
-            host.Reader, host.Clock);
+            host.Threads, faulty, host.Clock);
 
         // Act
         var failure = await Record.ExceptionAsync(async () =>

@@ -11,9 +11,9 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 ///     <paramref name="Intent" /> repeats the admission intent the handoff accepted; the author and instant are the
 ///     original actor and the admission instant.
 /// </summary>
-[Discriminator("bdgrz.advisor-feedback.recorded", 1)]
+[Discriminator("bdgrz.advisor-feedback.recorded", 2)]
 public sealed record AdvisorFeedbackRecorded(Uuid TenantId, Uuid ProgramId, Uuid HandoffId,
-    Uuid FeedbackId, Uuid RecordId, Uuid RecordVersionId, string Kind, string Body,
+    Uuid FeedbackId, Uuid RecordId, Uuid RecordVersionId, string Kind,
     ActorReference Author, DateTimeOffset CreatedAt, OperationProvenance Operation, ImmutableContentRef Intent,
     ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact
 {
