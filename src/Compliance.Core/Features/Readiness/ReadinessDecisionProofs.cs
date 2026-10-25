@@ -36,7 +36,7 @@ static class ReadinessDecisionProofs
         foreach (var gap in gaps.OrderBy(item => ReadinessEffects.GapKey(tenant, intent.ProgramId, item.GapId),
                      Kernel.StreamKeyOrder.Instance))
         {
-            var plan = await reader.HydrateAsync(new ReadinessGapPlan(tenant, intent.ProgramId, gap.GapId), ct)
+            var plan = await reader.HydrateAsync(new ReadinessGapPlan(tenant, intent.ProgramId, gap.GapId).ForSourceUse(candidate => ReadinessEffects.UseKey(intent, decision.Generation, candidate.Stream)), ct)
                 .ConfigureAwait(false);
             if (uses.FirstOrDefault(use => use.SourceOwner == plan.Stream) is not { } requirement)
                 return HeldPlans.Failed("A gap is not a frozen plan use of this decision.", false, gap.GapId);

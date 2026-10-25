@@ -114,7 +114,7 @@ sealed class CompletePolicyCampaignClosureHandler(IAggregateReader reader, IAggr
             var key = PolicyCampaignClosureEffects.UseKey(command.OperationId, intent.Header.FirstOwner,
                 command.Generation, participant.Requirement.SourceOwner);
             var owner = await reader.HydrateAsync(new PolicyCampaignParticipant(tenantId, campaign.Id,
-                participant.PersonId), ct).ConfigureAwait(false);
+                participant.PersonId).ForSourceUse(candidate => key), ct).ConfigureAwait(false);
             if (owner.Uses.Find(key) is not { } entry)
                 return Built.Failed(SourceUseReceiverSupport.Transient("A participant use is not visible yet.").Error!);
             if (entry.IsFence)

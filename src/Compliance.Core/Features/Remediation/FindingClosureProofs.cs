@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
@@ -32,7 +33,7 @@ static class FindingClosureProofs
                      finding.FindingId, item.ChildId), Kernel.StreamKeyOrder.Instance))
         {
             var action = await reader.HydrateAsync(new CorrectiveAction(tenant, decision.ProgramId, finding.FindingId,
-                child.ChildId, commandId), ct).ConfigureAwait(false);
+                child.ChildId, commandId).ForSourceUse(candidate => FindingClosureEffects.UseKey(intent, candidate.Stream)), ct).ConfigureAwait(false);
             if (action.Uses.Find(FindingClosureEffects.UseKey(intent, action.Stream)) is not
                 { GrantFact: { } grant, IsActive: true })
                 return Failure("A corrective action is not held by this closure yet.", true);

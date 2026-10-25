@@ -182,6 +182,7 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
         if (_latest is null || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a recorded designation can be held, on its own stream.", true));
+        Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new FirmProfessionalDutyDesignationEngagementUseAuthorized(Stream, (long)_revision, generation,
             intent, null, operation, null, null));
         return Result.Success;
@@ -195,6 +196,7 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held designation stream."));
+        Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new FirmProfessionalDutyDesignationEngagementUseSettled(Stream, (long)_revision, generation,
             intent, null, operation, null, null));
         return Result.Success;
@@ -240,5 +242,10 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
         _latest = fact;
         _revision = revision;
         _pending = null;
+    }
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
     }
 }

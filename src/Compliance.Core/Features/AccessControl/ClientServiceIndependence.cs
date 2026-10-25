@@ -192,6 +192,7 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A service history is held on its own client stream."));
+        Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new ClientServicePersonalDecisionUseAuthorized(Stream, (long)Epoch, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -205,6 +206,7 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held client stream."));
+        Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new ClientServicePersonalDecisionUseSettled(Stream, (long)Epoch, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -218,6 +220,7 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A service history is held on its own client stream."));
+        Uses.RequireForAppend(SourceUsePurpose.EngagementAcceptance, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new EngagementServiceEpochAuthorized(Stream, (long)Epoch, generation, intent, null, operation,
             null, null));
         return Result.Success;
@@ -231,8 +234,14 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held client stream."));
+        Uses.RequireForAppend(SourceUsePurpose.EngagementAcceptance, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new EngagementServiceEpochSettled(Stream, (long)Epoch, generation, intent, null, operation, null,
             null));
         return Result.Success;
+    }
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
     }
 }

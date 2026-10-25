@@ -262,7 +262,7 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
             return new Held(null);
         var assertionId = change.Intent.VerifiedAssertionId;
         var staff = await reader.HydrateAsync(new FirmStaffRecord(
-            Uuid.Parse(requirement.SourceOwner.Resource, System.Globalization.CultureInfo.InvariantCulture)), ct)
+            Uuid.Parse(requirement.SourceOwner.Resource, System.Globalization.CultureInfo.InvariantCulture)).ForSourceUse(candidate => ProfessionalDutyRules.StaffUseKey(assertionId, change.Owner!.Stream, requirement)), ct)
             .ConfigureAwait(false);
         var key = ProfessionalDutyRules.StaffUseKey(assertionId, change.Owner!.Stream, requirement);
         if (staff.Uses.Find(key) is not { } entry)

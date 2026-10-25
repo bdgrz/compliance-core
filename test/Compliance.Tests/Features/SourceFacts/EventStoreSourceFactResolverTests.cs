@@ -111,7 +111,10 @@ public sealed class EventStoreSourceFactResolverTests
         var failure = await Record.ExceptionAsync(() => resolver.VerifyAsync(wrong));
 
         // Assert
-        Assert.IsType<SourceFactVerificationException>(failure);
+        if (mismatch is "stream" or "realm")
+            Assert.IsType<SourceFactUnavailableException>(failure);
+        else
+            Assert.IsType<SourceFactVerificationException>(failure);
     }
 
     [Fact]
@@ -137,7 +140,7 @@ public sealed class EventStoreSourceFactResolverTests
         var failure = await Record.ExceptionAsync(() => resolver.VerifyAsync(proof with { PhysicalPosition = 42 }));
 
         // Assert
-        Assert.IsType<SourceFactVerificationException>(failure);
+        Assert.IsType<SourceFactUnavailableException>(failure);
     }
 
     static async Task<(EventStoreSourceFactResolver Resolver, SourceFactProof<TenantRegistered> Proof)> SeedAsync()

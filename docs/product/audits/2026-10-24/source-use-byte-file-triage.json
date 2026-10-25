@@ -1,0 +1,19 @@
+{
+  "reviewed": 51,
+  "blockedReviews": 0,
+  "signalsTriaged": 1,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs",
+      "sha256": "b2fd1bc611c884717d9dd237b537feb97ed11d2a5ba4a2a8495c03875fa7d0d0",
+      "signals": {
+        "authority_gap": 0.53,
+        "invariant_gap": 0.66,
+        "recovery_gap": 0.63,
+        "incomplete_path": 0.42
+      },
+      "classification": "personal_ratification_native_sequence_and_selected_source_uses",
+      "evidence": "Catalog business/root/actor/native sequence gates from1117 remain. SourceUse now requires exact selected key and finalized metadata version plus committed physical cut for actual grant/settle producers. Production original\u2192calendar\u2192source-use reader chain performs complete transient unselected history validation, compares rolling concrete payload/event/aggregate/occurred/audit digest and actual selected full native metadata, then retains live+selected slots. Existing personal authority and engagement holds remain; no new mutable cross-owner permit is claimed.595 focused cases include actual pairs, malformed unselected fences/duplicates, truncated/substituted streams, metadata/cut mismatches and real DI executor wiring."
+    }
+  ]
+}

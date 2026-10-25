@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
@@ -59,7 +60,7 @@ static class AuditorRequestResolutionProofs
                          child.ChildId), Kernel.StreamKeyOrder.Instance))
         {
             var response = await reader.HydrateAsync(new AuditorResponse(tenant, decision.ProgramId, requestId,
-                child.ChildId, commandId), ct).ConfigureAwait(false);
+                child.ChildId, commandId).ForSourceUse(candidate => AuditorRequestResolutionEffects.UseKey(intent, candidate.Stream)), ct).ConfigureAwait(false);
             if (response.Uses.Find(AuditorRequestResolutionEffects.UseKey(intent, response.Stream)) is not
                 { GrantFact: { } grant, IsActive: true })
                 return Failure("A response is not held by this resolution yet.", true);

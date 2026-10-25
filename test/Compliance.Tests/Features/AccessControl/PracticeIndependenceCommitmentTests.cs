@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceUse;
 using System.Reflection;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -51,7 +52,7 @@ public sealed class PracticeIndependenceCommitmentTests
         await PracticeCommitmentFacts.CommitSubjectAsync(host.Provider, host.Tenant, PracticeSubjectKind.Staff, subject,
             "attest", engagement, operation, host.MemberReference, IndependenceHost.At);
         var owner = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant, PracticeSubjectKind.Staff,
-            subject));
+            subject).ForSourceUse(candidate => new ReservationKey(operation, candidate.Stream, 1, candidate.Stream, "actual_staff_assignment")));
 
         // Assert
         Assert.Equal("attest", owner.Practice);
@@ -137,9 +138,11 @@ public sealed class PracticeIndependenceCommitmentTests
             PracticeSubjectKind.Staff, subject, Uuid.Empty, "advisory", Uuid.CreateVersion4()), owner =>
             AggregateOutcome.Commit(owner.Reserve(Reserve(Uuid.CreateVersion4()), Intent, 1)),
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var sameOperation = Uuid.CreateVersion4();
         var same = await executor.ExecuteAsync(new PracticeIndependenceCommitment(host.Tenant,
-            PracticeSubjectKind.Staff, subject, Uuid.Empty, "attest", Uuid.CreateVersion4()), owner =>
-            AggregateOutcome.Commit(owner.Reserve(Reserve(Uuid.CreateVersion4()), Intent, 1)),
+            PracticeSubjectKind.Staff, subject, Uuid.Empty, "attest", Uuid.CreateVersion4()).ForSourceUse(candidate =>
+                new ReservationKey(sameOperation, stream, 1, candidate.Stream, "actual_staff_assignment")), owner =>
+            AggregateOutcome.Commit(owner.Reserve(Reserve(sameOperation), Intent, 1)),
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
 
         // Assert

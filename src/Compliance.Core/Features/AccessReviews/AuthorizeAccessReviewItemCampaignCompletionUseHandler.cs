@@ -74,7 +74,9 @@ sealed class AuthorizeAccessReviewItemCampaignCompletionUseHandler(IAggregateRea
 
         if (!drains.TryGetValue(request.SourceOwnerId, out var selections))
             return null;
-        var owner = await _reader.HydrateAsync(Open(request, Uuid.Empty), ct).ConfigureAwait(false);
+        var selected = Open(request, Uuid.Empty);
+        selected.ForSourceUses(selections.Select(selection => selected.BulkKey(selection.DecisionBatchId)).ToArray());
+        var owner = await _reader.HydrateAsync(selected, ct).ConfigureAwait(false);
         foreach (var selection in selections)
             if (owner.Uses.Find(owner.BulkKey(selection.DecisionBatchId)) is not { IsSettled: true })
                 return new RequestError(RequestErrorKind.Conflict,

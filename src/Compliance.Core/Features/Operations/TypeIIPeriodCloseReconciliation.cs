@@ -63,7 +63,7 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
             var native = new List<TypeIIPeriodCloseNativeSource>();
             foreach (var fact in period.OccurrenceGenerations)
             {
-                native.Add(TypeIIPeriodCloseHistory.Capture(period.Owner.Stream, fact));
+                native.Add(await history.CaptureOperatingAsync(period.Owner.Stream, fact, ct).ConfigureAwait(false));
                 var manifest = await ControlOperatingContent.ReadAsync<ControlOccurrenceSelectionManifest>(content,
                     current.TenantId, fact.CreationIntentManifest, ct).ConfigureAwait(false);
                 foreach (var selected in manifest.Selections)
@@ -147,7 +147,8 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
                     if (view.State is ControlOperationStates.ActionRequested or ControlOperationStates.Deferred)
                         unresolved.Add(id);
                     if (capturedOccurrences.Add(id))
-                        native.AddRange(owner.Facts.Select(fact => TypeIIPeriodCloseHistory.Capture(owner.Stream, fact)));
+                        foreach (var fact in owner.Facts)
+                            native.Add(await history.CaptureOperatingAsync(owner.Stream, fact, ct).ConfigureAwait(false));
                 }
                 if (materialized)
                     actualExpected.Add(requirement.OccurrenceId);
@@ -158,7 +159,8 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
                 var line = await reader.HydrateAsync(new ControlOperatingPlan(current.TenantId, current.ProgramId, controlId), ct).ConfigureAwait(false);
                 if (line.Facts.OfType<INativeOperationFact>().Any(fact => fact.Operation.AcceptedAt > operation.AcceptedAt))
                     throw new ImmutableContentUnavailableException("An operating plan changed during close capture.");
-                native.AddRange(line.Facts.Select(fact => TypeIIPeriodCloseHistory.Capture(line.Stream, fact)));
+                foreach (var fact in line.Facts)
+                    native.Add(await history.CaptureOperatingAsync(line.Stream, fact, ct).ConfigureAwait(false));
                 foreach (var view in completeOperating.ReadRecordedOccurrences(controlId).Where(item =>
                              item.PeriodStart is { } from && from <= current.PeriodEnd && (item.PeriodEnd is null || item.PeriodEnd >= current.PeriodStart)))
                 {
@@ -168,7 +170,8 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
                         Uuid.Empty, ct).ConfigureAwait(false);
                     if (owner.Facts.OfType<INativeOperationFact>().Any(fact => fact.Operation.AcceptedAt > operation.AcceptedAt))
                         throw new ImmutableContentUnavailableException("An operating occurrence changed during close capture.");
-                    native.AddRange(owner.Facts.Select(fact => TypeIIPeriodCloseHistory.Capture(owner.Stream, fact)));
+                    foreach (var fact in owner.Facts)
+                        native.Add(await history.CaptureOperatingAsync(owner.Stream, fact, ct).ConfigureAwait(false));
                     if (view.State is ControlOperationStates.ActionRequested or ControlOperationStates.Deferred)
                         unresolved.Add(view.OccurrenceId);
                 }

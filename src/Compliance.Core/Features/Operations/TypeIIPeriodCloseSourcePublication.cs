@@ -33,17 +33,31 @@ public sealed class TypeIIPeriodCloseSourcePublication(IArtifactContentStore art
         prefix.CopyTo(bytes, 0);
         json.CopyTo(bytes, prefix.Length);
         var digest = ContentDigest.Sha256(bytes);
-        await using var stream = new MemoryStream(bytes, writable: false);
+        var blob = new SnapshotSourceBlob(digest, bytes.Length, "application/vnd.bdgrz.canonical-snapshot-source.v1",
+            "snapshot", "Canonical Type II close source proof bytes (domain, NUL delimiter, exact complete JSON payload).");
+        using var capture = SnapshotSourceCapture.Begin(period.TenantId);
+        SnapshotSourceCapture.Material? material = null;
+        var bodies = records.SelectMany(record => record.PhysicalContentBlobs ?? []).ToArray();
+        if (bodies.Length > 0)
+        {
+            _ = SnapshotSourceCapture.HashData(bytes);
+            SnapshotSourceCapture.TypeIIClose(digest, bytes, bodies);
+            if (!capture.TryGet(digest, out material) || material is null)
+                throw new ImmutableContentIntegrityException("The complete selected operating source bytes were not captured.");
+            blob = material.Blob;
+        }
+        if (blob.Bytes > ArtifactContentLimits.MaxContentLength)
+            throw new ImmutableContentIntegrityException("The complete close source exceeds supported artifact storage size.");
+        await using var stream = material is null ? (Stream)new MemoryStream(bytes, writable: false)
+            : new FileStream(material.Path, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous);
         var written = await artifacts.StoreIfAbsentAsync(period.TenantId, stream, ct).ConfigureAwait(false);
-        if (written.Content.TenantId != period.TenantId || written.Content.Sha256 != digest || written.Content.Length != bytes.Length)
+        if (written.Content.TenantId != period.TenantId || written.Content.Sha256 != blob.Sha256 || written.Content.Length != blob.Bytes)
             throw new ImmutableContentIntegrityException("The complete close source differs from its exact published byte identity.");
         await using var verified = await artifacts.OpenVerifiedAsync(written.Content, ct).ConfigureAwait(false);
         if (verified is null)
             throw new ImmutableContentUnavailableException("The published close source is not available for verified read yet.");
         var version = Uuid.CreateVersion5(period.PeriodId, $"{family}:{digest}");
         var reference = new ExaminationContentReference(family, period.PeriodId, version, period.Revision, digest);
-        var blob = new SnapshotSourceBlob(digest, bytes.Length, "application/vnd.bdgrz.canonical-snapshot-source.v1",
-            "snapshot", "Canonical Type II close source proof bytes (domain, NUL delimiter, exact complete JSON payload).");
         return (reference, new SnapshotSourcePublicationEntry(family, period.PeriodId, version, period.Revision, digest, blob));
     }
 

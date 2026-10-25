@@ -52,7 +52,7 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
         {
             try
             {
-                var owner = await reader.HydrateAsync(Open(request, request.CommandId), ct).ConfigureAwait(false);
+                var owner = await reader.HydrateAsync(Open(request, request.CommandId).ForSourceUses(source.Key), ct).ConfigureAwait(false);
                 if (Decide(owner, binding, source.Key) is { } early)
                     return early;
                 var held = owner.Uses.GrantOf(source.Key);
@@ -60,7 +60,7 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
                     Uuid.CreateVersion5(request.CommandId, $"source-use-settlement-intent:{held?.ReservationGeneration ?? 0}"),
                     SourceUseAuthorizationIntent.Schema, new SourceUseAuthorizationIntent(source.Header,
                         source.ParentIntent, source.Key, source.Requirement, held, required), ct).ConfigureAwait(false);
-                var step = await executor.ExecuteAsync(Open(request, request.CommandId), fresh =>
+                var step = await executor.ExecuteAsync(Open(request, request.CommandId).ForSourceUses(source.Key), fresh =>
                 {
                     if (Decide(fresh, binding, source.Key) is { } decided)
                         return AggregateOutcome.Discard(Result<Step>.Success(new Decided(decided)));

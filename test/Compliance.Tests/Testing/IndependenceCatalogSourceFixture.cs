@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceUse;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -20,9 +21,9 @@ sealed class IndependenceCatalogSourceFixture : IAsyncDisposable
         services.AddPortia();
         _provider = services.BuildServiceProvider();
         _scope = _provider.CreateAsyncScope();
-        Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        Reader = new SourceUseAggregateReader(_scope.ServiceProvider.GetRequiredService<IAggregateReader>(), Events);
         Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
-        Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+        Executor = new AggregateExecutor(Reader, Writer);
     }
     public InMemoryEventStore Events { get; } = new();
     public IImmutableContentStore Content { get; } = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));

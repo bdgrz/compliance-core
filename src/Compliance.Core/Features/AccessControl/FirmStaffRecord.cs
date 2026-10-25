@@ -219,6 +219,7 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         if (!IsRegistered || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a registered staff record can be held, on its own stream.", true));
+        Uses.RequireForAppend(SourceUsePurpose.ProfessionalDutyRecording, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new FirmStaffProfessionalDutyUseAuthorized(Stream, (long)_revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -232,6 +233,7 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         if (!IsRegistered || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a registered staff record can be held, on its own stream.", true));
+        Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new FirmStaffRecordEngagementUseAuthorized(Stream, (long)_revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -245,6 +247,7 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held staff stream."));
+        Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new FirmStaffRecordEngagementUseSettled(Stream, (long)_revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -258,8 +261,14 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held staff stream."));
+        Uses.RequireForAppend(SourceUsePurpose.ProfessionalDutyRecording, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new FirmStaffProfessionalDutyUseSettled(Stream, (long)_revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
+    }
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
     }
 }

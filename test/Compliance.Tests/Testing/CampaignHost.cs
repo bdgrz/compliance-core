@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
@@ -160,8 +161,8 @@ sealed class CampaignHost : IAsyncDisposable
         return state.Value;
     }
 
-    public Task<PolicyCampaignParticipant> ParticipantAsync(Uuid campaignId, Uuid person) =>
-        CampaignSeed.ParticipantAsync(_provider, Tenant, campaignId, person);
+    public Task<PolicyCampaignParticipant> ParticipantAsync(Uuid campaignId, Uuid person, ReservationKey? selectedUse = null) =>
+        CampaignSeed.ParticipantAsync(_provider, Tenant, campaignId, person, selectedUse);
 
     public Task<PolicyDistributionCampaign> CampaignAsync(Uuid campaignId) =>
         ProgramManagementServices.HydrateAsync(_provider, new PolicyDistributionCampaign(Tenant, campaignId));

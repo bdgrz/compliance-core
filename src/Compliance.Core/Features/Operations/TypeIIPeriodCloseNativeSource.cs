@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Snapshots;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
@@ -10,6 +11,8 @@ public sealed record TypeIIPeriodCloseNativeSource(NativeFactReference Fact, str
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<TypeIIPeriodCloseContentBlob>? ContentBlobs { get; init; }
+    [JsonIgnore]
+    internal IReadOnlyList<SnapshotSourceContentBlob>? PhysicalContentBlobs { get; init; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public DateTimeOffset? RecordedAt { get; init; }
 }

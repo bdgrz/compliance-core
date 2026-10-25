@@ -119,7 +119,7 @@ public sealed class AccessReviewBulkDecisionTests
             nameof(ApplyAccessReviewItemDecision), record.Targets[0]);
         var partial = await fixture.CampaignAsync(campaignId);
         var firstItem = await fixture.ItemAsync(campaignId, ItemOf(record.Targets[0]));
-        var notYet = await Assert.ThrowsAsync<SourceFactVerificationException>(() => fixture.BulkStepAsync(record,
+        var notYet = await Assert.ThrowsAsync<SourceFactUnavailableException>(() => fixture.BulkStepAsync(record,
             BulkAccessDecisionProcess.Publish, nameof(PublishAccessReviewDecisionBatch)));
         foreach (var target in record.Targets.Skip(1))
             await ReceiveAppliedAsync(fixture, record, BulkAccessDecisionProcess.Apply,

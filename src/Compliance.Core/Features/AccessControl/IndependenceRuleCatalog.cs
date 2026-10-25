@@ -100,6 +100,7 @@ public sealed class IndependenceRuleCatalog : Aggregate, ISourceUseOwner
         if (Header is null || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a revised catalog can be held, on its own stream.", true));
+        Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new IndependenceRuleCatalogEngagementUseAuthorized(Stream, Sequence, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -113,6 +114,7 @@ public sealed class IndependenceRuleCatalog : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held catalog stream."));
+        Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new IndependenceRuleCatalogEngagementUseSettled(Stream, Sequence, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -120,4 +122,9 @@ public sealed class IndependenceRuleCatalog : Aggregate, ISourceUseOwner
 
 
     static Result Failure(string message, bool transient = false) => Result.Failure(new RequestError(RequestErrorKind.Conflict, message, transient));
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
+    }
 }

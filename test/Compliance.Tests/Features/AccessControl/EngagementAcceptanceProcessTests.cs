@@ -168,7 +168,7 @@ public sealed class EngagementAcceptanceProcessTests
         Assert.Equal(ProcessState.Aborted, afterEpoch.State);
         Assert.Single(await host.EventsAsync<ServiceEngagementAcceptanceRejected>(stream));
         Assert.Empty(await host.EventsAsync<EngagementPracticeCommitmentsAuthorized>(stream));
-        var service = await host.HydrateAsync(new ClientServiceIndependence(host.Tenant));
+        var service = await host.HydrateAsync(new ClientServiceIndependence(host.Tenant).ForSourceUse(candidate => EngagementAcceptanceEffects.UseKey(command.CommandId, stream, candidate.Stream)));
         var epochKey = EngagementAcceptanceEffects.UseKey(command.CommandId, stream, service.Stream);
         Assert.True(service.Uses.Find(epochKey) is { IsFence: true }, "the epoch key must be fenced, never granted");
 
@@ -178,7 +178,7 @@ public sealed class EngagementAcceptanceProcessTests
                      intent.Subjects))
         {
             var owner = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant, subject.Kind,
-                subject.SubjectId));
+                subject.SubjectId).ForSourceUse(candidate => EngagementAcceptanceEffects.UseKey(command.CommandId, stream, candidate.Stream)));
             Assert.Null(owner.Practice);
             Assert.True(owner.Uses.Find(EngagementAcceptanceEffects.UseKey(command.CommandId, stream, owner.Stream))
                 is { IsSettled: true });
@@ -272,7 +272,8 @@ public sealed class EngagementAcceptanceProcessTests
         foreach (var requirement in await host.Content.ReadSelectionAsync<SourceUseRequirement>(host.Tenant.ToString(),
                      intent.SourceUses))
         {
-            var owner = await HydrateOwnerAsync(host, requirement.SourceOwner, partner);
+            var owner = await HydrateOwnerAsync(host, requirement.SourceOwner, partner,
+                EngagementAcceptanceEffects.UseKey(command.CommandId, stream, requirement.SourceOwner));
             var key = EngagementAcceptanceEffects.UseKey(command.CommandId, stream, requirement.SourceOwner);
             Assert.True(owner.Uses.Find(key) is { GrantFact: not null, SettleFact: not null }, requirement.SourceOwner.Area);
         }
@@ -337,22 +338,22 @@ public sealed class EngagementAcceptanceProcessTests
         .Select(item => PracticeSubjects.Key(item.Target!)).ToArray();
 
     static async Task<ISourceUseOwner> HydrateOwnerAsync(IndependenceHost host, EventStreamAddress stream,
-        PartnerSetup partner)
+        PartnerSetup partner, ReservationKey selectedUse)
     {
         switch (stream.Area)
         {
             case ClientServiceIndependence.Area:
-                return await host.HydrateAsync(new ClientServiceIndependence(host.Tenant));
+                return await host.HydrateAsync(new ClientServiceIndependence(host.Tenant).ForSourceUses(selectedUse));
             case FirmStaffRecord.Area:
                 return await host.HydrateAsync(new FirmStaffRecord(Uuid.Parse(stream.Resource,
-                    System.Globalization.CultureInfo.InvariantCulture)));
+                    System.Globalization.CultureInfo.InvariantCulture)).ForSourceUses(selectedUse));
             case FirmProfessionalDutyDesignation.Area:
                 return await host.HydrateAsync(new FirmProfessionalDutyDesignation(partner.Staff.UserId,
-                    FirmProfessionalDuty.EngagementPartner, host.Tenant));
+                    FirmProfessionalDuty.EngagementPartner, host.Tenant).ForSourceUses(selectedUse));
             case IndependenceRuleCatalog.Area:
-                return await host.HydrateAsync(new IndependenceRuleCatalog());
+                return await host.HydrateAsync(new IndependenceRuleCatalog().ForSourceUses(selectedUse));
             case IndependenceRuleRatificationCatalog.Area:
-                return await host.HydrateAsync(new IndependenceRuleRatificationCatalog());
+                return await host.HydrateAsync(new IndependenceRuleRatificationCatalog().ForSourceUses(selectedUse));
             default:
                 throw new InvalidOperationException(stream.Area);
         }

@@ -164,6 +164,7 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
         if (_added is null || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a materialized action can be held, on its own stream.", true));
+        Uses.RequireForAppend(SourceUsePurpose.FindingClosure, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new CorrectiveActionFindingClosureUseAuthorized(Stream, _revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -178,6 +179,7 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the action's own stream."));
+        Uses.RequireForAppend(SourceUsePurpose.FindingClosure, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new CorrectiveActionFindingClosureUseSettled(Stream, _revision, generation, intent, null,
             operation, null, null, disposition));
         return Result.Success;
@@ -206,4 +208,9 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     }
 
     static Result Fail(CommandFailure failure) => Result.Failure(failure.ToRequestError());
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
+    }
 }

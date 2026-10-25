@@ -70,9 +70,10 @@ public sealed class PolicyCampaignClosureProcessTests
         var view = state.ToView(host.Today);
         Assert.Equal("closed", view.Status);
         Assert.Equal(new CampaignTotalsView(2, 2, 0, 0, 1, 0, 1, 0), view.ClosingTotals);
-        var participant = await host.ParticipantAsync(campaign, host.LearnerPerson);
+        var key = PolicyCampaignClosureEffects.UseKey(closeId, owner.Stream, 1,
+            new PolicyCampaignParticipant(host.Tenant, campaign, host.LearnerPerson).Stream);
+        var participant = await host.ParticipantAsync(campaign, host.LearnerPerson, key);
         Assert.NotNull(participant.Acknowledgement);
-        var key = PolicyCampaignClosureEffects.UseKey(closeId, owner.Stream, 1, participant.Stream);
         Assert.True(participant.Uses.Find(key)!.IsSettled);
         Assert.Empty(participant.Uses.ActiveUses);
         Assert.Empty(await host.EventsAsync<PolicyCampaignParticipantCampaignClosureUseAuthorized>(
@@ -237,8 +238,9 @@ public sealed class PolicyCampaignClosureProcessTests
         // Act
         var aborted = await host.RunAsync(await host.ClosureKey(closeId));
         var owner = await host.CampaignAsync(campaign);
-        var participant = await host.ParticipantAsync(campaign, host.LearnerPerson);
-        var key = PolicyCampaignClosureEffects.UseKey(closeId, owner.Stream, 1, participant.Stream);
+        var key = PolicyCampaignClosureEffects.UseKey(closeId, owner.Stream, 1,
+            new PolicyCampaignParticipant(host.Tenant, campaign, host.LearnerPerson).Stream);
+        var participant = await host.ParticipantAsync(campaign, host.LearnerPerson, key);
 
         // Assert
         Assert.Equal(ProcessState.Completed, aborted.State);

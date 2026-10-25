@@ -12,7 +12,7 @@ static class EngagementUseOwners
     ///     The duty designation is scoped by the original actor of the frozen header, who is the partner.
     /// </summary>
     public static async ValueTask<ISourceUseOwner?> HydrateAsync(IAggregateReader reader, EventStreamAddress stream,
-        DurableIntentHeader header, Uuid tenantId, CancellationToken ct)
+        DurableIntentHeader header, Uuid tenantId, ReservationKey key, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(reader);
         ArgumentNullException.ThrowIfNull(stream);
@@ -20,16 +20,16 @@ static class EngagementUseOwners
         switch (stream.Area)
         {
             case ClientServiceIndependence.Area:
-                return await reader.HydrateAsync(new ClientServiceIndependence(tenantId), ct).ConfigureAwait(false);
+                return await reader.HydrateAsync(new ClientServiceIndependence(tenantId).ForSourceUses(key), ct).ConfigureAwait(false);
             case FirmStaffRecord.Area when Uuid.TryParse(stream.Resource, out var staffId):
-                return await reader.HydrateAsync(new FirmStaffRecord(staffId), ct).ConfigureAwait(false);
+                return await reader.HydrateAsync(new FirmStaffRecord(staffId).ForSourceUses(key), ct).ConfigureAwait(false);
             case FirmProfessionalDutyDesignation.Area when Uuid.TryParse(header.OriginalActor.Id, out var userId):
                 return await reader.HydrateAsync(new FirmProfessionalDutyDesignation(userId,
-                    FirmProfessionalDuty.EngagementPartner, tenantId), ct).ConfigureAwait(false);
+                    FirmProfessionalDuty.EngagementPartner, tenantId).ForSourceUses(key), ct).ConfigureAwait(false);
             case IndependenceRuleCatalog.Area:
-                return await reader.HydrateAsync(new IndependenceRuleCatalog(), ct).ConfigureAwait(false);
+                return await reader.HydrateAsync(new IndependenceRuleCatalog().ForSourceUses(key), ct).ConfigureAwait(false);
             case IndependenceRuleRatificationCatalog.Area:
-                return await reader.HydrateAsync(new IndependenceRuleRatificationCatalog(), ct).ConfigureAwait(false);
+                return await reader.HydrateAsync(new IndependenceRuleRatificationCatalog().ForSourceUses(key), ct).ConfigureAwait(false);
             default:
                 return null;
         }

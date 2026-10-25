@@ -6,6 +6,7 @@ using System.Text.Json;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -16,7 +17,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 ///     decision time and its envelope time are inside the cutoff, and the finding facts must form a complete prefix.
 /// </summary>
 public sealed class FindingTypeIBaselineSourceContributor(
-    IDomainEventReader events, IAggregateReader aggregates) : ITypeIBaselineSourceContributor
+    IDomainEventReader events, IAggregateReader aggregates, IImmutableContentStore contentStore) : ITypeIBaselineSourceContributor
 {
     const string DigestDomain = "bdgrz.snapshot.source.finding.v1\0";
 
@@ -29,6 +30,20 @@ public sealed class FindingTypeIBaselineSourceContributor(
     public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
         ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context,
         CancellationToken ct)
+    {
+        try
+        {
+            return await ReadCoreAsync(engagement, context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The finding's exact immutable source bytes cannot be verified.", exception is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<TypeIBaselineSourceContribution>> ReadCoreAsync(ExaminationEngagementView engagement,
+        TypeIBaselineSourceReadContext context, CancellationToken ct)
     {
         if (engagement is null || context?.PreviouslyCapturedSources is null ||
             engagement.TenantId == Uuid.Empty || engagement.ProgramId == Uuid.Empty ||
@@ -66,7 +81,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
 
                 if (!complete)
                     return InvalidHistory("The Type I finding history is not a complete prefix.");
-                history.Add(Capture(fact));
+                history.Add(await CaptureAsync(engagement.TenantId, fact, ct).ConfigureAwait(false));
                 asOfRevision = RevisionOf(fact);
             }
 
@@ -83,7 +98,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 foreach (var fact in ActionFacts(action))
                     if (context.RecordedThrough is null ? InsideCutoff(fact, through) :
                         await context.IncludesAsync(action.Stream, fact, ct).ConfigureAwait(false))
-                        history.Add(Capture(fact));
+                        history.Add(await CaptureAsync(engagement.TenantId, fact, ct).ConfigureAwait(false));
             }
 
             try
@@ -131,6 +146,80 @@ public sealed class FindingTypeIBaselineSourceContributor(
         _ => throw new InvalidOperationException($"{fact.GetType().Name} is not a remediation fact."),
     };
 
+    async ValueTask<FindingTypeIBaselineSourceEvent> CaptureAsync(Uuid tenant, DomainEvent fact, CancellationToken ct)
+    {
+        var references = new List<ImmutableContentRef>();
+        void Add(ImmutableContentRef? reference, bool required = true)
+        {
+            if (reference is null)
+            {
+                if (required)
+                    throw new ImmutableContentIntegrityException("A selected finding source has no exact required business content reference.");
+                return;
+            }
+            references.Add(reference);
+        }
+        ImmutableContentRef? intent = null;
+        switch (fact)
+        {
+            case FindingRaisedV2 value:
+                Add(value.LinksManifest);
+                break;
+            case CorrectiveActionAdmitted value:
+                Add(intent = value.Intent);
+                Add(value.SourceProofs, false);
+                break;
+            case CorrectiveActionAddedV2 value:
+                Add(value.ActionContent);
+                Add(intent = value.Intent);
+                break;
+            case CorrectiveActionCompletedV2 value:
+                Add(value.EvidenceManifest);
+                break;
+            case FindingAcceptanceLinkedV2 value:
+                Add(value.AcceptanceContent);
+                break;
+            case FindingClosureAccepted value:
+                Add(intent = value.Intent);
+                Add(value.SourceProofs, false);
+                break;
+            case FindingClosedV2 value:
+                Add(value.ClosureContent);
+                Add(value.ActionCompletionProofs);
+                Add(intent = value.Intent);
+                break;
+            case FindingClosureCanceled value:
+                Add(intent = value.Intent);
+                Add(value.SourceProofs, false);
+                break;
+        }
+        if (intent is { Schema: ChildAdmissionIntent.Schema })
+        {
+            var child = await contentStore.ReadJsonAsync<ChildAdmissionIntent>(tenant.ToString(), intent, ct).ConfigureAwait(false);
+            if (child.SelectedSourceProofs is null)
+                throw new ImmutableContentIntegrityException("The selected child admission has no complete source-proof manifest.");
+            Add(child.CanonicalAuthoredContent);
+            Add(child.SelectedSourceProofs.Content);
+        }
+        else if (intent is { Schema: ClosureIntent.Schema })
+        {
+            var closure = await contentStore.ReadJsonAsync<ClosureIntent>(tenant.ToString(), intent, ct).ConfigureAwait(false);
+            if (closure.AdmittedChildren is null || closure.SourceUses is null)
+                throw new ImmutableContentIntegrityException("The selected closure has no complete admitted-child and source-use manifests.");
+            Add(closure.AdmittedChildren.Content);
+            Add(closure.AuthoredDecision);
+            Add(closure.SourceUses.Content);
+            Add(closure.WaiverProof, false);
+        }
+        else if (intent is not null)
+            throw new ImmutableContentIntegrityException("The selected finding source names another immutable intent schema.");
+        var blobs = new List<SnapshotSourceContentBlob>();
+        foreach (var reference in references.Distinct())
+            blobs.Add(new(reference, (await contentStore.ReadVerifiedAsync(tenant.ToString(), reference, ct)
+                .ConfigureAwait(false)).ToArray()));
+        return Capture(fact) with { ContentBlobs = blobs };
+    }
+
     static FindingTypeIBaselineSourceEvent Capture(DomainEvent fact)
     {
         var metadata = fact.Metadata;
@@ -168,7 +257,9 @@ public sealed class FindingTypeIBaselineSourceContributor(
         var material = new byte[domain.Length + bytes.Length];
         domain.CopyTo(material, 0);
         bytes.CopyTo(material, domain.Length);
-        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
+        var digest = Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
+        SnapshotSourceCapture.Finding(digest, material, content.History.SelectMany(item => item.ContentBlobs ?? []).ToArray());
+        return digest;
     }
 
     static Result<TypeIBaselineSourceContribution> InvalidHistory(string message) =>

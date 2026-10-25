@@ -99,6 +99,12 @@
       "reason": "Native three existing roots preserve discriminator spellings and advance versions for immutable delta payloads. This is a writer/read preparation, not persisted v1/v2 envelope migration. Original draft callback decoder is unchanged. No automatic migration, lineage parity or dual-read compatibility is claimed for existing retained application streams.",
       "slice": "S34",
       "nextWork": "Continue independent native owners; no GitHub issue created."
+    },
+    {
+      "id": "typeii-opening-export-source-selection",
+      "status": "contract_selection_gap",
+      "evidence": "Opening commits plan/outcome/SystemDescription hashes while selectedSourceReferences/SourceContentManifest are copied from TypeI source families. No separate opening publication entry/package-selection source-kind contract is selected.",
+      "nextWork": "Preserve selected baseline sources and existing artifact contract; do not invent new archive entry authority while continuing independent owners."
     }
   ],
   "remainingSlices": [
@@ -509,12 +515,23 @@
     },
     {
       "id": "governance-catalogs-native",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "fullUnitPassed": 6025,
       "focusedPassed": 548,
       "productionHttpPassed": 4,
       "directJevProductionFilesReviewed": 63,
-      "qualificationArtifact": "governance-catalogs-qualification.json"
+      "qualificationArtifact": "governance-catalogs-qualification.json",
+      "pullRequest": 1117,
+      "mergeCommit": "0ab96e64fbf091f737e52ff15d973afb9199917c"
+    },
+    {
+      "id": "source-use-byte-closure",
+      "status": "locally_verified_pending_merge",
+      "fullUnitPassed": 6058,
+      "focusedPassed": 613,
+      "productionHttpPassed": 12,
+      "directJevProductionFilesReviewed": 51,
+      "qualificationArtifact": "source-use-byte-qualification.json"
     }
   ],
   "resolved": [

@@ -56,7 +56,7 @@ public sealed class FitzSourceFactResolverTests
         var failure = await Record.ExceptionAsync(() => resolver.ResolveAsync(Stream, 1));
 
         // Assert
-        Assert.IsType<SourceFactVerificationException>(failure);
+        Assert.IsType<SourceFactUnavailableException>(failure);
     }
 
     static StreamReadPage Page(StreamRecord record, bool more) => new(

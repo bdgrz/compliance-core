@@ -140,6 +140,7 @@ public sealed class ReadinessGapPlan : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A decision use is recorded on the gap plan's own stream."));
+        Uses.RequireForAppend(SourceUsePurpose.ReadinessDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new ReadinessGapPlanReadinessDecisionUseAuthorized(Stream, Revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -153,6 +154,7 @@ public sealed class ReadinessGapPlan : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the gap plan's own stream."));
+        Uses.RequireForAppend(SourceUsePurpose.ReadinessDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new ReadinessGapPlanReadinessDecisionUseSettled(Stream, Revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -179,4 +181,9 @@ public sealed class ReadinessGapPlan : Aggregate, ISourceUseOwner
     }
 
     static Result Fail(CommandFailure failure) => Result.Failure(failure.ToRequestError());
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
+    }
 }

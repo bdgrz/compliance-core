@@ -151,11 +151,11 @@ sealed class AuthorizeEngagementPracticeCommitmentsHandler(IAggregateReader read
                 "The proofs do not cover exactly the frozen source uses and practice subjects.");
         foreach (var requirement in loaded.Requirements)
         {
-            var source = await EngagementUseOwners.HydrateAsync(reader, requirement.SourceOwner, intent.Header, tenantId, ct)
+            var key = EngagementAcceptanceEffects.UseKey(command.OperationId, engagement, requirement.SourceOwner);
+            var source = await EngagementUseOwners.HydrateAsync(reader, requirement.SourceOwner, intent.Header, tenantId, key, ct)
                 .ConfigureAwait(false);
             if (source is null || source.Stream != requirement.SourceOwner)
                 return EngagementAcceptanceVerifier.Permanent("A required source use names an owner that cannot be resolved.");
-            var key = EngagementAcceptanceEffects.UseKey(command.OperationId, engagement, requirement.SourceOwner);
             if (source.Uses.Find(key) is not { IsActive: true } entry)
                 return EngagementAcceptanceVerifier.Transient(
                     "A required source use is not held yet; authorization waits for the complete set.");
@@ -167,7 +167,7 @@ sealed class AuthorizeEngagementPracticeCommitmentsHandler(IAggregateReader read
         foreach (var subject in loaded.Subjects)
         {
             var held = await reader.HydrateAsync(new PracticeIndependenceCommitment(tenantId, subject.Kind,
-                subject.SubjectId), ct).ConfigureAwait(false);
+                subject.SubjectId).ForSourceUse(candidate => EngagementAcceptanceEffects.UseKey(command.OperationId, engagement, candidate.Stream)), ct).ConfigureAwait(false);
             var key = EngagementAcceptanceEffects.UseKey(command.OperationId, engagement, held.Stream);
             if (held.Uses.Find(key) is not { IsActive: true } entry)
                 return EngagementAcceptanceVerifier.Transient(

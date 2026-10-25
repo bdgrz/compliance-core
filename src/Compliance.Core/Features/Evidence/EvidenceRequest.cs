@@ -189,6 +189,7 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
         if (_fulfilled is null || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a fulfilled evidence request can be held, on its own stream.", true));
+        Uses.RequireForAppend(SourceUsePurpose.ActionCompletionReview, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new EvidenceRequestActionCompletionUseAuthorized(Stream, _revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -202,6 +203,7 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the request's own stream."));
+        Uses.RequireForAppend(SourceUsePurpose.ActionCompletionReview, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new EvidenceRequestActionCompletionUseSettled(Stream, _revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -253,4 +255,9 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
     }
 
     static Result Fail(CommandFailure failure) => Result.Failure(failure.ToRequestError());
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
+    }
 }

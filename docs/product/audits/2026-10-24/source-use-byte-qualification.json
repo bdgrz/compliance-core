@@ -1,0 +1,48 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Bounded SourceUseReservations live+selected domain command state with full transient exact-cut raw history validation; source proof identity before writes; selected Finding/TypeII operating business bytes in physical source archives.",
+  "validation": {
+    "genuineRedFailed": {
+      "retainedTerminalSlots": 1,
+      "wrongSourceTupleActualProofWrites": 6,
+      "actualMissingArchiveBodies": 2,
+      "pendingBulkUnavailableClassification": 1
+    },
+    "sourceProofPositiveControlPassed": 1,
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 613,
+    "productionHttpPassed": 12,
+    "backendUnitPassed": 6058,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "coverageExport": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 51,
+    "signalsTriaged": 1,
+    "mergeProbability": 0.58,
+    "adopted": "merge scoped repair; continue independent owners"
+  },
+  "parentRefinements": [
+    "Layered distinct opaque-key production reader decorators original\u2192calendar\u2192source-use; preserved installed executor resolution through decorated reader.",
+    "Renamed14 override parameters to selected SDK base Apply(ev), preserving full owner fact observation.",
+    "Fixed immutable EventStreamAddress test construction and operating archive test indexable collection analyzer.",
+    "Strengthened source-proof RED spy to actual immutable writes plus canonical real positive write/readback; six wrong tuples reproduced Writes1vs0.",
+    "Qualified lightweight ProgramManagementServices/AuditorRequest fixtures with shared opaque-key verified SourceUse reader; preserved custom original registrations/lifetimes.",
+    "Actual partial bulk publication RED showed generic verification error for not-yet-created effects. Typed unavailable subclass now identifies pending work; existing parent exception catch contract remains."
+  ],
+  "qualification": [
+    "All existing actual16 acquire/settle pairs and14 ISourceUseOwner declarations remain; no new source-use purpose or callback schema. Every actual producer requires finalized selected key at exact logical/physical cut.",
+    "Runtime domain component retains live+selected slots; full transient raw validator checks unselected grants/fences/duplicates and exact native metadata/payload cut. O(N) scan work remains; no SDK infrastructure memory or constant-time claim.",
+    "Selected actual grant/settle full metadata compared independently; rolling cut excludes writer-stamped attribution fields. Installed SDK audit sessions are independent streams.",
+    "SourceFactProofs compares requested realm/stream/event/version/physical tuple and typed bytes before proof writes. Existing implied-offset API retained; explicit actual-offset overload added. Other callers not claimed universally audit-offset corrected.",
+    "Original logical source preimages/hashes preserved; optional physical blob envelope includes exact selected business refs/bytes and accurate physical digest/length.",
+    "No new TypeII opening archive entry contract invented; current selected opening sources remain TypeI families. No retained wide-fact conversion, reset, deployment or production broker qualification.",
+    "Other owner/reactor families continue separately; no repository completion claim."
+  ]
+}
