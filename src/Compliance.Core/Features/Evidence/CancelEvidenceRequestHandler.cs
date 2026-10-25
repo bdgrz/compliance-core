@@ -13,8 +13,7 @@ namespace Bdgrz.Compliance.Features.Evidence;
 ///     Cancels an open request with an attributed rationale. Cancellation and fulfilment serialize on the request, and
 ///     the frozen first response is the request view after the cancellation.
 /// </summary>
-public sealed class CancelEvidenceRequestHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content, TimeProvider clock)
+public sealed class CancelEvidenceRequestHandler(NativeOperationExecutor operations, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<CancelEvidenceRequest, EvidenceRequestView>
 {
     public async ValueTask<Result<EvidenceRequestView>> HandleAsync(IRequestContext<CancelEvidenceRequest> context,
@@ -27,39 +26,40 @@ public sealed class CancelEvidenceRequestHandler(NativeOperationExecutor operati
         var actor = OperationsActor.From(context.Actor, request.TenantId);
         var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new EvidenceRequest(request.TenantId, request.ProgramId,
-            request.EvidenceRequestId, request.CommandId), ct).ConfigureAwait(false);
+        var snapshot = new EvidenceRequest(request.TenantId, request.ProgramId,
+            request.EvidenceRequestId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, "CancelEvidenceRequest", snapshot.Stream,
-            actorReference, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now);
+            actorReference, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
 
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(EvidenceRequest owner, CancellationToken token)
         {
-            var prepared = snapshot.PrepareDecision(request.ExpectedRevision);
+            var prepared = owner.PrepareDecision(request.ExpectedRevision);
             if (!prepared.IsSuccess)
-                return Result<EvidenceRequestView>.Failure(prepared.Error!);
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
             var invalid = EvidenceRequestRules.ValidateCancel(request.Rationale);
             if (invalid is not null)
-                return Result<EvidenceRequestView>.Failure(invalid.ToRequestError());
-            var view = snapshot.View()! with
+                return Result<FirstResponseDescriptor>.Failure(invalid.ToRequestError());
+            var view = owner.View()! with
             {
-                Revision = snapshot.Revision + 1,
+                Revision = owner.Revision + 1,
                 Status = EvidenceRequest.Cancelled,
                 CancellationRationale = request.Rationale.Trim(),
                 CancelledBy = actorReference,
                 CancelledAt = now,
             };
             (response, result) = await FindingContent.FreezeAsync(content, request.TenantId,
-                EvidenceRequestRules.ViewSchema, view, ct).ConfigureAwait(false);
+                EvidenceRequestRules.ViewSchema, view, token).ConfigureAwait(false);
+            return Result<FirstResponseDescriptor>.Success(response!);
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<EvidenceRequest>(binding,
             () => new EvidenceRequest(request.TenantId, request.ProgramId, request.EvidenceRequestId, request.CommandId),
             evidenceRequest => evidenceRequest.Acceptance,
-            evidenceRequest => FindingCommands.Prepared(evidenceRequest.PrepareDecision(request.ExpectedRevision),
-                response),
+            PrepareAsync,
             (EvidenceRequest evidenceRequest, ImmutableContentRef frozen) => evidenceRequest.Cancel(provenance,
                 request.Rationale.Trim(), actorReference, now, frozen, result!)), context, ct).ConfigureAwait(false);
         return await FindingContent.ResponseAsync<EvidenceRequestView>(content, request.TenantId, outcome, ct)

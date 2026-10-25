@@ -6,7 +6,11 @@ namespace Bdgrz.Compliance.Features.ControlMappings;
 public sealed class GetControlCriterionMappingHandler(ControlMappingReader mappings)
     : IRequestHandler<GetControlCriterionMapping, ControlCriterionMappingView>
 {
-    public async ValueTask<Result<ControlCriterionMappingView>> HandleAsync(
+    public ValueTask<Result<ControlCriterionMappingView>> HandleAsync(
+        IRequestContext<GetControlCriterionMapping> context, CancellationToken ct) =>
+        MappingLineFailures.ExecuteAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<ControlCriterionMappingView>> HandleCoreAsync(
         IRequestContext<GetControlCriterionMapping> context, CancellationToken ct)
     {
         var request = context.Request;

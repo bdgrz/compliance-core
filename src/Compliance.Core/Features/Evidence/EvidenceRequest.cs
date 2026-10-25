@@ -35,7 +35,6 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
     readonly Uuid _tenantId;
     readonly Uuid _programId;
     readonly Uuid _requestId;
-    readonly List<DomainEvent> _facts = [];
     EvidenceRequestOpened? _opened;
     EvidenceRequestFulfilled? _fulfilled;
     EvidenceRequestCancelled? _cancelled;
@@ -59,13 +58,11 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
                 throw new InvalidOperationException(
                     "An action completion use is granted on a fulfilled request at its held revision.");
             Uses.ApplyGranted(SourceUsePurpose.ActionCompletionReview, granted);
-            _facts.Add(granted);
         });
         On<EvidenceRequestActionCompletionUseSettled>(settled =>
         {
             Acceptance.Observe(settled);
             Uses.ApplySettled(SourceUsePurpose.ActionCompletionReview, settled);
-            _facts.Add(settled);
         });
     }
 
@@ -103,8 +100,10 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
     /// <summary>The current status, or null before the request opened.</summary>
     public string? Status => _opened is null ? null : _fulfilled is not null ? Fulfilled : _cancelled is not null ? Cancelled : Open;
 
-    /// <summary>The fact with this event id.</summary>
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+    /// <summary>The exact original lifecycle content fact; technical source-use history belongs to its verified selection.</summary>
+    public DomainEvent? ContentFactById(Uuid eventId) => _opened?.Metadata.EventId == eventId ? _opened
+        : _fulfilled?.Metadata.EventId == eventId ? _fulfilled
+        : _cancelled?.Metadata.EventId == eventId ? _cancelled : null;
 
     /// <summary>The public view of the request, or null before it opened.</summary>
     public EvidenceRequestView? View() => _opened is not { } opened
@@ -225,7 +224,6 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
             throw new InvalidOperationException("An evidence request is opened once, by its own operation.");
         _opened = ev;
         _revision = 1;
-        _facts.Add(ev);
     }
 
     void Apply(EvidenceRequestFulfilled ev)
@@ -234,7 +232,6 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
         EnsureDecidable(ev.TenantId, ev.ProgramId, ev.EvidenceRequestId, ev.Revision, ev.Operation);
         _fulfilled = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
     }
 
     void Apply(EvidenceRequestCancelled ev)
@@ -243,7 +240,6 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
         EnsureDecidable(ev.TenantId, ev.ProgramId, ev.EvidenceRequestId, ev.Revision, ev.Operation);
         _cancelled = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
     }
 
     void EnsureDecidable(Uuid tenantId, Uuid programId, Uuid requestId, long revision, OperationProvenance operation)

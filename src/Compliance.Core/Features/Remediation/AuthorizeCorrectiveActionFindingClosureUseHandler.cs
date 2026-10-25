@@ -59,7 +59,7 @@ sealed class AuthorizeCorrectiveActionFindingClosureUseHandler(IAggregateReader 
                 superseded));
         if (!action.IsMaterialized)
             return Fail("The corrective action is not materialized yet.", true);
-        if (action.FactById(request.SourceContentEventId) is not { } pinned)
+        if (action.ContentFactById(request.SourceContentEventId) is not { } pinned)
             return Fail("The pinned corrective action fact does not exist.", false);
 
         var admitted = finding.Admitted.FirstOrDefault(fact => fact.Operation.LogicalId == request.SourceOwnerId);

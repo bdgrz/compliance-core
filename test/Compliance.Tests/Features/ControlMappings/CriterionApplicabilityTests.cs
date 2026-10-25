@@ -18,25 +18,25 @@ public sealed class CriterionApplicabilityTests
     static readonly Uuid ReviewerId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = NativeFacts.Now;
 
-    static CriterionApplicability Line(string criterion = "CC6.2", Uuid logicalId = default) =>
-        new(TenantId, ProgramId, EditionId, criterion, logicalId);
+    static CriterionApplicabilityRules Line(string criterion = "CC6.2") =>
+        new(TenantId, ProgramId, EditionId, criterion);
 
     static ActorReference Actor(Uuid memberId) => ActorReference.ForMember(memberId, "Member");
 
-    static Result Propose(CriterionApplicability line, Uuid decisionId, long expected,
+    static Result Propose(CriterionApplicabilityRules line, Uuid decisionId, long expected,
         string rationale = "No accounts are approved.") => line.Propose(
-        NativeFacts.Root(line, decisionId, "ProposeCriterionNotApplicable", expected, ProposerId), rationale, ProposerId,
-        Actor(ProposerId), Now, NativeFacts.Ref(), NativeFacts.Ref());
+        MappingRuleFacts.Root(line, decisionId, "ProposeCriterionNotApplicable", expected, ProposerId), rationale, ProposerId,
+        Actor(ProposerId), Now);
 
-    static Result Review(CriterionApplicability line, Uuid decisionId, long expected, string outcome,
+    static Result Review(CriterionApplicabilityRules line, Uuid decisionId, long expected, string outcome,
         Uuid? reviewer = null, SeparationOfDutiesWaiver? waiver = null) => line.Review(
-        NativeFacts.Root(line, Uuid.CreateVersion4(), "ReviewCriterionApplicability", expected, reviewer ?? ReviewerId),
+        MappingRuleFacts.Root(line, Uuid.CreateVersion4(), "ReviewCriterionApplicability", expected, reviewer ?? ReviewerId),
         decisionId, outcome, "Supported.", reviewer ?? ReviewerId, Actor(reviewer ?? ReviewerId), Now.AddMinutes(1),
-        waiver, NativeFacts.Ref(), NativeFacts.Ref());
+        waiver);
 
-    static Result Withdraw(CriterionApplicability line, Uuid decisionId, long expected) => line.Withdraw(
-        NativeFacts.Root(line, Uuid.CreateVersion4(), "WithdrawCriterionNotApplicable", expected, ProposerId),
-        decisionId, "Now applies.", Actor(ProposerId), Now.AddMinutes(2), NativeFacts.Ref(), NativeFacts.Ref());
+    static Result Withdraw(CriterionApplicabilityRules line, Uuid decisionId, long expected) => line.Withdraw(
+        MappingRuleFacts.Root(line, Uuid.CreateVersion4(), "WithdrawCriterionNotApplicable", expected, ProposerId),
+        decisionId, "Now applies.", Actor(ProposerId), Now.AddMinutes(2));
 
     [Fact]
     public void ShouldExcludeCriterionGivenAcceptedReviewThenRestoreGivenWithdrawal()
@@ -162,13 +162,13 @@ public sealed class CriterionApplicabilityTests
         Assert.True(Review(line, first, 1, "reject").IsSuccess);
         Assert.True(Propose(line, second, 2, "Second attempt.").IsSuccess);
         Assert.True(Review(line, second, 3, "accept").IsSuccess);
-        var facts = NativeFacts.Raised(line);
+        var facts = MappingRuleFacts.Raised(line);
 
         // Act
         CriterionApplicabilityView? projected = null;
         foreach (var fact in facts)
             projected = CriterionApplicabilityReducer.Apply(projected, fact);
-        var replayed = NativeFacts.Replay(Line(), facts);
+        var replayed = MappingRuleFacts.Replay(Line(), facts);
 
         // Assert
         Assert.Equal(line.View! with { Versions = [] }, projected! with { Versions = [] });

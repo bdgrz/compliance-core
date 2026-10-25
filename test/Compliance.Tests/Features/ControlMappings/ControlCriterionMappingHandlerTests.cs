@@ -314,7 +314,7 @@ public sealed class ControlCriterionMappingHandlerTests
         public Uuid ControlId => ControlDraft.IdFor(TenantId, ProgramId, "AC-MAP");
         public Uuid ControlVersionId => ControlVersionIds.Initial(ControlId);
 
-        public static async Task<Fixture> CreateAsync()
+        public static async Task<Fixture> CreateAsync(Action<IServiceCollection>? configure = null)
         {
             var provider = ProgramManagementServices.Build(
                 new RecordingPermissionAuthorizer(allowed: true),
@@ -329,10 +329,14 @@ public sealed class ControlCriterionMappingHandlerTests
                     .AddRequestHandler<WithdrawCriterionNotApplicableHandler>()
                     .AddRequestHandler<GetCriterionApplicabilityHandler>()
                     .AddRequestHandler<ListCriterionApplicabilityHandler>(),
-                services => services.AddSingleton<ICriteriaCatalog>(TestCatalog())
+                services =>
+                {
+                    services.AddSingleton<ICriteriaCatalog>(TestCatalog())
                     .AddScoped<ICriteriaTextOverlayReader, EmptyCriteriaTextOverlayReader>()
                     .AddScoped<ControlActivationSource>()
-                    .AddCoverageProjections());
+                    .AddCoverageProjections();
+                    configure?.Invoke(services);
+                });
             var fixture = new Fixture { Provider = provider };
             var now = DateTimeOffset.UtcNow;
             var admin = Uuid.CreateVersion4();

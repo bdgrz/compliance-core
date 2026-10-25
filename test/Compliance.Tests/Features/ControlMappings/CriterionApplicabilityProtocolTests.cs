@@ -23,13 +23,13 @@ public sealed class CriterionApplicabilityProtocolTests
         ControlCriterionMappingHandlerTests.Fixture fixture, ProposeCriterionNotApplicable request) =>
         (await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.AuthorUserId, request)).Value;
 
-    static async Task<int> FactsAsync(ControlCriterionMappingHandlerTests.Fixture fixture, Uuid decisionId)
+    static async Task<long> FactsAsync(ControlCriterionMappingHandlerTests.Fixture fixture, Uuid decisionId)
     {
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<ApplicabilityReader>();
         var criterion = await reader.LocateAsync(fixture.TenantId, fixture.ProgramId, decisionId);
         return (await reader.ReadLineAsync(fixture.TenantId, fixture.ProgramId, criterion!.EditionId,
-            criterion.CriterionIdentifier)).Facts.Count;
+            criterion.CriterionIdentifier)).Revision;
     }
 
     [Fact]

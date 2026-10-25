@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.ControlMappings;
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,10 +17,10 @@ static class CoverageProjections
         var kv = new InMemoryKvClient();
         services.AddSingleton<IDomainEventReader>(provider =>
             (IDomainEventReader)provider.GetRequiredService<IEventStore>());
-        services.AddSingleton(new FitzControlMappingDirectoryV1(kv));
+        services.AddSingleton(provider => new FitzControlMappingDirectoryV1(kv, provider.GetRequiredService<IImmutableContentStore>()));
         services.AddSingleton<IControlMappingDirectoryReader>(provider =>
             provider.GetRequiredService<FitzControlMappingDirectoryV1>());
-        services.AddSingleton(new FitzCriterionApplicabilityDirectoryV1(kv));
+        services.AddSingleton(provider => new FitzCriterionApplicabilityDirectoryV1(kv, provider.GetRequiredService<IImmutableContentStore>()));
         services.AddSingleton<ICriterionApplicabilityDirectoryReader>(provider =>
             provider.GetRequiredService<FitzCriterionApplicabilityDirectoryV1>());
         services.AddScoped<CriteriaCoverageReadConsistency>();

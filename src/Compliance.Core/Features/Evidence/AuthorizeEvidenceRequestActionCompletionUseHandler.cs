@@ -66,7 +66,7 @@ sealed class AuthorizeEvidenceRequestActionCompletionUseHandler(IAggregateReader
             });
         if (!evidence.IsOpened)
             return Fail("The evidence request is not visible yet.", true);
-        if (evidence.FactById(request.SourceContentEventId) is not { } pinned)
+        if (evidence.ContentFactById(request.SourceContentEventId) is not { } pinned)
             return Fail("The pinned evidence request fact does not exist.", false);
 
         var fulfilled = evidence.FulfilledFact;

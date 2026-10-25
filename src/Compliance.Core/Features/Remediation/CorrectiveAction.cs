@@ -26,8 +26,7 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     readonly Uuid _programId;
     readonly Uuid _findingId;
     readonly Uuid _actionId;
-    readonly List<DomainEvent> _facts = [];
-    readonly SortedSet<long> _closedGenerations = [];
+    long? _closedByGeneration;
     CorrectiveActionAddedV2? _added;
     CorrectiveActionCompletedV2? _completed;
     long _revision;
@@ -48,15 +47,14 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
             if (_added is null || granted.Revision != _revision)
                 throw new InvalidOperationException("A closure use is granted on a materialized action at its held revision.");
             Uses.ApplyGranted(SourceUsePurpose.FindingClosure, granted);
-            _facts.Add(granted);
         });
         On<CorrectiveActionFindingClosureUseSettled>(settled =>
         {
             Acceptance.Observe(settled);
             Uses.ApplySettled(SourceUsePurpose.FindingClosure, settled);
             if (settled.Disposition == SourceUseSettlementDisposition.ParentClosed)
-                _closedGenerations.Add(settled.Generation);
-            _facts.Add(settled);
+                _closedByGeneration ??= settled.Generation;
+
         });
     }
 
@@ -94,11 +92,12 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     /// <summary>The latest content fact: the completion when completed, else the materialization.</summary>
     public DomainEvent? Latest => (DomainEvent?)_completed ?? _added;
 
-    /// <summary>The finding generations whose closure fenced this action.</summary>
-    public IReadOnlyCollection<long> ClosedGenerations => _closedGenerations;
+    /// <summary>The first parent generation whose verified closed settlement permanently fenced this action.</summary>
+    public long? ClosedByGeneration => _closedByGeneration;
 
-    /// <summary>The fact with this event id.</summary>
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+    /// <summary>The original lifecycle content fact; technical use history is resolved by its verified selection.</summary>
+    public DomainEvent? ContentFactById(Uuid eventId) => _added?.Metadata.EventId == eventId ? _added
+        : _completed?.Metadata.EventId == eventId ? _completed : null;
 
     /// <summary>Checks that the action can be materialized.</summary>
     public Result PrepareMaterialize() => _added is null
@@ -125,7 +124,7 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     {
         if (_added is null)
             return Fail(CommandFailure.MissingRecord("The corrective action was not found."));
-        if (_closedGenerations.Count > 0)
+        if (_closedByGeneration is not null)
             return Fail(CommandFailure.StateConflict(
                 "The corrective action is fenced by a closed finding generation."));
         if (Uses.HasActiveUse)
@@ -193,7 +192,6 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
             throw new InvalidOperationException("An action is materialized once, at revision one, on its own stream.");
         _added = ev;
         _revision = 1;
-        _facts.Add(ev);
     }
 
     void Apply(CorrectiveActionCompletedV2 ev)
@@ -204,7 +202,6 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
             throw new InvalidOperationException("An action completes once, at the next revision after its materialization.");
         _completed = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
     }
 
     static Result Fail(CommandFailure failure) => Result.Failure(failure.ToRequestError());

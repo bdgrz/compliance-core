@@ -20,7 +20,11 @@ public sealed class ReviewControlCriterionMappingHandler(NativeOperationExecutor
 {
     const string CommandKind = "ReviewControlCriterionMapping";
 
-    public async ValueTask<Result> HandleAsync(IRequestContext<ReviewControlCriterionMapping> context,
+    public ValueTask<Result> HandleAsync(IRequestContext<ReviewControlCriterionMapping> context,
+        CancellationToken ct) =>
+        MappingLineFailures.ExecuteAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<ReviewControlCriterionMapping> context,
         CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
@@ -45,51 +49,42 @@ public sealed class ReviewControlCriterionMappingHandler(NativeOperationExecutor
             AuthoredIntentDigest.Compute(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        SeparationOfDutiesWaiver? waiver = null;
-        FirstResponseDescriptor? response = null;
-        ImmutableContentRef? result = null;
-        if (line.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            if (request.Outcome == "accept" && line.View is { Status: "pending" })
-            {
-                var program = await reader.HydrateAsync(new ComplianceProgram(request.TenantId, request.ProgramId), ct)
-                    .ConfigureAwait(false);
-                if (program.CriteriaEditionId != tuple.EditionId)
-                    return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                        "The mapping targets an edition the program no longer selects; remap it explicitly."));
-            }
-
-            if (request.SeparationOfDutiesWaiverId is { } waiverId)
-                waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, waiverId), ct)
-                    .ConfigureAwait(false);
-            var prepared = line.PrepareReview(request.MappingId, request.ExpectedRevision, request.Outcome,
-                request.Rationale, actor.MemberId, now, waiver);
-            if (!prepared.IsSuccess)
-                return prepared;
-            (response, result) = await NativeContent.FreezeUnitAsync(content, request.TenantId, ct)
-                .ConfigureAwait(false);
-        }
-
+        MappingLinePrepared? prepared = null;
         var outcome = await operations.ExecuteAsync(new NativeOperation<ControlCriterionMapping>(binding,
-            () => new ControlCriterionMapping(request.TenantId, request.ProgramId, tuple.ControlId, tuple.EditionId,
-                tuple.CriterionIdentifier, request.CommandId), owner => owner.Acceptance,
-            owner => Prepare(owner, request, actor.MemberId, now, waiver, response),
-            (ControlCriterionMapping owner, ImmutableContentRef frozen) => owner.Review(provenance, request.MappingId,
-                request.Outcome, request.Rationale, actor.MemberId, actor.Display, now, waiver, frozen, result!)),
+            () => new ControlCriterionMapping(request.TenantId, request.ProgramId, tuple.ControlId, tuple.EditionId, tuple.CriterionIdentifier, request.CommandId), owner => owner.Acceptance,
+            async (owner, token) =>
+            {
+                var rules = await mappings.ComposeAsync(owner, token).ConfigureAwait(false);
+                FirstResponseDescriptor? response = null;
+                ImmutableContentRef? result = null;
+                SeparationOfDutiesWaiver? waiver = null;
+                if (request.Outcome == "accept" && rules.View is { Status: "pending" })
+                {
+                    var program = await reader.HydrateAsync(new ComplianceProgram(request.TenantId, request.ProgramId), token)
+                        .ConfigureAwait(false);
+                    if (program.CriteriaEditionId != tuple.EditionId)
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "The mapping targets an edition the program no longer selects; remap it explicitly."));
+                }
+
+                if (request.SeparationOfDutiesWaiverId is { } waiverId)
+                    waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, waiverId), token)
+                        .ConfigureAwait(false);
+                var guard = rules.PrepareReview(request.MappingId, request.ExpectedRevision, request.Outcome,
+                    request.Rationale, actor.MemberId, now, waiver);
+                if (!guard.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(guard.Error!);
+                (response, result) = await NativeContent.FreezeUnitAsync(content, request.TenantId, token)
+                    .ConfigureAwait(false);
+
+                var applied = rules.Review(provenance, request.MappingId, request.Outcome, request.Rationale, actor.MemberId, actor.Display, now, waiver);
+                if (!applied.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(applied.Error!);
+                prepared = await MappingLineContent.PrepareAsync(content, owner, request, rules.Changes[^1],
+                    MappingLineContent.Current(rules), MappingLineContent.Header(rules), result!, token).ConfigureAwait(false);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            }, (owner, frozen) => owner.Apply(prepared ?? throw new InvalidOperationException("The native line was not prepared."), frozen)),
             context, ct).ConfigureAwait(false);
         return NativeContent.UnitOutcome(outcome);
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(ControlCriterionMapping owner, ReviewControlCriterionMapping request,
-        Uuid reviewerMemberId, DateTimeOffset now, SeparationOfDutiesWaiver? waiver, FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareReview(request.MappingId, request.ExpectedRevision, request.Outcome,
-            request.Rationale, reviewerMemberId, now, waiver);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The mapping line changed while the review was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 }

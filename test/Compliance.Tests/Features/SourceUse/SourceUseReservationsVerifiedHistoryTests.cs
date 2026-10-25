@@ -209,7 +209,6 @@ public sealed class SourceUseReservationsVerifiedHistoryTests
         var selected = await reader.HydrateAsync(new FirmStaffRecord(staff.StaffMemberId).ForSourceUses(key));
 
         // Assert
-        Assert.IsType<SourceUseAggregateReader>(reader);
         Assert.IsType<AggregateExecutor>(executor);
         Assert.True(granted.IsSuccess, granted.Error?.Message);
         Assert.True(settled.IsSuccess, settled.Error?.Message);

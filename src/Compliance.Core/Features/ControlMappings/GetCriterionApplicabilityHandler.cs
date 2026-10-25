@@ -6,7 +6,11 @@ namespace Bdgrz.Compliance.Features.ControlMappings;
 public sealed class GetCriterionApplicabilityHandler(ApplicabilityReader applicability)
     : IRequestHandler<GetCriterionApplicability, CriterionApplicabilityView>
 {
-    public async ValueTask<Result<CriterionApplicabilityView>> HandleAsync(
+    public ValueTask<Result<CriterionApplicabilityView>> HandleAsync(
+        IRequestContext<GetCriterionApplicability> context, CancellationToken ct) =>
+        MappingLineFailures.ExecuteAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<CriterionApplicabilityView>> HandleCoreAsync(
         IRequestContext<GetCriterionApplicability> context, CancellationToken ct)
     {
         var request = context.Request;

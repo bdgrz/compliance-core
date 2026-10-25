@@ -19,7 +19,11 @@ public sealed class WithdrawCriterionNotApplicableHandler(NativeOperationExecuto
 {
     const string CommandKind = "WithdrawCriterionNotApplicable";
 
-    public async ValueTask<Result> HandleAsync(IRequestContext<WithdrawCriterionNotApplicable> context,
+    public ValueTask<Result> HandleAsync(IRequestContext<WithdrawCriterionNotApplicable> context,
+        CancellationToken ct) =>
+        MappingLineFailures.ExecuteAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<WithdrawCriterionNotApplicable> context,
         CancellationToken ct)
     {
         var request = context.Request;
@@ -40,36 +44,28 @@ public sealed class WithdrawCriterionNotApplicableHandler(NativeOperationExecuto
             request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        FirstResponseDescriptor? response = null;
-        ImmutableContentRef? result = null;
-        if (line.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var prepared = line.PrepareWithdrawal(request.DecisionId, request.ExpectedRevision, request.Rationale);
-            if (!prepared.IsSuccess)
-                return prepared;
-            (response, result) = await NativeContent.FreezeUnitAsync(content, request.TenantId, ct)
-                .ConfigureAwait(false);
-        }
-
+        MappingLinePrepared? prepared = null;
         var outcome = await operations.ExecuteAsync(new NativeOperation<CriterionApplicability>(binding,
-            () => new CriterionApplicability(request.TenantId, request.ProgramId, criterion.EditionId,
-                criterion.CriterionIdentifier, request.CommandId), owner => owner.Acceptance,
-            owner => Prepare(owner, request, response),
-            (CriterionApplicability owner, ImmutableContentRef frozen) => owner.Withdraw(provenance,
-                request.DecisionId, request.Rationale, member, now, frozen, result!)), context, ct)
-            .ConfigureAwait(false);
-        return NativeContent.UnitOutcome(outcome);
-    }
+            () => new CriterionApplicability(request.TenantId, request.ProgramId, criterion.EditionId, criterion.CriterionIdentifier, request.CommandId), owner => owner.Acceptance,
+            async (owner, token) =>
+            {
+                var rules = await applicability.ComposeAsync(owner, token).ConfigureAwait(false);
+                FirstResponseDescriptor? response = null;
+                ImmutableContentRef? result = null;
+                var guard = rules.PrepareWithdrawal(request.DecisionId, request.ExpectedRevision, request.Rationale);
+                if (!guard.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(guard.Error!);
+                (response, result) = await NativeContent.FreezeUnitAsync(content, request.TenantId, token)
+                    .ConfigureAwait(false);
 
-    static Result<FirstResponseDescriptor> Prepare(CriterionApplicability owner, WithdrawCriterionNotApplicable request,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareWithdrawal(request.DecisionId, request.ExpectedRevision, request.Rationale);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The applicability line changed while the withdrawal was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
+                var applied = rules.Withdraw(provenance, request.DecisionId, request.Rationale, member, now);
+                if (!applied.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(applied.Error!);
+                prepared = await MappingLineContent.PrepareAsync(content, owner, request, rules.Changes[^1],
+                    MappingLineContent.Current(rules), MappingLineContent.Header(rules), result!, token).ConfigureAwait(false);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            }, (owner, frozen) => owner.Apply(prepared ?? throw new InvalidOperationException("The native line was not prepared."), frozen)),
+            context, ct).ConfigureAwait(false);
+        return NativeContent.UnitOutcome(outcome);
     }
 }

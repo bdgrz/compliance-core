@@ -1,0 +1,31 @@
+{
+  "reviewed": 53,
+  "blockedReviews": 0,
+  "signalsTriaged": 2,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/ControlMappings/MappingLineTransitions.cs",
+      "sha256": "1066d08c8264d145ef10c2055ee9e0691e6a240577c921c1c0bd75f78a21f77c",
+      "signals": {
+        "authority_gap": 0.67,
+        "invariant_gap": 0.59,
+        "recovery_gap": 0.39,
+        "incomplete_path": 0.42
+      },
+      "classification": "raw_native_line_transitions_and_proposer_binding_refinement",
+      "evidence": "Raw transitions enforce exact tuple/owner/root/actor/revision, pending\u2192review\u2192active/termination and independent review. Mapping Actor is computed from ActorMemberId, so existing operation/actor equality already binds that scalar. Applicability proposal stored explicit Actor independently; adversarial review reproduced6 default/executor accepted wrong-member/nonmember/malformed UUID facts with coherent native/immutable headers. New member-kind/UUID/equality guard rejects them before any executor delegate. Full raw prefix commitment, selected metadata and logical/proposal uniqueness validation remain. Existing current program edition/approved-Control/waiver guards are producer/pipeline responsibility; missing stronger source-use/persisted producer-proof lane is explicitly qualified, not invented."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Remediation/AuthorizeCorrectiveActionFindingClosureUseHandler.cs",
+      "sha256": "04c7fe16e68173648e91328828649d48f2ec6bd21c0f503e85bb9497a8791685",
+      "signals": {
+        "authority_gap": 0.43,
+        "invariant_gap": 0.39,
+        "recovery_gap": 0.39,
+        "incomplete_path": 0.77
+      },
+      "classification": "actual_corrective_action_closure_source_use_receiver",
+      "evidence": "Preserves actual trusted finding closure verifier, frozen child-set membership, exact lifecycle content-fact pin, owner/completer separation and existing waiver proof, selected source-use key, current business revision plus finalized native/physical cut. Compact action retains2 lifecycle facts and first irreversible closed-parent fence; source-use grants/terminals remain verified outside lifetime owner history. Missing materialization/admission bytes are typed transient, corruption permanent. Existing producer/refusal/settle/fence protocol retained. CompleteFinding/owner compaction is a separate next stage, not claimed done.446 focused includes actual closure/process/source-use/missing-content and128 terminal-history cases."
+    }
+  ]
+}

@@ -15,10 +15,9 @@ static class MappingSeeds
     {
         var id = mappingId ?? Uuid.CreateVersion4();
         await ProgramManagementServices.SeedAsync(provider,
-            new ControlCriterionMapping(tenantId, programId, controlId, editionId, criterion, id), line =>
-                line.Propose(NativeFacts.Root(line, id, "ProposeControlCriterionMapping", expectedRevision,
-                        actorMemberId, at), controlVersionId, kind, rationale, explanation, actorMemberId, display, at,
-                    NativeFacts.Ref(), NativeFacts.Ref()));
+            new ControlCriterionMappingRules(tenantId, programId, controlId, editionId, criterion), line =>
+                line.Propose(MappingRuleFacts.Root(line, id, "ProposeControlCriterionMapping", expectedRevision,
+                        actorMemberId, at), controlVersionId, kind, rationale, explanation, actorMemberId, display, at));
         return id;
     }
 
@@ -29,10 +28,9 @@ static class MappingSeeds
     {
         var commandId = Uuid.CreateVersion4();
         return ProgramManagementServices.SeedAsync(provider,
-            new ControlCriterionMapping(tenantId, programId, controlId, editionId, criterion, commandId), line =>
-                line.Review(NativeFacts.Root(line, commandId, "ReviewControlCriterionMapping", expectedRevision,
-                        reviewerMemberId, at), mappingId, outcome, rationale, reviewerMemberId, display, at, null,
-                    NativeFacts.Ref(), NativeFacts.Ref()));
+            new ControlCriterionMappingRules(tenantId, programId, controlId, editionId, criterion), line =>
+                line.Review(MappingRuleFacts.Root(line, commandId, "ReviewControlCriterionMapping", expectedRevision,
+                        reviewerMemberId, at), mappingId, outcome, rationale, reviewerMemberId, display, at, null));
     }
 
     /// <summary>Proposes a not-applicable decision on the criterion's line; the proposal id is returned.</summary>
@@ -42,10 +40,10 @@ static class MappingSeeds
     {
         var id = decisionId ?? Uuid.CreateVersion4();
         await ProgramManagementServices.SeedAsync(provider,
-            new CriterionApplicability(tenantId, programId, editionId, criterion, id), line =>
-                line.Propose(NativeFacts.Root(line, id, "ProposeCriterionNotApplicable", expectedRevision,
+            new CriterionApplicabilityRules(tenantId, programId, editionId, criterion), line =>
+                line.Propose(MappingRuleFacts.Root(line, id, "ProposeCriterionNotApplicable", expectedRevision,
                         actorMemberId, at), rationale, actorMemberId, ActorReference.ForMember(actorMemberId, display),
-                    at, NativeFacts.Ref(), NativeFacts.Ref()));
+                    at));
         return id;
     }
 
@@ -56,10 +54,9 @@ static class MappingSeeds
     {
         var commandId = Uuid.CreateVersion4();
         return ProgramManagementServices.SeedAsync(provider,
-            new CriterionApplicability(tenantId, programId, editionId, criterion, commandId), line =>
-                line.Review(NativeFacts.Root(line, commandId, "ReviewCriterionApplicability", expectedRevision,
+            new CriterionApplicabilityRules(tenantId, programId, editionId, criterion), line =>
+                line.Review(MappingRuleFacts.Root(line, commandId, "ReviewCriterionApplicability", expectedRevision,
                         reviewerMemberId, at), decisionId, outcome, rationale, reviewerMemberId,
-                    ActorReference.ForMember(reviewerMemberId, display), at, null, NativeFacts.Ref(),
-                    NativeFacts.Ref()));
+                    ActorReference.ForMember(reviewerMemberId, display), at, null));
     }
 }

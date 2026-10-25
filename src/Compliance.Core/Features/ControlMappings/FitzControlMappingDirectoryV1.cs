@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
@@ -5,7 +6,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.ControlMappings;
 
 /// <summary>Projects every program's mapping views for coverage and list reads.</summary>
-sealed class FitzControlMappingDirectoryV1(IKvClient client)
+sealed class FitzControlMappingDirectoryV1(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client, "kv://bdgrz/control-mapping-directory-v1/projection",
             ProjectorName),
         IControlMappingDirectoryReader, IControlMappingDirectoryProjection
@@ -34,7 +35,13 @@ sealed class FitzControlMappingDirectoryV1(IKvClient client)
         };
         var current = await ControlCoverageDirectorySchema.Mappings.GetAsync(Transaction,
             lineId, ct).ConfigureAwait(false);
-        var next = ControlCriterionMappingReducer.Apply(current, domainEvent);
+        _ = MappingLineTransitions.Next(MappingLineContent.Owner(domainEvent),
+            current is null ? new MappingLineHeader(0, 0, Uuid.Empty, null, null, false) : MappingLineContent.Header(current), domainEvent);
+        var decoded = await MappingLineContent.ReadAsync(content, domainEvent, ct).ConfigureAwait(false);
+        var next = ControlCriterionMappingReducer.Apply(current, decoded.Change);
+        MappingLineContent.ValidateCurrent(decoded.Current, MappingLineContent.Current(next));
+        if (((IMappingLineFact)domainEvent).Header != MappingLineContent.Header(next))
+            throw new ImmutableContentIntegrityException("The projected current authority has another native header.");
         if (next.Revision != (current?.Revision ?? 0) + 1)
             throw new InvalidOperationException(
                 "A control mapping revision cannot project before its predecessor.");

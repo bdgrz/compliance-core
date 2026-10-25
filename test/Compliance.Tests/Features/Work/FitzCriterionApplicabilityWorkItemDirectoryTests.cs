@@ -97,12 +97,8 @@ public sealed class FitzCriterionApplicabilityWorkItemDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          reviewedCheckpoint)))
         {
-            await directory.ApplyAsync(new CriterionNotApplicableWithdrawn(tenantId, programId,
-                secondId, 5, 2, "The criterion applies now.", proposer,
-                proposedAt.AddMinutes(4), editionId, "AC-2.4",
-                NativeFacts.Root(new CriterionApplicability(tenantId, programId, editionId, "AC-2.4"),
-                    Uuid.CreateVersion4(), "WithdrawCriterionNotApplicable", 4, proposerId, proposedAt.AddMinutes(4)),
-                NativeFacts.Ref(), NativeFacts.Ref()));
+            await directory.ApplyAsync(new CriterionNotApplicableWithdrawn(tenantId, programId, secondId, 5, 2, proposer, proposedAt.AddMinutes(4), editionId, "AC-2.4", NativeFacts.Ref(MappingLineContent.Schema), new MappingLineHeader(5, 2, secondId, null, null, true), NativeFacts.Root(new CriterionApplicability(tenantId, programId, editionId, "AC-2.4"),
+                    Uuid.CreateVersion4(), "WithdrawCriterionNotApplicable", 4, proposerId, proposedAt.AddMinutes(4)), NativeFacts.Ref(), NativeFacts.Ref()));
             await batch.CommitAsync(withdrawnCheckpoint);
         }
         var withdrawn = await directory.LoadProgramAsync(tenantId, programId,
@@ -141,23 +137,16 @@ public sealed class FitzCriterionApplicabilityWorkItemDirectoryTests
     static CriterionNotApplicableProposed Proposed(Uuid tenantId, Uuid programId,
         Uuid decisionId, Uuid editionId, Uuid proposerId, ActorReference proposer,
         long revision, int versionNumber, DateTimeOffset proposedAt) =>
-        new(tenantId, programId, decisionId, revision, versionNumber, editionId,
-            "AC-2.4", "The control is not relevant to this organization.", proposerId,
-            proposer, proposedAt,
-            NativeFacts.Root(new CriterionApplicability(tenantId, programId, editionId, "AC-2.4"), decisionId,
-                "ProposeCriterionNotApplicable", revision - 1, proposerId, proposedAt), NativeFacts.Ref(),
-            NativeFacts.Ref());
+        new(tenantId, programId, decisionId, revision, versionNumber, editionId, "AC-2.4", proposerId, proposer, proposedAt, NativeFacts.Ref(MappingLineContent.Schema), new MappingLineHeader(revision, versionNumber, decisionId, new MappingLineSlot(decisionId, versionNumber, proposerId), null, false), NativeFacts.Root(new CriterionApplicability(tenantId, programId, editionId, "AC-2.4"), decisionId,
+                "ProposeCriterionNotApplicable", revision - 1, proposerId, proposedAt), NativeFacts.Ref(), NativeFacts.Ref());
 
     static CriterionApplicabilityReviewed Reviewed(Uuid tenantId, Uuid programId, Uuid editionId,
         Uuid decisionId, ActorReference reviewer, long revision, int versionNumber,
         string outcome, DateTimeOffset reviewedAt)
     {
         var reviewId = Uuid.CreateVersion4();
-        return new CriterionApplicabilityReviewed(tenantId, programId, decisionId, revision, versionNumber, reviewId,
-            outcome, "Reviewed the applicability rationale.", reviewer, reviewedAt, null, editionId, "AC-2.4",
-            NativeFacts.Root(new CriterionApplicability(tenantId, programId, editionId, "AC-2.4"), reviewId,
+        return new CriterionApplicabilityReviewed(tenantId, programId, decisionId, revision, versionNumber, reviewId, outcome, reviewer, reviewedAt, null, editionId, "AC-2.4", NativeFacts.Ref(MappingLineContent.Schema), new MappingLineHeader(revision, versionNumber, decisionId, null, (outcome == "accept" ? new MappingLineSlot(decisionId, versionNumber, Uuid.Parse(reviewer.Id, System.Globalization.CultureInfo.InvariantCulture)) : null), false), NativeFacts.Root(new CriterionApplicability(tenantId, programId, editionId, "AC-2.4"), reviewId,
                 "ReviewCriterionApplicability", revision - 1, Uuid.Parse(reviewer.Id,
-                    System.Globalization.CultureInfo.InvariantCulture), reviewedAt), NativeFacts.Ref(),
-            NativeFacts.Ref());
+                    System.Globalization.CultureInfo.InvariantCulture), reviewedAt), NativeFacts.Ref(), NativeFacts.Ref());
     }
 }

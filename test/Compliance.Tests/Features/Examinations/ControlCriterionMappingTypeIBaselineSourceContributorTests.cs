@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.Content;
+using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Criteria;
@@ -183,36 +185,35 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
         bool approveInitial = true, bool includeControlSource = true,
         Uuid? capturedControlVersionId = null, bool successorBeforePeriod = false, Uuid? firstMappingId = null)
     {
-        var line = new ControlCriterionMapping(TenantId, ProgramId, ControlId, Edition.EditionId,
+        var line = new ControlCriterionMappingRules(TenantId, ProgramId, ControlId, Edition.EditionId,
             Criterion.Identifier);
         var mappingId = firstMappingId ?? Uuid.CreateVersion4();
-        Assert.True(line.Propose(NativeFacts.Root(line, mappingId, "ProposeControlCriterionMapping", 0, AuthorId,
+        Assert.True(line.Propose(MappingRuleFacts.Root(line, mappingId, "ProposeControlCriterionMapping", 0, AuthorId,
                 BeforePeriod), ControlVersionId, Criterion.Kind, "Restricts access", "All production systems",
-            AuthorId, "Author", BeforePeriod, NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
+            AuthorId, "Author", BeforePeriod).IsSuccess);
         if (approveInitial)
-            Assert.True(line.Review(NativeFacts.Root(line, ReviewDecisionId, "ReviewControlCriterionMapping", 1,
+            Assert.True(line.Review(MappingRuleFacts.Root(line, ReviewDecisionId, "ReviewControlCriterionMapping", 1,
                     ReviewerId, BeforePeriod.AddDays(1)), mappingId, "accept",
                 "The mapping matches the selected criterion.", ReviewerId, "Reviewer", BeforePeriod.AddDays(1),
-                null, NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
+                null).IsSuccess);
         if (includeFutureSuccessor)
         {
             var revision = approveInitial ? 2 : 1;
             var successorAt = successorBeforePeriod ? BeforePeriod.AddDays(4) : AfterPeriod;
             var successorId = Uuid.CreateVersion4();
-            Assert.True(line.Propose(NativeFacts.Root(line, successorId, "ProposeControlCriterionMapping", revision,
+            Assert.True(line.Propose(MappingRuleFacts.Root(line, successorId, "ProposeControlCriterionMapping", revision,
                     AuthorId, successorAt), FutureControlVersionId, Criterion.Kind, "Maps the successor control",
-                "The successor covers production systems", AuthorId, "Author", successorAt, NativeFacts.Ref(),
-                NativeFacts.Ref()).IsSuccess);
+                "The successor covers production systems", AuthorId, "Author", successorAt).IsSuccess);
             if (approveInitial)
-                Assert.True(line.Review(NativeFacts.Root(line, Uuid.CreateVersion4(), "ReviewControlCriterionMapping",
+                Assert.True(line.Review(MappingRuleFacts.Root(line, Uuid.CreateVersion4(), "ReviewControlCriterionMapping",
                         revision + 1, ReviewerId, successorAt.AddDays(1)), successorId, "accept",
-                    "The successor mapping is approved.", ReviewerId, "Reviewer", successorAt.AddDays(1), null,
-                    NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
+                    "The successor mapping is approved.", ReviewerId, "Reviewer", successorAt.AddDays(1), null).IsSuccess);
         }
 
         var events = new InMemoryEventStore();
-        await events.AppendAsync(line.Stream, 0, NativeFacts.Raised(line));
-        var mappingReader = new ControlMappingReader(new UnusedAggregateReader(), events);
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
+        await events.AppendAsync(line.Stream, 0, await MappingNativeSeeds.RaisedAsync(line, content));
+        var mappingReader = new ControlMappingReader(new UnusedAggregateReader(), events, content);
         var views = (await mappingReader.ReadProgramAsync(TenantId, ProgramId)).Mappings.ToArray();
         var checkpoint = await CheckpointAfterAsync(events);
         var mappingDirectory = new MappingDirectory(views, checkpoint);

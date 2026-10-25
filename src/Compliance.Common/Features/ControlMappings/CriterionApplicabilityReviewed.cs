@@ -5,14 +5,9 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.ControlMappings;
 
-/// <summary>
-///     The independent review of the pending proposal <paramref name="DecisionId" />. The edition and criterion name
-///     the applicability line the fact belongs to; <paramref name="ReviewDecisionId" /> is the logical id of the
-///     review operation.
-/// </summary>
-[Discriminator("bdgrz.criterion_applicability.reviewed", 2)]
+[Discriminator("bdgrz.criterion_applicability.reviewed", 3)]
 public sealed record CriterionApplicabilityReviewed(Uuid TenantId, Uuid ProgramId, Uuid DecisionId, long Revision,
-    int VersionNumber, Uuid ReviewDecisionId, string Outcome, string Rationale, ActorReference Actor,
+    int VersionNumber, Uuid ReviewDecisionId, string Outcome, ActorReference Actor,
     DateTimeOffset ReviewedAt, Uuid? SeparationOfDutiesWaiverId, Uuid EditionId, string CriterionIdentifier,
-    OperationProvenance Operation, ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult)
-    : DomainEvent, INativeOperationFact;
+    ImmutableContentRef Content, MappingLineHeader Header, OperationProvenance Operation, ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult)
+    : DomainEvent, IMappingLineFact;

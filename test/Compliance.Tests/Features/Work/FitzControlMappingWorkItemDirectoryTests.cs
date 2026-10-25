@@ -122,12 +122,8 @@ public sealed class FitzControlMappingWorkItemDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          reviewedCheckpoint)))
         {
-            await directory.ApplyAsync(new ControlCriterionMappingRetired(tenantId, programId,
-                mappingId, 5, 1, "Mapping is no longer needed.", reviewerId, "Reviewer",
-                proposedAt.AddMinutes(4), controlId, editionId, "AC-2.4",
-                NativeFacts.Root(new ControlCriterionMapping(tenantId, programId, controlId, editionId, "AC-2.4"),
-                    Uuid.CreateVersion4(), "RetireControlCriterionMapping", 4, reviewerId, proposedAt.AddMinutes(4)),
-                NativeFacts.Ref(), NativeFacts.Ref()));
+            await directory.ApplyAsync(new ControlCriterionMappingRetired(tenantId, programId, mappingId, 5, 1, reviewerId, "Reviewer", proposedAt.AddMinutes(4), controlId, editionId, "AC-2.4", NativeFacts.Ref(MappingLineContent.Schema), new MappingLineHeader(5, 1, mappingId, null, null, true), NativeFacts.Root(new ControlCriterionMapping(tenantId, programId, controlId, editionId, "AC-2.4"),
+                    Uuid.CreateVersion4(), "RetireControlCriterionMapping", 4, reviewerId, proposedAt.AddMinutes(4)), NativeFacts.Ref(), NativeFacts.Ref()));
             await batch.CommitAsync(retiredCheckpoint);
         }
         var retired = await directory.LoadProgramAsync(tenantId, programId,
@@ -209,24 +205,15 @@ public sealed class FitzControlMappingWorkItemDirectoryTests
 
     static ControlCriterionMappingProposed Proposed(Uuid tenantId, Uuid programId, Uuid controlId,
         Uuid mappingId, Uuid controlVersionId, Uuid editionId, Uuid proposerId, long revision,
-        int versionNumber, DateTimeOffset proposedAt) => new(tenantId, programId, mappingId,
-        revision, versionNumber, controlId, controlVersionId, editionId, "AC-2.4", "security",
-        "Map the control to the criterion.", "The control enforces the requirement.", proposerId,
-        "Proposer", proposedAt,
-        NativeFacts.Root(new ControlCriterionMapping(tenantId, programId, controlId, editionId, "AC-2.4"), mappingId,
-            "ProposeControlCriterionMapping", revision - 1, proposerId, proposedAt), NativeFacts.Ref(),
-        NativeFacts.Ref());
+        int versionNumber, DateTimeOffset proposedAt) => new(tenantId, programId, mappingId, revision, versionNumber, controlId, controlVersionId, editionId, "AC-2.4", "security", proposerId, "Proposer", proposedAt, NativeFacts.Ref(MappingLineContent.Schema), new MappingLineHeader(revision, versionNumber, mappingId, new MappingLineSlot(mappingId, versionNumber, proposerId), null, false), NativeFacts.Root(new ControlCriterionMapping(tenantId, programId, controlId, editionId, "AC-2.4"), mappingId,
+            "ProposeControlCriterionMapping", revision - 1, proposerId, proposedAt), NativeFacts.Ref(), NativeFacts.Ref());
 
     static ControlCriterionMappingReviewed Reviewed(Uuid tenantId, Uuid programId, Uuid controlId, Uuid editionId,
         Uuid mappingId, Uuid reviewerId, long revision, int versionNumber, string outcome,
         DateTimeOffset reviewedAt)
     {
         var decisionId = Uuid.CreateVersion4();
-        return new ControlCriterionMappingReviewed(tenantId, programId, mappingId, revision, versionNumber, decisionId,
-            outcome, "Reviewed the mapping rationale.", reviewerId, "Reviewer", reviewedAt, null, controlId, editionId,
-            "AC-2.4",
-            NativeFacts.Root(new ControlCriterionMapping(tenantId, programId, controlId, editionId, "AC-2.4"),
-                decisionId, "ReviewControlCriterionMapping", revision - 1, reviewerId, reviewedAt), NativeFacts.Ref(),
-            NativeFacts.Ref());
+        return new ControlCriterionMappingReviewed(tenantId, programId, mappingId, revision, versionNumber, decisionId, outcome, reviewerId, "Reviewer", reviewedAt, null, controlId, editionId, "AC-2.4", NativeFacts.Ref(MappingLineContent.Schema), new MappingLineHeader(revision, versionNumber, mappingId, null, (outcome == "accept" ? new MappingLineSlot(mappingId, versionNumber, reviewerId) : null), false), NativeFacts.Root(new ControlCriterionMapping(tenantId, programId, controlId, editionId, "AC-2.4"),
+                decisionId, "ReviewControlCriterionMapping", revision - 1, reviewerId, reviewedAt), NativeFacts.Ref(), NativeFacts.Ref());
     }
 }

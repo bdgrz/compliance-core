@@ -57,7 +57,7 @@ public sealed class FindingClosureTests
         Assert.True(stillHeld.Uses.HasActiveUse);
         Assert.IsType<ReceiverOutcome.Applied>(settled.Value);
         Assert.False(fenced.Uses.HasActiveUse);
-        Assert.Equal([1L], fenced.ClosedGenerations);
+        Assert.Equal(1L, fenced.ClosedByGeneration);
         Assert.Equal(2, fenced.Revision);
 
         // Act: step 3, an edit at the same public revision is rejected under the parent fence.
@@ -93,7 +93,7 @@ public sealed class FindingClosureTests
         Assert.Null(after.Closed);
         Assert.Null(after.PendingClosure);
         Assert.False(action.Uses.HasActiveUse);
-        Assert.Equal([1L], action.ClosedGenerations);
+        Assert.Equal(1L, action.ClosedByGeneration);
         Assert.Equal(fenced.Version, action.Version);
     }
 
@@ -158,7 +158,7 @@ public sealed class FindingClosureTests
         Assert.All(actions, action =>
         {
             Assert.False(action.Uses.HasActiveUse);
-            Assert.Empty(action.ClosedGenerations);
+            Assert.Null(action.ClosedByGeneration);
         });
 
         // Act: the action is completed and a new closure of the same generation closes the finding.
@@ -320,7 +320,7 @@ public sealed class FindingClosureTests
             var state = await fixture.ActionAsync(finding.FindingId, action.ActionId);
             Assert.Equal(1UL, state.Uses.Generation);
             Assert.False(state.Uses.HasActiveUse);
-            Assert.Equal([1L], state.ClosedGenerations);
+            Assert.Equal(1L, state.ClosedByGeneration);
         }
     }
 

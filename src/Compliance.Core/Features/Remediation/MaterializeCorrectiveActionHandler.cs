@@ -38,6 +38,10 @@ sealed class MaterializeCorrectiveActionHandler(IAggregateReader reader, IAggreg
             authored = await FindingContent.ReadAsync<AddCorrectiveAction>(content, tenant,
                 intent.CanonicalAuthoredContent, ct).ConfigureAwait(false);
         }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            return SourceUseReceiverSupport.Transient($"The frozen admission is not available yet: {exception.Message}");
+        }
         catch (ImmutableContentIntegrityException exception)
         {
             return SourceUseReceiverSupport.Permanent($"The frozen admission cannot be verified: {exception.Message}");
