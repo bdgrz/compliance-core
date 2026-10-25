@@ -18,6 +18,6 @@ public interface ICommitmentDraftDirectoryReader
         int limit, string? cursor, CancellationToken ct = default);
     ValueTask<Page<CommitmentDecisionView>> ListDecisionsAsync(Uuid tenantId, Uuid draftId,
         int limit, string? cursor, CancellationToken ct = default);
-    ValueTask<CommitmentDecisionView?> GetDecisionAsync(Uuid tenantId, Uuid decisionId,
+    ValueTask<CommitmentDecisionView?> GetDecisionAsync(Uuid tenantId, Uuid draftId, Uuid decisionId,
         CancellationToken ct = default);
 }

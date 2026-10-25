@@ -123,8 +123,8 @@ public sealed class FitzCriterionApplicabilityWorkItemDirectoryTests
             first.Responsible);
         Assert.Contains(proposerId, first.Excluded);
         Assert.Equal(proposedAt, first.CreatedAt);
-        Assert.Equal(WorkCandidate.IdFor(Uuid.CreateVersion5(decisionId,
-            "criterion-applicability-review\n1"), WorkSource.CriterionApplicabilityReview),
+        Assert.Equal(WorkSource.CriterionApplicabilityReviewWorkItemId(CriterionApplicability.IdentityOf(tenantId, programId,
+            editionId, "AC-2.4"), decisionId, 1),
             first.WorkItemId);
 
         Assert.True(secondProposal.IsSuccess);

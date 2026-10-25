@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Portia;
@@ -234,6 +235,7 @@ static class WorkSource
                 var proposerMemberId = Uuid.Parse(proposal.ProposedBy.Id,
                     CultureInfo.InvariantCulture);
                 var candidate = ControlCriterionMappingReviewCandidate(tenantId, programId,
+                    ControlCriterionMapping.IdentityOf(tenantId, programId, mapping.ControlId, mapping.EditionId, mapping.CriterionIdentifier),
                     mapping.ControlId, proposal.MappingId, mapping.CriterionIdentifier,
                     proposerMemberId, proposal.VersionNumber, proposal.ProposedAt);
                 if (workItemId is { } wantedMapping && candidate.WorkItemId != wantedMapping)
@@ -253,6 +255,7 @@ static class WorkSource
                 var proposerMemberId = Uuid.Parse(proposal.ProposedBy.Id,
                     CultureInfo.InvariantCulture);
                 var candidate = CriterionApplicabilityReviewCandidate(tenantId, programId,
+                    CriterionApplicability.IdentityOf(tenantId, programId, decision.EditionId, decision.CriterionIdentifier),
                     proposal.DecisionId, decision.CriterionIdentifier,
                     proposerMemberId, proposal.VersionNumber, proposal.ProposedAt);
                 if (workItemId is { } wantedApplicability &&
@@ -362,7 +365,7 @@ static class WorkSource
     public static WorkCandidate ControlOperatingPlanApprovalCandidate(Uuid tenantId,
         Uuid programId, Uuid controlId, string controlIdentifier, Uuid planVersionId,
         Uuid proposerMemberId, DateTimeOffset proposedAt) => new(
-        WorkCandidate.IdFor(planVersionId, ControlOperatingPlanApproval),
+        ControlOperatingPlanApprovalWorkItemId(tenantId, programId, controlId, planVersionId),
         ControlOperatingPlanApproval, planVersionId, controlId, null,
         $"Approve operating plan for {controlIdentifier}",
         "A control operating plan is awaiting independent approval.", null, null, "approve",
@@ -370,6 +373,11 @@ static class WorkSource
         $"operating-plan/proposals/{planVersionId}/approvals",
         new OperatingHolder(OperatingAuthority.ProgramManagerHolder, programId), null,
         new HashSet<Uuid> { proposerMemberId }, proposedAt);
+
+    public static Uuid ControlOperatingPlanApprovalWorkItemId(Uuid tenantId, Uuid programId, Uuid controlId, Uuid planVersionId) =>
+        WorkCandidate.IdFor(Uuid.CreateVersion5(
+            ControlOccurrenceIdentity.PlanLineOf(tenantId, programId, controlId),
+            $"operating-plan-approval\n{planVersionId}"), ControlOperatingPlanApproval);
 
     public static WorkCandidate ControlEvaluationReviewCandidate(Uuid tenantId, Uuid programId,
         Uuid controlId, Uuid evaluationId, Uuid evaluatorMemberId, int round,
@@ -388,9 +396,9 @@ static class WorkSource
     }
 
     public static WorkCandidate ControlCriterionMappingReviewCandidate(Uuid tenantId,
-        Uuid programId, Uuid controlId, Uuid mappingId, string criterionIdentifier,
+        Uuid programId, Uuid lineId, Uuid controlId, Uuid mappingId, string criterionIdentifier,
         Uuid proposerMemberId, int versionNumber, DateTimeOffset proposedAt) =>
-        new(ControlCriterionMappingReviewWorkItemId(mappingId, versionNumber),
+        new(ControlCriterionMappingReviewWorkItemId(lineId, mappingId, versionNumber),
             ControlCriterionMappingReview, mappingId, controlId, null,
             $"Review control mapping for {criterionIdentifier}",
             "A control-to-criteria mapping proposal is awaiting independent review.", null, null,
@@ -399,17 +407,17 @@ static class WorkSource
             new OperatingHolder(OperatingAuthority.ProgramManagerHolder, programId), null,
             new HashSet<Uuid> { proposerMemberId }, proposedAt);
 
-    public static Uuid ControlCriterionMappingReviewWorkItemId(Uuid mappingId, int versionNumber)
+    public static Uuid ControlCriterionMappingReviewWorkItemId(Uuid lineId, Uuid mappingId, int versionNumber)
     {
-        var identity = Uuid.CreateVersion5(mappingId,
-            $"control-criterion-mapping-review\n{versionNumber}");
+        var identity = Uuid.CreateVersion5(lineId,
+            $"control-criterion-mapping-review\n{mappingId}\n{versionNumber.ToString(CultureInfo.InvariantCulture)}");
         return WorkCandidate.IdFor(identity, ControlCriterionMappingReview);
     }
 
     public static WorkCandidate CriterionApplicabilityReviewCandidate(Uuid tenantId,
-        Uuid programId, Uuid decisionId, string criterionIdentifier,
+        Uuid programId, Uuid lineId, Uuid decisionId, string criterionIdentifier,
         Uuid proposerMemberId, int versionNumber, DateTimeOffset proposedAt) =>
-        new(CriterionApplicabilityReviewWorkItemId(decisionId, versionNumber),
+        new(CriterionApplicabilityReviewWorkItemId(lineId, decisionId, versionNumber),
             CriterionApplicabilityReview, decisionId, null, null,
             $"Review not-applicable proposal for {criterionIdentifier}",
             "A criterion not-applicable proposal is awaiting independent review.", null, null,
@@ -418,10 +426,10 @@ static class WorkSource
             new OperatingHolder(OperatingAuthority.ProgramManagerHolder, programId), null,
             new HashSet<Uuid> { proposerMemberId }, proposedAt);
 
-    public static Uuid CriterionApplicabilityReviewWorkItemId(Uuid decisionId, int versionNumber)
+    public static Uuid CriterionApplicabilityReviewWorkItemId(Uuid lineId, Uuid decisionId, int versionNumber)
     {
-        var identity = Uuid.CreateVersion5(decisionId,
-            $"criterion-applicability-review\n{versionNumber}");
+        var identity = Uuid.CreateVersion5(lineId,
+            $"criterion-applicability-review\n{decisionId}\n{versionNumber.ToString(CultureInfo.InvariantCulture)}");
         return WorkCandidate.IdFor(identity, CriterionApplicabilityReview);
     }
 }

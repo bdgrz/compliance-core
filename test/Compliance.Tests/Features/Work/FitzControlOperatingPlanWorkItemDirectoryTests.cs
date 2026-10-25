@@ -62,8 +62,8 @@ public sealed class FitzControlOperatingPlanWorkItemDirectoryTests
             fixture.ProgramId), item.Responsible);
         Assert.Contains(fixture.LeadMemberId, item.Excluded);
         Assert.Equal(plan.ProposedAt, item.CreatedAt);
-        Assert.Equal(WorkCandidate.IdFor(plan.PlanVersionId,
-            WorkSource.ControlOperatingPlanApproval), item.WorkItemId);
+        Assert.Equal(WorkSource.ControlOperatingPlanApprovalWorkItemId(fixture.TenantId, fixture.ProgramId,
+            fixture.ControlId, plan.PlanVersionId), item.WorkItemId);
         Assert.True(approved.IsSuccess);
         Assert.Empty(approved.Value);
         Assert.Equal(2, await directory.LoadRevisionAsync(fixture.TenantId));

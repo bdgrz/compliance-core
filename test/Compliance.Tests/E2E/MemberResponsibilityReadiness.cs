@@ -15,7 +15,7 @@ static class MemberResponsibilityReadiness
         Uuid memberId, string path)
     {
         var responsibilityScope = new ResponsibilityScope("boundary", boundaryId, versionId, 1);
-        var checkpointIdentity = new CheckpointIdentity("MemberResponsibilitiesV1",
+        var checkpointIdentity = new CheckpointIdentity(FitzMemberResponsibilityIndex.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString()));
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         var sourceAssignment = Uuid.Empty;

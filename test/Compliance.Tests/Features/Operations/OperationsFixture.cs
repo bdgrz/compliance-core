@@ -718,7 +718,7 @@ sealed class OperationsFixture
             ValueTask.FromResult(new Page<CommitmentDecisionView>([], null));
 
         public ValueTask<CommitmentDecisionView?> GetDecisionAsync(Uuid tenantId,
-            Uuid decisionId, CancellationToken ct = default) =>
+            Uuid draftId, Uuid decisionId, CancellationToken ct = default) =>
             ValueTask.FromResult<CommitmentDecisionView?>(null);
     }
 

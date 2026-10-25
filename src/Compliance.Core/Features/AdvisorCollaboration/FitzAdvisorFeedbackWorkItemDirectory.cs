@@ -8,10 +8,10 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/advisor-feedback-work-items/projection-v1",
+    : FitzKvProjectionStore(client, "kv://bdgrz/advisor-feedback-work-items/projection-v2",
         ProjectorName), IAdvisorFeedbackWorkItemProjection, IAccountableWorkItemDirectoryReader
 {
-    public const string ProjectorName = "AdvisorFeedbackWorkItemV1";
+    public const string ProjectorName = "AdvisorFeedbackWorkItemV2";
     Uuid? _batchTenantId;
 
     string IAccountableWorkItemDirectoryReader.ProjectorName => ProjectorName;
@@ -57,7 +57,7 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
             throw InvalidEvent();
 
         var current = await AdvisorFeedbackWorkItemSchema.Threads.GetAsync(Transaction,
-            feedbackId, ct).ConfigureAwait(false);
+            AdvisorFeedbackWorkItemSchema.ThreadKey(tenantId, programId, handoffId, feedbackId), ct).ConfigureAwait(false);
         if (current is null)
         {
             if (domainEvent is not AdvisorFeedbackRecorded || metadata.AggregateVersion != 1)
@@ -117,8 +117,7 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
             foreach (var entry in page.Items)
             {
                 if (entry.TenantId != tenantId || entry.ProgramId != programId ||
-                    entry.WorkItemId != WorkCandidate.IdFor(entry.FeedbackId,
-                        WorkSource.AdvisorFeedback))
+                    entry.WorkItemId != AdvisorFeedbackWorkItemSchema.WorkItemId(entry.TenantId, entry.ProgramId, entry.HandoffId, entry.FeedbackId))
                     return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
                 if (entry.IsResolved || entry.Kind == "validated")
                     continue;
@@ -141,11 +140,11 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
             ev.CreatedAt == default)
             throw InvalidEvent();
         var existing = await AdvisorFeedbackWorkItemSchema.Feedback.GetAsync(Transaction,
-            ev.FeedbackId, ct).ConfigureAwait(false);
+            AdvisorFeedbackWorkItemSchema.ThreadKey(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.FeedbackId), ct).ConfigureAwait(false);
         if (existing is not null)
             throw InvalidEvent();
         var entry = new AdvisorFeedbackWorkItemEntry(ev.TenantId, ev.ProgramId, ev.HandoffId,
-            ev.FeedbackId, WorkCandidate.IdFor(ev.FeedbackId, WorkSource.AdvisorFeedback),
+            ev.FeedbackId, AdvisorFeedbackWorkItemSchema.WorkItemId(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.FeedbackId),
             ev.RecordId, ev.Kind, ev.Body, ev.Author, ev.CreatedAt, false, false);
         await AdvisorFeedbackWorkItemSchema.Feedback.InsertAsync(Transaction, entry, ct)
             .ConfigureAwait(false);
@@ -193,10 +192,10 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
         Uuid handoffId, Uuid feedbackId, CancellationToken ct)
     {
         var current = await AdvisorFeedbackWorkItemSchema.Feedback.GetAsync(Transaction,
-            feedbackId, ct).ConfigureAwait(false) ?? throw InvalidEvent();
+            AdvisorFeedbackWorkItemSchema.ThreadKey(tenantId, programId, handoffId, feedbackId), ct).ConfigureAwait(false) ?? throw InvalidEvent();
         if (current.TenantId != tenantId || current.ProgramId != programId ||
             current.HandoffId != handoffId || current.FeedbackId != feedbackId ||
-            current.WorkItemId != WorkCandidate.IdFor(feedbackId, WorkSource.AdvisorFeedback))
+            current.WorkItemId != AdvisorFeedbackWorkItemSchema.WorkItemId(tenantId, programId, handoffId, feedbackId))
             throw InvalidEvent();
         return current;
     }

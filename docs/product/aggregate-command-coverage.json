@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "a705834b95adbad0745dbd3ac19fe0d2d3dd2783",
+  "sourceCommit": "b28c50df51b415302cbd354c0ed30ea86da31476",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -670,6 +670,7 @@
         "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorFeedbackThread.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackScopedIdentityTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs"
       ],
       "disposition": "aggregate_fact",
@@ -2781,7 +2782,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3033,6 +3035,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs",
         "test/Compliance.Tests/Testing/ControlOperatingEvents.cs"
       ],
       "disposition": "aggregate_fact",
@@ -3278,7 +3281,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6446,12 +6450,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
         "test/Compliance.Tests/Features/Responsibilities/MemberResponsibilityIndexTests.cs",
+        "test/Compliance.Tests/Features/Responsibilities/ResponsibilityScopedIdentityTests.cs",
         "test/Compliance.Tests/Features/Responsibilities/ResponsibilitySetProjectionTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Hosting/Persistence/EventPersistenceFrameTests.cs",
-        "test/Compliance.Tests/Testing/BoundarySeeds.cs"
+        "test/Compliance.Tests/Hosting/Persistence/EventPersistenceFrameTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6479,12 +6483,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
         "test/Compliance.Tests/Features/Responsibilities/MemberResponsibilityIndexTests.cs",
+        "test/Compliance.Tests/Features/Responsibilities/ResponsibilityScopedIdentityTests.cs",
         "test/Compliance.Tests/Features/Responsibilities/ResponsibilitySetProjectionTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Testing/BoundarySeeds.cs",
-        "test/Compliance.Tests/Testing/CommitmentSeeds.cs"
+        "test/Compliance.Tests/Testing/BoundarySeeds.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9323,6 +9327,7 @@
         "MaterializeAdvisorFeedback"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackScopedIdentityTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/FitzAdvisorFeedbackWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs",
@@ -9353,6 +9358,7 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackAdmissionTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackScopedIdentityTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs",
@@ -9851,7 +9857,7 @@
         "test/Compliance.Tests/Features/Commitments/CommitmentHttpRoutesTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentNativeDirectoryReadTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentVersionProjectionTests.cs"
+        "test/Compliance.Tests/Features/Commitments/CommitmentOwnerScopedIdentityTests.cs"
       ],
       "commandRouteDisposition": "pending_command_route",
       "ownerIssue": 1022,
@@ -9931,6 +9937,8 @@
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingTests.cs",
         "test/Compliance.Tests/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
         "test/Compliance.Tests/Testing/MappingSeeds.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -10059,6 +10067,7 @@
         "test/Compliance.Tests/Features/Operations/ControlOperatingPlanTests.cs",
         "test/Compliance.Tests/Features/Operations/PersonalOperatingPlanApprovalTransportTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlOperatingPlanWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs",
         "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
         "test/Compliance.Tests/Testing/ControlOperatingEvents.cs",
         "test/Compliance.Tests/Testing/ControlOperatingSeed.cs"
@@ -10128,6 +10137,7 @@
         "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityProtocolTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs",
         "test/Compliance.Tests/Testing/MappingSeeds.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -25727,6 +25737,7 @@
         "AdvisorHandoffReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackScopedIdentityTests.cs",
         "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs",
         "test/Compliance.Tests/Testing/AdvisorHost.cs",
         "test/Compliance.Tests/Testing/AdvisorSeed.cs"
@@ -29943,12 +29954,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlLifecycleTests.cs",
+        "test/Compliance.Tests/Features/Responsibilities/ResponsibilityScopedIdentityTests.cs",
         "test/Compliance.Tests/Features/Work/CommitmentDecisionWorkTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Testing/BoundarySeeds.cs",
-        "test/Compliance.Tests/Testing/CommitmentSeeds.cs",
-        "test/Compliance.Tests/Testing/ControlSeeds.cs"
+        "test/Compliance.Tests/Testing/CommitmentSeeds.cs"
       ],
       "note": ""
     },

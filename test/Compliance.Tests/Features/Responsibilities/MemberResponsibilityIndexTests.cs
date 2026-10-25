@@ -22,7 +22,7 @@ public sealed class MemberResponsibilityIndexTests
             [], "Administrator");
         var revoked = new ResponsibilityRevoked(tenantId, assigned.AssignmentId, scope,
             Uuid.CreateVersion4(), now.AddMinutes(1), "Reassigned", "Administrator");
-        var identity = new CheckpointIdentity("MemberResponsibilitiesV1",
+        var identity = new CheckpointIdentity(FitzMemberResponsibilityIndex.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString()));
 
         // Act

@@ -1,0 +1,33 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Six owner-local projection identity collisions and target-only resolution/revocation.",
+  "validation": {
+    "originalApiRedFailed": 16,
+    "strictBuildWarnings": 0,
+    "focusedPassed": 54,
+    "backendUnitPassed": 5845,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 14,
+    "signalsTriaged": 5,
+    "mergeProbability": 0.86,
+    "adopted": "merge scoped repair; continue remaining owners and shared receipt consumers"
+  },
+  "parentRefinements": [
+    "Routine old-API fixture type/format/analyzer corrections before executable RED.",
+    "Removed duplicate ThreadKey application at advisor correction/response/resolution caller boundary; helper accepts raw local feedback ID."
+  ],
+  "qualification": [
+    "Fresh projection generations require full replay; old generations remain intact.",
+    "Existing accountability assignment/delegation/escalation histories, saved work IDs and URLs are not migrated or given inferred aliases.",
+    "Mapping/applicability ambiguous local-ID action locators continue to fail closed.",
+    "No data reset, retained-history converter or deployment."
+  ],
+  "remaining": "All-source receipts; SD/Risk/Calendar/catalog/Incident and independent remaining owners."
+}

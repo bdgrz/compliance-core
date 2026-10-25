@@ -8,10 +8,10 @@ namespace Bdgrz.Compliance.Features.Work;
 
 sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
     : FitzKvProjectionStore(client,
-        "kv://bdgrz/accountable-work-items/control-criterion-mappings-v1", ProjectorName),
+        "kv://bdgrz/accountable-work-items/control-criterion-mappings-v2", ProjectorName),
       IAccountableWorkItemDirectoryReader, IControlCriterionMappingWorkItemProjection
 {
-    public const string ProjectorName = "AccountableWorkItemControlCriterionMappingV1";
+    public const string ProjectorName = "AccountableWorkItemControlCriterionMappingV2";
     const string RevisionKey = ProjectorName;
     const string Pending = "pending";
     const string Active = "active";
@@ -93,7 +93,11 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
                 ControlCriterionMappingWorkItemDirectorySchema.StatesByProgram.Query()
                     .WithPrefix(programId.ToString()).Take(200).After(stateCursor), ct).ConfigureAwait(false);
             foreach (var state in states.Items.Where(static state => state.PendingMappingId is not null))
-                pending[state.PendingMappingId!.Value] = state;
+            {
+                if (state.PendingVersionNumber is not { } version ||
+                    !pending.TryAdd(WorkItemIdFor(state.LineId, state.PendingMappingId!.Value, version), state))
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
+            }
             stateCursor = states.NextCursor;
         } while (stateCursor is not null);
 
@@ -106,7 +110,7 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
                 .ConfigureAwait(false);
             foreach (var item in page.Items)
             {
-                pending.TryGetValue(item.SourceId, out var state);
+                pending.TryGetValue(item.WorkItemId, out var state);
                 if (item.TenantId != tenantId || item.ProgramId != programId ||
                     item.Kind != WorkSource.ControlCriterionMappingReview ||
                     item.ControlId != state?.ControlId || item.FindingId is not null ||
@@ -115,7 +119,7 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
                     state.State != Pending || state.PendingVersionNumber is not { } pendingVersion ||
                     state.ProposerMemberId is not { } proposer || !item.Excluded.Contains(proposer) ||
                     state.ProposedAt != item.CreatedAt ||
-                    item.WorkItemId != WorkItemIdFor(item.SourceId, pendingVersion))
+                    item.WorkItemId != WorkItemIdFor(state.LineId, item.SourceId, pendingVersion))
                     return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
                 candidates.Add(item.ToCandidate());
             }
@@ -161,7 +165,7 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
         }
 
         var candidate = WorkSource.ControlCriterionMappingReviewCandidate(proposed.TenantId,
-            proposed.ProgramId, proposed.ControlId, proposed.MappingId,
+            proposed.ProgramId, scope.LineId, proposed.ControlId, proposed.MappingId,
             proposed.CriterionIdentifier, proposed.ActorMemberId, proposed.VersionNumber,
             proposed.ProposedAt);
         await AddWorkItemAsync(proposed.TenantId, proposed.ProgramId, candidate, ct)
@@ -188,7 +192,7 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
             reviewed.Outcome is not ("accept" or "reject"))
             throw new InvalidOperationException(
                 "A control mapping review must resolve its current proposal with a valid outcome.");
-        await RemoveWorkItemAsync(reviewed.TenantId, reviewed.ProgramId, reviewed.MappingId,
+        await RemoveWorkItemAsync(reviewed.TenantId, reviewed.ProgramId, scope.LineId, reviewed.MappingId,
             reviewed.VersionNumber, required: true, ct).ConfigureAwait(false);
         return current with
         {
@@ -239,10 +243,10 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
                 existing, workItem, ct).ConfigureAwait(false);
     }
 
-    async ValueTask RemoveWorkItemAsync(Uuid tenantId, Uuid programId, Uuid mappingId,
+    async ValueTask RemoveWorkItemAsync(Uuid tenantId, Uuid programId, Uuid lineId, Uuid mappingId,
         int versionNumber, bool required, CancellationToken ct)
     {
-        var workItemId = WorkItemIdFor(mappingId, versionNumber);
+        var workItemId = WorkItemIdFor(lineId, mappingId, versionNumber);
         var existing = await ControlCriterionMappingWorkItemDirectorySchema.WorkItems.GetAsync(
             Transaction, workItemId, ct).ConfigureAwait(false);
         if (existing is null)
@@ -289,8 +293,8 @@ sealed class FitzControlMappingWorkItemDirectory(IKvClient client)
         actor.Kind == "member" &&
         StringComparer.Ordinal.Equals(actor.Id, memberId.ToString());
 
-    static Uuid WorkItemIdFor(Uuid mappingId, int versionNumber) =>
-        WorkSource.ControlCriterionMappingReviewWorkItemId(mappingId, versionNumber);
+    static Uuid WorkItemIdFor(Uuid lineId, Uuid mappingId, int versionNumber) =>
+        WorkSource.ControlCriterionMappingReviewWorkItemId(lineId, mappingId, versionNumber);
 
     static MappingScope ScopeFor(DomainEvent domainEvent) => domainEvent switch
     {

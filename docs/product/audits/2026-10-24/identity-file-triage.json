@@ -1,0 +1,68 @@
+{
+  "reviewed": 14,
+  "blockedReviews": 0,
+  "signalsTriaged": 5,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/AdvisorCollaboration/FitzAdvisorFeedbackWorkItemDirectory.cs",
+      "sha256": "24508dbf1737d8c961d82f8e6a60a9bf0e9ecdd3058837e0f7f5c4bd719ee48b",
+      "signals": {
+        "authority_gap": 0.7,
+        "invariant_gap": 0.56,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.35
+      },
+      "classification": "reviewed_scoped_identity_and_fresh_replay",
+      "evidence": "Exact native aggregate identity, tenant batch, contiguous version/event and current row scope are verified. Thread/work keys include tenant/program/handoff/feedback. Existing duplicate replay and invalid-scope tests plus two native cross-handoff regressions pass. Parent removed double application of ThreadKey at caller/helper boundary."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Responsibilities/FitzMemberResponsibilityIndex.cs",
+      "sha256": "f6a4ecf25a13658e8db53ab2a4e0b38882faf4a6234a7952eb95cdfbbcc0a5e5",
+      "signals": {
+        "authority_gap": 0.51,
+        "invariant_gap": 0.43,
+        "recovery_gap": 0.73,
+        "incomplete_path": 0.3
+      },
+      "classification": "reviewed_scoped_identity_and_fresh_replay",
+      "evidence": "Assignment identity now includes complete responsibility scope and local assignment ID. Both assignment and member row revocation match this full tuple. Equivalent assignment and revocation replays preserve terms; source-confirmed same-command two native owners and target-only revocation regression passes."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/FitzControlMappingWorkItemDirectory.cs",
+      "sha256": "e4476302d594aac38943154676f25b76ec1506aa2eb177a0c443e1ce8eb0421f",
+      "signals": {
+        "authority_gap": 0.53,
+        "invariant_gap": 0.51,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.3
+      },
+      "classification": "reviewed_scoped_identity_and_fresh_replay",
+      "evidence": "Read join and queue identities use exact native line ID plus mapping/version. Scope/state/event continuity validation and ambiguous action locator refusal remain. Two cross-line collision cases and existing projection tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/FitzControlOperatingPlanWorkItemDirectory.cs",
+      "sha256": "59a29c24124bddcbe014e5c379bbce3aa914139739caa89e3372ed7d74680e14",
+      "signals": {
+        "authority_gap": 0.53,
+        "invariant_gap": 0.55,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.43
+      },
+      "classification": "reviewed_scoped_identity_and_fresh_replay",
+      "evidence": "Pending row identity includes program/control/local plan version within tenant realm. Work ID includes native tenant/program/control line. Approval removes exact target and immutable plan source is validated. Both cross-control/program collision cases plus existing projection cases pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/FitzCriterionApplicabilityWorkItemDirectory.cs",
+      "sha256": "d1ba1f8849a52c4211eed50f527ec2bab0ccd856795773b4925a5377340f88a8",
+      "signals": {
+        "authority_gap": 0.48,
+        "invariant_gap": 0.42,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.28
+      },
+      "classification": "reviewed_scoped_identity_and_fresh_replay",
+      "evidence": "Read join and work identity use exact native line plus decision/version. Existing scope/event sequencing gates and ambiguous action locator refusal remain. Both reused-decision cases and prior directory tests pass."
+    }
+  ],
+  "qualification": "Fresh projection generations require replay. Historical work assignment/delegation/escalation, saved URLs and IDs are not migrated or inferred."
+}

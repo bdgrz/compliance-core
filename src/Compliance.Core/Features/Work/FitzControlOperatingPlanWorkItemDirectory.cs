@@ -11,10 +11,10 @@ namespace Bdgrz.Compliance.Features.Work;
 sealed class FitzControlOperatingPlanWorkItemDirectory(IKvClient client,
     ControlReader controlSources, IImmutableContentStore content)
     : FitzKvProjectionStore(client,
-        "kv://bdgrz/accountable-work-items/control-operating-plans-v1", ProjectorName),
+        "kv://bdgrz/accountable-work-items/control-operating-plans-v2", ProjectorName),
       IAccountableWorkItemDirectoryReader, IControlOperatingPlanWorkItemProjection
 {
-    public const string ProjectorName = "AccountableWorkItemControlOperatingPlanV1";
+    public const string ProjectorName = "AccountableWorkItemControlOperatingPlanV2";
     const string RevisionKey = ProjectorName;
 
     string IAccountableWorkItemDirectoryReader.ProjectorName => ProjectorName;
@@ -146,7 +146,8 @@ sealed class FitzControlOperatingPlanWorkItemDirectory(IKvClient client,
         }
 
         var existing = await ControlOperatingPlanWorkItemDirectorySchema.Plans.GetAsync(
-            Transaction, plan.PlanVersionId, ct).ConfigureAwait(false);
+            Transaction, ControlOperatingPlanWorkItemDirectorySchema.PlanKey(
+                plan.ProgramId, plan.ControlId, plan.PlanVersionId), ct).ConfigureAwait(false);
         if (existing is not null)
             throw new InvalidOperationException(
                 "A control operating-plan version cannot create more than one pending approval.");
@@ -175,7 +176,8 @@ sealed class FitzControlOperatingPlanWorkItemDirectory(IKvClient client,
                 "An approval must resolve the current pending control operating plan.");
 
         var plan = await ControlOperatingPlanWorkItemDirectorySchema.Plans.GetAsync(Transaction,
-            approved.PlanVersionId, ct).ConfigureAwait(false);
+            ControlOperatingPlanWorkItemDirectorySchema.PlanKey(approved.ProgramId, approved.ControlId,
+                approved.PlanVersionId), ct).ConfigureAwait(false);
         if (plan is null || plan.TenantId != approved.TenantId ||
             plan.ProgramId != approved.ProgramId || plan.ControlId != approved.ControlId ||
             plan.Revision != current.Revision)

@@ -4,9 +4,11 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Responsibilities;
 
 public sealed class FitzMemberResponsibilityIndex(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/member-responsibilities-v1/projection",
-        "MemberResponsibilitiesV1"), IMemberResponsibilityIndex
+    : FitzKvProjectionStore(client, "kv://bdgrz/member-responsibilities-v2/projection",
+        ProjectorName), IMemberResponsibilityIndex
 {
+    public const string ProjectorName = "MemberResponsibilitiesV2";
+
     public async ValueTask<IReadOnlyList<ResponsibilityAssignmentView>> GetAsync(Uuid tenantId,
         Uuid memberId, CancellationToken ct = default)
     {
@@ -37,7 +39,7 @@ public sealed class FitzMemberResponsibilityIndex(IKvClient client)
         CancellationToken ct)
     {
         var current = await MemberResponsibilityIndexSchema.Assignments.GetAsync(Transaction,
-            ev.AssignmentId, ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
+            MemberResponsibilityIndexSchema.AssignmentKey(ev.Scope, ev.AssignmentId), ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
             "A responsibility revocation cannot project before its assignment.");
         if (current.TenantId != ev.TenantId || current.Scope != ev.Scope)
             throw new InvalidOperationException("A responsibility revocation has a different tenant or scope.");
@@ -65,7 +67,7 @@ public sealed class FitzMemberResponsibilityIndex(IKvClient client)
         await MemberResponsibilityIndexSchema.Members.ReplaceAsync(Transaction, member,
             member with
             {
-                Assignments = member.Assignments.Select(item => item.AssignmentId == updated.AssignmentId
+                Assignments = member.Assignments.Select(item => item.AssignmentId == updated.AssignmentId && item.Scope == updated.Scope
                 ? updated : item).ToArray()
             }, ct).ConfigureAwait(false);
     }
@@ -76,7 +78,7 @@ public sealed class FitzMemberResponsibilityIndex(IKvClient client)
             ev.Type, ev.Scope, ev.AssignedAt, ev.AssignedByMemberId, ev.EffectiveFrom,
             ev.EffectiveUntil, null, Uuid.Empty, ev.SeparationOfDutiesWaiverIds, ev.AssignedByDisplay);
         var existing = await MemberResponsibilityIndexSchema.Assignments.GetAsync(Transaction,
-            ev.AssignmentId, ct).ConfigureAwait(false);
+            MemberResponsibilityIndexSchema.AssignmentKey(ev.Scope, ev.AssignmentId), ct).ConfigureAwait(false);
         if (existing is not null)
         {
             if (!Equivalent(existing, assignment))
