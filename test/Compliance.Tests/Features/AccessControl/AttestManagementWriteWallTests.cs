@@ -270,7 +270,7 @@ public sealed class AttestManagementWriteWallTests
     }
 
     static Task SeedProgramAsync(ServiceProvider provider) => ProgramManagementServices.SeedAsync(provider,
-        new ComplianceProgram(Tenant, Program), program =>
+        new ProgramRules(Tenant, Program), program =>
         {
             Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null),
                 RbacIds.Member(Tenant, User), "Client author", Now));

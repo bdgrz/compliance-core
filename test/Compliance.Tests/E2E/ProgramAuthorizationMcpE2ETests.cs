@@ -69,9 +69,9 @@ public sealed class ProgramAuthorizationMcpE2ETests(BrokerStackFixture broker)
                     tenantId);
                 var programsPath = $"/api/v1/tenants/{tenantId}/programs";
                 var plan = Plan("Grant lifecycle");
-                using var firstCreated = await administrator.PostAsJsonAsync(programsPath,
+                using var firstCreated = await administrator.PutAsJsonAsync(programsPath + $"/{Uuid.CreateVersion4()}",
                     new { name = "P1", plan });
-                using var secondCreated = await administrator.PostAsJsonAsync(programsPath,
+                using var secondCreated = await administrator.PutAsJsonAsync(programsPath + $"/{Uuid.CreateVersion4()}",
                     new { name = "P2", plan });
                 Assert.Equal(HttpStatusCode.OK, firstCreated.StatusCode);
                 Assert.Equal(HttpStatusCode.OK, secondCreated.StatusCode);
@@ -320,6 +320,7 @@ public sealed class ProgramAuthorizationMcpE2ETests(BrokerStackFixture broker)
                 var plan = Plan("Administrator");
                 var createInput = new Dictionary<string, object?>
                 {
+                    ["program_id"] = Uuid.CreateVersion4().ToString(),
                     ["tenant_id"] = tenant.TenantId,
                     ["name"] = "MCP managed program",
                     ["plan"] = plan,
@@ -426,9 +427,9 @@ public sealed class ProgramAuthorizationMcpE2ETests(BrokerStackFixture broker)
                         .EnumerateArray());
                     Assert.Equal(programId, item.GetProperty("program_id").GetString());
                 }
-                using var deniedCreate = await participant.PostAsJsonAsync(programsPath,
+                using var deniedCreate = await participant.PutAsJsonAsync(programsPath + $"/{Uuid.CreateVersion4()}",
                     new { name = "Unauthorized program", plan });
-                using var deniedRevise = await participant.PutAsJsonAsync(programPath,
+                using var deniedRevise = await participant.PutAsJsonAsync(programPath + $"/revisions/{Uuid.CreateVersion4()}",
                     new { expected_revision = 1, name = "Unauthorized revision", plan });
 
                 await using var participantMcp = await McpScenario.ConnectAsync(participant,
@@ -449,12 +450,14 @@ public sealed class ProgramAuthorizationMcpE2ETests(BrokerStackFixture broker)
                 var deniedMcpCreate = participantMcp.When("bdgrz.program.create",
                     new Dictionary<string, object?>
                     {
+                        ["program_id"] = Uuid.CreateVersion4().ToString(),
                         ["tenant_id"] = tenant.TenantId,
                         ["name"] = "Unauthorized MCP program",
                         ["plan"] = plan,
                     });
                 var reviseInput = new Dictionary<string, object?>
                 {
+                    ["command_id"] = Uuid.CreateVersion4().ToString(),
                     ["tenant_id"] = tenant.TenantId,
                     ["program_id"] = programId,
                     ["expected_revision"] = 1,
@@ -483,10 +486,11 @@ public sealed class ProgramAuthorizationMcpE2ETests(BrokerStackFixture broker)
                         ["limit"] = 5,
                     }).ExpectSuccess();
                 using var deniedSelect = await participant.PutAsJsonAsync(
-                    $"{programPath}/criteria-edition",
+                    $"{programPath}/criteria-edition" + $"/selections/{Uuid.CreateVersion4()}",
                     new { expected_revision = 1, edition_id = editionId });
                 var selectInput = new Dictionary<string, object?>
                 {
+                    ["command_id"] = Uuid.CreateVersion4().ToString(),
                     ["tenant_id"] = tenant.TenantId,
                     ["program_id"] = programId,
                     ["expected_revision"] = 1,
@@ -538,7 +542,7 @@ public sealed class ProgramAuthorizationMcpE2ETests(BrokerStackFixture broker)
                 Assert.Equal(programId, onlyProgram.GetProperty("program_id").GetString());
                 Assert.Equal(2, onlyProgram.GetProperty("revision").GetInt64());
 
-                using var secondCreated = await administrator.PostAsJsonAsync(programsPath,
+                using var secondCreated = await administrator.PutAsJsonAsync(programsPath + $"/{Uuid.CreateVersion4()}",
                     new { name = "Second program", plan });
                 Assert.Equal(HttpStatusCode.OK, secondCreated.StatusCode);
                 using var secondDocument = JsonDocument.Parse(

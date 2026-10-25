@@ -402,7 +402,7 @@ public sealed class WorkSourceCompositionTests
                 instance.Declare(applicationId, "Production", "aws_account", null, null,
                     Uuid.CreateVersion4(), "Seeder", now));
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ComplianceProgram(fixture.TenantId, fixture.ProgramId), program =>
+            new ProgramRules(fixture.TenantId, fixture.ProgramId), program =>
                 program.Create("Security", new ProgramPlan(null, null, null, null, null, null),
                     fixture.LeadMemberId, "Lead", now) is null
                     ? Result.Success

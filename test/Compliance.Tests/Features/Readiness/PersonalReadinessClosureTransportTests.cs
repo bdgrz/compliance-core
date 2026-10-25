@@ -242,7 +242,7 @@ public sealed class PersonalReadinessClosureTransportTests
         services.AddSingleton<ITenantActivity, ActiveTenant>();
         services.AddSingleton<ITenantMembershipDirectoryReader, AlwaysMemberDirectory>();
         var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
-        await ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(tenant, programId), program =>
+        await ProgramManagementServices.SeedAsync(provider, new ProgramRules(tenant, programId), program =>
         {
             if (!program.IsCreated)
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null),

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Net;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AuditorRequests;
@@ -20,10 +21,10 @@ public sealed class AuditorRequestReadHttpTests
         // Arrange
         await using var fixture = new AuditorRequestFixture();
         var requestId = await fixture.SeedRequestAsync();
-        var program = new ComplianceProgram(fixture.TenantId, fixture.ProgramId);
+        var program = new ProgramRules(fixture.TenantId, fixture.ProgramId);
         Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
             fixture.MemberId, "Program author", AuditorRequestFixture.Now));
-        await fixture.Writer.SaveAsync(program, new RequestDispatchContext(RequestActor.System));
+        await ProgramSeeds.WriteAsync(fixture.Reader, fixture.Writer, fixture.Events, fixture.Content, program);
         await using var factory = ProviderHttpMcpTests.CreateFactory().WithWebHostBuilder(builder =>
             builder.ConfigureServices(services =>
             {

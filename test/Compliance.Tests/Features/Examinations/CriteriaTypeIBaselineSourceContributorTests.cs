@@ -27,16 +27,16 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
         var cutoff = new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.Zero);
         var first = Edition(Uuid.CreateVersion4());
         var second = Edition(Uuid.CreateVersion4(), "later edition");
-        var program = Program(first.EditionId, cutoff.AddDays(-20),
+        var program = await Program(first.EditionId, cutoff.AddDays(-20),
             (second.EditionId, lateBrokerReceipt ? cutoff.AddDays(-1) : cutoff.AddDays(1)));
         var events = new InMemoryEventStore();
-        await events.AppendAsync(program.Stream, 0, NativeFacts.Raised(program));
+        await events.AppendAsync(program.Stream, 0, program.Facts);
         var receipts = new ScriptedNativeEventReceipts();
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString()),
             EventCursor.Start, CancellationToken.None))
             receipts.Record(record, lateBrokerReceipt && record.Event is ProgramCriteriaEditionSelected selected && selected.EditionId == second.EditionId
                 ? cutoff.AddMilliseconds(1) : cutoff);
-        var contributor = Contributor(new ProgramReader(program), Catalog(lateBrokerReceipt ? first : second));
+        var contributor = Contributor(new CriteriaProgramReader(program), Catalog(lateBrokerReceipt ? first : second));
         var context = new TypeIBaselineSourceReadContext(Uuid.Empty, [])
         {
             RecordedThrough = cutoff,
@@ -64,9 +64,9 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
         var edition = Edition(Uuid.CreateVersion4());
         var catalog = Catalog(edition);
         var original = catalog.Entries[0];
-        var program = Program(edition.EditionId, cutoff.AddDays(-20));
+        var program = await Program(edition.EditionId, cutoff.AddDays(-20));
         var events = new InMemoryEventStore();
-        await events.AppendAsync(program.Stream, 0, NativeFacts.Raised(program));
+        await events.AppendAsync(program.Stream, 0, program.Facts);
         var store = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var overlay = new CriteriaTextOverlay(TenantId, edition.EditionId, original.Identifier);
         var first = new CriteriaTextOverlayContent("Original licensed narrative", "Supplier", "License", new(true, true));
@@ -84,13 +84,13 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
             second, secondOperation.Actor, secondOperation.AcceptedAt);
         var current = CriteriaTextOverlayPolicy.Apply(original, secondRevision, secondRevision, false);
         var expectedHistorical = CriteriaTextOverlayPolicy.Apply(original, firstRevision, secondRevision, false);
-        var expected = await Contributor(new ProgramReader(program), catalog, new OverlayReader([expectedHistorical]))
+        var expected = await Contributor(new CriteriaProgramReader(program), catalog, new OverlayReader([expectedHistorical]))
             .ReadAsync(Engagement(), CancellationToken.None);
         var receipts = new ScriptedNativeEventReceipts();
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString()),
             EventCursor.Start, CancellationToken.None))
             receipts.Record(record, record.Event is CriteriaTextOverlayEntryRevised { Revision: 2 } ? cutoff.AddMilliseconds(1) : cutoff);
-        var contributor = new CriteriaTypeIBaselineSourceContributor(new ProgramReader(program), catalog, new OverlayReader([current]), store);
+        var contributor = new CriteriaTypeIBaselineSourceContributor(new CriteriaProgramReader(program), events, catalog, new OverlayReader([current]), store);
         var context = new TypeIBaselineSourceReadContext(Uuid.Empty, [])
         {
             RecordedThrough = cutoff,
@@ -113,10 +113,10 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
         // Arrange
         var engagement = Engagement();
         var edition = Edition(Uuid.CreateVersion4());
-        var program = Program(edition.EditionId, new DateTimeOffset(2026, 9, 10, 12, 0, 0,
+        var program = await Program(edition.EditionId, new DateTimeOffset(2026, 9, 10, 12, 0, 0,
             TimeSpan.Zero));
         var catalog = Catalog(edition);
-        var contributor = Contributor(new ProgramReader(program), catalog);
+        var contributor = Contributor(new CriteriaProgramReader(program), catalog);
 
         // Act
         var result = await contributor.ReadAsync(engagement, CancellationToken.None);
@@ -144,10 +144,10 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
         var engagement = Engagement();
         var selected = Edition(Uuid.CreateVersion4());
         var later = Edition(Uuid.CreateVersion4(), "later edition");
-        var program = Program(selected.EditionId, new DateTimeOffset(2026, 9, 10, 12, 0, 0,
+        var program = await Program(selected.EditionId, new DateTimeOffset(2026, 9, 10, 12, 0, 0,
             TimeSpan.Zero), (later.EditionId, new DateTimeOffset(2026, 10, 1, 12, 0, 0,
                 TimeSpan.Zero)));
-        var contributor = Contributor(new ProgramReader(program), Catalog(selected));
+        var contributor = Contributor(new CriteriaProgramReader(program), Catalog(selected));
 
         // Act
         var result = await contributor.ReadAsync(engagement, CancellationToken.None);
@@ -164,9 +164,9 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
     {
         // Arrange
         var engagement = Engagement();
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
         Assert.Null(program.Create("SOC 2", Plan(), MemberId, "Lead", Now));
-        var contributor = Contributor(new ProgramReader(program), Catalog(Edition(Uuid.CreateVersion4())));
+        var contributor = Contributor(new CriteriaProgramReader(await SourceAsync(program)), Catalog(Edition(Uuid.CreateVersion4())));
 
         // Act
         var result = await contributor.ReadAsync(engagement, CancellationToken.None);
@@ -184,9 +184,9 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
         // Arrange
         var engagement = Engagement();
         var edition = Edition(Uuid.CreateVersion4()) with { IsComplete = false };
-        var program = Program(edition.EditionId, new DateTimeOffset(2026, 9, 10, 12, 0, 0,
+        var program = await Program(edition.EditionId, new DateTimeOffset(2026, 9, 10, 12, 0, 0,
             TimeSpan.Zero));
-        var contributor = Contributor(new ProgramReader(program), Catalog(edition));
+        var contributor = Contributor(new CriteriaProgramReader(program), Catalog(edition));
 
         // Act
         var result = await contributor.ReadAsync(engagement, CancellationToken.None);
@@ -203,13 +203,13 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
         // Arrange
         var engagement = Engagement();
         var edition = Edition(Uuid.CreateVersion4());
-        var program = Program(edition.EditionId, new DateTimeOffset(2026, 9, 10, 12, 0, 0,
+        var program = await Program(edition.EditionId, new DateTimeOffset(2026, 9, 10, 12, 0, 0,
             TimeSpan.Zero));
         var entry = Assert.Single(Catalog(edition).ListEntries(edition.EditionId, null, null, null));
         var overlay = new CriteriaTextOverlayMetadata(2, "AICPA", "License-1",
             new CriteriaOverlayUsageFlags(true, false), ActorReference.ForMember(MemberId, "Lead"),
             new DateTimeOffset(2026, 10, 2, 12, 0, 0, TimeSpan.Zero));
-        var contributor = Contributor(new ProgramReader(program), Catalog(edition),
+        var contributor = Contributor(new CriteriaProgramReader(program), Catalog(edition),
             new OverlayReader([entry with { Overlay = overlay, LicensedText = null }]));
 
         // Act
@@ -221,19 +221,19 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
             StringComparison.OrdinalIgnoreCase));
     }
 
-    static CriteriaTypeIBaselineSourceContributor Contributor(IAggregateReader reader,
+    static CriteriaTypeIBaselineSourceContributor Contributor(CriteriaProgramReader reader,
         ICriteriaCatalog catalog, ICriteriaTextOverlayReader? overlays = null) =>
-        new(reader, catalog, overlays ?? new OverlayReader([]));
+        new(reader, reader.Events, catalog, overlays ?? new OverlayReader([]));
 
     static ExaminationEngagementView Engagement() => new(TenantId, ProgramId, Uuid.CreateVersion4(),
         "type_i", "Audit Firm", new DateOnly(2026, 9, 30), null,
         ["security", "availability", "confidentiality", "processing_integrity", "privacy"],
         Uuid.CreateVersion4(), [], "draft", 1, Now, MemberId, "Lead");
 
-    static ComplianceProgram Program(Uuid firstEdition, DateTimeOffset firstSelectedAt,
+    static async Task<ProgramSource> Program(Uuid firstEdition, DateTimeOffset firstSelectedAt,
         params (Uuid EditionId, DateTimeOffset SelectedAt)[] laterSelections)
     {
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
         Assert.Null(program.Create("SOC 2", Plan(), MemberId, "Lead", Now));
         Assert.Null(program.SelectCriteriaEdition(1, firstEdition, MemberId, "Lead",
             firstSelectedAt));
@@ -241,7 +241,7 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
         foreach (var selection in laterSelections)
             Assert.Null(program.SelectCriteriaEdition(revision++, selection.EditionId, MemberId,
                 "Lead", selection.SelectedAt));
-        return program;
+        return await SourceAsync(program);
     }
 
     static ProgramPlan Plan() => new(null, null, null, null, null, null);
@@ -254,11 +254,28 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
         [new Criterion(edition.EditionId, "CC1.1", "CC1.1", "security", "criterion", null,
             "Leadership sets ethical expectations.")]);
 
-    sealed class ProgramReader(params ComplianceProgram[] programs) : IAggregateReader
+    static async Task<ProgramSource> SourceAsync(ProgramRules rules)
     {
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
+        var facts = await ProgramSeeds.FactsAsync(content, rules);
+        var owner = new ComplianceProgram(rules.TenantId, rules.Id);
+        new AggregateScenario<ComplianceProgram>(owner).Given(facts.ToArray());
+        var events = new InMemoryEventStore();
+        await events.AppendAsync(owner.Stream, 0, facts);
+        return new ProgramSource(owner, events, facts);
+    }
+
+    sealed record ProgramSource(ComplianceProgram Owner, InMemoryEventStore Events, IReadOnlyList<DomainEvent> Facts)
+    {
+        public EventStreamAddress Stream => Owner.Stream;
+    }
+
+    sealed class CriteriaProgramReader(params ProgramSource[] programs) : IAggregateReader
+    {
+        public IDomainEventReader Events => programs[0].Events;
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
             CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(programs.FirstOrDefault(program => program.Id == aggregate.Id)
+            ValueTask.FromResult(programs.FirstOrDefault(program => program.Owner.Id == aggregate.Id)?.Owner
                 is TAggregate found ? found : aggregate);
     }
 

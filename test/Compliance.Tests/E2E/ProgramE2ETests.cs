@@ -80,7 +80,7 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
                 var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
                 while (DateTimeOffset.UtcNow < deadline)
                 {
-                    using var response = await owner.PostAsJsonAsync(path,
+                    using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}",
                         new { name = "Split program", plan });
                     if (response.StatusCode == HttpStatusCode.OK)
                     {
@@ -117,7 +117,7 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
                 }
                 Assert.Equal(ActorReference.ForMember(RbacIds.Member(tenantId,
                         Uuid.Parse(ownerUserId, CultureInfo.InvariantCulture)),
-                    ownerEmail), storedProgram?.StoredActor);
+                    ownerEmail), storedProgram?.Operation.Actor);
                 var administratorsTeamId = BuiltInRbac.AdministratorsTeamId(tenantId);
                 ActorReference? bootstrapActor = null;
                 await foreach (var record in worker.Services.GetRequiredService<IEventStore>()
@@ -158,9 +158,9 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
                 var initialSetup = await initialSetupResponse.Content
                     .ReadFromJsonAsync<ProgramSetupDocument>();
                 Assert.Contains(initialSetup?.Items ?? [], item => item.Code == "define_system_boundary");
-                using var revised = await owner.PutAsJsonAsync(programPath,
+                using var revised = await owner.PutAsJsonAsync(programPath + $"/revisions/{Uuid.CreateVersion4()}",
                     new { expected_revision = 1, name = "Split program revised", plan });
-                Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
+                Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
                 while (DateTimeOffset.UtcNow < deadline)
                 {
                     using var response = await owner.GetAsync(programPath);
@@ -365,7 +365,7 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
                 }
                 Assert.Contains(allSetup?.Items ?? [], item => item.Code == "identify_scoped_services");
 
-                using var otherProgramCreated = await owner.PostAsJsonAsync(path,
+                using var otherProgramCreated = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}",
                     new { name = "Other program", plan });
                 Assert.Equal(HttpStatusCode.OK, otherProgramCreated.StatusCode);
                 var otherProgram = await otherProgramCreated.Content
@@ -487,7 +487,7 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
                 var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
                 while (DateTimeOffset.UtcNow < deadline)
                 {
-                    using var response = await owner.PostAsJsonAsync(programsPath,
+                    using var response = await owner.PutAsJsonAsync(programsPath + $"/{Uuid.CreateVersion4()}",
                         new { name = "Setup work program", plan });
                     if (response.StatusCode == HttpStatusCode.OK)
                     {
@@ -638,7 +638,7 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, create);
+            using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", create);
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 registration = await response.Content.ReadFromJsonAsync<ProgramRegistrationDocument>();
@@ -717,8 +717,8 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
         using var deniedFresh = await outsider.GetAsync($"{programPath}?minimum_revision=1");
         using var missing = await outsider.GetAsync($"{path}/{Uuid.CreateVersion4()}");
         using var deniedList = await outsider.GetAsync(path);
-        using var deniedCreate = await outsider.PostAsJsonAsync(path, create);
-        using var deniedRevise = await outsider.PutAsJsonAsync(programPath, new
+        using var deniedCreate = await outsider.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", create);
+        using var deniedRevise = await outsider.PutAsJsonAsync(programPath + $"/revisions/{Uuid.CreateVersion4()}", new
         {
             expected_revision = 1,
             name = "Unauthorized change",
@@ -731,7 +731,7 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
         Assert.Equal(HttpStatusCode.NotFound, deniedCreate.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, deniedRevise.StatusCode);
 
-        using var revised = await owner.PutAsJsonAsync(programPath, new
+        using var revised = await owner.PutAsJsonAsync(programPath + $"/revisions/{Uuid.CreateVersion4()}", new
         {
             expected_revision = 1,
             name = "SOC 2 continuing program",
@@ -745,8 +745,8 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
                 audit_firm = (string?)null,
             },
         });
-        Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
-        using var stale = await owner.PutAsJsonAsync(programPath, new
+        Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
+        using var stale = await owner.PutAsJsonAsync(programPath + $"/revisions/{Uuid.CreateVersion4()}", new
         {
             expected_revision = 1,
             name = "Stale program",
@@ -756,12 +756,12 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
         var staleRevisionDetail = "The program changed. Current revision: 2. Reload it and retry.";
         Assert.Contains(staleRevisionDetail, await stale.Content.ReadAsStringAsync(),
             StringComparison.Ordinal);
-        using var invalidCreate = await owner.PostAsJsonAsync(path,
+        using var invalidCreate = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}",
             new { name = "", plan = create.plan });
         Assert.Equal(HttpStatusCode.BadRequest, invalidCreate.StatusCode);
         Assert.Contains("A program requires a name.",
             await invalidCreate.Content.ReadAsStringAsync(), StringComparison.Ordinal);
-        using var invalidCurrent = await owner.PutAsJsonAsync(programPath, new
+        using var invalidCurrent = await owner.PutAsJsonAsync(programPath + $"/revisions/{Uuid.CreateVersion4()}", new
         {
             expected_revision = 2,
             name = "",
@@ -776,6 +776,7 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
             var invalidCreateMcp = await commandMcp.When("bdgrz.program.create",
                 new Dictionary<string, object?>
                 {
+                    ["program_id"] = Uuid.CreateVersion4().ToString(),
                     ["tenant_id"] = tenant.TenantId,
                     ["name"] = "",
                     ["plan"] = create.plan,
@@ -785,6 +786,7 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
             var staleMcp = await commandMcp.When("bdgrz.program.revise",
                 new Dictionary<string, object?>
                 {
+                    ["command_id"] = Uuid.CreateVersion4().ToString(),
                     ["tenant_id"] = tenant.TenantId,
                     ["program_id"] = registration.ProgramId,
                     ["expected_revision"] = 1,
@@ -882,7 +884,7 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
         deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(secondPath,
+            using var response = await owner.PutAsJsonAsync(secondPath + $"/{Uuid.CreateVersion4()}",
                 new { name = "Second tenant program", plan = create.plan });
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -913,7 +915,7 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
             $"{secondPath}/{registration.ProgramId}/revisions/1");
         Assert.Equal(HttpStatusCode.NotFound, wrongTenantRevision.StatusCode);
 
-        using var conflictingTenant = await owner.PostAsJsonAsync(path, new
+        using var conflictingTenant = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
         {
             tenant_id = secondTenant.TenantId,
             name = "Conflicting tenant body",

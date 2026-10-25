@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     revision of that owner (negative when unconstrained) and <paramref name="Generation" /> the guard generation of
 ///     this fact.
 /// </summary>
-[Discriminator("bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted", 1)]
+[Discriminator("bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted", 2)]
 public sealed record TenantManagerSourceMutationAdmitted(EventStreamAddress Owner, long Revision, long Generation, ImmutableContentRef Intent,
     ImmutableContentRef? SourceProofs, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
-    ImmutableContentRef? OperationResult) : DomainEvent, ITenantManagerGuardFact;
+    ImmutableContentRef? OperationResult, TenantManagerEpisodeAuthority CurrentAuthority = null!) : DomainEvent, ITenantManagerGuardFact;

@@ -1,3 +1,4 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Tests.Features.Operations;
 
@@ -76,7 +77,7 @@ public sealed class WorkReminderTests
 
         // Act
         var preference = await fixture.AsAsync(fixture.OwnerUserId,
-            new SetWorkDigestPreference(fixture.TenantId, false));
+            new SetWorkDigestPreference(Uuid.CreateVersion4(), fixture.TenantId, false));
 
         // Assert
         Assert.False(preference.EmailDigestEnabled);

@@ -456,7 +456,7 @@ public sealed class ReadinessAssessmentHandlerTests
             });
         var remappedAt = DateTimeOffset.UtcNow.AddHours(-2);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ComplianceProgram(fixture.TenantId, fixture.ProgramId), program =>
+            new ProgramRules(fixture.TenantId, fixture.ProgramId), program =>
                 Command(program.SelectCriteriaEdition(2, second.EditionId, Uuid.CreateVersion4(),
                     "Admin", remappedAt)));
 
@@ -676,12 +676,12 @@ public sealed class ReadinessAssessmentHandlerTests
                 ? approved.AddDays(-1) : DateTimeOffset.UtcNow.AddDays(-1);
             var admin = Uuid.CreateVersion4();
             await ProgramManagementServices.SeedAsync(provider,
-                new ComplianceProgram(fixture.TenantId, fixture.ProgramId), program =>
+                new ProgramRules(fixture.TenantId, fixture.ProgramId), program =>
                     Command(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null,
                         null), admin, "Admin", now)));
             if (selectEdition)
                 await ProgramManagementServices.SeedAsync(provider,
-                    new ComplianceProgram(fixture.TenantId, fixture.ProgramId), program =>
+                    new ProgramRules(fixture.TenantId, fixture.ProgramId), program =>
                         Command(program.SelectCriteriaEdition(1, selectedEdition ?? Edition,
                             admin, "Admin", now)));
             var owner = Uuid.CreateVersion4();

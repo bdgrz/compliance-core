@@ -200,7 +200,7 @@ public sealed class ProviderChangeImpactE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await client.PostAsJsonAsync(path, new
+            using var response = await client.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "SOC 2",
                 plan = new

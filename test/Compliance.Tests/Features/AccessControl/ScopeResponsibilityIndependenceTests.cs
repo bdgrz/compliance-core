@@ -156,7 +156,7 @@ public sealed class ScopeResponsibilityIndependenceTests
             var now = DateTimeOffset.UtcNow.AddDays(-1);
             var author = RbacIds.Member(fixture.Tenant, Uuid.CreateVersion4());
             var reviewer = RbacIds.Member(fixture.Tenant, Uuid.CreateVersion4());
-            await ProgramManagementServices.SeedAsync(fixture.Provider, new ComplianceProgram(fixture.Tenant, fixture.Program), program =>
+            await ProgramManagementServices.SeedAsync(fixture.Provider, new ProgramRules(fixture.Tenant, fixture.Program), program =>
             {
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), author, "Client author", now));
                 return Result.Success;

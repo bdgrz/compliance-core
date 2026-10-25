@@ -47,6 +47,8 @@ static class ProgramManagementServices
             new PersistenceKvClient(new InMemoryKvClient())));
         collection.AddScoped<FirmStaffViews>();
         collection.AddScoped<NativeOperationExecutor>();
+        collection.AddScoped<ProgramReader>();
+        collection.AddScoped<ProgramOperations>();
         collection.AddScoped<IndependenceRuleCatalogReader>();
         collection.AddScoped<IndependenceRuleRatificationReader>();
         collection.AddScoped<IndependenceRuleCatalogOperations>();
@@ -93,7 +95,35 @@ static class ProgramManagementServices
         collection.AddVerifiedServiceEngagementReader();
         collection.AddVerifiedWorkDigestReader();
         collection.AddVerifiedWorkAssignmentReader();
+        collection.AddVerifiedProgramReader();
+        collection.AddVerifiedWorkPreferenceReader();
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+    }
+
+    public static Task SeedAsync(IServiceProvider provider, ProgramRules selected,
+        Func<ProgramRules, Bdgrz.Compliance.Features.Versioning.CommandFailure?> operation) =>
+        SeedAsync(provider, selected, rules =>
+        {
+            var failure = operation(rules);
+            Assert.Null(failure);
+            return Result.Success;
+        });
+
+    public static async Task SeedAsync(IServiceProvider provider, ProgramRules selected, Func<ProgramRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var rules = await services.GetRequiredService<ProgramReader>().RulesAsync(selected.TenantId, selected.Id);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await ProgramSeeds.AppendAsync(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IDomainEventReader>(), services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+
+    public static async Task<ProgramRules> HydrateAsync(IServiceProvider provider, ProgramRules selected)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ProgramReader>().RulesAsync(selected.TenantId, selected.Id);
     }
 
     public static async Task<RiskMethodRules> HydrateAsync(IServiceProvider provider, RiskMethodRules selected)

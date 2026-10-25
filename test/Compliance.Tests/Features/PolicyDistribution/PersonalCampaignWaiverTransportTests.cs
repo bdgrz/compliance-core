@@ -158,7 +158,7 @@ public sealed class PersonalCampaignWaiverTransportTests
         {
             var fixture = new Fixture();
             var actor = ActorReference.ForMember(RbacIds.Member(fixture.Tenant, fixture.Manager), "Client manager");
-            await ProgramManagementServices.SeedAsync(fixture._provider, new ComplianceProgram(fixture.Tenant, fixture.Program), program =>
+            await ProgramManagementServices.SeedAsync(fixture._provider, new ProgramRules(fixture.Tenant, fixture.Program), program =>
             {
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), fixture.Manager, "Client manager", fixture._at));
                 return Result.Success;

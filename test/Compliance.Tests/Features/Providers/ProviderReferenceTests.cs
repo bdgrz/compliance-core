@@ -207,7 +207,7 @@ public sealed class ProviderReferenceTests
             };
             await ProgramManagementServices.SeedAsync(fixture.Services, new Person(fixture.TenantId, fixture.PersonId),
                 person => person.Record("Non-signing owner", null, fixture.Author, fixture.Now));
-            await ProgramManagementServices.SeedAsync(fixture.Services, new ComplianceProgram(fixture.TenantId, fixture.ProgramId), program =>
+            await ProgramManagementServices.SeedAsync(fixture.Services, new ProgramRules(fixture.TenantId, fixture.ProgramId), program =>
             {
                 Assert.Null(program.Create("SOC2", new ProgramPlan(null, null, null, null, null, null), Uuid.CreateVersion4(), "Recorder", fixture.Now));
                 return Result.Success;

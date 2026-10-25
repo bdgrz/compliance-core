@@ -28,7 +28,7 @@ public sealed class CommitmentHttpRoutesTests
         var program = Uuid.CreateVersion4();
         var service = Uuid.CreateVersion4();
         var id = CommitmentDraft.IdFor(tenant, program, "service_commitment", "SC-HTTP");
-        await ProgramManagementServices.SeedAsync(factory.Services, new ComplianceProgram(tenant, program), owner =>
+        await ProgramManagementServices.SeedAsync(factory.Services, new ProgramRules(tenant, program), owner =>
         {
             Assert.Null(owner.Create("Security", new ProgramPlan(null, null, null, null, null, null),
                 RbacIds.Member(tenant, author), "Author", DateTimeOffset.UtcNow));

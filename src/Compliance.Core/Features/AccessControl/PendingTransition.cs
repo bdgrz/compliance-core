@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     <paramref name="Reason" />, or a first registration of the episode's administrators-team assignment.
 /// </summary>
 public sealed record PendingTransition(bool IsWithdrawal, Uuid Episode, string? Reason, long Generation,
-    bool IsRegistration)
+    bool IsRegistration, bool Superseded = false)
 {
     /// <summary>True when the source change lands on the member owner.</summary>
     public bool OwnedByMember => Reason is TenantManagerGuard.Suspended or TenantManagerGuard.Deprovisioned;

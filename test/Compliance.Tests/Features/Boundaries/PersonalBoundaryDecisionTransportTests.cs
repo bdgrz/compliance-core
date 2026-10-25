@@ -126,7 +126,7 @@ public sealed class PersonalBoundaryDecisionTransportTests
             var fixture = new Fixture();
             var now = DateTimeOffset.UtcNow;
             var author = RbacIds.Member(fixture._tenant, fixture._author);
-            await ProgramManagementServices.SeedAsync(fixture._provider, new ComplianceProgram(fixture._tenant, fixture._program), program =>
+            await ProgramManagementServices.SeedAsync(fixture._provider, new ProgramRules(fixture._tenant, fixture._program), program =>
             {
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), author, "Author", now));
                 return Result.Success;

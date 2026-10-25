@@ -41,7 +41,7 @@ public sealed class AttestProgramManagementWriteWallTests
     {
         // Arrange
         await using var provider = Compose();
-        await ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(Tenant, Program), source =>
+        await ProgramManagementServices.SeedAsync(provider, new ProgramRules(Tenant, Program), source =>
         {
             Assert.Null(source.Create("Security", new ProgramPlan(null, null, null, null, null, null),
                 RbacIds.Member(Tenant, User), "Client administrator", Now));
@@ -56,7 +56,7 @@ public sealed class AttestProgramManagementWriteWallTests
         // Act
         var error = operation switch
         {
-            "program" => (await bus.DispatchAsync(new CreateProgram(Tenant, "New program",
+            "program" => (await bus.DispatchAsync(new CreateProgram(Uuid.CreateVersion4(), Tenant, "New program",
                 new ProgramPlan(null, null, null, null, null, null)), context, CancellationToken.None)).Error,
             "service" => (await bus.DispatchAsync(new CreateClientService(Tenant, Program, "Service",
                 "Client service purpose", "Client owner"), context, CancellationToken.None)).Error,
@@ -148,7 +148,7 @@ public sealed class AttestProgramManagementWriteWallTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(
-            new CreateProgram(Tenant, "New program", new ProgramPlan(null, null, null, null, null, null)),
+            new CreateProgram(Uuid.CreateVersion4(), Tenant, "New program", new ProgramPlan(null, null, null, null, null, null)),
             ProgramManagementServices.Actor(User));
 
         // Assert
@@ -179,7 +179,7 @@ public sealed class AttestProgramManagementWriteWallTests
     }
 
     static Task SeedProgramAsync(IServiceProvider provider) => ProgramManagementServices.SeedAsync(provider,
-        new ComplianceProgram(Tenant, Program), program =>
+        new ProgramRules(Tenant, Program), program =>
         {
             Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null),
                 RbacIds.Member(Tenant, User), "Client administrator", Now));

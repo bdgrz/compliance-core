@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Criteria;
@@ -19,26 +20,26 @@ public sealed class ProgramCriteriaProjectionTests
     {
         // Arrange
         await using var fixture = new StoreFixture();
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
         var editionId = CriteriaCatalog.Platform.Edition.EditionId;
         var actor = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())],
             "BdgrzSession"));
         var plan = new ProgramPlan(null, null, null, null, null, null);
-        var creation = new RequestContext<CreateProgram>(new CreateProgram(tenantId, "SOC 2",
+        var creation = new RequestContext<CreateProgram>(new CreateProgram(Uuid.CreateVersion4(), tenantId, "SOC 2",
             plan), actor);
-        Assert.True((await new CreateProgramHandler(fixture.Repository, TimeProvider.System)
+        Assert.True((await new CreateProgramHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content))
             .HandleAsync(creation, CancellationToken.None)).IsSuccess);
-        var programId = creation.RequestId;
-        Assert.True((await new SelectProgramCriteriaEditionHandler(fixture.Repository,
-                CriteriaCatalog.Platform, TimeProvider.System)
+        var programId = creation.Request.ProgramId;
+        Assert.True((await new SelectProgramCriteriaEditionHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content), CriteriaCatalog.Platform)
             .HandleAsync(new RequestContext<SelectProgramCriteriaEdition>(
-                new SelectProgramCriteriaEdition(tenantId, programId, 1, editionId), actor),
+                new SelectProgramCriteriaEdition(Uuid.CreateVersion4(), tenantId, programId, 1, editionId), actor),
                 CancellationToken.None)).IsSuccess);
-        Assert.True((await new ReviseProgramHandler(fixture.Repository, TimeProvider.System)
-            .HandleAsync(new RequestContext<ReviseProgram>(new ReviseProgram(tenantId, programId,
+        Assert.True((await new ReviseProgramHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content))
+            .HandleAsync(new RequestContext<ReviseProgram>(new ReviseProgram(Uuid.CreateVersion4(), tenantId, programId,
                 2, "SOC 2 revised", plan), actor), CancellationToken.None)).IsSuccess);
-        using var replay = BuildReplayWorker(fixture.Store, tenantId);
+        using var replay = BuildReplayWorker(fixture.Store, content, tenantId);
 
         // Act
         await replay.StartAsync();
@@ -77,7 +78,7 @@ public sealed class ProgramCriteriaProjectionTests
                 (revision.Revision, revision.CriteriaEditionId)));
     }
 
-    static IHost BuildReplayWorker(IDomainEventReader reader, Uuid tenant)
+    static IHost BuildReplayWorker(IDomainEventReader reader, IImmutableContentStore content, Uuid tenant)
     {
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {
@@ -85,8 +86,7 @@ public sealed class ProgramCriteriaProjectionTests
         });
         builder.Services.AddSingleton(reader);
         builder.Services.AddSingleton<IKvClient, InMemoryKvClient>();
-        builder.Services.AddSingleton<IImmutableContentStore>(provider =>
-            new FitzKvImmutableContentStore(provider.GetRequiredService<IKvClient>()));
+        builder.Services.AddSingleton(content);
         builder.Services.AddSingleton<ITenantDirectory>(new StaticTenantDirectory(
             new TenantId(tenant.ToString())));
         builder.Services.AddScoped<FitzProgramDirectory>();
@@ -94,9 +94,9 @@ public sealed class ProgramCriteriaProjectionTests
             provider.GetRequiredService<FitzProgramDirectory>());
         builder.Services.AddScoped<IProgramDirectoryReader>(provider =>
             provider.GetRequiredService<FitzProgramDirectory>());
-        builder.Services.AddPortiaEvent<ProgramCreated>(1, "bdgrz.program.created");
-        builder.Services.AddPortiaEvent<ProgramRevised>(1, "bdgrz.program.revised");
-        builder.Services.AddPortiaEvent<ProgramCriteriaEditionSelected>(1,
+        builder.Services.AddPortiaEvent<ProgramCreated>(2, "bdgrz.program.created");
+        builder.Services.AddPortiaEvent<ProgramRevised>(2, "bdgrz.program.revised");
+        builder.Services.AddPortiaEvent<ProgramCriteriaEditionSelected>(2,
             "bdgrz.program.criteria.selected");
         builder.Services.AddPortia()
             .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant,

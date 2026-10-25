@@ -435,7 +435,7 @@ public sealed class ProgramReadLeakMatrixE2ETests(BrokerStackFixture broker)
         var firstProgram = await CreateProgramAsync(owner, programsPath, marker + " Program 1");
         var secondProgram = await CreateProgramAsync(owner, programsPath, marker + " Program 2");
         await WaitForPageCountAsync(owner, programsPath, 2);
-        using var revisedProgram = await owner.PutAsJsonAsync(programsPath + "/" + firstProgram,
+        using var revisedProgram = await owner.PutAsJsonAsync(programsPath + "/" + firstProgram + $"/revisions/{Uuid.CreateVersion4()}",
             new
             {
                 expected_revision = 1,
@@ -494,7 +494,7 @@ public sealed class ProgramReadLeakMatrixE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, new { name, plan = Plan() });
+            using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new { name, plan = Plan() });
             if (response.StatusCode == HttpStatusCode.OK)
                 return (await ReadJsonAsync(response)).GetProperty("program_id").GetString()!;
             Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,

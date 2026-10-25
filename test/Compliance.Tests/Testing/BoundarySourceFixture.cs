@@ -39,10 +39,10 @@ sealed class BoundarySourceFixture : IAsyncDisposable
     public Task SeedAsync(BoundaryRules rules) => BoundarySeeds.AppendAsync(Reader, Writer, Content, rules);
     public async Task SeedProgramAsync(Uuid tenant, Uuid program, Uuid user)
     {
-        var owner = new ComplianceProgram(tenant, program);
+        var owner = new ProgramRules(tenant, program);
         Assert.Null(owner.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
             RbacIds.Member(tenant, user), "Lead", Clock.Now));
-        await Writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System));
+        await ProgramSeeds.WriteAsync(Reader, Writer, Events, Content, owner);
     }
     public async Task<IReadOnlyList<DomainEvent>> FactsAsync(Uuid tenant, Uuid control)
     {

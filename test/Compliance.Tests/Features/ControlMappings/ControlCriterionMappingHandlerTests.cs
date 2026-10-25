@@ -154,7 +154,7 @@ public sealed class ControlCriterionMappingHandlerTests
 
         // Act
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ComplianceProgram(fixture.TenantId, fixture.ProgramId), program =>
+            new ProgramRules(fixture.TenantId, fixture.ProgramId), program =>
                 Command(program.SelectCriteriaEdition(2, NextEdition, Uuid.CreateVersion4(),
                     "Admin", DateTimeOffset.UtcNow)));
 
@@ -341,11 +341,11 @@ public sealed class ControlCriterionMappingHandlerTests
             var now = DateTimeOffset.UtcNow;
             var admin = Uuid.CreateVersion4();
             await ProgramManagementServices.SeedAsync(provider,
-                new ComplianceProgram(fixture.TenantId, fixture.ProgramId), program =>
+                new ProgramRules(fixture.TenantId, fixture.ProgramId), program =>
                     Command(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null,
                         null), admin, "Admin", now)));
             await ProgramManagementServices.SeedAsync(provider,
-                new ComplianceProgram(fixture.TenantId, fixture.ProgramId), program =>
+                new ProgramRules(fixture.TenantId, fixture.ProgramId), program =>
                     Command(program.SelectCriteriaEdition(1, CurrentEdition, admin, "Admin", now)));
             var owner = Uuid.CreateVersion4();
             var reviewId = Uuid.CreateVersion4();

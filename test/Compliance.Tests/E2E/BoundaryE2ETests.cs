@@ -74,7 +74,7 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
         string? lastBootstrapResponse = null;
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(programsPath, new
+            using var response = await owner.PutAsJsonAsync(programsPath + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "Readiness program",
                 plan = new

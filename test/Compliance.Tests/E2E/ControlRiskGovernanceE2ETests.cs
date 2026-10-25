@@ -69,7 +69,7 @@ public sealed class ControlRiskGovernanceE2ETests(BrokerStackFixture broker)
         var editions = await ReadAsync(await owner.GetAsync($"{tenantPath}/criteria-editions"));
         var editionId = editions.EnumerateArray().First().GetProperty("edition_id").GetString()!;
         using (var selected = await RetryUntilAuthorizedAsync(() => owner.PutAsJsonAsync(
-                   $"{programPath}/criteria-edition",
+                   $"{programPath}/criteria-edition" + $"/selections/{Uuid.CreateVersion4()}",
                    new { expected_revision = 1, edition_id = editionId })))
             Assert.Equal(HttpStatusCode.NoContent, selected.StatusCode);
         await InviteReviewerAsync(factory, worker, owner, reviewer, tenantId);
@@ -443,7 +443,7 @@ public sealed class ControlRiskGovernanceE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var program = await owner.PostAsJsonAsync(path, new
+            using var program = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "SOC 2",
                 plan = new

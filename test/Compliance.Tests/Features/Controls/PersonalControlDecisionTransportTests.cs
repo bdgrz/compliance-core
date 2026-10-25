@@ -222,7 +222,7 @@ public sealed class PersonalControlDecisionTransportTests
             var fixture = new Fixture();
             var now = DateTimeOffset.UtcNow;
             var author = RbacIds.Member(fixture.Tenant, fixture.Author);
-            await ProgramManagementServices.SeedAsync(fixture._provider, new ComplianceProgram(fixture.Tenant, fixture.Program), program =>
+            await ProgramManagementServices.SeedAsync(fixture._provider, new ProgramRules(fixture.Tenant, fixture.Program), program =>
             {
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), author, "Author", now));
                 return Result.Success;

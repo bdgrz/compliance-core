@@ -268,9 +268,9 @@ public sealed class CriteriaEvaluationTransportTests
         {
             var admin = Uuid.CreateVersion4();
             var now = DateTimeOffset.UtcNow;
-            await ControlOperationE2ETests.SeedAsync(factory, new ComplianceProgram(tenant, program), item =>
+            await ControlOperationE2ETests.SeedAsync(factory, new ProgramRules(tenant, program), item =>
                 Command(item.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null), admin, "Admin", now)));
-            await ControlOperationE2ETests.SeedAsync(factory, new ComplianceProgram(tenant, program), item =>
+            await ControlOperationE2ETests.SeedAsync(factory, new ProgramRules(tenant, program), item =>
                 Command(item.SelectCriteriaEdition(1, CriteriaCatalog.Platform.Edition.EditionId, admin, "Admin", now)));
         }
 

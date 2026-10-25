@@ -625,7 +625,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ResolveMyTenantSlug, TenantSlugResolution>("/api/v1/tenant-slugs/{slug}/mine")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
-    app.MapPortiaPost<CreateProgram, ProgramRegistration>("/api/v1/tenants/{tenant_id}/programs", config => config.OnNativeResult()).WithNativeFirstResponse<CreateProgram>()
+    app.MapPortiaPut<CreateProgram, ProgramRegistration>("/api/v1/tenants/{tenant_id}/programs/{program_id}", config => config.OnNativeResult()).WithNativeFirstResponse<CreateProgram>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Programs");
     app.MapPortiaGet<ListCriteriaCatalogEditions, IReadOnlyList<CriteriaCatalogEdition>>(
@@ -853,10 +853,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Criteria");
     app.MapPortiaPut<SelectProgramCriteriaEdition>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/criteria-edition", config => config.OnNativeResult()).WithNativeFirstResponse<SelectProgramCriteriaEdition>()
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/criteria-edition/selections/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<SelectProgramCriteriaEdition>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Programs");
-    app.MapPortiaPut<ReviseProgram>("/api/v1/tenants/{tenant_id}/programs/{program_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseProgram>()
+    app.MapPortiaPut<ReviseProgram>("/api/v1/tenants/{tenant_id}/programs/{program_id}/revisions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseProgram>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Programs");
     app.MapPortiaGet<GetProgram, ProgramView>("/api/v1/tenants/{tenant_id}/programs/{program_id}")
@@ -1941,7 +1941,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Work");
     app.MapPortiaPut<SetWorkDigestPreference, WorkDigestPreferenceView>(
-            "/api/v1/tenants/{tenant_id}/work-digest-preference", config => config.OnNativeResult()).WithNativeFirstResponse<SetWorkDigestPreference>()
+            "/api/v1/tenants/{tenant_id}/work-digest-preference/changes/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<SetWorkDigestPreference>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Work");
     app.MapPortiaPost<RecordPerson, PersonRegistration>(

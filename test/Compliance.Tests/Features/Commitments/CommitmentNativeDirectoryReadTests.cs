@@ -54,10 +54,10 @@ public sealed class CommitmentNativeDirectoryReadTests
         await using var native = new CommitmentProjectionScenario();
         var tenant = Uuid.CreateVersion4();
         var program = Uuid.CreateVersion4();
-        var programSource = new ComplianceProgram(tenant, program);
+        var programSource = new ProgramRules(tenant, program);
         Assert.Null(programSource.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
             Uuid.CreateVersion4(), "Program lead", Now));
-        await native.Writer.SaveAsync(programSource, new RequestDispatchContext(RequestActor.System));
+        await ProgramSeeds.WriteAsync(native.Reader, native.Writer, native.Events, native.Content, programSource);
         var first = await SeedAsync(native, tenant, program, "SC-01");
         var second = await SeedAsync(native, tenant, program, "SC-02");
         var normal = new FitzCommitmentDraftDirectory(native.Kv, native.Commitments);

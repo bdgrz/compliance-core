@@ -173,9 +173,11 @@ public sealed class AccessGrantProposalValidatorTests
         var userId = Uuid.CreateVersion4();
         var roleId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var program = new ComplianceProgram(tenantId, programId);
-        Assert.Null(program.Create("Program", new ProgramPlan(null, null, null, null, null, null),
+        var programRules = new ProgramRules(tenantId, programId);
+        Assert.Null(programRules.Create("Program", new ProgramPlan(null, null, null, null, null, null),
             Uuid.CreateVersion4(), "Admin", DateTimeOffset.UtcNow));
+        await using var programNative = new ProgramNativeFixture();
+        var program = await ProgramSeeds.OwnerAsync(programNative.Content, programRules);
         var validator = new AccessGrantProposalValidator(
             new MembershipReader(userId, tenantId, "client_personnel"), new TeamDirectory(),
             new RoleDirectory(roleId), ResourceScopes(tenantId, program, false),

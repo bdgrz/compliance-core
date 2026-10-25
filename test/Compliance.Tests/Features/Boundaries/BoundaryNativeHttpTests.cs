@@ -28,7 +28,7 @@ public sealed class BoundaryNativeHttpTests
         var tenant = Uuid.CreateVersion4();
         var program = Uuid.CreateVersion4();
         var boundary = Uuid.CreateVersion4();
-        await ProgramManagementServices.SeedAsync(factory.Services, new ComplianceProgram(tenant, program), owner =>
+        await ProgramManagementServices.SeedAsync(factory.Services, new ProgramRules(tenant, program), owner =>
         {
             Assert.Null(owner.Create("Security", new ProgramPlan(null, null, null, null, null, null),
                 RbacIds.Member(tenant, author), "Author", DateTimeOffset.UtcNow));

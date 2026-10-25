@@ -23,7 +23,7 @@ public sealed class CompleteAdministratorWithdrawalHandler(AdministratorReceiver
         if (!intent.IsSuccess)
             return Result<ReceiverOutcome>.Failure(intent.Error!);
         var tenantId = AdministratorReceiverSupport.TenantOf(request.Target);
-        var loaded = await support.Guards.LoadAsync(tenantId, request.CommandId, ct).ConfigureAwait(false);
+        var loaded = await support.Guards.LoadAsync(tenantId, request.CommandId, request.MemberEpisode, request.OperationId, ct).ConfigureAwait(false);
         var guard = loaded.Guard;
         if (request.Target != guard.Stream)
             return AdministratorReceiverSupport.Invalid<ReceiverOutcome>("The command does not target this tenant's guard.");

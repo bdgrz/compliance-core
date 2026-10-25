@@ -282,8 +282,10 @@ public sealed class ScopeSnapshotTests
         var reviewerId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var plan = new ProgramPlan(null, null, null, null, null, null);
-        var program = new ComplianceProgram(tenantId, programId);
-        Assert.Null(program.Create("SOC 2", plan, actorId, "Lead", now));
+        var programRules = new ProgramRules(tenantId, programId);
+        Assert.Null(programRules.Create("SOC 2", plan, actorId, "Lead", now));
+        await using var programNative = new ProgramNativeFixture();
+        var program = await ProgramSeeds.OwnerAsync(programNative.Content, programRules);
         var programRevision = new ProgramRevisionView(programId, 1, "SOC 2", plan,
             actorId, "Lead", now);
         var boundary = new BoundaryRules(tenantId, boundaryId);
@@ -384,8 +386,10 @@ public sealed class ScopeSnapshotTests
         var reviewerId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var plan = new ProgramPlan(null, null, null, null, null, null);
-        var program = new ComplianceProgram(tenantId, programId);
-        Assert.Null(program.Create("SOC 2", plan, authorId, "Lead", now));
+        var programRules = new ProgramRules(tenantId, programId);
+        Assert.Null(programRules.Create("SOC 2", plan, authorId, "Lead", now));
+        await using var programNative = new ProgramNativeFixture();
+        var program = await ProgramSeeds.OwnerAsync(programNative.Content, programRules);
         var boundary = new BoundaryRules(tenantId, boundaryId);
         var content = new BoundaryContent("Scope", "readiness", ["security"], []);
         Assert.True(boundary.Create(programId, firstVersionId, content,
@@ -482,8 +486,10 @@ public sealed class ScopeSnapshotTests
         var reviewerId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var plan = new ProgramPlan(null, null, null, null, null, null);
-        var program = new ComplianceProgram(tenantId, programId);
-        Assert.Null(program.Create("SOC 2", plan, actorId, "Lead", now));
+        var programRules = new ProgramRules(tenantId, programId);
+        Assert.Null(programRules.Create("SOC 2", plan, actorId, "Lead", now));
+        await using var programNative = new ProgramNativeFixture();
+        var program = await ProgramSeeds.OwnerAsync(programNative.Content, programRules);
         var programRevision = new ProgramRevisionView(programId, 1, "SOC 2", plan,
             actorId, "Lead", now);
         var boundary = new BoundaryRules(tenantId, boundaryId);

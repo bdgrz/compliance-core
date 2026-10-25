@@ -93,7 +93,7 @@ sealed class CampaignHost : IAsyncDisposable
     /// <summary>Seeds the program and the two people: a member-correlated learner and a person without a membership.</summary>
     public async Task SeedAsync()
     {
-        await ProgramManagementServices.SeedAsync(_provider, new ComplianceProgram(Tenant, Program), program =>
+        await ProgramManagementServices.SeedAsync(_provider, new ProgramRules(Tenant, Program), program =>
         {
             Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), Manager,
                 "Client manager", Start));

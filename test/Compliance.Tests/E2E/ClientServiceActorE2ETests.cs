@@ -197,7 +197,7 @@ public sealed class ClientServiceActorE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, new
+            using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "Service actor program",
                 plan = new

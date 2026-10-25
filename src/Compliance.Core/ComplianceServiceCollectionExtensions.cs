@@ -170,6 +170,8 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzTenantInvitationDirectory>());
         services.AddScoped<ITenantInvitationDirectoryReader>(
             provider => provider.GetRequiredService<FitzTenantInvitationDirectory>());
+        services.AddScoped<ProgramReader>();
+        services.AddScoped<ProgramOperations>();
         services.AddScoped<FitzProgramDirectory>();
         services.AddScoped<ProgramDirectoryReadConsistency>();
         services.AddScoped<FitzApplicationDirectory>();

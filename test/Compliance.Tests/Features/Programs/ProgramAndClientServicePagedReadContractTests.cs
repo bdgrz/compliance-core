@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
@@ -14,7 +15,7 @@ public sealed class ProgramAndClientServicePagedReadContractTests
     public async Task ShouldRejectOutOfRangeLimitGivenProgramAndClientServiceLists(int limit)
     {
         // Arrange
-        var scenario = CreateScenario();
+        var scenario = await CreateScenario();
         var programHistory = new ProgramHistoryReadConsistency(scenario.Programs, scenario.Reader);
         var serviceHistory = new ClientServiceHistoryReadConsistency(scenario.Services, scenario.Reader);
         var programs = new ListProgramsHandler(scenario.Programs, Visibility(true));
@@ -50,7 +51,7 @@ public sealed class ProgramAndClientServicePagedReadContractTests
     public async Task ShouldRejectInvalidCursorGivenProgramAndClientServiceLists()
     {
         // Arrange
-        var scenario = CreateScenario(rejectCursor: true);
+        var scenario = await CreateScenario(rejectCursor: true);
         var programHistory = new ProgramHistoryReadConsistency(scenario.Programs, scenario.Reader);
         var serviceHistory = new ClientServiceHistoryReadConsistency(scenario.Services, scenario.Reader);
         var programs = new ListProgramsHandler(scenario.Programs, Visibility(true));
@@ -114,7 +115,7 @@ public sealed class ProgramAndClientServicePagedReadContractTests
                     "Operations", "active", null, Uuid.CreateVersion4(), "Owner", now, programId),
             ], null),
         };
-        var reader = new AggregateReader(ProgramSource(tenantId, programId));
+        var reader = new AggregateReader(await ProgramSource(tenantId, programId));
         var programHistory = new ProgramHistoryReadConsistency(programs, reader);
         var serviceHistory = new ClientServiceHistoryReadConsistency(services, reader);
 
@@ -201,7 +202,7 @@ public sealed class ProgramAndClientServicePagedReadContractTests
         Assert.Equal<string?>([null, "after-hidden"], directory.RequestedCursors);
     }
 
-    static Scenario CreateScenario(bool rejectCursor = false)
+    static async Task<Scenario> CreateScenario(bool rejectCursor = false)
     {
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
@@ -209,7 +210,7 @@ public sealed class ProgramAndClientServicePagedReadContractTests
         return new Scenario(tenantId, programId, serviceId,
             new ProgramDirectory { RejectCursor = rejectCursor },
             new ClientServiceDirectory { RejectCursor = rejectCursor },
-            new AggregateReader(ProgramSource(tenantId, programId)));
+            new AggregateReader(await ProgramSource(tenantId, programId)));
     }
 
     static RequestContext<T> Context<T>(T request) where T : IRequestBase =>
@@ -230,12 +231,13 @@ public sealed class ProgramAndClientServicePagedReadContractTests
         new(tenantId, serviceId, 1, "Payroll", "Run payroll", "Operations", "active",
             Uuid.CreateVersion4(), "Owner", DateTimeOffset.UtcNow, programId);
 
-    static ComplianceProgram ProgramSource(Uuid tenantId, Uuid programId)
+    static async Task<ComplianceProgram> ProgramSource(Uuid tenantId, Uuid programId)
     {
-        var program = new ComplianceProgram(tenantId, programId);
+        var program = new ProgramRules(tenantId, programId);
         Assert.Null(program.Create("Readiness", Plan(), Uuid.CreateVersion4(), "Owner",
             DateTimeOffset.UtcNow));
-        return program;
+        await using var native = new ProgramNativeFixture();
+        return await ProgramSeeds.OwnerAsync(native.Content, program);
     }
 
     static void AssertValidation(RequestError? error) =>

@@ -1,3 +1,4 @@
+using Cntryl.Portia;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
@@ -39,7 +40,7 @@ public sealed class ClientServiceE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(programsPath, new
+            using var response = await owner.PutAsJsonAsync(programsPath + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "Service program",
                 plan = new

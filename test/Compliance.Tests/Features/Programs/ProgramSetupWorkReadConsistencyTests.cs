@@ -238,7 +238,8 @@ public sealed class ProgramSetupWorkReadConsistencyTests
     static async Task AppendProgramCreatedAsync(InMemoryEventStore events, Uuid tenantId,
         Uuid programId)
     {
-        DomainEvent created = new ProgramCreated(tenantId, programId, "SOC 2",
+        await using var programNative = new ProgramNativeFixture();
+        var created = await ProgramSeeds.CreatedAsync(programNative.Content, tenantId, programId, "SOC 2",
             new ProgramPlan(null, null, null, null, null, null), Uuid.CreateVersion4(), "Lead",
             DateTimeOffset.UtcNow);
         created.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), programId, 1,

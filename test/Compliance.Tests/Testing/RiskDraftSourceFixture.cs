@@ -36,9 +36,9 @@ sealed class RiskDraftSourceFixture : IAsyncDisposable
         new RiskDraftReader(reader ?? Reader, Events, content ?? Content), reader ?? Reader, content ?? Content, TimeProvider.System);
     public async Task SeedProgramAsync(Uuid tenant, Uuid program, Uuid actor)
     {
-        var source = new ComplianceProgram(tenant, program);
+        var source = new ProgramRules(tenant, program);
         Assert.Null(source.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null), actor, "Program author", DateTimeOffset.UtcNow));
-        await Writer.SaveAsync(source, new RequestDispatchContext(RequestActor.System));
+        await ProgramSeeds.WriteAsync(Reader, Writer, Events, Content, source);
     }
     public async Task<IReadOnlyList<DomainEvent>> PublishAsync(RiskDraftRules rules)
     {

@@ -29,7 +29,7 @@ public sealed class ApplyAdministratorAssignmentRestorationHandler(Administrator
             intent.AssignmentGeneration is not { } generation || generation == 0 ||
             intent.ExpectedAssignmentRevision != request.ExpectedAssignmentRevision)
             return AdministratorReceiverSupport.Invalid<ReceiverOutcome>("The command does not match the admitted assignment.");
-        var guard = await support.Reader.HydrateAsync(new TenantManagerGuard(tenantId), ct).ConfigureAwait(false);
+        var guard = (await support.Guards.LoadAsync(tenantId, request.CommandId, request.MemberEpisodeId, request.OperationId, ct).ConfigureAwait(false)).Guard;
         var gate = AdministratorSupersession.Of(guard.GateRestoration(request.OperationId));
         var member = await support.Reader.HydrateAsync(Member.ForVerification(tenantId, request.MemberId), ct)
             .ConfigureAwait(false);

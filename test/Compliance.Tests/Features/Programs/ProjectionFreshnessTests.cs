@@ -14,9 +14,11 @@ public sealed class ProjectionFreshnessTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var program = new ComplianceProgram(tenantId, programId);
-        Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
+        var programRules = new ProgramRules(tenantId, programId);
+        Assert.Null(programRules.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
             Uuid.CreateVersion4(), "Lead", DateTimeOffset.UtcNow));
+        await using var programNative = new ProgramNativeFixture();
+        var program = await ProgramSeeds.OwnerAsync(programNative.Content, programRules);
         var handler = new GetProgramHandler(new EmptyProgramDirectory(),
             new SourceReader(program));
 
@@ -37,9 +39,11 @@ public sealed class ProjectionFreshnessTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var program = new ComplianceProgram(tenantId, programId);
-        Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
+        var programRules = new ProgramRules(tenantId, programId);
+        Assert.Null(programRules.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
             Uuid.CreateVersion4(), "Lead", DateTimeOffset.UtcNow));
+        await using var programNative = new ProgramNativeFixture();
+        var program = await ProgramSeeds.OwnerAsync(programNative.Content, programRules);
         var programs = new EmptyProgramDirectory();
         var boundaries = new EmptyBoundaryDirectory();
         var handler = new GetProgramSetupWorkHandler(programs, boundaries, new SourceReader(program),
@@ -122,9 +126,11 @@ public sealed class ProjectionFreshnessTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var source = new ComplianceProgram(tenantId, programId);
-        Assert.Null(source.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
+        var sourceRules = new ProgramRules(tenantId, programId);
+        Assert.Null(sourceRules.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
             Uuid.CreateVersion4(), "Lead", DateTimeOffset.UtcNow));
+        await using var programNative = new ProgramNativeFixture();
+        var source = await ProgramSeeds.OwnerAsync(programNative.Content, sourceRules);
         var directory = new EmptyProgramDirectory();
         var consistency = new ProgramHistoryReadConsistency(directory, new SourceReader(source));
 

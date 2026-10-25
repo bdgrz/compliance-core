@@ -8,7 +8,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     The guard restored a member's availability as an administrator for <paramref name="Reason" /> after the exact
 ///     source restoration and current eligibility were proven.
 /// </summary>
-[Discriminator("bdgrz.rbac.manager_guard.restored", 1)]
+[Discriminator("bdgrz.rbac.manager_guard.restored", 2)]
 public sealed record TenantManagerRestored(Uuid TenantId, Uuid MemberId, string Reason, OperationProvenance Operation,
-    ImmutableContentRef Intent, ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult)
-    : DomainEvent, INativeOperationFact;
+    ImmutableContentRef Intent, ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult, TenantManagerEpisodeAuthority CurrentAuthority = null!)
+    : DomainEvent, ITenantManagerAuthorityFact;

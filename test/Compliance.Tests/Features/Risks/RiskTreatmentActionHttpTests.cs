@@ -132,7 +132,7 @@ public sealed class RiskTreatmentActionHttpTests
     }
 
     static Task SeedProgramAsync(RiskGovernanceHandlerTests.Fixture fixture) =>
-        ProgramManagementServices.SeedAsync(fixture.Provider, new ComplianceProgram(fixture.TenantId, fixture.ProgramId),
+        ProgramManagementServices.SeedAsync(fixture.Provider, new ProgramRules(fixture.TenantId, fixture.ProgramId),
             program =>
             {
                 Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),

@@ -1,16 +1,23 @@
+using System.Globalization;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Programs;
 
-[Discriminator("bdgrz.program.criteria.selected", 1)]
-public sealed record ProgramCriteriaEditionSelected(Uuid TenantId, Uuid ProgramId, long Revision,
-    Uuid EditionId, Uuid ActorMemberId, string ActorDisplay, DateTimeOffset ChangedAt) : DomainEvent
+/// <summary>The exact native program acceptance; authored value bytes remain in verified immutable content.</summary>
+[Discriminator("bdgrz.program.criteria.selected", 2)]
+public sealed record ProgramCriteriaEditionSelected(Uuid TenantId, Uuid ProgramId, long Revision, Uuid EditionId,
+    ImmutableContentRef Content, DateTimeOffset ChangedAt, OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult, ulong NativeSequence, int ChangeCount)
+    : DomainEvent, IProgramFact
 {
-    [JsonPropertyName("actor")]
-    public ActorReference? StoredActor { get; init; }
-
     [JsonIgnore]
-    public ActorReference Actor => StoredActor ?? ActorReference.ForMember(ActorMemberId, ActorDisplay);
+    public ActorReference Actor => Operation.Actor;
+    [JsonIgnore]
+    public Uuid ActorMemberId => Uuid.TryParse(Actor.Id, CultureInfo.InvariantCulture, out var member) ? member : Uuid.Empty;
+    [JsonIgnore]
+    public string ActorDisplay => Actor.Display;
 }

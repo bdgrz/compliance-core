@@ -168,7 +168,7 @@ sealed class AccessReviewFixture : IAsyncDisposable
                 instance.Declare(fixture.ApplicationId, "Production", "aws_account", null, null,
                     Uuid.CreateVersion4(), "Seeder", now));
         await ProgramManagementServices.SeedAsync(provider,
-            new ComplianceProgram(fixture.TenantId, fixture.ProgramId), program =>
+            new ProgramRules(fixture.TenantId, fixture.ProgramId), program =>
                 program.Create("Security", new ProgramPlan(null, null, null, null, null, null),
                     fixture.ManagerMemberId, "Manager", now) is null
                     ? Result.Success

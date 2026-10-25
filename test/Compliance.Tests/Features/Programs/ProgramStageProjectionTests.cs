@@ -27,8 +27,8 @@ public sealed class ProgramStageProjectionTests
         await using var fixture = new StoreFixture();
         var tenantId = Uuid.CreateVersion4();
         var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
-        var approvedProgram = await CreateProgramAsync(fixture, tenantId);
-        var deferredProgram = await CreateProgramAsync(fixture, tenantId);
+        var approvedProgram = await CreateProgramAsync(fixture, content, tenantId);
+        var deferredProgram = await CreateProgramAsync(fixture, content, tenantId);
         await DeferAsync(fixture, content, tenantId, deferredProgram);
         var approvedDecision = await ApproveWithExceptionsAsync(fixture, content, tenantId,
             approvedProgram);
@@ -69,16 +69,16 @@ public sealed class ProgramStageProjectionTests
         Assert.Null(deferred.StageDecisionId);
     }
 
-    static async Task<Uuid> CreateProgramAsync(StoreFixture fixture, Uuid tenantId)
+    static async Task<Uuid> CreateProgramAsync(StoreFixture fixture, IImmutableContentStore content, Uuid tenantId)
     {
         var actor = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())],
             "BdgrzSession"));
-        var creation = new RequestContext<CreateProgram>(new CreateProgram(tenantId, "SOC 2",
+        var creation = new RequestContext<CreateProgram>(new CreateProgram(Uuid.CreateVersion4(), tenantId, "SOC 2",
             new ProgramPlan(null, null, null, null, null, null)), actor);
-        Assert.True((await new CreateProgramHandler(fixture.Repository, TimeProvider.System)
+        Assert.True((await new CreateProgramHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content))
             .HandleAsync(creation, CancellationToken.None)).IsSuccess);
-        return creation.RequestId;
+        return creation.Request.ProgramId;
     }
 
     static async Task<ReadinessAssessmentView> RecordAssessmentAsync(StoreFixture fixture,
@@ -135,9 +135,9 @@ public sealed class ProgramStageProjectionTests
             provider.GetRequiredService<FitzProgramDirectory>());
         builder.Services.AddScoped<IProgramDirectoryReader>(provider =>
             provider.GetRequiredService<FitzProgramDirectory>());
-        builder.Services.AddPortiaEvent<ProgramCreated>(1, "bdgrz.program.created");
-        builder.Services.AddPortiaEvent<ProgramRevised>(1, "bdgrz.program.revised");
-        builder.Services.AddPortiaEvent<ProgramCriteriaEditionSelected>(1,
+        builder.Services.AddPortiaEvent<ProgramCreated>(2, "bdgrz.program.created");
+        builder.Services.AddPortiaEvent<ProgramRevised>(2, "bdgrz.program.revised");
+        builder.Services.AddPortiaEvent<ProgramCriteriaEditionSelected>(2,
             "bdgrz.program.criteria.selected");
         builder.Services.AddPortiaEvent<TypeIEntryDecisionRecorded>(1,
             "bdgrz.readiness.type_i_entry.decided");

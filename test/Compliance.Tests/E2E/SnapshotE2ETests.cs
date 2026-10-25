@@ -362,7 +362,7 @@ public sealed class SnapshotE2ETests(BrokerStackFixture broker)
                         }).ExpectFailure();
                 }
 
-                using var revised = await owner.PutAsJsonAsync(programPath, new
+                using var revised = await owner.PutAsJsonAsync(programPath + $"/revisions/{Uuid.CreateVersion4()}", new
                 {
                     expected_revision = 1,
                     name = "Revised program name",
@@ -478,7 +478,7 @@ public sealed class SnapshotE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path,
+            using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}",
                 new { name = "Snapshot program", plan });
             if (response.StatusCode == HttpStatusCode.OK)
             {

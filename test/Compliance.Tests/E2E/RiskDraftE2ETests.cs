@@ -382,7 +382,7 @@ public sealed class RiskDraftE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var program = await owner.PostAsJsonAsync(path, new
+            using var program = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "SOC 2",
                 plan = new

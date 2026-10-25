@@ -20,7 +20,7 @@ namespace Bdgrz.Compliance.Features.Readiness;
 ///     runs. A source that is not readable or consistent yet fails the admission as transient; a missing business input
 ///     is recorded as an explicit gap by the computation, never as a partial assessment.
 /// </summary>
-public sealed class RunReadinessAssessmentHandler(NativeOperationExecutor operations, IAggregateReader reader, ControlReader controlSources,
+public sealed class RunReadinessAssessmentHandler(NativeOperationExecutor operations, ProgramReader programs, ControlReader controlSources,
     ControlMappingReader mappingReader, ICriteriaCatalog catalog, IReadinessSourceReader sources,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<RunReadinessAssessment, OperationAcceptedResponse>
@@ -76,11 +76,10 @@ public sealed class RunReadinessAssessmentHandler(NativeOperationExecutor operat
         if (!prepared.IsSuccess)
             return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(prepared.Error!);
         var tenant = request.TenantId;
-        var program = await reader.HydrateAsync(new ComplianceProgram(tenant, request.ProgramId), ct)
-            .ConfigureAwait(false);
-        if (!program.IsCreated)
+        var program = await programs.HistoryAsync(tenant, request.ProgramId, ct).ConfigureAwait(false);
+        if (!program.Owner.IsCreated)
             return Fail(RequestErrorKind.NotFound, "The program was not found.");
-        var selectedEditionId = program.CriteriaEditionAt(asOf);
+        var selectedEditionId = program.CriteriaSelectionAt(asOf)?.EditionId;
         var catalogEdition = selectedEditionId is { } selected ? catalog.GetEdition(selected) : null;
         var editionId = catalogEdition is not null ? selectedEditionId : null;
         var criteria = editionId is { } edition

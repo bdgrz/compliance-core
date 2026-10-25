@@ -155,10 +155,10 @@ public sealed class AuditorRequestReadHandlerTests
         // Arrange
         await using var fixture = await ReadFixture.CreateAsync();
         await fixture.ProjectAsync();
-        var program = new ComplianceProgram(fixture.Native.TenantId, Uuid.CreateVersion4());
+        var program = new ProgramRules(fixture.Native.TenantId, Uuid.CreateVersion4());
         Assert.Null(program.Create("Unrelated program", new ProgramPlan(null, null, null, null, null, null),
             fixture.Native.MemberId, "Program author", AuditorRequestFixture.Now));
-        await fixture.Native.Writer.SaveAsync(program, new RequestDispatchContext(RequestActor.System));
+        await ProgramSeeds.WriteAsync(fixture.Native.Reader, fixture.Native.Writer, fixture.Native.Events, fixture.Native.Content, program);
 
         // Act
         var result = await fixture.ListAsync();

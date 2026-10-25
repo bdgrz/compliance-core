@@ -130,7 +130,7 @@ public sealed class ArtifactMetadataAccessTests
             else if (scope == "program")
             {
                 var program = Uuid.CreateVersion4();
-                await ProgramManagementServices.SeedAsync(fixture.Provider, new ComplianceProgram(fixture.TenantId, program), item =>
+                await ProgramManagementServices.SeedAsync(fixture.Provider, new ProgramRules(fixture.TenantId, program), item =>
                 {
                     Assert.Null(item.Create("Program", new ProgramPlan(null, null, null, null, null, null), fixture.UserId, "Administrator", Fixture.Now));
                     return Result.Success;

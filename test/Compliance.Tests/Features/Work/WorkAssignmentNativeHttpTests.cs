@@ -91,6 +91,39 @@ public sealed class WorkAssignmentNativeHttpTests
             new WorkItemAssignment(fixture.Source.TenantId, fixture.Source.ProgramId, item.WorkItemId))).Revision);
     }
 
+    [Fact]
+    public async Task ShouldReplayOriginalMemberPreferenceGivenLaterHttpPreferenceChange()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        var command = Uuid.CreateVersion4();
+        var route = $"/api/v1/tenants/{fixture.Source.TenantId}/work-digest-preference/changes/{command}";
+        const string originalBody = "{\"email_digest_enabled\":false,\"time_zone_id\":\"America/New_York\"}";
+        using var first = await fixture.PutAsync(route, originalBody);
+        var original = await first.Content.ReadAsStringAsync();
+        Assert.True(first.StatusCode == HttpStatusCode.OK, original);
+        using var later = await fixture.PutAsync($"/api/v1/tenants/{fixture.Source.TenantId}/work-digest-preference/changes/{Uuid.CreateVersion4()}",
+            "{\"email_digest_enabled\":true,\"time_zone_id\":\"UTC\"}");
+        Assert.True(later.StatusCode == HttpStatusCode.OK, await later.Content.ReadAsStringAsync());
+
+        // Act
+        using var replay = await fixture.PutAsync(route, originalBody);
+        using var changed = await fixture.PutAsync(route, "{\"email_digest_enabled\":true}");
+        using var missing = await fixture.PutAsync($"/api/v1/tenants/{fixture.Source.TenantId}/work-digest-preference", originalBody);
+        await using var scope = fixture.Factory.Services.CreateAsyncScope();
+        var current = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(
+            new WorkDigestPreference(fixture.Source.TenantId, fixture.MemberId));
+
+        // Assert
+        Assert.True(replay.StatusCode == HttpStatusCode.OK, await replay.Content.ReadAsStringAsync());
+        Assert.Equal(original, await replay.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.Conflict, changed.StatusCode);
+        Assert.True(missing.StatusCode is HttpStatusCode.MethodNotAllowed or HttpStatusCode.NotFound);
+        Assert.True(current.Read().EmailDigestEnabled);
+        Assert.Equal("UTC", current.Read().TimeZoneId);
+        Assert.Equal(2UL, current.CommittedStreamPosition);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         public required OperationsFixture Source { get; init; }

@@ -148,10 +148,12 @@ public sealed class ExaminationEngagementNativeHttpTests
             using var login = await _client.PostAsync("/api/v1/developer-user-sessions", body);
             Assert.Equal(HttpStatusCode.OK, login.StatusCode);
             await using var scope = _factory.Services.CreateAsyncScope();
-            var program = new ComplianceProgram(Tenant, Program);
+            var program = new ProgramRules(Tenant, Program);
             Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null), _member, "Program lead", Now));
-            await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(program,
-                new RequestDispatchContext(RequestActor.System));
+            await ProgramSeeds.WriteAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
+                scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+                scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), program);
             await SeedEntryAsync(ProgramReadiness.Approve);
         }
         public async Task SeedEntryAsync(string outcome)

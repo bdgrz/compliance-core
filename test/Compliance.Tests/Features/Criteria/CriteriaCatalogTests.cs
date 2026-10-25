@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Content;
+using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Criteria;
@@ -122,7 +125,7 @@ public sealed class CriteriaCatalogTests
     }
 
     [Fact]
-    public void ShouldKeepExactEditionSelectionGivenExplicitRemap()
+    public async Task ShouldKeepExactEditionSelectionGivenExplicitRemap()
     {
         // Arrange
         var foundation = CriteriaCatalog.Platform.Edition;
@@ -146,7 +149,7 @@ public sealed class CriteriaCatalogTests
         ]);
         var first = catalog.Editions[0].EditionId;
         var second = catalog.Editions[1].EditionId;
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
         var plan = new ProgramPlan(null, null, null, null, null, null);
         Assert.Null(program.Create("SOC 2", plan, MemberId, "Lead", Now));
 
@@ -154,7 +157,8 @@ public sealed class CriteriaCatalogTests
         var selected = program.SelectCriteriaEdition(1, first, MemberId, "Lead", Now.AddMinutes(1));
         var stale = program.SelectCriteriaEdition(1, second, MemberId, "Lead", Now.AddMinutes(2));
         var remapped = program.SelectCriteriaEdition(2, second, MemberId, "Lead", Now.AddMinutes(3));
-        var events = new AggregateScenario<ComplianceProgram>(program).PendingEvents;
+        await using var native = new ProgramNativeFixture();
+        var events = await ProgramSeeds.FactsAsync(native.Content, program);
 
         // Assert
         Assert.Null(selected);
@@ -172,6 +176,7 @@ public sealed class CriteriaCatalogTests
     {
         // Arrange
         await using var fixture = new StoreFixture();
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var incomplete = CriteriaCatalog.Platform.Edition with
         {
             EditionId = Uuid.CreateVersion4(),
@@ -183,12 +188,11 @@ public sealed class CriteriaCatalogTests
             new(incomplete.EditionId, "CC6.1", "CC6.1", "security", "criterion", null,
                 "Test incomplete edition."),
         ]);
-        var handler = new SelectProgramCriteriaEditionHandler(fixture.Repository,
-            catalog, TimeProvider.System);
+        var handler = new SelectProgramCriteriaEditionHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content), catalog);
         var actor = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())],
             "BdgrzSession"));
-        var request = new SelectProgramCriteriaEdition(TenantId, ProgramId, 1,
+        var request = new SelectProgramCriteriaEdition(Uuid.CreateVersion4(), TenantId, ProgramId, 1,
             incomplete.EditionId);
 
         // Act
@@ -212,7 +216,7 @@ public sealed class CriteriaCatalogTests
     {
         // Arrange
         var editionId = CriteriaCatalog.Platform.Edition.EditionId;
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
         Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
             MemberId, "Lead", Now));
         Assert.Null(program.SelectCriteriaEdition(1, editionId, MemberId, "Lead", Now));
@@ -223,7 +227,7 @@ public sealed class CriteriaCatalogTests
         // Assert
         Assert.Null(retry);
         Assert.Equal(2, program.Revision);
-        Assert.Equal(2, new AggregateScenario<ComplianceProgram>(program).PendingEvents.Count);
+        Assert.Equal(2, program.AppliedChanges.Count);
     }
 
     [Fact]
@@ -232,7 +236,7 @@ public sealed class CriteriaCatalogTests
         // Arrange
         var first = Uuid.CreateVersion4();
         var second = Uuid.CreateVersion4();
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
         Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
             MemberId, "Lead", Now));
         Assert.Null(program.SelectCriteriaEdition(1, first, MemberId, "Lead", Now));
@@ -249,7 +253,7 @@ public sealed class CriteriaCatalogTests
         Assert.Equal(CommandFailureCode.VersionConflict, arbitrary?.Code);
         Assert.Null(exactRetry);
         Assert.Equal(4, program.Revision);
-        Assert.Equal(4, new AggregateScenario<ComplianceProgram>(program).PendingEvents.Count);
+        Assert.Equal(4, program.AppliedChanges.Count);
     }
 
     [Fact]
@@ -257,6 +261,7 @@ public sealed class CriteriaCatalogTests
     {
         // Arrange
         await using var fixture = new StoreFixture();
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var first = CriteriaCatalog.Platform.Edition;
         var second = first with { EditionId = Uuid.CreateVersion4(), EditionLabel = "test_second" };
         var catalog = new CriteriaCatalog([first, second],
@@ -268,16 +273,15 @@ public sealed class CriteriaCatalogTests
         var actor = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())],
             "BdgrzSession"));
-        var create = new CreateProgramHandler(fixture.Repository, TimeProvider.System);
-        var creation = new RequestContext<CreateProgram>(new CreateProgram(TenantId, "SOC 2",
+        var create = new CreateProgramHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content));
+        var creation = new RequestContext<CreateProgram>(new CreateProgram(Uuid.CreateVersion4(), TenantId, "SOC 2",
             new ProgramPlan(null, null, null, null, null, null)), actor);
         Assert.True((await create.HandleAsync(creation, CancellationToken.None)).IsSuccess);
-        var programId = creation.RequestId;
-        var select = new SelectProgramCriteriaEditionHandler(fixture.Repository, catalog,
-            TimeProvider.System);
+        var programId = creation.Request.ProgramId;
+        var select = new SelectProgramCriteriaEditionHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content), catalog);
         Task<Result> SelectAsync(long revision, Uuid editionId) => select.HandleAsync(
             new RequestContext<SelectProgramCriteriaEdition>(
-                new SelectProgramCriteriaEdition(TenantId, programId, revision, editionId),
+                new SelectProgramCriteriaEdition(Uuid.CreateVersion4(), TenantId, programId, revision, editionId),
                 actor), CancellationToken.None).AsTask();
 
         // Act
@@ -290,7 +294,7 @@ public sealed class CriteriaCatalogTests
         await foreach (var record in fixture.Store.ReadAsync(
                            new ComplianceProgram(TenantId, programId).Stream, 0,
                            CancellationToken.None))
-            if (record.Event is ProgramCriteriaEditionSelected selection)
+            if (record.Event is ProgramCriteriaEditionSelected { ChangeCount: 1 } selection)
                 stored.Add(selection);
         using var wire = JsonDocument.Parse(JsonSerializer.Serialize(stored[0],
             ComplianceCoreJsonContext.Default.ProgramCriteriaEditionSelected));
@@ -306,7 +310,7 @@ public sealed class CriteriaCatalogTests
             ev => Assert.Equal((3L, second.EditionId), (ev.Revision, ev.EditionId)));
         Assert.Equal(first.EditionId.ToString(),
             wire.RootElement.GetProperty("edition_id").GetString());
-        Assert.Equal("member", wire.RootElement.GetProperty("actor").GetProperty("kind")
+        Assert.Equal("member", wire.RootElement.GetProperty("operation").GetProperty("actor").GetProperty("kind")
             .GetString());
     }
 }

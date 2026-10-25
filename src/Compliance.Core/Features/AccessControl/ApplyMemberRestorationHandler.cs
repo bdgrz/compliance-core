@@ -24,7 +24,7 @@ public sealed class ApplyMemberRestorationHandler(AdministratorReceiverSupport s
         var stream = Member.ForOperation(tenantId, request.MemberId, request.CommandId).Stream;
         if (request.Target != stream)
             return AdministratorReceiverSupport.Invalid<ReceiverOutcome>("The command does not match the admitted restoration.");
-        var guard = await support.Reader.HydrateAsync(new TenantManagerGuard(tenantId), ct).ConfigureAwait(false);
+        var guard = (await support.Guards.LoadAsync(tenantId, request.CommandId, request.MemberEpisode, request.OperationId, ct).ConfigureAwait(false)).Guard;
         var gate = guard.GateRestoration(request.OperationId);
         var provenance = AdministratorReceiverSupport.Provenance(request, nameof(ApplyMemberRestoration), stream, intent,
             verified.Value.FactEventId);

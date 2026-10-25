@@ -678,7 +678,7 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
             fixture.Provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             var now = DateTimeOffset.UtcNow;
             var member = RbacIds.Member(fixture.Tenant, fixture.User);
-            await ProgramManagementServices.SeedAsync(fixture.Provider, new ComplianceProgram(fixture.Tenant, fixture.Program), program =>
+            await ProgramManagementServices.SeedAsync(fixture.Provider, new ProgramRules(fixture.Tenant, fixture.Program), program =>
             {
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), member, "Client administrator", now));
                 return Result.Success;
@@ -723,7 +723,7 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
             var sourceTenant = sourceTenantId ?? Tenant;
             var content = new BoundaryContent("Synthetic scoped advisory work", "readiness", ["security"], []);
             if (programId != Program)
-                await ProgramManagementServices.SeedAsync(Provider, new ComplianceProgram(sourceTenant, programId), program =>
+                await ProgramManagementServices.SeedAsync(Provider, new ProgramRules(sourceTenant, programId), program =>
                 {
                     Assert.Null(program.Create("Other program", new ProgramPlan(null, null, null, null, null, null),
                         author, "Synthetic author", at));

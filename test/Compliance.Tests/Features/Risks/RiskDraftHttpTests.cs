@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -117,9 +118,12 @@ public sealed class RiskDraftHttpTests
             using var login = await _client.PostAsync("/api/v1/developer-user-sessions", loginBody);
             Assert.Equal(HttpStatusCode.OK, login.StatusCode);
             await using var scope = _factory.Services.CreateAsyncScope();
-            var program = new ComplianceProgram(Tenant, Program);
+            var program = new ProgramRules(Tenant, Program);
             Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null), Uuid.CreateVersion4(), "Program author", DateTimeOffset.UtcNow));
-            await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(program, new RequestDispatchContext(RequestActor.System));
+            await ProgramSeeds.WriteAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
+                scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+                scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), program);
         }
         public Task<HttpResponseMessage> CreateAsync(CreateRiskDraft request) => PutBodyAsync($"/{request.RiskId}", JsonSerializer.Serialize(request, ComplianceCoreJsonContext.Default.CreateRiskDraft));
         public Task<HttpResponseMessage> ReviseAsync(ReviseRiskDraft request) => PutBodyAsync($"/{request.RiskId}/draft", JsonSerializer.Serialize(request, ComplianceCoreJsonContext.Default.ReviseRiskDraft));

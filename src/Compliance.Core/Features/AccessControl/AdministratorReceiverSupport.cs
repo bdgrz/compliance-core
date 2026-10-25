@@ -116,7 +116,7 @@ public sealed class AdministratorReceiverSupport(ISourceFactResolver resolver, I
         EventStreamAddress owner, AdministratorTransitionIntent intent, Uuid causationEventId) =>
         new(request.CommandId, request.OperationId, causationEventId, commandKind, intent.Header.OriginalActor, owner,
             intent.MemberEpisodeId.ToString(), request.ExpectedRevision is >= 0 and var revision ? (ulong)revision : null,
-            intent.Header.AuthoredIntentSha256, intent.Header.AcceptedAt, owner, owner);
+            intent.Header.AuthoredIntentSha256, intent.Header.AcceptedAt, owner, owner, FirstOwner: intent.Header.FirstOwner);
 
     /// <summary>The acting member recorded by the original admission.</summary>
     public static Uuid ActorMemberId(AdministratorTransitionIntent intent) =>

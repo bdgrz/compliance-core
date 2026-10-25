@@ -237,7 +237,7 @@ public sealed class ControlDraftAuthorizationTests
         var authorizer = new ProgramManagementAuthorizer(new FixedMembershipDirectory(true),
             new ActiveTenant(), scoped, ProgramManagementServices.ResourceScopes());
         var context = new RequestContext<IProgramManagementRequest>(
-            new CreateProgram(tenantId, "Readiness", new ProgramPlan(null, null, null, null, null, null)),
+            new CreateProgram(Uuid.CreateVersion4(), tenantId, "Readiness", new ProgramPlan(null, null, null, null, null, null)),
             ProgramManagementServices.Actor(Uuid.CreateVersion4()));
 
         // Act

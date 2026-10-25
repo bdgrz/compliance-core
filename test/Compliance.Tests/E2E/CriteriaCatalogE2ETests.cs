@@ -147,49 +147,50 @@ public sealed class CriteriaCatalogE2ETests(BrokerStackFixture broker)
 
                 // Act: select concurrently with a plan revision at the same expected revision.
                 var plan = Plan();
-                var selectTask = owner.PutAsJsonAsync(programPath + "/criteria-edition",
+                var selectTask = owner.PutAsJsonAsync(programPath + "/criteria-edition" + $"/selections/{Uuid.CreateVersion4()}",
                     new { expected_revision = 1, edition_id = editionId });
-                var reviseTask = owner.PutAsJsonAsync(programPath,
+                var reviseTask = owner.PutAsJsonAsync(programPath + $"/revisions/{Uuid.CreateVersion4()}",
                     new { expected_revision = 1, name = "Criteria program revised", plan });
                 using var raceSelect = await selectTask;
                 using var raceRevise = await reviseTask;
 
                 // Assert: exactly one writer wins; the loser gets a version conflict.
                 Assert.Equal(
-                    new[] { HttpStatusCode.NoContent, HttpStatusCode.Conflict },
+                    new[] { HttpStatusCode.OK, HttpStatusCode.Conflict },
                     new[] { raceSelect.StatusCode, raceRevise.StatusCode }.Order());
                 var selectionExpectedRevision = 1L;
                 if (raceSelect.StatusCode == HttpStatusCode.Conflict)
                 {
                     using var afterRevise = await owner.PutAsJsonAsync(
-                        programPath + "/criteria-edition",
+                        programPath + "/criteria-edition" + $"/selections/{Uuid.CreateVersion4()}",
                         new { expected_revision = 2, edition_id = editionId });
-                    Assert.Equal(HttpStatusCode.NoContent, afterRevise.StatusCode);
+                    Assert.Equal(HttpStatusCode.OK, afterRevise.StatusCode);
                     selectionExpectedRevision = 2;
                 }
 
                 // Act: retry the selection (HTTP and MCP) and probe invalid selections.
-                using var httpRetry = await owner.PutAsJsonAsync(programPath + "/criteria-edition",
+                using var httpRetry = await owner.PutAsJsonAsync(programPath + "/criteria-edition" + $"/selections/{Uuid.CreateVersion4()}",
                     new { expected_revision = selectionExpectedRevision, edition_id = editionId });
                 _ = await mcp.When("bdgrz.program.criteria.select",
                     new Dictionary<string, object?>
                     {
+                        ["command_id"] = Uuid.CreateVersion4().ToString(),
                         ["tenant_id"] = tenantId,
                         ["program_id"] = programId,
                         ["expected_revision"] = selectionExpectedRevision,
                         ["edition_id"] = editionId,
                     }).ExpectSuccess();
-                if (raceSelect.StatusCode == HttpStatusCode.NoContent)
+                if (raceSelect.StatusCode == HttpStatusCode.OK)
                 {
-                    using var afterSelect = await owner.PutAsJsonAsync(programPath,
+                    using var afterSelect = await owner.PutAsJsonAsync(programPath + $"/revisions/{Uuid.CreateVersion4()}",
                         new { expected_revision = 2, name = "Criteria program revised", plan });
-                    Assert.Equal(HttpStatusCode.NoContent, afterSelect.StatusCode);
+                    Assert.Equal(HttpStatusCode.OK, afterSelect.StatusCode);
                 }
                 using var unknownEdition = await owner.PutAsJsonAsync(
-                    programPath + "/criteria-edition",
+                    programPath + "/criteria-edition" + $"/selections/{Uuid.CreateVersion4()}",
                     new { expected_revision = 3, edition_id = Uuid.CreateVersion4() });
                 using var missingProgram = await owner.PutAsJsonAsync(
-                    $"{tenantPath}/programs/{Uuid.CreateVersion4()}/criteria-edition",
+                    $"{tenantPath}/programs/{Uuid.CreateVersion4()}/criteria-edition" + $"/selections/{Uuid.CreateVersion4()}",
                     new { expected_revision = 1, edition_id = editionId });
                 await WaitForProgramAsync(owner, programPath, 3);
                 var projected = await ReadJsonAsync(await owner.GetAsync(
@@ -210,16 +211,16 @@ public sealed class CriteriaCatalogE2ETests(BrokerStackFixture broker)
                                        Uuid.Parse(tenantId, CultureInfo.InvariantCulture),
                                        Uuid.Parse(programId, CultureInfo.InvariantCulture)).Stream,
                                    0, CancellationToken.None))
-                    if (record.Event is ProgramCriteriaEditionSelected selection)
+                    if (record.Event is ProgramCriteriaEditionSelected { ChangeCount: 1 } selection)
                         selections.Add(selection);
 
                 // Assert: retries are idempotent and the projection preserves the exact edition.
-                Assert.Equal(HttpStatusCode.NoContent, httpRetry.StatusCode);
+                Assert.Equal(HttpStatusCode.OK, httpRetry.StatusCode);
                 Assert.Equal(HttpStatusCode.BadRequest, unknownEdition.StatusCode);
                 Assert.Equal(HttpStatusCode.NotFound, missingProgram.StatusCode);
                 var stored = Assert.Single(selections);
                 Assert.Equal(editionId, stored.EditionId.ToString());
-                Assert.Equal("member", stored.StoredActor?.Kind);
+                Assert.Equal("member", stored.Operation.Actor.Kind);
                 Assert.Equal(3, projected.GetProperty("revision").GetInt64());
                 Assert.Equal(editionId, projected.GetProperty("criteria_edition_id").GetString());
                 Assert.Equal(editionId, Result(mcpProgram).GetProperty("criteria_edition_id")
@@ -250,7 +251,7 @@ public sealed class CriteriaCatalogE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path,
+            using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}",
                 new { name = "Criteria program", plan = Plan() });
             if (response.StatusCode == HttpStatusCode.OK)
                 return (await ReadJsonAsync(response)).GetProperty("program_id").GetString()!;

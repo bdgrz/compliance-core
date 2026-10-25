@@ -29,7 +29,7 @@ public sealed class CompleteAdministratorRestorationHandler(AdministratorReceive
         if (!proofs.IsSuccess || proofs.Value!.Restoration.EventId != request.Source.Proof.EventId)
             return AdministratorReceiverSupport.Invalid<ReceiverOutcome>("The eligibility proofs name another fact.");
         var tenantId = AdministratorReceiverSupport.TenantOf(request.Target);
-        var loaded = await support.Guards.LoadAsync(tenantId, request.CommandId, ct).ConfigureAwait(false);
+        var loaded = await support.Guards.LoadAsync(tenantId, request.CommandId, request.MemberEpisode, request.OperationId, ct).ConfigureAwait(false);
         var guard = loaded.Guard;
         if (request.Target != guard.Stream)
             return AdministratorReceiverSupport.Invalid<ReceiverOutcome>("The command does not target this tenant's guard.");

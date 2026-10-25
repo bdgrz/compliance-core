@@ -1,0 +1,167 @@
+ M src/Compliance.App/Program.cs
+ M src/Compliance.Common/Features/AccessControl/ITenantManagerGuardFact.cs
+ M src/Compliance.Common/Features/AccessControl/TenantManagerRestorationAccepted.cs
+ M src/Compliance.Common/Features/AccessControl/TenantManagerRestorationCompleted.cs
+ M src/Compliance.Common/Features/AccessControl/TenantManagerRestored.cs
+ M src/Compliance.Common/Features/AccessControl/TenantManagerSourceMutationAdmitted.cs
+ M src/Compliance.Common/Features/AccessControl/TenantManagerWithdrawalAccepted.cs
+ M src/Compliance.Common/Features/AccessControl/TenantManagerWithdrawalCompleted.cs
+ M src/Compliance.Common/Features/Programs/CreateProgram.cs
+ M src/Compliance.Common/Features/Programs/ProgramCreated.cs
+ M src/Compliance.Common/Features/Programs/ProgramCriteriaEditionSelected.cs
+ M src/Compliance.Common/Features/Programs/ProgramRevised.cs
+ M src/Compliance.Common/Features/Programs/ReviseProgram.cs
+ M src/Compliance.Common/Features/Programs/SelectProgramCriteriaEdition.cs
+ M src/Compliance.Common/Features/Work/SetWorkDigestPreference.cs
+ M src/Compliance.Core/ComplianceCoreJsonContext.cs
+ M src/Compliance.Core/ComplianceServiceCollectionExtensions.cs
+ M src/Compliance.Core/Features/AccessControl/AdministratorReceiverSupport.cs
+ M src/Compliance.Core/Features/AccessControl/AdministratorTransitionAdmission.cs
+ M src/Compliance.Core/Features/AccessControl/ApplyAdministratorAssignmentRestorationHandler.cs
+ M src/Compliance.Core/Features/AccessControl/ApplyMemberRestorationHandler.cs
+ M src/Compliance.Core/Features/AccessControl/CompleteAdministratorRestorationHandler.cs
+ M src/Compliance.Core/Features/AccessControl/CompleteAdministratorWithdrawalHandler.cs
+ M src/Compliance.Core/Features/AccessControl/LoadedGuard.cs
+ M src/Compliance.Core/Features/AccessControl/PendingTransition.cs
+ M src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs
+ M src/Compliance.Core/Features/AccessControl/TenantManagerGuardLoader.cs
+ M src/Compliance.Core/Features/Examinations/CriteriaTypeIBaselineSourceContributor.cs
+ M src/Compliance.Core/Features/Programs/ComplianceProgram.cs
+ M src/Compliance.Core/Features/Programs/CreateProgramHandler.cs
+ M src/Compliance.Core/Features/Programs/FitzProgramDirectory.cs
+ M src/Compliance.Core/Features/Programs/ReviseProgramHandler.cs
+ M src/Compliance.Core/Features/Programs/SelectProgramCriteriaEditionHandler.cs
+ M src/Compliance.Core/Features/Readiness/RunReadinessAssessmentHandler.cs
+ M src/Compliance.Core/Features/Work/SetWorkDigestPreferenceHandler.cs
+ M src/Compliance.Core/Features/Work/WorkDigestPreference.cs
+ M src/Compliance.Core/Hosting/Persistence/PersistenceServiceCollectionExtensions.cs
+ M test/Compliance.Tests/E2E/ApplicationInventoryE2ETests.cs
+ M test/Compliance.Tests/E2E/BoundaryE2ETests.cs
+ M test/Compliance.Tests/E2E/BoundaryMcpAuthoringE2ETests.cs
+ M test/Compliance.Tests/E2E/BoundarySnapshotReadLeakMatrixE2ETests.cs
+ M test/Compliance.Tests/E2E/ClientServiceActorE2ETests.cs
+ M test/Compliance.Tests/E2E/ClientServiceE2ETests.cs
+ M test/Compliance.Tests/E2E/CommitmentDraftE2ETests.cs
+ M test/Compliance.Tests/E2E/ControlDraftE2ETests.cs
+ M test/Compliance.Tests/E2E/ControlOperationE2ETests.cs
+ M test/Compliance.Tests/E2E/ControlRiskGovernanceE2ETests.cs
+ M test/Compliance.Tests/E2E/CriteriaCatalogE2ETests.cs
+ M test/Compliance.Tests/E2E/CriteriaReadLeakMatrixE2ETests.cs
+ M test/Compliance.Tests/E2E/DraftActorSnapshotE2ETests.cs
+ M test/Compliance.Tests/E2E/DraftReadLeakMatrixE2ETests.cs
+ M test/Compliance.Tests/E2E/PolicyDistributionE2ETests.cs
+ M test/Compliance.Tests/E2E/ProgramAuthorizationMcpE2ETests.cs
+ M test/Compliance.Tests/E2E/ProgramConcurrencyE2ETests.cs
+ M test/Compliance.Tests/E2E/ProgramE2ETests.cs
+ M test/Compliance.Tests/E2E/ProgramReadLeakMatrixE2ETests.cs
+ M test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs
+ M test/Compliance.Tests/E2E/ProviderChangeImpactE2ETests.cs
+ M test/Compliance.Tests/E2E/RiskDraftE2ETests.cs
+ M test/Compliance.Tests/E2E/SnapshotE2ETests.cs
+ M test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs
+ M test/Compliance.Tests/Features/AccessControl/AccessGrantProposalValidatorTests.cs
+ M test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs
+ M test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs
+ M test/Compliance.Tests/Features/AccessControl/FitzPermissionAuthorizerTests.cs
+ M test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs
+ M test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs
+ M test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs
+ M test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHttpTests.cs
+ M test/Compliance.Tests/Features/Applications/ApplicationReadinessImpactTests.cs
+ M test/Compliance.Tests/Features/AuditPackages/AuditPackageReadHttpTests.cs
+ M test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs
+ M test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHttpTests.cs
+ M test/Compliance.Tests/Features/AuditorRequests/AuditorRequestScopedReadHttpTests.cs
+ M test/Compliance.Tests/Features/Boundaries/BoundaryNativeHttpTests.cs
+ M test/Compliance.Tests/Features/Boundaries/PersonalBoundaryDecisionTransportTests.cs
+ M test/Compliance.Tests/Features/Changes/SignificantChangeHttpTests.cs
+ M test/Compliance.Tests/Features/Commitments/CommitmentHttpRoutesTests.cs
+ M test/Compliance.Tests/Features/Commitments/CommitmentNativeDirectoryReadTests.cs
+ M test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs
+ M test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs
+ M test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs
+ M test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs
+ M test/Compliance.Tests/Features/Controls/ControlDraftHandlerTests.cs
+ M test/Compliance.Tests/Features/Controls/ControlNativeBoundaryRedTests.cs
+ M test/Compliance.Tests/Features/Controls/PersonalControlDecisionTransportTests.cs
+ M test/Compliance.Tests/Features/Criteria/CriteriaCatalogTests.cs
+ M test/Compliance.Tests/Features/Criteria/ProgramCriteriaProjectionTests.cs
+ M test/Compliance.Tests/Features/Evaluations/CriteriaEvaluationTransportTests.cs
+ M test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs
+ M test/Compliance.Tests/Features/Examinations/CriteriaTypeIBaselineSourceContributorTests.cs
+ M test/Compliance.Tests/Features/Examinations/ExaminationEngagementNativeHttpTests.cs
+ M test/Compliance.Tests/Features/Incidents/ComplianceIncidentHttpTests.cs
+ M test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs
+ M test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs
+ M test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateReadHttpTests.cs
+ M test/Compliance.Tests/Features/Operations/ObservationPeriodReadHttpTests.cs
+ M test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs
+ M test/Compliance.Tests/Features/Policies/PolicyNativeHttpTests.cs
+ M test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs
+ M test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs
+ M test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs
+ M test/Compliance.Tests/Features/Programs/ComplianceProgramTests.cs
+ M test/Compliance.Tests/Features/Programs/ProgramAndClientServicePagedReadContractTests.cs
+ M test/Compliance.Tests/Features/Programs/ProgramResourceScopeResolverTests.cs
+ M test/Compliance.Tests/Features/Programs/ProgramSetupWorkReadConsistencyTests.cs
+ M test/Compliance.Tests/Features/Programs/ProgramStageProjectionTests.cs
+ M test/Compliance.Tests/Features/Programs/ProjectionFreshnessTests.cs
+ M test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs
+ M test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs
+ M test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs
+ M test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs
+ M test/Compliance.Tests/Features/Readiness/ReadinessNativeHistoryTests.cs
+ M test/Compliance.Tests/Features/Readiness/ReadinessNativeHttpTests.cs
+ M test/Compliance.Tests/Features/Risks/AttestRiskManagementWriteWallTests.cs
+ M test/Compliance.Tests/Features/Risks/RiskDraftHttpTests.cs
+ M test/Compliance.Tests/Features/Risks/RiskMethodPublicationTests.cs
+ M test/Compliance.Tests/Features/Risks/RiskTreatmentActionHttpTests.cs
+ M test/Compliance.Tests/Features/Snapshots/ScopeSnapshotTests.cs
+ M test/Compliance.Tests/Features/Snapshots/SnapshotPagedReadContractTests.cs
+ M test/Compliance.Tests/Features/SystemDescription/SystemDescriptionHttpTests.cs
+ M test/Compliance.Tests/Features/Work/WorkAssignmentNativeHttpTests.cs
+ M test/Compliance.Tests/Features/Work/WorkReminderTests.cs
+ M test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs
+ M test/Compliance.Tests/Testing/AdministratorTransitionHost.cs
+ M test/Compliance.Tests/Testing/BoundarySourceFixture.cs
+ M test/Compliance.Tests/Testing/CampaignHost.cs
+ M test/Compliance.Tests/Testing/CommitmentSourceFixture.cs
+ M test/Compliance.Tests/Testing/ControlSourceFixture.cs
+ M test/Compliance.Tests/Testing/PolicySourceFixture.cs
+ M test/Compliance.Tests/Testing/ProgramManagementServices.cs
+ M test/Compliance.Tests/Testing/RiskDraftSourceFixture.cs
+?? docs/recovery/
+?? src/Compliance.Common/Features/AccessControl/ITenantManagerAuthorityFact.cs
+?? src/Compliance.Common/Features/AccessControl/TenantManagerEpisodeAuthority.cs
+?? src/Compliance.Common/Features/Programs/IProgramFact.cs
+?? src/Compliance.Common/Features/Programs/ProgramContent.cs
+?? src/Compliance.Common/Features/Work/WorkDigestPreferenceRecorded.cs
+?? src/Compliance.Core/Features/AccessControl/TenantManagerGuardAggregateReader.cs
+?? src/Compliance.Core/Features/AccessControl/TenantManagerGuardHistory.cs
+?? src/Compliance.Core/Features/AccessControl/TenantManagerGuardHistorySnapshot.cs
+?? src/Compliance.Core/Features/AccessControl/TenantManagerGuardRules.cs
+?? src/Compliance.Core/Features/NativeOperations/NativePreparedCut.cs
+?? src/Compliance.Core/Features/NativeOperations/NativeReplayCommitment.cs
+?? src/Compliance.Core/Features/Programs/ProgramAggregateReader.cs
+?? src/Compliance.Core/Features/Programs/ProgramHistory.cs
+?? src/Compliance.Core/Features/Programs/ProgramHistorySnapshot.cs
+?? src/Compliance.Core/Features/Programs/ProgramOperations.cs
+?? src/Compliance.Core/Features/Programs/ProgramReadFailure.cs
+?? src/Compliance.Core/Features/Programs/ProgramReader.cs
+?? src/Compliance.Core/Features/Programs/ProgramRuleChange.cs
+?? src/Compliance.Core/Features/Programs/ProgramRules.cs
+?? src/Compliance.Core/Features/Work/WorkPreferenceAggregateReader.cs
+?? src/Compliance.Core/Features/Work/WorkPreferenceReplayCut.cs
+?? test/Compliance.Tests/Features/AccessControl/TenantManagerNativeBoundaryTests.cs
+?? test/Compliance.Tests/Features/AccessControl/TenantManagerNativeHistoryTests.cs
+?? test/Compliance.Tests/Features/AccessControl/TenantManagerPrepareRecoveryTests.cs
+?? test/Compliance.Tests/Features/Programs/ProgramNativeBoundaryTests.cs
+?? test/Compliance.Tests/Features/Programs/ProgramNativeHistoryTests.cs
+?? test/Compliance.Tests/Features/Programs/ProgramNativeHttpTests.cs
+?? test/Compliance.Tests/Features/Programs/ProgramNativeProjectionTests.cs
+?? test/Compliance.Tests/Features/Work/WorkDigestPreferenceNativeTests.cs
+?? test/Compliance.Tests/Testing/ProgramNativeFixture.cs
+?? test/Compliance.Tests/Testing/ProgramSeeds.cs
+?? test/Compliance.Tests/Testing/VerifiedProgramServices.cs
+?? test/Compliance.Tests/Testing/VerifiedTenantManagerServices.cs
+?? test/Compliance.Tests/Testing/VerifiedWorkPreferenceServices.cs
