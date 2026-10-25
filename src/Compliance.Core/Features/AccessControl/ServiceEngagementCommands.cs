@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     is frozen as the first response, and the append is checked against the engagement revision on every attempt.
 ///     The directory staff snapshot a command relied on is retained in the change, never re-read for a retry.
 /// </summary>
-sealed class ServiceEngagementCommands(NativeOperationExecutor operations, IAggregateReader reader,
+sealed class ServiceEngagementCommands(NativeOperationExecutor operations,
     IImmutableContentStore content, FirmStaffViews staffViews, PracticeIndependenceWall wall, TimeProvider clock)
 {
     const string InitialEpisode = "initial";
@@ -147,43 +147,34 @@ sealed class ServiceEngagementCommands(NativeOperationExecutor operations, IAggr
         var stream = new ServiceEngagementIndependence(request.TenantId, request.EngagementId).Stream;
         var provenance = new OperationProvenance(request.CommandId, request.CommandId, null, kind, actor, stream,
             InitialEpisode, (ulong)request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now, stream,
-            stream);
+            stream, FirstOwner: stream);
         var binding = AcceptedOperationBinding.Of(provenance);
-        var snapshot = await reader.HydrateAsync(
-            new ServiceEngagementIndependence(request.TenantId, request.EngagementId, request.CommandId), ct)
-            .ConfigureAwait(false);
-
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var prepared = snapshot.PrepareRevocation(request.ExpectedRevision);
-            if (!prepared.IsSuccess)
-                return Result<ServiceEngagementAcceptanceView>.Failure(prepared.Error!);
-            if (snapshot.AcceptanceResult is not { } acceptanceResult || snapshot.LatestResult is not { } draft)
-                return IndependenceContent.Failure<ServiceEngagementAcceptanceView>(RequestErrorKind.Conflict,
-                    "The accepted engagement cannot be read yet; retry after it is available.", true);
-            var acceptance = await IndependenceContent.ReadResultAsync<ServiceEngagementAcceptanceView>(content, realm,
-                acceptanceResult, ct).ConfigureAwait(false);
-            var engagement = await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content, realm, draft, ct)
-                .ConfigureAwait(false);
-            if (!acceptance.Assignments.Any(staff => staff.StaffMemberId == request.StaffMemberId && staff.IsCurrent))
-                return IndependenceContent.Failure<ServiceEngagementAcceptanceView>(RequestErrorKind.Conflict,
-                    "Reload the current actual assignment before revoking.");
-            var revised = ServiceEngagementRules.Revoke(acceptance, engagement.Content.EngagementLeadStaffMemberId,
-                request.StaffMemberId, request.Reason, actor, now);
-            var revisedContent = await IndependenceContent.WriteAsync(content, realm, IndependenceContent.RevocationSchema,
-                revised, ct).ConfigureAwait(false);
-            result = await IndependenceContent.WriteResultAsync(content, realm, IndependenceContent.RevocationSchema,
-                revisedContent, ct).ConfigureAwait(false);
-            response = IndependenceContent.Ok(IndependenceContent.RevocationSchema, revisedContent);
-        }
-
-        var revision = snapshot.Revision;
         var outcome = await operations.ExecuteAsync(new NativeOperation<ServiceEngagementIndependence>(binding,
             () => new ServiceEngagementIndependence(request.TenantId, request.EngagementId, request.CommandId),
-            owner => owner.Acceptance, owner => PrepareRevocation(owner, request, revision, response),
-            (ServiceEngagementIndependence owner, ImmutableContentRef frozen) => owner.Revoke(provenance,
+            owner => owner.Acceptance, async (owner, token) =>
+            {
+                var prepared = owner.PrepareRevocation(request.ExpectedRevision);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                if (owner.AcceptanceResult is not { } acceptanceResult || owner.LatestResult is not { } draft)
+                    return IndependenceContent.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
+                        "The accepted engagement cannot be read yet; retry after it is available.", true);
+                var acceptance = await IndependenceContent.ReadResultAsync<ServiceEngagementAcceptanceView>(content, realm,
+                    acceptanceResult, token).ConfigureAwait(false);
+                var engagement = await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content, realm, draft, token)
+                    .ConfigureAwait(false);
+                if (!acceptance.Assignments.Any(staff => staff.StaffMemberId == request.StaffMemberId && staff.IsCurrent))
+                    return IndependenceContent.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
+                        "Reload the current actual assignment before revoking.");
+                var revised = ServiceEngagementRules.Revoke(acceptance, engagement.Content.EngagementLeadStaffMemberId,
+                    request.StaffMemberId, request.Reason, actor, now);
+                var revisedContent = await IndependenceContent.WriteAsync(content, realm, IndependenceContent.RevocationSchema,
+                    revised, token).ConfigureAwait(false);
+                result = await IndependenceContent.WriteResultAsync(content, realm, IndependenceContent.RevocationSchema,
+                    revisedContent, token).ConfigureAwait(false);
+                return Result<FirstResponseDescriptor>.Success(IndependenceContent.Ok(IndependenceContent.RevocationSchema, revisedContent));
+            }, (ServiceEngagementIndependence owner, ImmutableContentRef frozen) => owner.Revoke(provenance,
                 request.StaffMemberId, request.Reason, actor, now, frozen, result!)), context, ct)
             .ConfigureAwait(false);
         return await IndependenceContent.ReadOutcomeAsync<ServiceEngagementAcceptanceView>(content, realm, outcome, ct)
@@ -203,52 +194,44 @@ sealed class ServiceEngagementCommands(NativeOperationExecutor operations, IAggr
         var realm = IndependenceContent.Realm(tenantId);
         var stream = new ServiceEngagementIndependence(tenantId, engagementId).Stream;
         var provenance = new OperationProvenance(logicalId, logicalId, null, kind, actor, stream, InitialEpisode,
-            (ulong)expectedRevision, AuthoredIntentDigest.Compute(context.Request), now, stream, stream);
+            (ulong)expectedRevision, AuthoredIntentDigest.Compute(context.Request), now, stream, stream, FirstOwner: stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        // A logical id that was already accepted resolves from the owner's facts before any guard or directory read.
-        var snapshot = await reader.HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId, logicalId),
-            ct).ConfigureAwait(false);
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? change = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var prepared = snapshot.PrepareChange(kind, expectedRevision);
-            if (!prepared.IsSuccess)
-                return Result<ServiceEngagementView>.Failure(prepared.Error!);
-            ServiceEngagementView? current = null;
-            if (snapshot.LatestResult is { } latest)
-            {
-                try
-                {
-                    current = await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content, realm, latest, ct)
-                        .ConfigureAwait(false);
-                }
-                catch (ImmutableContentIntegrityException exception)
-                {
-                    return IndependenceContent.Failure<ServiceEngagementView>(RequestErrorKind.Conflict,
-                        $"The current engagement cannot be verified: {exception.Message}", true);
-                }
-            }
-
-            var built = await build(current, actor, now, ct).ConfigureAwait(false);
-            if (!built.IsSuccess)
-                return Result<ServiceEngagementView>.Failure(built.Error!);
-            var view = await IndependenceContent.WriteAsync(content, realm, IndependenceContent.EngagementSchema,
-                built.Value!.View, ct).ConfigureAwait(false);
-            change = await IndependenceContent.WriteAsync(content, realm, IndependenceContent.EngagementChangeSchema,
-                built.Value.Change, ct).ConfigureAwait(false);
-            result = await IndependenceContent.WriteResultAsync(content, realm, IndependenceContent.EngagementSchema,
-                view, ct).ConfigureAwait(false);
-            response = IndependenceContent.Ok(IndependenceContent.EngagementSchema, view);
-        }
-
-        var revision = snapshot.Revision;
         var outcome = await operations.ExecuteAsync(new NativeOperation<ServiceEngagementIndependence>(binding,
             () => new ServiceEngagementIndependence(tenantId, engagementId, logicalId), owner => owner.Acceptance,
-            owner => Prepare(owner, kind, expectedRevision, revision, response),
-            (ServiceEngagementIndependence owner, ImmutableContentRef frozen) =>
+            async (owner, token) =>
+            {
+                var prepared = owner.PrepareChange(kind, expectedRevision);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                ServiceEngagementView? current = null;
+                if (owner.LatestResult is { } latest)
+                {
+                    try
+                    {
+                        current = await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content, realm, latest, token)
+                            .ConfigureAwait(false);
+                    }
+                    catch (ImmutableContentIntegrityException exception)
+                    {
+                        return IndependenceContent.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
+                            $"The current engagement cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException);
+                    }
+                }
+
+                var built = await build(current, actor, now, token).ConfigureAwait(false);
+                if (!built.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(built.Error!);
+                var view = await IndependenceContent.WriteAsync(content, realm, IndependenceContent.EngagementSchema,
+                    built.Value!.View, token).ConfigureAwait(false);
+                change = await IndependenceContent.WriteAsync(content, realm, IndependenceContent.EngagementChangeSchema,
+                    built.Value.Change, token).ConfigureAwait(false);
+                result = await IndependenceContent.WriteResultAsync(content, realm, IndependenceContent.EngagementSchema,
+                    view, token).ConfigureAwait(false);
+                return Result<FirstResponseDescriptor>.Success(IndependenceContent.Ok(IndependenceContent.EngagementSchema, view));
+            }, (ServiceEngagementIndependence owner, ImmutableContentRef frozen) =>
                 owner.Change(kind, provenance, change!, frozen, result!)), context, ct).ConfigureAwait(false);
         return await IndependenceContent.ReadOutcomeAsync<ServiceEngagementView>(content, realm, outcome, ct)
             .ConfigureAwait(false);
@@ -278,30 +261,6 @@ sealed class ServiceEngagementCommands(NativeOperationExecutor operations, IAggr
 
     async ValueTask<FirmStaffMemberView?> ActiveStaffAsync(Uuid staffMemberId, CancellationToken ct) =>
         await staffViews.GetAsync(staffMemberId, ct).ConfigureAwait(false) is { IsActive: true } staff ? staff : null;
-
-    static Result<FirstResponseDescriptor> Prepare(ServiceEngagementIndependence owner, string kind,
-        long expectedRevision, ulong snapshotRevision, FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareChange(kind, expectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null || owner.Revision != snapshotRevision
-            ? IndependenceContent.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
-                "The engagement changed while the command was prepared; reload and retry.", true)
-            : Result<FirstResponseDescriptor>.Success(response);
-    }
-
-    static Result<FirstResponseDescriptor> PrepareRevocation(ServiceEngagementIndependence owner,
-        RevokeServiceEngagementActualStaff request, ulong snapshotRevision, FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareRevocation(request.ExpectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null || owner.Revision != snapshotRevision
-            ? IndependenceContent.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
-                "The engagement changed while the revocation was prepared; reload and retry.", true)
-            : Result<FirstResponseDescriptor>.Success(response);
-    }
 
     static bool ValidIdentity(Uuid tenantId, Uuid engagementId, Uuid logicalId) =>
         tenantId != Uuid.Empty && engagementId != Uuid.Empty && logicalId != Uuid.Empty;

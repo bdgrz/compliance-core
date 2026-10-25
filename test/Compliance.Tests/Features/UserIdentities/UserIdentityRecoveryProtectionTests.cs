@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,7 +50,7 @@ public sealed class UserIdentityRecoveryProtectionTests
         // Arrange
         var account = Uuid.CreateVersion4();
         var held = Uuid.CreateVersion4();
-        var identity = new UserIdentity("issuer", "replacement");
+        var identity = new UserIdentity("issuer", "replacement", held);
         Protect(identity, held, account, RecoveryIdentityRole.Replacement);
 
         // Act
@@ -70,7 +72,7 @@ public sealed class UserIdentityRecoveryProtectionTests
         // Arrange
         var account = Uuid.CreateVersion4();
         var challenge = Uuid.CreateVersion4();
-        var identity = new UserIdentity("issuer", "replacement");
+        var identity = new UserIdentity("issuer", "replacement", challenge);
         Settle(identity, challenge);
 
         // Act
@@ -173,10 +175,25 @@ public sealed class UserIdentityRecoveryProtectionTests
         // Arrange
         await using var host = new IdentityRecoveryHost();
         var account = await host.SeedAccountAsync();
-        var slot = new UserIdentity(IdentityRecoveryHost.NewProvider, "new-subject");
-        await host.SeedAsync(slot, identity => identity.Protect(EmailAddressFacts.Operation(identity.Stream,
-                Uuid.CreateVersion4(), "ProtectRecoveryIdentity"), EmailAddressFacts.Content, null,
-            Uuid.CreateVersion4(), account.UserId, RecoveryIdentityRole.Replacement, Uuid.CreateVersion4(), 1));
+        var challenge = Uuid.CreateVersion4();
+        var token = await host.StartedAsync(account, challenge);
+        Assert.True((await host.CompleteAsync(account, challenge, token)).IsSuccess);
+        var process = await host.PrepareProcessAsync(account, challenge);
+        var materialized = Assert.IsType<ReceiverOutcome.Applied>(
+            (await host.SendAsync(await host.CommandAsync(process,
+                IdentityRecoveryReceivers.MaterializeIdentityRecoveryPreparation))).Value);
+        process = process with
+        {
+            Facts = new Dictionary<string, NativeFactReference>(process.Facts)
+            {
+                [ProcessRecord.FactKey(
+                    IdentityRecoveryReceivers.MaterializeIdentityRecoveryPreparation, null)] = materialized.Fact,
+            },
+        };
+        var slotId = UserIdentity.GetIdentityId(IdentityRecoveryHost.NewProvider, "new-subject");
+        Assert.IsType<ReceiverOutcome.Applied>(
+            (await host.SendAsync(await host.CommandAsync(process, IdentityRecoveryReceivers.ProtectRecoveryIdentity,
+                slotId.ToString()))).Value);
         var continuation = new UserIdentityContinuation(host.Provider.GetRequiredService<IAggregateExecutor>());
         var system = new RequestDispatchContext(RequestActor.System);
 

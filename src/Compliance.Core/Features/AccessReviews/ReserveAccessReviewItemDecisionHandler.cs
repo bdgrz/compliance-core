@@ -25,6 +25,43 @@ sealed class ReserveAccessReviewItemDecisionHandler(IAggregateReader reader, IAg
     protected override AccessReviewItem Open(ReserveAccessReviewItemDecision request, Uuid selectedCommandId) =>
         new(Tenant(request.Target), request.CampaignId, request.SourceOwnerId, selectedCommandId, request.OperationId, request.SourceContentEventId);
 
+    protected override ReservationKey ReceiptSelection(ReserveAccessReviewItemDecision request) =>
+        AccessReviewEffects.BulkUseKey(request.OperationId, AccessReviewEffects.CampaignStream(Tenant(request.Target), request.CampaignId), request.Target);
+
+    protected override async ValueTask<Result<SourceUseSource>?> VerifyReceiptSourceAsync(ReserveAccessReviewItemDecision request,
+        AccessReviewItem owner, CancellationToken ct)
+    {
+        var tenant = Tenant(request.Target);
+        if (request.Generation != AccessReviewEffects.Generation || request.SourceOwnerId != owner.ItemId || request.DecisionBatchId != request.OperationId)
+            return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The request differs from its selected Access source-use owner or generation.", false));
+        var native = await verifier.ReadNativeAsync(tenant, request.CampaignId, request.Source, request.Intent,
+            request.OperationId, ct).ConfigureAwait(false);
+        if (native.Error is not null)
+            return Result<SourceUseSource>.Failure(native.Error);
+        var campaign = native.Campaign!;
+        var parent = native.Admitted!.Operation;
+        var key = ReceiptSelection(request)!;
+        var recorded = await AccessReviewSourceUseReceipts.ReadAsync(Content, owner, key, parent, request.Source,
+            request.Intent, SourceUsePurpose.BulkDecision, false, false, ct).ConfigureAwait(false);
+        if (recorded is null)
+            return null;
+        var result = recorded.Value;
+        if (!result.IsSuccess)
+            return Result<SourceUseSource>.Failure(result.Error!);
+        var intent = result.Value!;
+        if (intent.Requirement.ContentEvent.EventId != request.SourceContentEventId ||
+            intent.Requirement.ResourceRevision != request.ExpectedContentRevision)
+            return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The authorization differs from its exact recorded source use requirement.", false));
+        var batch = await _reader.HydrateAsync(new AccessReviewDecisionBatch(tenant, request.CampaignId,
+            request.DecisionBatchId), ct).ConfigureAwait(false);
+        var superseded = batch.CancellationAccepted is not null ? "The bulk decision was canceled."
+            : batch.Published is not null ? "The bulk decision already published." : null;
+        return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, intent.ParentIntent, key,
+            intent.Requirement, nameof(ReserveAccessReviewItemDecision), null, superseded));
+    }
+
     protected override async ValueTask<Result<SourceUseSource>> VerifyAsync(ReserveAccessReviewItemDecision request,
         CancellationToken ct)
     {

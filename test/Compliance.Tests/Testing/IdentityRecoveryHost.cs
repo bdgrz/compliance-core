@@ -69,6 +69,7 @@ sealed class IdentityRecoveryHost : IAsyncDisposable
             .AddRequestHandler<SendIdentityRecoveryNoticeHandler>()
             .AddRequestHandler<RejectIdentityRecoveryPreparationHandler>()
             .AddRequestAuthorizer<IdentityRecoveryReceiverAuthorizer>();
+        services.AddVerifiedIdentityOwnerReader();
         Provider = services.BuildServiceProvider();
         Events = events;
         Content = Provider.GetRequiredService<IImmutableContentStore>();
@@ -235,9 +236,11 @@ sealed class IdentityRecoveryHost : IAsyncDisposable
     public async Task<IdentityRecovery> RecoveryAsync(Uuid challengeId) =>
         await Reader.HydrateAsync(new IdentityRecovery(challengeId));
 
-    public async Task<UserIdentity> IdentityAsync(Uuid identityId) => await Reader.HydrateAsync(new UserIdentity(identityId));
+    public async Task<UserIdentity> IdentityAsync(Uuid identityId, Uuid selectedChallengeId = default) =>
+        await Reader.HydrateAsync(new UserIdentity(identityId, selectedChallengeId));
 
-    public async Task<EmailAddress> AddressAsync(string email = Email) => await Reader.HydrateAsync(new EmailAddress(email));
+    public async Task<EmailAddress> AddressAsync(string email = Email, Uuid selectedChallengeId = default) =>
+        await Reader.HydrateAsync(new EmailAddress(email, Uuid.Empty, null, selectedChallengeId));
 
     public async Task<List<DomainEvent>> FactsAsync(EventStreamAddress stream)
     {

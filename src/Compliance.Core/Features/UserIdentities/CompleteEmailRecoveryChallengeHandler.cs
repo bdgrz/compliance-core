@@ -29,7 +29,7 @@ public sealed class CompleteEmailRecoveryChallengeHandler(IdentityRecoveryReceiv
         var provenance = IdentityRecoveryReceiverSupport.Provenance(request, nameof(CompleteEmailRecoveryChallenge),
             request.Target, frozen, verified.Value!.EventId);
         return await support.ApplyAsync(
-            () => new EmailAddress(addressId, request.CommandId, nameof(CompleteEmailRecoveryChallenge)),
+            () => new EmailAddress(addressId, request.CommandId, nameof(CompleteEmailRecoveryChallenge), request.ChallengeId),
             address => address.Acceptance, AcceptedOperationBinding.Of(provenance),
             address => address.ClaimOf(request.ChallengeId) is { } claim && claim.OldIdentityId == frozen.OldIdentityId &&
                        claim.ReplacementIdentityId == frozen.ReplacementIdentityId && claim.Fact.UserId == frozen.AccountId

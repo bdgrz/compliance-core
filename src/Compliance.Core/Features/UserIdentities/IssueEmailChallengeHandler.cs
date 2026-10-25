@@ -39,18 +39,17 @@ public sealed class IssueEmailChallengeHandler(
         var owner = new EmailAddress(normalized).Stream;
         var provenance = EmailAddressOperations.Provenance(request.ChallengeId, CommandKind, actor, owner, -1,
             AuthoredIntentDigest.Compute(request with { EmailAddress = normalized }), now);
-        var response = await EmailAddressOperations.UnitResponseAsync(content, ct).ConfigureAwait(false);
+        var preparation = new IdentityOwnerPreparation();
         return EmailAddressOperations.Of(await operations.ExecuteAsync(new NativeOperation<EmailAddress>(
             AcceptedOperationBinding.Of(provenance), () => Hydrate(normalized, request), address => address.Acceptance,
-            address => address.PrepareIssueChallenge(request.UserId, request.ChallengeId, hash, expiresAt, now, keyId)
-                is { IsSuccess: false } failed
-                ? Result<FirstResponseDescriptor>.Failure(failed.Error!)
-                : Result<FirstResponseDescriptor>.Success(response),
-            (EmailAddress address, ImmutableContentRef frozen) => address.IssueChallenge(provenance, frozen,
-                request.UserId, request.ChallengeId, hash, expiresAt, now, keyId)), context, ct)
+            (address, cancel) => preparation.PrepareAsync(address,
+                address.PrepareIssueChallenge(request.UserId, request.ChallengeId, hash, expiresAt, now, keyId),
+                bodyCancel => EmailAddressOperations.UnitResponseAsync(content, bodyCancel), cancel),
+            (EmailAddress address, ImmutableContentRef frozen) => preparation.Apply(address,
+                () => address.IssueChallenge(provenance, frozen, request.UserId, request.ChallengeId, hash, expiresAt, now, keyId))), context, ct)
             .ConfigureAwait(false));
     }
 
     static EmailAddress Hydrate(string normalized, IssueEmailChallenge request) =>
-        new(normalized, request.ChallengeId, CommandKind);
+        new(normalized, request.ChallengeId, CommandKind, request.ChallengeId);
 }

@@ -1,0 +1,61 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 1904,
+    "focusedQualification": "1894initialpass+10newscopedtestfixturescorrectedandisolated10pass; allsameproduction in finalwholeunit",
+    "productionHttpPassed": 168,
+    "backendUnit": {
+      "passed": 6742,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "coverageExport": "pass1",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass(historical catalog counters not live completion)",
+    "format": "pass",
+    "exactCurrentProductionSourceAndDependencyHashes": "71verified",
+    "currentAggregateHandlerReactorReviews": "940current after29 refresh"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 71,
+    "fileSignalsAtOrAbove065": 4,
+    "triage": "engagement-identity-access-file-triage.json",
+    "integration": {
+      "decision": {
+        "type": "choice",
+        "choice": "merge_scoped_repair",
+        "confidence": 0.82,
+        "probabilities": {
+          "merge_scoped_repair": 0.88,
+          "refine_before_merge": 0.11,
+          "blocked_by_missing_authority": 0.01
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.18
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.13
+      }
+    },
+    "adopted": "Squash merge scoped repair after local gates, without waiting CI per explicit user direction; continue all unblocked work."
+  },
+  "scope": "Four existing Access generic source-use pairs implement exact recorded use-intent receipt binding and expected-failure preparation/recovery through source-compatible shared helper.",
+  "genuineOldApiRedFailed": 22,
+  "preexistingPositiveControls": 4,
+  "qualification": [
+    "All four pairs can resolve nativeknowledge before obsolete parentintent/derivedwrite reads, after verifying mandatory recorded use-intent body contains every native/request term. Required storedintent unavailable remains pending even after receipt; changed pin/revision/disposition cannotreplay.",
+    "Completion grantless cancellation keeps complete itemproof drain and real terminal sourcebinding. Current pin/grant/terminal/disposition/nativecut/OCC behavior and irreversible proof semantics are preserved. Other pairs keep full original verifier before receipt through optionalprobe default.",
+    "Original synchronous helper API retained; async decision overload is usedimmediately byselectedpairs and preserves requested cancellation on initial native hydration/decision expected failures. Programmer faults and unrelated exceptions retainmeaning.",
+    "No constructor/DI/DTO/tag/route/owner-state change. New10binding negatives runthrough actual accepted grants/settlements. Roottest fixes assignactualSourceRevision and resolvescopedreader insideAsyncScope; allnegative assertions retained."
+  ],
+  "remainingWork": [
+    "No globalbinding ornewsource-use pair/purpose/callback invented; separate existing selected source-protocol gaps unchanged."
+  ]
+}

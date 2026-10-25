@@ -65,30 +65,24 @@ sealed class EngagementAcceptanceAdmission(NativeOperationExecutor operations, I
         var realm = IndependenceContent.Realm(spec.TenantId);
         var stream = new ServiceEngagementIndependence(spec.TenantId, spec.EngagementId).Stream;
         var provenance = new OperationProvenance(spec.OperationId, spec.OperationId, null, spec.CommandKind, spec.Actor,
-            stream, InitialEpisode, (ulong)spec.ExpectedRevision, spec.AuthoredDigest, now, stream, stream);
+            stream, InitialEpisode, (ulong)spec.ExpectedRevision, spec.AuthoredDigest, now, stream, stream, FirstOwner: stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        // A logical id that was already accepted resolves from the owner's facts before any guard is evaluated.
-        var snapshot = await reader.HydrateAsync(
-            new ServiceEngagementIndependence(spec.TenantId, spec.EngagementId, spec.OperationId), ct)
-            .ConfigureAwait(false);
         ImmutableContentRef? intent = null;
-        FirstResponseDescriptor? response = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(spec, snapshot, provenance, now, realm, ct).ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response) = frozen.Value;
-        }
-
-        var intentRevision = snapshot.Revision;
+        ulong intentRevision = 0;
         var outcome = await operations.ExecuteAsync(new NativeOperation<ServiceEngagementIndependence>(binding,
             () => new ServiceEngagementIndependence(spec.TenantId, spec.EngagementId, spec.OperationId),
-            owner => owner.Acceptance, owner => Prepare(owner, spec, intentRevision, response),
+            owner => owner.Acceptance, async (owner, token) =>
+            {
+                var frozen = await FreezeAsync(spec, owner, provenance, now, realm, token).ConfigureAwait(false);
+                if (!frozen.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                intent = frozen.Value.Intent;
+                intentRevision = owner.Revision;
+                return Result<FirstResponseDescriptor>.Success(frozen.Value.Response);
+            },
             (ServiceEngagementIndependence owner, ImmutableContentRef acknowledgment) =>
-                owner.AdmitOperation(provenance, intent!, intentRevision, acknowledgment, spec.Kind)), context, ct)
-            .ConfigureAwait(false);
+                owner.AdmitOperation(provenance, intent!, intentRevision, acknowledgment, spec.Kind)), context, ct).ConfigureAwait(false);
         return await IndependenceContent.ReadAcknowledgmentAsync(content, realm, outcome, ct).ConfigureAwait(false);
     }
 
@@ -113,7 +107,7 @@ sealed class EngagementAcceptanceAdmission(NativeOperationExecutor operations, I
         {
             return IndependenceContent.Failure<(ImmutableContentRef, FirstResponseDescriptor)>(
                 RequestErrorKind.Conflict, $"The engagement or service history cannot be verified: {exception.Message}",
-                true);
+                exception is ImmutableContentUnavailableException);
         }
 
         var completeServices = await content.WriteSelectionAsync(realm, Uuid.CreateVersion4(),
@@ -328,18 +322,6 @@ sealed class EngagementAcceptanceAdmission(NativeOperationExecutor operations, I
             PracticeSubjects.Stream(tenantId, PracticeSubjectKind.Staff, staff.StaffMemberId));
         yield return new PracticeSubjectIntent(PracticeSubjectKind.CanonicalUser, staff.UserId, practice,
             PracticeSubjects.Stream(tenantId, PracticeSubjectKind.CanonicalUser, staff.UserId));
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(ServiceEngagementIndependence owner, Spec spec, ulong intentRevision,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareOperation(spec.OperationId, spec.Kind, spec.ExpectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null || owner.Revision != intentRevision
-            ? IndependenceContent.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
-                "The engagement changed while the operation was prepared; reload and retry.", true)
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static Result<Terms> Conflict(string message, bool transient = false) =>

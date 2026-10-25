@@ -279,7 +279,7 @@ public sealed class EmailChallengeDeliveryProcessTests
         await using var host = new EmailChallengeDeliveryHost();
         var (owner, challengeId, record) = await host.IssueVerificationAsync();
         var token = await host.VerificationTokenAsync(owner, challengeId);
-        await host.SeedAsync(new EmailAddress(EmailChallengeDeliveryHost.Email),
+        await host.SeedAsync(new EmailAddress(EmailChallengeDeliveryHost.Email, challengeId, nameof(CompleteEmailChallenge), challengeId),
             address => address.CompleteChallenge(owner, token, host.Clock.GetUtcNow()));
 
         // Act
@@ -298,8 +298,10 @@ public sealed class EmailChallengeDeliveryProcessTests
         // Arrange
         await using var host = new EmailChallengeDeliveryHost();
         var (owner, challengeId, record) = await host.IssueVerificationAsync();
-        await host.SeedAsync(new EmailAddress(EmailChallengeDeliveryHost.Email), address => address.IssueChallenge(owner,
-            Uuid.CreateVersion4(), new string('A', 64), host.Clock.GetUtcNow().AddMinutes(15), host.Clock.GetUtcNow()));
+        var newerChallengeId = Uuid.CreateVersion4();
+        await host.SeedAsync(new EmailAddress(EmailChallengeDeliveryHost.Email, newerChallengeId, nameof(IssueEmailChallenge), newerChallengeId),
+            address => address.IssueChallenge(owner, newerChallengeId, new string('A', 64),
+                host.Clock.GetUtcNow().AddMinutes(15), host.Clock.GetUtcNow()));
 
         // Act
         var process = await host.DriveAsync(record);

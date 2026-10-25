@@ -39,7 +39,7 @@ sealed class CancelEngagementPersonalDecisionHandler(IAggregateExecutor executor
             try
             {
                 var step = await executor.ExecuteAsync(new ServiceEngagementIndependence(owner.TenantId,
-                    command.EngagementId, command.CommandId), fresh =>
+                    command.EngagementId, command.CommandId, command.OperationId), fresh =>
                     {
                         switch (fresh.Acceptance.Decide(binding))
                         {
@@ -49,6 +49,10 @@ sealed class CancelEngagementPersonalDecisionHandler(IAggregateExecutor executor
                             case NativeAcceptanceDecision.Conflict:
                                 return AggregateOutcome.Discard(Result<Step>.Failure(AcceptedAppendResult.ConflictError));
                         }
+
+                        if (fresh.ReplayCut.Digest != owner.ReplayCut.Digest)
+                            return AggregateOutcome.Discard(Result<Step>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                "The engagement native prefix changed during receiver preparation; retry from its exact current cut.", true)));
 
                         if (fresh.DecisionOf(command.OperationId) is { Canceled: { } existing })
                             return AggregateOutcome.Discard(Result<Step>.Success(

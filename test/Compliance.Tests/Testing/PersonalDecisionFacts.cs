@@ -117,7 +117,7 @@ static class PersonalDecisionFacts
         await using var scope = provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var owner = await services.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ServiceEngagementIndependence(tenant, engagement));
+            .HydrateAsync(new ServiceEngagementIndependence(tenant, engagement, selectedRootId: decision));
         var admitted = owner.DecisionOf(decision)?.Admitted ?? throw new InvalidOperationException("Admit first.");
         return await services.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(ProcessRecord.Start(
             KeyOf(decision, NativeFactReference.Of(owner.Stream, admitted)), NativeFactReference.Of(owner.Stream, admitted), admitted.Operation.Episode,

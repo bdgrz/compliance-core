@@ -40,15 +40,14 @@ public sealed class ReserveEmailHandler(
             return current.PrepareReserve(request.UserId, request.ExpectedRevision);
         }
 
-        var response = await EmailAddressOperations.UnitResponseAsync(content, ct).ConfigureAwait(false);
+        var preparation = new IdentityOwnerPreparation(current);
         return EmailAddressOperations.Of(await operations.ExecuteAsync(new NativeOperation<EmailAddress>(binding,
             () => Hydrate(normalized, request), address => address.Acceptance,
-            address => address.PrepareReserve(request.UserId, request.ExpectedRevision)
-                is { IsSuccess: false } failed
-                ? Result<FirstResponseDescriptor>.Failure(failed.Error!)
-                : Result<FirstResponseDescriptor>.Success(response),
-            (EmailAddress address, ImmutableContentRef frozen) => address.Reserve(provenance, frozen, request.UserId,
-                request.ExpectedRevision)), context, ct).ConfigureAwait(false));
+            (address, cancel) => preparation.PrepareAsync(address,
+                address.PrepareReserve(request.UserId, request.ExpectedRevision),
+                bodyCancel => EmailAddressOperations.UnitResponseAsync(content, bodyCancel), cancel),
+            (EmailAddress address, ImmutableContentRef frozen) => preparation.Apply(address,
+                () => address.Reserve(provenance, frozen, request.UserId, request.ExpectedRevision))), context, ct).ConfigureAwait(false));
     }
 
     static EmailAddress Hydrate(string normalized, ReserveEmail request) =>

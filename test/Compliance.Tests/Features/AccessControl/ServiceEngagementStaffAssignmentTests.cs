@@ -43,7 +43,7 @@ public sealed class ServiceEngagementStaffAssignmentTests
         var added = Assert.Single(view.Assignments, item => item.StaffMemberId == assignee.StaffMemberId);
         Assert.True(added.IsCurrent);
         Assert.Equal(command.EffectiveFrom, added.EffectiveFrom);
-        Assert.Equal(owner.OperationOf(command.CommandId)!.Authorized!.DecisionAt, added.AssignedAt);
+        Assert.Equal((await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).OperationOf(command.CommandId)!.Authorized!.DecisionAt, added.AssignedAt);
         Assert.Equal(2, (await host.SendAsync(new GetServiceEngagementAcceptanceHistory(host.Tenant, engagement)))
             .Value!.Count);
         foreach (var kind in new[] { PracticeSubjectKind.Staff, PracticeSubjectKind.CanonicalUser })

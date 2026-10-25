@@ -29,7 +29,7 @@ sealed class EngagementPersonalDecisionVerifier(IAggregateReader reader, IImmuta
             !Uuid.TryParse(source.Stream.Realm, out var tenantId) || tenantId == Uuid.Empty)
             return LoadedDecision.Failed(Permanent("The receiver names another decision, engagement or tenant."));
         var owner = await reader.HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId,
-            selectedLogicalId), ct).ConfigureAwait(false);
+            selectedLogicalId, decisionId), ct).ConfigureAwait(false);
         if (owner.DecisionOf(decisionId) is not { } decision)
             return LoadedDecision.Failed(Transient("The admitted personal decision is not visible yet."));
         var admitted = decision.Admitted;
@@ -57,16 +57,25 @@ sealed class EngagementPersonalDecisionVerifier(IAggregateReader reader, IImmuta
         {
             intent = await content.ReadJsonAsync<EngagementPersonalDecisionIntent>(
                 IndependenceContent.Realm(tenantId), intentReference, ct).ConfigureAwait(false);
+            if (intent.Header is null || intent.RequiredSourceUses is null || intent.CompleteServiceManifest is null ||
+                intent.AuthoredContent is null)
+                return LoadedDecision.Failed(Permanent("The frozen personal decision is missing required immutable terms."));
             requirements = await content.ReadSelectionAsync<SourceUseRequirement>(IndependenceContent.Realm(tenantId),
                 intent.RequiredSourceUses, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return LoadedDecision.Failed(Permanent(
-                $"The frozen personal decision cannot be verified: {exception.Message}"));
+            return LoadedDecision.Failed(exception is ImmutableContentUnavailableException
+                ? Transient($"The frozen personal decision is unavailable: {exception.Message}")
+                : Permanent($"The frozen personal decision cannot be verified: {exception.Message}"));
         }
 
-        if (intent.DecisionId != decisionId || intent.Header.RootOperationId != decisionId ||
+        if (intentReference.Schema != EngagementPersonalDecisionIntent.Schema ||
+            !EngagementIntentBinding.Matches(intent.Header, admitted.Operation) ||
+            intent.ExpectedEngagementRevision != (ulong)admitted.Revision ||
+            intent.Kind != (admitted.Operation.CommandKind == ServiceEngagementIndependence.ManagementKind
+                ? EngagementPersonalDecisionKind.ManagementAcknowledgement : EngagementPersonalDecisionKind.PartnerEvaluation) ||
+            intent.DecisionId != decisionId || intent.Header.RootOperationId != decisionId ||
             intent.EngagementId != engagementId || intent.Header.FirstOwner != owner.Stream ||
             intent.Header.AuthoredIntentSha256 != admitted.Operation.AuthoredIntentSha256)
             return LoadedDecision.Failed(Permanent("The command differs from the frozen personal decision intent."));

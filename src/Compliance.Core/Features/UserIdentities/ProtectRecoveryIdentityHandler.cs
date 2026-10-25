@@ -30,14 +30,14 @@ public sealed class ProtectRecoveryIdentityHandler(IdentityRecoveryReceiverSuppo
             return IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>(
                 "The command does not match the frozen candidate and identity role.");
 
-        var recovery = await support.Reader.HydrateAsync(IdentityRecoveryReceiverSupport.RecoveryOf(request.ChallengeId),
-            ct).ConfigureAwait(false);
         var provenance = IdentityRecoveryReceiverSupport.Provenance(request, nameof(ProtectRecoveryIdentity), stream,
             frozen, verified.Value!.EventId);
-        return await support.ApplyAsync(
-            () => new UserIdentity(request.IdentityId, request.CommandId, nameof(ProtectRecoveryIdentity)),
+        return await support.ApplyAsync<UserIdentity, IdentityRecovery>(
+            () => new UserIdentity(request.IdentityId, request.CommandId, nameof(ProtectRecoveryIdentity), request.ChallengeId),
             identity => identity.Acceptance, AcceptedOperationBinding.Of(provenance),
-            identity =>
+            async (_, cancel) => Result<IdentityRecovery>.Success(await support.Reader.HydrateAsync(
+                IdentityRecoveryReceiverSupport.RecoveryOf(request.ChallengeId), cancel).ConfigureAwait(false)),
+            (identity, recovery) =>
             {
                 if (recovery.State == IdentityRecovery.Stage.Rejected)
                     return IdentityRecoveryReceiverSupport.Superseded("The preparation was rejected.");
@@ -54,7 +54,7 @@ public sealed class ProtectRecoveryIdentityHandler(IdentityRecoveryReceiverSuppo
                             "An accepted swap cannot be rejected: " + decision.Reason),
                 };
             },
-            (UserIdentity identity) => identity.Protect(provenance, request.Intent, request.Source.RequiredFacts,
+            (identity, _) => identity.Protect(provenance, request.Intent, request.Source.RequiredFacts,
                 request.ChallengeId, request.AccountId, request.IdentityRole, frozen.ReplacementIdentityId,
                 request.Generation), context, ct).ConfigureAwait(false);
     }

@@ -67,7 +67,7 @@ sealed class AuthorizeEngagementPersonalDecisionHandler(IAggregateReader reader,
             try
             {
                 var step = await executor.ExecuteAsync(new ServiceEngagementIndependence(owner.TenantId,
-                    command.EngagementId, command.CommandId), fresh =>
+                    command.EngagementId, command.CommandId, command.OperationId), fresh =>
                     {
                         switch (fresh.Acceptance.Decide(binding))
                         {
@@ -78,6 +78,10 @@ sealed class AuthorizeEngagementPersonalDecisionHandler(IAggregateReader reader,
                             case NativeAcceptanceDecision.Conflict:
                                 return AggregateOutcome.Discard(Result<Step>.Failure(AcceptedAppendResult.ConflictError));
                         }
+
+                        if (fresh.ReplayCut.Digest != owner.ReplayCut.Digest)
+                            return AggregateOutcome.Discard(Result<Step>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                "The engagement native prefix changed during receiver preparation; retry from its exact current cut.", true)));
 
                         if (fresh.DecisionOf(command.OperationId) is { Canceled: { } canceled })
                             return AggregateOutcome.Discard(Result<Step>.Success(new Step(

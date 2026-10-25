@@ -20,8 +20,43 @@ sealed class SettleAccessReviewItemCampaignCompletionUseHandler(IAggregateReader
         clock)
 {
     protected override AccessReviewItem Open(SettleAccessReviewItemCampaignCompletionUse request,
-        Uuid selectedCommandId) => new(Uuid.Parse(request.Target.Realm, CultureInfo.InvariantCulture),
+        Uuid selectedCommandId) => new(Tenant(request.Target),
         request.CampaignId, request.SourceOwnerId, selectedCommandId);
+
+    protected override ReservationKey ReceiptSelection(SettleAccessReviewItemCampaignCompletionUse request) =>
+        new(request.OperationId, AccessReviewEffects.CampaignStream(Tenant(request.Target), request.CampaignId), (ulong)AccessReviewEffects.Generation, request.Target, SourceUseReservations.PurposeName(SourceUsePurpose.CampaignCompletion));
+
+    protected override async ValueTask<Result<SourceUseSource>?> VerifyReceiptSourceAsync(SettleAccessReviewItemCampaignCompletionUse request,
+        AccessReviewItem owner, CancellationToken ct)
+    {
+        var tenant = Tenant(request.Target);
+        if (request.Generation != AccessReviewEffects.Generation || request.SourceOwnerId != owner.ItemId)
+            return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The request differs from its selected Access source-use owner or generation.", false));
+        var native = await verifier.ReadNativeAsync(tenant, request.CampaignId, request.Source, request.Intent,
+            request.OperationId, Uuid.Empty, ct).ConfigureAwait(false);
+        if (native.Error is not null)
+            return Result<SourceUseSource>.Failure(native.Error);
+        var campaign = native.Campaign!;
+        var parent = native.Accepted!.Operation;
+        var key = ReceiptSelection(request)!;
+        var recorded = await AccessReviewSourceUseReceipts.ReadAsync(Content, owner, key, parent, request.Source,
+            request.Intent, SourceUsePurpose.CampaignCompletion, true, false, ct).ConfigureAwait(false);
+        if (recorded is null)
+            return null;
+        var result = recorded.Value;
+        if (!result.IsSuccess)
+            return Result<SourceUseSource>.Failure(result.Error!);
+        var intent = result.Value!;
+        var disposition = campaign.ClosedFor(request.OperationId) is not null ? SourceUseSettlementDisposition.ParentClosed
+            : campaign.CanceledFor(request.OperationId) is not null ? SourceUseSettlementDisposition.Canceled
+            : (SourceUseSettlementDisposition?)null;
+        if (disposition is null)
+            return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Neither the closed campaign nor the cancellation fence is visible yet.", true));
+        return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, intent.ParentIntent, key,
+            intent.Requirement, nameof(SettleAccessReviewItemCampaignCompletionUse), disposition, null));
+    }
 
     protected override async ValueTask<Result<SourceUseSource>> VerifyAsync(
         SettleAccessReviewItemCampaignCompletionUse request, CancellationToken ct)
@@ -58,4 +93,6 @@ sealed class SettleAccessReviewItemCampaignCompletionUseHandler(IAggregateReader
         SourceUseSettlementDisposition disposition) =>
         (AccessReviewItem item, OperationProvenance provenance, ImmutableContentRef intent, long generation) =>
             item.SettleCampaignCompletionUse(provenance, intent, generation, disposition);
+    static Uuid Tenant(EventStreamAddress stream) => Uuid.Parse(stream.Realm, CultureInfo.InvariantCulture);
+
 }

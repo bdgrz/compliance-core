@@ -80,6 +80,10 @@ static class EngagementAcceptanceEffects
         _ => null,
     };
 
+    /// <summary>A deterministic physical content identity scoped to the exact first owner and root.</summary>
+    public static Uuid ContentId(EventStreamAddress firstOwner, Uuid operationId, string schema) =>
+        Uuid.CreateVersion5(operationId, $"engagement-content:{StreamKey(firstOwner)}:{schema}");
+
     /// <summary>The wire name of a practice for an engagement practice string.</summary>
     public static string PracticeOf(EngagementPractice practice) => practice == EngagementPractice.Attest
         ? PracticeIndependenceCommitment.Attest

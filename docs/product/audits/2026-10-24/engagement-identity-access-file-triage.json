@@ -1,0 +1,27 @@
+{
+  "reviewed": 71,
+  "signalsAtOrAbove065": 4,
+  "triage": [
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/DirectoryReevaluationDiscovery.cs",
+      "signal": "recovery .66",
+      "disposition": "Complete transient snapshot retains every accepted original operation and metadata from finalized owner. Identity discovery/locator coverage remains checked twice; concrete receiver rebinds actual physical source tuple, full typed payload+metadata, frozen acceptance scope and causation before any receipt. Source pattern supplies discovery only; no new authority or source mutation is introduced by this consumer migration."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/EngagementAcceptanceAdmission.cs",
+      "signal": "invariant .65",
+      "disposition": "All original evidence/paired decisions/live source-use and practice subject selection now runs inside native async Prepare. Full finalized native cut is compared through append; pending acceptance fences fresh personal decisions. External Client service history/cuts and current professional authority remain verified; acceptance202 does not itself grant access. Root subject content IDs include actual first owner."
+    },
+    {
+      "path": "src/Compliance.Core/Features/UserIdentities/CompleteIdentityRecoveryHandler.cs",
+      "signal": "authority .72/invariant .68/recovery .73",
+      "disposition": "Verified reserved address account and authenticated OIDC provider+subject are bound before operation digest. Current challenge possession and actual old/replacement identity ownership/revocation checks happen inside receipt-first async Prepare; one checked old slot candidate is frozen. Full native/payload/metadata email cut guards append. Exact original ack precedes expired/obsolete mutable preparation; subsequent source-proven materialize/protect/accept/register/revoke/complete/notice/settle process rechecks actual slots. This202 admits a process, not an immediate identity swap. The new-challenge race classification case is explicitly a proposed transient cut gate; fresh retry remains forbidden and no old claim appears. Two equal-winner and four other receiver plusfourUnit failures are genuine."
+    },
+    {
+      "path": "src/Compliance.Core/Features/SourceUse/SettleSourceUseHandler.cs",
+      "signal": "incomplete .72",
+      "disposition": "The optional native probe is implemented by all four selected Access pairs; its default no-receipt signal deliberately keeps other pairs on their full original source verifier. This is a compatible fallback, not an admitted missing receiver. Selected native settlement requires stored use-intent body binding of all DTO terms, full source validation for grantless cancellation/drain, original terminal/disposition/OCC behavior. New24 preparation rows (20genuine red4alreadypositive),2initial cancellation cases and10binding negatives now pass except corrected test-only scope setup; no guard relaxed."
+    }
+  ],
+  "runtime": "Strict Release build0warnings/errors; final6742unit0fail;1904focus across corrected newtestfixture;168HTTP;format/coverage/spec/implementation/Node24pass."
+}

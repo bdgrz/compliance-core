@@ -59,6 +59,11 @@ public sealed class IdentityRecoveryReceiverSupport(ISourceFactResolver resolver
         {
             return Result<VerifiedSourceProof<TFact>>.Success(await resolver.VerifyAsync(proof, ct).ConfigureAwait(false));
         }
+        catch (SourceFactUnavailableException exception)
+        {
+            return Result<VerifiedSourceProof<TFact>>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact source proof is not visible yet: {exception.Message}", true));
+        }
         catch (SourceFactVerificationException exception)
         {
             return Result<VerifiedSourceProof<TFact>>.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -90,6 +95,11 @@ public sealed class IdentityRecoveryReceiverSupport(ISourceFactResolver resolver
         {
             intent = await content.ReadJsonAsync<IdentityRecoveryIntent>(Realm, request.Intent, ct)
                 .ConfigureAwait(false);
+        }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            return Result<IdentityRecoveryIntent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact immutable dependency is not visible yet: {exception.Message}", true));
         }
         catch (ImmutableContentIntegrityException exception)
         {
@@ -134,6 +144,11 @@ public sealed class IdentityRecoveryReceiverSupport(ISourceFactResolver resolver
             proofs = await content.ReadJsonAsync<IdentityRecoveryProtectionProofs>(Realm, reference, ct)
                 .ConfigureAwait(false);
         }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            return Result<IdentityRecoveryProtectionProofs>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact immutable dependency is not visible yet: {exception.Message}", true));
+        }
         catch (ImmutableContentIntegrityException exception)
         {
             return Invalid<IdentityRecoveryProtectionProofs>($"The protection proofs do not verify: {exception.Message}");
@@ -174,33 +189,58 @@ public sealed class IdentityRecoveryReceiverSupport(ISourceFactResolver resolver
     ///     id fails permanently, <paramref name="early" /> may stop with a wait, a supersession, a rejection or an
     ///     existing proof, and a lost append race is retried against the rehydrated owner.
     /// </summary>
-    public async ValueTask<Result<ReceiverOutcome>> ApplyAsync<TAggregate>(Func<TAggregate> create,
+    public ValueTask<Result<ReceiverOutcome>> ApplyAsync<TAggregate>(Func<TAggregate> create,
         Func<TAggregate, NativeAcceptance> acceptance, AcceptedOperationBinding binding,
         Func<TAggregate, Result<ReceiverOutcome>?> early, Func<TAggregate, Result> operate, IExecutionContext context,
-        CancellationToken ct) where TAggregate : Aggregate
+        CancellationToken ct, Func<TAggregate, Result>? preparedGuard = null) where TAggregate : Aggregate =>
+        ApplyAsync<TAggregate, EmptyPreparation>(create, acceptance, binding,
+            (owner, _) => ValueTask.FromResult(preparedGuard?.Invoke(owner) is { IsSuccess: false } failed
+                ? Result<EmptyPreparation>.Failure(failed.Error!)
+                : Result<EmptyPreparation>.Success(EmptyPreparation.Instance)),
+            (owner, _) => early(owner), (owner, _) => operate(owner), context, ct);
+
+    /// <summary>Prepares mutable dependencies only after selected receipt knowledge, and guards that exact target cut through append.</summary>
+    public async ValueTask<Result<ReceiverOutcome>> ApplyAsync<TAggregate, TPrepared>(Func<TAggregate> create,
+        Func<TAggregate, NativeAcceptance> acceptance, AcceptedOperationBinding binding,
+        Func<TAggregate, CancellationToken, ValueTask<Result<TPrepared>>> prepare,
+        Func<TAggregate, TPrepared, Result<ReceiverOutcome>?> early, Func<TAggregate, TPrepared, Result> operate,
+        IExecutionContext context, CancellationToken ct) where TAggregate : Aggregate where TPrepared : class
     {
         for (var attempt = 1; ; attempt++)
         {
             ct.ThrowIfCancellationRequested();
+            var preparation = await NativeReceiverPreparation.PrepareAsync<TAggregate, ReceiverCandidate<TPrepared>>(reader,
+                create, owner => Decide(acceptance(owner), binding, owner.Stream), async (owner, cancel) =>
+                {
+                    var cut = IdentityOwnerPreparationCut.Of(owner);
+                    var dependency = await prepare(owner, cancel).ConfigureAwait(false);
+                    if (!dependency.IsSuccess)
+                        return Result<ReceiverCandidate<TPrepared>>.Failure(dependency.Error!);
+                    var stopped = early(owner, dependency.Value!);
+                    return stopped is { IsSuccess: false } failed
+                        ? Result<ReceiverCandidate<TPrepared>>.Failure(failed.Error!)
+                        : Result<ReceiverCandidate<TPrepared>>.Success(new ReceiverCandidate<TPrepared>(cut, dependency.Value!, stopped));
+                }, ct).ConfigureAwait(false);
+            if (!preparation.IsSuccess)
+                return Result<ReceiverOutcome>.Failure(preparation.Error!);
+            if (preparation.Value!.Outcome is { } known)
+                return known;
+            var candidate = preparation.Value.Value!;
+            if (candidate.Stop is { } stop)
+                return stop;
             try
             {
                 return await executor.ExecuteAsync<TAggregate, ReceiverOutcome>(create(), aggregate =>
                 {
                     var accepted = acceptance(aggregate);
-                    switch (accepted.Decide(binding))
-                    {
-                        case NativeAcceptanceDecision.Replayed:
-                            return AggregateOutcome.Discard(Result<ReceiverOutcome>.Success(
-                                new ReceiverOutcome.Replayed(NativeFactReference.Of(aggregate.Stream,
-                                    accepted.SelectedFact!))));
-                        case NativeAcceptanceDecision.Conflict:
-                            return AggregateOutcome.Discard(Result<ReceiverOutcome>.Failure(
-                                AcceptedAppendResult.ConflictError));
-                    }
-
-                    if (early(aggregate) is { } stop)
-                        return AggregateOutcome.Discard(stop);
-                    var applied = operate(aggregate);
+                    if (Decide(accepted, binding, aggregate.Stream) is { } nativeReceipt)
+                        return AggregateOutcome.Discard(nativeReceipt);
+                    var sameCut = candidate.Cut.Require(aggregate);
+                    if (!sameCut.IsSuccess)
+                        return AggregateOutcome.Discard(Result<ReceiverOutcome>.Failure(sameCut.Error!));
+                    if (early(aggregate, candidate.Dependency) is { } executionStop)
+                        return AggregateOutcome.Discard(executionStop);
+                    var applied = operate(aggregate, candidate.Dependency);
                     if (!applied.IsSuccess)
                         return AggregateOutcome.Discard(Result<ReceiverOutcome>.Failure(applied.Error!));
                     return AggregateOutcome.Commit(Result<ReceiverOutcome>.Success(new ReceiverOutcome.Applied(
@@ -210,13 +250,32 @@ public sealed class IdentityRecoveryReceiverSupport(ISourceFactResolver resolver
             }
             catch (EventStreamConcurrencyException) when (attempt < MaximumAttempts)
             {
-                // The append lost the owner's OCC: rehydrate and decide again by logical id.
+                // Unknown append outcomes and equal OCC winners rehydrate before any later target preparation.
             }
             catch (EventStreamConcurrencyException)
             {
-                return Wait("The target changed while the receiver applied; it will be retried.");
+                var current = await reader.HydrateAsync(create(), ct).ConfigureAwait(false);
+                return Decide(acceptance(current), binding, current.Stream) ??
+                    Wait("The target changed while the receiver applied; it will be retried.");
             }
         }
+    }
+
+    internal static Result<ReceiverOutcome>? Decide(NativeAcceptance acceptance, AcceptedOperationBinding binding,
+        EventStreamAddress stream) => acceptance.Decide(binding) switch
+        {
+            NativeAcceptanceDecision.Replayed => Result<ReceiverOutcome>.Success(
+                new ReceiverOutcome.Replayed(NativeFactReference.Of(stream, acceptance.SelectedFact!))),
+            NativeAcceptanceDecision.Conflict => Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError),
+            _ => null,
+        };
+
+    sealed record ReceiverCandidate<TPrepared>(IdentityOwnerPreparationCut Cut, TPrepared Dependency,
+        Result<ReceiverOutcome>? Stop) where TPrepared : class;
+
+    sealed class EmptyPreparation
+    {
+        public static EmptyPreparation Instance { get; } = new();
     }
 
     /// <summary>Parses an identity id from a process target key.</summary>

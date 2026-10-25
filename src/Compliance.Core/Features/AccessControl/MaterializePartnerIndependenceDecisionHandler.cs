@@ -14,7 +14,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     pinned. It keeps the original authenticated actor and the frozen decision instant.
 /// </summary>
 sealed class MaterializePartnerIndependenceDecisionHandler(IAggregateExecutor executor,
-    IImmutableContentStore content, EngagementPersonalDecisionVerifier verifier)
+    IImmutableContentStore content, IDomainEventReader events, EngagementPersonalDecisionVerifier verifier)
     : IRequestHandler<MaterializePartnerIndependenceDecision, ReceiverOutcome>
 {
     const int MaximumAttempts = 4;
@@ -118,7 +118,8 @@ sealed class MaterializePartnerIndependenceDecisionHandler(IAggregateExecutor ex
                 .ConfigureAwait(false);
             var rules = await content.ReadJsonAsync<IndependenceRuleVersionView>(
                 EngagementPersonalDecisionEffects.PlatformRealm, rulesUse.RequiredFacts, ct).ConfigureAwait(false);
-            var change = engagement.Changes.SingleOrDefault(item => item.Revision == intent.ExpectedEngagementRevision);
+            var history = await ServiceEngagementHistory.ReadAsync(events, engagement, ct).ConfigureAwait(false);
+            var change = history.Changes.SingleOrDefault(item => item.Revision == intent.ExpectedEngagementRevision);
             if (change?.OperationResult is null || services.Count != (int)intent.ServiceEpoch)
                 return Failure("The pinned engagement content or service history is not retained.");
             var view = await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content, realm,

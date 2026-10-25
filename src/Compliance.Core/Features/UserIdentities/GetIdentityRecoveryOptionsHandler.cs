@@ -15,7 +15,7 @@ public sealed class GetIdentityRecoveryOptionsHandler(
             return Result<IdentityRecoveryOptions>.Failure(new RequestError(RequestErrorKind.Validation,
                 "Enter a valid email address."));
 
-        var address = await aggregates.HydrateAsync(new EmailAddress(normalized), ct).ConfigureAwait(false);
+        var address = await aggregates.HydrateAsync(new EmailAddress(normalized, Uuid.Empty, null, context.Request.ChallengeId), ct).ConfigureAwait(false);
         if (address.Owner is not { } owner)
             return Result<IdentityRecoveryOptions>.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "No verified recovery address is available."));

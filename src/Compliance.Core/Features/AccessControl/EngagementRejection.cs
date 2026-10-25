@@ -31,7 +31,7 @@ sealed class EngagementRejection(IAggregateReader reader, IAggregateExecutor exe
             !Uuid.TryParse(target.Realm, CultureInfo.InvariantCulture, out var tenantId) ||
             !Uuid.TryParse(target.Resource, CultureInfo.InvariantCulture, out var engagementId))
             return SourceUseReceiverSupport.Permanent("The rejection names another operation, engagement or generation.");
-        var owner = await reader.HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId, commandId), ct)
+        var owner = await reader.HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId, commandId, operationId), ct)
             .ConfigureAwait(false);
         if (owner.OperationOf(operationId) is not { } operation)
             return SourceUseReceiverSupport.Transient("The admitted operation is not visible yet.");
@@ -56,7 +56,7 @@ sealed class EngagementRejection(IAggregateReader reader, IAggregateExecutor exe
             try
             {
                 var step = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId,
-                    commandId), fresh =>
+                    commandId, operationId), fresh =>
                     {
                         switch (fresh.Acceptance.Decide(binding))
                         {
@@ -66,6 +66,10 @@ sealed class EngagementRejection(IAggregateReader reader, IAggregateExecutor exe
                             case NativeAcceptanceDecision.Conflict:
                                 return AggregateOutcome.Discard(Result<Step>.Failure(AcceptedAppendResult.ConflictError));
                         }
+
+                        if (fresh.ReplayCut.Digest != owner.ReplayCut.Digest)
+                            return AggregateOutcome.Discard(Result<Step>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                "The engagement native prefix changed during receiver preparation; retry from its exact current cut.", true)));
 
                         if (fresh.OperationOf(operationId) is { Rejected: { } existing })
                             return AggregateOutcome.Discard(Result<Step>.Success(

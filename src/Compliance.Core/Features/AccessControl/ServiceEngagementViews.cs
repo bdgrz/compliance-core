@@ -38,8 +38,9 @@ public sealed class ServiceEngagementViews(IAggregateReader reader, IDomainEvent
         if (!owner.Exists)
             return null;
         var realm = IndependenceContent.Realm(tenantId);
-        var history = new List<ServiceEngagementView>(owner.Changes.Count);
-        foreach (var change in owner.Changes)
+        var snapshot = await ServiceEngagementHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
+        var history = new List<ServiceEngagementView>(snapshot.Changes.Count);
+        foreach (var change in snapshot.Changes)
             history.Add(await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content, realm,
                 change.OperationResult!, ct).ConfigureAwait(false));
         return Array.AsReadOnly(history.ToArray());
@@ -51,44 +52,25 @@ public sealed class ServiceEngagementViews(IAggregateReader reader, IDomainEvent
     {
         if (tenantId == Uuid.Empty)
             return [];
-        var latest = new Dictionary<Uuid, (ImmutableContentRef Result, string Status, ulong Revision)>();
-        var pattern = EventStreamPattern.ForPattern(IndependenceContent.Realm(tenantId),
-            ServiceEngagementIndependence.Area);
+        var identities = new HashSet<Uuid>();
+        var realm = IndependenceContent.Realm(tenantId);
+        var pattern = EventStreamPattern.ForPattern(realm, ServiceEngagementIndependence.Area);
         await foreach (var record in events.ReadAsync(pattern, EventCursor.Start, ct).WithCancellation(ct)
                            .ConfigureAwait(false))
         {
             if (record.Event.Metadata.IsAudit)
                 continue;
-            var engagementId = Uuid.Parse(record.Stream.Resource, System.Globalization.CultureInfo.InvariantCulture);
-            switch (record.Event)
-            {
-                case ServiceEngagementMutationRecorded change when change.TenantId == tenantId &&
-                    change.Operation.Owner == record.Stream:
-                    latest[engagementId] = (change.OperationResult!, change.Intent == ServiceEngagementIndependence.CloseKind
-                        ? "closed"
-                        : "draft", change.Revision);
-                    break;
-                case ServiceEngagementAcceptanceRecorded recorded when latest.TryGetValue(engagementId, out var current):
-                    latest[engagementId] = (current.Result, "accepted", recorded.Revision);
-                    break;
-                case ServiceEngagementStaffAssigned assigned when latest.TryGetValue(engagementId, out var current):
-                    latest[engagementId] = (current.Result, current.Status, assigned.Revision);
-                    break;
-                case ServiceEngagementAssignmentRevoked revoked when latest.TryGetValue(engagementId, out var current):
-                    latest[engagementId] = (current.Result, revoked.StaffMemberId is null ? "closed" : current.Status,
-                        revoked.Revision);
-                    break;
-                case DirectoryIndependenceReevaluated receipt when latest.TryGetValue(engagementId, out var current):
-                    latest[engagementId] = (current.Result, current.Status, receipt.Revision);
-                    break;
-            }
+            if (record.Stream.Realm != realm || record.Stream.Area != ServiceEngagementIndependence.Area ||
+                !Uuid.TryParse(record.Stream.Resource, System.Globalization.CultureInfo.InvariantCulture, out var engagementId) ||
+                engagementId == Uuid.Empty)
+                throw new ImmutableContentIntegrityException("Engagement discovery returned another owner scope.");
+            identities.Add(engagementId);
         }
 
-        var realm = IndependenceContent.Realm(tenantId);
-        var views = new List<ServiceEngagementView>(latest.Count);
-        foreach (var item in latest.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
-            views.Add(Overlay(await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content, realm,
-                item.Value.Result, ct).ConfigureAwait(false), item.Value.Status, item.Value.Revision));
+        var views = new List<ServiceEngagementView>(identities.Count);
+        foreach (var engagementId in identities.OrderBy(id => id.ToString(), StringComparer.Ordinal))
+            if (await GetAsync(tenantId, engagementId, ct).ConfigureAwait(false) is { } view)
+                views.Add(view);
         return Array.AsReadOnly(views.ToArray());
     }
 
@@ -119,8 +101,9 @@ public sealed class ServiceEngagementViews(IAggregateReader reader, IDomainEvent
                 .ConfigureAwait(false);
             if (owner.LatestResult is not { } latest || owner.AcceptanceResult is not { } result)
                 continue;
-            var denied = new List<(Uuid StaffMemberId, Uuid UserId)>(owner.DirectoryReceipts.Count);
-            foreach (var receipt in owner.DirectoryReceipts)
+            var snapshot = await ServiceEngagementHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
+            var denied = new List<(Uuid StaffMemberId, Uuid UserId)>(snapshot.DirectoryReceipts.Count);
+            foreach (var receipt in snapshot.DirectoryReceipts)
             {
                 var view = await content.ReadJsonAsync<DirectoryIndependenceReevaluationView>(realm,
                     receipt.ReevaluationContent, ct).ConfigureAwait(false);

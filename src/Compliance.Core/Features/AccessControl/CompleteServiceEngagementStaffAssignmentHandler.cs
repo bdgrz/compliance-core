@@ -46,16 +46,16 @@ sealed class CompleteServiceEngagementStaffAssignmentHandler(EngagementCompletio
         var decisionAt = operation.Authorized!.DecisionAt;
         var view = EngagementAcceptanceViews.Assigned(current, assigned, effectiveFrom, intent.Header.OriginalActor,
             decisionAt);
-        var assignedContent = await completion.WriteAsync(owner.TenantId, command.OperationId,
+        var assignedContent = await completion.WriteAsync(owner.TenantId, owner.Stream, command.OperationId,
             EngagementAcceptanceEffects.AssignedStaffSchema, assigned, ct).ConfigureAwait(false);
-        var partnerContent = await completion.WriteAsync(owner.TenantId, command.OperationId,
+        var partnerContent = await completion.WriteAsync(owner.TenantId, owner.Stream, command.OperationId,
             EngagementAcceptanceEffects.PartnerStaffSchema, evidence.PartnerStaff, ct).ConfigureAwait(false);
-        var designationContent = await completion.WriteAsync(owner.TenantId, command.OperationId,
+        var designationContent = await completion.WriteAsync(owner.TenantId, owner.Stream, command.OperationId,
             EngagementAcceptanceEffects.PartnerDesignationSchema, evidence.PartnerDesignation, ct)
             .ConfigureAwait(false);
-        var viewReference = await completion.WriteAsync(owner.TenantId, command.OperationId,
+        var viewReference = await completion.WriteAsync(owner.TenantId, owner.Stream, command.OperationId,
             EngagementAcceptanceEffects.AcceptanceSchema, view, ct).ConfigureAwait(false);
-        var result = await completion.WriteResultAsync(owner.TenantId, command.OperationId, viewReference, ct)
+        var result = await completion.WriteResultAsync(owner.TenantId, owner.Stream, command.OperationId, viewReference, ct)
             .ConfigureAwait(false);
         return await completion.AppendAsync(loaded, command.CommandId,
             nameof(CompleteServiceEngagementStaffAssignment), command.Source, context,

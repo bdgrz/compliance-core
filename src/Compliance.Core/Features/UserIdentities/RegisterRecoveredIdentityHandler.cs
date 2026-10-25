@@ -32,26 +32,34 @@ public sealed class RegisterRecoveredIdentityHandler(IdentityRecoveryReceiverSup
             .ConfigureAwait(false);
         if (!proofs.IsSuccess)
             return Result<ReceiverOutcome>.Failure(proofs.Error!);
-        string? assertedEmail;
-        try
-        {
-            assertedEmail = (await support.Content.ReadJsonAsync<IdentityRecoveryProofProvenance>(
-                IdentityRecoveryReceiverSupport.Realm, frozen.ReplacementProofProvenance, ct)
-                .ConfigureAwait(false)).AssertedEmail;
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>(
-                $"The replacement proof provenance does not verify: {exception.Message}");
-        }
-
         var provenance = IdentityRecoveryReceiverSupport.Provenance(request, nameof(RegisterRecoveredIdentity), stream,
             frozen, verified.Value!.EventId);
-        return await support.ApplyAsync(
+        return await support.ApplyAsync<UserIdentity, RegistrationPreparation>(
             () => new UserIdentity(frozen.ReplacementProvider, frozen.ReplacementSubject, request.CommandId,
-                nameof(RegisterRecoveredIdentity)),
+                nameof(RegisterRecoveredIdentity), request.ChallengeId),
             identity => identity.Acceptance, AcceptedOperationBinding.Of(provenance),
-            identity =>
+            async (owner, cancel) =>
+            {
+                if (owner.IsRegistered)
+                    return Result<RegistrationPreparation>.Success(new RegistrationPreparation(null));
+                try
+                {
+                    var proof = await support.Content.ReadJsonAsync<IdentityRecoveryProofProvenance>(
+                        IdentityRecoveryReceiverSupport.Realm, frozen.ReplacementProofProvenance, cancel).ConfigureAwait(false);
+                    return Result<RegistrationPreparation>.Success(new RegistrationPreparation(proof.AssertedEmail));
+                }
+                catch (ImmutableContentUnavailableException exception)
+                {
+                    return Result<RegistrationPreparation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        $"The replacement proof provenance is not visible yet: {exception.Message}", true));
+                }
+                catch (ImmutableContentIntegrityException exception)
+                {
+                    return IdentityRecoveryReceiverSupport.Invalid<RegistrationPreparation>(
+                        $"The replacement proof provenance does not verify: {exception.Message}");
+                }
+            },
+            (identity, _) =>
             {
                 if (!identity.IsRegistered)
                     return null;
@@ -62,7 +70,9 @@ public sealed class RegisterRecoveredIdentityHandler(IdentityRecoveryReceiverSup
                     : IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>(
                         "The replacement identity is registered to another account or revoked.");
             },
-            (UserIdentity identity) => identity.RegisterRecovered(provenance, request.Intent, request.ChallengeId,
-                request.AccountId, assertedEmail), context, ct).ConfigureAwait(false);
+            (identity, prepared) => identity.RegisterRecovered(provenance, request.Intent, request.ChallengeId,
+                request.AccountId, prepared.AssertedEmail), context, ct).ConfigureAwait(false);
     }
+
+    sealed record RegistrationPreparation(string? AssertedEmail);
 }

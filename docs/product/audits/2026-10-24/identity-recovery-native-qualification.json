@@ -1,0 +1,69 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 1904,
+    "focusedQualification": "1894initialpass+10newscopedtestfixturescorrectedandisolated10pass; allsameproduction in finalwholeunit",
+    "productionHttpPassed": 168,
+    "backendUnit": {
+      "passed": 6742,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "coverageExport": "pass1",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass(historical catalog counters not live completion)",
+    "format": "pass",
+    "exactCurrentProductionSourceAndDependencyHashes": "71verified",
+    "currentAggregateHandlerReactorReviews": "940current after29 refresh"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 71,
+    "fileSignalsAtOrAbove065": 4,
+    "triage": "engagement-identity-access-file-triage.json",
+    "integration": {
+      "decision": {
+        "type": "choice",
+        "choice": "merge_scoped_repair",
+        "confidence": 0.82,
+        "probabilities": {
+          "merge_scoped_repair": 0.88,
+          "refine_before_merge": 0.11,
+          "blocked_by_missing_authority": 0.01
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.18
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.13
+      }
+    },
+    "adopted": "Squash merge scoped repair after local gates, without waiting CI per explicit user direction; continue all unblocked work."
+  },
+  "scope": "Compact current/explicit-challenge identity and email authority, complete transient native history/metadata commitments and actual physical registration proofs; all real consuming flows and native root/receiver/Unit preparation wired.",
+  "genuineOldApiRedFailed": 15,
+  "preexistingPositiveControls": 3,
+  "additionalDesignGate": {
+    "count": 1,
+    "scope": "Changed-current-challenge during exact preparation cut now reports transientConflict; oldForbidden already safely rejected. Freshretry stillpermanentForbidden, newchallenge retained andnoobsoleteclaim. Not counted as businessvulnerability."
+  },
+  "qualification": [
+    "UserIdentity keeps current protection+selected settlement, not lifetime settledset. EmailAddress keeps current/latest/selected claim/completion authority, not lifetime claim/completed collections. Complete external history verifies ordered native payloads and every immutable metadata field; emitted suffix acquires durable attribution while previously known metadata prefix stays committed.",
+    "All actual registration/authentication/session/recovery/delivery/notice consumers select realChallengeID when reading historical protection/claim state; no commandhash reversal. Registration physical offset is located from actual stream records, not native versionminus1; current SDK audit sessions remain separate.",
+    "Complete recovery keeps authenticated OIDC provider/subject and verified reservedaccount binding. Mutable identity reads and candidate/provenance/ack writes run within native asyncPrepare/equal-winner recovery and exact finalized email cut. Initial202 is process admission, not immediate identity swap.",
+    "Materialize/protect/accept/reject/register/revoke/complete/notice/settle maintain actual trusted source/header/DTO/candidate/account/role bindings. Immutable terms needed tobind fields absent from nativefact stillreadbefore receipt; obsolete preparation andnewwrites follow receipt knowledge. Missing source/intent pending, corrupt permanent; currentrevoked-session denial preserved.",
+    "Reserve/Issue/Verify/Start no longerwrite a new Unit candidate before exact originalreceipt. Default/executor reader wrapper preserves complete existing currentchain/lifetimes. Existing DTOs/payloadtags/routes/statuses unchanged; no secret/bearer persistence or fabricated recovery producer."
+  ],
+  "rootRefinements": [
+    "Corrected heldlambda variable, requestscope, Apply override parameter names and varstyle after strictbuild; no behavioral guard relaxed."
+  ],
+  "remainingWork": [
+    "No deployment/reset/keyrotation/retained migration qualification claimed."
+  ]
+}

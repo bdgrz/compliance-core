@@ -34,40 +34,75 @@ public abstract class AuthorizeSourceUseHandler<TOwner, TRequest>(IAggregateRead
         if (request.CommandId == Uuid.Empty || request.OperationId == Uuid.Empty || request.Generation < 0 ||
             request.Target != Open(request, request.CommandId).Stream)
             return SourceUseReceiverSupport.Permanent("The authorization names another target stream, operation or generation.");
-        var verified = await VerifyAsync(request, ct).ConfigureAwait(false);
-        if (!verified.IsSuccess)
-            return Result<ReceiverOutcome>.Failure(verified.Error!);
-        var source = verified.Value!;
-        if (source.SupersededReason is { } reason)
-            return source.RequiresAbort
-                ? Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected(reason, null))
-                : SourceUseReceiverSupport.Superseded(reason, null);
-        if (source.Key.Target != request.Target || source.Key.RootOperationId != request.OperationId ||
-            source.Requirement.SourceOwner != request.Target)
-            return SourceUseReceiverSupport.Permanent("The authorization differs from the frozen source use requirement.");
-
+        var selection = ReceiptSelection(request);
+        AuthorizationPrepared prepared;
+        if (selection is not null)
+        {
+            var preparation = await NativeReceiverPreparation.PrepareAsync<TOwner, AuthorizationPrepared>(reader,
+                () => Open(request, request.CommandId).ForSourceUses(selection),
+                (owner, token) => DecideReceiptAsync(request, owner, selection, token),
+                (_, token) => PrepareAsync(request, true, token), ct).ConfigureAwait(false);
+            if (!preparation.IsSuccess)
+                return Result<ReceiverOutcome>.Failure(preparation.Error!);
+            if (preparation.Value!.Outcome is { } known)
+                return known;
+            prepared = preparation.Value.Value!;
+        }
+        else
+        {
+            var preparation = await PrepareAsync(request, false, ct).ConfigureAwait(false);
+            if (!preparation.IsSuccess)
+                return Result<ReceiverOutcome>.Failure(preparation.Error!);
+            prepared = preparation.Value!;
+        }
+        if (prepared.Outcome is { } terminal)
+            return terminal;
+        var (source, intent) = (prepared.Source!, prepared.Intent!);
         var provenance = SourceUseReceiverSupport.Child(request.CommandId, source.CommandKind,
             request.Source.EventId, source.Header, request.Target, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
         var grant = GrantOperation();
-        var intent = await Content.WriteJsonAsync(request.Target.Realm,
-            Uuid.CreateVersion5(request.CommandId, "source-use-authorization-intent"),
-            SourceUseAuthorizationIntent.Schema, new SourceUseAuthorizationIntent(source.Header, source.ParentIntent,
-                source.Key, source.Requirement, null, null), ct).ConfigureAwait(false);
         for (var attempt = 1; ; attempt++)
         {
             try
             {
-                var owner = await reader.HydrateAsync(Open(request, request.CommandId).ForSourceUses(source.Key), ct).ConfigureAwait(false);
-                if (Decide(owner, binding, source.Key) is { } early)
-                    return early;
-                if (FencedReason(owner, source.Key) is { } fenced)
-                    return SourceUseReceiverSupport.Superseded(fenced, null);
-                var pinned = await VerifyPinnedAsync(owner, source.Requirement, ct).ConfigureAwait(false);
-                if (!pinned.IsSuccess)
-                    return pinned.Error!.IsTransient
-                        ? Result<ReceiverOutcome>.Failure(pinned.Error)
-                        : await RefuseAsync(request, source, pinned.Error.Message, context, ct).ConfigureAwait(false);
+                Result<ReceiverOutcome>? Early(TOwner owner)
+                {
+                    if (Decide(owner, binding, source.Key) is { } outcome)
+                        return outcome;
+                    return FencedReason(owner, source.Key) is { } fenced
+                        ? SourceUseReceiverSupport.Superseded(fenced, null) : null;
+                }
+                var pinnedPreparation = await NativeReceiverPreparation.PrepareAsync<TOwner, PinnedPrepared>(reader,
+                    () => Open(request, request.CommandId).ForSourceUses(source.Key), Early, async (owner, token) =>
+                    {
+                        try
+                        {
+                            var pinned = await VerifyPinnedAsync(owner, source.Requirement, token).ConfigureAwait(false);
+                            if (!pinned.IsSuccess)
+                            {
+                                if (pinned.Error!.IsTransient)
+                                    return Result<PinnedPrepared>.Failure(pinned.Error);
+                                var refusal = await RefuseAsync(request, source, pinned.Error.Message, context, token)
+                                    .ConfigureAwait(false);
+                                return refusal.IsSuccess ? Result<PinnedPrepared>.Success(new PinnedPrepared(refusal))
+                                    : Result<PinnedPrepared>.Failure(refusal.Error!);
+                            }
+                            return Result<PinnedPrepared>.Success(new PinnedPrepared(null));
+                        }
+                        catch (ImmutableContentIntegrityException error)
+                        {
+                            token.ThrowIfCancellationRequested();
+                            return Result<PinnedPrepared>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                error.Message, error is ImmutableContentUnavailableException));
+                        }
+                    }, ct).ConfigureAwait(false);
+                if (!pinnedPreparation.IsSuccess)
+                    return Result<ReceiverOutcome>.Failure(pinnedPreparation.Error!);
+                if (pinnedPreparation.Value!.Outcome is { } known)
+                    return known;
+                if (pinnedPreparation.Value.Value!.Outcome is { } refused)
+                    return refused;
 
                 var step = await executor.ExecuteAsync(Open(request, request.CommandId).ForSourceUses(source.Key), fresh =>
                 {
@@ -97,6 +132,68 @@ public abstract class AuthorizeSourceUseHandler<TOwner, TRequest>(IAggregateRead
             }
         }
     }
+
+    /// <summary>An optional exact historical key selected only as a locator before native receipt verification.</summary>
+    protected virtual ReservationKey? ReceiptSelection(TRequest request) => null;
+
+    /// <summary>
+    /// A pair may bind a selected native receipt's original immutable terms to its actual authoritative parent.
+    /// Null retains full verification; a recorded grant intent is never inferred from absence.
+    /// </summary>
+    protected virtual ValueTask<Result<SourceUseSource>?> VerifyReceiptSourceAsync(TRequest request, TOwner owner,
+        CancellationToken ct) => ValueTask.FromResult<Result<SourceUseSource>?>(null);
+
+    async ValueTask<Result<ReceiverOutcome>?> DecideReceiptAsync(TRequest request, TOwner owner, ReservationKey selection,
+        CancellationToken ct)
+    {
+        var receipt = await VerifyReceiptSourceAsync(request, owner, ct).ConfigureAwait(false);
+        if (receipt is null)
+            return null;
+        var result = receipt.Value;
+        if (!result.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(result.Error!);
+        var source = result.Value!;
+        if (source.SupersededReason is { } reason)
+            return Superseded(source, reason);
+        if (source.Key != selection || source.Key.Target != request.Target ||
+            source.Key.RootOperationId != request.OperationId || source.Requirement.SourceOwner != request.Target)
+            return SourceUseReceiverSupport.Permanent("The authorization differs from the frozen source use requirement.");
+        var provenance = SourceUseReceiverSupport.Child(request.CommandId, source.CommandKind,
+            request.Source.EventId, source.Header, request.Target, clock.GetUtcNow());
+        return Decide(owner, AcceptedOperationBinding.Of(provenance), source.Key);
+    }
+
+    async ValueTask<Result<AuthorizationPrepared>> PrepareAsync(TRequest request, bool classify, CancellationToken ct)
+    {
+        try
+        {
+            var verified = await VerifyAsync(request, ct).ConfigureAwait(false);
+            if (!verified.IsSuccess)
+                return Result<AuthorizationPrepared>.Failure(verified.Error!);
+            var source = verified.Value!;
+            if (source.SupersededReason is { } reason)
+                return Result<AuthorizationPrepared>.Success(new AuthorizationPrepared(null, null, Superseded(source, reason)));
+            if (source.Key.Target != request.Target || source.Key.RootOperationId != request.OperationId ||
+                source.Requirement.SourceOwner != request.Target)
+                return Result<AuthorizationPrepared>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The authorization differs from the frozen source use requirement.", false));
+            var intent = await Content.WriteJsonAsync(request.Target.Realm,
+                Uuid.CreateVersion5(request.CommandId, "source-use-authorization-intent"),
+                SourceUseAuthorizationIntent.Schema, new SourceUseAuthorizationIntent(source.Header, source.ParentIntent,
+                    source.Key, source.Requirement, null, null), ct).ConfigureAwait(false);
+            return Result<AuthorizationPrepared>.Success(new AuthorizationPrepared(source, intent, null));
+        }
+        catch (ImmutableContentIntegrityException error) when (classify)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<AuthorizationPrepared>.Failure(new RequestError(RequestErrorKind.Conflict,
+                error.Message, error is ImmutableContentUnavailableException));
+        }
+    }
+
+    static Result<ReceiverOutcome> Superseded(SourceUseSource source, string reason) => source.RequiresAbort
+        ? Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected(reason, null))
+        : SourceUseReceiverSupport.Superseded(reason, null);
 
     /// <summary>Opens the target owner of <paramref name="request" />, selecting <paramref name="selectedCommandId" />.</summary>
     protected abstract TOwner Open(TRequest request, Uuid selectedCommandId);
@@ -154,6 +251,10 @@ public abstract class AuthorizeSourceUseHandler<TOwner, TRequest>(IAggregateRead
             : SourceUseReceiverSupport.Superseded("The use was settled before it was granted; the key is fenced.",
                 NativeFactReference.Of(owner.Stream, entry.SettleFact!));
     }
+
+    sealed record AuthorizationPrepared(SourceUseSource? Source, ImmutableContentRef? Intent, Result<ReceiverOutcome>? Outcome);
+
+    sealed record PinnedPrepared(Result<ReceiverOutcome>? Outcome);
 
     abstract record Step;
 

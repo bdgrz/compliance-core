@@ -54,7 +54,7 @@ public sealed class EmailChallengeDeliveryWorker(IImmutableContentStore content,
     public async ValueTask<Result<ReceiverOutcome>> DeliverAsync(DeliverEmailChallenge request,
         IExecutionContext context, CancellationToken ct)
     {
-        var address = await HydrateAsync(request.Source, ct).ConfigureAwait(false);
+        var address = await HydrateAsync(request.Source, request.ChallengeId, ct).ConfigureAwait(false);
         if (!address.IsSuccess)
             return Result<ReceiverOutcome>.Failure(address.Error!);
         var owner = address.Value!;
@@ -79,7 +79,7 @@ public sealed class EmailChallengeDeliveryWorker(IImmutableContentStore content,
     public async ValueTask<Result<ReceiverOutcome>> DeliverAsync(DeliverRecoveryChallenge request,
         IExecutionContext context, CancellationToken ct)
     {
-        var address = await HydrateAsync(request.Source, ct).ConfigureAwait(false);
+        var address = await HydrateAsync(request.Source, request.ChallengeId, ct).ConfigureAwait(false);
         if (!address.IsSuccess)
             return Result<ReceiverOutcome>.Failure(address.Error!);
         var owner = address.Value!;
@@ -102,12 +102,12 @@ public sealed class EmailChallengeDeliveryWorker(IImmutableContentStore content,
             ct).ConfigureAwait(false);
     }
 
-    async ValueTask<Result<EmailAddress>> HydrateAsync(NativeFactReference source, CancellationToken ct)
+    async ValueTask<Result<EmailAddress>> HydrateAsync(NativeFactReference source, Uuid challengeId, CancellationToken ct)
     {
         if (source.Stream.Realm != Realm || source.Stream.Area != "email-addresses" ||
             !Uuid.TryParse(source.Stream.Resource, CultureInfo.InvariantCulture, out var addressId))
             return Invalid<EmailAddress>("The source fact is not on an email address stream.");
-        var address = await reader.HydrateAsync(new EmailAddress(addressId, Uuid.Empty, null), ct).ConfigureAwait(false);
+        var address = await reader.HydrateAsync(new EmailAddress(addressId, Uuid.Empty, null, challengeId), ct).ConfigureAwait(false);
         return address.Address is null
             ? Invalid<EmailAddress>("The email address of the source fact does not exist.")
             : Result<EmailAddress>.Success(address);

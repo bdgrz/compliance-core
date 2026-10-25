@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
@@ -51,11 +52,13 @@ sealed class SettleEngagementPersonalDecisionHandler(IAggregateReader reader, IA
             return Result<ReceiverOutcome>.Failure(EngagementPersonalDecisionVerifier.Transient(
                 "The authorization of the personal decision is not visible yet."));
 
-        var child = await ChildFactAsync(owner.TenantId, intent, ct).ConfigureAwait(false);
-        if (child is null)
+        var child = await ChildFactAsync(owner.TenantId, intent, command.Intent, decision.Authorized, ct).ConfigureAwait(false);
+        if (child.Invalid)
+            return SourceUseReceiverSupport.Permanent("The materialized child belongs to another admitted first owner, intent or authorization.");
+        if (child.Fact is null)
             return Result<ReceiverOutcome>.Failure(EngagementPersonalDecisionVerifier.Transient(
                 "The materialized personal decision is not visible yet."));
-        if (child != command.Source)
+        if (child.Fact != command.Source)
             return SourceUseReceiverSupport.Permanent("The source is not the materialized fact of this decision.");
 
         for (var attempt = 1; ; attempt++)
@@ -63,7 +66,7 @@ sealed class SettleEngagementPersonalDecisionHandler(IAggregateReader reader, IA
             try
             {
                 var step = await executor.ExecuteAsync(new ServiceEngagementIndependence(owner.TenantId,
-                    command.EngagementId, command.CommandId), fresh =>
+                    command.EngagementId, command.CommandId, command.OperationId), fresh =>
                     {
                         switch (fresh.Acceptance.Decide(binding))
                         {
@@ -73,6 +76,10 @@ sealed class SettleEngagementPersonalDecisionHandler(IAggregateReader reader, IA
                             case NativeAcceptanceDecision.Conflict:
                                 return AggregateOutcome.Discard(Result<Step>.Failure(AcceptedAppendResult.ConflictError));
                         }
+
+                        if (fresh.ReplayCut.Digest != owner.ReplayCut.Digest)
+                            return AggregateOutcome.Discard(Result<Step>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                "The engagement native prefix changed during receiver preparation; retry from its exact current cut.", true)));
 
                         if (fresh.DecisionOf(command.OperationId) is { Materialized: { } existing })
                             return AggregateOutcome.Discard(Result<Step>.Success(
@@ -97,21 +104,36 @@ sealed class SettleEngagementPersonalDecisionHandler(IAggregateReader reader, IA
     }
 
     /// <summary>The materialized child fact of the decision on its own owner, once visible.</summary>
-    async ValueTask<NativeFactReference?> ChildFactAsync(Uuid tenantId, EngagementPersonalDecisionIntent intent,
-        CancellationToken ct)
+    async ValueTask<(NativeFactReference? Fact, bool Invalid)> ChildFactAsync(Uuid tenantId, EngagementPersonalDecisionIntent intent,
+        ImmutableContentRef parentIntent, EngagementPersonalDecisionAuthorized authorization, CancellationToken ct)
     {
         if (intent.Kind == EngagementPersonalDecisionKind.ManagementAcknowledgement)
         {
             var acknowledgement = await reader.HydrateAsync(
                 new EngagementManagementAcknowledgement(tenantId, intent.DecisionId), ct).ConfigureAwait(false);
             return acknowledgement.Acknowledged is { } fact
-                ? NativeFactReference.Of(acknowledgement.Stream, fact)
-                : null;
+                ? ValidChild(fact, fact.Intent, acknowledgement.Stream, intent, parentIntent, authorization)
+                : (null, false);
         }
 
         var partner = await reader.HydrateAsync(new PartnerIndependenceDecision(tenantId, intent.DecisionId), ct)
             .ConfigureAwait(false);
-        return partner.Recorded is { } recorded ? NativeFactReference.Of(partner.Stream, recorded) : null;
+        return partner.Recorded is { } recorded
+            ? ValidChild(recorded, recorded.Intent, partner.Stream, intent, parentIntent, authorization)
+            : (null, false);
+    }
+
+    static (NativeFactReference? Fact, bool Invalid) ValidChild(DomainEvent fact, ImmutableContentRef? actualIntent,
+        EventStreamAddress child, EngagementPersonalDecisionIntent intent, ImmutableContentRef parentIntent,
+        EngagementPersonalDecisionAuthorized authorization)
+    {
+        var operation = ((INativeOperationFact)fact).Operation;
+        var valid = actualIntent == parentIntent && operation.Owner == child &&
+            operation.RootOperationId == intent.Header.RootOperationId && operation.FirstOwner == intent.Header.FirstOwner &&
+            operation.CausationEventId == authorization.Metadata.EventId && operation.Actor == intent.Header.OriginalActor &&
+            operation.AuthoredIntentSha256 == intent.Header.AuthoredIntentSha256 && operation.Episode == intent.Header.Episode &&
+            operation.OriginalExpectedRevision == intent.Header.OriginalExpectedRevision;
+        return valid ? (NativeFactReference.Of(child, fact), false) : (null, true);
     }
 
     sealed record Step(NativeFactReference Fact, bool Applied);

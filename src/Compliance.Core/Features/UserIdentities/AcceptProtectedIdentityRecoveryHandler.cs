@@ -30,26 +30,31 @@ public sealed class AcceptProtectedIdentityRecoveryHandler(IdentityRecoveryRecei
         if (!proofs.IsSuccess)
             return Result<ReceiverOutcome>.Failure(proofs.Error!);
 
-        var recovery = await support.Reader.HydrateAsync(IdentityRecoveryReceiverSupport.RecoveryOf(request.ChallengeId),
-            ct).ConfigureAwait(false);
-        var old = await support.Reader.HydrateAsync(new UserIdentity(frozen.OldIdentityId), ct).ConfigureAwait(false);
-        var replacement = await support.Reader.HydrateAsync(new UserIdentity(frozen.ReplacementIdentityId), ct)
-            .ConfigureAwait(false);
         var provenance = IdentityRecoveryReceiverSupport.Provenance(request, nameof(AcceptProtectedIdentityRecovery),
             target, frozen, verified.Value!.EventId);
-        return await support.ApplyAsync(
+        return await support.ApplyAsync<IdentityRecovery, ProtectedSlots>(
             () => IdentityRecoveryReceiverSupport.RecoveryOf(request.ChallengeId, request.CommandId),
             current => current.Acceptance, AcceptedOperationBinding.Of(provenance),
-            current =>
+            async (_, cancel) =>
             {
-                if (current.State == IdentityRecovery.Stage.Rejected || old.IsSettledFor(request.ChallengeId) ||
-                    replacement.IsSettledFor(request.ChallengeId))
+                var old = await support.Reader.HydrateAsync(new UserIdentity(frozen.OldIdentityId, request.ChallengeId), cancel)
+                    .ConfigureAwait(false);
+                var replacement = await support.Reader.HydrateAsync(new UserIdentity(frozen.ReplacementIdentityId, request.ChallengeId), cancel)
+                    .ConfigureAwait(false);
+                return Result<ProtectedSlots>.Success(new ProtectedSlots(old, replacement));
+            },
+            (current, slots) =>
+            {
+                if (current.State == IdentityRecovery.Stage.Rejected || slots.Old.IsSettledFor(request.ChallengeId) ||
+                    slots.Replacement.IsSettledFor(request.ChallengeId))
                     return IdentityRecoveryReceiverSupport.Superseded("The preparation was rejected or its protection settled.");
-                return old.IsProtectedFor(request.ChallengeId) && replacement.IsProtectedFor(request.ChallengeId)
+                return slots.Old.IsProtectedFor(request.ChallengeId) && slots.Replacement.IsProtectedFor(request.ChallengeId)
                     ? null
                     : IdentityRecoveryReceiverSupport.Wait("A protected slot is not readable yet.");
             },
-            (IdentityRecovery current) => current.Accept(provenance, request.Intent, request.ProtectionProofs),
+            (current, _) => current.Accept(provenance, request.Intent, request.ProtectionProofs),
             context, ct).ConfigureAwait(false);
     }
+
+    sealed record ProtectedSlots(UserIdentity Old, UserIdentity Replacement);
 }

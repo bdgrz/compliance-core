@@ -812,30 +812,63 @@
     },
     {
       "id": "client-service-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "client-service-native-qualification.json",
       "combinedProductionFileReviews": 42,
       "focusedPassed": 363,
       "httpPassed": 29,
-      "unitPassed": 6670
+      "unitPassed": 6670,
+      "pr": 1135,
+      "mergeCommit": "54202884eabcacc1eee26789a3fe3894d2f104d7"
     },
     {
       "id": "weekly-native-receivers",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "weekly-native-receivers-qualification.json",
       "combinedProductionFileReviews": 42,
       "focusedPassed": 363,
       "httpPassed": 29,
-      "unitPassed": 6670
+      "unitPassed": 6670,
+      "pr": 1135,
+      "mergeCommit": "54202884eabcacc1eee26789a3fe3894d2f104d7"
     },
     {
       "id": "import-receiver-preparation",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "import-receiver-preparation-qualification.json",
       "combinedProductionFileReviews": 42,
       "focusedPassed": 363,
       "httpPassed": 29,
-      "unitPassed": 6670
+      "unitPassed": 6670,
+      "pr": 1135,
+      "mergeCommit": "54202884eabcacc1eee26789a3fe3894d2f104d7"
+    },
+    {
+      "id": "service-engagement-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "service-engagement-native-qualification.json",
+      "productionFileReviews": 71,
+      "focusedPassed": 1904,
+      "httpPassed": 168,
+      "unitPassed": 6742
+    },
+    {
+      "id": "identity-recovery-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "identity-recovery-native-qualification.json",
+      "productionFileReviews": 71,
+      "focusedPassed": 1904,
+      "httpPassed": 168,
+      "unitPassed": 6742
+    },
+    {
+      "id": "access-source-use-preparation",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "access-source-use-preparation-qualification.json",
+      "productionFileReviews": 71,
+      "focusedPassed": 1904,
+      "httpPassed": 168,
+      "unitPassed": 6742
     }
   ],
   "resolved": [
@@ -882,11 +915,10 @@
     }
   ],
   "continuingPreparation": [
-    "ServiceEngagement compact lifetime/full history/current decision and selected root preparation; exact child settlement binding.",
-    "UserIdentity/EmailAddress compact recovery authorities/full history/actual physical proofs/native owning and receiver preparation.",
-    "Generic Access SourceUse pairs; then ComplianceProgram selected native3 and full as-of history.",
-    "Weekly Schedule technical capture/result journal after explicit selected owner placement correction; exact ScheduleKey source cut and original zero/partial page results.",
-    "WorkAssignment selected native4/full history; TenantManagerGuard current contributors/fences and remaining evidence/finite owner inventory.",
-    "AuditPackage successful output replay candidate from refreshed Jev signal requires actual frozen-body recovery regression before change."
+    "WorkAssignment65 frozen; additional oldAPI2 pendingqualification, then rootintake. TenantManagerGuard next on sameagent.",
+    "ComplianceProgram native3/current/asof history active; rootoutside20testfixtures assigned; ClientService product native3 queued.",
+    "EvidenceRedaction selected native2/current/fullhistory/sourceproofs active; fourgenuineoldAPI casesqualified; generic16MiB responsebytebound remains explicit, no lifetimecountcap/truncation. AuditPopulationnative6 queued.",
+    "RootweeklySchedule technical capture/page/result journal unimplemented after explicitplacementcorrection andgenuine3oldAPI cases; no newbusinessroot or globalatomicity claim.",
+    "Fresh selected-signature finite-owner triage70candidates needsactualsource/behavior qualification; current/caplessowner alone doesnotprove native commandcompletion. Workforce/assertion/representation/preferences/other selectedowners remain towork or preciselyqualify."
   ]
 }

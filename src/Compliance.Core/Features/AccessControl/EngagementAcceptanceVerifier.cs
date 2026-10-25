@@ -31,7 +31,7 @@ sealed class EngagementAcceptanceVerifier(IAggregateReader reader, IImmutableCon
             engagementId != Uuid.Empty && engagementId != streamEngagement)
             return LoadedOperation.Failed(Permanent("The receiver names another operation, engagement or tenant."));
         var owner = await reader.HydrateAsync(new ServiceEngagementIndependence(tenantId, streamEngagement,
-            selectedLogicalId), ct).ConfigureAwait(false);
+            selectedLogicalId, operationId), ct).ConfigureAwait(false);
         if (owner.OperationOf(operationId) is not { } operation)
             return LoadedOperation.Failed(Transient("The admitted acceptance is not visible yet."));
         var expected = sourceKind switch
@@ -57,6 +57,9 @@ sealed class EngagementAcceptanceVerifier(IAggregateReader reader, IImmutableCon
         {
             intent = await content.ReadJsonAsync<EngagementIndependenceIntent>(realm, intentReference, ct)
                 .ConfigureAwait(false);
+            if (intent.Header is null || intent.SourceUses is null || intent.Subjects is null ||
+                intent.CompleteServiceHistory is null || intent.Evidence is null)
+                return LoadedOperation.Failed(Permanent("The frozen acceptance is missing required immutable terms."));
             requirements = await content.ReadSelectionAsync<SourceUseRequirement>(realm, intent.SourceUses, ct)
                 .ConfigureAwait(false);
             subjects = await content.ReadSelectionAsync<PracticeSubjectIntent>(realm, intent.Subjects, ct)
@@ -64,10 +67,15 @@ sealed class EngagementAcceptanceVerifier(IAggregateReader reader, IImmutableCon
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return LoadedOperation.Failed(Permanent($"The frozen acceptance cannot be verified: {exception.Message}"));
+            return LoadedOperation.Failed(exception is ImmutableContentUnavailableException
+                ? Transient($"The frozen acceptance is unavailable: {exception.Message}")
+                : Permanent($"The frozen acceptance cannot be verified: {exception.Message}"));
         }
 
-        if (intent.Header.RootOperationId != operationId || intent.EngagementId != streamEngagement ||
+        if (intentReference.Schema != EngagementIndependenceIntent.Schema ||
+            !EngagementIntentBinding.Matches(intent.Header, operation.RequestedOperation.Operation) ||
+            intent.EngagementRevision != operation.RequestedOperation.Operation.OriginalExpectedRevision ||
+            intent.Header.RootOperationId != operationId || intent.EngagementId != streamEngagement ||
             intent.Header.FirstOwner != owner.Stream || intent.OperationKind != operation.Kind ||
             intent.Header.AuthoredIntentSha256 != operation.RequestedOperation.Operation.AuthoredIntentSha256)
             return LoadedOperation.Failed(Permanent("The command differs from the frozen acceptance intent."));
@@ -152,7 +160,7 @@ sealed class EngagementAcceptanceVerifier(IAggregateReader reader, IImmutableCon
             return null;
         var intent = loaded.Intent!;
         var reference = await content.WriteJsonAsync(IndependenceContent.Realm(EngagementIndependenceIntent.TenantOf(intent.Header)),
-            Uuid.CreateVersion5(intent.Header.RootOperationId, $"practice-subject:{subject.Key}"),
+            EngagementAcceptanceEffects.ContentId(intent.Header.FirstOwner, intent.Header.RootOperationId, $"practice-subject:{subject.Key}"),
             PracticeSubjectIntent.Schema, subject, ct).ConfigureAwait(false);
         return new SourceUseRequirement(subject.Stream, new NativeFactReference(subject.Stream, Uuid.Empty, 0), 0,
             SourceUsePurpose.ActualStaffAssignment, reference);

@@ -142,7 +142,7 @@ public sealed class IndependenceCatalogNativeReadTests
         Assert.Equal(unavailable, admission.Error!.IsTransient);
         Assert.Equal(RequestErrorKind.Conflict, evidence.Error?.Kind);
         Assert.Equal(unavailable, evidence.Error!.IsTransient);
-        Assert.Null(owner.DecisionOf(request.EvaluationId));
+        Assert.Null((await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).DecisionOf(request.EvaluationId));
     }
 
     static async Task DamageAsync(IKvClient client, ImmutableContentRef reference, bool unavailable)

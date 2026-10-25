@@ -1,0 +1,61 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 1904,
+    "focusedQualification": "1894initialpass+10newscopedtestfixturescorrectedandisolated10pass; allsameproduction in finalwholeunit",
+    "productionHttpPassed": 168,
+    "backendUnit": {
+      "passed": 6742,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "coverageExport": "pass1",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass(historical catalog counters not live completion)",
+    "format": "pass",
+    "exactCurrentProductionSourceAndDependencyHashes": "71verified",
+    "currentAggregateHandlerReactorReviews": "940current after29 refresh"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 71,
+    "fileSignalsAtOrAbove065": 4,
+    "triage": "engagement-identity-access-file-triage.json",
+    "integration": {
+      "decision": {
+        "type": "choice",
+        "choice": "merge_scoped_repair",
+        "confidence": 0.82,
+        "probabilities": {
+          "merge_scoped_repair": 0.88,
+          "refine_before_merge": 0.11,
+          "blocked_by_missing_authority": 0.01
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.18
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.13
+      }
+    },
+    "adopted": "Squash merge scoped repair after local gates, without waiting CI per explicit user direction; continue all unblocked work."
+  },
+  "scope": "Compact ServiceEngagement current/live/selected authority plus complete verified external chronology; native async preparation, authenticated reactors and exact child settlement binding.",
+  "genuineOldApiRedFailed": 5,
+  "qualification": [
+    "Removed lifetime lifecycle/personal/acceptance/directory history collections from owner. Complete uncapped transient original reducer and finalized full native payload/metadata prefix support all actual consumers; current pointers are only the2fixed decision kinds.",
+    "Lifecycle/revocation/personal/acceptance/staff/directory producers prepare reads/guards/immutable candidates inside native recheck boundary and guard exact captured target prefix through append. Pending acceptance fences new personal decisions. Current source-use/authority checks remain.",
+    "Reactors authenticate actual typed physical checkpoint/source payload and full metadata before effects; directory receipts stay denial-only and bind exact source causes. Raw list scan only discovers scoped identities; current authoritativeGet supplies result/status/revision. Root physicalbound check preserves existing exact-cause Conflict2negatives before missing-owner guard.",
+    "Same caller child UUID across two first owners cannot falsely settle another engagement pin: actual child intent/header/root/firstowner/actor/intent/revision/episode and authorization cause must match. Selected child addresses remain tenant/evaluationID orackID.",
+    "Physical subject/completion blob namespace includes actual firstowner/root/schema. Old root-only aliases are not guessed/migrated. Command DTOs/factv1tags/routes/resultschemas/statuses unchanged; stricter native read preparation is not retained-data cutover qualification."
+  ],
+  "remainingWork": [
+    "Absent realmwide operation binding leaves cross-firstowner samecallerID child collision recovery unqualified and failclosed; no new globalregistry/address/protocol invented. Bare operation status qualification unchanged."
+  ]
+}

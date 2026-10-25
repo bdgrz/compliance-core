@@ -34,7 +34,7 @@ public sealed class ServiceEngagementAcceptanceTests
         var owner = await host.HydrateAsync(new ServiceEngagementIndependence(host.Tenant, engagement));
         Assert.Equal("accepted", owner.Status);
         Assert.Equal(2UL, owner.Revision);
-        var operation = owner.OperationOf(command.CommandId)!;
+        var operation = (await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).OperationOf(command.CommandId)!;
         Assert.NotNull(operation.Authorized);
         Assert.NotNull(operation.Completed);
         Assert.Null(operation.Rejected);

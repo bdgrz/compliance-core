@@ -43,21 +43,25 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public const long AcceptanceGeneration = 1;
 
     readonly Uuid _tenantId;
-    readonly List<ServiceEngagementMutationRecorded> _changes = [];
+    ServiceEngagementMutationRecorded? _latestChange;
+    readonly Uuid _selectedRootId;
+    EngagementPersonalDecisionRecord? _selectedDecision;
+    EngagementAcceptanceRecord? _selectedOperation;
+    long _decisionOrdinal;
     readonly Dictionary<Uuid, EngagementPersonalDecisionRecord> _decisions = [];
     readonly Dictionary<string, EngagementPersonalDecisionRecord> _pointers = [];
     readonly Dictionary<Uuid, EngagementAcceptanceRecord> _operations = [];
-    readonly List<ImmutableContentRef> _acceptanceHistory = [];
-    readonly List<DirectoryIndependenceReevaluated> _receipts = [];
     ImmutableContentRef? _acceptanceResult;
     ulong _revision;
     string _status = "none";
 
     /// <summary>Opens one engagement, selecting the logical operation to resolve.</summary>
-    public ServiceEngagementIndependence(Uuid tenantId, Uuid engagementId, Uuid selectedLogicalId = default)
+    public ServiceEngagementIndependence(Uuid tenantId, Uuid engagementId, Uuid selectedLogicalId = default,
+        Uuid selectedRootId = default)
         : base(AggregateIdentity.Create(nameof(ServiceEngagementIndependence), tenantId, engagementId),
             new EventStreamAddress(tenantId.ToString(), Area, engagementId.ToString()))
     {
+        _selectedRootId = selectedRootId == Uuid.Empty ? selectedLogicalId : selectedRootId;
         _tenantId = tenantId;
         EngagementId = engagementId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
@@ -71,27 +75,26 @@ public sealed class ServiceEngagementIndependence : Aggregate
                 change.Operation.CommandKind != change.Intent || change.Revision != _revision + 1 ||
                 change.FirstResponse is null || change.OperationResult is null ||
                 change.Intent is not (CreateKind or AmendKind or ProposeKind or WithdrawKind or CloseKind) ||
-                creating != (_revision == 0) || _status == "closed" ||
+                creating != (_revision == 0) || _status == "closed" || HasPendingPersonalDecision || HasPendingOperation ||
                 creating && change.OperationId != EngagementId)
                 throw new InvalidOperationException(
                     "An engagement draft changes once per command, in order, until it is closed.");
             _status = change.Intent == CloseKind ? "closed" : "draft";
             _revision = change.Revision;
-            _changes.Add(change);
+            _latestChange = change;
         });
         On<ServiceEngagementAssignmentRevoked>(revoked =>
         {
             Acceptance.Observe(revoked);
             if (revoked.TenantId != _tenantId || revoked.EngagementId != EngagementId ||
                 revoked.Operation.Owner != Stream || revoked.OperationId != revoked.Operation.LogicalId ||
-                revoked.Revision != _revision + 1 || _status != "accepted" || revoked.FirstResponse is null ||
+                revoked.Revision != _revision + 1 || _status != "accepted" || HasPendingPersonalDecision || HasPendingOperation || revoked.FirstResponse is null ||
                 revoked.OperationResult is null)
                 throw new InvalidOperationException(
                     "An actual assignment is revoked on an accepted engagement of its own tenant, in order.");
             _status = revoked.StaffMemberId is null ? "closed" : _status;
             _revision = revoked.Revision;
             _acceptanceResult = revoked.OperationResult;
-            _acceptanceHistory.Add(revoked.OperationResult);
         });
         On<EngagementPersonalDecisionAdmitted>(admitted =>
         {
@@ -100,11 +103,13 @@ public sealed class ServiceEngagementIndependence : Aggregate
                 admitted.Operation.LogicalId != admitted.Operation.RootOperationId ||
                 admitted.Operation.CommandKind is not (ManagementKind or PartnerKind) ||
                 admitted.Revision != (long)_revision || admitted.Generation != DecisionGeneration ||
-                _status != "draft" || admitted.FirstResponse is null ||
+                _status != "draft" || HasPendingOperation || admitted.FirstResponse is null ||
                 !_decisions.TryAdd(admitted.Operation.RootOperationId,
-                    new EngagementPersonalDecisionRecord(admitted, _decisions.Count)))
+                    new EngagementPersonalDecisionRecord(admitted, _decisionOrdinal++)))
                 throw new InvalidOperationException(
                     "A personal decision is admitted once, on an open draft, at its current content revision.");
+            if (admitted.Operation.RootOperationId == _selectedRootId)
+                _selectedDecision = _decisions[admitted.Operation.RootOperationId];
         });
         On<EngagementPersonalDecisionAuthorized>(authorized =>
         {
@@ -123,6 +128,7 @@ public sealed class ServiceEngagementIndependence : Aggregate
                 decision.Authorized is not null || decision.Canceled is not null)
                 throw new InvalidOperationException("Only an unauthorized personal decision is canceled once.");
             decision.Canceled = canceled;
+            _decisions.Remove(canceled.Operation.RootOperationId);
         });
         On<EngagementPersonalDecisionMaterialized>(materialized =>
         {
@@ -132,6 +138,7 @@ public sealed class ServiceEngagementIndependence : Aggregate
                 decision.Authorized is null || decision.Materialized is not null)
                 throw new InvalidOperationException("Only an authorized personal decision is materialized once.");
             decision.Materialized = materialized;
+            _decisions.Remove(materialized.Operation.RootOperationId);
             var kind = decision.Admitted.Operation.CommandKind;
             if (!_pointers.TryGetValue(kind, out var current) || current.Ordinal < decision.Ordinal)
                 _pointers[kind] = decision;
@@ -163,10 +170,10 @@ public sealed class ServiceEngagementIndependence : Aggregate
             var operation = CompleteOperation(recorded.Operation, recorded.TenantId, recorded.OperationId,
                 recorded.Revision, recorded.OperationResult, EngagementIndependenceOperationKind.Acceptance, "draft");
             operation.Completed = recorded;
+            _operations.Remove(recorded.Operation.RootOperationId);
             _status = "accepted";
             _revision = recorded.Revision;
             _acceptanceResult = recorded.OperationResult;
-            _acceptanceHistory.Add(recorded.OperationResult!);
         });
         On<ServiceEngagementStaffAssigned>(assigned =>
         {
@@ -177,9 +184,9 @@ public sealed class ServiceEngagementIndependence : Aggregate
                 assigned.Revision, assigned.OperationResult, EngagementIndependenceOperationKind.StaffAssignment,
                 "accepted");
             operation.Completed = assigned;
+            _operations.Remove(assigned.Operation.RootOperationId);
             _revision = assigned.Revision;
             _acceptanceResult = assigned.OperationResult;
-            _acceptanceHistory.Add(assigned.OperationResult!);
         });
         On<DirectoryIndependenceReevaluated>(reevaluated =>
         {
@@ -190,9 +197,19 @@ public sealed class ServiceEngagementIndependence : Aggregate
                 reevaluated.OperationResult is null)
                 throw new InvalidOperationException(
                     "A directory receipt is recorded once, on an accepted engagement of its own tenant, in order.");
-            _receipts.Add(reevaluated);
             _revision = reevaluated.Revision;
         });
+    }
+
+    internal FirmIndependenceReplayCut ReplayCut { get; } = new();
+    internal Uuid SelectedRootId => _selectedRootId;
+    internal IReadOnlyDictionary<Uuid, EngagementPersonalDecisionRecord> LiveDecisions => _decisions;
+    internal IReadOnlyDictionary<Uuid, EngagementAcceptanceRecord> LiveOperations => _operations;
+    protected override void Apply(DomainEvent ev)
+    {
+        if (!ev.Metadata.IsAudit)
+            ReplayCut.Observe(ev);
+        base.Apply(ev);
     }
 
     /// <summary>The engagement this owner serves.</summary>
@@ -213,11 +230,10 @@ public sealed class ServiceEngagementIndependence : Aggregate
     /// <summary>True once a draft was created.</summary>
     public bool Exists => _revision > 0;
 
-    /// <summary>Every accepted lifecycle change of this engagement, in order; the result of each is the view after it.</summary>
-    public IReadOnlyList<ServiceEngagementMutationRecorded> Changes => _changes;
+
 
     /// <summary>The operation result of the latest lifecycle change, which holds the current draft view.</summary>
-    public ImmutableContentRef? LatestResult => _changes.LastOrDefault()?.OperationResult;
+    public ImmutableContentRef? LatestResult => _latestChange?.OperationResult;
 
     /// <summary>
     ///     The retained result of the latest acceptance, staff assignment or revocation, whose view is the current
@@ -225,29 +241,28 @@ public sealed class ServiceEngagementIndependence : Aggregate
     /// </summary>
     public ImmutableContentRef? AcceptanceResult => _acceptanceResult;
 
-    /// <summary>The retained result of every acceptance, staff assignment and revocation, in order.</summary>
-    public IReadOnlyList<ImmutableContentRef> AcceptanceHistory => _acceptanceHistory;
 
-    /// <summary>Every directory receipt of this engagement, in order.</summary>
-    public IReadOnlyList<DirectoryIndependenceReevaluated> DirectoryReceipts => _receipts;
 
-    /// <summary>Every acceptance and staff assignment ever admitted on this engagement, by operation identity.</summary>
-    public IReadOnlyDictionary<Uuid, EngagementAcceptanceRecord> Operations => _operations;
+
+
+
 
     /// <summary>The acceptance or staff assignment of one identity, once admitted.</summary>
-    public EngagementAcceptanceRecord? OperationOf(Uuid operationId) => _operations.GetValueOrDefault(operationId);
+    public EngagementAcceptanceRecord? OperationOf(Uuid operationId) =>
+        _operations.GetValueOrDefault(operationId) ?? (operationId == _selectedRootId ? _selectedOperation : null);
 
     /// <summary>True while an admitted acceptance or staff assignment is neither recorded nor rejected.</summary>
     public bool HasPendingOperation => _operations.Values.Any(operation => operation.IsPending);
 
-    /// <summary>Every personal decision ever admitted on this engagement, by decision identity.</summary>
-    public IReadOnlyDictionary<Uuid, EngagementPersonalDecisionRecord> Decisions => _decisions;
+
 
     /// <summary>True while an admitted decision is neither materialized nor canceled; it pins the content revision.</summary>
     public bool HasPendingPersonalDecision => _decisions.Values.Any(decision => decision.IsPending);
 
     /// <summary>The decision of one identity, once admitted.</summary>
-    public EngagementPersonalDecisionRecord? DecisionOf(Uuid decisionId) => _decisions.GetValueOrDefault(decisionId);
+    public EngagementPersonalDecisionRecord? DecisionOf(Uuid decisionId) =>
+        _decisions.GetValueOrDefault(decisionId) ?? (decisionId == _selectedRootId ? _selectedDecision :
+            _pointers.Values.FirstOrDefault(value => value.Admitted.Operation.RootOperationId == decisionId));
 
     /// <summary>
     ///     The materialized decision that currently stands for a kind: the one admitted last among those materialized,
@@ -292,6 +307,9 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public Result Change(string kind, OperationProvenance operation, ImmutableContentRef change,
         ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(change);
         ArgumentNullException.ThrowIfNull(firstResponse);
@@ -331,6 +349,9 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public Result Revoke(OperationProvenance operation, Uuid? staffMemberId, string reason, ActorReference actor,
         DateTimeOffset recordedAt, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(firstResponse);
         ArgumentNullException.ThrowIfNull(operationResult);
@@ -359,6 +380,8 @@ public sealed class ServiceEngagementIndependence : Aggregate
         if (expectedRevision != (long)_revision)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Reload the engagement revision before deciding on it."));
+        if (HasPendingOperation)
+            return PendingOperationFailure();
         return _status == "draft"
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -372,6 +395,9 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public Result AdmitPersonalDecision(OperationProvenance operation, ImmutableContentRef intent, ulong intentRevision,
         ImmutableContentRef firstResponse)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(firstResponse);
@@ -395,9 +421,12 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public Result AuthorizePersonalDecision(OperationProvenance operation, DateTimeOffset decisionAt,
         ImmutableContentRef authorizationProofs)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(authorizationProofs);
-        if (!_decisions.TryGetValue(operation.RootOperationId, out var decision) || operation.Owner != Stream)
+        if (DecisionOf(operation.RootOperationId) is not { } decision || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only an admitted personal decision of this engagement can be authorized.", true));
         if (decision.Canceled is not null)
@@ -414,8 +443,11 @@ public sealed class ServiceEngagementIndependence : Aggregate
     /// <summary>Cancels the admitted decision before authorization; an authorized decision recovers forward.</summary>
     public Result CancelPersonalDecision(OperationProvenance operation)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
-        if (!_decisions.TryGetValue(operation.RootOperationId, out var decision) || operation.Owner != Stream)
+        if (DecisionOf(operation.RootOperationId) is not { } decision || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only an admitted personal decision of this engagement can be canceled.", true));
         if (decision.Authorized is not null)
@@ -432,8 +464,11 @@ public sealed class ServiceEngagementIndependence : Aggregate
     /// <summary>Releases the content pin of the materialized decision and advances the decision pointer.</summary>
     public Result MaterializePersonalDecision(OperationProvenance operation)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
-        if (!_decisions.TryGetValue(operation.RootOperationId, out var decision) || operation.Owner != Stream ||
+        if (DecisionOf(operation.RootOperationId) is not { } decision || operation.Owner != Stream ||
             decision.Authorized is null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only an authorized personal decision of this engagement can be materialized.", true));
@@ -480,6 +515,9 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public Result AdmitOperation(OperationProvenance operation, ImmutableContentRef intent, ulong intentRevision,
         ImmutableContentRef firstResponse, EngagementIndependenceOperationKind kind)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(firstResponse);
@@ -507,9 +545,12 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public Result AuthorizeOperation(OperationProvenance operation, DateTimeOffset decisionAt,
         ImmutableContentRef authorizationProofs)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(authorizationProofs);
-        if (!_operations.TryGetValue(operation.RootOperationId, out var record) || operation.Owner != Stream)
+        if (OperationOf(operation.RootOperationId) is not { } record || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only an admitted acceptance or staff assignment of this engagement can be authorized.", true));
         if (record.Rejected is not null)
@@ -526,8 +567,11 @@ public sealed class ServiceEngagementIndependence : Aggregate
     /// <summary>Rejects the admitted operation before authorization; an authorized operation recovers forward.</summary>
     public Result RejectOperation(OperationProvenance operation, EngagementIndependenceOperationKind kind)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
-        if (!_operations.TryGetValue(operation.RootOperationId, out var record) || operation.Owner != Stream ||
+        if (OperationOf(operation.RootOperationId) is not { } record || operation.Owner != Stream ||
             record.Kind != kind)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only an admitted operation of this engagement can be rejected.", true));
@@ -550,6 +594,9 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public Result RecordAcceptance(OperationProvenance operation, ImmutableContentRef acceptanceContent,
         ImmutableContentRef operationResult)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(acceptanceContent);
         ArgumentNullException.ThrowIfNull(operationResult);
@@ -567,6 +614,9 @@ public sealed class ServiceEngagementIndependence : Aggregate
         long partnerDutyContinuityStartRevision, ActorReference actor, DateTimeOffset recordedAt,
         ImmutableContentRef operationResult)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(assignedStaffContent);
         ArgumentNullException.ThrowIfNull(partnerStaffContent);
@@ -595,6 +645,9 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public Result RecordDirectoryReevaluation(OperationProvenance operation, ImmutableContentRef content,
         ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(firstResponse);
@@ -612,7 +665,7 @@ public sealed class ServiceEngagementIndependence : Aggregate
 
     Result ReadyToComplete(OperationProvenance operation, EngagementIndependenceOperationKind kind)
     {
-        if (!_operations.TryGetValue(operation.RootOperationId, out var record) || operation.Owner != Stream ||
+        if (OperationOf(operation.RootOperationId) is not { } record || operation.Owner != Stream ||
             record.Kind != kind)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only an admitted operation of this engagement can be recorded.", true));
@@ -636,10 +689,12 @@ public sealed class ServiceEngagementIndependence : Aggregate
         var operation = ((INativeOperationFact)fact).Operation;
         if (owner != Stream || operation.Owner != Stream || operation.LogicalId != operation.RootOperationId ||
             operation.CommandKind != commandKind || revision != (long)_revision || generation != AcceptanceGeneration ||
-            _status != requiredStatus || firstResponse is null || HasPendingOperation ||
+            _status != requiredStatus || firstResponse is null || HasPendingOperation || HasPendingPersonalDecision ||
             !_operations.TryAdd(operation.RootOperationId, new EngagementAcceptanceRecord(fact, kind) { Intent = intent }))
             throw new InvalidOperationException(
                 "An acceptance or staff assignment is admitted once, alone, at the current content revision.");
+        if (operation.RootOperationId == _selectedRootId)
+            _selectedOperation = _operations[operation.RootOperationId];
     }
 
     void ApplyRejected(DomainEvent fact, EventStreamAddress owner, ImmutableContentRef intent,
@@ -647,17 +702,18 @@ public sealed class ServiceEngagementIndependence : Aggregate
     {
         Acceptance.Observe(fact);
         var operation = ((INativeOperationFact)fact).Operation;
-        if (!_operations.TryGetValue(operation.RootOperationId, out var record) || owner != Stream ||
+        if (OperationOf(operation.RootOperationId) is not { } record || owner != Stream ||
             record.Kind != kind || intent != record.Intent || record.Authorized is not null || !record.IsPending)
             throw new InvalidOperationException("Only an unauthorized, pending operation is rejected once.");
         record.Rejected = fact;
+        _operations.Remove(operation.RootOperationId);
     }
 
     EngagementAcceptanceRecord CompleteOperation(OperationProvenance operation, Uuid tenantId, Uuid operationId,
         ulong revision, ImmutableContentRef? result, EngagementIndependenceOperationKind kind, string requiredStatus)
     {
         if (tenantId != _tenantId || operation.Owner != Stream || operationId != operation.RootOperationId ||
-            !_operations.TryGetValue(operation.RootOperationId, out var record) || record.Kind != kind ||
+            OperationOf(operation.RootOperationId) is not { } record || record.Kind != kind ||
             record.Authorized is null || !record.IsPending || revision != _revision + 1 || _status != requiredStatus ||
             result is null)
             throw new InvalidOperationException(
