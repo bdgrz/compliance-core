@@ -17,14 +17,14 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
     /// <summary>Stream area of every designation owner.</summary>
     public const string Area = "firm-professional-duty-designations";
 
-    readonly Dictionary<Uuid, ProfessionalDutyChangeAccepted> _accepted = [];
-    readonly Dictionary<Uuid, DomainEvent> _terminal = [];
-    Uuid? _pending;
+    ProfessionalDutyChangeAccepted? _pending;
+    ProfessionalDutyChangeAccepted? _selectedAccepted;
+    DomainEvent? _selectedTerminal;
     DomainEvent? _latest;
     ulong _revision;
 
     /// <summary>Opens the designation of one subject, duty and scope, selecting the logical operation to resolve.</summary>
-    public FirmProfessionalDutyDesignation(Uuid userId, string duty, Uuid? tenantId, Uuid selectedLogicalId = default)
+    public FirmProfessionalDutyDesignation(Uuid userId, string duty, Uuid? tenantId, Uuid selectedLogicalId = default, Uuid selectedRootId = default)
         : base(IdentityOf(userId, duty, tenantId),
             new EventStreamAddress(ProfessionalDutyContent.Realm, Area, IdentityOf(userId, duty, tenantId).ToString()))
     {
@@ -32,17 +32,19 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
         Duty = duty;
         TenantId = tenantId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
+        SelectedRootId = selectedRootId == Uuid.Empty ? selectedLogicalId : selectedRootId;
         Uses = new SourceUseReservations(Stream);
         On<ProfessionalDutyChangeAccepted>(accepted =>
         {
             Acceptance.Observe(accepted);
             if (_pending is not null || accepted.Owner != Stream || accepted.Operation.Owner != Stream ||
                 accepted.Operation.LogicalId != accepted.Operation.RootOperationId ||
-                accepted.Revision != (long)_revision || accepted.FirstResponse is null ||
-                !_accepted.TryAdd(accepted.Operation.RootOperationId, accepted))
+                accepted.Revision != (long)_revision || accepted.FirstResponse is null)
                 throw new InvalidOperationException(
                     "A designation accepts one new change at a time, at its own revision.");
-            _pending = accepted.Operation.RootOperationId;
+            _pending = accepted;
+            if (accepted.Operation.RootOperationId == SelectedRootId)
+                _selectedAccepted = accepted;
         });
         On<FirmProfessionalDutyDesignationRecorded>(recorded =>
         {
@@ -59,16 +61,17 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
         On<ProfessionalDutyChangeRejected>(rejected =>
         {
             Acceptance.Observe(rejected);
-            if (_pending != rejected.Operation.RootOperationId || rejected.Owner != Stream ||
-                rejected.Operation.Owner != Stream || rejected.Intent != _accepted[_pending.Value].Intent)
+            if (_pending?.Operation.RootOperationId != rejected.Operation.RootOperationId || rejected.Owner != Stream ||
+                rejected.Operation.Owner != Stream || rejected.Intent != _pending!.Intent)
                 throw new InvalidOperationException("Only the exact pending change can be rejected.");
-            _terminal.Add(_pending.Value, rejected);
+            if (rejected.Operation.RootOperationId == SelectedRootId)
+                _selectedTerminal = rejected;
             _pending = null;
         });
         On<FirmProfessionalDutyDesignationEngagementUseAuthorized>(granted =>
         {
             Acceptance.Observe(granted);
-            if (_latest is null || granted.Revision != (long)_revision)
+            if (_latest is null || _pending is not null || granted.Revision != (long)_revision)
                 throw new InvalidOperationException("A designation use is granted on a recorded designation at its held revision.");
             Uses.ApplyGranted(SourceUsePurpose.EngagementPersonalDecision, granted);
         });
@@ -78,6 +81,11 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
             Uses.ApplySettled(SourceUsePurpose.EngagementPersonalDecision, settled);
         });
     }
+
+    internal FirmIndependenceReplayCut ReplayCut { get; } = new();
+
+    /// <summary>The single historical root deliberately selected for this hydration.</summary>
+    public Uuid SelectedRootId { get; }
 
     /// <summary>The active grants, receiver generation and fences of this designation's source uses.</summary>
     public SourceUseReservations Uses { get; }
@@ -98,7 +106,7 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
     public ulong Revision => _revision;
 
     /// <summary>The accepted change that is neither applied nor rejected yet.</summary>
-    public ProfessionalDutyChangeAccepted? Pending => _pending is { } id ? _accepted[id] : null;
+    public ProfessionalDutyChangeAccepted? Pending => _pending;
 
     /// <summary>The latest recorded or revoked fact, whose designation content is the current view.</summary>
     public INativeOperationFact? Latest => _latest as INativeOperationFact;
@@ -124,11 +132,15 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
         AggregateIdentity.Create(nameof(FirmProfessionalDutyDesignation), userId, duty,
             tenantId is { } tenant ? $"tenant:{tenant}" : "platform");
 
-    /// <summary>The accepted change of an assertion, once recorded.</summary>
-    public ProfessionalDutyChangeAccepted? AcceptedFor(Uuid assertionId) => _accepted.GetValueOrDefault(assertionId);
+    /// <summary>The pending or explicitly selected accepted change of an assertion.</summary>
+    public ProfessionalDutyChangeAccepted? AcceptedFor(Uuid assertionId) =>
+        _pending?.Operation.RootOperationId == assertionId ? _pending :
+        SelectedRootId == assertionId ? _selectedAccepted : null;
 
-    /// <summary>The recorded, revoked or rejected fact that ended the change of an assertion, once recorded.</summary>
-    public DomainEvent? TerminalFor(Uuid assertionId) => _terminal.GetValueOrDefault(assertionId);
+    /// <summary>The selected terminal receipt, or the current applied decision when it names this assertion.</summary>
+    public DomainEvent? TerminalFor(Uuid assertionId) =>
+        SelectedRootId == assertionId ? _selectedTerminal :
+        (_latest as INativeOperationFact)?.Operation.RootOperationId == assertionId ? _latest : null;
 
     /// <summary>True when the change of an assertion was rejected.</summary>
     public bool IsRejected(Uuid assertionId) => TerminalFor(assertionId) is ProfessionalDutyChangeRejected;
@@ -140,7 +152,7 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
     /// <summary>Checks the admission guards without raising anything.</summary>
     public Result PrepareChange(long expectedRevision, Uuid assertionId)
     {
-        if (_accepted.ContainsKey(assertionId))
+        if (AcceptedFor(assertionId) is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "This signed assertion identity was already accepted for this designation."));
         if (_pending is not null)
@@ -169,6 +181,9 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
             operation.LogicalId);
         if (!prepared.IsSuccess)
             return prepared;
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new ProfessionalDutyChangeAccepted(Stream, (long)_revision, ProfessionalDutyEffects.Generation,
             intent, null, operation, firstResponse, null));
         return Result.Success;
@@ -182,7 +197,13 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
         if (_latest is null || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a recorded designation can be held, on its own stream.", true));
+        if (_pending is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A signed designation change is already pending; retry after it settles.", true));
         Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new FirmProfessionalDutyDesignationEngagementUseAuthorized(Stream, (long)_revision, generation,
             intent, null, operation, null, null));
         return Result.Success;
@@ -197,6 +218,9 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held designation stream."));
         Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new FirmProfessionalDutyDesignationEngagementUseSettled(Stream, (long)_revision, generation,
             intent, null, operation, null, null));
         return Result.Success;
@@ -207,10 +231,16 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
         ImmutableContentRef designationContent, string signedAssertion, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (_pending != operation.RootOperationId)
+        if (_pending?.Operation.RootOperationId != operation.RootOperationId)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending change can be applied."));
-        var intent = _accepted[_pending.Value].Intent;
+        if (Uses.HasActiveUse)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "An engagement personal decision holds this exact designation; retry after it settles.", true));
+        var intent = _pending!.Intent;
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         if (kind == ProfessionalDutyChangeKind.Record)
             RaiseEvent(new FirmProfessionalDutyDesignationRecorded(operation.RootOperationId, designationContent,
                 signedAssertion, operation, _revision + 1, intent, null, operationResult));
@@ -224,27 +254,33 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
     public Result Reject(OperationProvenance operation, ImmutableContentRef failureProof)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (_pending != operation.RootOperationId)
+        if (_pending?.Operation.RootOperationId != operation.RootOperationId)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending change can be rejected."));
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new ProfessionalDutyChangeRejected(Stream, (long)_revision, ProfessionalDutyEffects.Generation,
-            _accepted[_pending.Value].Intent, failureProof, operation, null, null));
+            _pending!.Intent, failureProof, operation, null, null));
         return Result.Success;
     }
 
     void Complete(DomainEvent fact, OperationProvenance operation, Uuid operationId, ImmutableContentRef intent,
         ulong revision)
     {
-        if (_pending is not { } pending || pending != operation.RootOperationId || operationId != pending ||
-            operation.Owner != Stream || intent != _accepted[pending].Intent || revision != _revision + 1)
+        if (_pending is not { } pending || pending.Operation.RootOperationId != operation.RootOperationId ||
+            operationId != pending.Operation.RootOperationId || operation.Owner != Stream || intent != pending.Intent || revision != _revision + 1)
             throw new InvalidOperationException("A designation change must follow its accepted change and revision.");
-        _terminal.Add(pending, fact);
+        if (operation.RootOperationId == SelectedRootId)
+            _selectedTerminal = fact;
         _latest = fact;
         _revision = revision;
         _pending = null;
     }
     protected override void Apply(DomainEvent ev)
     {
+        if (!ev.Metadata.IsAudit)
+            ReplayCut.Observe(ev);
         base.Apply(ev);
         Uses.ObserveOwnerFact(ev);
     }

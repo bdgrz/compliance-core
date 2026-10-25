@@ -27,7 +27,9 @@ sealed class ProfessionalDutyChangeVerifier(IAggregateReader reader, IImmutableC
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return ProfessionalDutyChange.Failed(Permanent($"The frozen change cannot be verified: {exception.Message}"));
+            return ProfessionalDutyChange.Failed(exception is ImmutableContentUnavailableException
+                ? Transient($"The frozen change is not available: {exception.Message}")
+                : Permanent($"The frozen change cannot be verified: {exception.Message}"));
         }
 
         if (intent.Header.RootOperationId != assertionId || intent.VerifiedAssertionId != assertionId ||
@@ -38,13 +40,22 @@ sealed class ProfessionalDutyChangeVerifier(IAggregateReader reader, IImmutableC
             return ProfessionalDutyChange.Failed(Permanent("The command differs from the frozen change intent."));
 
         var owner = await reader.HydrateAsync(
-            new FirmProfessionalDutyDesignation(evidence.UserId, evidence.Duty, evidence.TenantId, commandId), ct)
+            new FirmProfessionalDutyDesignation(evidence.UserId, evidence.Duty, evidence.TenantId, commandId, assertionId), ct)
             .ConfigureAwait(false);
         if (owner.AcceptedFor(assertionId) is not { } accepted)
             return ProfessionalDutyChange.Failed(Transient("The accepted change is not visible yet."));
         if (source.Stream != owner.Stream || accepted.Metadata.EventId != source.EventId ||
             accepted.Metadata.AggregateVersion != source.AggregateVersion || accepted.Intent != intentReference)
             return ProfessionalDutyChange.Failed(Permanent("The source is not the accepted change of this designation."));
+        try
+        {
+            ProfessionalDutyContent.RequireIntent(owner, accepted, intent, evidence);
+            await ProfessionalDutyContent.RequireAuthoredAsync(content, intent, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return ProfessionalDutyChange.Failed(error is ImmutableContentUnavailableException ? Transient(error.Message) : Permanent(error.Message));
+        }
         return new ProfessionalDutyChange(owner, accepted, intent, evidence, null);
     }
 

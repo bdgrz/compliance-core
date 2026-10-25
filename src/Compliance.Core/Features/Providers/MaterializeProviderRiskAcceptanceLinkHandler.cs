@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Providers;
@@ -14,12 +17,16 @@ namespace Bdgrz.Compliance.Features.Providers;
 ///     instant. An exact retry replays the original acceptance.
 /// </summary>
 sealed class MaterializeProviderRiskAcceptanceLinkHandler(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content, TimeProvider clock)
+    IImmutableContentStore content, TimeProvider clock, ProviderGapReader history, ISourceFactResolver resolver)
     : IRequestHandler<MaterializeProviderRiskAcceptanceLink, ReceiverOutcome>
 {
     const int MaximumAttempts = 4;
 
-    public async ValueTask<Result<ReceiverOutcome>> HandleAsync(
+    public ValueTask<Result<ReceiverOutcome>> HandleAsync(
+        IRequestContext<MaterializeProviderRiskAcceptanceLink> context, CancellationToken ct) =>
+        ProviderGapFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<ReceiverOutcome>> HandleCoreAsync(
         IRequestContext<MaterializeProviderRiskAcceptanceLink> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -27,45 +34,31 @@ sealed class MaterializeProviderRiskAcceptanceLinkHandler(IAggregateReader reade
             request.GapId == Uuid.Empty || !Uuid.TryParse(request.Source.Stream.Realm, out var tenantId) ||
             tenantId == Uuid.Empty || request.Target != ProviderAssuranceStreams.RiskAcceptance(tenantId, request.LinkId))
             return SourceUseReceiverSupport.Permanent("The materialization names another link, gap or tenant.");
-        ProviderRiskLinkIntent intent;
-        try
-        {
-            intent = await ProviderAssuranceContent.ReadAsync<ProviderRiskLinkIntent>(content, tenantId, request.Intent,
-                ct).ConfigureAwait(false);
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return SourceUseReceiverSupport.Permanent($"The frozen link cannot be verified: {exception.Message}");
-        }
-        if (intent.LinkId != request.LinkId || intent.GapId != request.GapId ||
-            intent.Header.RootOperationId != request.OperationId ||
-            (long)intent.GapAdmissionRevision != request.Generation)
-            return SourceUseReceiverSupport.Permanent("The command differs from the frozen link intent.");
-        var gap = await reader.HydrateAsync(new ProviderAssuranceGap(tenantId, intent.ProviderId, intent.GapId), ct)
-            .ConfigureAwait(false);
+        var gap = await history.ReadFromSourceAsync(request.Source, request.GapId, request.LinkId, ct).ConfigureAwait(false);
         if (gap.AdmissionOf(request.LinkId) is not { } admitted)
-            return SourceUseReceiverSupport.Transient("The admitted link is not visible yet.");
+            return gap.Facts.Any(value => value.Metadata.EventId == request.Source.EventId)
+                ? SourceUseReceiverSupport.Permanent("The source admits another link operation.")
+                : SourceUseReceiverSupport.Transient("The admitted link is not visible yet.");
         if (request.Source.Stream != gap.Stream || admitted.Metadata.EventId != request.Source.EventId ||
-            admitted.Metadata.AggregateVersion != request.Source.AggregateVersion ||
-            admitted.Intent != request.Intent || admitted.Revision != request.Generation ||
-            intent.Header.FirstOwner != gap.Stream)
+            admitted.Metadata.AggregateVersion != request.Source.AggregateVersion || admitted.Intent != request.Intent ||
+            admitted.Revision != request.Generation)
             return SourceUseReceiverSupport.Permanent("The source is not the admission of this link.");
+        var operation = admitted.Operation;
+        var header = new DurableIntentHeader(operation.RootOperationId, gap.Stream, gap.Stream, gap.Stream,
+            operation.Actor, operation.Episode, operation.OriginalExpectedRevision, operation.AuthoredIntentSha256,
+            operation.AcceptedAt);
+        // Preserve this receiver's actual existing child binding, including its original optional FirstOwner semantics.
         var provenance = new ProviderRiskAcceptance(tenantId, request.LinkId).Provenance(request.CommandId,
-            nameof(MaterializeProviderRiskAcceptanceLink), request.Source.EventId, intent.Header, clock.GetUtcNow());
+            nameof(MaterializeProviderRiskAcceptanceLink), request.Source.EventId, header, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var view = new ProviderCoverageGapRiskAcceptanceView(intent.ProgramId, intent.RiskId, intent.AcceptanceId,
-            intent.AcceptanceExpiresAt, intent.Header.OriginalActor, intent.LinkedAt)
-        {
-            Revision = admitted.Revision,
-        };
-        var acceptance = await ProviderAssuranceContent.WriteAsync(content, tenantId, ProviderAssuranceContent.LinkSchema,
-            view, ct, Uuid.CreateVersion5(request.CommandId, ProviderAssuranceContent.LinkSchema))
-            .ConfigureAwait(false);
-        var result = await ProviderAssuranceContent.WriteAsync(content, tenantId,
-            ProviderAssuranceContent.GapRegistrationSchema,
-            new ProviderCoverageGapRegistration(intent.GapId, admitted.Revision), ct,
-            Uuid.CreateVersion5(request.CommandId, ProviderAssuranceContent.GapRegistrationSchema))
-            .ConfigureAwait(false);
+        var preparation = await NativeReceiverPreparation.PrepareAsync<ProviderRiskAcceptance, Prepared>(reader,
+            () => new ProviderRiskAcceptance(tenantId, request.LinkId, request.CommandId), owner => Decide(owner, binding),
+            (_, token) => PrepareAsync(tenantId, gap, admitted, request, header, token), ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
+        var prepared = preparation.Value.Value!;
         for (var attempt = 1; ; attempt++)
         {
             try
@@ -79,8 +72,8 @@ sealed class MaterializeProviderRiskAcceptanceLinkHandler(IAggregateReader reade
                 {
                     if (Decide(fresh, binding) is { } decided)
                         return AggregateOutcome.Discard(Result<Decision>.Success(new Decision(decided)));
-                    var raised = fresh.Materialize(provenance, intent.GapId, intent.ProviderId, admitted.Revision,
-                        acceptance, request.Intent, result);
+                    var raised = fresh.Materialize(provenance, request.GapId, gap.ProviderId, admitted.Revision,
+                        prepared.Acceptance, request.Intent, prepared.Result);
                     return raised.IsSuccess
                         ? AggregateOutcome.Commit(Result<Decision>.Success(new Decision(
                             SourceUseReceiverSupport.Applied(NativeFactReference.Of(fresh.Stream,
@@ -94,6 +87,72 @@ sealed class MaterializeProviderRiskAcceptanceLinkHandler(IAggregateReader reade
                 // The link changed concurrently; rehydrate and decide again.
             }
         }
+    }
+
+    async ValueTask<Result<Prepared>> PrepareAsync(Uuid tenantId, ProviderGapSnapshot gap,
+        ProviderCoverageGapRiskAcceptanceAdmitted admitted, MaterializeProviderRiskAcceptanceLink request,
+        DurableIntentHeader header, CancellationToken ct)
+    {
+        ProviderRiskLinkIntent intent;
+        try
+        {
+            intent = await ProviderAssuranceContent.ReadAsync<ProviderRiskLinkIntent>(content, tenantId, request.Intent, ct)
+                .ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<Prepared>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen link cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
+        }
+        if (intent.Header != header || intent.LinkId != request.LinkId || intent.GapId != request.GapId ||
+            intent.ProviderId != gap.ProviderId || intent.GapAdmissionRevision != (ulong)admitted.Revision ||
+            intent.ProviderRevision != (ulong)gap.Recorded!.ProviderRevision || intent.LinkedAt != header.AcceptedAt ||
+            intent.ProgramId == Uuid.Empty || intent.RiskId == Uuid.Empty || intent.AcceptanceId == Uuid.Empty ||
+            header.OriginalExpectedRevision is not { } original || original > long.MaxValue ||
+            ProviderAssuranceGap.PairEpisode(intent.RiskId, intent.AcceptanceId) != header.Episode ||
+            AuthoredIntentDigest.Compute(new LinkProviderCoverageGapRiskAcceptance(request.LinkId, tenantId,
+                intent.ProgramId, gap.ProviderId, request.GapId, (long)original, intent.RiskId, intent.AcceptanceId)) !=
+                header.AuthoredIntentSha256 || intent.AcceptanceProof is null ||
+            intent.AcceptanceProof.Source != new RiskEvaluation(tenantId, intent.RiskId).Stream)
+            return Result<Prepared>.Failure(SourceUseReceiverSupport.Permanent(
+                "The frozen link differs from its exact native admission and original authored terms.").Error!);
+        var recorded = await ProviderAssuranceContent.ReadAsync<ProviderCoverageGapContent>(content, tenantId,
+            gap.Recorded.ContentContent, ct).ConfigureAwait(false);
+        if (recorded.ServiceId != intent.ServiceId)
+            return Result<Prepared>.Failure(SourceUseReceiverSupport.Permanent(
+                "The frozen link names another exact recorded provider service.").Error!);
+        VerifiedSourceProof<RiskAccepted> proof;
+        try
+        {
+            proof = await resolver.VerifyAsync(intent.AcceptanceProof, ct).ConfigureAwait(false);
+        }
+        catch (SourceFactVerificationException exception)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<Prepared>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The captured risk acceptance proof cannot be verified: " + exception.Message,
+                exception is SourceFactUnavailableException));
+        }
+        var fact = proof.Facts;
+        if (fact.TenantId != tenantId || fact.ProgramId != intent.ProgramId || fact.RiskId != intent.RiskId || fact.Header is null ||
+            fact.Header.LatestAcceptanceId != intent.AcceptanceId)
+            return Result<Prepared>.Failure(SourceUseReceiverSupport.Permanent(
+                "The captured source is another exact risk acceptance.").Error!);
+        var accepted = await RiskEvaluationContent.ReadAcceptanceAsync(content, fact, ct).ConfigureAwait(false);
+        if (accepted.AcceptanceId != intent.AcceptanceId || accepted.ExpiresAt != intent.AcceptanceExpiresAt ||
+            accepted.AcceptedAt > intent.LinkedAt || intent.AcceptanceExpiresAt <= intent.LinkedAt)
+            return Result<Prepared>.Failure(SourceUseReceiverSupport.Permanent(
+                "The captured acceptance was not active at the original link admission instant.").Error!);
+        var view = new ProviderCoverageGapRiskAcceptanceView(intent.ProgramId, intent.RiskId, intent.AcceptanceId,
+            intent.AcceptanceExpiresAt, header.OriginalActor, intent.LinkedAt)
+        { Revision = admitted.Revision };
+        var acceptance = await ProviderAssuranceContent.WriteAsync(content, tenantId, ProviderAssuranceContent.LinkSchema,
+            view, ct, Uuid.CreateVersion5(request.CommandId, ProviderAssuranceContent.LinkSchema)).ConfigureAwait(false);
+        var result = await ProviderAssuranceContent.WriteAsync(content, tenantId, ProviderAssuranceContent.GapRegistrationSchema,
+            new ProviderCoverageGapRegistration(request.GapId, admitted.Revision), ct,
+            Uuid.CreateVersion5(request.CommandId, ProviderAssuranceContent.GapRegistrationSchema)).ConfigureAwait(false);
+        return Result<Prepared>.Success(new Prepared(acceptance, result));
     }
 
     static Result<ReceiverOutcome>? Decide(ProviderRiskAcceptance owner, AcceptedOperationBinding binding)
@@ -111,6 +170,8 @@ sealed class MaterializeProviderRiskAcceptanceLinkHandler(IAggregateReader reade
                 NativeFactReference.Of(owner.Stream, linked))
             : null;
     }
+
+    sealed record Prepared(ImmutableContentRef Acceptance, ImmutableContentRef Result);
 
     sealed record Decision(Result<ReceiverOutcome> Outcome);
 }

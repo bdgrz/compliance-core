@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
 
-/// <summary>Durable member-level ledger for weekly digest reservations and delivery outcomes.</summary>
+/// <summary>Bounded latest/explicit selected member-week authority; complete dispatch history is external.</summary>
 public sealed class WorkDigestDispatch : Aggregate
 {
     public const string Scheduled = "scheduled";
@@ -14,216 +18,178 @@ public sealed class WorkDigestDispatch : Aggregate
     public const string RetryExhausted = "retry_exhausted";
     public const string Unknown = "unknown";
 
-    readonly Uuid _tenantId;
-    readonly Dictionary<DateOnly, DispatchState> _dispatches = [];
-
-    public WorkDigestDispatch(Uuid tenantId, Uuid memberId)
-        : base(memberId, new EventStreamAddress(tenantId.ToString(), "work-digest-dispatches",
-            memberId.ToString()))
+    public const string Area = "work-digest-dispatches";
+    readonly Uuid _tenant;
+    readonly DateOnly _selectedWeek;
+    WorkDigestDispatchState? _latest;
+    WorkDigestDispatchState? _selected;
+    public WorkDigestDispatch(Uuid tenantId, Uuid memberId, DateOnly selectedWeek = default, Uuid selectedCommandId = default)
+        : base(memberId, new EventStreamAddress(tenantId.ToString(), Area, memberId.ToString()))
     {
-        _tenantId = tenantId;
-        On<WorkDigestDispatchScheduled>(Apply);
-        On<WorkDigestDispatchAttemptStarted>(Apply);
-        On<WorkDigestDispatchOutcomeRecorded>(Apply);
-        On<WorkDigestUnknownRetryAuthorized>(Apply);
+        (_tenant, _selectedWeek) = (tenantId, selectedWeek);
+        Acceptance = new NativeAcceptance(selectedCommandId, nameof(AuthorizeWorkDigestUnknownRetry));
+        On<WorkDigestDispatchScheduled>(ApplyFact);
+        On<WorkDigestDispatchAttemptStarted>(ApplyFact);
+        On<WorkDigestDispatchOutcomeRecorded>(ApplyFact);
+        On<WorkDigestUnknownRetryAuthorized>(ApplyFact);
     }
-
-    internal bool Schedule(WorkDigestScheduleWindow window, Uuid messageId,
-        TimeSpan retryWindow, DateTimeOffset recordedAt)
+    public Uuid TenantId => _tenant;
+    public NativeAcceptance Acceptance { get; }
+    public long Revision => checked((long)Version);
+    public DateOnly SelectedWeek => _selectedWeek;
+    internal WorkDigestDispatchState? LatestState => _latest;
+    internal WorkDigestDispatchState? SelectedState => _selectedWeek == _latest?.WeekOf ? _latest : _selected;
+    public DomainEvent? Latest { get; private set; }
+    internal WorkDigestReplayCut ReplayCut { get; } = new();
+    internal bool Schedule(WorkDigestScheduleWindow window, Uuid messageId, TimeSpan retryWindow, DateTimeOffset recordedAt)
     {
-        if (_dispatches.ContainsKey(window.WeekOf) ||
-            _dispatches.Keys.Any(existingWeek => existingWeek > window.WeekOf) ||
-            retryWindow <= TimeSpan.Zero)
+        if (_latest is { } latest && latest.WeekOf >= window.WeekOf || !ReplayCut.Allows(this))
             return false;
-        var retryDeadline = window.ScheduledAt + retryWindow;
-        var nextWeek = WorkDigestSchedule.NextWeekStartUtc(window.WeekOf, window.TimeZoneId);
-        if (nextWeek < retryDeadline)
-            retryDeadline = nextWeek;
-        RaiseEvent(new WorkDigestDispatchScheduled(_tenantId, Id, window.WeekOf,
-            WorkDigestSchedule.NormalizeTimeZoneId(window.TimeZoneId), window.ScheduledAt,
-            messageId, retryDeadline, recordedAt));
+        var rules = new WorkDigestDispatchRules(_tenant, Id);
+        if (!rules.Schedule(window, messageId, retryWindow, recordedAt))
+            return false;
+        RaiseEvent(rules.PendingEvents.Single());
         return true;
     }
-
-    public WorkDigestDispatchStatusView Read(DateOnly weekOf) =>
-        _dispatches.TryGetValue(weekOf, out var state)
-            ? state.View(_tenantId, Id)
-            : new WorkDigestDispatchStatusView(_tenantId, Id, weekOf, "UTC",
-                DateTimeOffset.MinValue, "not_scheduled", 0, null, Uuid.Empty,
-                DateTimeOffset.MinValue, null, null, null, null, null);
-
-    public WorkDigestDispatchStatusView? FindCurrentWindow(DateTimeOffset now) =>
-        _dispatches.Values.OrderByDescending(static item => item.ScheduledAt)
-            .FirstOrDefault(state => WorkDigestSchedule.IsCurrentWeek(state.WeekOf,
-                state.TimeZoneId, now))?.View(_tenantId, Id);
-
-    public WorkDigestDispatchStatusView? FindPending() =>
-        _dispatches.Values.Where(static state => state.Status is
-                Scheduled or InFlight or RetryPending)
-            .OrderBy(static state => state.ScheduledAt)
-            .FirstOrDefault()?.View(_tenantId, Id);
-
-    internal DateTimeOffset RetryDeadline(DateOnly weekOf) =>
-        _dispatches.TryGetValue(weekOf, out var state)
-            ? state.RetryDeadline
-            : DateTimeOffset.MinValue;
-
-    public bool StartAttempt(DateOnly weekOf, DateTimeOffset startedAt)
+    WorkDigestDispatchState? State(DateOnly week)
     {
-        if (!_dispatches.TryGetValue(weekOf, out var state) || startedAt < state.ScheduledAt ||
-            startedAt >= state.RetryDeadline ||
-            !WorkDigestSchedule.IsCurrentWeek(state.WeekOf, state.TimeZoneId, startedAt) ||
-            state.Status != Scheduled &&
-            (state.Status != RetryPending || state.NextAttemptAt is not { } next || startedAt < next))
+        if (_latest?.WeekOf == week)
+            return _latest;
+        if (_selectedWeek == week)
+            return _selected;
+        if (_latest is not null && week < _latest.WeekOf)
+            throw new InvalidOperationException("Historical dispatch authority requires explicit selected-week hydration.");
+        return null;
+    }
+    public WorkDigestDispatchStatusView Read(DateOnly week) => (State(week)?.View(_tenant, Id) ??
+        new WorkDigestDispatchStatusView(_tenant, Id, week, "UTC", DateTimeOffset.MinValue, "not_scheduled", 0,
+            null, Uuid.Empty, DateTimeOffset.MinValue, null, null, null, null, null)) with
+    { Revision = Revision };
+    internal DateTimeOffset RetryDeadline(DateOnly week) => State(week)?.RetryDeadline ?? DateTimeOffset.MinValue;
+    bool Change(DateOnly week, Func<WorkDigestDispatchRules, bool> change)
+    {
+        if (!ReplayCut.Allows(this) || State(week) is not { } state)
             return false;
-        RaiseEvent(new WorkDigestDispatchAttemptStarted(_tenantId, Id, weekOf,
-            state.Attempts + 1, startedAt));
+        var rules = new WorkDigestDispatchRules(_tenant, Id);
+        rules.Restore(state);
+        if (!change(rules))
+            return false;
+        RaiseEvent(rules.PendingEvents.Single());
         return true;
     }
-
-    public bool RecordSent(DateOnly weekOf, DateTimeOffset recordedAt) =>
-        Record(weekOf, Sent, recordedAt, null, null);
-
-    public bool RecordSkipped(DateOnly weekOf, DateTimeOffset recordedAt, string reason) =>
-        _dispatches.TryGetValue(weekOf, out var state) &&
-        state.Status is (Scheduled or RetryPending) &&
-        RecordOutcome(weekOf, Skipped, recordedAt, null, reason);
-
-    public bool RecordPermanentRejection(DateOnly weekOf, DateTimeOffset recordedAt,
-        string failureCode) => Record(weekOf, PermanentFailure, recordedAt, null, failureCode);
-
-    public bool RecordUnknown(DateOnly weekOf, DateTimeOffset recordedAt, string failureCode) =>
-        Record(weekOf, Unknown, recordedAt, null, failureCode);
-
-    public bool RecordInterruptedAttempt(DateOnly weekOf, DateTimeOffset recordedAt) =>
-        _dispatches.TryGetValue(weekOf, out var state) && state.Status == InFlight &&
-        Record(weekOf, Unknown, recordedAt, null, "worker_interrupted");
-
-    public bool AuthorizeUnknownRetry(DateOnly weekOf, Uuid authorizedBy,
-        string evidenceReference, string rationale, DateTimeOffset authorizedAt,
-        int maximumAttempts)
+    public bool StartAttempt(DateOnly week, DateTimeOffset at) => Change(week, rules => rules.StartAttempt(week, at));
+    public bool RecordSent(DateOnly week, DateTimeOffset at) => Change(week, rules => rules.RecordSent(week, at));
+    public bool RecordSkipped(DateOnly week, DateTimeOffset at, string reason) => Change(week, rules => rules.RecordSkipped(week, at, reason));
+    public bool RecordPermanentRejection(DateOnly week, DateTimeOffset at, string code) => Change(week, rules => rules.RecordPermanentRejection(week, at, code));
+    public bool RecordUnknown(DateOnly week, DateTimeOffset at, string code) => Change(week, rules => rules.RecordUnknown(week, at, code));
+    public bool RecordInterruptedAttempt(DateOnly week, DateTimeOffset at) => Change(week, rules => rules.RecordInterruptedAttempt(week, at));
+    internal Result<WorkDigestRetryPreparation> PrepareRetry(AuthorizeWorkDigestUnknownRetry request,
+        OperationProvenance operation, int maximumAttempts)
     {
-        if (!_dispatches.TryGetValue(weekOf, out var state) || state.Status != Unknown ||
-            authorizedBy == Uuid.Empty || state.Attempts >= maximumAttempts ||
-            authorizedAt < state.ScheduledAt || authorizedAt >= state.RetryDeadline ||
-            !WorkDigestSchedule.IsCurrentWeek(state.WeekOf, state.TimeZoneId, authorizedAt) ||
-            !IsValidAuditValue(evidenceReference, 256) || !IsValidAuditValue(rationale, 512))
-            return false;
-
-        RaiseEvent(new WorkDigestUnknownRetryAuthorized(_tenantId, Id, weekOf,
-            state.MessageId, state.Attempts, authorizedBy, evidenceReference.Trim(),
-            rationale.Trim(), authorizedAt));
-        return true;
+        if (!ReplayCut.Allows(this))
+            return Result<WorkDigestRetryPreparation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact dispatch source cut is not finalized; retry.", true));
+        if (request.ExpectedRevision != Revision)
+            return Result<WorkDigestRetryPreparation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The member dispatch revision is {Revision}."));
+        if (request.TenantId != _tenant || request.MemberId != Id || request.WeekOf != _selectedWeek ||
+            operation.Actor.Kind != "platform_operator" || operation.FirstOwner != Stream ||
+            operation.Actor.Id == string.Empty || State(request.WeekOf) is not { } before)
+            return Result<WorkDigestRetryPreparation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The dispatch is not eligible for a same-week operator-authorized retry."));
+        var rules = new WorkDigestDispatchRules(_tenant, Id);
+        rules.Restore(before);
+        if (!rules.AuthorizeUnknownRetry(request.WeekOf,
+                Uuid.Parse(operation.Actor.Id, global::System.Globalization.CultureInfo.InvariantCulture),
+                request.EvidenceReference, request.Rationale, operation.AcceptedAt, maximumAttempts))
+            return Result<WorkDigestRetryPreparation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The dispatch is not eligible for a same-week operator-authorized retry."));
+        return Result<WorkDigestRetryPreparation>.Success(new WorkDigestRetryPreparation(Version, CommittedStreamPosition,
+            before.View(_tenant, Id) with { Revision = Revision }, before.RetryDeadline,
+            rules.Read(request.WeekOf) with { Revision = Revision + 1 }));
     }
-
-    public bool RecordTransientRejection(DateOnly weekOf, DateTimeOffset recordedAt,
-        int maximumAttempts, TimeSpan retryDelay)
+    internal Result AppendRetry(AuthorizeWorkDigestUnknownRetry request, OperationProvenance operation,
+        WorkDigestRetryPreparation prepared, int maximumAttempts, ActorAttribution originalActor, ImmutableContentRef change, ImmutableContentRef body,
+        ImmutableContentRef firstResponse, ImmutableContentRef result)
     {
-        if (!_dispatches.TryGetValue(weekOf, out var state) || state.Status != InFlight)
-            return false;
-        if (state.Attempts >= maximumAttempts || recordedAt + retryDelay >= state.RetryDeadline)
-            return Record(weekOf, RetryExhausted, recordedAt, null, "transient_rejection");
-        return Record(weekOf, RetryPending, recordedAt, recordedAt + retryDelay,
-            "transient_rejection");
-    }
-
-    public bool RecordRetryWindowExpired(DateOnly weekOf, DateTimeOffset recordedAt)
-    {
-        if (!_dispatches.TryGetValue(weekOf, out var state) ||
-            state.Status is not (Scheduled or RetryPending))
-            return false;
-        var expired = recordedAt >= state.RetryDeadline;
-        var localWeekEnded = !WorkDigestSchedule.IsCurrentWeek(state.WeekOf,
-            state.TimeZoneId, recordedAt);
-        if (!expired && !localWeekEnded)
-            return false;
-        return RecordOutcome(weekOf, RetryExhausted, recordedAt, null,
-            expired ? "retry_window_expired" : "local_week_ended");
-    }
-
-    public bool RecordMissedWeek(DateOnly weekOf, DateTimeOffset recordedAt) =>
-        _dispatches.TryGetValue(weekOf, out var state) && state.Status == Scheduled &&
-        !WorkDigestSchedule.IsCurrentWeek(state.WeekOf, state.TimeZoneId, recordedAt) &&
-        RecordOutcome(weekOf, Skipped, recordedAt, null, "missed_week");
-
-    bool Record(DateOnly weekOf, string status, DateTimeOffset recordedAt,
-        DateTimeOffset? nextAttemptAt, string? failureCode)
-    {
-        if (!_dispatches.TryGetValue(weekOf, out var state) || state.Status != InFlight)
-            return false;
-        return RecordOutcome(weekOf, status, recordedAt, nextAttemptAt, failureCode);
-    }
-
-    bool RecordOutcome(DateOnly weekOf, string status, DateTimeOffset recordedAt,
-        DateTimeOffset? nextAttemptAt, string? failureCode)
-    {
-        RaiseEvent(new WorkDigestDispatchOutcomeRecorded(_tenantId, Id, weekOf, status,
-            recordedAt, nextAttemptAt, failureCode));
-        return true;
-    }
-
-    static bool IsValidAuditValue(string? value, int maxLength) =>
-        !string.IsNullOrWhiteSpace(value) && value.Length <= maxLength &&
-        !value.Any(char.IsControl);
-
-    void Apply(WorkDigestDispatchScheduled scheduled)
-    {
-        _dispatches.Add(scheduled.WeekOf, new DispatchState(scheduled.WeekOf,
-            scheduled.TimeZoneId, scheduled.ScheduledAt, scheduled.RetryDeadline,
-            scheduled.MessageId, Scheduled,
-            0, null, scheduled.RecordedAt, null, null));
-    }
-
-    void Apply(WorkDigestDispatchAttemptStarted started)
-    {
-        var state = _dispatches[started.WeekOf];
-        _dispatches[started.WeekOf] = state with
+        if (!ReplayCut.Allows(this) || Version != prepared.Revision || CommittedStreamPosition != prepared.PhysicalPosition)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact dispatch authority changed while its retry was prepared.", true));
+        var checkedPreparation = PrepareRetry(request, operation, maximumAttempts);
+        if (!checkedPreparation.IsSuccess)
+            return Result.Failure(checkedPreparation.Error!);
+        if (checkedPreparation.Value != prepared || request.CommandId != operation.LogicalId ||
+            Acceptance.SelectedLogicalId != operation.LogicalId)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The retry differs from its exact prepared command and dispatch cut."));
+        var authorizedBy = Uuid.Parse(operation.Actor.Id, global::System.Globalization.CultureInfo.InvariantCulture);
+        var fact = new WorkDigestUnknownRetryAuthorized(_tenant, Id, request.WeekOf, prepared.Before.MessageId,
+            prepared.Before.Attempts, authorizedBy, request.EvidenceReference.Trim(), request.Rationale.Trim(), operation.AcceptedAt)
         {
-            Status = InFlight,
-            Attempts = started.Attempt,
-            LastAttemptAt = started.StartedAt,
-            LastUpdatedAt = started.StartedAt,
-            NextAttemptAt = null,
+            Operation = operation,
+            Authored = request,
+            OriginalActor = originalActor,
+            Revision = Version + 1,
+            MaximumAttempts = maximumAttempts,
+            Change = change,
+            ResponseContent = body,
+            FirstResponse = firstResponse,
+            OperationResult = result
         };
+        WorkDigestRetryContent.Validate(fact, this, Version, State(request.WeekOf));
+        if (DomainEventPayload.Size(fact) > DomainEventPayload.MaximumBytes)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "The native retry authorization exceeds the persisted business frame limit."));
+        RaiseEvent(fact);
+        return Result.Success;
     }
-
-    void Apply(WorkDigestDispatchOutcomeRecorded recorded)
+    public bool RecordTransientRejection(DateOnly week, DateTimeOffset at, int maximumAttempts, TimeSpan delay) =>
+        Change(week, rules => rules.RecordTransientRejection(week, at, maximumAttempts, delay));
+    public bool RecordRetryWindowExpired(DateOnly week, DateTimeOffset at) => Change(week, rules => rules.RecordRetryWindowExpired(week, at));
+    public bool RecordMissedWeek(DateOnly week, DateTimeOffset at) => Change(week, rules => rules.RecordMissedWeek(week, at));
+    void ApplyFact(DomainEvent fact)
     {
-        var state = _dispatches[recorded.WeekOf];
-        _dispatches[recorded.WeekOf] = state with
+        var (tenant, member, week) = WorkDigestDispatchHistory.Scope(fact);
+        if (tenant != _tenant || member != Id)
+            throw new ImmutableContentIntegrityException("The dispatch fact belongs to another member or tenant.");
+        if (fact is WorkDigestUnknownRetryAuthorized authorization)
         {
-            Status = recorded.Status,
-            LastUpdatedAt = recorded.RecordedAt,
-            NextAttemptAt = recorded.NextAttemptAt,
-            FailureCode = recorded.FailureCode,
-        };
-    }
-
-    void Apply(WorkDigestUnknownRetryAuthorized authorized)
-    {
-        var state = _dispatches[authorized.WeekOf];
-        _dispatches[authorized.WeekOf] = state with
+            var before = _latest?.WeekOf == week ? _latest : _selectedWeek == week ? _selected : null;
+            WorkDigestRetryContent.Validate(authorization, this, Version, before);
+            try
+            { Acceptance.Observe(authorization); }
+            catch (InvalidOperationException exception)
+            {
+                throw new ImmutableContentIntegrityException("The dispatch repeats a selected native authorization: " + exception.Message);
+            }
+        }
+        if (fact is WorkDigestDispatchScheduled scheduled)
         {
-            Status = RetryPending,
-            LastUpdatedAt = authorized.AuthorizedAt,
-            NextAttemptAt = authorized.AuthorizedAt,
-            FailureCode = "operator_authorized_retry",
-            RetryAuthorizedBy = authorized.AuthorizedBy,
-            RetryAuthorizedAt = authorized.AuthorizedAt,
-            RetryEvidenceReference = authorized.EvidenceReference,
-        };
+            if (_latest is { } latest && week <= latest.WeekOf)
+                throw new ImmutableContentIntegrityException("A dispatch schedule cannot repeat or precede its latest week.");
+            var rules = new WorkDigestDispatchRules(_tenant, Id);
+            rules.Replay(scheduled);
+            _latest = rules.States[week];
+            if (week == _selectedWeek)
+                _selected = _latest;
+        }
+        else
+        {
+            if (_latest?.WeekOf == week)
+                _latest = Updated(_latest, fact);
+            if (_selectedWeek == week && _selected is not null && _latest?.WeekOf != week)
+                _selected = Updated(_selected, fact);
+            else if (_selectedWeek == week && _latest?.WeekOf == week)
+                _selected = _latest;
+        }
+        Latest = fact;
+        ReplayCut.Observe(fact);
     }
-
-    sealed record DispatchState(DateOnly WeekOf, string TimeZoneId, DateTimeOffset ScheduledAt,
-        DateTimeOffset RetryDeadline, Uuid MessageId, string Status, int Attempts,
-        DateTimeOffset? LastAttemptAt,
-        DateTimeOffset LastUpdatedAt, DateTimeOffset? NextAttemptAt, string? FailureCode,
-        Uuid? RetryAuthorizedBy = null, DateTimeOffset? RetryAuthorizedAt = null,
-        string? RetryEvidenceReference = null)
+    WorkDigestDispatchState Updated(WorkDigestDispatchState state, DomainEvent fact)
     {
-        public WorkDigestDispatchStatusView View(Uuid tenantId, Uuid memberId) =>
-            new(tenantId, memberId, WeekOf, TimeZoneId, ScheduledAt, Status, Attempts,
-                LastAttemptAt, MessageId, LastUpdatedAt, NextAttemptAt, FailureCode,
-                RetryAuthorizedBy, RetryAuthorizedAt, RetryEvidenceReference);
+        var rules = new WorkDigestDispatchRules(_tenant, Id);
+        rules.Restore(state);
+        rules.Replay(fact);
+        return rules.States[state.WeekOf];
     }
 }

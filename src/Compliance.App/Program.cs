@@ -545,11 +545,22 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
     app.MapPortiaGet<GetWorkDigestDispatchStatus, WorkDigestDispatchStatusView>(
-            "/api/v1/platform/tenants/{tenant_id}/members/{member_id}/work-digest-dispatches/{week_of}")
+            "/api/v1/platform/tenants/{tenant_id}/members/{member_id}/work-digest-dispatches/{week_of}", config => config
+                .OnBind(WorkDigestHttp.BindStatus)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("member_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<DateOnly>("week_of", PortiaHttpParameterLocation.Route, required: true))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
-    app.MapPortiaPost<AuthorizeWorkDigestUnknownRetry, WorkDigestDispatchStatusView>(
-            "/api/v1/platform/tenants/{tenant_id}/members/{member_id}/work-digest-dispatches/{week_of}/retry-authorizations", config => config.OnNativeResult()).WithNativeFirstResponse<AuthorizeWorkDigestUnknownRetry>()
+    app.MapPortiaPut<AuthorizeWorkDigestUnknownRetry, WorkDigestDispatchStatusView>(
+            "/api/v1/platform/tenants/{tenant_id}/members/{member_id}/work-digest-dispatches/{week_of}/retry-authorizations/{command_id}", config => config
+                .OnBind(WorkDigestHttp.BindRetryAsync)
+                .Accepts<WorkDigestRetryHttpBody>("application/json", isOptional: false)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("member_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<DateOnly>("week_of", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("command_id", PortiaHttpParameterLocation.Route, required: true)
+                .OnNativeResult()).WithNativeFirstResponse<AuthorizeWorkDigestUnknownRetry>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
     app.MapPortiaPut<InviteTenantMember>("/api/v1/tenants/{tenant_id}/invitations/{invitation_id}", config => config.OnNativeResult()).WithNativeFirstResponse<InviteTenantMember>()

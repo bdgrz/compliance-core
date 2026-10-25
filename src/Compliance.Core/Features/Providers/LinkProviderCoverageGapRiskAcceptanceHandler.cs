@@ -22,7 +22,11 @@ public sealed class LinkProviderCoverageGapRiskAcceptanceHandler(NativeOperation
 {
     const string CommandKind = nameof(LinkProviderCoverageGapRiskAcceptance);
 
-    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+    public ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+        IRequestContext<LinkProviderCoverageGapRiskAcceptance> context, CancellationToken ct) =>
+        ProviderGapFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<OperationAcceptedResponse>> HandleCoreAsync(
         IRequestContext<LinkProviderCoverageGapRiskAcceptance> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -37,30 +41,28 @@ public sealed class LinkProviderCoverageGapRiskAcceptanceHandler(NativeOperation
             ProviderAssuranceGap.PairEpisode(request.RiskId, request.AcceptanceId),
             (ulong)request.ExpectedGapRevision, AuthoredIntentDigest.Compute(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
-        var prior = await reader.HydrateAsync(Owner(request), ct).ConfigureAwait(false);
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? intent = null;
-        if (prior.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(request, prior, provenance, now, ct).ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response) = frozen.Value;
-        }
+        ProviderGapPreparedCut? preparedCut = null;
         var accepted = await operations.ExecuteAsync(new NativeOperation<ProviderAssuranceGap>(binding,
             () => Owner(request), owner => owner.Acceptance,
-            owner =>
+            async (owner, token) =>
             {
-                var checkedLink = owner.PrepareAdmitLink(request.ExpectedGapRevision, request.RiskId,
-                    request.AcceptanceId);
-                return checkedLink.IsSuccess && response is not null
-                    ? Result<FirstResponseDescriptor>.Success(response)
-                    : Result<FirstResponseDescriptor>.Failure(checkedLink.IsSuccess
-                        ? AcceptedAppendResult.ConflictError
-                        : checkedLink.Error!);
+                preparedCut = ProviderGapPreparedCut.Capture(owner);
+                var frozen = await FreezeAsync(request, owner, provenance, now, token).ConfigureAwait(false);
+                if (!frozen.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                intent = frozen.Value.Intent;
+                return Result<FirstResponseDescriptor>.Success(frozen.Value.Response);
             },
-            (ProviderAssuranceGap owner, ImmutableContentRef acknowledgment) => owner.AdmitLink(provenance,
-                request.ExpectedGapRevision, request.RiskId, request.AcceptanceId, intent!, acknowledgment)),
+            (ProviderAssuranceGap owner, ImmutableContentRef acknowledgment) =>
+            {
+                var guarded = owner.PrepareAdmitLink(request.ExpectedGapRevision, request.RiskId, request.AcceptanceId);
+                if (!guarded.IsSuccess)
+                    return guarded;
+                return preparedCut is null || !preparedCut.Matches(owner) ? ProviderGapPreparedCut.Changed()
+                    : owner.AdmitLink(provenance, request.ExpectedGapRevision, request.RiskId, request.AcceptanceId,
+                        intent!, acknowledgment);
+            }),
             context, ct).ConfigureAwait(false);
         return await ProviderAssuranceContent.ReadFirstResponseAsync<OperationAcceptedResponse>(content,
             request.TenantId, ProviderAssuranceContent.AcceptedSchema, accepted, ct).ConfigureAwait(false);
@@ -86,8 +88,9 @@ public sealed class LinkProviderCoverageGapRiskAcceptanceHandler(NativeOperation
         }
         catch (ImmutableContentIntegrityException exception)
         {
+            ct.ThrowIfCancellationRequested();
             return Failed(new RequestError(RequestErrorKind.Conflict,
-                $"The recorded provider coverage gap cannot be verified: {exception.Message}", true));
+                $"The recorded provider coverage gap cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
         var provider = await providerConsistency.GetRevisionAsync(request.TenantId, request.ProviderId,
             gap.Recorded.ProviderRevision, ct).ConfigureAwait(false);
@@ -106,6 +109,7 @@ public sealed class LinkProviderCoverageGapRiskAcceptanceHandler(NativeOperation
         }
         catch (ImmutableContentIntegrityException failure)
         {
+            ct.ThrowIfCancellationRequested();
             return Failed(RiskEvaluationReadFailure.Of(failure));
         }
         var acceptance = risk.ProgramId == request.ProgramId ? risk.FindAcceptance(request.AcceptanceId) : null;
@@ -122,8 +126,9 @@ public sealed class LinkProviderCoverageGapRiskAcceptanceHandler(NativeOperation
         }
         catch (SourceFactVerificationException exception)
         {
+            ct.ThrowIfCancellationRequested();
             return Failed(new RequestError(RequestErrorKind.Conflict,
-                $"The risk acceptance cannot be proven yet: {exception.Message}", true));
+                $"The risk acceptance cannot be proven: {exception.Message}", exception is SourceFactUnavailableException));
         }
         var header = new DurableIntentHeader(request.CommandId, provenance.Owner, provenance.Owner, provenance.Owner,
             provenance.Actor, provenance.Episode, provenance.OriginalExpectedRevision, provenance.AuthoredIntentSha256,
@@ -142,7 +147,8 @@ public sealed class LinkProviderCoverageGapRiskAcceptanceHandler(NativeOperation
         Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(error);
 
     static ProviderAssuranceGap Owner(LinkProviderCoverageGapRiskAcceptance request) =>
-        new(request.TenantId, request.ProviderId, request.GapId, request.CommandId);
+        new(request.TenantId, request.ProviderId, request.GapId, request.CommandId,
+            selectedPair: ProviderAssuranceGap.PairEpisode(request.RiskId, request.AcceptanceId));
 
     static Result<OperationAcceptedResponse> Fail(RequestErrorKind kind, string message) =>
         Result<OperationAcceptedResponse>.Failure(new RequestError(kind, message));

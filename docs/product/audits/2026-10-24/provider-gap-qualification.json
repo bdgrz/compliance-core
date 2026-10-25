@@ -1,0 +1,49 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedAndHttpPassed": 1927,
+    "backendUnit": {
+      "passed": 6499,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "exactFileAndDependencyHashes": "verified"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 63,
+    "combinedSignalsTriaged": 9,
+    "integration": "merge scoped repair recommended",
+    "mergeProbability": 0.94,
+    "introducedRegressionProbability": 0.2,
+    "scopeMisrepresentationProbability": 0.12,
+    "adopted": "squash merge without CI wait per user direction; continue explicitly scoped remaining work"
+  },
+  "scope": "ProviderAssuranceGap compact native authority and full verified history; actual captured RiskAccepted proof and correctly bound materializer receipt preparation/recovery.",
+  "genuineOldApiRedFailed": 9,
+  "rootClassification": {
+    "failedBeforeFix": 3,
+    "missingPositivePassedBeforeFix": 3
+  },
+  "qualification": [
+    "Current record/closure/revision plus selected logical operation/pair/admission and ordered exact cut replace lifetime pair/admission collections. Complete transient native validation preserves full scope/root/actor/clock/revision/pair uniqueness and selected metadata before default/executor reads or retry.",
+    "Record/Close/Link prepare inside NativeOperationExecutor and compare exact prepared cut through append; current public authorization remains. Materializer discovers provider scope only from actual RecordedGap, recomputes scoped stream and verifies full owner before selected admission.",
+    "Captured RiskAccepted verifies actual physical tuple/payload and exact program/risk/acceptance/expiry at original LinkedAt. Materialization after closure/expiry remains valid; no current-risk policy/hold is invented. Required missing content/proof is transient, corruption permanent.",
+    "Only interpreted materializer terms bind native source before replay; legacy ExpectedRevision remains unused as in original code. Sole producer emits null; selected catalog supplies no numeric/null-only rule. Existing optional child FirstOwner semantics and result schemas retained.",
+    "Native tags/DTO/routes/response shapes unchanged. All reader wrappers/lifetimes preserved. No retained-data migration/replay/reset/deploy/broker/snapshot or constant-time hydration claim."
+  ],
+  "rootRefinements": [
+    "TypeI later closure fixture now rehydrates exact selected native cut and freezes actual GapClosed/registration/first-response schemas; original source/as-of/hash assertions retained.",
+    "Real required recorded-body Close/Link and captured-source failure tests proved corrupt-permanent distinction:3failed3missing-positive before production correction."
+  ],
+  "remainingWork": [
+    "General operation identity binding qualification remains local; Access/Import receiver follow-ons and remaining owners continue."
+  ]
+}

@@ -11,14 +11,17 @@ namespace Bdgrz.Compliance.Features.Providers;
 ///     identity: an exact retry replays the original result even after later facts, and a changed actor, intent or
 ///     expected revision under the same id conflicts. A closure never erases an already admitted risk link.
 /// </summary>
-public sealed class CloseProviderCoverageGapHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    AssuranceReferences references, IImmutableContentStore content, TimeProvider clock)
+public sealed class CloseProviderCoverageGapHandler(NativeOperationExecutor operations, AssuranceReferences references, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<CloseProviderCoverageGap, ProviderCoverageGapRegistration>
 {
     const string CommandKind = nameof(CloseProviderCoverageGap);
     const string Episode = "current";
 
-    public async ValueTask<Result<ProviderCoverageGapRegistration>> HandleAsync(
+    public ValueTask<Result<ProviderCoverageGapRegistration>> HandleAsync(
+        IRequestContext<CloseProviderCoverageGap> context, CancellationToken ct) =>
+        ProviderGapFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<ProviderCoverageGapRegistration>> HandleCoreAsync(
         IRequestContext<CloseProviderCoverageGap> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -34,58 +37,56 @@ public sealed class CloseProviderCoverageGapHandler(NativeOperationExecutor oper
         var provenance = Owner(request).Provenance(request.CommandId, CommandKind, actor, Episode,
             (ulong)request.ExpectedRevision, AuthoredIntentDigest.Compute(request with { Content = normalized }), now);
         var binding = AcceptedOperationBinding.Of(provenance);
-        var prior = await reader.HydrateAsync(Owner(request), ct).ConfigureAwait(false);
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? contentRef = null;
         ImmutableContentRef? resultRef = null;
         ProviderCoverageGapContent? recorded = null;
-        if (prior.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var provider = await references.ProviderAsync(request.TenantId, request.ProviderId, ct)
-                .ConfigureAwait(false);
-            if (!provider.IsSuccess)
-                return Result<ProviderCoverageGapRegistration>.Failure(provider.Error);
-            if (!prior.Exists)
-                return Fail(RequestErrorKind.NotFound, "The provider coverage gap was not found.");
-            try
-            {
-                recorded = await ProviderAssuranceContent.ReadAsync<ProviderCoverageGapContent>(content,
-                    request.TenantId, prior.Recorded!.ContentContent, ct).ConfigureAwait(false);
-            }
-            catch (ImmutableContentIntegrityException exception)
-            {
-                return Result<ProviderCoverageGapRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    $"The recorded provider coverage gap cannot be verified: {exception.Message}", true));
-            }
-            var prepared = prior.PrepareClose(request.ExpectedRevision, recorded, normalized);
-            if (!prepared.IsSuccess)
-                return Result<ProviderCoverageGapRegistration>.Failure(prepared.Error!);
-            var source = await references.CoverageGapSourceAsync(request.TenantId, provider.Value, recorded.ServiceId,
-                normalized.SourceKind, normalized.SourceId, normalized.SourceRevision, ct).ConfigureAwait(false);
-            if (!source.IsSuccess)
-                return Result<ProviderCoverageGapRegistration>.Failure(source.Error);
-            contentRef = await ProviderAssuranceContent.WriteAsync(content, request.TenantId,
-                ProviderAssuranceContent.GapClosedSchema, normalized, ct).ConfigureAwait(false);
-            resultRef = await ProviderAssuranceContent.WriteAsync(content, request.TenantId,
-                ProviderAssuranceContent.GapRegistrationSchema,
-                new ProviderCoverageGapRegistration(request.GapId, request.ExpectedRevision + 1), ct)
-                .ConfigureAwait(false);
-            response = ProviderAssuranceContent.Completed(resultRef, ProviderAssuranceContent.GapRegistrationSchema);
-        }
+        ProviderGapPreparedCut? preparedCut = null;
         var accepted = await operations.ExecuteAsync(new NativeOperation<ProviderAssuranceGap>(binding,
             () => Owner(request), owner => owner.Acceptance,
-            owner =>
+            async (owner, token) =>
             {
-                var checkedClose = recorded is null
-                    ? Result.Failure(AcceptedAppendResult.ConflictError)
-                    : owner.PrepareClose(request.ExpectedRevision, recorded, normalized);
-                return checkedClose.IsSuccess && response is not null
-                    ? Result<FirstResponseDescriptor>.Success(response)
-                    : Result<FirstResponseDescriptor>.Failure(checkedClose.Error!);
+                preparedCut = ProviderGapPreparedCut.Capture(owner);
+                var provider = await references.ProviderAsync(request.TenantId, request.ProviderId, token)
+                    .ConfigureAwait(false);
+                if (!provider.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(provider.Error);
+                if (!owner.Exists)
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound, "The provider coverage gap was not found."));
+                try
+                {
+                    recorded = await ProviderAssuranceContent.ReadAsync<ProviderCoverageGapContent>(content,
+                        request.TenantId, owner.Recorded!.ContentContent, token).ConfigureAwait(false);
+                }
+                catch (ImmutableContentIntegrityException exception)
+                {
+                    token.ThrowIfCancellationRequested();
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        $"The recorded provider coverage gap cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
+                }
+                var prepared = owner.PrepareClose(request.ExpectedRevision, recorded, normalized);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                var source = await references.CoverageGapSourceAsync(request.TenantId, provider.Value, recorded.ServiceId,
+                    normalized.SourceKind, normalized.SourceId, normalized.SourceRevision, token).ConfigureAwait(false);
+                if (!source.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(source.Error);
+                contentRef = await ProviderAssuranceContent.WriteAsync(content, request.TenantId,
+                    ProviderAssuranceContent.GapClosedSchema, normalized, token).ConfigureAwait(false);
+                resultRef = await ProviderAssuranceContent.WriteAsync(content, request.TenantId,
+                    ProviderAssuranceContent.GapRegistrationSchema,
+                    new ProviderCoverageGapRegistration(request.GapId, request.ExpectedRevision + 1), token)
+                    .ConfigureAwait(false);
+                return Result<FirstResponseDescriptor>.Success(ProviderAssuranceContent.Completed(resultRef, ProviderAssuranceContent.GapRegistrationSchema));
             },
-            (ProviderAssuranceGap owner, ImmutableContentRef frozen) => owner.Close(provenance,
-                request.ExpectedRevision, recorded!, normalized, contentRef!, actor, now, frozen, resultRef!)),
-            context, ct).ConfigureAwait(false);
+            (ProviderAssuranceGap owner, ImmutableContentRef frozen) =>
+            {
+                var guarded = owner.PrepareClose(request.ExpectedRevision, recorded!, normalized);
+                if (!guarded.IsSuccess)
+                    return guarded;
+                return preparedCut is null || !preparedCut.Matches(owner) ? ProviderGapPreparedCut.Changed()
+                    : owner.Close(provenance, request.ExpectedRevision, recorded!, normalized, contentRef!, actor, now,
+                        frozen, resultRef!);
+            }), context, ct).ConfigureAwait(false);
         return await ProviderAssuranceContent.ReadFirstResponseAsync<ProviderCoverageGapRegistration>(content,
             request.TenantId, ProviderAssuranceContent.GapRegistrationSchema, accepted, ct).ConfigureAwait(false);
     }

@@ -8,4 +8,8 @@ public sealed record WorkDigestDispatchStatusView(Uuid TenantId, Uuid MemberId,
     int Attempts, DateTimeOffset? LastAttemptAt, Uuid MessageId,
     DateTimeOffset LastUpdatedAt, DateTimeOffset? NextAttemptAt, string? FailureCode,
     Uuid? RetryAuthorizedBy = null, DateTimeOffset? RetryAuthorizedAt = null,
-    string? RetryEvidenceReference = null);
+    string? RetryEvidenceReference = null)
+{
+    /// <summary>Logical revision of the complete member dispatch stream at this read or original authorization.</summary>
+    public long Revision { get; init; }
+}

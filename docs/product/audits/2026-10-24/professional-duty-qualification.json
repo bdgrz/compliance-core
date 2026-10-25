@@ -1,0 +1,44 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedAndHttpPassed": 1927,
+    "backendUnit": {
+      "passed": 6499,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "exactFileAndDependencyHashes": "verified"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 63,
+    "combinedSignalsTriaged": 9,
+    "integration": "merge scoped repair recommended",
+    "mergeProbability": 0.94,
+    "introducedRegressionProbability": 0.2,
+    "scopeMisrepresentationProbability": 0.12,
+    "adopted": "squash merge without CI wait per user direction; continue explicitly scoped remaining work"
+  },
+  "scope": "FirmProfessionalDutyDesignation compact current/pending/selected signed authority, full verified historical views/source-use chronology and owning native preparation.",
+  "genuineOldApiRedFailed": 4,
+  "qualification": [
+    "Lifetime accepted/terminal dictionaries replaced by current pending/latest/scalar authority, active SourceUse and one selected root receipt. Full native/signed/body/continuity/staff-pin history composes outside owner and is verified at exact physical/raw prefix.",
+    "Current personal platform operator and strict cryptographic issuer/key/signature/subject/duty/tenant/assertion binding precede retry. Wall-clock freshness gates only first native admission; live ProfessionalDutyAuthorityReader independently still verifies at current now. Exact original accepted retry survives later expiry without conferring current duty.",
+    "Pending change blocks new engagement hold; apply refuses active uses. Existing grants/fences/settlement and independent personal decisions remain. Required immutable receiver terms still bind before shared NativeReceiverPreparation recovery.",
+    "Both owning commands prepare inside native executor and bind exact prepared cuts. Historical root/terminal selection and exact source reactors/views/projectors retain every original decision.",
+    "Current configured trust exposes one verification key. Historical replay after discarding/rotating that key is unqualified; no key archive or trust migration invented. Existing event/DTO/response schemas retained; no persisted migration/reset/deploy/replay/broker claim."
+  ],
+  "rootRefinements": [
+    "Fixed test interface/domain event comparison by asserting actual latest/earlier event IDs; one prematurely started compile was interrupted and excluded from evidence."
+  ],
+  "remainingWork": [
+    "Practice19 frozen; Client and ServiceEngagement independence active. Selected root-only subject-blob namespace correction remains in Engagement layer. No new issues."
+  ]
+}

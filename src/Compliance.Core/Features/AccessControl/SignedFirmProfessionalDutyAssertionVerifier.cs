@@ -31,6 +31,13 @@ sealed class SignedFirmProfessionalDutyAssertionVerifier : IFirmProfessionalDuty
 
     public bool TryVerify(string? signedAssertion, DateTimeOffset now,
         out VerifiedFirmProfessionalDutyAssertion assertion)
+        => TryVerifyCore(signedAssertion, now, out assertion);
+
+    public bool TryVerifyBinding(string? signedAssertion, out VerifiedFirmProfessionalDutyAssertion assertion) =>
+        TryVerifyCore(signedAssertion, null, out assertion);
+
+    bool TryVerifyCore(string? signedAssertion, DateTimeOffset? now,
+        out VerifiedFirmProfessionalDutyAssertion assertion)
     {
         assertion = null!;
         if (_settings is null || _publicKey is null || string.IsNullOrWhiteSpace(signedAssertion) ||
@@ -84,7 +91,7 @@ sealed class SignedFirmProfessionalDutyAssertionVerifier : IFirmProfessionalDuty
             var issuedAt = DateTimeOffset.FromUnixTimeSeconds(issuedAtSeconds);
             var notBefore = DateTimeOffset.FromUnixTimeSeconds(notBeforeSeconds);
             var expiresAt = DateTimeOffset.FromUnixTimeSeconds(expiresAtSeconds);
-            if (issuedAt > now || notBefore > now || expiresAt <= now || notBefore < issuedAt ||
+            if (now is { } instant && (issuedAt > instant || notBefore > instant || expiresAt <= instant) || notBefore < issuedAt ||
                 expiresAt <= notBefore || expiresAt - issuedAt > TimeSpan.FromSeconds(_settings.MaximumAssertionLifetimeSeconds))
                 return false;
 

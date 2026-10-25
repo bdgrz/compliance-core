@@ -16,7 +16,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 /// </summary>
 sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregateExecutor executor,
     IImmutableContentStore content, TimeProvider clock, ProfessionalDutyChangeVerifier verifier,
-    ProfessionalDutyFences fences)
+    ProfessionalDutyFences fences, ProfessionalDutyReader dutyViews)
 {
     const int MaximumAttempts = 4;
 
@@ -119,22 +119,33 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
         {
             try
             {
-                var current = await reader.HydrateAsync(new FirmProfessionalDutyDesignation(owner.UserId, owner.Duty,
-                    owner.TenantId, command.CommandId), ct).ConfigureAwait(false);
-                if (current.Acceptance.Decide(binding) is var decision and not NativeAcceptanceDecision.None)
-                    return decision == NativeAcceptanceDecision.Replayed
-                        ? SourceUseReceiverSupport.Replayed(Fact(current.Stream, current.Acceptance.SelectedFact!))
-                        : Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
-                if (current.IsRejected(command.AssertionId))
-                    return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The change was rejected.", null));
-
-                var applied = await BuildAsync(current, intent, evidence, provenance, command.CommandId, ct)
-                    .ConfigureAwait(false);
-                if (applied.Error is not null)
-                    return Result<ReceiverOutcome>.Failure(applied.Error);
-                var latestEvent = EventIdOf(current.Latest);
+                (ulong Version, ulong Position, string Digest)? preparedCut = null;
+                Result<ReceiverOutcome>? Decide(FirmProfessionalDutyDesignation current) => current.Acceptance.Decide(binding) switch
+                {
+                    NativeAcceptanceDecision.Replayed => SourceUseReceiverSupport.Replayed(Fact(current.Stream, current.Acceptance.SelectedFact!)),
+                    NativeAcceptanceDecision.Conflict => Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError),
+                    _ when current.IsRejected(command.AssertionId) => Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The change was rejected.", null)),
+                    _ => null,
+                };
+                var prepared = await NativeReceiverPreparation.PrepareAsync<FirmProfessionalDutyDesignation, Built>(reader,
+                    () => new FirmProfessionalDutyDesignation(owner.UserId, owner.Duty, owner.TenantId,
+                        command.CommandId, command.AssertionId), Decide,
+                    async (current, token) =>
+                    {
+                        var built = await BuildAsync(current, intent, evidence, provenance, command.CommandId, token)
+                            .ConfigureAwait(false);
+                        if (built.Error is not null)
+                            return Result<Built>.Failure(built.Error);
+                        preparedCut = (current.Version, current.CommittedStreamPosition, current.ReplayCut.Digest);
+                        return Result<Built>.Success(built);
+                    }, ct).ConfigureAwait(false);
+                if (!prepared.IsSuccess)
+                    return Result<ReceiverOutcome>.Failure(prepared.Error!);
+                if (prepared.Value!.Outcome is { } known)
+                    return known;
+                var applied = prepared.Value.Value!;
                 var step = await executor.ExecuteAsync(new FirmProfessionalDutyDesignation(owner.UserId, owner.Duty,
-                    owner.TenantId, command.CommandId), fresh =>
+                    owner.TenantId, command.CommandId, command.AssertionId), fresh =>
                     {
                         switch (fresh.Acceptance.Decide(binding))
                         {
@@ -147,7 +158,7 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
 
                         if (fresh.IsRejected(command.AssertionId))
                             return AggregateOutcome.Discard(Result<Step>.Success(new Step(null, false, true)));
-                        if (EventIdOf(fresh.Latest) != latestEvent || fresh.Revision != current.Revision)
+                        if (preparedCut != (fresh.Version, fresh.CommittedStreamPosition, fresh.ReplayCut.Digest))
                             return AggregateOutcome.Discard(Result<Step>.Success(new Step(null, false, false)));
                         var raised = fresh.Apply(intent.ChangeKind, provenance, applied.Designation!,
                             intent.SignedAssertion, applied.Result!);
@@ -195,16 +206,29 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Permanent($"The frozen change cannot be verified: {exception.Message}");
+            return exception is ImmutableContentUnavailableException
+                ? SourceUseReceiverSupport.Transient($"The frozen change is unavailable: {exception.Message}")
+                : SourceUseReceiverSupport.Permanent($"The frozen change cannot be verified: {exception.Message}");
         }
 
         var owner = new FirmProfessionalDutyDesignation(evidence.UserId, evidence.Duty, evidence.TenantId,
-            command.CommandId);
+            command.CommandId, command.OperationId);
         if (intent.Header.RootOperationId != command.OperationId || command.Target != owner.Stream)
             return SourceUseReceiverSupport.Permanent("The rejection names another designation stream or operation.");
         var hydrated = await reader.HydrateAsync(owner, ct).ConfigureAwait(false);
         if (hydrated.AcceptedFor(command.OperationId) is not { } accepted || accepted.Intent != command.FailureProof)
             return SourceUseReceiverSupport.Permanent("A rejection requires the exact frozen change of its designation.");
+
+        try
+        {
+            ProfessionalDutyContent.RequireIntent(hydrated, accepted, intent, evidence);
+            await ProfessionalDutyContent.RequireAuthoredAsync(content, intent, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return error is ImmutableContentUnavailableException ? SourceUseReceiverSupport.Transient(error.Message)
+                : SourceUseReceiverSupport.Permanent(error.Message);
+        }
 
         var provenance = ProfessionalDutyEffects.Child(command.CommandId, nameof(RejectProfessionalDutyChange),
             accepted.Metadata.EventId, intent, owner.Stream, clock.GetUtcNow());
@@ -214,7 +238,7 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
             try
             {
                 var step = await executor.ExecuteAsync(new FirmProfessionalDutyDesignation(evidence.UserId,
-                    evidence.Duty, evidence.TenantId, command.CommandId), pending =>
+                    evidence.Duty, evidence.TenantId, command.CommandId, command.OperationId), pending =>
                     {
                         switch (pending.Acceptance.Decide(binding))
                         {
@@ -287,13 +311,12 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
         FirmProfessionalDutyDesignationView? previous;
         try
         {
-            previous = current.LatestContent is { } latest
-                ? await ProfessionalDutyContent.ReadDesignationAsync(content, latest, ct).ConfigureAwait(false)
-                : null;
+            previous = await dutyViews.ReadCurrentAsync(current, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return Built.Failed(Permanent($"The current designation cannot be verified: {exception.Message}"));
+            return Built.Failed(new RequestError(RequestErrorKind.Conflict,
+                $"The current designation cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         var chain = ProfessionalDutyRules.CheckChain(intent.ChangeKind, evidence, previous);

@@ -1,0 +1,132 @@
+{
+  "model": "jev-1.14.0",
+  "files": 63,
+  "threshold": 0.65,
+  "signals": [
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/ProfessionalDutyAdmission.cs",
+      "kind": "invariant_gap",
+      "probability": 0.69
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/SignedFirmProfessionalDutyAssertionVerifier.cs",
+      "kind": "authority_gap",
+      "probability": 0.7
+    },
+    {
+      "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs",
+      "kind": "invariant_gap",
+      "probability": 0.7
+    },
+    {
+      "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs",
+      "kind": "recovery_gap",
+      "probability": 0.66
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/WeeklyWorkDigestRules.cs",
+      "kind": "invariant_gap",
+      "probability": 0.65
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/WeeklyWorkDigestRules.cs",
+      "kind": "recovery_gap",
+      "probability": 0.75
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
+      "kind": "recovery_gap",
+      "probability": 0.69
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
+      "kind": "recovery_gap",
+      "probability": 0.66
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/WorkDigestDispatchRules.cs",
+      "kind": "recovery_gap",
+      "probability": 0.75
+    }
+  ],
+  "exactSourceAndDependencyHashes": "verified",
+  "dispositions": [
+    {
+      "paths": [
+        "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs"
+      ],
+      "kinds": [
+        "invariant_gap",
+        "recovery_gap"
+      ],
+      "decision": "No demonstrated unresolved introduced gap after exact native history, selected pair absence and installed executor review.",
+      "evidence": [
+        "Complete raw history validates every original scope/root/actor/clock/revision/pair, duplicate logical IDs/pairs, ordered payload/immutable metadata commitment and full selected metadata at actual native/physical cut before reads or replay. Compact owner holds scalar record/closure/revision and explicit operation/pair/admission slots.",
+        "All three public owning commands freeze only inside NativeOperationExecutor and require full prepared cut again through append. Existing actor/program/provider authorization remains before replay.",
+        "Real captured RiskAccepted proof binds actual source/physical tuple/program/risk/acceptance/expiry at original LinkedAt. Historical materialization after closure/expiry remains valid. Root missing/corrupt tests3failed3positive then corrected Close/Link classification; all focused cases green.",
+        "Legacy materializer ExpectedRevision was never interpreted; selected catalog lists nullable field without numeric semantics, sole producer emits null. Preserve explicit unused qualification, no invented new null-only guard."
+      ]
+    },
+    {
+      "paths": [
+        "src/Compliance.Core/Features/AccessControl/ProfessionalDutyAdmission.cs",
+        "src/Compliance.Core/Features/AccessControl/SignedFirmProfessionalDutyAssertionVerifier.cs"
+      ],
+      "kinds": [
+        "invariant_gap",
+        "authority_gap"
+      ],
+      "decision": "Current operator and cryptographic assertion binding precede replay; freshness gates first native admission and live authority independently.",
+      "evidence": [
+        "Binding verifier still enforces RSA RS256 signature, configured kid/issuer/audience, canonical/unique/allowed claims, exact subject/duty/tenant scope/designation/assertion, chronological bounds and configured maximum assertion lifetime. Binding-only skips wall-clock freshness, not signature or scope.",
+        "Native executor resolves exact original actor/intent/revision acceptance first; new admission requires ValidAt at frozen decision instant and complete signed chain/current staff pin. ProfessionalDutyAuthorityReader still calls TryVerify with current now for live authorization.",
+        "Pending designation rejects new source holds and apply refuses active uses. Original expired retry, equal-winner failed intent, current operator revocation, full native history and grant/fence/settlement cases pass. No arbitrary validity relaxation or retention cap.",
+        "Current trust configuration has one configured verification key; historical replay across discarded/rotated keys is not qualified. No key archive, migration or trust authority is invented."
+      ]
+    },
+    {
+      "paths": [
+        "src/Compliance.Core/Features/Work/WeeklyWorkDigestRules.cs"
+      ],
+      "kinds": [
+        "invariant_gap",
+        "recovery_gap"
+      ],
+      "decision": "Rules is complete transient composition, compact owner retains current/selected attempt authority; weekly selected command follow-on remains explicit.",
+      "evidence": [
+        "Rules no longer inherits Aggregate. Its full list exists only in explicit History/Snapshot composition or a bounded current/selected preparation restored with latest attempt number; next attempt derives from scalar count, not truncated list length.",
+        "Actual128-failed-attempt history and selected earlier original callback tests preserve existing unlimited repeat policy. Installed raw/default/executor prefix validation fences malformed native transitions and exact captured cuts.",
+        "No new cap, deadline, sender, parent business owner or callback. Existing weekly Deliver/Record missing selected identities and complete ScheduleKey/source/page-result capture are separate internal follow-ons, not falsely completed by this history/operator patch."
+      ]
+    },
+    {
+      "paths": [
+        "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
+        "src/Compliance.Core/Features/Work/WorkDigestDispatchRules.cs"
+      ],
+      "kinds": [
+        "recovery_gap"
+      ],
+      "decision": "Complete external member-week history preserves pending discovery; native operator original response is distinct from later delivery progress.",
+      "evidence": [
+        "Production owner holds latest and one explicitly selected member-week; full read history reconstructs every state and pending/current window. Original monotonic-week, frozen timezone, deadline and attempt-budget rules are unchanged and checked against pre-migration source. Multiple pending frozen timezone weeks remain discoverable.",
+        "Selected operator command now has required CommandId/ExpectedRevision and canonical PUT per catalog. Full raw native v2 authorization proof binds actor/root/scope/revision/attempt/before/settings/exact authored text and original descriptor/body/MutationResult envelope. Current personal platform operator authority remains before replay.",
+        "Exact retry returns original attempt/status/revision after later Unknown/progress/clock/settings; a fresh identity can reuse evidence in another Unknown episode. Missing/corrupt original/candidate, lost append, equal winner, changed binding and actual HTTP scope/auth tests pass. Legacy v1 authorization data remains unqualified."
+      ]
+    },
+    {
+      "paths": [
+        "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs"
+      ],
+      "kinds": [
+        "recovery_gap"
+      ],
+      "decision": "Durable claim and exact claimed-attempt settlement prevent delayed worker result from completing another attempt.",
+      "evidence": [
+        "Processor durably claims before transport and settles only matching claimed attempt number, last-attempt time and stable message ID. Expected cancellation/interruptions become Unknown without automatic ambiguous resend. Existing current-week/deadline/attempt policy retained.",
+        "Genuine old real-processor/fake-transport late result regression qualified before changes. Combined focused tests cover a later authorization/second claim before old Accepted returns; the later claimed attempt remains intact. No real email was sent."
+      ]
+    }
+  ],
+  "adopted": "continue scoped integration review and final local gates; weekly source/result ownership and remaining owner/receiver work remain explicit"
+}

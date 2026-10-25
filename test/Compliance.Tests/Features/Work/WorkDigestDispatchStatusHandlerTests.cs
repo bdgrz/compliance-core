@@ -100,7 +100,7 @@ public sealed class WorkDigestDispatchStatusHandlerTests
 
     static Task SeedDispatchAsync(IServiceProvider provider, Uuid tenantId, Uuid memberId,
         DateOnly weekOf, DateTimeOffset scheduledAt, Uuid messageId) =>
-        ProgramManagementServices.SeedAsync(provider, new WorkDigestDispatch(tenantId, memberId),
+        WorkDigestFacts.DispatchAsync(provider, new WorkDigestDispatchRules(tenantId, memberId),
             dispatch => dispatch.Schedule(new WorkDigestScheduleWindow(weekOf,
                         "America/New_York", scheduledAt), messageId,
                     retryWindow: TimeSpan.FromHours(24), recordedAt: scheduledAt.AddMinutes(-1)) &&

@@ -14,7 +14,7 @@ public sealed class WorkDigestDispatchTests
         var messageId = Uuid.CreateVersion5(memberId, "digest:2026-10-05");
         var schedule = new WorkDigestScheduleWindow(new DateOnly(2026, 10, 5),
             "America/New_York", new DateTimeOffset(2026, 10, 5, 13, 0, 0, TimeSpan.Zero));
-        var dispatch = new WorkDigestDispatch(tenantId, memberId);
+        var dispatch = new WorkDigestDispatchRules(tenantId, memberId);
 
         // Act
         var firstClaim = dispatch.Schedule(schedule, messageId, TimeSpan.FromDays(6),
@@ -40,7 +40,7 @@ public sealed class WorkDigestDispatchTests
         var schedule = new WorkDigestScheduleWindow(new DateOnly(2026, 10, 5), "UTC",
             new DateTimeOffset(2026, 10, 5, 9, 0, 0, TimeSpan.Zero));
         var now = schedule.ScheduledAt;
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.True(dispatch.Schedule(schedule, Uuid.CreateVersion4(), TimeSpan.FromHours(24), now));
 
         // Act
@@ -70,7 +70,7 @@ public sealed class WorkDigestDispatchTests
         // Arrange
         var schedule = new WorkDigestScheduleWindow(new DateOnly(2026, 10, 5), "UTC",
             new DateTimeOffset(2026, 10, 5, 9, 0, 0, TimeSpan.Zero));
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.True(dispatch.Schedule(schedule, Uuid.CreateVersion4(), TimeSpan.FromDays(6),
             schedule.ScheduledAt));
         Assert.True(dispatch.StartAttempt(schedule.WeekOf, schedule.ScheduledAt));
@@ -93,7 +93,7 @@ public sealed class WorkDigestDispatchTests
         // Arrange
         var schedule = new WorkDigestScheduleWindow(new DateOnly(2026, 10, 5), "UTC",
             new DateTimeOffset(2026, 10, 5, 9, 0, 0, TimeSpan.Zero));
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.True(dispatch.Schedule(schedule, Uuid.CreateVersion4(), TimeSpan.FromDays(6),
             schedule.ScheduledAt));
 
@@ -117,7 +117,7 @@ public sealed class WorkDigestDispatchTests
         // Arrange
         var schedule = new WorkDigestScheduleWindow(new DateOnly(2026, 10, 5), "UTC",
             new DateTimeOffset(2026, 10, 5, 9, 0, 0, TimeSpan.Zero));
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.True(dispatch.Schedule(schedule, Uuid.CreateVersion4(), TimeSpan.FromDays(6),
             schedule.ScheduledAt));
         Assert.True(dispatch.StartAttempt(schedule.WeekOf, schedule.ScheduledAt));
@@ -143,7 +143,7 @@ public sealed class WorkDigestDispatchTests
         var schedule = new WorkDigestScheduleWindow(new DateOnly(2026, 10, 5), "UTC",
             new DateTimeOffset(2026, 10, 5, 9, 0, 0, TimeSpan.Zero));
         var deadline = schedule.ScheduledAt.AddHours(6);
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.True(dispatch.Schedule(schedule, Uuid.CreateVersion4(), TimeSpan.FromHours(6),
             schedule.ScheduledAt));
         Assert.True(dispatch.StartAttempt(schedule.WeekOf, schedule.ScheduledAt));
@@ -170,7 +170,7 @@ public sealed class WorkDigestDispatchTests
         var scheduledAt = new DateTimeOffset(2026, 10, 5, 13, 0, 0, TimeSpan.Zero);
         var nextLocalWeek = new DateTimeOffset(2026, 10, 12, 4, 0, 0, TimeSpan.Zero);
         var schedule = new WorkDigestScheduleWindow(weekOf, "America/New_York", scheduledAt);
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
 
         // Act
         var scheduled = dispatch.Schedule(schedule, Uuid.CreateVersion4(),
@@ -189,7 +189,7 @@ public sealed class WorkDigestDispatchTests
         var scheduledAt = new DateTimeOffset(2026, 3, 2, 14, 0, 0, TimeSpan.Zero);
         var nextLocalWeek = new DateTimeOffset(2026, 3, 9, 4, 0, 0, TimeSpan.Zero);
         var schedule = new WorkDigestScheduleWindow(weekOf, "America/New_York", scheduledAt);
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
 
         // Act
         var scheduled = dispatch.Schedule(schedule, Uuid.CreateVersion4(),
@@ -207,7 +207,7 @@ public sealed class WorkDigestDispatchTests
         var weekOf = new DateOnly(2026, 10, 5);
         var scheduledAt = new DateTimeOffset(2026, 10, 5, 13, 0, 0, TimeSpan.Zero);
         var nextLocalWeek = new DateTimeOffset(2026, 10, 12, 4, 0, 0, TimeSpan.Zero);
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.True(dispatch.Schedule(new WorkDigestScheduleWindow(weekOf,
                 "America/New_York", scheduledAt), Uuid.CreateVersion4(), TimeSpan.FromHours(167),
             scheduledAt));
@@ -225,7 +225,7 @@ public sealed class WorkDigestDispatchTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var memberId = Uuid.CreateVersion4();
-        var dispatch = new WorkDigestDispatch(tenantId, memberId);
+        var dispatch = new WorkDigestDispatchRules(tenantId, memberId);
         var firstWeek = new WorkDigestScheduleWindow(new DateOnly(2026, 10, 5), "UTC",
             new DateTimeOffset(2026, 10, 5, 9, 0, 0, TimeSpan.Zero));
         var nextWeek = new WorkDigestScheduleWindow(new DateOnly(2026, 10, 12), "UTC",
@@ -252,7 +252,7 @@ public sealed class WorkDigestDispatchTests
         var weekOf = new DateOnly(2026, 10, 5);
         var scheduledAt = new DateTimeOffset(2026, 10, 5, 13, 0, 0, TimeSpan.Zero);
         var authorizedAt = scheduledAt.AddHours(2);
-        var dispatch = new WorkDigestDispatch(tenantId, memberId);
+        var dispatch = new WorkDigestDispatchRules(tenantId, memberId);
         Assert.True(dispatch.Schedule(new WorkDigestScheduleWindow(weekOf, "America/New_York",
                 scheduledAt), Uuid.CreateVersion4(), TimeSpan.FromHours(167), scheduledAt));
         Assert.True(dispatch.StartAttempt(weekOf, scheduledAt));
@@ -285,7 +285,7 @@ public sealed class WorkDigestDispatchTests
         var weekOf = new DateOnly(2026, 10, 5);
         var scheduledAt = new DateTimeOffset(2026, 10, 5, 13, 0, 0, TimeSpan.Zero);
         var operatorId = Uuid.CreateVersion4();
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.True(dispatch.Schedule(new WorkDigestScheduleWindow(weekOf, "America/New_York",
                 scheduledAt), Uuid.CreateVersion4(), TimeSpan.FromHours(167), scheduledAt));
         Assert.True(dispatch.StartAttempt(weekOf, scheduledAt));
@@ -297,7 +297,7 @@ public sealed class WorkDigestDispatchTests
             "smtp-record:INC-4201", "Relay logs confirm non-acceptance.",
             new DateTimeOffset(2026, 10, 12, 4, 0, 0, TimeSpan.Zero), maximumAttempts: 3);
 
-        var exhausted = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var exhausted = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.True(exhausted.Schedule(new WorkDigestScheduleWindow(weekOf, "America/New_York",
                 scheduledAt), Uuid.CreateVersion4(), TimeSpan.FromHours(167), scheduledAt));
         Assert.True(exhausted.StartAttempt(weekOf, scheduledAt));
@@ -322,7 +322,7 @@ public sealed class WorkDigestDispatchTests
         var scheduledAt = new DateTimeOffset(2026, 10, 5, 13, 0, 0, TimeSpan.Zero);
         var authorizedAt = scheduledAt.AddHours(1);
         var operatorId = Uuid.CreateVersion4();
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.True(dispatch.Schedule(new WorkDigestScheduleWindow(weekOf,
                 "America/New_York", scheduledAt), Uuid.CreateVersion4(), TimeSpan.FromHours(167),
             scheduledAt));
@@ -349,7 +349,7 @@ public sealed class WorkDigestDispatchTests
         // Arrange
         var schedule = new WorkDigestScheduleWindow(new DateOnly(2026, 10, 5), "UTC",
             new DateTimeOffset(2026, 10, 5, 9, 0, 0, TimeSpan.Zero));
-        var dispatch = new WorkDigestDispatch(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var dispatch = new WorkDigestDispatchRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.True(dispatch.Schedule(schedule, Uuid.CreateVersion4(), TimeSpan.FromDays(6),
             schedule.ScheduledAt));
 

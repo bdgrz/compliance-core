@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -66,8 +68,16 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
         Assert.True(review.Complete(Provenance(review.Stream, Uuid.CreateVersion4(), reviewId),
             await WriteAsync(content, reviewContent), 1, "material", 1, actor, assuranceRecordedAt.AddHours(1), ProviderId,
             await WriteAsync(content, reviewContent)).IsSuccess);
-        Assert.True(gap.Record(Provenance(gap.Stream, gapId, gapId), 1, await WriteAsync(content, gapContent), actor,
-            assuranceRecordedAt.AddHours(2), await WriteAsync(content, gapContent), await WriteAsync(content, gapContent)).IsSuccess);
+        var gapAt = assuranceRecordedAt.AddHours(2);
+        var gapRequest = new RecordProviderCoverageGap(gapId, TenantId, ProviderId, gapContent);
+        var gapBody = await ProviderAssuranceContent.WriteAsync(content, TenantId, ProviderAssuranceContent.GapRecordedSchema,
+            gapContent, CancellationToken.None);
+        var gapResult = await ProviderAssuranceContent.WriteAsync(content, TenantId, ProviderAssuranceContent.GapRegistrationSchema,
+            new ProviderCoverageGapRegistration(gapId, 1), CancellationToken.None);
+        var gapResponse = await FirstResponses.FreezeAsync(content, TenantId.ToString(),
+            ProviderAssuranceContent.Completed(gapResult, ProviderAssuranceContent.GapRegistrationSchema));
+        Assert.True(gap.Record(gap.Provenance(gapId, nameof(RecordProviderCoverageGap), actor, "initial", null,
+                AuthoredIntentDigest.Compute(gapRequest), gapAt), 1, gapBody, actor, gapAt, gapResponse, gapResult).IsSuccess);
 
         await AppendAsync(store, report, 0);
         await AppendAsync(store, review, 0);
@@ -133,11 +143,24 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
         var closure = new ProviderCoverageGapClosureContent("coverage_restored",
             "assurance_report", reportId, 2,
             "The updated report now supports the missing service interval.");
-        Assert.True(gap.Close(Provenance(gap.Stream, Uuid.CreateVersion4(), Uuid.CreateVersion4()), 1, gapContent,
-            closure, await WriteAsync(content, closure), actor, RevisedAfterTypeI.AddHours(1),
-            await WriteAsync(content, closure), await WriteAsync(content, closure)).IsSuccess);
+        var closeId = Uuid.CreateVersion4();
+        var closedAt = RevisedAfterTypeI.AddHours(1);
+        gap = await services.GetRequiredService<IAggregateReader>().HydrateAsync(
+            new ProviderAssuranceGap(TenantId, ProviderId, gapId, closeId));
+        var closeRequest = new CloseProviderCoverageGap(closeId, TenantId, ProviderId, gapId, 1, closure);
+        var closureBody = await ProviderAssuranceContent.WriteAsync(content, TenantId,
+            ProviderAssuranceContent.GapClosedSchema, closure, CancellationToken.None);
+        var closureResult = await ProviderAssuranceContent.WriteAsync(content, TenantId,
+            ProviderAssuranceContent.GapRegistrationSchema, new ProviderCoverageGapRegistration(gapId, 2),
+            CancellationToken.None);
+        var closureResponse = await FirstResponses.FreezeAsync(content, TenantId.ToString(),
+            ProviderAssuranceContent.Completed(closureResult, ProviderAssuranceContent.GapRegistrationSchema));
+        var closed = gap.Close(gap.Provenance(closeId, nameof(CloseProviderCoverageGap), actor, "current", 1,
+                AuthoredIntentDigest.Compute(closeRequest), closedAt), 1, gapContent, closure, closureBody, actor,
+            closedAt, closureResponse, closureResult);
+        Assert.True(closed.IsSuccess, closed.Error?.Message);
         await AppendAsync(store, report, 1);
-        await AppendAsync(store, gap, 1);
+        await store.AppendAsync(gap.Stream, 1, new AggregateScenario<ProviderAssuranceGap>(gap).PendingEvents.ToArray());
         var currentReport = ReportView(reportId, 2, revisedReport, 2, actor, RevisedAfterTypeI);
         var closedGap = openGap with
         {
@@ -258,15 +281,16 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
         collection.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
             new PersistenceKvClient(new InMemoryKvClient())));
         collection.AddPortia();
+        collection.AddVerifiedProviderGapReader();
         return collection.BuildServiceProvider();
     }
 
-    /// <summary>Hydrates providers from the real store and every other owner from the fixed instances.</summary>
+    /// <summary>Hydrates providers and gaps from their verified real stores; the other owner fixtures retain their fixed instances.</summary>
     sealed class AggregateReader(IAggregateReader real, params Aggregate[] aggregates) : IAggregateReader
     {
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
             CancellationToken ct = default) where TAggregate : Aggregate =>
-            aggregate is Provider
+            aggregate is Provider or ProviderAssuranceGap
                 ? real.HydrateAsync(aggregate, ct)
                 : ValueTask.FromResult(aggregates.FirstOrDefault(item => item.Id == aggregate.Id &&
                     item.GetType() == typeof(TAggregate)) is TAggregate found ? found : aggregate);

@@ -3,8 +3,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
 
-/// <summary>Authorizes a same-week retry after relay evidence confirms non-acceptance.</summary>
-[Discriminator("bdgrz.work.digest.dispatch.unknown_retry.authorize", 1)]
-public sealed record AuthorizeWorkDigestUnknownRetry(Uuid TenantId, Uuid MemberId,
-    DateOnly WeekOf, string EvidenceReference, string Rationale)
-    : IRequest<WorkDigestDispatchStatusView>, ICallable, IPlatformOperatorRequest;
+/// <summary>Identifies one same-week retry authorization after relay evidence confirms non-acceptance.</summary>
+[Discriminator("bdgrz.work.digest.dispatch.unknown_retry.authorize", 2)]
+public sealed record AuthorizeWorkDigestUnknownRetry(Uuid CommandId, Uuid TenantId, Uuid MemberId,
+    DateOnly WeekOf, string EvidenceReference, string Rationale, long ExpectedRevision)
+    : IRequest<WorkDigestDispatchStatusView>, ICallable, IPlatformOperatorRequest, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

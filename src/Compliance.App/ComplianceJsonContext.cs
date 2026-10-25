@@ -73,4 +73,5 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.CriteriaTextOverlayContent))]
 [JsonSerializable(typeof(EvidenceArtifactContent))]
 [JsonSerializable(typeof(EvidenceCapture))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkDigestRetryHttpBody))]
 sealed partial class ComplianceJsonContext : JsonSerializerContext;

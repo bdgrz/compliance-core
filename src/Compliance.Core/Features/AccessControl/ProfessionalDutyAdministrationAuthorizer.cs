@@ -4,7 +4,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Operators may relay verified issuer assertions but cannot create or confer professional duty.</summary>
 sealed class ProfessionalDutyAdministrationAuthorizer(IPlatformOperatorAccess operators,
-    IFirmProfessionalDutyAssertionVerifier assertions, TimeProvider clock)
+    IFirmProfessionalDutyAssertionVerifier assertions)
     : IRequestAuthorizer<IProfessionalDutyAdministrationRequest>
 {
     public async ValueTask<Result> AuthorizeAsync(IRequestContext<IProfessionalDutyAdministrationRequest> context,
@@ -23,16 +23,14 @@ sealed class ProfessionalDutyAdministrationAuthorizer(IPlatformOperatorAccess op
         return context.Request switch
         {
             GetFirmProfessionalDutyCatalog => Result.Success,
-            RecordFirmProfessionalDutyDesignation request when assertions.TryVerify(request.SignedAssertion,
-                clock.GetUtcNow(), out var assertion) && assertion.Status == "active" &&
+            RecordFirmProfessionalDutyDesignation request when assertions.TryVerifyBinding(request.SignedAssertion, out var assertion) && assertion.Status == "active" &&
                 assertion.DesignationId == request.DesignationId &&
                 assertion.AssertionId == request.AssertionId => Result.Success,
-            RevokeFirmProfessionalDutyDesignation request when assertions.TryVerify(request.SignedAssertion,
-                clock.GetUtcNow(), out var assertion) && assertion.Status == "revoked" &&
+            RevokeFirmProfessionalDutyDesignation request when assertions.TryVerifyBinding(request.SignedAssertion, out var assertion) && assertion.Status == "revoked" &&
                 assertion.DesignationId == request.DesignationId &&
                 assertion.AssertionId == request.AssertionId => Result.Success,
             _ => Deny(RequestErrorKind.Forbidden,
-                "Duty changes require a valid, current assertion from the configured firm-authority issuer.")
+                "Duty changes require a cryptographically verified assertion from the configured firm-authority issuer.")
         };
     }
 

@@ -3,10 +3,14 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Work;
 
 /// <summary>Reads the durable digest dispatch ledger without exposing message or transport data.</summary>
-public sealed class GetWorkDigestDispatchStatusHandler(IAggregateReader reader)
+public sealed class GetWorkDigestDispatchStatusHandler(WorkDigestHistoryReader histories)
     : IRequestHandler<GetWorkDigestDispatchStatus, WorkDigestDispatchStatusView>
 {
-    public async ValueTask<Result<WorkDigestDispatchStatusView>> HandleAsync(
+    public ValueTask<Result<WorkDigestDispatchStatusView>> HandleAsync(
+        IRequestContext<GetWorkDigestDispatchStatus> context, CancellationToken ct) =>
+        WorkDigestSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<WorkDigestDispatchStatusView>> HandleCoreAsync(
         IRequestContext<GetWorkDigestDispatchStatus> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -14,8 +18,7 @@ public sealed class GetWorkDigestDispatchStatusHandler(IAggregateReader reader)
             return Result<WorkDigestDispatchStatusView>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The work digest dispatch scope is incomplete."));
 
-        var dispatch = await reader.HydrateAsync(new WorkDigestDispatch(request.TenantId,
-            request.MemberId), ct).ConfigureAwait(false);
+        var dispatch = await histories.ReadDispatchAsync(request.TenantId, request.MemberId, ct).ConfigureAwait(false);
         return Result<WorkDigestDispatchStatusView>.Success(dispatch.Read(request.WeekOf));
     }
 }

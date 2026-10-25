@@ -9,6 +9,32 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 public sealed class SignedFirmProfessionalDutyAssertionVerifierTests
 {
     [Fact]
+    public void ShouldVerifyImmutableSignedBindingGivenTemporalValidityEnded()
+    {
+        // Arrange
+        using var provider = Compose(configureTrust: true);
+        using var scope = provider.CreateScope();
+        var verifier = scope.ServiceProvider.GetRequiredService<IFirmProfessionalDutyAssertionVerifier>();
+        var now = CurrentSecond();
+        var claims = ProfessionalDutyAssertionTestIssuer.Claims(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            FirmProfessionalDuty.RuleRatifier, null, 1, "active", null, now.AddHours(-1), now.AddMinutes(-1));
+        var signed = ProfessionalDutyAssertionTestIssuer.SignClaims(claims);
+        var otherIssuer = Copy(claims);
+        otherIssuer["iss"] = "https://other-authority.example";
+
+        // Act
+        var bound = verifier.TryVerifyBinding(signed, out var evidence);
+        var current = verifier.TryVerify(signed, now, out _);
+        var foreign = verifier.TryVerifyBinding(ProfessionalDutyAssertionTestIssuer.SignClaims(otherIssuer), out _);
+
+        // Assert
+        Assert.True(bound);
+        Assert.True(evidence.ExpiresAt < now);
+        Assert.False(current);
+        Assert.False(foreign);
+    }
+
+    [Fact]
     public void ShouldRejectAssertionGivenNoConfiguredTrustedIssuer()
     {
         // Arrange

@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
@@ -25,6 +26,59 @@ static class ProfessionalDutyContent
 
     /// <summary>Schema of the normalized revoke command.</summary>
     public const string RevokeCommandSchema = "revoke-firm-professional-duty-designation.v1";
+
+    public static void RequireIntent(FirmProfessionalDutyDesignation owner, ProfessionalDutyChangeAccepted accepted,
+        ProfessionalDutyChangeIntent intent, VerifiedFirmProfessionalDutyAssertion evidence)
+    {
+        var operation = accepted.Operation;
+        if (intent.ChangeKind is not (ProfessionalDutyChangeKind.Record or ProfessionalDutyChangeKind.Revoke) ||
+            !ProfessionalDutyRules.ValidAssertion(evidence, intent.SignedAssertion) ||
+            operation.CommandKind != (intent.ChangeKind == ProfessionalDutyChangeKind.Record
+                ? nameof(RecordFirmProfessionalDutyDesignation) : nameof(RevokeFirmProfessionalDutyDesignation)) ||
+            intent.VerifiedScope.Schema != VerifiedScopeSchema ||
+            intent.Header.RootOperationId != operation.RootOperationId || intent.VerifiedAssertionId != operation.RootOperationId ||
+            intent.Header.FirstOwner != owner.Stream || intent.Header.AffectedOwner != owner.Stream ||
+            intent.Header.ExpectedRevisionOwner != owner.Stream || intent.Header.OriginalActor != operation.Actor ||
+            intent.Header.Episode != operation.Episode || intent.Header.OriginalExpectedRevision != operation.OriginalExpectedRevision ||
+            intent.Header.AuthoredIntentSha256 != operation.AuthoredIntentSha256 || intent.Header.AcceptedAt != operation.AcceptedAt ||
+            evidence.UserId != owner.UserId || evidence.Duty != owner.Duty || evidence.TenantId != owner.TenantId ||
+            evidence.AssertionId != operation.RootOperationId || evidence.DesignationId != intent.DesignationId ||
+            intent.AuthorityRevision != (ulong)evidence.AuthorityRevision ||
+            evidence.Status != (intent.ChangeKind == ProfessionalDutyChangeKind.Record ? "active" : "revoked") ||
+            intent.ChangeKind == ProfessionalDutyChangeKind.Record != (intent.StaffEligibility is not null) ||
+            ProfessionalDutyRules.EvidenceDigest(intent.SignedAssertion) != evidence.EvidenceDigest)
+            throw new ImmutableContentIntegrityException("The frozen designation scope differs from its exact native admission and owner.");
+    }
+
+    public static async Task RequireAuthoredAsync(IImmutableContentStore content, ProfessionalDutyChangeIntent intent,
+        CancellationToken ct)
+    {
+        if (intent.AuthoredChange.Schema != (intent.ChangeKind == ProfessionalDutyChangeKind.Record ? RecordCommandSchema : RevokeCommandSchema))
+            throw new ImmutableContentIntegrityException("The authored duty command has another selected schema.");
+        Uuid designation;
+        Uuid assertion;
+        string token;
+        long revision;
+        string digest;
+        if (intent.ChangeKind == ProfessionalDutyChangeKind.Record)
+        {
+            var command = await content.ReadJsonAsync<RecordFirmProfessionalDutyDesignation>(Realm, intent.AuthoredChange, ct)
+                .ConfigureAwait(false);
+            (designation, assertion, token, revision, digest) = (command.DesignationId, command.AssertionId,
+                command.SignedAssertion, command.ExpectedRevision, AuthoredIntentDigest.Compute(command));
+        }
+        else
+        {
+            var command = await content.ReadJsonAsync<RevokeFirmProfessionalDutyDesignation>(Realm, intent.AuthoredChange, ct)
+                .ConfigureAwait(false);
+            (designation, assertion, token, revision, digest) = (command.DesignationId, command.AssertionId,
+                command.SignedAssertion, command.ExpectedRevision, AuthoredIntentDigest.Compute(command));
+        }
+        if (designation != intent.DesignationId || assertion != intent.VerifiedAssertionId ||
+            token != intent.SignedAssertion || revision < 0 || (ulong)revision != intent.Header.OriginalExpectedRevision ||
+            digest != intent.Header.AuthoredIntentSha256)
+            throw new ImmutableContentIntegrityException("The authored duty command differs from its frozen native admission binding.");
+    }
 
     public static string DesignationSchema(ProfessionalDutyChangeKind kind) =>
         kind == ProfessionalDutyChangeKind.Record ? RecordedSchema : RevokedSchema;
