@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
@@ -196,11 +197,13 @@ static class CampaignSeed
 
     /// <summary>The participant of a campaign and person as its owner says it is.</summary>
     public static async Task<PolicyCampaignParticipant> ParticipantAsync(IServiceProvider provider, Uuid tenantId,
-        Uuid campaignId, Uuid personId)
+        Uuid campaignId, Uuid personId, ReservationKey? selectedUse = null)
     {
         await using var scope = provider.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new PolicyCampaignParticipant(tenantId, campaignId, personId));
+        var owner = new PolicyCampaignParticipant(tenantId, campaignId, personId);
+        if (selectedUse is not null)
+            owner.ForSourceUses(selectedUse);
+        return await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(owner);
     }
 
     static async Task<Result<ReceiverOutcome>> ApplyAsync<TRequest>(IServiceProvider provider, Uuid tenantId,

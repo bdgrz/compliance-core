@@ -49,7 +49,7 @@ sealed class FitzSourceFactResolver(IStreamClient streams, IDomainEventSerialize
             if (record is not null)
                 return record;
             if (!page.Cursor.HasMore)
-                throw new SourceFactVerificationException($"No record exists at {concrete} offset {resourcePosition}.");
+                throw new SourceFactUnavailableException($"No record exists at {concrete} offset {resourcePosition}.");
             if (page.Cursor.LastGlobalOffset is not { } last || last < next || last == ulong.MaxValue ||
                 page.Cursor.CursorFingerprint is not { } token || page.Cursor.CapturedWatermark is not { } captured)
                 throw new SourceFactVerificationException("The source selector cannot make verified global progress.");

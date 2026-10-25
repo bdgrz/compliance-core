@@ -27,10 +27,10 @@ static class EngagementAcceptanceProofs
                 var proofs = new List<NativeFactReference>(requirements.Count);
                 foreach (var requirement in requirements)
                 {
-                    var owner = await EngagementUseOwners.HydrateAsync(reader, requirement.SourceOwner, intent.Header,
-                        tenantId, ct).ConfigureAwait(false) ?? throw new SourceFactVerificationException(
-                        "A required source use names an unknown owner.");
                     var key = EngagementAcceptanceEffects.UseKey(operationId, root.Stream, requirement.SourceOwner);
+                    var owner = await EngagementUseOwners.HydrateAsync(reader, requirement.SourceOwner, intent.Header,
+                        tenantId, key, ct).ConfigureAwait(false) ?? throw new SourceFactVerificationException(
+                        "A required source use names an unknown owner.");
                     proofs.Add(owner.Uses.GrantOf(key)?.GrantEvent ?? throw new SourceFactVerificationException(
                         $"{requirement.SourceOwner.Area} has not produced its grant yet."));
                 }
@@ -50,7 +50,7 @@ static class EngagementAcceptanceProofs
                 foreach (var subject in subjects)
                 {
                     var owner = await reader.HydrateAsync(new PracticeIndependenceCommitment(tenantId, subject.Kind,
-                        subject.SubjectId), ct).ConfigureAwait(false);
+                        subject.SubjectId).ForSourceUse(candidate => EngagementAcceptanceEffects.UseKey(operationId, root.Stream, candidate.Stream)), ct).ConfigureAwait(false);
                     var key = EngagementAcceptanceEffects.UseKey(operationId, root.Stream, owner.Stream);
                     proofs.Add(owner.Uses.GrantOf(key)?.GrantEvent ?? throw new SourceFactVerificationException(
                         $"The reservation of {subject.Key} has not been produced yet."));

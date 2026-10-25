@@ -6,6 +6,8 @@ using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
@@ -113,6 +115,52 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
         }
         return result.OrderBy(item => item.Fact.Stream.ToString(), StreamKeyOrder.Instance)
             .ThenBy(item => item.Fact.AggregateVersion).ToArray();
+    }
+
+    /// <summary>Retains only the business bodies referenced by this exact selected operating source fact.</summary>
+    public async ValueTask<TypeIIPeriodCloseNativeSource> CaptureOperatingAsync(EventStreamAddress stream,
+        DomainEvent fact, CancellationToken ct)
+    {
+        var references = new List<ImmutableContentRef>();
+        var tenant = Uuid.Parse(stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
+        switch (fact)
+        {
+            case ControlOperatingPlanProposed value:
+                references.Add(value.PlanContent);
+                break;
+            case ControlOperatingPlanApproved value:
+                references.Add(value.ReassignmentsManifest);
+                break;
+            case ControlOccurrenceOpened value:
+                references.Add(value.CreationIntent);
+                references.Add(value.Intent);
+                break;
+            case ControlOccurrenceAttested value:
+                references.Add(value.AttestationContent);
+                break;
+            case ControlOccurrenceReviewed value:
+                references.Add(value.ReviewContent);
+                break;
+            case DueControlOccurrencesGenerated value:
+                references.Add(value.OccurrenceIdsManifest);
+                references.Add(value.CreationIntentManifest);
+                references.Add(value.CurrentContent);
+                var selection = await content.ReadJsonAsync<ControlOccurrenceSelectionManifest>(tenant.ToString(),
+                    value.CreationIntentManifest, ct).ConfigureAwait(false);
+                if (selection.Selections is null || selection.Selections.Any(item => item is null || item.Intent is null))
+                    throw new ImmutableContentIntegrityException("The selected occurrence generation has no complete immutable creation intent selection.");
+                references.AddRange(selection.Selections.Select(item => item.Intent));
+                break;
+        }
+        var blobs = new List<SnapshotSourceContentBlob>();
+        foreach (var reference in references.Distinct())
+        {
+            if (reference is null)
+                throw new ImmutableContentIntegrityException("The selected operating source has no exact required business content reference.");
+            blobs.Add(new(reference, (await content.ReadVerifiedAsync(tenant.ToString(), reference, ct)
+                .ConfigureAwait(false)).ToArray()));
+        }
+        return Capture(stream, fact) with { PhysicalContentBlobs = blobs };
     }
 
     public static TypeIIPeriodCloseNativeSource Capture(EventStreamAddress stream, DomainEvent fact) =>

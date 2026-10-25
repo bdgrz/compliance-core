@@ -175,6 +175,7 @@ public sealed class PracticeIndependenceCommitment : Aggregate, ISourceUseOwner
         var prepared = PrepareReservation(operation.RootOperationId, IntendedPractice);
         if (!prepared.IsSuccess)
             return prepared;
+        Uses.RequireForAppend(SourceUsePurpose.ActualStaffAssignment, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new PracticeIndependenceReserved(Stream, _commitments.Count, generation, intent, null, operation,
             null, null, IntendedPractice, IntendedEngagementId));
         return Result.Success;
@@ -209,6 +210,7 @@ public sealed class PracticeIndependenceCommitment : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the reserved subject stream."));
+        Uses.RequireForAppend(SourceUsePurpose.ActualStaffAssignment, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new PracticeIndependenceReservationSettled(Stream, _commitments.Count, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -225,5 +227,10 @@ public sealed class PracticeIndependenceCommitment : Aggregate, ISourceUseOwner
         public PracticeIndependenceReservationSettled? Settled { get; set; }
 
         public bool IsActive => Settled is null;
+    }
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
     }
 }

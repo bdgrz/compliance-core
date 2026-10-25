@@ -207,7 +207,7 @@ public sealed class EngagementPersonalDecisionTests
         Assert.Equal(command.AcknowledgementId, owner.CurrentDecision(EngagementPersonalDecisionKind.ManagementAcknowledgement)!
             .Admitted.Operation.LogicalId);
         Assert.False(owner.HasPendingPersonalDecision);
-        var service0 = await host.HydrateAsync(new ClientServiceIndependence(host.Tenant));
+        var service0 = await host.HydrateAsync(new ClientServiceIndependence(host.Tenant).ForSourceUse(candidate => EngagementPersonalDecisionEffects.UseKey(command.AcknowledgementId, engagementStream, candidate.Stream)));
         Assert.False(service0.Uses.HasActiveUse);
         Assert.True(service0.Uses.Find(EngagementPersonalDecisionEffects.UseKey(command.AcknowledgementId,
             engagementStream, service0.Stream)) is { IsSettled: true, GrantFact: not null });
@@ -703,12 +703,12 @@ public sealed class EngagementPersonalDecisionTests
         var engagementStream = new ServiceEngagementIndependence(host.Tenant, engagement).Stream;
         ISourceUseOwner[] owners =
         [
-            await host.HydrateAsync(new ClientServiceIndependence(host.Tenant)),
-            await host.HydrateAsync(new FirmStaffRecord(partner.Staff.StaffMemberId)),
+            await host.HydrateAsync(new ClientServiceIndependence(host.Tenant).ForSourceUse(candidate => EngagementPersonalDecisionEffects.UseKey(decision, engagementStream, candidate.Stream))),
+            await host.HydrateAsync(new FirmStaffRecord(partner.Staff.StaffMemberId).ForSourceUse(candidate => EngagementPersonalDecisionEffects.UseKey(decision, engagementStream, candidate.Stream))),
             await host.HydrateAsync(new FirmProfessionalDutyDesignation(partner.Staff.UserId,
-                FirmProfessionalDuty.EngagementPartner, host.Tenant)),
-            await host.HydrateAsync(new IndependenceRuleCatalog()),
-            await host.HydrateAsync(new IndependenceRuleRatificationCatalog()),
+                FirmProfessionalDuty.EngagementPartner, host.Tenant).ForSourceUse(candidate => EngagementPersonalDecisionEffects.UseKey(decision, engagementStream, candidate.Stream))),
+            await host.HydrateAsync(new IndependenceRuleCatalog().ForSourceUse(candidate => EngagementPersonalDecisionEffects.UseKey(decision, engagementStream, candidate.Stream))),
+            await host.HydrateAsync(new IndependenceRuleRatificationCatalog().ForSourceUse(candidate => EngagementPersonalDecisionEffects.UseKey(decision, engagementStream, candidate.Stream))),
         ];
         return owners.Select(owner => (owner.Stream.Area, owner.Uses.Find(
             EngagementPersonalDecisionEffects.UseKey(decision, engagementStream, owner.Stream)))).ToArray();

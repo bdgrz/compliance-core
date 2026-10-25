@@ -289,6 +289,7 @@ public sealed class AuditorResponse : Aggregate, ISourceUseOwner
         if (_created is null || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a materialized response can be held, on its own stream.", true));
+        Uses.RequireForAppend(SourceUsePurpose.RequestResolution, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new AuditorResponseRequestResolutionUseAuthorized(Stream, _revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -303,6 +304,7 @@ public sealed class AuditorResponse : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the response's own stream."));
+        Uses.RequireForAppend(SourceUsePurpose.RequestResolution, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new AuditorResponseRequestResolutionUseSettled(Stream, _revision, generation, intent, null,
             operation, null, null, disposition));
         return Result.Success;
@@ -424,4 +426,9 @@ public sealed class AuditorResponse : Aggregate, ISourceUseOwner
     }
 
     static Result Fail(CommandFailure failure) => Result.Failure(failure.ToRequestError());
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
+    }
 }

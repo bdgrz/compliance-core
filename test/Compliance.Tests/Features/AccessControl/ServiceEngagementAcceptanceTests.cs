@@ -283,11 +283,11 @@ public sealed class ServiceEngagementAcceptanceTests
         Assert.Equal(1UL, owner.Revision);
         Assert.False(owner.HasPendingOperation);
         var user = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant,
-            PracticeSubjectKind.CanonicalUser, lead.UserId));
+            PracticeSubjectKind.CanonicalUser, lead.UserId).ForSourceUse(candidate => EngagementAcceptanceEffects.UseKey(command.CommandId, stream, candidate.Stream)));
         Assert.Null(user.Practice);
         Assert.Null(user.CommitmentOf(command.CommandId));
         var staff = await host.HydrateAsync(new PracticeIndependenceCommitment(host.Tenant, PracticeSubjectKind.Staff,
-            lead.StaffMemberId));
+            lead.StaffMemberId).ForSourceUse(candidate => EngagementAcceptanceEffects.UseKey(command.CommandId, stream, candidate.Stream)));
         Assert.Equal("advisory", staff.Practice);
         Assert.Null(staff.CommitmentOf(command.CommandId));
         Assert.False((await host.HydrateAsync(new ClientServiceIndependence(host.Tenant))).Uses.HasActiveUse);

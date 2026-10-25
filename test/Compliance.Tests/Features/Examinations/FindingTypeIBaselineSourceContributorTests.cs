@@ -1,3 +1,11 @@
+using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using Bdgrz.Compliance.Features.Artifacts;
+using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Tests.Features.Operations;
@@ -77,11 +85,132 @@ public sealed class FindingTypeIBaselineSourceContributorTests
         Assert.Empty(result.Value.Sources);
     }
 
+    [Fact]
+    public async Task ShouldArchiveExactFindingActionAndEvidenceBytesGivenProductionSourcePublication()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var finding = await FindingTests.RaiseWithCompletedActionAsync(fixture);
+        var directory = Directory.CreateTempSubdirectory("bdgrz-finding-source-archive-").FullName;
+        try
+        {
+            var content = fixture.Provider.GetRequiredService<IImmutableContentStore>();
+            var artifacts = new LocalArtifactContentStore(new ArtifactContentStoreOptions(directory, null,
+                ArtifactContentLimits.MaxContentLength), TimeProvider.System);
+            var publisher = new PublishedTypeIBaselinePreviewReader(
+                new TypeIBaselinePreviewReader([Contributor(fixture)]), artifacts, content);
+            var preview = await publisher.ReadAsync(Engagement(fixture, DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1)));
+            Assert.True(preview.IsSuccess, preview.Error?.Message);
+            var source = Assert.Single(preview.Value.Sources);
+            Assert.NotNull(source.Content);
+            var selected = new AuditPackageSelectionEntry("findings", "F-01", source.Kind, source.RecordId,
+                source.Revision, source.Content.FileExtension, source.ContentSha256, source.Content.Bytes,
+                "product_calculated", source.VersionId, source.Content);
+            var manifest = new AuditPackageManifestView(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4(),
+                Uuid.CreateVersion4(), 1, Uuid.CreateVersion4(), preview.Value.ContentSha256, [finding.FindingId],
+                [new AuditPackageManifestEntryView(selected, "findings/F-01." + selected.Extension)],
+                new string('a', 64), DateTimeOffset.UtcNow);
+
+            // Act
+            var built = await new AuditPackageArchiveBuilder(artifacts).BuildAsync(fixture.TenantId, manifest,
+                CancellationToken.None);
+            Assert.True(built.IsSuccess, built.Error?.Message);
+            await using var stored = await artifacts.OpenVerifiedAsync(new ArtifactContentReference(fixture.TenantId,
+                built.Value.ArchiveSha256!, built.Value.ArchiveBytes!.Value));
+            using var zip = new ZipArchive(stored!, ZipArchiveMode.Read);
+            var entry = Assert.Single(zip.Entries);
+            await using var payload = entry.Open();
+            using var envelope = await JsonDocument.ParseAsync(payload);
+            var proof = Convert.FromBase64String(envelope.RootElement.GetProperty("source_base64").GetString()!);
+            var recovered = new List<string>();
+            foreach (var blob in envelope.RootElement.GetProperty("content_blobs").EnumerateArray())
+            {
+                var reference = blob.GetProperty("reference").Deserialize(ComplianceCoreJsonContext.Default.ImmutableContentRef)!;
+                var bytes = Convert.FromBase64String(blob.GetProperty("base64").GetString()!);
+                Assert.Equal(reference.Bytes, bytes.LongLength);
+                Assert.Equal(reference.Sha256, Convert.ToHexStringLower(SHA256.HashData(bytes)));
+                Assert.Equal((await content.ReadVerifiedAsync(fixture.TenantId.ToString(), reference)).ToArray(), bytes);
+                recovered.Add(Encoding.UTF8.GetString(bytes));
+            }
+
+            // Assert
+            Assert.Equal(source.ContentSha256, Convert.ToHexStringLower(SHA256.HashData(proof)));
+            Assert.StartsWith("bdgrz.snapshot.source.finding.v1\0", Encoding.UTF8.GetString(proof), StringComparison.Ordinal);
+            Assert.Equal(source.ContentSha256, envelope.RootElement.GetProperty("logical_content_sha256").GetString());
+            Assert.Equal("application/vnd.bdgrz.finding-snapshot-source.v1+json", source.Content.MediaType);
+            Assert.Equal(source.Content.Bytes, entry.Length);
+            Assert.Contains(recovered, body => body.Contains("Remove stale VPN accounts.", StringComparison.Ordinal));
+            Assert.Contains(recovered, body => body.Contains("Removal ticket", StringComparison.Ordinal));
+            Assert.Contains(recovered, body => body.Contains(fixture.ControlId.ToString(), StringComparison.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldClassifyUnverifiableFindingBusinessBytesGivenSelectedSourceFact(bool unavailable)
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
+        using var scope = fixture.Provider.CreateScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var owner = await reader.HydrateAsync(new FindingAggregate(fixture.TenantId, fixture.ProgramId, finding.FindingId));
+        var contributor = new FindingTypeIBaselineSourceContributor(scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+            reader, new UnverifiableFindingContent(fixture.Content, owner.Raised!.LinksManifest, unavailable));
+
+        // Act
+        var outcome = await contributor.ReadAsync(Engagement(fixture, fixture.Today.AddDays(1)), CancellationToken.None);
+
+        // Assert
+        Assert.False(outcome.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, outcome.Error?.Kind);
+        Assert.Equal(unavailable, outcome.Error!.IsTransient);
+    }
+
+    [Fact]
+    public async Task ShouldIgnoreUnselectedBusinessContentGivenFindingRecordedAfterCutoff()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
+        using var scope = fixture.Provider.CreateScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var owner = await reader.HydrateAsync(new FindingAggregate(fixture.TenantId, fixture.ProgramId, finding.FindingId));
+        var contributor = new FindingTypeIBaselineSourceContributor(scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+            reader, new UnverifiableFindingContent(fixture.Content, owner.Raised!.LinksManifest, false));
+
+        // Act
+        var outcome = await contributor.ReadAsync(Engagement(fixture, fixture.Today.AddDays(-2)), CancellationToken.None);
+
+        // Assert
+        Assert.True(outcome.IsSuccess, outcome.Error?.Message);
+        Assert.Empty(outcome.Value.Sources);
+    }
+
+    sealed class UnverifiableFindingContent(IImmutableContentStore inner, ImmutableContentRef selected,
+        bool unavailable) : IImmutableContentStore
+    {
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema,
+            string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
+            inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => reference.ContentId == selected.ContentId
+            ? throw (unavailable ? new ImmutableContentUnavailableException("The finding source bytes are unavailable.")
+                : new ImmutableContentIntegrityException("The finding source bytes cannot be verified."))
+            : inner.ReadVerifiedAsync(realm, reference, ct);
+    }
+
     static FindingTypeIBaselineSourceContributor Contributor(OperationsFixture fixture)
     {
         var scope = fixture.Provider.CreateScope();
         return new FindingTypeIBaselineSourceContributor(scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
-            scope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
     }
 
     static ExaminationEngagementView Engagement(OperationsFixture fixture, DateOnly typeIDate) => new(fixture.TenantId,

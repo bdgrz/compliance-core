@@ -58,7 +58,7 @@ public abstract class AuthorizeSourceUseHandler<TOwner, TRequest>(IAggregateRead
         {
             try
             {
-                var owner = await reader.HydrateAsync(Open(request, request.CommandId), ct).ConfigureAwait(false);
+                var owner = await reader.HydrateAsync(Open(request, request.CommandId).ForSourceUses(source.Key), ct).ConfigureAwait(false);
                 if (Decide(owner, binding, source.Key) is { } early)
                     return early;
                 if (FencedReason(owner, source.Key) is { } fenced)
@@ -69,7 +69,7 @@ public abstract class AuthorizeSourceUseHandler<TOwner, TRequest>(IAggregateRead
                         ? Result<ReceiverOutcome>.Failure(pinned.Error)
                         : await RefuseAsync(request, source, pinned.Error.Message, context, ct).ConfigureAwait(false);
 
-                var step = await executor.ExecuteAsync(Open(request, request.CommandId), fresh =>
+                var step = await executor.ExecuteAsync(Open(request, request.CommandId).ForSourceUses(source.Key), fresh =>
                 {
                     if (Decide(fresh, binding, source.Key) is { } decided)
                         return AggregateOutcome.Discard(Result<Step>.Success(new Decided(decided)));

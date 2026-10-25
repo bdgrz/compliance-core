@@ -37,6 +37,22 @@ static class SnapshotSourceCapture
             scope.Risk(logicalSha256, source, blobs);
     }
 
+    public static void Finding(string logicalSha256, ReadOnlySpan<byte> source,
+        IReadOnlyList<SnapshotSourceContentBlob> blobs)
+    {
+        if (blobs.Count > 0 && Current.Value is { } scope)
+            scope.Business(logicalSha256, source, blobs, "application/vnd.bdgrz.finding-snapshot-source.v1+json",
+                "Exact canonical finding source proof and its digest-verified immutable business content bytes.");
+    }
+
+    public static void TypeIIClose(string logicalSha256, ReadOnlySpan<byte> source,
+        IReadOnlyList<SnapshotSourceContentBlob> blobs)
+    {
+        if (blobs.Count > 0 && Current.Value is { } scope)
+            scope.Business(logicalSha256, source, blobs, "application/vnd.bdgrz.type-ii-close-snapshot-source.v1+json",
+                "Exact canonical Type II close source proof and its digest-verified selected operating content bytes.");
+    }
+
     internal sealed class Scope : IDisposable
     {
         readonly Scope? _parent;
@@ -130,16 +146,21 @@ static class SnapshotSourceCapture
 
         public void Risk(string logicalSha256, ReadOnlySpan<byte> source,
             IReadOnlyList<SnapshotSourceContentBlob> blobs)
+            => Business(logicalSha256, source, blobs, "application/vnd.bdgrz.risk-snapshot-source.v1+json",
+                "Exact canonical risk source proof and its digest-verified immutable business content bytes.");
+
+        public void Business(string logicalSha256, ReadOnlySpan<byte> source,
+            IReadOnlyList<SnapshotSourceContentBlob> blobs, string mediaType, string description)
         {
             if (Convert.ToHexStringLower(SHA256.HashData(source)) != logicalSha256)
-                throw new ImmutableContentIntegrityException("A risk source envelope differs from its exact logical preimage.");
+                throw new ImmutableContentIntegrityException("A snapshot source envelope differs from its exact logical preimage.");
             var unique = new Dictionary<Uuid, SnapshotSourceContentBlob>();
             foreach (var blob in blobs)
             {
                 if (blob.Reference.ContentId == Uuid.Empty || blob.Reference.Bytes != blob.Bytes.LongLength ||
                     Convert.ToHexStringLower(SHA256.HashData(blob.Bytes)) != blob.Reference.Sha256 ||
                     unique.TryGetValue(blob.Reference.ContentId, out var prior) && prior.Reference != blob.Reference)
-                    throw new ImmutableContentIntegrityException("A risk source blob differs from its exact immutable reference.");
+                    throw new ImmutableContentIntegrityException("A snapshot source blob differs from its exact immutable reference.");
                 unique.TryAdd(blob.Reference.ContentId, blob);
             }
             lock (_gate)
@@ -173,9 +194,7 @@ static class SnapshotSourceCapture
                 }
                 using var input = File.OpenRead(path);
                 var physical = Convert.ToHexStringLower(SHA256.HashData(input));
-                var descriptor = new SnapshotSourceBlob(physical, input.Length,
-                    "application/vnd.bdgrz.risk-snapshot-source.v1+json", "json",
-                    "Exact canonical risk source proof and its digest-verified immutable business content bytes.");
+                var descriptor = new SnapshotSourceBlob(physical, input.Length, mediaType, "json", description);
                 _materials.Add(logicalSha256, new Material(path, descriptor));
             }
         }

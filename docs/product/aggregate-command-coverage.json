@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "7951ed4d65b76a22047e1ec1791636772fc34017",
+  "sourceCommit": "0ab96e64fbf091f737e52ff15d973afb9199917c",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -4154,7 +4154,9 @@
         "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
+        "test/Compliance.Tests/Features/SourceUse/SourceUseReservationsNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/SourceUse/SourceUseReservationsVerifiedHistoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4172,7 +4174,9 @@
         "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
+        "test/Compliance.Tests/Features/SourceUse/SourceUseReservationsNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/SourceUse/SourceUseReservationsVerifiedHistoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -10494,12 +10498,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/AggregateCommandCoverageTests.Export.cs",
         "test/Compliance.Tests/AggregateCommandCoverageTests.cs",
+        "test/Compliance.Tests/Features/Examinations/FindingTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingProcessReactorTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+        "test/Compliance.Tests/Features/Remediation/FindingProcessReactorTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route",
       "note": "Owns finding terms, triage, acceptance links, action admission and the closure decision. Admission and closure seal by generation; the children and closure are completed by processes. No legacy ledger is read."
@@ -10582,7 +10586,8 @@
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRetainedStatusTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
-        "test/Compliance.Tests/Testing/FirmStaffFacts.cs"
+        "test/Compliance.Tests/Features/SourceUse/SourceUseReservationsNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/SourceUse/SourceUseReservationsVerifiedHistoryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -13265,7 +13270,9 @@
       "helperServices": [
         "AccessReviewBulkVerifier"
       ],
-      "directAggregateReferences": [],
+      "directAggregateReferences": [
+        "AccessReviewItem"
+      ],
       "aggregateTargets": [
         "AccessReviewItem"
       ],
@@ -27093,6 +27100,7 @@
       "aggregateTargets": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseArchive.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseSourceBusinessBytes.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseSources.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseValidation.cs",
         "test/Compliance.Tests/Testing/TypeIIPeriodTestExtensions.cs"

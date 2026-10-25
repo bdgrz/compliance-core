@@ -79,7 +79,7 @@ public sealed class ProfessionalDutyChangeTests
         Assert.Equal(0UL, owner.Revision);
         Assert.Empty(await host.EventsAsync<FirmProfessionalDutyDesignationRecorded>(owner.Stream));
         Assert.Empty(await host.EventsAsync<ProfessionalAssertionIdentityClaimed>(claimStream));
-        Assert.True((await host.HydrateAsync(new FirmStaffRecord(staff))).Uses.Find(key)!.IsFence);
+        Assert.True((await host.HydrateAsync(new FirmStaffRecord(staff).ForSourceUses(key))).Uses.Find(key)!.IsFence);
 
         // Act: step 2, delayed claim, apply and use are delivered after the rejection.
         var record = (await host.ProcessRecordAsync(stale.Evidence.AssertionId))!;
@@ -289,8 +289,8 @@ public sealed class ProfessionalDutyChangeTests
         var first = await host.SendAsync(acquire);
         var retry = await host.SendAsync(acquire);
         var sameKeyOtherCommand = await host.SendAsync(otherId);
-        var staffRecord = await host.HydrateAsync(new FirmStaffRecord(staff));
         var key = await host.StaffUseKeyAsync(await host.HydrateAsync(Owner(user)), active.Evidence.AssertionId);
+        var staffRecord = await host.HydrateAsync(new FirmStaffRecord(staff).ForSourceUses(key));
         var grant = staffRecord.Uses.GrantOf(key)!;
         await ProfessionalDutyFacts.RunProcessAsync(host.Provider, user, Duty, null, active.Evidence.AssertionId);
         var settle = (SettleFirmStaffProfessionalDutyUse)(await Step(host, record, "settle",
@@ -456,6 +456,10 @@ public sealed class ProfessionalDutyChangeTests
         var second = first with { RootOperationId = Uuid.CreateVersion4() };
         var third = first with { RootOperationId = Uuid.CreateVersion4() };
 
+        uses.Select(first);
+        uses.Select(second);
+        uses.Select(third);
+
         // Act
         uses.ApplyGranted(SourceUsePurpose.ProfessionalDutyRecording, Granted(owner, first));
         uses.ApplyGranted(SourceUsePurpose.ProfessionalDutyRecording, Granted(owner, second));
@@ -486,6 +490,8 @@ public sealed class ProfessionalDutyChangeTests
         var uses = new SourceUseReservations(target);
         var first = new ReservationKey(Uuid.CreateVersion4(), target, 1, target, "professional_duty_recording");
         var second = first with { FirstOwner = new FirmStaffRecord(Uuid.CreateVersion4()).Stream };
+        uses.Select(first);
+        uses.Select(second);
         uses.ApplyGranted(SourceUsePurpose.ProfessionalDutyRecording, Granted(target, first));
         Assert.Null(uses.Find(second));
         uses.ApplyGranted(SourceUsePurpose.ProfessionalDutyRecording, Granted(target, second));

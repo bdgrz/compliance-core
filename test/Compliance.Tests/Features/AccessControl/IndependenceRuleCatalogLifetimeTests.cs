@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
@@ -66,13 +67,15 @@ public sealed class IndependenceRuleCatalogLifetimeTests
         var pure = new IndependenceRuleCatalogRules();
         Assert.True(pure.ReviseRules(Uuid.CreateVersion4(), 0, Rules("Synthetic source"), Operator, Now).IsSuccess);
         await fixture.SeedAsync(pure);
-        var catalog = await fixture.Reader.HydrateAsync(new IndependenceRuleCatalog());
         var root = Uuid.CreateVersion4();
+        var catalog = await fixture.Reader.HydrateAsync(new IndependenceRuleCatalog().ForSourceUse(candidate =>
+            new ReservationKey(root, candidate.Stream, 1, candidate.Stream, "engagement_personal_decision")));
 
         // Act
         var granted = catalog.AuthorizeEngagementUse(Provenance(catalog.Stream, Uuid.CreateVersion4(), root), Intent, 1);
         await fixture.Writer.SaveAsync(catalog, new RequestDispatchContext(RequestActor.System));
         var refused = catalog.PrepareRevision(catalog.Sequence);
+        catalog = await fixture.Reader.HydrateAsync(catalog);
         var settled = catalog.SettleEngagementUse(Provenance(catalog.Stream, Uuid.CreateVersion4(), root), Intent, 1);
         await fixture.Writer.SaveAsync(catalog, new RequestDispatchContext(RequestActor.System));
         var request = new ReviseIndependenceRules(Uuid.CreateVersion4(), catalog.Sequence, Rules("Another"));
@@ -101,13 +104,15 @@ public sealed class IndependenceRuleCatalogLifetimeTests
         Assert.True(pure.Ratify(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, 1, 0, new string('a', 64),
             "Synthetic source", staff, duty, actor, Now).IsSuccess);
         await fixture.SeedAsync(pure);
-        var catalog = await fixture.Reader.HydrateAsync(new IndependenceRuleRatificationCatalog());
         var root = Uuid.CreateVersion4();
+        var catalog = await fixture.Reader.HydrateAsync(new IndependenceRuleRatificationCatalog().ForSourceUse(candidate =>
+            new ReservationKey(root, candidate.Stream, 1, candidate.Stream, "engagement_personal_decision")));
 
         // Act
         var granted = catalog.AuthorizeEngagementUse(Provenance(catalog.Stream, Uuid.CreateVersion4(), root), Intent, 1);
         await fixture.Writer.SaveAsync(catalog, new RequestDispatchContext(RequestActor.System));
         var refused = catalog.PrepareRatification(1, 2);
+        catalog = await fixture.Reader.HydrateAsync(catalog);
         var settled = catalog.SettleEngagementUse(Provenance(catalog.Stream, Uuid.CreateVersion4(), root), Intent, 1);
         await fixture.Writer.SaveAsync(catalog, new RequestDispatchContext(RequestActor.System));
         var accepted = catalog.PrepareRatification(1, 2);
@@ -136,8 +141,9 @@ public sealed class IndependenceRuleCatalogLifetimeTests
         var pure = new IndependenceRuleCatalogRules();
         Assert.True(pure.ReviseRules(Uuid.CreateVersion4(), 0, Rules("Synthetic source"), Operator, Now).IsSuccess);
         await fixture.SeedAsync(pure);
-        var catalog = await fixture.Reader.HydrateAsync(new IndependenceRuleCatalog());
         var root = Uuid.CreateVersion4();
+        var catalog = await fixture.Reader.HydrateAsync(new IndependenceRuleCatalog().ForSourceUse(candidate =>
+            new ReservationKey(root, candidate.Stream, 1, candidate.Stream, "engagement_personal_decision")));
         var settle = Provenance(catalog.Stream, Uuid.CreateVersion4(), root);
 
         // Act

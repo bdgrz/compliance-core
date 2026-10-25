@@ -169,6 +169,7 @@ public sealed class PolicyCampaignParticipant : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A closure use is held on the participant's own stream."));
+        Uses.RequireForAppend(SourceUsePurpose.CampaignClosure, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new PolicyCampaignParticipantCampaignClosureUseAuthorized(Stream, Revision, generation, intent,
             null, operation, null, null));
         return Result.Success;
@@ -182,6 +183,7 @@ public sealed class PolicyCampaignParticipant : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held participant stream."));
+        Uses.RequireForAppend(SourceUsePurpose.CampaignClosure, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new PolicyCampaignParticipantCampaignClosureUseSettled(Stream, Revision, generation, intent,
             null, operation, null, null));
         return Result.Success;
@@ -211,4 +213,9 @@ public sealed class PolicyCampaignParticipant : Aggregate, ISourceUseOwner
     }
 
     static Result Conflict(string message) => Result.Failure(new RequestError(RequestErrorKind.Conflict, message));
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
+    }
 }

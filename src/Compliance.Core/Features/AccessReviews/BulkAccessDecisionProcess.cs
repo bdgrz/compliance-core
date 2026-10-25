@@ -140,11 +140,11 @@ static class BulkAccessDecisionProcess
         foreach (var targetKey in record.Targets)
         {
             var target = AccessReviewCompletionTarget.Parse(targetKey);
-            var item = await reader.HydrateAsync(new AccessReviewItem(tenant, campaignId, target.ItemId), ct)
+            var item = await reader.HydrateAsync(new AccessReviewItem(tenant, campaignId, target.ItemId).ForSourceUse(candidate => candidate.BulkKey(batchId)), ct)
                 .ConfigureAwait(false);
             var key = item.BulkKey(batchId);
             if (item.ProvisionalFor(batchId) is not { } provisional || item.Uses.GrantOf(key) is not { } hold)
-                throw new SourceFactVerificationException(
+                throw new SourceFactUnavailableException(
                     $"The hold and provisional decision of item {target.ItemId} are not visible yet.");
             proofs.Add(new BulkItemDecisionProof(target.ItemId, hold.GrantEvent,
                 NativeFactReference.Of(item.Stream, provisional)));

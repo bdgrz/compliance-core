@@ -113,7 +113,7 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
             if (!requirements.TryGetValue(stream.Resource, out var requirement))
                 return await AbortAsync(completion, command, "A launched item is not covered by the completion.",
                     item.ItemId, context, ct).ConfigureAwait(false);
-            var owner = await reader.HydrateAsync(new AccessReviewItem(tenant, command.CampaignId, item.ItemId), ct)
+            var owner = await reader.HydrateAsync(new AccessReviewItem(tenant, command.CampaignId, item.ItemId).ForSourceUse(candidate => AccessReviewCompletionVerifier.UseKey(command.OperationId, campaign, requirement)), ct)
                 .ConfigureAwait(false);
             var key = AccessReviewCompletionVerifier.UseKey(command.OperationId, campaign, requirement);
             if (owner.Opened is null || owner.Uses.Find(key) is not { IsActive: true } ||

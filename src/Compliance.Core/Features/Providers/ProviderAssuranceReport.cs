@@ -155,6 +155,7 @@ public sealed class ProviderAssuranceReport : Aggregate, ISourceUseOwner
         if (_revision == 0 || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a recorded report can be held, on its own stream.", true));
+        Uses.RequireForAppend(SourceUsePurpose.ProviderReview, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new ProviderAssuranceReportProviderReviewUseAuthorized(Stream, _revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -168,6 +169,7 @@ public sealed class ProviderAssuranceReport : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held report stream."));
+        Uses.RequireForAppend(SourceUsePurpose.ProviderReview, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new ProviderAssuranceReportProviderReviewUseSettled(Stream, _revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -184,5 +186,10 @@ public sealed class ProviderAssuranceReport : Aggregate, ISourceUseOwner
         _latest = fact;
         _content = content;
         _providerRevision = providerRevision;
+    }
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
     }
 }

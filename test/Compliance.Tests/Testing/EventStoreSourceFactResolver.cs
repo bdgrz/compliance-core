@@ -33,7 +33,7 @@ sealed class EventStoreSourceFactResolver(IDomainEventReader events) : ISourceFa
         {
             // The in-memory store reports an unknown stream or offset beyond its end this way.
         }
-        throw new SourceFactVerificationException($"No record exists at {stream} offset {resourcePosition}.");
+        throw new SourceFactUnavailableException($"No record exists at {stream} offset {resourcePosition}.");
     }
 
     public async Task<VerifiedSourceProof<TEvent>> VerifyAsync<TEvent>(SourceFactProof<TEvent> proof,

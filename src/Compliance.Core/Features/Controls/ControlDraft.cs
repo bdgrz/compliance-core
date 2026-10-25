@@ -634,4 +634,9 @@ public sealed class ControlDraft : Aggregate, ISourceUseOwner
 
     static Result Fail(RequestErrorKind kind, string message, bool transient = false) =>
         Result.Failure(new RequestError(kind, message, transient));
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
+    }
 }

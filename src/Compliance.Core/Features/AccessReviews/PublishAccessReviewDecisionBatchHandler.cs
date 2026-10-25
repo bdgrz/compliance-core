@@ -107,7 +107,7 @@ sealed class PublishAccessReviewDecisionBatchHandler(IAggregateReader reader, IA
         {
             if (!byItem.TryGetValue(selected.ItemId, out var proof))
                 return Verified.Fail(SourceUseReceiverSupport.Permanent("The proof set omits a selected item."));
-            var item = await reader.HydrateAsync(new AccessReviewItem(tenant, campaignId, selected.ItemId), ct)
+            var item = await reader.HydrateAsync(new AccessReviewItem(tenant, campaignId, selected.ItemId).ForSourceUse(candidate => candidate.BulkKey(command.DecisionBatchId)), ct)
                 .ConfigureAwait(false);
             if (item.ItemId != selected.ItemId || item.Stream.Resource != resource)
                 return Verified.Fail(SourceUseReceiverSupport.Permanent("The proof set names another item."));

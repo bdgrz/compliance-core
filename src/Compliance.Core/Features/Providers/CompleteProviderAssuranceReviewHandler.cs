@@ -128,7 +128,7 @@ sealed class CompleteProviderAssuranceReviewHandler(IAggregateReader reader, IAg
         {
             var requirement = requirements[index];
             var report = await reader.HydrateAsync(new ProviderAssuranceReport(tenantId, intent.ProviderId,
-                authored.Content.AssuranceReportId ?? Uuid.Empty), ct).ConfigureAwait(false);
+                authored.Content.AssuranceReportId ?? Uuid.Empty).ForSourceUse(candidate => ProviderReviewEffects.UseKey(request.OperationId, request.Target, requirement.SourceOwner)), ct).ConfigureAwait(false);
             var key = ProviderReviewEffects.UseKey(request.OperationId, request.Target, requirement.SourceOwner);
             var grant = report.Stream == requirement.SourceOwner ? report.Uses.GrantOf(key) : null;
             if (grant is null || grant.GrantEvent != grants[index])

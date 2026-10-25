@@ -299,6 +299,7 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         var prepared = PrepareBulkHold(operation.RootOperationId);
         if (!prepared.IsSuccess)
             return prepared;
+        Uses.RequireForAppend(SourceUsePurpose.BulkDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new AccessReviewItemDecisionAuthorized(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
             intent, null, operation, null, null));
         return Result.Success;
@@ -330,6 +331,7 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
+        Uses.RequireForAppend(SourceUsePurpose.BulkDecision, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new AccessReviewItemDecisionSettled(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
             intent, null, disposition, operation, null, null));
         return Result.Success;
@@ -357,6 +359,7 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         if (_opened is null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The review item has not been materialized yet.", true));
+        Uses.RequireForAppend(SourceUsePurpose.CampaignCompletion, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new AccessReviewItemCampaignCompletionUseAuthorized(_tenantId, _campaignId, _itemId, Stream,
             _revision, generation, intent, null, operation, null, null));
         return Result.Success;
@@ -368,6 +371,7 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
+        Uses.RequireForAppend(SourceUsePurpose.CampaignCompletion, operation, generation, Version, CommittedStreamPosition);
         RaiseEvent(new AccessReviewItemCampaignCompletionUseSettled(_tenantId, _campaignId, _itemId, Stream, _revision,
             generation, intent, null, disposition, operation, null, null));
         return Result.Success;
@@ -391,5 +395,10 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
             throw new InvalidOperationException("An item fact follows the materialization at the next revision.");
         _revision = revision;
         _facts.Add(ev);
+    }
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        Uses.ObserveOwnerFact(ev);
     }
 }

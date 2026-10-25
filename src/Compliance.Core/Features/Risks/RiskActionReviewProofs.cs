@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -33,7 +34,7 @@ static class RiskActionReviewProofs
                      item.EvidenceRequestId), Kernel.StreamKeyOrder.Instance))
         {
             var request = await reader.HydrateAsync(new EvidenceRequest(tenant, decision.ProgramId,
-                item.EvidenceRequestId, commandId), ct).ConfigureAwait(false);
+                item.EvidenceRequestId, commandId).ForSourceUse(candidate => RiskActionReviewEffects.UseKey(intent, generation, candidate.Stream)), ct).ConfigureAwait(false);
             if (request.Uses.Find(RiskActionReviewEffects.UseKey(intent, generation, request.Stream)) is not
                 { GrantFact: { } grant, IsActive: true })
                 return Failure("An evidence request is not held by this review yet.", true);

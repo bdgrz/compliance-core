@@ -31,7 +31,7 @@ static class ProgramManagementServices
     public static ServiceProvider Build(IPermissionAuthorizer permissions,
         Action<PortiaBuilder> handlers, Action<IServiceCollection>? services = null)
     {
-        var collection = new ServiceCollection();
+        IServiceCollection collection = new ServiceCollection();
         var eventStore = new InMemoryEventStore();
         collection.AddSingleton<IEventStore>(eventStore);
         collection.AddSingleton<IDomainEventReader>(eventStore);
@@ -72,6 +72,7 @@ static class ProgramManagementServices
         collection.AddScoped<RiskMethodReader>();
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
+        collection.AddVerifiedSourceUseReader();
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 

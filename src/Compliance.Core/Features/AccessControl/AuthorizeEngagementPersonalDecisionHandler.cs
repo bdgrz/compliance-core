@@ -127,11 +127,11 @@ sealed class AuthorizeEngagementPersonalDecisionHandler(IAggregateReader reader,
                 "The proofs do not cover exactly the frozen required source uses.");
         foreach (var requirement in requirements)
         {
-            var source = await HydrateAsync(requirement.SourceOwner, intent, tenantId, ct).ConfigureAwait(false);
+            var key = EngagementPersonalDecisionEffects.UseKey(intent.DecisionId, engagement, requirement.SourceOwner);
+            var source = await HydrateAsync(requirement.SourceOwner, intent, tenantId, key, ct).ConfigureAwait(false);
             if (source is null || source.Stream != requirement.SourceOwner)
                 return EngagementPersonalDecisionVerifier.Permanent(
                     "A required source use names an owner that cannot be resolved.");
-            var key = EngagementPersonalDecisionEffects.UseKey(intent.DecisionId, engagement, requirement.SourceOwner);
             if (source.Uses.Find(key) is not { IsActive: true } entry)
                 return EngagementPersonalDecisionVerifier.Transient(
                     "A required source use is not held yet; authorization waits for the complete set.");
@@ -144,21 +144,21 @@ sealed class AuthorizeEngagementPersonalDecisionHandler(IAggregateReader reader,
     }
 
     async ValueTask<ISourceUseOwner?> HydrateAsync(EventStreamAddress stream, EngagementPersonalDecisionIntent intent,
-        Uuid tenantId, CancellationToken ct)
+        Uuid tenantId, ReservationKey key, CancellationToken ct)
     {
         switch (stream.Area)
         {
             case ClientServiceIndependence.Area:
-                return await reader.HydrateAsync(new ClientServiceIndependence(tenantId), ct).ConfigureAwait(false);
+                return await reader.HydrateAsync(new ClientServiceIndependence(tenantId).ForSourceUses(key), ct).ConfigureAwait(false);
             case FirmStaffRecord.Area when Uuid.TryParse(stream.Resource, out var staffId):
-                return await reader.HydrateAsync(new FirmStaffRecord(staffId), ct).ConfigureAwait(false);
+                return await reader.HydrateAsync(new FirmStaffRecord(staffId).ForSourceUses(key), ct).ConfigureAwait(false);
             case FirmProfessionalDutyDesignation.Area when Uuid.TryParse(intent.Header.OriginalActor.Id, out var userId):
                 return await reader.HydrateAsync(new FirmProfessionalDutyDesignation(userId,
-                    FirmProfessionalDuty.EngagementPartner, tenantId), ct).ConfigureAwait(false);
+                    FirmProfessionalDuty.EngagementPartner, tenantId).ForSourceUses(key), ct).ConfigureAwait(false);
             case IndependenceRuleCatalog.Area:
-                return await reader.HydrateAsync(new IndependenceRuleCatalog(), ct).ConfigureAwait(false);
+                return await reader.HydrateAsync(new IndependenceRuleCatalog().ForSourceUses(key), ct).ConfigureAwait(false);
             case IndependenceRuleRatificationCatalog.Area:
-                return await reader.HydrateAsync(new IndependenceRuleRatificationCatalog(), ct).ConfigureAwait(false);
+                return await reader.HydrateAsync(new IndependenceRuleRatificationCatalog().ForSourceUses(key), ct).ConfigureAwait(false);
             default:
                 return null;
         }
