@@ -30,41 +30,66 @@ sealed class AbortAccessReviewCampaignCompletionHandler(IAggregateReader reader,
             command.Target != AccessReviewEffects.CampaignStream(tenant, campaignId))
             return SourceUseReceiverSupport.Permanent("The abort names another campaign stream, operation or generation.");
 
-        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, campaignId, command.CommandId), ct)
+        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, campaignId, command.CommandId, command.OperationId), ct)
             .ConfigureAwait(false);
         if (campaign.AcceptedFor(command.OperationId) is not { } accepted)
             return SourceUseReceiverSupport.Transient("The accepted completion is not visible yet.");
         ClosureIntent intent;
+        AccessReviewCompletionFailure failure;
         try
         {
             intent = await AccessReviewContent.ReadAsync<ClosureIntent>(content, tenant, accepted.Intent, ct)
                 .ConfigureAwait(false);
-            _ = await AccessReviewContent.ReadAsync<AccessReviewCompletionFailure>(content, tenant, command.FailureProof,
+            failure = await AccessReviewContent.ReadAsync<AccessReviewCompletionFailure>(content, tenant, command.FailureProof,
                 ct).ConfigureAwait(false);
+            AccessReviewIntentBindings.Require(intent.Header, accepted.Operation);
+        }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            return SourceUseReceiverSupport.Transient($"The frozen completion cannot be verified: {exception.Message}");
         }
         catch (ImmutableContentIntegrityException exception)
         {
             return SourceUseReceiverSupport.Permanent($"The frozen completion cannot be verified: {exception.Message}");
         }
 
-        if (intent.Header.RootOperationId != command.OperationId || command.ExpectedRevision != accepted.Revision)
+        if (intent.Header.RootOperationId != command.OperationId || command.ExpectedRevision != accepted.Revision ||
+            failure.Evidence != NativeFactReference.Of(campaign.Stream, accepted))
             return SourceUseReceiverSupport.Permanent("The abort differs from the frozen completion admission.");
+        if (failure.ItemId is { } failedItem)
+        {
+            try
+            {
+                var requirements = await new AccessReviewManifests(content).RequirementsAsync(command.Target.Realm,
+                    intent.SourceUses, ct).ConfigureAwait(false);
+                if (!requirements.ContainsKey(AccessReviewEffects.ItemStream(tenant, campaignId, failedItem).Resource))
+                    return SourceUseReceiverSupport.Permanent("The completion failure names an item outside its exact frozen selection.");
+            }
+            catch (ImmutableContentIntegrityException error)
+            {
+                return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict, error.Message,
+                    error is ImmutableContentUnavailableException));
+            }
+        }
         var provenance = SourceUseReceiverSupport.Child(command.CommandId, nameof(AbortAccessReviewCampaignCompletion),
             accepted.Metadata!.EventId, intent.Header, campaign.Stream, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
+        var preparedCut = AccessReviewPreparedCut.Capture(campaign);
         for (var attempt = 1; ; attempt++)
         {
             try
             {
-                var current = await reader.HydrateAsync(new AccessReviewCampaign(tenant, campaignId, command.CommandId), ct)
+                var current = await reader.HydrateAsync(new AccessReviewCampaign(tenant, campaignId, command.CommandId, command.OperationId), ct)
                     .ConfigureAwait(false);
                 if (Decide(current, binding, command.OperationId) is { } early)
                     return early;
-                var step = await executor.ExecuteAsync(new AccessReviewCampaign(tenant, campaignId, command.CommandId),
+                var step = await executor.ExecuteAsync(new AccessReviewCampaign(tenant, campaignId, command.CommandId, command.OperationId),
                     fresh =>
                     {
                         if (Decide(fresh, binding, command.OperationId) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
+                        if (!preparedCut.Matches(fresh))
+                            return AggregateOutcome.Discard(Result<Decided>.Failure(AccessReviewPreparedCut.Changed().Error!));
                         var raised = fresh.CancelCompletion(provenance, command.FailureProof);
                         return raised.IsSuccess
                             ? AggregateOutcome.Commit(Result<Decided>.Success(new Decided(

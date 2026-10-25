@@ -31,7 +31,7 @@ public sealed class AccessReviewBulkDecisionTraceTests
         var (request, acknowledgment) = await fixture.AdmitBulkAsync(fixture.ManagerUserId, campaignId, selected,
             "keep", "Bulk reaffirmation.");
         var admittedCampaign = await fixture.CampaignAggregateAsync(campaignId);
-        var admitted = Assert.IsType<AccessReviewDecisionBatchAdmitted>(admittedCampaign.Facts[^1]);
+        var admitted = Assert.IsType<AccessReviewDecisionBatchAdmitted>((await fixture.CampaignHistoryAsync(admittedCampaign)).Facts[^1]);
         var beforeBatch = await fixture.BatchAsync(campaignId, request.DecisionBatchId);
 
         // Act: step 2, the completion is requested at revision 2 while child creation is paused.
@@ -64,7 +64,7 @@ public sealed class AccessReviewBulkDecisionTraceTests
         var published = await fixture.CampaignAsync(campaignId);
         var finished = await fixture.RunCompletionAsync(campaignId, completion.CommandId);
         var closedCampaign = await fixture.CampaignAggregateAsync(campaignId);
-        var closed = Assert.IsType<AccessReviewCampaignCompleted>(closedCampaign.Facts[^1]);
+        var closed = Assert.IsType<AccessReviewCampaignCompleted>((await fixture.CampaignHistoryAsync(closedCampaign)).Facts[^1]);
         var proofs = await fixture.Provider.GetRequiredService<IImmutableContentStore>()
             .ReadJsonAsync<IReadOnlyList<AccessReviewItemCompletionProof>>(fixture.TenantId.ToString(),
                 closed.ItemCompletionProofs);
@@ -114,7 +114,7 @@ public sealed class AccessReviewBulkDecisionTraceTests
 
         // Assert: step 5
         Assert.Equal(acknowledgment, retried);
-        Assert.Equal(closedCampaign.Facts.Count, after.Facts.Count);
+        Assert.Equal((await fixture.CampaignHistoryAsync(closedCampaign)).Facts.Count, (await fixture.CampaignHistoryAsync(after)).Facts.Count);
         Assert.Equal(batch.Facts.Count, afterBatch.Facts.Count);
     }
 

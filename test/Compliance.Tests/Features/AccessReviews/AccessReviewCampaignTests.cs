@@ -178,7 +178,7 @@ public sealed class AccessReviewCampaignTests
         Assert.All(conflicts, conflict => Assert.Contains("different", conflict.Message,
             StringComparison.OrdinalIgnoreCase));
         Assert.Equal(1, aggregate.Revision);
-        Assert.Single(aggregate.Facts);
+        Assert.Single((await fixture.CampaignHistoryAsync(aggregate)).Facts);
     }
 
     [Fact]

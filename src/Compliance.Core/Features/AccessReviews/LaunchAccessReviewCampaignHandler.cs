@@ -29,6 +29,20 @@ public sealed class LaunchAccessReviewCampaignHandler(NativeOperationExecutor op
     public async ValueTask<Result<AccessReviewCampaignRegistration>> HandleAsync(
         IRequestContext<LaunchAccessReviewCampaign> context, CancellationToken ct)
     {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<AccessReviewCampaignRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact campaign source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<AccessReviewCampaignRegistration>> HandleCoreAsync(
+        IRequestContext<LaunchAccessReviewCampaign> context, CancellationToken ct)
+    {
         var request = context.Request;
         var campaignId = request.CampaignId;
         if (campaignId == Uuid.Empty)
@@ -44,6 +58,7 @@ public sealed class LaunchAccessReviewCampaignHandler(NativeOperationExecutor op
 
         FirstResponseDescriptor? response = null;
         Frozen? frozen = null;
+        AccessReviewPreparedCut? preparedCut = null;
         if (hydrated.Launched is { } existing)
         {
             // An already accepted launch resolves from the owner's facts: the actor must currently see and manage it.
@@ -64,33 +79,43 @@ public sealed class LaunchAccessReviewCampaignHandler(NativeOperationExecutor op
         }
         else
         {
-            var built = await FreezeAsync(context, request, actor, provenance, now, ct).ConfigureAwait(false);
-            if (!built.IsSuccess)
-                return Result<AccessReviewCampaignRegistration>.Failure(built.Error!);
-            frozen = built.Value!;
-            response = frozen.Response;
+            if (request.ProgramId is not { } requestedProgramId || requestedProgramId == Uuid.Empty)
+                return Failure(RequestErrorKind.Validation, "A routed campaign requires an explicit owner Program and remediation owner.");
+            var requestedProgram = await reader.HydrateAsync(new ComplianceProgram(request.TenantId, requestedProgramId), ct)
+                .ConfigureAwait(false);
+            if (!requestedProgram.IsCreated)
+                return Failure(RequestErrorKind.NotFound, "The owner Program was not found in this tenant.");
+            if (!await authority.HasProgramManagementPermissionAsync(request.TenantId, requestedProgramId,
+                    actor.MemberId, ct).ConfigureAwait(false))
+                return Failure(RequestErrorKind.Forbidden, "The launching actor must currently manage the owner Program.");
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AccessReviewCampaign>(binding,
             () => new AccessReviewCampaign(request.TenantId, campaignId, campaignId), owner => owner.Acceptance,
-            owner => Prepare(owner, response),
-            (AccessReviewCampaign owner, ImmutableContentRef firstResponse) => owner.Launch(provenance,
+            async (owner, prepareCt) =>
+            {
+                var prepared = owner.PrepareLaunch();
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                var built = await FreezeAsync(context, request, actor, provenance, now, prepareCt).ConfigureAwait(false);
+                if (!built.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(built.Error!);
+                frozen = built.Value!;
+                response = frozen.Response;
+                preparedCut = AccessReviewPreparedCut.Capture(owner);
+                return Result<FirstResponseDescriptor>.Success(response);
+            },
+            (AccessReviewCampaign owner, ImmutableContentRef firstResponse) =>
+            {
+                if (preparedCut?.Matches(owner) != true)
+                    return AccessReviewPreparedCut.Changed();
+                return owner.Launch(provenance,
                 request.Name, request.Instructions, request.Deadline, frozen!.SnapshotId, frozen.ContentSha256,
                 frozen.Reviewers, frozen.Items, frozen.ItemIntents, actor.Reference, now, request.ProgramId,
-                request.RemediationOwnerMemberId, firstResponse, frozen.Result)), context, ct).ConfigureAwait(false);
+                request.RemediationOwnerMemberId, firstResponse, frozen.Result);
+            }), context, ct).ConfigureAwait(false);
         return await AccessReviewContent.ResponseAsync<AccessReviewCampaignRegistration>(content, request.TenantId,
             outcome, ct).ConfigureAwait(false);
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(AccessReviewCampaign owner, FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareLaunch();
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The campaign changed while the launch was prepared; retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     async ValueTask<Result<Frozen>> FreezeAsync(IRequestContext<LaunchAccessReviewCampaign> context,

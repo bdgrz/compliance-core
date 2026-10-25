@@ -62,5 +62,5 @@ static class AccessReviewEffects
     public static OperationProvenance Root(Uuid logicalId, string commandKind, EventStreamAddress owner,
         ActorReference actor, long? expectedRevision, string intentDigest, DateTimeOffset acceptedAt) => new(logicalId,
         logicalId, null, commandKind, actor, owner, InitialEpisode, expectedRevision is { } expected ? (ulong)expected : null,
-        intentDigest, acceptedAt, owner, owner);
+        intentDigest, acceptedAt, owner, owner, owner);
 }

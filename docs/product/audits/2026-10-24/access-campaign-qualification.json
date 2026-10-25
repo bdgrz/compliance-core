@@ -1,0 +1,49 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Compact Campaign/Item native authority; complete transient exact-prefix chronology/rolling commitment; selected historical batch/completion/pin facts; all 8 personal/campaign producers prepare and freeze inside NativeOperationExecutor and bind exact append cuts; complete bulk holds/provisional/publication/cancellation fences and completion drain/hold/close/settle consumers; verified current readers and Work/TypeI source consumers.",
+  "validation": {
+    "genuineOldApiRedFailed": 4,
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 249,
+    "productionHttpPassed": 59,
+    "backendUnit": {
+      "passed": 6346,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "exactFileAndDependencyHashes": "verified"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 52,
+    "signalsTriaged": 5,
+    "integration": "merge scoped repair recommended",
+    "mergeProbability": 0.79,
+    "introducedRegressionProbability": 0.31,
+    "scopeMisrepresentationProbability": 0.21,
+    "adopted": "merge scoped current native migration after final local gates, continue explicit receiver-recovery follow-on and other owners; no CI wait per user direction"
+  },
+  "qualification": {
+    "wire": "Existing public DTOs, route maps, discriminator tags/versions, source logical digests/physical-byte/receipt semantics and FirstResponse/MutationResultContent envelopes unchanged. New root provenance explicitly records its actual FirstOwner. No shared Program/DI/JSON edits required; existing scoped registrations automatically resolve added IDomainEventReader/ISourceFactResolver constructor dependencies.",
+    "authority": "Lifetime facts/admitted/canceled/provisional/published/fenced collections are removed from Campaign/Item. History snapshots are transient and complete. The independent DecisionBatch remains unchanged: its lifecycle is bounded to admission plus publication, or cancellation acceptance plus cancellation. SourceUse72 selected-finalized proofs and protected Apply observer are preserved.",
+    "protocol": "Bulk selections and completion use/drain manifests verify full descriptors, complete canonical membership, duplicate/scope/first-owner header/native source identity. Completion verifies all launched item uses and exact earlier admitted item/batch drain tuples, not only counts. Abort requires Evidence == exact selected accepted completion and optional failed item belongs its frozen selection. Missing content is transient, corrupt content permanent. Exact authorized accepted retry resolves before unrelated mutable body reads/freezes.",
+    "metadataQualification": "Established rolling typed payload + immutable EventId/AggregateId/AggregateVersion/OccurredOn/IsAudit commitment; selected actual facts also compare full metadata. NativeOwnerHistory includes physical offsets/audits at the hydrated cut. This does not invent ordering/receipt semantics or rewrite historical source bytes.",
+    "legacyQualification": "No migration or dual-read path. Previously persisted malformed manual fixture histories (missing materialization causation/FirstOwner) are corrected in tests, not accepted by fallback. Production bulk child processing of pre-cutover null FirstOwner admissions is not qualified by the stricter exact frozen-header gate; existing exact accepted root retry retains NativeAcceptance semantics. Existing prerelease disposable-history decision applies."
+  },
+  "rootRefinements": [
+    "IDEvar3, concrete Dictionary Index return and HashSet collection expression required5 analyzer fixes.",
+    "Initial focused216pass33fail captured31 bulk failures caused by Preview using empty outer identity snapshot. It now uses actual preparedCampaign inside native Prepare.",
+    "Two intermediate-prefix substitution tests exposed generic SourceUse.Confirm InvalidOperationException before Access replay finalization. Expected source-use history integrity failure is now classified permanently; failed proof cannot mark Access replay cut verified.",
+    "Actual HTTP58pass1fail caught fresh launch returning403 for unknown owner Program before checking existence. Current authorization now checks Program identity/existence before management permission (same as accepted branch); Freeze retains independent checks inside native Prepare. Final HTTP59green."
+  ],
+  "remainingWork": [
+    "Existing receiver-preparation recovery gap remains separate: several Access receivers (for example Abort completion) read immutable body before selected native receipt Decide. Shared NativeReceiverPreparation helper is being qualified/shipped with full Policy family, then apply to these Access receivers with actual races/unavailable-body regressions. No claim that this follow-on is complete.",
+    "ExaminationEngagement75 frozen next; Policy whole protocol finalizing; ImportSource+Batch and Digest owners preparing; Staff RED2 qualified, independence/identity/guard/other retained inventory continues."
+  ]
+}

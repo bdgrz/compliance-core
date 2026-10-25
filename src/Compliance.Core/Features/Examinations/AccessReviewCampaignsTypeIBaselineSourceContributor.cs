@@ -344,7 +344,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
         var settlement = await AccessReviewContent.ReadAsync<SourceUseAuthorizationIntent>(content, tenant,
             settled.Intent, ct).ConfigureAwait(false);
         var itemOwner = AccessReviewEffects.ItemStream(tenant, campaignId, settled.ItemId);
-        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, campaignId), ct).ConfigureAwait(false);
+        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, campaignId, selectedRootId: operationId), ct).ConfigureAwait(false);
         var admitted = campaign.AdmittedFor(operationId)
             ?? throw new ImmutableContentUnavailableException("The settled bulk decision admission is not visible.");
         var admission = NativeFactReference.Of(campaign.Stream, admitted);

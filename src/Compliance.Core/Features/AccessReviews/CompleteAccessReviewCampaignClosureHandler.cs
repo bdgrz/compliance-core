@@ -18,7 +18,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 /// </summary>
 sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader, IAggregateExecutor executor,
     IImmutableContentStore content, AccessReviewManifests manifests, PopulationSnapshotFreezer freezer,
-    AccessReviewCompletionVerifier verifier, AccessReviewCompletionFences fences, TimeProvider clock)
+    AccessReviewCompletionVerifier verifier, AccessReviewCompletionFences fences, TimeProvider clock, IDomainEventReader events)
     : IRequestHandler<CompleteAccessReviewCampaignClosure, ReceiverOutcome>
 {
     const int MaximumAttempts = 4;
@@ -47,6 +47,7 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
             command.ItemProofs != intent.SourceUses.Content)
             return SourceUseReceiverSupport.Permanent("The closure differs from the pending completion admission.");
 
+        var preparedCut = AccessReviewPreparedCut.Capture(campaign);
         AccessReviewCampaignCompletionView view;
         ImmutableContentRef proofs;
         try
@@ -58,7 +59,8 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Transient($"The frozen completion cannot be verified yet: {exception.Message}");
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen completion cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         var completionContent = await AccessReviewContent.WriteAsync(content, tenant,
@@ -70,10 +72,12 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
             try
             {
                 var step = await executor.ExecuteAsync(new AccessReviewCampaign(tenant, command.CampaignId,
-                    command.CommandId), fresh =>
+                    command.CommandId, command.OperationId), fresh =>
                     {
                         if (Decide(fresh, binding, command.OperationId) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
+                        if (!preparedCut.Matches(fresh))
+                            return AggregateOutcome.Discard(Result<Decided>.Failure(AccessReviewPreparedCut.Changed().Error!));
                         var raised = fresh.Close(provenance, completionContent, proofs, result);
                         return raised.IsSuccess
                             ? AggregateOutcome.Commit(Result<Decided>.Success(new Decided(
@@ -113,7 +117,7 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
             if (!requirements.TryGetValue(stream.Resource, out var requirement))
                 return await AbortAsync(completion, command, "A launched item is not covered by the completion.",
                     item.ItemId, context, ct).ConfigureAwait(false);
-            var owner = await reader.HydrateAsync(new AccessReviewItem(tenant, command.CampaignId, item.ItemId).ForSourceUse(candidate => AccessReviewCompletionVerifier.UseKey(command.OperationId, campaign, requirement)), ct)
+            var owner = await reader.HydrateAsync(new AccessReviewItem(tenant, command.CampaignId, item.ItemId, selectedContentEventId: requirement.ContentEvent.EventId).ForSourceUse(candidate => AccessReviewCompletionVerifier.UseKey(command.OperationId, campaign, requirement)), ct)
                 .ConfigureAwait(false);
             var key = AccessReviewCompletionVerifier.UseKey(command.OperationId, campaign, requirement);
             if (owner.Opened is null || owner.Uses.Find(key) is not { IsActive: true } ||
@@ -125,7 +129,8 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
                 !owner.MatchesPin(requirement.ContentEvent.EventId, requirement.ResourceRevision))
                 return await AbortAsync(completion, command, $"Item {item.ItemId} changed under its completion hold.",
                     item.ItemId, context, ct).ConfigureAwait(false);
-            var state = await AccessReviewItemFold.ReadAsync(owner, item, launched.RemediationOwnerMemberId, content,
+            var history = await AccessReviewItemHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
+            var state = await AccessReviewItemFold.ReadAsync(owner, history, item, launched.RemediationOwnerMemberId, content,
                 tenant, ct).ConfigureAwait(false);
             if (state.CompletionBlocker(now) is { } blocker)
                 return await AbortAsync(completion, command, blocker, item.ItemId, context, ct).ConfigureAwait(false);

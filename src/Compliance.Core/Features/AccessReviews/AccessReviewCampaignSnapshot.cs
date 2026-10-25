@@ -13,10 +13,12 @@ public sealed class AccessReviewCampaignSnapshot
     readonly List<Uuid> _order;
 
     internal AccessReviewCampaignSnapshot(Uuid tenantId, AccessReviewCampaign campaign, AccessReviewLaunch? launched,
-        AccessReviewCampaignCompletionView? completion, IReadOnlyList<AccessReviewItemState> items)
+        AccessReviewCampaignCompletionView? completion, IReadOnlyList<AccessReviewItemState> items,
+        AccessReviewCampaignHistorySnapshot history)
     {
         TenantId = tenantId;
         Campaign = campaign;
+        History = history;
         Launched = launched;
         Completion = completion;
         _order = [.. items.Select(static item => item.Item.ItemId)];
@@ -28,6 +30,8 @@ public sealed class AccessReviewCampaignSnapshot
 
     /// <summary>The campaign stream's aggregate.</summary>
     public AccessReviewCampaign Campaign { get; }
+
+    public AccessReviewCampaignHistorySnapshot History { get; }
 
     /// <summary>The campaign id.</summary>
     public Uuid Id => Campaign.Id;

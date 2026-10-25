@@ -23,6 +23,20 @@ public sealed class CompleteAccessReviewCampaignHandler(NativeOperationExecutor 
     public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
         IRequestContext<CompleteAccessReviewCampaign> context, CancellationToken ct)
     {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact campaign source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<OperationAcceptedResponse>> HandleCoreAsync(
+        IRequestContext<CompleteAccessReviewCampaign> context, CancellationToken ct)
+    {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
             return Failure(RequestErrorKind.Forbidden, "Access review sign-off requires personal HTTP submission.");
@@ -31,7 +45,7 @@ public sealed class CompleteAccessReviewCampaignHandler(NativeOperationExecutor 
             return Failure(RequestErrorKind.Validation,
                 "A completion requires a command id and a non-negative expected revision.");
         var actor = AccessReviewActor.From(context);
-        var campaign = await campaigns.ReadCampaignAsync(request.TenantId, request.CampaignId, request.CommandId, ct)
+        var campaign = await campaigns.ReadCampaignIdentityAsync(request.TenantId, request.CampaignId, request.CommandId, ct)
             .ConfigureAwait(false);
         if (!campaign.IsLaunched ||
             !await RestrictedAccessReviewVisibility.CanReadCampaignItemsAsync(visibility, request.TenantId,
@@ -45,39 +59,38 @@ public sealed class CompleteAccessReviewCampaignHandler(NativeOperationExecutor 
         var binding = AcceptedOperationBinding.Of(provenance);
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? intent = null;
-        if (campaign.Campaign.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            if (campaign.Campaign.PrepareCompletion(request.ExpectedRevision) is { IsSuccess: false } blocked)
-                return Result<OperationAcceptedResponse>.Failure(blocked.Error!);
-            if (campaign.CompletionBlockers(now) is { Count: > 0 } blockers)
-                return Failure(RequestErrorKind.Conflict, string.Join(" ", blockers.Take(10)));
-            if (!AccessReviewVocabulary.IsBoundedText(request.Attestation, 4000))
-                return Failure(RequestErrorKind.Validation,
-                    "Completion requires an attestation of at most 4000 characters.");
-            intent = await FreezeIntentAsync(request, campaign, provenance, now, ct).ConfigureAwait(false);
-            response = await AccessReviewContent.AcceptedResponseAsync(content, request.TenantId, request.CommandId,
-                now, ct).ConfigureAwait(false);
-        }
+        AccessReviewPreparedCut? preparedCut = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AccessReviewCampaign>(binding,
             () => new AccessReviewCampaign(request.TenantId, request.CampaignId, request.CommandId),
-            owner => owner.Acceptance, owner => Prepare(owner, request.ExpectedRevision, response),
-            (AccessReviewCampaign owner, ImmutableContentRef acknowledgment) => owner.AcceptCompletion(provenance,
-                intent!, acknowledgment)), context, ct).ConfigureAwait(false);
+            owner => owner.Acceptance,
+            async (owner, prepareCt) =>
+            {
+                var prepared = owner.PrepareCompletion(request.ExpectedRevision);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                var preparedCampaign = await campaigns.ReadCampaignAsync(request.TenantId, owner, prepareCt)
+                    .ConfigureAwait(false);
+                if (preparedCampaign.CompletionBlockers(now) is { Count: > 0 } blockers)
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict, string.Join(" ", blockers.Take(10)));
+                if (!AccessReviewVocabulary.IsBoundedText(request.Attestation, 4000))
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Validation,
+                        "Completion requires an attestation of at most 4000 characters.");
+                intent = await FreezeIntentAsync(request, preparedCampaign, provenance, now, prepareCt).ConfigureAwait(false);
+                response = await AccessReviewContent.AcceptedResponseAsync(content, request.TenantId, request.CommandId,
+                    now, prepareCt).ConfigureAwait(false);
+
+                preparedCut = AccessReviewPreparedCut.Capture(owner);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (AccessReviewCampaign owner, ImmutableContentRef acknowledgment) =>
+            {
+                if (preparedCut?.Matches(owner) != true)
+                    return AccessReviewPreparedCut.Changed();
+                return owner.AcceptCompletion(provenance, intent!, acknowledgment);
+            }), context, ct).ConfigureAwait(false);
         return await AccessReviewContent.AcknowledgmentAsync(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(AccessReviewCampaign owner, long expectedRevision,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareCompletion(expectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The campaign changed while the completion was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     async Task<ImmutableContentRef> FreezeIntentAsync(CompleteAccessReviewCampaign request,
@@ -98,7 +111,7 @@ public sealed class CompleteAccessReviewCampaignHandler(NativeOperationExecutor 
 
         var uses = await ManifestAsync(tenantId, AccessReviewContent.SourceUseItemSchema, [.. requirements.Values], ct)
             .ConfigureAwait(false);
-        var admitted = await DrainedBatchesAsync(tenantId, campaign.Campaign, ct).ConfigureAwait(false);
+        var admitted = await DrainedBatchesAsync(tenantId, campaign.Campaign, campaign.History, ct).ConfigureAwait(false);
         var decisionContent = await AccessReviewContent.WriteAsync(content, tenantId,
             AccessReviewContent.CompletionDecisionSchema, new AccessReviewCompletionDecision(request.CommandId,
                 request.CampaignId, request.ExpectedRevision, request.Attestation.Trim()), ct).ConfigureAwait(false);
@@ -115,15 +128,15 @@ public sealed class CompleteAccessReviewCampaignHandler(NativeOperationExecutor 
     ///     completion holds an item only after every batch that selects it settled, so these drain first.
     /// </summary>
     async Task<ImmutableSelectionManifest> DrainedBatchesAsync(Uuid tenantId, AccessReviewCampaign campaign,
-        CancellationToken ct)
+        AccessReviewCampaignHistorySnapshot history, CancellationToken ct)
     {
         var selections = new SortedDictionary<string, AccessReviewAdmittedBatchSelection>(StreamKeyOrder.Instance);
-        foreach (var admitted in campaign.AdmittedBatches)
+        foreach (var admitted in history.AdmittedBatches)
         {
             var intent = await AccessReviewContent.ReadAsync<BulkAccessDecisionIntent>(content, tenantId,
                 admitted.Intent, ct).ConfigureAwait(false);
-            var items = await AccessReviewContent.ReadAsync<IReadOnlyList<BulkAccessDecisionItemIntent>>(content,
-                tenantId, intent.Items.Content, ct).ConfigureAwait(false);
+            var items = await ImmutableSelectionManifests.ReadAsync<BulkAccessDecisionItemIntent>(content,
+                AccessReviewContent.Realm(tenantId), intent.Items, ct).ConfigureAwait(false);
             foreach (var item in items)
                 selections.Add($"{item.ItemOwner.Resource}|{intent.DecisionBatchId}",
                     new AccessReviewAdmittedBatchSelection(intent.DecisionBatchId, item.ItemId,

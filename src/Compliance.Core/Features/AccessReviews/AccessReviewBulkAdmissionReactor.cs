@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
@@ -12,7 +13,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     unverified admission.
 /// </summary>
 sealed partial class AccessReviewBulkAdmissionReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process,
-    IImmutableContentStore content, AccessReviewManifests manifests)
+    IImmutableContentStore content, AccessReviewManifests manifests, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(AccessReviewCampaign.Area), WorkloadName),
         IReactorHandler<AccessReviewDecisionBatchAdmitted>
 {
@@ -20,6 +21,8 @@ sealed partial class AccessReviewBulkAdmissionReactor(IProjectionCheckpointStore
 
     public async ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchAdmitted> context, CancellationToken ct)
     {
+        await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
+            .ConfigureAwait(false);
         var realm = context.Source.Stream.Realm;
         var tenant = Uuid.Parse(realm, CultureInfo.InvariantCulture);
         var campaignId = Uuid.Parse(context.Source.Stream.Resource, CultureInfo.InvariantCulture);
@@ -38,7 +41,7 @@ sealed partial class AccessReviewBulkAdmissionReactor(IProjectionCheckpointStore
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen bulk decision cannot be verified yet: {exception.Message}", true));
+                $"The frozen bulk decision cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         _ = await process.StartAsync(AccessReviewEffects.BulkProcessName, context, context.Trigger.Intent, targets,

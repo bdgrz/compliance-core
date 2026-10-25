@@ -16,18 +16,18 @@ public sealed class AccessReviewManifests(IImmutableContentStore content)
 {
     const int MaximumCached = 16;
 
-    readonly ConcurrentDictionary<(string Realm, Uuid ContentId, string Sha256), object> _indexes = new();
+    readonly ConcurrentDictionary<(string Realm, string Kind, ImmutableContentRef Content, ImmutableSelectionManifest? Selection), object> _indexes = new();
 
     /// <summary>The frozen item views of a launch by item id.</summary>
     public async Task<IReadOnlyDictionary<Uuid, AccessReviewItemView>> ItemsAsync(string realm,
         ImmutableContentRef reference, CancellationToken ct = default)
     {
-        var key = (realm, reference.ContentId, reference.Sha256);
+        var key = (realm, nameof(ItemsAsync), reference, (ImmutableSelectionManifest?)null);
         if (_indexes.TryGetValue(key, out var cached))
             return (IReadOnlyDictionary<Uuid, AccessReviewItemView>)cached;
         var items = await content.ReadJsonAsync<IReadOnlyList<AccessReviewItemView>>(realm, reference, ct)
             .ConfigureAwait(false);
-        IReadOnlyDictionary<Uuid, AccessReviewItemView> index = items.ToDictionary(static item => item.ItemId);
+        var index = Index(items, static item => item.ItemId);
         Remember(key, index);
         return index;
     }
@@ -36,13 +36,13 @@ public sealed class AccessReviewManifests(IImmutableContentStore content)
     public async Task<IReadOnlyDictionary<Uuid, ImmutableContentRef>> IntentsAsync(string realm,
         ImmutableContentRef reference, CancellationToken ct = default)
     {
-        var key = (realm, reference.ContentId, reference.Sha256);
+        var key = (realm, nameof(IntentsAsync), reference, (ImmutableSelectionManifest?)null);
         if (_indexes.TryGetValue(key, out var cached))
             return (IReadOnlyDictionary<Uuid, ImmutableContentRef>)cached;
         var manifest = await content.ReadJsonAsync<AccessReviewItemIntentManifest>(realm, reference, ct)
             .ConfigureAwait(false);
-        IReadOnlyDictionary<Uuid, ImmutableContentRef> index = manifest.Selections.ToDictionary(
-            static selection => selection.ItemId, static selection => selection.Intent);
+        IReadOnlyDictionary<Uuid, ImmutableContentRef> index = Index(manifest.Selections, static selection => selection.ItemId)
+            .ToDictionary(static pair => pair.Key, static pair => pair.Value.Intent);
         Remember(key, index);
         return index;
     }
@@ -51,13 +51,14 @@ public sealed class AccessReviewManifests(IImmutableContentStore content)
     public async Task<IReadOnlyDictionary<string, SourceUseRequirement>> RequirementsAsync(string realm,
         ImmutableSelectionManifest manifest, CancellationToken ct = default)
     {
-        var key = (realm, manifest.Content.ContentId, manifest.Content.Sha256);
+        var key = (realm, nameof(RequirementsAsync), manifest.Content, (ImmutableSelectionManifest?)manifest);
         if (_indexes.TryGetValue(key, out var cached))
             return (IReadOnlyDictionary<string, SourceUseRequirement>)cached;
-        var requirements = await content.ReadJsonAsync<IReadOnlyList<SourceUseRequirement>>(realm, manifest.Content,
+        Check(manifest, AccessReviewContent.SourceUseItemSchema);
+        var requirements = await ImmutableSelectionManifests.ReadAsync<SourceUseRequirement>(content, realm, manifest,
             ct).ConfigureAwait(false);
-        IReadOnlyDictionary<string, SourceUseRequirement> index = requirements.ToDictionary(
-            static requirement => requirement.SourceOwner.Resource, StringComparer.Ordinal);
+        RequireOrder(requirements.Select(static value => value.SourceOwner.Resource));
+        var index = Index(requirements, static requirement => requirement.SourceOwner.Resource);
         Remember(key, index);
         return index;
     }
@@ -66,13 +67,14 @@ public sealed class AccessReviewManifests(IImmutableContentStore content)
     public async Task<IReadOnlyDictionary<string, BulkAccessDecisionItemIntent>> BulkItemsAsync(string realm,
         ImmutableSelectionManifest manifest, CancellationToken ct = default)
     {
-        var key = (realm, manifest.Content.ContentId, manifest.Content.Sha256);
+        var key = (realm, nameof(BulkItemsAsync), manifest.Content, (ImmutableSelectionManifest?)manifest);
         if (_indexes.TryGetValue(key, out var cached))
             return (IReadOnlyDictionary<string, BulkAccessDecisionItemIntent>)cached;
-        var items = await content.ReadJsonAsync<IReadOnlyList<BulkAccessDecisionItemIntent>>(realm, manifest.Content,
+        Check(manifest, BulkAccessDecisionItemIntent.Schema);
+        var items = await ImmutableSelectionManifests.ReadAsync<BulkAccessDecisionItemIntent>(content, realm, manifest,
             ct).ConfigureAwait(false);
-        IReadOnlyDictionary<string, BulkAccessDecisionItemIntent> index = items.ToDictionary(
-            static item => item.ItemOwner.Resource, StringComparer.Ordinal);
+        RequireOrder(items.Select(static value => value.ItemOwner.Resource));
+        var index = Index(items, static item => item.ItemOwner.Resource);
         Remember(key, index);
         return index;
     }
@@ -81,11 +83,14 @@ public sealed class AccessReviewManifests(IImmutableContentStore content)
     public async Task<IReadOnlyDictionary<Uuid, IReadOnlyList<AccessReviewAdmittedBatchSelection>>> DrainsAsync(
         string realm, ImmutableSelectionManifest manifest, CancellationToken ct = default)
     {
-        var key = (realm, manifest.Content.ContentId, manifest.Content.Sha256);
+        var key = (realm, nameof(DrainsAsync), manifest.Content, (ImmutableSelectionManifest?)manifest);
         if (_indexes.TryGetValue(key, out var cached))
             return (IReadOnlyDictionary<Uuid, IReadOnlyList<AccessReviewAdmittedBatchSelection>>)cached;
-        var selections = await content.ReadJsonAsync<IReadOnlyList<AccessReviewAdmittedBatchSelection>>(realm,
-            manifest.Content, ct).ConfigureAwait(false);
+        Check(manifest, AccessReviewContent.AdmittedChildrenSchema);
+        var selections = await ImmutableSelectionManifests.ReadAsync<AccessReviewAdmittedBatchSelection>(content,
+            realm, manifest, ct).ConfigureAwait(false);
+        if (selections.Select(static selection => (selection.ItemId, selection.DecisionBatchId)).Distinct().Count() != selections.Count)
+            throw new ImmutableContentIntegrityException("The drained selection repeats an item/batch admission.");
         IReadOnlyDictionary<Uuid, IReadOnlyList<AccessReviewAdmittedBatchSelection>> index = selections
             .GroupBy(static selection => selection.ItemId)
             .ToDictionary(static group => group.Key, static group => (IReadOnlyList<AccessReviewAdmittedBatchSelection>)[.. group]);
@@ -109,7 +114,34 @@ public sealed class AccessReviewManifests(IImmutableContentStore content)
             .Select(static target => target.ToString())];
     }
 
-    void Remember((string Realm, Uuid ContentId, string Sha256) key, object index)
+    static void Check(ImmutableSelectionManifest manifest, string schema)
+    {
+        if (manifest.ItemSchema != schema || manifest.Order != SelectionOrder.CanonicalKey)
+            throw new ImmutableContentIntegrityException("The selection has another schema or ordering contract.");
+    }
+
+    static void RequireOrder(IEnumerable<string> keys)
+    {
+        string? previous = null;
+        foreach (var key in keys)
+        {
+            if (previous is not null && Kernel.StreamKeyOrder.Instance.Compare(previous, key) >= 0)
+                throw new ImmutableContentIntegrityException("The complete selection is not in unique canonical owner order.");
+            previous = key;
+        }
+    }
+
+    static Dictionary<TKey, TValue> Index<TKey, TValue>(IEnumerable<TValue> values, Func<TValue, TKey> keyOf)
+        where TKey : notnull
+    {
+        var result = new Dictionary<TKey, TValue>();
+        foreach (var value in values)
+            if (!result.TryAdd(keyOf(value), value))
+                throw new ImmutableContentIntegrityException("The complete immutable manifest repeats a selected identity.");
+        return result;
+    }
+
+    void Remember((string Realm, string Kind, ImmutableContentRef Content, ImmutableSelectionManifest? Selection) key, object index)
     {
         if (_indexes.Count >= MaximumCached)
             _indexes.Clear();

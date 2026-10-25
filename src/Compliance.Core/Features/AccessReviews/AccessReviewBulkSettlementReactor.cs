@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
@@ -14,20 +15,28 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     delayed hold is refused.
 /// </summary>
 sealed partial class AccessReviewBulkSettlementReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus,
-    IImmutableContentStore content, IAggregateReader reader, AccessReviewManifests manifests)
+    IImmutableContentStore content, IAggregateReader reader, AccessReviewManifests manifests, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(AccessReviewDecisionBatch.Area), WorkloadName),
         IReactorHandler<AccessReviewDecisionBatchPublished>,
         IReactorHandler<AccessReviewDecisionBatchCanceled>
 {
     public const string WorkloadName = "AccessReviewBulkSettlementV1";
 
-    public ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchPublished> context, CancellationToken ct) =>
-        SettleAsync(context.Source.Stream.Realm, context.Trigger.Intent, SourceUseSettlementDisposition.IrreversibleDecision,
-            context, ct);
+    public async ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchPublished> context, CancellationToken ct)
+    {
+        await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
+            .ConfigureAwait(false);
+        await SettleAsync(context.Source.Stream.Realm, context.Trigger.Intent, SourceUseSettlementDisposition.IrreversibleDecision,
+            context, ct).ConfigureAwait(false);
+    }
 
-    public ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchCanceled> context, CancellationToken ct) =>
-        SettleAsync(context.Source.Stream.Realm, context.Trigger.Intent, SourceUseSettlementDisposition.Canceled, context,
-            ct);
+    public async ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchCanceled> context, CancellationToken ct)
+    {
+        await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
+            .ConfigureAwait(false);
+        await SettleAsync(context.Source.Stream.Realm, context.Trigger.Intent, SourceUseSettlementDisposition.Canceled, context,
+            ct).ConfigureAwait(false);
+    }
 
     async ValueTask SettleAsync(string realm, ImmutableContentRef intentReference,
         SourceUseSettlementDisposition disposition, IExecutionContext context, CancellationToken ct)

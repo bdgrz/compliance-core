@@ -22,7 +22,7 @@ sealed class SettleAccessReviewItemDecisionHandler(IAggregateReader reader, IAgg
     readonly IAggregateReader _reader = reader;
 
     protected override AccessReviewItem Open(SettleAccessReviewItemDecision request, Uuid selectedCommandId) =>
-        new(Tenant(request.Target), request.CampaignId, request.SourceOwnerId, selectedCommandId);
+        new(Tenant(request.Target), request.CampaignId, request.SourceOwnerId, selectedCommandId, request.OperationId);
 
     protected override async ValueTask<Result<SourceUseSource>> VerifyAsync(SettleAccessReviewItemDecision request,
         CancellationToken ct)
@@ -47,7 +47,7 @@ sealed class SettleAccessReviewItemDecisionHandler(IAggregateReader reader, IAgg
         catch (ImmutableContentIntegrityException exception)
         {
             return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen item head cannot be verified: {exception.Message}", false));
+                $"The frozen item head cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         var batch = await _reader.HydrateAsync(new AccessReviewDecisionBatch(tenant, request.CampaignId,
@@ -61,7 +61,7 @@ sealed class SettleAccessReviewItemDecisionHandler(IAggregateReader reader, IAgg
         if (disposition == SourceUseSettlementDisposition.IrreversibleDecision)
         {
             var item = await _reader.HydrateAsync(new AccessReviewItem(tenant, request.CampaignId,
-                request.SourceOwnerId), ct).ConfigureAwait(false);
+                request.SourceOwnerId, selectedBatchId: request.DecisionBatchId), ct).ConfigureAwait(false);
             if (item.ProvisionalFor(request.DecisionBatchId) is null)
                 return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
                     "The published batch has no applied decision on this item.", false));

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Content;
@@ -30,8 +31,8 @@ public sealed class AccessReviewCompletionProcessTests
         // Act
         var (acknowledgment, process) = await fixture.CompleteAsync(fixture.ManagerUserId, campaignId);
         var campaign = await fixture.CampaignAggregateAsync(campaignId);
-        var accepted = Assert.IsType<AccessReviewCampaignCompletionAccepted>(campaign.Facts[1]);
-        var closed = Assert.IsType<AccessReviewCampaignCompleted>(campaign.Facts[2]);
+        var accepted = Assert.IsType<AccessReviewCampaignCompletionAccepted>((await fixture.CampaignHistoryAsync(campaign)).Facts[1]);
+        var closed = Assert.IsType<AccessReviewCampaignCompleted>((await fixture.CampaignHistoryAsync(campaign)).Facts[2]);
         var proofs = await fixture.Provider.GetRequiredService<IImmutableContentStore>()
             .ReadJsonAsync<IReadOnlyList<AccessReviewItemCompletionProof>>(fixture.TenantId.ToString(),
                 closed.ItemCompletionProofs);
@@ -87,7 +88,7 @@ public sealed class AccessReviewCompletionProcessTests
         Assert.Equal(first, retried);
         Assert.Contains("different", changed.Message, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(changedRevision);
-        Assert.Equal(3, campaign.Facts.Count);
+        Assert.Equal(3, (await fixture.CampaignHistoryAsync(campaign)).Facts.Count);
     }
 
     [Fact]
@@ -127,7 +128,7 @@ public sealed class AccessReviewCompletionProcessTests
         var run = await fixture.RunCompletionAsync(campaignId, request.CommandId);
         await SettleCanceledAsync(fixture, campaignId);
         var campaign = await fixture.CampaignAggregateAsync(campaignId);
-        var canceled = Assert.IsType<AccessReviewCampaignCompletionCanceled>(campaign.Facts[^1]);
+        var canceled = Assert.IsType<AccessReviewCampaignCompletionCanceled>((await fixture.CampaignHistoryAsync(campaign)).Facts[^1]);
 
         // Assert
         Assert.Equal("keep", late.Decision);
@@ -137,7 +138,7 @@ public sealed class AccessReviewCompletionProcessTests
         Assert.Equal(3, campaign.Revision);
         Assert.Equal(request.CommandId, canceled.Operation.RootOperationId);
         Assert.Equal(AccessReviewCompletionProcess.ReceiverCommandId(
-            ((DomainEvent)campaign.AcceptedFor(request.CommandId)!).Metadata!.EventId,
+            ((DomainEvent)(await fixture.CampaignHistoryAsync(campaign)).AcceptedFor(request.CommandId)!).Metadata!.EventId,
             nameof(AbortAccessReviewCampaignCompletion), null, "initial"), canceled.Operation.LogicalId);
         foreach (var itemId in itemIds)
         {
@@ -267,7 +268,7 @@ public sealed class AccessReviewCompletionProcessTests
         var superseded = Assert.IsType<ReceiverOutcome.Superseded>(late.Value);
         Assert.Contains("recovers forward", superseded.Reason, StringComparison.Ordinal);
         Assert.True(campaign.IsCompleted);
-        Assert.Equal(3, campaign.Facts.Count);
+        Assert.Equal(3, (await fixture.CampaignHistoryAsync(campaign)).Facts.Count);
     }
 
     [Fact]
@@ -297,7 +298,7 @@ public sealed class AccessReviewCompletionProcessTests
         // Assert
         Assert.Equal(ProcessState.Completed, run.State);
         Assert.False(aggregate.IsCompleted);
-        var canceled = Assert.IsType<AccessReviewCampaignCompletionCanceled>(aggregate.Facts[^1]);
+        var canceled = Assert.IsType<AccessReviewCampaignCompletionCanceled>((await fixture.CampaignHistoryAsync(aggregate)).Facts[^1]);
         var proof = await fixture.Provider.GetRequiredService<IImmutableContentStore>()
             .ReadJsonAsync<AccessReviewCompletionFailure>(fixture.TenantId.ToString(), canceled.SourceProofs!);
         Assert.Equal(botDeploy, proof.ItemId);
@@ -353,7 +354,9 @@ public sealed class AccessReviewCompletionProcessTests
             scope.ServiceProvider.GetRequiredService<ProcessRootReaction>(),
             scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(),
             scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
-            scope.ServiceProvider.GetRequiredService<AccessReviewManifests>());
+            scope.ServiceProvider.GetRequiredService<AccessReviewManifests>(),
+            scope.ServiceProvider.GetRequiredService<ISourceFactResolver>());
+        await fixture.BindReactorAsync(reactor);
 
         // Act
         await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<AccessReviewCampaignCompletionAccepted>(record),
@@ -426,7 +429,10 @@ public sealed class AccessReviewCompletionProcessTests
         var reactor = new AccessReviewCompletionSettlementReactor(new InMemoryProjectionCheckpointStore(),
             scope.ServiceProvider.GetRequiredService<IRequestBus>(),
             scope.ServiceProvider.GetRequiredService<IProcessRecordStore>(),
-            scope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            scope.ServiceProvider.GetRequiredService<ISourceFactResolver>(),
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        await fixture.BindReactorAsync(reactor);
         await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<AccessReviewCampaignCompletionCanceled>(record),
             CancellationToken.None);
     }

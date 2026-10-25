@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -12,7 +13,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     the sweep resumes it if this reactor stops. A set that cannot be read yet is transient.
 /// </summary>
 sealed partial class AccessReviewCompletionReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process,
-    IImmutableContentStore content, IAggregateReader reader, AccessReviewManifests manifests)
+    IImmutableContentStore content, IAggregateReader reader, AccessReviewManifests manifests, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(AccessReviewCampaign.Area), WorkloadName),
         IReactorHandler<AccessReviewCampaignCompletionAccepted>
 {
@@ -21,6 +22,8 @@ sealed partial class AccessReviewCompletionReactor(IProjectionCheckpointStore ch
     public async ValueTask HandleAsync(IReactorContext<AccessReviewCampaignCompletionAccepted> context,
         CancellationToken ct)
     {
+        await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
+            .ConfigureAwait(false);
         var realm = context.Source.Stream.Realm;
         var tenant = Uuid.Parse(realm, CultureInfo.InvariantCulture);
         var campaignId = Uuid.Parse(context.Source.Stream.Resource, CultureInfo.InvariantCulture);
@@ -43,7 +46,7 @@ sealed partial class AccessReviewCompletionReactor(IProjectionCheckpointStore ch
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen completion cannot be verified yet: {exception.Message}", true));
+                $"The frozen completion cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         _ = await process.StartAsync(AccessReviewEffects.CompletionProcessName, context, context.Trigger.Intent, targets,

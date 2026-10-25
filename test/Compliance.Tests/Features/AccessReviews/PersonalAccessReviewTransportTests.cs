@@ -240,7 +240,7 @@ public sealed class PersonalAccessReviewTransportTests
                 AccessDecisionView view => view.DecidedBy,
                 AccessRemediationExceptionView view => view.ApprovedBy,
                 OperationAcceptedResponse accepted => (await ProgramManagementServices.HydrateAsync(_provider,
-                    new AccessReviewCampaign(Source.TenantId, _sourceId))).AcceptedFor(accepted.OperationId)!.Operation.Actor,
+                    new AccessReviewCampaign(Source.TenantId, _sourceId, selectedRootId: accepted.OperationId))).AcceptedFor(accepted.OperationId)!.Operation.Actor,
                 AccessPopulationAcceptance => (await ProgramManagementServices.HydrateAsync(_provider,
                     new AccessPopulation(Source.TenantId, _sourceId))).AcceptedFact!.AcceptedBy,
                 _ => null

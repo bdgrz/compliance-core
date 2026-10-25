@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
@@ -11,7 +12,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     reported canceled while a delayed hold or apply could still land.
 /// </summary>
 sealed partial class AccessReviewBulkCancellationCompletionReactor(IProjectionCheckpointStore checkpoints,
-    IRequestBus bus, IImmutableContentStore content, IAggregateReader reader, AccessReviewManifests manifests)
+    IRequestBus bus, IImmutableContentStore content, IAggregateReader reader, AccessReviewManifests manifests, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(AccessReviewDecisionBatch.Area), WorkloadName),
         IReactorHandler<AccessReviewDecisionBatchCancellationAccepted>
 {
@@ -20,6 +21,8 @@ sealed partial class AccessReviewBulkCancellationCompletionReactor(IProjectionCh
     public async ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchCancellationAccepted> context,
         CancellationToken ct)
     {
+        await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
+            .ConfigureAwait(false);
         var realm = context.Source.Stream.Realm;
         var (tenant, intent, source) = await AccessReviewBulkReactions.ResolveAsync(realm, context.Trigger.Intent,
             content, reader, ct).ConfigureAwait(false);
@@ -27,7 +30,7 @@ sealed partial class AccessReviewBulkCancellationCompletionReactor(IProjectionCh
         var proofs = new List<BulkItemFenceProof>(items.Count);
         foreach (var selected in items)
         {
-            var item = await reader.HydrateAsync(new AccessReviewItem(tenant, intent.CampaignId, selected.ItemId), ct)
+            var item = await reader.HydrateAsync(new AccessReviewItem(tenant, intent.CampaignId, selected.ItemId, selectedBatchId: intent.DecisionBatchId), ct)
                 .ConfigureAwait(false);
             if (item.FenceFor(intent.DecisionBatchId) is not { } fence)
                 throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,

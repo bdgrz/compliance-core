@@ -26,21 +26,30 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     readonly Uuid _tenantId;
     readonly Uuid _campaignId;
     readonly Uuid _itemId;
-    readonly List<DomainEvent> _facts = [];
-    readonly Dictionary<Uuid, AccessDecisionsRecorded> _provisional = [];
-    readonly HashSet<Uuid> _published = [];
-    readonly Dictionary<Uuid, AccessReviewItemDecisionCanceled> _fenced = [];
+    readonly AccessReviewReplayCut _cut = new();
+    readonly Uuid _selectedBatchId;
+    readonly Uuid _selectedContentEventId;
+    DomainEvent? _latest;
+    AccessDecisionsRecorded? _liveProvisional;
+    AccessDecisionsRecorded? _selectedProvisional;
+    AccessReviewItemDecisionCanceled? _selectedFence;
+    bool _selectedPublished;
+    DomainEvent? _selectedPin;
+    long _selectedPinRevision;
+    bool _onlyBulkAfterPin;
     AccessReviewItemOpened? _opened;
     long _revision;
     bool _closed;
 
     /// <summary>Opens the item, selecting the logical operation to resolve.</summary>
-    public AccessReviewItem(Uuid tenantId, Uuid campaignId, Uuid itemId, Uuid selectedLogicalId = default)
+    public AccessReviewItem(Uuid tenantId, Uuid campaignId, Uuid itemId, Uuid selectedLogicalId = default,
+        Uuid selectedBatchId = default, Uuid selectedContentEventId = default)
         : base(AccessReviewEffects.ItemStreamId(tenantId, campaignId, itemId),
             AccessReviewEffects.ItemStream(tenantId, campaignId, itemId))
     {
         (_tenantId, _campaignId, _itemId) = (tenantId, campaignId, itemId);
         Acceptance = new NativeAcceptance(selectedLogicalId);
+        (_selectedBatchId, _selectedContentEventId) = (selectedBatchId, selectedContentEventId);
         Uses = new SourceUseReservations(Stream);
         On<AccessReviewItemOpened>(ev =>
         {
@@ -51,7 +60,7 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
                     "An item is materialized once, on the stream its tenant, campaign and item derive.");
             _opened = ev;
             _revision = 1;
-            _facts.Add(ev);
+            ObserveBusiness(ev);
         });
         On<AccessDecisionsRecorded>(ev =>
         {
@@ -63,16 +72,19 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
                 return;
             }
 
-            if (!ev.PublicationRequired || ev.Operation.RootOperationId != batchId || _fenced.ContainsKey(batchId) ||
-                Uses.Find(BulkKey(batchId)) is not { IsActive: true } || !_provisional.TryAdd(batchId, ev))
+            if (!ev.PublicationRequired || ev.Operation.RootOperationId != batchId || IsFenced(batchId) ||
+                Uses.Find(BulkKey(batchId)) is not { IsActive: true } || _liveProvisional is not null)
                 throw new InvalidOperationException(
                     "A provisional bulk decision is applied once, under the batch's active hold, before any fence.");
+            _liveProvisional = ev;
+            if (batchId == _selectedBatchId)
+                _selectedProvisional = ev;
         });
         On<AccessReviewItemDecisionAuthorized>(granted =>
         {
             Acceptance.Observe(granted);
             if (_opened is null || granted.Revision != _revision || granted.CampaignId != _campaignId ||
-                granted.ItemId != _itemId || _closed || _fenced.ContainsKey(granted.Operation.RootOperationId))
+                granted.ItemId != _itemId || _closed || IsFenced(granted.Operation.RootOperationId))
                 throw new InvalidOperationException(
                     "A bulk decision hold is granted on an open, unfenced item at its held revision.");
             Uses.ApplyGranted(SourceUsePurpose.BulkDecision, granted);
@@ -83,16 +95,21 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
             if (settled.CampaignId != _campaignId || settled.ItemId != _itemId)
                 throw new InvalidOperationException("A bulk decision use settles on the item it names.");
             Uses.ApplySettled(SourceUsePurpose.BulkDecision, settled);
-            if (settled.Disposition == SourceUseSettlementDisposition.IrreversibleDecision)
-                _published.Add(settled.Operation.RootOperationId);
+            if (settled.Disposition == SourceUseSettlementDisposition.IrreversibleDecision &&
+                settled.Operation.RootOperationId == _selectedBatchId)
+                _selectedPublished = true;
+            if (_liveProvisional?.Operation.RootOperationId == settled.Operation.RootOperationId)
+                _liveProvisional = null;
         });
         On<AccessReviewItemDecisionCanceled>(fence =>
         {
             Acceptance.Observe(fence);
             if (_opened is null || fence.CampaignId != _campaignId || fence.ItemId != _itemId ||
-                fence.Owner != Stream || !_fenced.TryAdd(fence.Operation.RootOperationId, fence) ||
-                _published.Contains(fence.Operation.RootOperationId))
+                fence.Owner != Stream || IsFenced(fence.Operation.RootOperationId) ||
+                IsPublished(fence.Operation.RootOperationId))
                 throw new InvalidOperationException("An item is fenced once against a batch it did not publish.");
+            if (fence.Operation.RootOperationId == _selectedBatchId)
+                _selectedFence = fence;
         });
         On<AccessRemediationChangeRecorded>(ev => Business(ev, ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision,
             ev.Operation));
@@ -127,6 +144,15 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
 
+    internal AccessReviewReplayCut ReplayCut => _cut;
+    public Uuid TenantId => _tenantId;
+    internal AccessDecisionsRecorded? LiveProvisional => _liveProvisional;
+    internal Uuid SelectedBatchId => _selectedBatchId;
+    internal Uuid SelectedContentEventId => _selectedContentEventId;
+    internal DomainEvent? SelectedPin => _selectedPin;
+    internal long SelectedPinRevision => _selectedPinRevision;
+    internal bool OnlyBulkAfterPin => _onlyBulkAfterPin;
+
     /// <summary>The campaign this item belongs to.</summary>
     public Uuid CampaignId => _campaignId;
 
@@ -142,47 +168,23 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     /// <summary>True once a closed campaign settled its completion use of this item; no change is accepted again.</summary>
     public bool IsClosed => _closed;
 
-    /// <summary>The business facts of the item in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
+    /// <summary>The current business head; source-use/fence facts do not advance it.</summary>
+    public DomainEvent? Latest => _latest;
 
-    /// <summary>The latest business fact, whose revision a campaign completion pins.</summary>
-    public DomainEvent? Latest => _facts.Count == 0 ? null : _facts[^1];
-
-    /// <summary>The reservation key of a bulk decision batch's use of this item.</summary>
     public ReservationKey BulkKey(Uuid decisionBatchId) => AccessReviewEffects.BulkUseKey(decisionBatchId,
         AccessReviewEffects.CampaignStream(_tenantId, _campaignId), Stream);
 
-    /// <summary>True once the item was fenced against the batch.</summary>
-    public bool IsFenced(Uuid decisionBatchId) => _fenced.ContainsKey(decisionBatchId);
+    /// <summary>Only the batch explicitly selected before hydration can supply historical authority.</summary>
+    public bool IsFenced(Uuid id) => id == _selectedBatchId && _selectedFence is not null;
+    public AccessReviewItemDecisionCanceled? FenceFor(Uuid id) => id == _selectedBatchId ? _selectedFence : null;
+    public AccessDecisionsRecorded? ProvisionalFor(Uuid id) => id == _selectedBatchId ? _selectedProvisional :
+        _liveProvisional?.Operation.RootOperationId == id ? _liveProvisional : null;
+    public bool IsPublished(Uuid id) => id == _selectedBatchId && _selectedPublished;
 
-    /// <summary>The fence fact that refuses the batch on this item, once installed.</summary>
-    public AccessReviewItemDecisionCanceled? FenceFor(Uuid decisionBatchId) => _fenced.GetValueOrDefault(decisionBatchId);
-
-    /// <summary>The provisional decision fact the batch applied to this item, if any.</summary>
-    public AccessDecisionsRecorded? ProvisionalFor(Uuid decisionBatchId) =>
-        _provisional.GetValueOrDefault(decisionBatchId);
-
-    /// <summary>True once the batch's publication made its decision of this item visible.</summary>
-    public bool IsPublished(Uuid decisionBatchId) => _published.Contains(decisionBatchId);
-
-    /// <summary>A decision fact is visible unless it is a bulk decision whose batch has not published it to this item.</summary>
-    public bool IsVisible(AccessDecisionsRecorded decision) =>
-        decision.DecisionBatchId is not { } batchId || _published.Contains(batchId);
-
-    /// <summary>
-    ///     True when the item is still exactly at a pinned head: that fact is the latest one, or the only facts after it
-    ///     are bulk decision facts (a batch admitted before the completion seal that drained since).
-    /// </summary>
-    public bool MatchesPin(Uuid pinnedEventId, ulong pinnedRevision)
-    {
-        if (Latest is not { } latest)
-            return false;
-        if (latest.Metadata!.EventId == pinnedEventId)
-            return (ulong)_revision == pinnedRevision;
-        var index = _facts.FindIndex(fact => fact.Metadata!.EventId == pinnedEventId);
-        return index >= 0 && (ulong)_revision > pinnedRevision && _facts.Skip(index + 1)
-            .All(static fact => fact is AccessDecisionsRecorded { DecisionBatchId: not null });
-    }
+    /// <summary>Checks the exact selected historical business head and permits only bulk-decision business tail facts.</summary>
+    public bool MatchesPin(Uuid id, ulong revision) => Latest?.Metadata.EventId == id ? (ulong)_revision == revision :
+        _selectedPin?.Metadata.EventId == id && (ulong)_selectedPinRevision == revision && _onlyBulkAfterPin &&
+            (ulong)_revision > revision;
 
     /// <summary>Checks the guards every change shares without raising anything.</summary>
     public Result PrepareChange(long expectedRevision)
@@ -210,9 +212,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
                 "A materialization is recorded on the item's own stream."));
         if (_opened is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The item is already materialized."));
-        RaiseEvent(new AccessReviewItemOpened(_tenantId, _campaignId, _itemId, Stream, 1,
+        return Append(operation, new AccessReviewItemOpened(_tenantId, _campaignId, _itemId, Stream, 1,
             AccessReviewEffects.Generation, intent, null, operation, null, null));
-        return Result.Success;
     }
 
     /// <summary>Records the reviewer's decision as the root native fact of its operation.</summary>
@@ -222,9 +223,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         var prepared = PrepareRoot(operation);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessDecisionsRecorded(_tenantId, _campaignId, _itemId, _revision + 1, decisions, operation,
+        return Append(operation, new AccessDecisionsRecorded(_tenantId, _campaignId, _itemId, _revision + 1, decisions, operation,
             null, false, intent, firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Records a provider-side change as the root native fact of its operation.</summary>
@@ -234,9 +234,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         var prepared = PrepareRoot(operation);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessRemediationChangeRecorded(_tenantId, _campaignId, _revision + 1, _itemId, change,
+        return Append(operation, new AccessRemediationChangeRecorded(_tenantId, _campaignId, _revision + 1, _itemId, change,
             operation, firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Records a remediation verification as the root native fact of its operation.</summary>
@@ -246,9 +245,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         var prepared = PrepareRoot(operation);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessRemediationVerified(_tenantId, _campaignId, _revision + 1, _itemId, verification,
+        return Append(operation, new AccessRemediationVerified(_tenantId, _campaignId, _revision + 1, _itemId, verification,
             operation, firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Records a remediation exception as the root native fact of its operation.</summary>
@@ -258,9 +256,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         var prepared = PrepareRoot(operation);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessRemediationExceptionRecorded(_tenantId, _campaignId, _revision + 1, _itemId, exception,
+        return Append(operation, new AccessRemediationExceptionRecorded(_tenantId, _campaignId, _revision + 1, _itemId, exception,
             operation, firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Records a responsibility reassignment as the root native fact of its operation.</summary>
@@ -270,9 +267,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         var prepared = PrepareRoot(operation);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessReviewResponsibilityReassigned(_tenantId, _campaignId, _itemId, _revision + 1,
+        return Append(operation, new AccessReviewResponsibilityReassigned(_tenantId, _campaignId, _itemId, _revision + 1,
             reassignment, operation, firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Checks that a bulk decision may hold this item and that the item is not held by another operation.</summary>
@@ -283,7 +279,10 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
                 "The review item has not been materialized yet; retry shortly.", true));
         if (_closed)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "A completed campaign cannot change."));
-        if (_fenced.ContainsKey(decisionBatchId))
+        if (decisionBatchId != _selectedBatchId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A bulk decision must select its own root before hydration."));
+        if (IsFenced(decisionBatchId))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The bulk decision was canceled."));
         return Uses.HasActiveUse
             ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -300,9 +299,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         if (!prepared.IsSuccess)
             return prepared;
         Uses.RequireForAppend(SourceUsePurpose.BulkDecision, operation, generation, Version, CommittedStreamPosition);
-        RaiseEvent(new AccessReviewItemDecisionAuthorized(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
+        return Append(operation, new AccessReviewItemDecisionAuthorized(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
             intent, null, operation, null, null));
-        return Result.Success;
     }
 
     /// <summary>Applies the batch's decision as a provisional fact under its active hold; it stays hidden until published.</summary>
@@ -313,16 +311,15 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         ArgumentNullException.ThrowIfNull(decisions);
         ArgumentNullException.ThrowIfNull(intent);
         var batchId = operation.RootOperationId;
-        if (_opened is null || _closed || _fenced.ContainsKey(batchId) ||
+        if (_opened is null || _closed || batchId != _selectedBatchId || IsFenced(batchId) ||
             Uses.Find(BulkKey(batchId)) is not { IsActive: true })
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The bulk decision no longer holds this item.", false));
-        if (_provisional.ContainsKey(batchId))
+        if (ProvisionalFor(batchId) is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The bulk decision was already applied to this item."));
-        RaiseEvent(new AccessDecisionsRecorded(_tenantId, _campaignId, _itemId, _revision + 1, decisions, operation,
+        return Append(operation, new AccessDecisionsRecorded(_tenantId, _campaignId, _itemId, _revision + 1, decisions, operation,
             batchId, true, intent, null, null));
-        return Result.Success;
     }
 
     /// <summary>Settles the batch's use of this item with the disposition its terminal batch fact requires.</summary>
@@ -331,10 +328,12 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
+        if (operation.RootOperationId != _selectedBatchId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A bulk receiver must select its own batch root before hydration."));
         Uses.RequireForAppend(SourceUsePurpose.BulkDecision, operation, generation, Version, CommittedStreamPosition);
-        RaiseEvent(new AccessReviewItemDecisionSettled(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
+        return Append(operation, new AccessReviewItemDecisionSettled(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
             intent, null, disposition, operation, null, null));
-        return Result.Success;
     }
 
     /// <summary>Fences the item against a canceled batch, whether or not it was ever held.</summary>
@@ -342,12 +341,14 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
+        if (operation.RootOperationId != _selectedBatchId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A bulk receiver must select its own batch root before hydration."));
         if (_opened is null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The review item has not been materialized yet.", true));
-        RaiseEvent(new AccessReviewItemDecisionCanceled(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
+        return Append(operation, new AccessReviewItemDecisionCanceled(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
             intent, null, operation, null, null));
-        return Result.Success;
     }
 
     /// <summary>Holds this item's exact pinned head for a campaign completion. The caller verified the pin.</summary>
@@ -360,9 +361,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The review item has not been materialized yet.", true));
         Uses.RequireForAppend(SourceUsePurpose.CampaignCompletion, operation, generation, Version, CommittedStreamPosition);
-        RaiseEvent(new AccessReviewItemCampaignCompletionUseAuthorized(_tenantId, _campaignId, _itemId, Stream,
+        return Append(operation, new AccessReviewItemCampaignCompletionUseAuthorized(_tenantId, _campaignId, _itemId, Stream,
             _revision, generation, intent, null, operation, null, null));
-        return Result.Success;
     }
 
     /// <summary>Settles this item's campaign completion use with the disposition its terminal source fact requires.</summary>
@@ -372,9 +372,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
         Uses.RequireForAppend(SourceUsePurpose.CampaignCompletion, operation, generation, Version, CommittedStreamPosition);
-        RaiseEvent(new AccessReviewItemCampaignCompletionUseSettled(_tenantId, _campaignId, _itemId, Stream, _revision,
+        return Append(operation, new AccessReviewItemCampaignCompletionUseSettled(_tenantId, _campaignId, _itemId, Stream, _revision,
             generation, intent, null, disposition, operation, null, null));
-        return Result.Success;
     }
 
     Result PrepareRoot(OperationProvenance operation)
@@ -394,10 +393,34 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
             revision != _revision + 1 || operation.Owner != Stream)
             throw new InvalidOperationException("An item fact follows the materialization at the next revision.");
         _revision = revision;
-        _facts.Add(ev);
+        ObserveBusiness(ev);
     }
+    void ObserveBusiness(DomainEvent ev)
+    {
+        _latest = ev;
+        if (ev.Metadata.EventId == _selectedContentEventId)
+        {
+            _selectedPin = ev;
+            _selectedPinRevision = _revision;
+            _onlyBulkAfterPin = true;
+        }
+        else if (_selectedPin is not null && ev is not AccessDecisionsRecorded { DecisionBatchId: not null })
+            _onlyBulkAfterPin = false;
+    }
+
+    Result Append(OperationProvenance operation, DomainEvent fact)
+    {
+        var finalized = _cut.Require(this, Acceptance, operation);
+        if (!finalized.IsSuccess)
+            return finalized;
+        RaiseEvent(fact);
+        return Result.Success;
+    }
+
     protected override void Apply(DomainEvent ev)
     {
+        if (!ev.Metadata.IsAudit)
+            _cut.Observe(ev);
         base.Apply(ev);
         Uses.ObserveOwnerFact(ev);
     }

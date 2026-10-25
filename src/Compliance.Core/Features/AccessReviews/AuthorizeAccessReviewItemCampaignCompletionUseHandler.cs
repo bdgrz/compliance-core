@@ -17,14 +17,14 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 /// </summary>
 sealed class AuthorizeAccessReviewItemCampaignCompletionUseHandler(IAggregateReader reader,
     IAggregateExecutor executor, IImmutableContentStore content, TimeProvider clock, TimeProvider time,
-    AccessReviewCompletionVerifier verifier, AccessReviewCompletionFences fences, AccessReviewManifests manifests)
+    AccessReviewCompletionVerifier verifier, AccessReviewCompletionFences fences, AccessReviewManifests manifests, IDomainEventReader events)
     : AuthorizeSourceUseHandler<AccessReviewItem, AuthorizeAccessReviewItemCampaignCompletionUse>(reader, executor,
         content, clock)
 {
     readonly IAggregateReader _reader = reader;
 
     protected override AccessReviewItem Open(AuthorizeAccessReviewItemCampaignCompletionUse request,
-        Uuid selectedCommandId) => new(Tenant(request.Target), request.CampaignId, request.SourceOwnerId, selectedCommandId);
+        Uuid selectedCommandId) => new(Tenant(request.Target), request.CampaignId, request.SourceOwnerId, selectedCommandId, selectedContentEventId: request.SourceContentEventId);
 
     protected override async ValueTask<Result<SourceUseSource>> VerifyAsync(
         AuthorizeAccessReviewItemCampaignCompletionUse request, CancellationToken ct)
@@ -69,7 +69,7 @@ sealed class AuthorizeAccessReviewItemCampaignCompletionUseHandler(IAggregateRea
         catch (ImmutableContentIntegrityException exception)
         {
             return new RequestError(RequestErrorKind.Conflict,
-                $"The admitted bulk decisions cannot be verified yet: {exception.Message}", true);
+                $"The admitted bulk decisions cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException);
         }
 
         if (!drains.TryGetValue(request.SourceOwnerId, out var selections))
@@ -101,7 +101,8 @@ sealed class AuthorizeAccessReviewItemCampaignCompletionUseHandler(IAggregateRea
         {
             var frozen = await AccessReviewItemFold.FrozenItemAsync(owner, Content, Tenant(owner.Stream), ct)
                 .ConfigureAwait(false);
-            var state = await AccessReviewItemFold.ReadAsync(owner, frozen, null, Content, Tenant(owner.Stream), ct)
+            var history = await AccessReviewItemHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
+            var state = await AccessReviewItemFold.ReadAsync(owner, history, frozen, null, Content, Tenant(owner.Stream), ct)
                 .ConfigureAwait(false);
             return state.CompletionBlocker(time.GetUtcNow()) is { } blocker
                 ? Result.Failure(new RequestError(RequestErrorKind.Conflict, blocker, false))
@@ -110,7 +111,7 @@ sealed class AuthorizeAccessReviewItemCampaignCompletionUseHandler(IAggregateRea
         catch (ImmutableContentIntegrityException exception)
         {
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The pinned item content cannot be verified: {exception.Message}", false));
+                $"The pinned item content cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
     }
 

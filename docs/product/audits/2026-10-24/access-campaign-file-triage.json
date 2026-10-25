@@ -1,0 +1,76 @@
+{
+  "model": "jev-1.14.0",
+  "files": 52,
+  "threshold": 0.65,
+  "signals": [
+    {
+      "path": "src/Compliance.Core/Features/AccessReviews/CompleteAccessReviewCampaignHandler.cs",
+      "kind": "recovery_gap",
+      "probability": 0.72
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessReviews/PreviewBulkAccessDecisionHandler.cs",
+      "kind": "authority_gap",
+      "probability": 0.68
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessReviews/RecordBulkAccessDecisionHandler.cs",
+      "kind": "authority_gap",
+      "probability": 0.69
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessReviews/RecordBulkAccessDecisionHandler.cs",
+      "kind": "invariant_gap",
+      "probability": 0.72
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessReviews/RecordBulkAccessDecisionHandler.cs",
+      "kind": "recovery_gap",
+      "probability": 0.87
+    }
+  ],
+  "exactSourceAndDependencyHashes": "verified",
+  "dispositions": [
+    {
+      "path": "src/Compliance.Core/Features/AccessReviews/CompleteAccessReviewCampaignHandler.cs",
+      "signals": [
+        "recovery_gap"
+      ],
+      "decision": "no demonstrated new owning-producer recovery defect after source/test review",
+      "evidence": [
+        "ReadCampaignIdentityAsync reads immutable launch scope for current visibility authorization before replay, without folding unrelated mutable item state. This mandatory authorization identity remains an availability dependency.",
+        "PrepareCompletion, full current campaign/item reads, blockers, attestation validation, intent manifests and acknowledgement writes run inside NativeOperationExecutor async Prepare. Expected immutable failure triggers exact native recheck; requested cancellation retains priority.",
+        "Existing ShouldReturnOriginalAcknowledgmentGivenExactCompletionRetryAfterClosure passes; all249 focused tests pass. Current tenant membership/activity/management permission is checked by installed AccessReviewAuthorizer before handler."
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessReviews/PreviewBulkAccessDecisionHandler.cs",
+      "signals": [
+        "authority_gap"
+      ],
+      "decision": "no demonstrated new authority bypass",
+      "evidence": [
+        "PreviewBulkAccessDecision implements IAccessReviewParticipantRequest. Installed AccessReviewAuthorizer requires actual unsuspended/nondeprovisioned non-firm tenant membership and active tenant.",
+        "Each selected unique item must exist in frozen launch, be currently visible to this user, remain assigned to this member and pass program queue eligibility. BulkAccessDecisions rejects unknown/nonreviewer identities and enforces selected item eligibility.",
+        "Preview is read-only and intentionally callable; current personal HTTP restrictions apply to sign-off producers. Existing queue/visibility/privileged exclusion and transport coverage remains passing."
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessReviews/RecordBulkAccessDecisionHandler.cs",
+      "signals": [
+        "authority_gap",
+        "invariant_gap",
+        "recovery_gap"
+      ],
+      "decision": "concrete introduced snapshot bug fixed; remaining advisory signals reviewed against exact executor/authority/proof pipeline",
+      "evidence": [
+        "Initial249-test run had31 bulk-related failures because Preview used outer identity-only snapshot. Root changed Preview to actual preparedCampaign. All249 now pass, including complete/duplicate/partial/stale selection, privileged exclusion, exact retry after publication, atomic cancellation/fence/settlement/drain and SourceUse boundaries.",
+        "Existing authorizer runs first; handler requires personal HTTP, current selected-item restricted visibility, current reviewer/queue eligibility, valid exact preview token and complete selected cardinality. Domain validation and all immutable preparation/freeze work run inside native async Prepare.",
+        "Prepared campaign full native version/physical tail/rolling payload+immutable event identity is compared again inside executor Apply. Child intents freeze each actual item head/reviewer episode and existing hold/provisional/publication verification binds authoritative source tuples.",
+        "Current authorization uses immutable launch identity before accepted replay; original binding includes actor/full authored request. No global operation identity guarantee or availability independent of authorization identity is claimed."
+      ]
+    }
+  ],
+  "separateFollowOn": "Selected native receiver preparations (for example Abort completion) still read body before their own Decide, an existing equal-winner/unavailable-body recovery seam. Policy shared NativeReceiverPreparation helper plus qualified receiver RED2 is in progress; apply with explicit receiver regressions to Access after it ships. This migration does not claim those follow-on receiver recovery paths are complete.",
+  "rootLaunchRefinement": "HTTP regression58pass1fail before refinement. Fresh launch now verifies actual Program identity/existence before management permission, preserving existing404. Freeze independently repeats existence/management checks inside native Prepare; immutable writes remain in native recovery."
+}

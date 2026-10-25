@@ -9,7 +9,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Work;
 
 sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
-    IAggregateReader sourceReader, IImmutableContentStore content)
+    IAggregateReader sourceReader, IImmutableContentStore content, IDomainEventReader events)
     : FitzKvProjectionStore(client,
         "kv://bdgrz/accountable-work-items/access-review-campaigns-v1", ProjectorName),
       IAccountableWorkItemDirectoryReader, IAccessReviewCampaignWorkItemProjection
@@ -88,7 +88,8 @@ sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
                 "A campaign's frozen Program cannot change after launch.");
 
         var frozen = await AccessReviewItemFold.FrozenItemAsync(item, content, tenantId, ct).ConfigureAwait(false);
-        var folded = await AccessReviewItemFold.ReadAsync(item, frozen, remediationOwnerId, content, tenantId, ct)
+        var history = await AccessReviewItemHistory.ReadAsync(events, item, ct).ConfigureAwait(false);
+        var folded = await AccessReviewItemFold.ReadAsync(item, history, frozen, remediationOwnerId, content, tenantId, ct)
             .ConfigureAwait(false);
         if (frozen.ItemId == Uuid.Empty || frozen.SystemInstanceId == Uuid.Empty)
             throw new InvalidOperationException("A frozen campaign item has incomplete work scope.");

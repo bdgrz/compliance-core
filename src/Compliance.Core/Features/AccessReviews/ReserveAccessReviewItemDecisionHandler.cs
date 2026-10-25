@@ -23,7 +23,7 @@ sealed class ReserveAccessReviewItemDecisionHandler(IAggregateReader reader, IAg
     readonly IAggregateReader _reader = reader;
 
     protected override AccessReviewItem Open(ReserveAccessReviewItemDecision request, Uuid selectedCommandId) =>
-        new(Tenant(request.Target), request.CampaignId, request.SourceOwnerId, selectedCommandId);
+        new(Tenant(request.Target), request.CampaignId, request.SourceOwnerId, selectedCommandId, request.OperationId, request.SourceContentEventId);
 
     protected override async ValueTask<Result<SourceUseSource>> VerifyAsync(ReserveAccessReviewItemDecision request,
         CancellationToken ct)
@@ -48,7 +48,7 @@ sealed class ReserveAccessReviewItemDecisionHandler(IAggregateReader reader, IAg
         catch (ImmutableContentIntegrityException exception)
         {
             return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen item head cannot be verified: {exception.Message}", false));
+                $"The frozen item head cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         if (head.EventId != request.SourceContentEventId || selected.ExpectedItemRevision != request.ExpectedContentRevision)

@@ -78,7 +78,7 @@ sealed class ApplyAccessReviewItemDecisionHandler(IAggregateReader reader, IAggr
 
     static AccessReviewItem Open(Uuid tenant, ApplyAccessReviewItemDecision command)
     {
-        var owner = new AccessReviewItem(tenant, command.CampaignId, command.ItemId, command.CommandId);
+        var owner = new AccessReviewItem(tenant, command.CampaignId, command.ItemId, command.CommandId, command.DecisionBatchId);
         return owner.ForSourceUses(owner.BulkKey(command.OperationId));
     }
 

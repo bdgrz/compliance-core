@@ -25,19 +25,24 @@ public sealed class AccessReviewCampaign : Aggregate
     public const string Completed = "completed";
 
     readonly Uuid _tenantId;
-    readonly List<DomainEvent> _facts = [];
-    readonly Dictionary<Uuid, AccessReviewCampaignCompletionCanceled> _canceled = [];
-    readonly Dictionary<Uuid, AccessReviewDecisionBatchAdmitted> _admitted = [];
+    readonly AccessReviewReplayCut _cut = new();
+    readonly Uuid _selectedRootId;
+    AccessReviewCampaignCompletionAccepted? _selectedCompletion;
+    AccessReviewCampaignCompletionCanceled? _selectedCanceled;
+    AccessReviewDecisionBatchAdmitted? _selectedBulk;
+    DomainEvent? _latest;
     AccessReviewCampaignLaunched? _launched;
     AccessReviewCampaignCompletionAccepted? _pending;
     AccessReviewCampaignCompleted? _completed;
     long _revision;
 
     /// <summary>Opens the campaign, selecting the logical operation to resolve.</summary>
-    public AccessReviewCampaign(Uuid tenantId, Uuid campaignId, Uuid selectedLogicalId = default)
+    public AccessReviewCampaign(Uuid tenantId, Uuid campaignId, Uuid selectedLogicalId = default,
+        Uuid selectedRootId = default)
         : base(campaignId, new EventStreamAddress(tenantId.ToString(), Area, campaignId.ToString()))
     {
         _tenantId = tenantId;
+        _selectedRootId = selectedRootId == Uuid.Empty ? selectedLogicalId : selectedRootId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
         On<AccessReviewCampaignLaunched>(ev =>
         {
@@ -48,7 +53,7 @@ public sealed class AccessReviewCampaign : Aggregate
                 throw new InvalidOperationException("A campaign accepts exactly one launch of its own campaign.");
             _launched = ev;
             _revision = 1;
-            _facts.Add(ev);
+            _latest = ev;
         });
         On<AccessReviewCampaignCompletionAccepted>(ev =>
         {
@@ -57,21 +62,24 @@ public sealed class AccessReviewCampaign : Aggregate
                 ev.Operation.Owner != Stream || ev.Revision != _revision + 1 || ev.FirstResponse is null)
                 throw new InvalidOperationException(
                     "A completion is admitted once at a time on a launched, uncompleted campaign.");
+            if (ev.Operation.RootOperationId == _selectedRootId)
+                _selectedCompletion = ev;
             _pending = ev;
             _revision = ev.Revision;
-            _facts.Add(ev);
+            _latest = ev;
         });
         On<AccessReviewDecisionBatchAdmitted>(ev =>
         {
             Acceptance.Observe(ev);
             if (_launched is null || _pending is not null || _completed is not null || ev.Owner != Stream ||
                 ev.Operation.Owner != Stream || ev.Revision != _revision + 1 || ev.FirstResponse is null ||
-                ev.Operation.RootOperationId != ev.Operation.LogicalId ||
-                !_admitted.TryAdd(ev.Operation.RootOperationId, ev))
+                ev.Operation.RootOperationId != ev.Operation.LogicalId)
                 throw new InvalidOperationException(
                     "A bulk decision is admitted once, on a launched campaign that is not sealed by a completion.");
+            if (ev.Operation.RootOperationId == _selectedRootId)
+                _selectedBulk = ev;
             _revision = ev.Revision;
-            _facts.Add(ev);
+            _latest = ev;
         });
         On<AccessReviewCampaignCompleted>(ev =>
         {
@@ -84,7 +92,7 @@ public sealed class AccessReviewCampaign : Aggregate
             _completed = ev;
             _pending = null;
             _revision = ev.Revision;
-            _facts.Add(ev);
+            _latest = ev;
         });
         On<AccessReviewCampaignCompletionCanceled>(ev =>
         {
@@ -93,15 +101,22 @@ public sealed class AccessReviewCampaign : Aggregate
                 ev.Revision != _revision + 1 || ev.Operation.RootOperationId != _pending.Operation.RootOperationId ||
                 ev.Intent != _pending.Intent)
                 throw new InvalidOperationException("Only the exact pending completion can be canceled.");
-            _canceled.Add(ev.Operation.RootOperationId, ev);
+            if (ev.Operation.RootOperationId == _selectedRootId)
+                _selectedCanceled = ev;
             _pending = null;
             _revision = ev.Revision;
-            _facts.Add(ev);
+            _latest = ev;
         });
     }
 
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
+
+    internal AccessReviewReplayCut ReplayCut => _cut;
+
+    public Uuid TenantId => _tenantId;
+
+    public DomainEvent? Latest => _latest;
 
     /// <summary>The launch fact, once recorded.</summary>
     public AccessReviewCampaignLaunched? Launched => _launched;
@@ -124,25 +139,18 @@ public sealed class AccessReviewCampaign : Aggregate
     /// <summary>The campaign status.</summary>
     public string Status => _completed is null ? Active : Completed;
 
-    /// <summary>Every fact of the campaign in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
+    /// <summary>The exact bulk admission selected before hydration, if present.</summary>
+    public AccessReviewDecisionBatchAdmitted? AdmittedFor(Uuid id) =>
+        _selectedBulk?.Operation.RootOperationId == id ? _selectedBulk : null;
 
-    /// <summary>The bulk decision batches admitted on this campaign, in admission order.</summary>
-    public IReadOnlyList<AccessReviewDecisionBatchAdmitted> AdmittedBatches =>
-        [.. _facts.OfType<AccessReviewDecisionBatchAdmitted>()];
+    /// <summary>The explicitly selected historical completion admission, or the current pending admission.</summary>
+    public AccessReviewCampaignCompletionAccepted? AcceptedFor(Uuid id) =>
+        _selectedCompletion?.Operation.RootOperationId == id ? _selectedCompletion :
+        _pending?.Operation.RootOperationId == id ? _pending : null;
 
-    /// <summary>The admission fact of a bulk decision batch, once recorded.</summary>
-    public AccessReviewDecisionBatchAdmitted? AdmittedFor(Uuid decisionBatchId) =>
-        _admitted.GetValueOrDefault(decisionBatchId);
-
-    /// <summary>The accepted completion fact of a root operation, whatever became of it.</summary>
-    public AccessReviewCampaignCompletionAccepted? AcceptedFor(Uuid rootOperationId) =>
-        _facts.OfType<AccessReviewCampaignCompletionAccepted>()
-            .FirstOrDefault(accepted => accepted.Operation.RootOperationId == rootOperationId);
-
-    /// <summary>The cancellation fence of a root operation, once installed.</summary>
-    public AccessReviewCampaignCompletionCanceled? CanceledFor(Uuid rootOperationId) =>
-        _canceled.GetValueOrDefault(rootOperationId);
+    /// <summary>The cancellation explicitly selected before hydration, if present.</summary>
+    public AccessReviewCampaignCompletionCanceled? CanceledFor(Uuid id) =>
+        _selectedCanceled?.Operation.RootOperationId == id ? _selectedCanceled : null;
 
     /// <summary>The closing fact of a root operation, when it is the one that closed the campaign.</summary>
     public AccessReviewCampaignCompleted? ClosedFor(Uuid rootOperationId) =>
@@ -166,10 +174,9 @@ public sealed class AccessReviewCampaign : Aggregate
         var prepared = PrepareLaunch();
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessReviewCampaignLaunched(_tenantId, Id, name.Trim(), instructions.Trim(), deadline,
+        return Append(operation, new AccessReviewCampaignLaunched(_tenantId, Id, name.Trim(), instructions.Trim(), deadline,
             snapshotId, contentSha256, reviewers, items, itemIntents, launchedBy, now, programId,
             remediationOwnerMemberId, operation, firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Checks the completion admission guards without raising anything.</summary>
@@ -200,9 +207,8 @@ public sealed class AccessReviewCampaign : Aggregate
         var prepared = PrepareCompletion((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessReviewCampaignCompletionAccepted(Stream, _revision + 1, AccessReviewEffects.Generation,
+        return Append(operation, new AccessReviewCampaignCompletionAccepted(Stream, _revision + 1, AccessReviewEffects.Generation,
             intent, null, operation, firstResponse, null));
-        return Result.Success;
     }
 
     /// <summary>Checks the bulk admission guards without raising anything.</summary>
@@ -236,9 +242,8 @@ public sealed class AccessReviewCampaign : Aggregate
         var prepared = PrepareBulkAdmission((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new AccessReviewDecisionBatchAdmitted(Stream, _revision + 1, AccessReviewEffects.Generation,
+        return Append(operation, new AccessReviewDecisionBatchAdmitted(Stream, _revision + 1, AccessReviewEffects.Generation,
             intent, null, operation, firstResponse, null));
-        return Result.Success;
     }
 
     /// <summary>Closes the campaign for its pending completion; the caller proved every item was held and verified.</summary>
@@ -250,9 +255,8 @@ public sealed class AccessReviewCampaign : Aggregate
             operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending completion can close the campaign."));
-        RaiseEvent(new AccessReviewCampaignCompleted(_tenantId, Id, _revision + 1, completion, operation,
+        return Append(operation, new AccessReviewCampaignCompleted(_tenantId, Id, _revision + 1, completion, operation,
             AccessReviewEffects.Generation, itemProofs, _pending.Intent, null, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Cancels the pending completion and fences the generation against every delayed closure.</summary>
@@ -263,8 +267,23 @@ public sealed class AccessReviewCampaign : Aggregate
             operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending completion can be canceled."));
-        RaiseEvent(new AccessReviewCampaignCompletionCanceled(Stream, _revision + 1, AccessReviewEffects.Generation,
+        return Append(operation, new AccessReviewCampaignCompletionCanceled(Stream, _revision + 1, AccessReviewEffects.Generation,
             _pending.Intent, failureProof, operation, null, null));
+    }
+    protected override void Apply(DomainEvent ev)
+    {
+        if (!ev.Metadata.IsAudit)
+            _cut.Observe(ev);
+        base.Apply(ev);
+    }
+
+    Result Append(OperationProvenance operation, DomainEvent fact)
+    {
+        var finalized = _cut.Require(this, Acceptance, operation);
+        if (!finalized.IsSuccess)
+            return finalized;
+        RaiseEvent(fact);
         return Result.Success;
     }
+
 }
