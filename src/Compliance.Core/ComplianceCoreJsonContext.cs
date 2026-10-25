@@ -1577,6 +1577,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(WorkDigestView))]
 [JsonSerializable(typeof(GetWorkDigestDispatchStatus))]
 [JsonSerializable(typeof(AuthorizeWorkDigestUnknownRetry))]
+[JsonSerializable(typeof(WorkDigestRetryAuthorizationContent))]
 [JsonSerializable(typeof(SetWorkDigestPreference))]
 [JsonSerializable(typeof(GetWorkDigestPreference))]
 [JsonSerializable(typeof(WorkDigestPreferenceView))]

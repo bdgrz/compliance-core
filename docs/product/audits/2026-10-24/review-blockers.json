@@ -743,7 +743,7 @@
     },
     {
       "id": "firm-staff-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "firm-staff-qualification.json",
       "fileReviews": 19,
       "signalsTriaged": 3,
@@ -751,7 +751,33 @@
       "focusedPassed": 951,
       "httpPassed": 36,
       "remainingIndependenceFamilies": "Duty/practice/client/service engagement continue independently",
-      "unitPassed": 6422
+      "unitPassed": 6422,
+      "pr": 1132,
+      "mergeCommit": "d88b9aaed691e5251bc47ca63722f9616ebc770b"
+    },
+    {
+      "id": "provider-gap-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "provider-gap-qualification.json",
+      "combinedProductionFileReviews": 63,
+      "focusedAndHttpPassed": 1927,
+      "unitPassed": 6499
+    },
+    {
+      "id": "professional-duty-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "professional-duty-qualification.json",
+      "combinedProductionFileReviews": 63,
+      "focusedAndHttpPassed": 1927,
+      "unitPassed": 6499
+    },
+    {
+      "id": "digest-history-and-operator-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "digest-history-operator-qualification.json",
+      "combinedProductionFileReviews": 63,
+      "focusedAndHttpPassed": 1927,
+      "unitPassed": 6499
     }
   ],
   "resolved": [
@@ -798,10 +824,10 @@
     }
   ],
   "continuingPreparation": [
-    "ImportSource34 + ImportBatch26 coherent compact/history/producer stack",
-    "Digest35 history/attempt + selected operator command identity; weekly selected admissions/source capture follow-on",
-    "ProviderAssuranceGap full history and captured proof; native receiver recovery",
-    "FirmStaff25 ready; professional duty/practice/client/service-engagement independence active",
-    "Access receiver preparation follow-on after shared helper; remaining identity/guard/assignment/program/source owners continue"
+    "Practice19 frozen; Client and ServiceEngagement independence active",
+    "Weekly identified delivery/result receivers; precise ScheduleKey empty-page/first-owner/result capture placement adjudication",
+    "UserIdentity/EmailAddress recovery lifetime history next",
+    "Access item/batch/campaign receiver preparation and full term binding; then Import receivers",
+    "WorkAssignment selected native roots/full history, ComplianceProgram as-of history, TenantManagerGuard and remaining evidence/finite owner inventory"
   ]
 }

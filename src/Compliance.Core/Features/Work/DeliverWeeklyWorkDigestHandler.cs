@@ -9,7 +9,11 @@ public sealed class DeliverWeeklyWorkDigestHandler(IAggregateReader reader,
     WeeklyWorkDigestRecipientResolver recipients, TimeProvider clock)
     : IRequestHandler<DeliverWeeklyWorkDigest>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<DeliverWeeklyWorkDigest> context,
+    public ValueTask<Result> HandleAsync(IRequestContext<DeliverWeeklyWorkDigest> context,
+        CancellationToken ct) =>
+        WorkDigestSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<DeliverWeeklyWorkDigest> context,
         CancellationToken ct)
     {
         if (!WeeklyWorkDigestWorkerIdentity.IsNamed(context, WeeklyWorkDigest.DeliveryProcessId))
@@ -29,21 +33,21 @@ public sealed class DeliverWeeklyWorkDigestHandler(IAggregateReader reader,
                 "The delivery request must be caused by its exact persisted weekly schedule event."));
 
         var digest = await reader.HydrateAsync(new WeeklyWorkDigest(request.TenantId,
-            request.DigestId), ct).ConfigureAwait(false);
+            request.DigestId, request.AttemptNumber), ct).ConfigureAwait(false);
         if (digest.Revision == 0 || digest.MemberId != request.MemberId)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The scheduled weekly digest was not found for this tenant member."));
 
         var actor = ActorReference.ForSystemProcess(WeeklyWorkDigest.DeliveryProcessId,
             "Weekly work digest delivery worker");
-        var existingAttempt = digest.DeliveryAttempts.Any(attempt =>
-            attempt.Number == request.AttemptNumber && attempt.DeliveryKey == request.DeliveryKey);
+        var existingAttempt = digest.SelectedAttempt is { } selected && selected.Number == request.AttemptNumber &&
+            selected.DeliveryKey == request.DeliveryKey;
         var suppression = existingAttempt
             ? null
             : await recipients.SuppressionReasonAsync(request.TenantId, request.MemberId, ct)
                 .ConfigureAwait(false);
         return await executor.ExecuteAsync(new WeeklyWorkDigest(request.TenantId,
-                request.DigestId), current =>
+                request.DigestId, request.AttemptNumber), current =>
             {
                 var result = existingAttempt || suppression is null
                     ? current.RequestDelivery(request.ExpectedRevision, request.AttemptNumber,

@@ -11,7 +11,11 @@ public sealed class ScheduleWeeklyWorkDigestHandler(IAggregateExecutor executor,
 {
     const int MaximumPageSize = 200;
 
-    public async ValueTask<Result<WorkDigestSchedulePageView>> HandleAsync(
+    public ValueTask<Result<WorkDigestSchedulePageView>> HandleAsync(
+        IRequestContext<ScheduleWeeklyWorkDigest> context, CancellationToken ct) =>
+        WorkDigestSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<WorkDigestSchedulePageView>> HandleCoreAsync(
         IRequestContext<ScheduleWeeklyWorkDigest> context, CancellationToken ct)
     {
         if (!WeeklyWorkDigestWorkerIdentity.IsNamed(context, WeeklyWorkDigest.SchedulerProcessId))

@@ -29,7 +29,7 @@ sealed class ProviderAssuranceHost : IAsyncDisposable
 {
     readonly ServiceProvider _provider;
 
-    ProviderAssuranceHost()
+    ProviderAssuranceHost(IImmutableContentStore? content = null, TimeProvider? clock = null)
     {
         var services = new ServiceCollection();
         services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
@@ -41,6 +41,10 @@ sealed class ProviderAssuranceHost : IAsyncDisposable
         services.AddSingleton<IEventStore>(Events);
         services.AddSingleton<IDomainEventReader>(Events);
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
+        if (content is not null)
+            services.AddSingleton(content);
+        if (clock is not null)
+            services.AddSingleton(clock);
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(Permissions));
         services.AddSingleton<ITenantActivity, ActiveTenant>();
         services.AddSingleton<ITenantMembershipDirectoryReader, AlwaysMemberDirectory>();
@@ -68,9 +72,9 @@ sealed class ProviderAssuranceHost : IAsyncDisposable
     ///     Creates a host whose tenant holds one material provider that declares <see cref="ServiceId" /> for
     ///     <see cref="ProgramId" />, seeded directly in the provider register.
     /// </summary>
-    public static async Task<ProviderAssuranceHost> CreateAsync()
+    public static async Task<ProviderAssuranceHost> CreateAsync(IImmutableContentStore? immutableContent = null, TimeProvider? clock = null)
     {
-        var host = new ProviderAssuranceHost { ProviderId = Uuid.CreateVersion4() };
+        var host = new ProviderAssuranceHost(immutableContent, clock) { ProviderId = Uuid.CreateVersion4() };
         var content = MaterialProvider() with
         {
             Dependencies =

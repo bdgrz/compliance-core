@@ -6,7 +6,7 @@ namespace Bdgrz.Compliance.Features.Work;
 /// <summary>Claims, sends, and records one member's durable weekly digest dispatches.</summary>
 sealed class WorkDigestDispatchProcessor(IAggregateReader reader, IAggregateExecutor executor,
     IWorkDigestContentReader contentReader, IWorkDigestDelivery delivery,
-    WorkDigestDeliverySettings settings, TimeProvider clock)
+    WorkDigestDeliverySettings settings, TimeProvider clock, WorkDigestHistoryReader histories)
 {
     public async ValueTask ProcessMemberAsync(Uuid tenantId, Uuid userId,
         bool tenantActive, bool memberActive, CancellationToken ct)
@@ -18,7 +18,7 @@ sealed class WorkDigestDispatchProcessor(IAggregateReader reader, IAggregateExec
         var preferenceAggregate = await reader.HydrateAsync(
             new WorkDigestPreference(tenantId, memberId), ct).ConfigureAwait(false);
         var preference = preferenceAggregate.Read();
-        var dispatch = await reader.HydrateAsync(new WorkDigestDispatch(tenantId, memberId), ct)
+        var dispatch = await histories.ReadDispatchAsync(tenantId, memberId, ct)
             .ConfigureAwait(false);
         var pending = dispatch.FindPending();
         if (pending is not null)
@@ -37,19 +37,19 @@ sealed class WorkDigestDispatchProcessor(IAggregateReader reader, IAggregateExec
             string.Create(System.Globalization.CultureInfo.InvariantCulture,
                 $"work-digest:{memberId}:{window.WeekOf:yyyy-MM-dd}"));
         var now = clock.GetUtcNow();
-        if (!await MutateAsync(tenantId, memberId,
+        if (!await MutateAsync(tenantId, memberId, window.WeekOf,
                 aggregate => aggregate.Schedule(window, messageId, settings.RetryWindow, now), ct)
             .ConfigureAwait(false))
             return;
 
-        var scheduled = await reader.HydrateAsync(new WorkDigestDispatch(tenantId, memberId), ct)
+        var scheduled = await histories.ReadDispatchAsync(tenantId, memberId, ct)
             .ConfigureAwait(false);
         var current = scheduled.Read(window.WeekOf);
         await ProcessPendingAsync(tenantId, userId, current, scheduled, ct).ConfigureAwait(false);
     }
 
     async ValueTask ProcessPendingAsync(Uuid tenantId, Uuid userId,
-        WorkDigestDispatchStatusView pending, WorkDigestDispatch dispatch,
+        WorkDigestDispatchStatusView pending, WorkDigestDispatchHistorySnapshot dispatch,
         CancellationToken ct)
     {
         var now = clock.GetUtcNow();
@@ -57,14 +57,14 @@ sealed class WorkDigestDispatchProcessor(IAggregateReader reader, IAggregateExec
         {
             case WorkDigestDispatch.InFlight:
                 if (pending.LastAttemptAt is { } attemptAt && now >= attemptAt + settings.AttemptLease)
-                    await MutateAsync(tenantId, pending.MemberId,
+                    await MutateAsync(tenantId, pending.MemberId, pending.WeekOf,
                         aggregate => aggregate.RecordInterruptedAttempt(pending.WeekOf, now), ct)
                         .ConfigureAwait(false);
                 return;
             case WorkDigestDispatch.Scheduled:
                 if (!WorkDigestSchedule.IsCurrentWeek(pending.WeekOf, pending.TimeZoneId, now))
                 {
-                    await MutateAsync(tenantId, pending.MemberId,
+                    await MutateAsync(tenantId, pending.MemberId, pending.WeekOf,
                         aggregate => aggregate.RecordMissedWeek(pending.WeekOf, now), ct)
                         .ConfigureAwait(false);
                     return;
@@ -97,7 +97,7 @@ sealed class WorkDigestDispatchProcessor(IAggregateReader reader, IAggregateExec
             return;
         if (content.Kind == WorkDigestContentReadKind.Skip)
         {
-            await MutateAsync(tenantId, pending.MemberId,
+            await MutateAsync(tenantId, pending.MemberId, pending.WeekOf,
                 aggregate => aggregate.RecordSkipped(pending.WeekOf, clock.GetUtcNow(),
                     content.SkipReason ?? "recipient_unavailable"), ct).ConfigureAwait(false);
             return;
@@ -106,9 +106,14 @@ sealed class WorkDigestDispatchProcessor(IAggregateReader reader, IAggregateExec
         var message = content.Message ?? throw new InvalidOperationException(
             "A ready digest must contain a message.");
         var startedAt = clock.GetUtcNow();
-        if (!await MutateAsync(tenantId, pending.MemberId,
-                aggregate => aggregate.StartAttempt(pending.WeekOf, startedAt), ct)
-            .ConfigureAwait(false))
+        WorkDigestDispatchStatusView? claim = null;
+        if (!await MutateAsync(tenantId, pending.MemberId, pending.WeekOf, aggregate =>
+            {
+                if (!aggregate.StartAttempt(pending.WeekOf, startedAt))
+                    return false;
+                claim = aggregate.Read(pending.WeekOf);
+                return true;
+            }, ct).ConfigureAwait(false) || claim is not { } claimed)
             return;
 
         WorkDigestTransportOutcome outcome;
@@ -124,36 +129,43 @@ sealed class WorkDigestDispatchProcessor(IAggregateReader reader, IAggregateExec
         }
 
         var recordedAt = clock.GetUtcNow();
-        await MutateAsync(tenantId, pending.MemberId, aggregate => outcome.Kind switch
+        await MutateAsync(tenantId, pending.MemberId, pending.WeekOf, aggregate =>
         {
-            WorkDigestTransportOutcomeKind.Accepted =>
-                aggregate.RecordSent(pending.WeekOf, recordedAt),
-            WorkDigestTransportOutcomeKind.DefiniteTransientRejection =>
-                aggregate.RecordTransientRejection(pending.WeekOf, recordedAt,
-                    settings.MaximumAttempts, settings.RetryDelay),
-            WorkDigestTransportOutcomeKind.DefinitePermanentRejection =>
-                aggregate.RecordPermanentRejection(pending.WeekOf, recordedAt,
-                    outcome.FailureCode ?? "smtp_permanent_rejection"),
-            _ => aggregate.RecordUnknown(pending.WeekOf, recordedAt,
-                outcome.FailureCode ?? "transport_ambiguous"),
+            var current = aggregate.Read(pending.WeekOf);
+            if (current.Status != WorkDigestDispatch.InFlight || current.Attempts != claimed.Attempts ||
+                current.LastAttemptAt != claimed.LastAttemptAt || current.MessageId != claimed.MessageId)
+                return false;
+            return outcome.Kind switch
+            {
+                WorkDigestTransportOutcomeKind.Accepted =>
+                    aggregate.RecordSent(pending.WeekOf, recordedAt),
+                WorkDigestTransportOutcomeKind.DefiniteTransientRejection =>
+                    aggregate.RecordTransientRejection(pending.WeekOf, recordedAt,
+                        settings.MaximumAttempts, settings.RetryDelay),
+                WorkDigestTransportOutcomeKind.DefinitePermanentRejection =>
+                    aggregate.RecordPermanentRejection(pending.WeekOf, recordedAt,
+                        outcome.FailureCode ?? "smtp_permanent_rejection"),
+                _ => aggregate.RecordUnknown(pending.WeekOf, recordedAt,
+                    outcome.FailureCode ?? "transport_ambiguous"),
+            };
         }, ct).ConfigureAwait(false);
     }
 
     async ValueTask ExpireAsync(Uuid tenantId, WorkDigestDispatchStatusView pending,
         DateTimeOffset now, CancellationToken ct)
     {
-        _ = await MutateAsync(tenantId, pending.MemberId,
+        _ = await MutateAsync(tenantId, pending.MemberId, pending.WeekOf,
             aggregate => aggregate.RecordRetryWindowExpired(pending.WeekOf, now), ct)
             .ConfigureAwait(false);
     }
 
-    async ValueTask<bool> MutateAsync(Uuid tenantId, Uuid memberId,
+    async ValueTask<bool> MutateAsync(Uuid tenantId, Uuid memberId, DateOnly week,
         Func<WorkDigestDispatch, bool> mutation, CancellationToken ct)
     {
         var request = new WorkDigestDispatchMutation(tenantId, memberId);
         try
         {
-            var result = await executor.ExecuteAsync(new WorkDigestDispatch(tenantId, memberId),
+            var result = await executor.ExecuteAsync(new WorkDigestDispatch(tenantId, memberId, week),
                 aggregate =>
                 {
                     var changed = mutation(aggregate);

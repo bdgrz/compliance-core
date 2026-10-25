@@ -16,7 +16,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 /// </summary>
 sealed class ProfessionalDutyAdmission(NativeOperationExecutor operations, IAggregateReader reader,
     FirmStaffViews staffViews, IPlatformUserDirectoryReader users, IFirmProfessionalDutyAssertionVerifier assertions,
-    IImmutableContentStore content, TimeProvider clock)
+    IImmutableContentStore content, TimeProvider clock, ProfessionalDutyReader dutyViews)
 {
     const string InitialEpisode = "initial";
 
@@ -32,7 +32,7 @@ sealed class ProfessionalDutyAdmission(NativeOperationExecutor operations, IAggr
         if (expectedRevision < 0)
             return Failure(RequestErrorKind.Validation, "The expected revision cannot be negative.");
         var now = clock.GetUtcNow();
-        if (!assertions.TryVerify(signedAssertion, now, out var evidence) ||
+        if (!assertions.TryVerifyBinding(signedAssertion, out var evidence) ||
             evidence.Status != (recording ? "active" : "revoked") || evidence.DesignationId != designationId ||
             evidence.AssertionId != assertionId)
             return Failure(RequestErrorKind.Forbidden, recording
@@ -45,31 +45,38 @@ sealed class ProfessionalDutyAdmission(NativeOperationExecutor operations, IAggr
         var actor = FirmStaffOperator.From(context);
         var stream = new FirmProfessionalDutyDesignation(evidence.UserId, evidence.Duty, evidence.TenantId).Stream;
         var provenance = new OperationProvenance(assertionId, assertionId, null, commandKind, actor, stream,
-            InitialEpisode, (ulong)expectedRevision, AuthoredIntentDigest.Compute(context.Request), now, stream, stream);
+            InitialEpisode, (ulong)expectedRevision, AuthoredIntentDigest.Compute(context.Request), now, stream, stream, stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        // A logical id that was already accepted resolves from the owner's facts before any guard is evaluated.
-        var snapshot = await reader.HydrateAsync(
-            new FirmProfessionalDutyDesignation(evidence.UserId, evidence.Duty, evidence.TenantId, assertionId), ct)
-            .ConfigureAwait(false);
         ImmutableContentRef? intent = null;
-        FirstResponseDescriptor? response = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        (ulong Version, ulong Position, string Digest)? preparedCut = null;
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(FirmProfessionalDutyDesignation owner,
+            CancellationToken token)
         {
+            var ready = owner.PrepareChange(expectedRevision, assertionId);
+            if (!ready.IsSuccess)
+                return Result<FirstResponseDescriptor>.Failure(ready.Error!);
+            if (!ProfessionalDutyRules.ValidAt(evidence, now))
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                    "A first professional-duty admission requires signed validity at its frozen decision instant."));
             var frozen = await FreezeAsync(context.Request, kind, evidence, signedAssertion, designationId, assertionId,
-                snapshot, provenance, now, ct).ConfigureAwait(false);
+                owner, provenance, now, token).ConfigureAwait(false);
             if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response) = frozen.Value;
+                return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+            intent = frozen.Value.Intent;
+            preparedCut = (owner.Version, owner.CommittedStreamPosition, owner.ReplayCut.Digest);
+            return Result<FirstResponseDescriptor>.Success(frozen.Value.Response);
         }
 
-        var snapshotLatest = EventIdOf(snapshot.Latest);
         var outcome = await operations.ExecuteAsync(new NativeOperation<FirmProfessionalDutyDesignation>(binding,
             () => new FirmProfessionalDutyDesignation(evidence.UserId, evidence.Duty, evidence.TenantId, assertionId),
             owner => owner.Acceptance,
-            owner => Prepare(owner, expectedRevision, assertionId, snapshotLatest, response),
+            PrepareAsync,
             (FirmProfessionalDutyDesignation owner, ImmutableContentRef acknowledgment) =>
-                owner.AcceptChange(provenance, intent!, acknowledgment)), context, ct).ConfigureAwait(false);
+                preparedCut == (owner.Version, owner.CommittedStreamPosition, owner.ReplayCut.Digest)
+                    ? owner.AcceptChange(provenance, intent!, acknowledgment)
+                    : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The prepared designation prefix changed before admission.", true))), context, ct).ConfigureAwait(false);
         if (!outcome.IsSuccess)
             return Result<OperationAcceptedResponse>.Failure(outcome.Error!);
         var descriptor = outcome.Value switch
@@ -95,14 +102,12 @@ sealed class ProfessionalDutyAdmission(NativeOperationExecutor operations, IAggr
         FirmProfessionalDutyDesignationView? current;
         try
         {
-            current = snapshot.LatestContent is { } latest
-                ? await ProfessionalDutyContent.ReadDesignationAsync(content, latest, ct).ConfigureAwait(false)
-                : null;
+            current = await dutyViews.ReadCurrentAsync(snapshot, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {
             return Fail(RequestErrorKind.Conflict,
-                $"The current designation cannot be verified: {exception.Message}", true);
+                $"The current designation cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException);
         }
 
         var chain = ProfessionalDutyRules.CheckChain(kind, evidence, current);
@@ -154,20 +159,6 @@ sealed class ProfessionalDutyAdmission(NativeOperationExecutor operations, IAggr
             new FirstResponseDescriptor(202, ImmutableContentStoreExtensions.JsonMediaType,
                 "operation-accepted-response.v1", new StandardResponseBody(acknowledgment))));
     }
-
-    static Result<FirstResponseDescriptor> Prepare(FirmProfessionalDutyDesignation owner, long expectedRevision,
-        Uuid assertionId, Uuid? snapshotLatest, FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareChange(expectedRevision, assertionId);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null || EventIdOf(owner.Latest) != snapshotLatest
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The designation changed while the change was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
-    }
-
-    static Uuid? EventIdOf(INativeOperationFact? fact) => (fact as DomainEvent)?.Metadata?.EventId;
 
     static Result<(ImmutableContentRef, FirstResponseDescriptor)> Fail(RequestErrorKind kind, string message,
         bool transient = false) =>

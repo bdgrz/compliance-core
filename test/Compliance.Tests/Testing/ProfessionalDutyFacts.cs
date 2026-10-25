@@ -1,9 +1,11 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,7 +43,7 @@ static class ProfessionalDutyFacts
         await using var scope = provider.CreateAsyncScope();
         var projector = new FirmProfessionalDutyDirectoryProjector(
             scope.ServiceProvider.GetRequiredService<FitzFirmProfessionalDutyDirectory>(),
-            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            scope.ServiceProvider.GetRequiredService<ProfessionalDutyReader>());
         await new ProjectorRunner(scope.ServiceProvider.GetRequiredService<IDomainEventReader>())
             .RunAsync(projector, ProjectionCheckpoint.Start);
     }
@@ -63,7 +65,7 @@ static class ProfessionalDutyFacts
         await using var scope = provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var owner = await services.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new FirmProfessionalDutyDesignation(userId, duty, tenantId));
+            .HydrateAsync(new FirmProfessionalDutyDesignation(userId, duty, tenantId, assertionId, assertionId));
         var accepted = owner.AcceptedFor(assertionId) ?? throw new InvalidOperationException("The change was not accepted.");
         var store = services.GetRequiredService<IImmutableContentStore>();
         var intent = await store.ReadJsonAsync<ProfessionalDutyChangeIntent>(Realm, accepted.Intent);
@@ -115,29 +117,54 @@ static class ProfessionalDutyFacts
         var view = kind == ProfessionalDutyChangeKind.Record
             ? ProfessionalDutyRules.Recorded(current, evidence, staff!.StaffMemberId, staff.Revision, revision, actor, at)
             : ProfessionalDutyRules.Revoked(current!, evidence, revision, actor, at);
+        ImmutableContentRef authored;
+        string digest;
+        if (kind == ProfessionalDutyChangeKind.Record)
+        {
+            var command = new RecordFirmProfessionalDutyDesignation(evidence.DesignationId, assertionId,
+                assertion.Token, (long)owner.Revision);
+            authored = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(), ProfessionalDutyContent.RecordCommandSchema, command);
+            digest = AuthoredIntentDigest.Compute(command);
+        }
+        else
+        {
+            var command = new RevokeFirmProfessionalDutyDesignation(evidence.DesignationId, assertionId,
+                assertion.Token, (long)owner.Revision);
+            authored = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(), ProfessionalDutyContent.RevokeCommandSchema, command);
+            digest = AuthoredIntentDigest.Compute(command);
+        }
         var header = new DurableIntentHeader(assertionId, stream, stream, stream, actor, "initial", owner.Revision,
-            new string('e', 64), at);
-        var authored = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(),
-            ProfessionalDutyContent.RecordCommandSchema, new RecordFirmProfessionalDutyDesignation(
-                evidence.DesignationId, assertionId, assertion.Token, (long)owner.Revision));
+            digest, at);
         var scopeRef = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(),
             ProfessionalDutyContent.VerifiedScopeSchema, evidence);
+        SourceUseRequirement? staffSource = null;
+        if (staff is not null)
+        {
+            var source = await reader.HydrateAsync(new FirmStaffRecord(staff.StaffMemberId));
+            staffSource = new SourceUseRequirement(source.Stream, NativeFactReference.Of(source.Stream, source.Latest!),
+                source.Revision, SourceUsePurpose.ProfessionalDutyRecording, source.Latest!.StaffContent);
+        }
         var intent = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(), ProfessionalDutyChangeIntent.Schema,
             new ProfessionalDutyChangeIntent(header, evidence.DesignationId, kind, authored, assertion.Token,
-                assertionId, (ulong)evidence.AuthorityRevision, scopeRef, null, null));
+                assertionId, (ulong)evidence.AuthorityRevision, scopeRef,
+                owner.Latest is DomainEvent previous ? NativeFactReference.Of(stream, previous) : null, staffSource));
         var accepted = await executor.ExecuteAsync(new FirmProfessionalDutyDesignation(evidence.UserId, evidence.Duty,
             evidence.TenantId, assertionId), item => AggregateOutcome.Commit(item.AcceptChange(
-                Provenance(assertionId, assertionId, "SeedProfessionalDutyChange", actor, stream, header, at), intent,
+                Provenance(assertionId, assertionId, kind == ProfessionalDutyChangeKind.Record ? nameof(RecordFirmProfessionalDutyDesignation) : nameof(RevokeFirmProfessionalDutyDesignation), actor, stream, header, at), intent,
                 FirstResponse)), new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         Assert.True(accepted.IsSuccess, accepted.Error?.Message);
         var designation = await ProfessionalDutyContent.WriteDesignationAsync(content, Uuid.CreateVersion4(), kind,
             view, CancellationToken.None);
         var result = await ProfessionalDutyContent.WriteResultAsync(content, Uuid.CreateVersion4(), kind, designation,
             CancellationToken.None);
+        var acceptedOwner = await reader.HydrateAsync(new FirmProfessionalDutyDesignation(evidence.UserId, evidence.Duty,
+            evidence.TenantId, assertionId, assertionId));
+        var cause = acceptedOwner.AcceptedFor(assertionId)!.Metadata.EventId;
+        var applyId = Uuid.CreateVersion4();
         var applied = await executor.ExecuteAsync(new FirmProfessionalDutyDesignation(evidence.UserId, evidence.Duty,
-            evidence.TenantId, Uuid.Empty), item => AggregateOutcome.Commit(item.Apply(kind,
-                Provenance(Uuid.CreateVersion4(), assertionId, "ApplyProfessionalDutyChange", actor, stream, header,
-                    at), designation, assertion.Token, result)), new RequestDispatchContext(RequestActor.System),
+            evidence.TenantId, applyId, assertionId), item => AggregateOutcome.Commit(item.Apply(kind,
+                Provenance(applyId, assertionId, "ApplyProfessionalDutyChange", actor, stream, header,
+                    at, cause), designation, assertion.Token, result)), new RequestDispatchContext(RequestActor.System),
             CancellationToken.None);
         return applied.IsSuccess
             ? Result<FirmProfessionalDutyDesignationView>.Success(view)
@@ -145,7 +172,7 @@ static class ProfessionalDutyFacts
     }
 
     static OperationProvenance Provenance(Uuid logicalId, Uuid rootId, string kind, ActorReference actor,
-        EventStreamAddress owner, DurableIntentHeader header, DateTimeOffset acceptedAt) => new(logicalId, rootId,
-        logicalId == rootId ? null : rootId, kind, actor, owner, header.Episode, header.OriginalExpectedRevision,
-        header.AuthoredIntentSha256, acceptedAt, owner, owner);
+        EventStreamAddress owner, DurableIntentHeader header, DateTimeOffset acceptedAt, Uuid? cause = null) => new(logicalId, rootId,
+        cause, kind, actor, owner, header.Episode, header.OriginalExpectedRevision,
+        header.AuthoredIntentSha256, acceptedAt, owner, owner, header.FirstOwner);
 }

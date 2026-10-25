@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 /// </summary>
 sealed class ProfessionalDutyAuthorityReader(IAggregateReader reader, FirmStaffViews staffViews,
     IPlatformUserDirectoryReader users, IFirmProfessionalDutyAssertionVerifier assertions,
-    IImmutableContentStore content, TimeProvider clock)
+    ProfessionalDutyReader dutyViews, TimeProvider clock)
 {
     public async ValueTask<CurrentProfessionalDuty?> ReadCurrentAsync(Uuid userId, string duty,
         Uuid? tenantId, CancellationToken ct)
@@ -21,12 +21,12 @@ sealed class ProfessionalDutyAuthorityReader(IAggregateReader reader, FirmStaffV
             return null;
         var owner = await reader.HydrateAsync(new FirmProfessionalDutyDesignation(userId, duty, tenantId), ct)
             .ConfigureAwait(false);
-        if (owner.LatestContent is not { } latest)
+        if (owner.LatestContent is null)
             return null;
-        FirmProfessionalDutyDesignationView designation;
+        FirmProfessionalDutyDesignationView? designation;
         try
         {
-            designation = await ProfessionalDutyContent.ReadDesignationAsync(content, latest, ct).ConfigureAwait(false);
+            designation = await dutyViews.ReadCurrentAsync(owner, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException)
         {
@@ -34,7 +34,7 @@ sealed class ProfessionalDutyAuthorityReader(IAggregateReader reader, FirmStaffV
         }
 
         var now = clock.GetUtcNow();
-        if (!designation.IsActive || designation.AuthorityStatus != "active" || designation.UserId != userId ||
+        if (designation is null || !designation.IsActive || designation.AuthorityStatus != "active" || designation.UserId != userId ||
             designation.Duty != duty || designation.TenantId != tenantId || designation.DesignatedAt > now ||
             designation.NotBefore > now || designation.ExpiresAt <= now ||
             designation.StaffMemberId != staff.StaffMemberId || designation.DirectoryStaffRevision != staff.Revision)

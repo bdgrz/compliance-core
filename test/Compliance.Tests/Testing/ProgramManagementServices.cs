@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
@@ -49,6 +50,8 @@ static class ProgramManagementServices
         collection.AddScoped<IndependenceRuleCatalogReader>();
         collection.AddScoped<IndependenceRuleRatificationReader>();
         collection.AddScoped<IndependenceRuleCatalogOperations>();
+        collection.AddScoped<WorkDigestHistoryReader>();
+        collection.AddScoped<WorkDigestRetryOperations>();
         collection.AddScoped<ControlOperationsReader>();
         collection.AddScoped<ProviderSource>();
         collection.AddScoped<ControlMappingReader>();
@@ -78,6 +81,7 @@ static class ProgramManagementServices
         collection.AddVerifiedAccessReviewReader();
         collection.AddVerifiedEvaluationReader();
         collection.AddVerifiedMappingLineReader();
+        collection.AddVerifiedWorkDigestReader();
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 

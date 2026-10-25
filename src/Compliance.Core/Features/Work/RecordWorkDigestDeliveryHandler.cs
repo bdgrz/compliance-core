@@ -7,7 +7,11 @@ namespace Bdgrz.Compliance.Features.Work;
 public sealed class RecordWorkDigestDeliveryHandler(IAggregateExecutor executor,
     IDomainEventReader events, TimeProvider clock) : IRequestHandler<RecordWorkDigestDelivery>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<RecordWorkDigestDelivery> context,
+    public ValueTask<Result> HandleAsync(IRequestContext<RecordWorkDigestDelivery> context,
+        CancellationToken ct) =>
+        WorkDigestSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<RecordWorkDigestDelivery> context,
         CancellationToken ct)
     {
         if (!WeeklyWorkDigestWorkerIdentity.IsNamed(context, WeeklyWorkDigest.DeliveryProcessId))
@@ -31,7 +35,7 @@ public sealed class RecordWorkDigestDeliveryHandler(IAggregateExecutor executor,
         var actor = ActorReference.ForSystemProcess(WeeklyWorkDigest.DeliveryProcessId,
             "Weekly work digest delivery worker");
         return await executor.ExecuteAsync(new WeeklyWorkDigest(request.TenantId,
-                request.DigestId), digest =>
+                request.DigestId, request.AttemptNumber), digest =>
             {
                 return AggregateOutcome.CommitOnSuccess(digest.RecordDeliveryResult(
                     request.ExpectedRevision, request.AttemptNumber, request.DeliveryKey,

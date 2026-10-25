@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
@@ -17,14 +18,14 @@ public sealed class ProviderAssuranceGap : Aggregate
     readonly Uuid _tenantId;
     readonly Uuid _providerId;
     readonly Uuid _gapId;
-    readonly HashSet<string> _admittedPairs = new(StringComparer.Ordinal);
-    readonly Dictionary<Uuid, ProviderCoverageGapRiskAcceptanceAdmitted> _admissions = [];
+    readonly ProviderGapReplayCut _cut = new();
     ProviderCoverageGapRecorded? _recorded;
     ProviderCoverageGapClosed? _closed;
     long _revision;
 
     /// <summary>Opens the gap of one provider, selecting the logical operation to resolve.</summary>
-    public ProviderAssuranceGap(Uuid tenantId, Uuid providerId, Uuid gapId, Uuid selectedLogicalId = default)
+    public ProviderAssuranceGap(Uuid tenantId, Uuid providerId, Uuid gapId, Uuid selectedLogicalId = default,
+        Uuid selectedAdmissionId = default, string? selectedPair = null)
         : base(ProviderAssuranceStreams.GapIdentity(tenantId, providerId, gapId),
             ProviderAssuranceStreams.Gap(tenantId, providerId, gapId))
     {
@@ -32,36 +33,50 @@ public sealed class ProviderAssuranceGap : Aggregate
         _providerId = providerId;
         _gapId = gapId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
+        SelectedAdmissionId = selectedAdmissionId;
+        SelectedPair = selectedPair;
         On<ProviderCoverageGapRecorded>(recorded =>
         {
+            if (recorded.Operation is null)
+                throw new ImmutableContentIntegrityException("The native provider gap fact lacks operation provenance.");
+            if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == recorded.Operation.LogicalId)
+                throw new ImmutableContentIntegrityException("The selected native provider gap operation occurs more than once.");
             Acceptance.Observe(recorded);
             if (_recorded is not null || recorded.TenantId != _tenantId || recorded.ProviderId != _providerId ||
                 recorded.GapId != _gapId || recorded.ProviderRevision < 1 || recorded.Operation.Owner != Stream ||
                 recorded.Operation.LogicalId != _gapId || recorded.RequestId != _gapId)
-                throw new InvalidOperationException("A gap is recorded once, by its own provider and logical identity.");
+                throw new ImmutableContentIntegrityException("A gap is recorded once, by its own provider and logical identity.");
             _recorded = recorded;
             _revision = 1;
         });
         On<ProviderCoverageGapClosed>(closed =>
         {
+            if (closed.Operation is null)
+                throw new ImmutableContentIntegrityException("The native provider gap fact lacks operation provenance.");
+            if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == closed.Operation.LogicalId)
+                throw new ImmutableContentIntegrityException("The selected native provider gap operation occurs more than once.");
             Acceptance.Observe(closed);
             if (_recorded is null || _closed is not null || closed.TenantId != _tenantId ||
                 closed.ProviderId != _providerId || closed.GapId != _gapId || closed.Revision != _revision + 1 ||
                 closed.Operation.Owner != Stream || closed.Operation.LogicalId != closed.RequestId)
-                throw new InvalidOperationException("A closure must follow the open gap and its previous revision.");
+                throw new ImmutableContentIntegrityException("A closure must follow the open gap and its previous revision.");
             _closed = closed;
             _revision = closed.Revision;
         });
         On<ProviderCoverageGapRiskAcceptanceAdmitted>(admitted =>
         {
+            if (admitted.Operation is null)
+                throw new ImmutableContentIntegrityException("The native provider gap fact lacks operation provenance.");
+            if (Acceptance.SelectedFact is not null && Acceptance.SelectedLogicalId == admitted.Operation.LogicalId)
+                throw new ImmutableContentIntegrityException("The selected native provider gap operation occurs more than once.");
             Acceptance.Observe(admitted);
             if (_recorded is null || _closed is not null || admitted.Owner != Stream ||
-                admitted.Revision != _revision + 1 || admitted.Operation.Owner != Stream ||
-                !_admittedPairs.Add(admitted.Operation.Episode) ||
-                !_admissions.TryAdd(admitted.Operation.LogicalId, admitted))
-                throw new InvalidOperationException(
+                admitted.Revision != _revision + 1 || admitted.Operation.Owner != Stream)
+                throw new ImmutableContentIntegrityException(
                     "A risk acceptance link is admitted on the open gap for a new pair at the next revision.");
             _revision = admitted.Revision;
+            if (admitted.Operation.LogicalId == SelectedAdmissionId)
+                SelectedAdmission = admitted;
         });
     }
 
@@ -89,8 +104,12 @@ public sealed class ProviderAssuranceGap : Aggregate
     /// <summary>The single closure, once it happened.</summary>
     public ProviderCoverageGapClosed? Closed => _closed;
 
-    /// <summary>The admission of one link, by its admitting command id, or null when it was never admitted.</summary>
-    public ProviderCoverageGapRiskAcceptanceAdmitted? AdmissionOf(Uuid linkId) => _admissions.GetValueOrDefault(linkId);
+    internal ProviderGapReplayCut ReplayCut => _cut;
+    internal Uuid TenantId => _tenantId;
+    internal Uuid SelectedAdmissionId { get; }
+    internal ProviderCoverageGapRiskAcceptanceAdmitted? SelectedAdmission { get; set; }
+    internal string? SelectedPair { get; }
+    internal bool SelectedPairSeen { get; set; }
 
     /// <summary>The wire form of the pair a link admission is bound to; it is carried as the operation episode.</summary>
     public static string PairEpisode(Uuid riskId, Uuid acceptanceId) => $"{riskId}:{acceptanceId}";
@@ -112,6 +131,9 @@ public sealed class ProviderAssuranceGap : Aggregate
         var prepared = PrepareRecord();
         if (!prepared.IsSuccess)
             return prepared;
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new ProviderCoverageGapRecorded(_tenantId, _gapId, _providerId, _gapId, providerRevision, content,
             actor, recordedAt, operation, firstResponse, operationResult));
         return Result.Success;
@@ -153,6 +175,9 @@ public sealed class ProviderAssuranceGap : Aggregate
         var prepared = PrepareClose(expectedRevision, recorded, closure);
         if (!prepared.IsSuccess)
             return prepared;
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         RaiseEvent(new ProviderCoverageGapClosed(_tenantId, _gapId, _providerId, operation.LogicalId, _revision + 1,
             content, actor, closedAt, operation, firstResponse, operationResult));
         return Result.Success;
@@ -169,7 +194,10 @@ public sealed class ProviderAssuranceGap : Aggregate
         if (_closed is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "A closed provider coverage gap cannot receive a risk acceptance link."));
-        return _admittedPairs.Contains(PairEpisode(riskId, acceptanceId))
+        if (SelectedPair != PairEpisode(riskId, acceptanceId))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A link admission requires its exact selected pair at the finalized native gap cut.", true));
+        return SelectedPairSeen
             ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The risk acceptance is already linked to this provider coverage gap."))
             : Result.Success;
@@ -192,10 +220,19 @@ public sealed class ProviderAssuranceGap : Aggregate
         var prepared = PrepareAdmitLink(expectedRevision, riskId, acceptanceId);
         if (!prepared.IsSuccess)
             return prepared;
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
         var revision = _revision + 1;
         RaiseEvent(new ProviderCoverageGapRiskAcceptanceAdmitted(Stream, revision, revision, intent, null, operation,
             firstResponse, null));
         return Result.Success;
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        _cut.Observe(ev);
+        base.Apply(ev);
     }
 
     /// <summary>The provenance of an operation on this owner; the owner is its own first, affected and revision scope.</summary>

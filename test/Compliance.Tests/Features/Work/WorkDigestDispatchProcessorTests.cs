@@ -28,15 +28,14 @@ public sealed class WorkDigestDispatchProcessorTests
             fixture.Member(fixture.OwnerUserId));
         var processor = new WorkDigestDispatchProcessor(reader,
             scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content, delivery,
-            settings, clock);
+            settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()));
 
         // Act
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
             tenantActive: true, memberActive: true, CancellationToken.None);
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
             tenantActive: true, memberActive: true, CancellationToken.None);
-        var persisted = await reader.HydrateAsync(new WorkDigestDispatch(fixture.TenantId,
-            fixture.Member(fixture.OwnerUserId)));
+        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadDispatchAsync(fixture.TenantId, fixture.Member(fixture.OwnerUserId));
         var status = persisted.Read(weekOf);
 
         // Assert
@@ -59,8 +58,8 @@ public sealed class WorkDigestDispatchProcessorTests
         var now = new DateTimeOffset(2026, 10, 12, 9, 0, 0, TimeSpan.Zero);
         var clock = new FixedTimeProvider(now);
         var memberId = fixture.Member(fixture.OwnerUserId);
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new WorkDigestDispatch(fixture.TenantId, memberId), dispatch =>
+        await WorkDigestFacts.DispatchAsync(fixture.Provider,
+            new WorkDigestDispatchRules(fixture.TenantId, memberId), dispatch =>
             {
                 Assert.True(dispatch.Schedule(new WorkDigestScheduleWindow(weekOf, "UTC",
                         scheduledAt), Uuid.CreateVersion4(), TimeSpan.FromDays(6), scheduledAt));
@@ -76,12 +75,12 @@ public sealed class WorkDigestDispatchProcessorTests
         var delivery = new InspectingDelivery(reader, fixture.TenantId, memberId);
         var processor = new WorkDigestDispatchProcessor(reader,
             scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content, delivery,
-            settings, clock);
+            settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()));
 
         // Act
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
             tenantActive: true, memberActive: true, CancellationToken.None);
-        var persisted = await reader.HydrateAsync(new WorkDigestDispatch(fixture.TenantId, memberId));
+        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadDispatchAsync(fixture.TenantId, memberId);
         var status = persisted.Read(weekOf);
 
         // Assert
@@ -126,7 +125,7 @@ public sealed class WorkDigestDispatchProcessorTests
         var delivery = new CountingDelivery();
         var processor = new WorkDigestDispatchProcessor(reader,
             scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
-            new ReadyDigestContentReader(), delivery, settings, clock);
+            new ReadyDigestContentReader(), delivery, settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()));
 
         // Act
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
@@ -139,8 +138,7 @@ public sealed class WorkDigestDispatchProcessorTests
             });
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
             tenantActive: true, memberActive: true, CancellationToken.None);
-        var persisted = await reader.HydrateAsync(new WorkDigestDispatch(fixture.TenantId,
-            memberId));
+        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadDispatchAsync(fixture.TenantId, memberId);
 
         // Assert
         Assert.Equal(WorkDigestDispatch.Sent, persisted.Read(currentWindow.WeekOf).Status);
@@ -159,8 +157,8 @@ public sealed class WorkDigestDispatchProcessorTests
         var retryDueAt = new DateTimeOffset(2026, 10, 12, 9, 0, 0, TimeSpan.Zero);
         var memberId = fixture.Member(fixture.OwnerUserId);
         var clock = new FixedTimeProvider(retryDueAt);
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new WorkDigestDispatch(fixture.TenantId, memberId), dispatch =>
+        await WorkDigestFacts.DispatchAsync(fixture.Provider,
+            new WorkDigestDispatchRules(fixture.TenantId, memberId), dispatch =>
             {
                 Assert.True(dispatch.Schedule(new WorkDigestScheduleWindow(weekOf,
                         "America/New_York", scheduledAt), Uuid.CreateVersion4(),
@@ -183,13 +181,12 @@ public sealed class WorkDigestDispatchProcessorTests
         var delivery = new CountingDelivery();
         var processor = new WorkDigestDispatchProcessor(reader,
             scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content, delivery,
-            settings, clock);
+            settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()));
 
         // Act
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
             tenantActive: true, memberActive: false, CancellationToken.None);
-        var persisted = await reader.HydrateAsync(new WorkDigestDispatch(fixture.TenantId,
-            memberId));
+        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadDispatchAsync(fixture.TenantId, memberId);
         var status = persisted.Read(weekOf);
 
         // Assert
@@ -236,7 +233,7 @@ public sealed class WorkDigestDispatchProcessorTests
         {
             Calls++;
             MessageId = message.MessageId;
-            var aggregate = await reader.HydrateAsync(new WorkDigestDispatch(tenantId, memberId), ct);
+            var aggregate = await reader.HydrateAsync(new WorkDigestDispatch(tenantId, memberId, new DateOnly(2026, 10, 5)), ct);
             StatusAtSend = aggregate.Read(new DateOnly(2026, 10, 5)).Status;
             return new WorkDigestTransportOutcome(WorkDigestTransportOutcomeKind.Accepted);
         }

@@ -1,0 +1,45 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedAndHttpPassed": 1927,
+    "backendUnit": {
+      "passed": 6499,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "exactFileAndDependencyHashes": "verified"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 63,
+    "combinedSignalsTriaged": 9,
+    "integration": "merge scoped repair recommended",
+    "mergeProbability": 0.94,
+    "introducedRegressionProbability": 0.2,
+    "scopeMisrepresentationProbability": 0.12,
+    "adopted": "squash merge without CI wait per user direction; continue explicitly scoped remaining work"
+  },
+  "scope": "WorkDigestDispatch and WeeklyWorkDigest compact history/attempt authority; exact claimed-worker outcome settlement; selected identified operator retry authorization with immutable original result.",
+  "genuineOldApiRedFailed": 4,
+  "qualification": [
+    "Dispatch retains latest/one selected member-week; Weekly retains scalar header/latest/one selected attempt. Complete rules/history compose externally and installed reader verifies exact raw/native/physical prefixes, current/selected authority before mutation/retry. Full pending discovery across frozen timezones remains.",
+    "Original monotonic week, frozen timezone, deadline and attempt-budget rules preserved; weekly failed-attempt repeats retain their existing unbounded policy. No new cap/deadline.128attempt and52week cases qualify actual lifetime reduction.",
+    "Actual dispatch processor durably claims before transport; late outcome must match exact claimed attempt number/time/message ID. Delayed older accepted result cannot settle a later claim. Cancellation/interruption produces Unknown without automatic ambiguous resend. Only fake transports used in tests.",
+    "Operator retry follows selected required CommandId/ExpectedRevision and canonical identified PUT replacing unidentified POST; status.Revision is additive. Occupied request/fact discriminator v1\u2192v2. Full native authorization binds exact supplied authored text, actor/root/scope/revision/attempt/before/settings and original descriptor/typed body/MutationResult envelope. Current personal platform operator authorization remains before replay.",
+    "Exact command returns original result after later progress/clock/settings. Fresh identity allows repeated evidence in later Unknown. Legacy v1 authorization history/wire is unqualified; no alias, migration/reset or new MCP route.",
+    "Weekly selected Deliver/Record identified admissions and complete ScheduleKey/source/original page capture remain actionable follow-ons. Empty/partial page fanout can create no selected Weekly first owner; no new technical business/result owner is silently substituted. No sender/callback invented."
+  ],
+  "rootRefinements": [
+    "Actual API startup tests caught missing OnBind input declarations. Added explicit route parameters and authored-only3field HTTP body/AppJSON metadata; canonical route/body/query/auth/old route/OpenAPI tests pass."
+  ],
+  "remainingWork": [
+    "Weekly identified receiver layer active; exact Schedule empty-page/first-owner/original-result mismatch saved for root catalog/Jev adjudication. Identity/email lifetime work follows. No actual email/deploy/broker operation."
+  ]
+}

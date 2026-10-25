@@ -37,17 +37,15 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             fixture.TenantId, WeekStarting, "schedule-2026-10-12", Limit: 2)), CancellationToken.None);
         var digestId = WeeklyWorkDigest.IdFor(fixture.TenantId,
             RbacIds.Member(fixture.TenantId, subscribedUser), WeekStarting);
-        var digest = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.TenantId,
-            digestId));
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
         var retry = await handler.HandleAsync(Fixture.ScheduleContext(new ScheduleWeeklyWorkDigest(
             fixture.TenantId, WeekStarting, "schedule-2026-10-12", Limit: 2)), CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Equal(new WorkDigestSchedulePageView(2, 1, 1, "page-2"), result.Value);
-        Assert.Equal("scheduled", digest.Status);
-        Assert.Equal("scheduled", (await fixture.Reader.HydrateAsync(
-            new WeeklyWorkDigest(fixture.TenantId, digestId))).Status);
+        Assert.Equal("scheduled", digest.View.Status);
+        Assert.Equal("scheduled", (await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId)).View.Status);
         Assert.True(retry.IsSuccess, retry.Error?.Message);
         Assert.Equal(0, retry.Value.DigestsScheduled);
     }
@@ -105,7 +103,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             requestEventId), CancellationToken.None);
         var retry = await recordHandler.HandleAsync(Fixture.RecordContext(recordCommand,
             requestEventId), CancellationToken.None);
-        var digest = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.TenantId, digestId));
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
 
         // Assert
         Assert.True(requested.IsSuccess, requested.Error?.Message);
@@ -113,8 +111,8 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         Assert.Equal(RequestErrorKind.Conflict, wrongCause.Error?.Kind);
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
         Assert.True(retry.IsSuccess, retry.Error?.Message);
-        Assert.Equal("delivered", digest.Status);
-        var attempt = Assert.Single(digest.DeliveryAttempts);
+        Assert.Equal("delivered", digest.View.Status);
+        var attempt = Assert.Single(digest.View.DeliveryAttempts);
         Assert.Equal("delivered", attempt.Status);
         Assert.Equal(deliveryKey, attempt.DeliveryKey);
         Assert.Equal("system_process", attempt.RequestedBy.Kind);
@@ -153,12 +151,12 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         // Act
         var replay = await recordHandler.HandleAsync(Fixture.RecordContext(failedCallback,
             firstRequestEventId), CancellationToken.None);
-        var digest = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.TenantId, digestId));
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
 
         // Assert
         Assert.True(replay.IsSuccess, replay.Error?.Message);
-        Assert.Equal(4, digest.Revision);
-        Assert.Collection(digest.DeliveryAttempts,
+        Assert.Equal(4, digest.View.Revision);
+        Assert.Collection(digest.View.DeliveryAttempts,
             first => Assert.Equal("failed", first.Status),
             second => Assert.Equal("requested", second.Status));
     }
@@ -182,13 +180,13 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         // Act
         var result = await fixture.DeliveryHandler().HandleAsync(
             Fixture.DeliveryContext(command, scheduleEventId), CancellationToken.None);
-        var digest = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.TenantId, digestId));
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("suppressed", digest.Status);
-        Assert.Equal("email_digest_opted_out", digest.Read().SuppressionReason);
-        Assert.Empty(digest.DeliveryAttempts);
+        Assert.Equal("suppressed", digest.View.Status);
+        Assert.Equal("email_digest_opted_out", digest.View.SuppressionReason);
+        Assert.Empty(digest.View.DeliveryAttempts);
     }
 
     [Fact]
@@ -206,14 +204,13 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         // Act
         var result = await fixture.DeliveryHandler().HandleAsync(
             Fixture.DeliveryContext(command, scheduleEventId), CancellationToken.None);
-        var digest = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.TenantId,
-            digestId));
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("suppressed", digest.Status);
-        Assert.Equal("guest_member", digest.Read().SuppressionReason);
-        Assert.Empty(digest.DeliveryAttempts);
+        Assert.Equal("suppressed", digest.View.Status);
+        Assert.Equal("guest_member", digest.View.SuppressionReason);
+        Assert.Empty(digest.View.DeliveryAttempts);
     }
 
     [Fact]
@@ -230,13 +227,12 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         // Act
         var result = await handler.HandleAsync(Fixture.ScheduleContext(new ScheduleWeeklyWorkDigest(
             fixture.TenantId, WeekStarting, "schedule-2026-10-12")), CancellationToken.None);
-        var digest = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.TenantId,
-            WeeklyWorkDigest.IdFor(fixture.TenantId, memberId, WeekStarting)));
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, WeeklyWorkDigest.IdFor(fixture.TenantId, memberId, WeekStarting));
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Equal(new WorkDigestSchedulePageView(1, 0, 1, null), result.Value);
-        Assert.Equal("missing", digest.Status);
+        Assert.Equal("missing", digest.View.Status);
     }
 
     [Fact]
@@ -261,14 +257,13 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         // Act
         var duplicate = await handler.HandleAsync(Fixture.DeliveryContext(command, scheduleEventId),
             CancellationToken.None);
-        var digest = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.TenantId,
-            digestId));
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
 
         // Assert
         Assert.True(requested.IsSuccess, requested.Error?.Message);
         Assert.True(duplicate.IsSuccess, duplicate.Error?.Message);
-        Assert.Equal("delivery_requested", digest.Status);
-        Assert.Single(digest.DeliveryAttempts);
+        Assert.Equal("delivery_requested", digest.View.Status);
+        Assert.Single(digest.View.DeliveryAttempts);
     }
 
     [Fact]
@@ -287,8 +282,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Equal("scheduled", (await fixture.Reader.HydrateAsync(
-            new WeeklyWorkDigest(fixture.TenantId, digestId))).Status);
+        Assert.Equal("scheduled", (await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId)).View.Status);
     }
 
     sealed class Fixture : IAsyncDisposable
@@ -312,6 +306,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             services.AddSingleton<IEventStore>(_store);
             services.AddSingleton<IDomainEventReader>(_store);
             services.AddPortia();
+            services.AddVerifiedWorkDigestReader();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             {
                 ValidateScopes = true,

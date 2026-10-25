@@ -4,6 +4,7 @@ using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
@@ -20,6 +21,151 @@ public sealed class ProfessionalDutyChangeTests
     static readonly Uuid Operator = Uuid.CreateVersion4();
 
     static ClaimsPrincipal Actor => ActorFor(Operator);
+
+    [Fact]
+    public async Task ShouldKeepBoundedDesignationAuthorityGivenRepeatedSignedRefreshes()
+    {
+        // Arrange
+        await using var host = new Host();
+        var staff = await FirmStaffFacts.RegisterAsync(host.Provider, Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var designation = Uuid.CreateVersion4();
+        Uuid? predecessor = null;
+        for (var index = 1; index <= 32; index++)
+        {
+            var assertion = Active(designation, staff.UserId, index, predecessor);
+            var result = await ProfessionalDutyFacts.RecordAsync(host.Provider, assertion, staff, staff.Actor, DateTimeOffset.UtcNow);
+            Assert.True(result.IsSuccess, result.Error?.Message);
+            predecessor = assertion.Evidence.AssertionId;
+        }
+
+        // Act
+        var owner = await host.HydrateAsync(Owner(staff.UserId));
+        var growing = typeof(FirmProfessionalDutyDesignation).GetFields(global::System.Reflection.BindingFlags.Instance |
+            global::System.Reflection.BindingFlags.NonPublic).Where(field => field.GetValue(owner) is
+                global::System.Collections.ICollection { Count: > 1 }).ToArray();
+
+        // Assert
+        Assert.Empty(growing);
+        Assert.Equal(32UL, owner.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldReplayOriginalDutyAdmissionGivenSignedValidityExpiredAfterAcceptance()
+    {
+        // Arrange
+        var clock = new MutableTimeProvider(DateTimeOffset.UtcNow);
+        await using var host = new Host(clock);
+        var staff = await FirmStaffFacts.RegisterAsync(host.Provider, Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var signed = ProfessionalDutyAssertionTestIssuer.Issue(Uuid.CreateVersion4(), staff.UserId, Duty, null, 1,
+            "active", null, clock.GetUtcNow().AddMinutes(-1), clock.GetUtcNow().AddMinutes(1));
+        var command = RecordOf(signed, 0);
+        var accepted = await host.AdmitAsync(command);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+        clock.UtcNow = clock.GetUtcNow().AddMinutes(2);
+
+        // Act
+        var retry = await host.AdmitAsync(command);
+
+        // Assert
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(accepted.Value, retry.Value);
+        Assert.Single(await host.EventsAsync<ProfessionalDutyChangeAccepted>(Owner(staff.UserId).Stream));
+    }
+
+    [Fact]
+    public async Task ShouldRefuseNewDesignationHoldGivenSignedChangeAlreadyAccepted()
+    {
+        // Arrange
+        await using var host = new Host();
+        var staff = await FirmStaffFacts.RegisterAsync(host.Provider, Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var tenant = Uuid.CreateVersion4();
+        var designation = Uuid.CreateVersion4();
+        var first = ProfessionalDutyAssertionTestIssuer.Issue(designation, staff.UserId, FirmProfessionalDuty.EngagementPartner,
+            tenant, 1, "active", null, DateTimeOffset.UtcNow.AddMinutes(-1), DateTimeOffset.UtcNow.AddMinutes(30));
+        Assert.True((await ProfessionalDutyFacts.RecordAsync(host.Provider, first, staff, staff.Actor, DateTimeOffset.UtcNow)).IsSuccess);
+        var refresh = ProfessionalDutyAssertionTestIssuer.Issue(designation, staff.UserId, FirmProfessionalDuty.EngagementPartner,
+            tenant, 2, "active", first.Evidence.AssertionId, DateTimeOffset.UtcNow.AddMinutes(-1), DateTimeOffset.UtcNow.AddMinutes(30));
+        Assert.True((await host.AdmitAsync(RecordOf(refresh, 1))).IsSuccess);
+        var stream = new FirmProfessionalDutyDesignation(staff.UserId, FirmProfessionalDuty.EngagementPartner, tenant).Stream;
+        var key = new ReservationKey(Uuid.CreateVersion4(), new ServiceEngagementIndependence(tenant, Uuid.CreateVersion4()).Stream,
+            1, stream, SourceUseReservations.PurposeName(SourceUsePurpose.EngagementPersonalDecision));
+        var operation = UseProvenance(stream, key);
+
+        // Act
+        var held = await host.Scope.ServiceProvider.GetRequiredService<IAggregateExecutor>().ExecuteAsync(
+            new FirmProfessionalDutyDesignation(staff.UserId, FirmProfessionalDuty.EngagementPartner, tenant, operation.LogicalId).ForSourceUses(key),
+            owner => AggregateOutcome.Commit(owner.AuthorizeEngagementUse(operation, UseIntent(), 1)),
+            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+
+        // Assert
+        Assert.False(held.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, held.Error?.Kind);
+        Assert.True(held.Error!.IsTransient);
+        Assert.False((await host.HydrateAsync(new FirmProfessionalDutyDesignation(staff.UserId, FirmProfessionalDuty.EngagementPartner, tenant))).Uses.HasActiveUse);
+    }
+
+    [Fact]
+    public async Task ShouldReplayDutyAdmissionGivenEqualWinnerBeforeLosingIntentWriteUnavailable()
+    {
+        // Arrange
+        LosingDutyStore content = null!;
+        await using var host = new Host(configureContent: inner => content = new LosingDutyStore(inner));
+        var staff = await FirmStaffFacts.RegisterAsync(host.Provider, Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var command = RecordOf(Active(Uuid.CreateVersion4(), staff.UserId), 0);
+        Result<OperationAcceptedResponse> winner = default;
+        content.Arm(async () => winner = await host.AdmitAsync(command));
+        Result<OperationAcceptedResponse> actual = default;
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => actual = await host.AdmitAsync(command));
+
+        // Assert
+        Assert.True(content.Failed);
+        Assert.True(winner.IsSuccess, winner.Error?.Message);
+        Assert.Null(failure);
+        Assert.True(actual.IsSuccess, actual.Error?.Message);
+        Assert.Equal(winner.Value, actual.Value);
+        Assert.Single(await host.EventsAsync<ProfessionalDutyChangeAccepted>(Owner(staff.UserId).Stream));
+    }
+
+    sealed class LosingDutyStore(IImmutableContentStore inner) : IImmutableContentStore
+    {
+        Func<Task>? _admit;
+        public bool Failed { get; private set; }
+        public void Arm(Func<Task> admit) => _admit = admit;
+        public async Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id, string schema, string mediaType,
+            ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
+        {
+            if (!Failed && _admit is { } admit && schema == ProfessionalDutyChangeIntent.Schema)
+            {
+                Failed = true;
+                await admit();
+                throw new ImmutableContentUnavailableException("The losing duty intent publication is unavailable.");
+            }
+            return await inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
+        }
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => inner.ReadVerifiedAsync(realm, reference, ct);
+    }
+
+    [Fact]
+    public async Task ShouldRefuseFreshDutyAdmissionGivenSignedValidityAlreadyExpired()
+    {
+        // Arrange
+        var clock = new MutableTimeProvider(DateTimeOffset.UtcNow);
+        await using var host = new Host(clock);
+        var staff = await FirmStaffFacts.RegisterAsync(host.Provider, Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var signed = ProfessionalDutyAssertionTestIssuer.Issue(Uuid.CreateVersion4(), staff.UserId, Duty, null, 1,
+            "active", null, clock.GetUtcNow().AddMinutes(-10), clock.GetUtcNow().AddMinutes(-1));
+
+        // Act
+        var refused = await host.AdmitAsync(RecordOf(signed, 0));
+
+        // Assert
+        Assert.False(refused.IsSuccess);
+        Assert.Equal(RequestErrorKind.Forbidden, refused.Error?.Kind);
+        Assert.Empty(await host.EventsAsync<ProfessionalDutyChangeAccepted>(Owner(staff.UserId).Stream));
+    }
 
     [Theory]
     [InlineData(0)]
@@ -68,7 +214,7 @@ public sealed class ProfessionalDutyChangeTests
         // Act: step 1, the staff member was deactivated before the use grant.
         var firstRun = await ProfessionalDutyFacts.RunProcessAsync(host.Provider, user, Duty, null,
             stale.Evidence.AssertionId);
-        var owner = await host.HydrateAsync(Owner(user));
+        var owner = await host.HydrateAsync(new FirmProfessionalDutyDesignation(user, Duty, null, stale.Evidence.AssertionId));
         var claimStream = new ProfessionalAssertionIdentityClaim(stale.Evidence.AssertionId).Stream;
         var key = await host.StaffUseKeyAsync(owner, stale.Evidence.AssertionId);
 
@@ -382,7 +528,8 @@ public sealed class ProfessionalDutyChangeTests
         Assert.IsType<ReceiverOutcome.Superseded>(claim.Value);
         Assert.IsType<ReceiverOutcome.Rejected>(lateApply.Value);
         var owner = await host.HydrateAsync(Owner(userB));
-        Assert.True(owner.IsRejected(assertionId));
+        var history = await ProfessionalDutyHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner);
+        Assert.IsType<ProfessionalDutyChangeRejected>(history.TerminalFor(assertionId));
         Assert.Empty(await host.EventsAsync<FirmProfessionalDutyDesignationRecorded>(owner.Stream));
         Assert.Single(await host.EventsAsync<ProfessionalAssertionIdentityClaimed>(claimStream));
         var staffRecord = await host.HydrateAsync(new FirmStaffRecord(staffB));
@@ -586,7 +733,7 @@ public sealed class ProfessionalDutyChangeTests
 
     sealed class Host : IAsyncDisposable
     {
-        public Host(TimeProvider? clock = null)
+        public Host(TimeProvider? clock = null, Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
         {
             var services = new ServiceCollection();
             var values = new Dictionary<string, string?>
@@ -600,7 +747,11 @@ public sealed class ProfessionalDutyChangeTests
             var events = new InMemoryEventStore();
             services.AddSingleton<IEventStore>(events);
             services.AddSingleton<IDomainEventReader>(events);
+            services.AddSingleton<ISourceFactResolver, EventStoreSourceFactResolver>();
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
+            if (configureContent is not null)
+                services.AddSingleton<IImmutableContentStore>(provider => configureContent(
+                    new FitzKvImmutableContentStore(provider.GetRequiredService<IKvClient>())));
             services.AddSingleton<IPlatformUserDirectoryReader>(new Users());
             services.AddSingleton<IPlatformOperatorAccess>(new OperatorAccess());
             if (clock is not null)
@@ -650,7 +801,8 @@ public sealed class ProfessionalDutyChangeTests
 
         public async Task<ReservationKey> StaffUseKeyAsync(FirmProfessionalDutyDesignation owner, Uuid assertionId)
         {
-            var accepted = owner.AcceptedFor(assertionId)!;
+            var history = await ProfessionalDutyHistory.ReadAsync(Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner);
+            var accepted = history.AcceptedFor(assertionId)!;
             var intent = await Content.ReadJsonAsync<ProfessionalDutyChangeIntent>(Realm, accepted.Intent);
             return ProfessionalDutyRules.StaffUseKey(assertionId, owner.Stream, intent.StaffEligibility!);
         }

@@ -102,6 +102,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<WorkDigestContentReader>();
         services.AddScoped<IWorkDigestContentReader>(provider =>
             provider.GetRequiredService<WorkDigestContentReader>());
+        services.AddScoped<WorkDigestHistoryReader>();
+        services.AddScoped<WorkDigestRetryOperations>();
         services.AddScoped<WorkDigestDispatchProcessor>();
         services.AddScoped<WorkDigestDispatchSweep>();
         services.AddSingleton(EmailChallengeTokenKeys.FromConfiguration(configuration,
@@ -340,6 +342,7 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzTechnologyInventoryDirectory>());
         services.AddScoped<ProviderReferences>();
         services.AddScoped<ProviderSource>();
+        services.AddScoped<ProviderGapReader>();
         services.AddScoped<FitzProviderDirectory>();
         services.AddScoped<IProviderProjection>(provider => provider.GetRequiredService<FitzProviderDirectory>());
         services.AddScoped<IProviderReader>(provider => provider.GetRequiredService<FitzProviderDirectory>());
@@ -705,6 +708,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<DirectoryReevaluationDiscovery>();
         services.AddScoped<ProfessionalDutyAdministrationAuthorizer>();
         services.AddScoped<ProfessionalDutyAuthorityReader>();
+        services.AddScoped<ProfessionalDutyReader>();
         services.AddScoped<IndependenceRuleRatificationAuthorizer>();
         services.AddScoped<ProfessionalEngagementPartnerAuthorizer>();
         services.AddScoped<IndependenceRuleCatalogReader>();

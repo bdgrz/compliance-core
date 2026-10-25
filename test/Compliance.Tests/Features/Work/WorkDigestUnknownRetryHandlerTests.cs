@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
@@ -23,8 +25,8 @@ public sealed class WorkDigestUnknownRetryHandlerTests
         await using var provider = BuildProvider(operatorId, authorizedAt);
         await SeedUnknownDispatchAsync(provider, tenantId, memberId, weekOf, scheduledAt,
             messageId);
-        var request = new AuthorizeWorkDigestUnknownRetry(tenantId, memberId, weekOf,
-            "smtp-record:INC-4201", "Relay logs confirm the message was not accepted.");
+        var request = new AuthorizeWorkDigestUnknownRetry(Uuid.CreateVersion4(), tenantId, memberId, weekOf,
+            "smtp-record:INC-4201", "Relay logs confirm the message was not accepted.", 3);
 
         // Act
         var dispatchContext = HttpContext(Actor(operatorId));
@@ -44,8 +46,12 @@ public sealed class WorkDigestUnknownRetryHandlerTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.False(replay.IsSuccess);
-        Assert.Equal(RequestErrorKind.Conflict, replay.Error.Kind);
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(result.Value, replay.Value);
+        var changed = await handler.HandleAsync(new Cntryl.Portia.RequestContext<AuthorizeWorkDigestUnknownRetry>(
+            request with { Rationale = "Changed evidence rationale" }, dispatchContext), CancellationToken.None);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error.Kind);
         Assert.IsAssignableFrom<IPlatformOperatorRequest>(request);
         Assert.Equal(WorkDigestDispatch.RetryPending, result.Value.Status);
         Assert.Equal(messageId, result.Value.MessageId);
@@ -62,9 +68,9 @@ public sealed class WorkDigestUnknownRetryHandlerTests
         // Arrange
         await using var provider = BuildProvider(Uuid.CreateVersion4(),
             new DateTimeOffset(2026, 10, 5, 15, 0, 0, TimeSpan.Zero));
-        var request = new AuthorizeWorkDigestUnknownRetry(Uuid.CreateVersion4(),
+        var request = new AuthorizeWorkDigestUnknownRetry(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), new DateOnly(2026, 10, 5), "smtp-record:INC-4201",
-            "Relay logs confirm the message was not accepted.");
+            "Relay logs confirm the message was not accepted.", 3);
 
         // Act
         var authorizer = new PlatformOperatorAuthorizer(
@@ -85,9 +91,9 @@ public sealed class WorkDigestUnknownRetryHandlerTests
         // Arrange
         await using var provider = BuildProvider(Uuid.CreateVersion4(),
             new DateTimeOffset(2026, 10, 5, 15, 0, 0, TimeSpan.Zero));
-        var request = new AuthorizeWorkDigestUnknownRetry(Uuid.CreateVersion4(),
+        var request = new AuthorizeWorkDigestUnknownRetry(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), new DateOnly(2026, 10, 5), "smtp-record:INC-4201",
-            "Relay logs confirm the message was not accepted.");
+            "Relay logs confirm the message was not accepted.", 3);
         await using var scope = provider.CreateAsyncScope();
         var handler = scope.ServiceProvider.GetRequiredService<AuthorizeWorkDigestUnknownRetryHandler>();
         var context = new Cntryl.Portia.RequestContext<AuthorizeWorkDigestUnknownRetry>(request,
@@ -112,9 +118,9 @@ public sealed class WorkDigestUnknownRetryHandlerTests
             new DateTimeOffset(2026, 10, 5, 15, 0, 0, TimeSpan.Zero));
         await using var scope = provider.CreateAsyncScope();
         var handler = scope.ServiceProvider.GetRequiredService<AuthorizeWorkDigestUnknownRetryHandler>();
-        var request = new AuthorizeWorkDigestUnknownRetry(Uuid.CreateVersion4(),
+        var request = new AuthorizeWorkDigestUnknownRetry(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), new DateOnly(2026, 10, 5), " ",
-            "Relay logs confirm the message was not accepted.");
+            "Relay logs confirm the message was not accepted.", 3);
 
         // Act
         var result = await handler.HandleAsync(
@@ -146,14 +152,16 @@ public sealed class WorkDigestUnknownRetryHandlerTests
         var writer = services.GetRequiredService<IAggregateWriter>();
         var gatedReader = new ConcurrentDispatchReader(innerReader, memberId);
         var executor = new AggregateExecutor(gatedReader, writer);
-        var handler = new AuthorizeWorkDigestUnknownRetryHandler(executor,
-            services.GetRequiredService<TimeProvider>(),
-            services.GetRequiredService<WorkDigestDeliverySettings>());
+        var content = services.GetRequiredService<IImmutableContentStore>();
+        var native = new NativeOperationExecutor(gatedReader, executor, content);
+        var handler = new AuthorizeWorkDigestUnknownRetryHandler(new WorkDigestRetryOperations(native, content,
+            services.GetRequiredService<TimeProvider>(), services.GetRequiredService<WorkDigestDeliverySettings>()));
         var authorizer = new PlatformOperatorAuthorizer(
             services.GetRequiredService<IPlatformOperatorAccess>());
-        var request = new AuthorizeWorkDigestUnknownRetry(tenantId, memberId, weekOf,
-            "smtp-record:INC-4201", "Relay logs confirm the message was not accepted.");
+        var request = new AuthorizeWorkDigestUnknownRetry(Uuid.CreateVersion4(), tenantId, memberId, weekOf,
+            "smtp-record:INC-4201", "Relay logs confirm the message was not accepted.", 3);
         var contexts = new[] { HttpContext(Actor(operatorId)), HttpContext(Actor(operatorId)) };
+        var requests = new[] { request, request with { CommandId = Uuid.CreateVersion4() } };
         foreach (var context in contexts)
         {
             var authorization = await authorizer.AuthorizeAsync(
@@ -163,8 +171,8 @@ public sealed class WorkDigestUnknownRetryHandlerTests
         }
 
         // Act
-        var results = await Task.WhenAll(contexts.Select(context => handler.HandleAsync(
-            new Cntryl.Portia.RequestContext<AuthorizeWorkDigestUnknownRetry>(request, context),
+        var results = await Task.WhenAll(contexts.Select((context, index) => handler.HandleAsync(
+            new Cntryl.Portia.RequestContext<AuthorizeWorkDigestUnknownRetry>(requests[index], context),
             CancellationToken.None).AsTask()));
         var persisted = await innerReader.HydrateAsync(new WorkDigestDispatch(tenantId, memberId));
         var records = new List<DomainEventRecord>();
@@ -201,7 +209,7 @@ public sealed class WorkDigestUnknownRetryHandlerTests
 
     static Task SeedUnknownDispatchAsync(IServiceProvider provider, Uuid tenantId, Uuid memberId,
         DateOnly weekOf, DateTimeOffset scheduledAt, Uuid messageId) =>
-        ProgramManagementServices.SeedAsync(provider, new WorkDigestDispatch(tenantId, memberId),
+        WorkDigestFacts.DispatchAsync(provider, new WorkDigestDispatchRules(tenantId, memberId),
             dispatch => dispatch.Schedule(new WorkDigestScheduleWindow(weekOf,
                         "America/New_York", scheduledAt), messageId,
                     TimeSpan.FromHours(167), scheduledAt) &&
@@ -243,7 +251,7 @@ public sealed class WorkDigestUnknownRetryHandlerTests
             CancellationToken ct = default) where TAggregate : Aggregate
         {
             var hydrated = await inner.HydrateAsync(aggregate, ct);
-            if (hydrated is WorkDigestDispatch && hydrated.Id == memberId)
+            if (hydrated is WorkDigestDispatch && hydrated.Id == memberId && !_bothHydrated.Task.IsCompleted)
             {
                 if (Interlocked.Increment(ref _arrivals) == 2)
                     _bothHydrated.TrySetResult();

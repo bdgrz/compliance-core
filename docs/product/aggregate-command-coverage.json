@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "ce49c69e69693c37e0aeab5ca2fb0cc2659a0966",
+  "sourceCommit": "d88b9aaed691e5251bc47ca63722f9616ebc770b",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 510,
     "factsWithReducer": 486,
-    "factsWithAggregateEmitter": 409,
+    "factsWithAggregateEmitter": 402,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 77,
+    "legacyReducerOnlyFacts": 84,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 107,
+    "aggregateTypesWithCommandPath": 105,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 742,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 56,
+    "unwiredAggregateProducerOperations": 47,
     "unwiredAggregateProducerClassifications": {
-      "direct_processor_executor": 12,
+      "direct_processor_executor": 2,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 43
+      "no_registered_request_route": 44
     },
     "factReplayGuardRows": 0
   },
@@ -4129,7 +4129,8 @@
         "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyNativeHistoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -5843,7 +5844,8 @@
         "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyNativeHistoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -5860,7 +5862,9 @@
       "emitters": [
         "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -6136,6 +6140,12 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapAcceptedRetryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapCapturedProofTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapHistoricalMaterializationTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapPreparationRaceTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapReceiverPreparationTests.cs",
         "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "disposition": "aggregate_fact",
@@ -6155,6 +6165,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapHistoricalMaterializationTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapReceiverPreparationTests.cs",
         "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "disposition": "aggregate_fact",
@@ -6585,7 +6597,9 @@
         }
       ],
       "emitters": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Providers/ProviderGapCapturedProofTests.cs"
+      ],
       "disposition": "legacy_replay",
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
@@ -8867,14 +8881,13 @@
           "source": "src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestTests.cs"
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestNativeHistoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "WeeklyWorkDigestDeliveryRequested",
@@ -8885,14 +8898,12 @@
           "source": "src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "WeeklyWorkDigestDeliverySuppressed",
@@ -8903,12 +8914,10 @@
           "source": "src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "WeeklyWorkDigestScheduled",
@@ -8919,14 +8928,12 @@
           "source": "src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "WorkDigestDispatchAttemptStarted",
@@ -8937,12 +8944,10 @@
           "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "WorkDigestDispatchOutcomeRecorded",
@@ -8953,12 +8958,12 @@
           "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Work/WorkDigestAttemptBindingTests.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "WorkDigestDispatchScheduled",
@@ -8969,12 +8974,12 @@
           "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Work/WorkDigestNativeHistoryTests.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "WorkDigestPreferenceChanged",
@@ -9007,7 +9012,12 @@
         "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/WorkDigestUnknownRetryHandlerTests.cs"
+        "test/Compliance.Tests/Features/Work/WorkDigestAttemptBindingTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestAuthorizationHttpTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestNativeAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestUnknownRetryHandlerTests.cs",
+        "test/Compliance.Tests/Testing/WorkDigestFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -10590,6 +10600,7 @@
         "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyNativeHistoryTests.cs",
         "test/Compliance.Tests/Testing/ProfessionalDutyFacts.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -11320,6 +11331,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapCapturedProofTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapNativeHistoryTests.cs",
         "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -12273,17 +12286,17 @@
         "WeeklyWorkDigestDeliverySuppressed",
         "WeeklyWorkDigestScheduled"
       ],
-      "commandRequests": [
-        "DeliverWeeklyWorkDigest",
-        "RecordWorkDigestDelivery",
-        "ScheduleWeeklyWorkDigest"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestTests.cs"
+        "test/Compliance.Tests/Features/Work/WorkDigestHistoryBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/WorkDigestFacts.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "WorkDigestDispatch",
@@ -12294,17 +12307,21 @@
         "WorkDigestDispatchScheduled",
         "WorkDigestUnknownRetryAuthorized"
       ],
-      "commandRequests": [
-        "AuthorizeWorkDigestUnknownRetry"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Work/WorkDigestAttemptBindingTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestAuthorizationHttpTests.cs",
         "test/Compliance.Tests/Features/Work/WorkDigestDispatchProcessorTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkDigestDispatchStatusHandlerTests.cs",
         "test/Compliance.Tests/Features/Work/WorkDigestDispatchTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkDigestUnknownRetryHandlerTests.cs"
+        "test/Compliance.Tests/Features/Work/WorkDigestHistoryBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestNativeAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestOriginalAuthorizationTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "WorkDigestPreference",
@@ -14971,7 +14988,7 @@
     {
       "request": "AuthorizeWorkDigestUnknownRetry",
       "contract": "src/Compliance.Common/Features/Work/AuthorizeWorkDigestUnknownRetry.cs",
-      "interfaces": "IRequest<WorkDigestDispatchStatusView>, ICallable, IPlatformOperatorRequest",
+      "interfaces": "IRequest<WorkDigestDispatchStatusView>, ICallable, IPlatformOperatorRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -14981,15 +14998,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "WorkDigestDispatch"
-      ],
-      "aggregateTargets": [
-        "WorkDigestDispatch"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/WorkDigestUnknownRetryHandlerTests.cs"
+        "test/Compliance.Tests/Features/Work/WorkDigestNativeAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestOriginalAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestUnknownRetryHandlerTests.cs",
+        "test/Compliance.Tests/Testing/WorkDigestFacts.cs"
       ],
       "note": ""
     },
@@ -15711,7 +15727,9 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapPreparationRaceTests.cs",
         "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "note": ""
@@ -17517,9 +17535,7 @@
       "directAggregateReferences": [
         "WeeklyWorkDigest"
       ],
-      "aggregateTargets": [
-        "WeeklyWorkDigest"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
         "WeeklyWorkDigestRecipientResolver"
       ],
@@ -20879,9 +20895,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "WorkDigestDispatch"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -21430,6 +21444,10 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapAcceptedRetryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapCapturedProofTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapPreparationRaceTests.cs",
         "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "note": ""
@@ -24358,15 +24376,20 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ProviderAssuranceGap",
-        "ProviderRiskAcceptance"
+        "ProviderRiskAcceptance",
+        "RiskEvaluation"
       ],
       "aggregateTargets": [
         "ProviderRiskAcceptance"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ProviderGapReader"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs"
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapCapturedProofTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapHistoricalMaterializationTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderGapReceiverPreparationTests.cs"
       ],
       "note": "System-only provider assurance process receiver. No HTTP/MCP route. Materializes the immutable link from its admission and never changes the gap."
     },
@@ -26978,6 +27001,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderAssuranceGapTests.cs",
         "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
@@ -27374,9 +27398,7 @@
       "directAggregateReferences": [
         "WeeklyWorkDigest"
       ],
-      "aggregateTargets": [
-        "WeeklyWorkDigest"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs"
@@ -30187,7 +30209,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
+        "test/Compliance.Tests/Testing/ProfessionalDutyFacts.cs"
       ],
       "note": ""
     },
@@ -30364,9 +30387,7 @@
       "directAggregateReferences": [
         "WeeklyWorkDigest"
       ],
-      "aggregateTargets": [
-        "WeeklyWorkDigest"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
         "WeeklyWorkDigestRecipientResolver"
       ],
@@ -32081,184 +32102,15 @@
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {
-      "fact": "WorkDigestDispatchOutcomeRecorded",
+      "fact": "WorkDigestUnknownRetryAuthorized",
       "aggregate": "WorkDigestDispatch",
+      "method": "AppendRetry",
+      "methodArgumentCount": 9,
       "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "method": "RecordInterruptedAttempt",
-      "methodArgumentCount": 2,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "RecordInterruptedAttempt"
-          ]
-        }
-      ],
-      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
-    },
-    {
-      "fact": "WorkDigestDispatchOutcomeRecorded",
-      "aggregate": "WorkDigestDispatch",
-      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "method": "RecordMissedWeek",
-      "methodArgumentCount": 2,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "RecordMissedWeek"
-          ]
-        }
-      ],
-      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
-    },
-    {
-      "fact": "WorkDigestDispatchOutcomeRecorded",
-      "aggregate": "WorkDigestDispatch",
-      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "method": "RecordPermanentRejection",
-      "methodArgumentCount": 3,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "RecordPermanentRejection"
-          ]
-        }
-      ],
-      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
-    },
-    {
-      "fact": "WorkDigestDispatchOutcomeRecorded",
-      "aggregate": "WorkDigestDispatch",
-      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "method": "RecordRetryWindowExpired",
-      "methodArgumentCount": 2,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "RecordRetryWindowExpired"
-          ]
-        }
-      ],
-      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
-    },
-    {
-      "fact": "WorkDigestDispatchOutcomeRecorded",
-      "aggregate": "WorkDigestDispatch",
-      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "method": "RecordSent",
-      "methodArgumentCount": 2,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "RecordSent"
-          ]
-        }
-      ],
-      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
-    },
-    {
-      "fact": "WorkDigestDispatchOutcomeRecorded",
-      "aggregate": "WorkDigestDispatch",
-      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "method": "RecordSkipped",
-      "methodArgumentCount": 3,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "RecordSkipped"
-          ]
-        }
-      ],
-      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
-    },
-    {
-      "fact": "WorkDigestDispatchOutcomeRecorded",
-      "aggregate": "WorkDigestDispatch",
-      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "method": "RecordTransientRejection",
-      "methodArgumentCount": 4,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "RecordTransientRejection"
-          ]
-        }
-      ],
-      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
-    },
-    {
-      "fact": "WorkDigestDispatchOutcomeRecorded",
-      "aggregate": "WorkDigestDispatch",
-      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "method": "RecordUnknown",
-      "methodArgumentCount": 3,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "RecordUnknown"
-          ]
-        }
-      ],
-      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
-    },
-    {
-      "fact": "WorkDigestDispatchScheduled",
-      "aggregate": "WorkDigestDispatch",
-      "method": "Schedule",
-      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "Schedule"
-          ]
-        }
-      ],
-      "methodArgumentCount": 4,
-      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
-    },
-    {
-      "fact": "WorkDigestDispatchAttemptStarted",
-      "aggregate": "WorkDigestDispatch",
-      "method": "StartAttempt",
-      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "StartAttempt"
-          ]
-        }
-      ],
-      "methodArgumentCount": 2,
-      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     }
   ],
   "factEmissionHelpers": [
