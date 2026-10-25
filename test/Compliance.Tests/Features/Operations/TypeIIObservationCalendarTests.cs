@@ -3,7 +3,6 @@ using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Operations;
 
@@ -21,7 +20,7 @@ public sealed class TypeIIObservationCalendarTests
     public void ShouldRefuseOverlapGivenInclusiveEndpointsOfAnotherPeriodRange()
     {
         // Arrange
-        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var calendar = new TypeIICalendarRules(TenantId, ProgramId);
         Authorize(calendar, Uuid.CreateVersion4(), Uuid.CreateVersion4(), Year);
 
         // Act
@@ -41,7 +40,7 @@ public sealed class TypeIIObservationCalendarTests
     public void ShouldHoldOldAndNewRangeUntilActivatedGivenAmendmentOfOnePeriod()
     {
         // Arrange
-        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var calendar = new TypeIICalendarRules(TenantId, ProgramId);
         var (period, opening, amendment) = (Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
         var moved = new ObservationRange(Year.From.AddMonths(1), Year.UntilInclusive.AddMonths(1));
         Authorize(calendar, period, opening, Year);
@@ -70,7 +69,7 @@ public sealed class TypeIIObservationCalendarTests
     public void ShouldReleaseOnlyPendingRangeGivenCanceledAmendmentAndKeepOldActive()
     {
         // Arrange
-        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var calendar = new TypeIICalendarRules(TenantId, ProgramId);
         var (period, opening, amendment) = (Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
         var moved = new ObservationRange(Year.From.AddMonths(1), Year.UntilInclusive.AddMonths(1));
         Authorize(calendar, period, opening, Year);
@@ -96,7 +95,7 @@ public sealed class TypeIIObservationCalendarTests
     public void ShouldRefuseLateAcquisitionGivenOperationFencedBeforeAnyGrant()
     {
         // Arrange
-        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var calendar = new TypeIICalendarRules(TenantId, ProgramId);
         var (period, operation) = (Uuid.CreateVersion4(), Uuid.CreateVersion4());
 
         // Act
@@ -114,7 +113,7 @@ public sealed class TypeIIObservationCalendarTests
     public void ShouldRefuseSettlementGivenAnotherPeriodOrAlreadyReleasedReservation()
     {
         // Arrange
-        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var calendar = new TypeIICalendarRules(TenantId, ProgramId);
         var (period, other, operation) = (Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Authorize(calendar, period, operation, Year);
 
@@ -133,18 +132,19 @@ public sealed class TypeIIObservationCalendarTests
     public void ShouldRebuildReservationsFromOrderedFactsGivenReplay()
     {
         // Arrange
-        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var calendar = new TypeIICalendarRules(TenantId, ProgramId);
         var (period, opening, amendment) = (Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
         var moved = new ObservationRange(Year.From.AddMonths(1), Year.UntilInclusive.AddMonths(1));
         Authorize(calendar, period, opening, Year);
         Settle(calendar, period, TypeIIRangeSettlementKind.Activated, opening, null);
         Authorize(calendar, period, amendment, moved, opening);
         Settle(calendar, period, TypeIIRangeSettlementKind.Activated, amendment, opening);
-        var events = new AggregateScenario<TypeIIObservationCalendar>(calendar).PendingEvents.ToArray();
+        var events = calendar.AppliedChanges.ToArray();
 
         // Act
-        var replay = new AggregateScenario<TypeIIObservationCalendar>(
-            new TypeIIObservationCalendar(TenantId, ProgramId)).Given(events).Aggregate;
+        var replay = new TypeIICalendarRules(TenantId, ProgramId);
+        foreach (var change in events)
+            replay.Apply(change);
 
         // Assert
         Assert.Equal(calendar.Revision, replay.Revision);
@@ -154,12 +154,12 @@ public sealed class TypeIIObservationCalendarTests
         Assert.Equal(moved, replay.Find(amendment)!.Range);
     }
 
-    static RequestError? Refusal(TypeIIObservationCalendar calendar, ObservationRange range) =>
+    static RequestError? Refusal(TypeIICalendarRules calendar, ObservationRange range) =>
         calendar.FindOverlap(Uuid.CreateVersion4(), range) is null
             ? null
             : new RequestError(RequestErrorKind.Conflict, "overlap");
 
-    static Result Authorize(TypeIIObservationCalendar calendar, Uuid period, Uuid operation, ObservationRange range,
+    static Result Authorize(TypeIICalendarRules calendar, Uuid period, Uuid operation, ObservationRange range,
         Uuid? prior = null, bool tryOnly = false)
     {
         var kind = prior is null ? TypeIIRangeOperationKind.Opening : TypeIIRangeOperationKind.Amendment;
@@ -168,14 +168,14 @@ public sealed class TypeIIObservationCalendarTests
         return authorized;
     }
 
-    static Result Settle(TypeIIObservationCalendar calendar, Uuid period, TypeIIRangeSettlementKind kind, Uuid operation,
+    static Result Settle(TypeIICalendarRules calendar, Uuid period, TypeIIRangeSettlementKind kind, Uuid operation,
         Uuid? released) => calendar.Settle(Provenance(calendar, Uuid.CreateVersion4(), operation), Intent, period, kind,
         operation, released);
 
-    static OperationProvenance Provenance(TypeIIObservationCalendar calendar, Uuid operation) =>
+    static OperationProvenance Provenance(TypeIICalendarRules calendar, Uuid operation) =>
         Provenance(calendar, Uuid.CreateVersion4(), operation);
 
-    static OperationProvenance Provenance(TypeIIObservationCalendar calendar, Uuid logicalId, Uuid root) => new(logicalId,
+    static OperationProvenance Provenance(TypeIICalendarRules calendar, Uuid logicalId, Uuid root) => new(logicalId,
         root, null, "Synthetic", ActorReference.ForMember(Uuid.CreateVersion4(), "Compliance lead"), calendar.Stream,
         "initial", null, new string('b', 64), At, calendar.Stream, calendar.Stream);
 }

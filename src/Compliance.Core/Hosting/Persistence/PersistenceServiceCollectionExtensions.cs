@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,8 @@ static class PersistenceServiceCollectionExtensions
         Decorate<IEventStore>(services, (provider, inner) =>
             new PersistenceEventStore(inner, provider.GetRequiredService<IDomainEventSerializer>()));
         Decorate<IKvClient>(services, (_, inner) => new PersistenceKvClient(inner));
+        Decorate<IAggregateReader>(services, (provider, inner) =>
+            new TypeIICalendarAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IRequestBus>(services, (_, inner) => new PersistenceValidationRequestBus(inner));
     }
 

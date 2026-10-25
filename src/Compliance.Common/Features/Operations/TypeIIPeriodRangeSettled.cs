@@ -9,9 +9,10 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     amendment also released the replaced <paramref name="ReleasedOperationId" />. A settlement before any
 ///     authorization fences the reservation so a late acquisition is refused.
 /// </summary>
-[Discriminator("bdgrz.type-ii-observation-calendar.type-ii-period-range-settled", 1)]
+[Discriminator("bdgrz.type-ii-observation-calendar.type-ii-period-range-settled", 2)]
 public sealed record TypeIIPeriodRangeSettled(EventStreamAddress Owner, long Revision, long Generation,
     ImmutableContentRef Intent, ImmutableContentRef? SourceProofs, OperationProvenance Operation,
     ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult, Uuid PeriodId,
-    TypeIIRangeSettlementKind Settlement, Uuid TargetOperationId, Uuid? ReleasedOperationId)
+    TypeIIRangeSettlementKind Settlement, Uuid TargetOperationId, Uuid? ReleasedOperationId,
+    TypeIIObservationCalendarHeader Header, ImmutableContentRef CurrentAuthority)
     : DomainEvent, INativeOperationFact;

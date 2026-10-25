@@ -73,8 +73,8 @@ sealed class TypeIIRangeFixture : IAsyncDisposable
     public Task<TypeIIPeriodReadSnapshot> PeriodAsync(Uuid periodId) =>
         Host.Periods.ReadAsync(TenantId, ProgramId, periodId).AsTask();
 
-    public Task<TypeIIObservationCalendar> CalendarAsync() =>
-        Host.HydrateAsync(new TypeIIObservationCalendar(TenantId, ProgramId));
+    public Task<TypeIICalendarReadSnapshot> CalendarAsync(params Uuid[] selectedRoots) =>
+        Host.Calendars.ReadAsync(TenantId, ProgramId, selectedRoots).AsTask();
 
     public Task<ProcessRecord> RunAsync(Uuid periodId, Uuid operationId) =>
         Host.RunProcessAsync(TenantId, ProgramId, periodId, operationId);

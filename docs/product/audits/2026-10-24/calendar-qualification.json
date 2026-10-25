@@ -1,0 +1,37 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Compact TypeIIObservationCalendar current/selected authority and immutable terminal history; full transient exact-cut raw validation at reads/retries/executor hydration.",
+  "validation": {
+    "originalBoundednessRedFailed": 1,
+    "malformedHistoryRedFailed": 6,
+    "strictBuildWarnings": 0,
+    "focusedPassed": 98,
+    "productionHttpPassed": 4,
+    "backendUnitPassed": 5910,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 22,
+    "signalsTriaged": 1,
+    "mergeProbability": 0.85,
+    "adopted": "merge scoped repair; continue owner batches"
+  },
+  "parentRefinements": [
+    "Replaced strict xUnit2029 empty filtered assertion in old-API and migrated regression; preserved exact old-API RED in recovery.",
+    "Preserved formatted RED when composing migrated tests; fixed missing Kernel namespace import for explicit body digest comparison.",
+    "Adversarial review found compact header replay missed malformed unselected history. Six real current-read/executor/accepted-retry REDs reproduced, then exact raw transition validator + production reader decorator + current/selected body comparison passed. No old immutable body read was added before accepted retry.",
+    "Future SourceUse decorator shared variant explicitly layers original\u2192calendar\u2192source-use via distinct opaque keys."
+  ],
+  "qualification": [
+    "Actual first-authorized and terminal native facts/metadata survive released/fenced historical selection. Missing chain never proves absence.",
+    "Full transient replay/chain work is O(N); returned owner/current read state is bounded by live+selected. No SDK infrastructure memory or constant-time claim.",
+    "Native calendar fact schemas advance to v2. No retained-v1 converter, reset, deployed stream rebuild or broker qualification.",
+    "Original HTTP202, authorization, root actor/gate/FirstOwner and nullable child result semantics retained.",
+    "No deployment or new cross-owner authority contract."
+  ]
+}

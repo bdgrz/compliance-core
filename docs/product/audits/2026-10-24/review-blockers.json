@@ -191,7 +191,11 @@
     "baseline-identity-integration-jev.json",
     "baseline-identity-qualification.json",
     "remaining-owner-reactor-inventory.json",
-    "remaining-owner-reactor-inventory.md"
+    "remaining-owner-reactor-inventory.md",
+    "calendar-file-reviews.json",
+    "calendar-file-triage.json",
+    "calendar-integration-jev.json",
+    "calendar-qualification.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 91,
@@ -476,10 +480,19 @@
     },
     {
       "id": "typei-baseline-projection-identity",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "fullUnitPassed": 5896,
       "focusedPassed": 49,
-      "qualificationArtifact": "baseline-identity-qualification.json"
+      "qualificationArtifact": "baseline-identity-qualification.json",
+      "pullRequest": 1114,
+      "mergeCommit": "cc34a8ce80c28e3deedff6902794aed5a5932608"
+    },
+    {
+      "id": "typeii-calendar-native",
+      "status": "locally_verified_pending_merge",
+      "fullUnitPassed": 5910,
+      "focusedPassed": 98,
+      "qualificationArtifact": "calendar-qualification.json"
     }
   ],
   "resolved": [
@@ -507,11 +520,6 @@
       "id": "risk-native",
       "status": "frozen_runtime_pending",
       "artifactDirectory": "/tmp/compliance-risk-native-prepared"
-    },
-    {
-      "id": "typeii-observation-calendar-native",
-      "status": "frozen_runtime_pending",
-      "artifactDirectory": "/tmp/compliance-calendar-prepared"
     },
     {
       "id": "independence-catalogs-native",

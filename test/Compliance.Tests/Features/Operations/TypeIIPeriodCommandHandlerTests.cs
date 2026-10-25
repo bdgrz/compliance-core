@@ -63,8 +63,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         var retry = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
         var run = await fixture.RunProcessAsync(request.CommandId);
         var replayed = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
-        var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
-            fixture.TenantId, fixture.ProgramId));
+        var calendar = await fixture.Host.Calendars.ReadAsync(fixture.TenantId, fixture.ProgramId, [fixture.PeriodId, request.CommandId]);
         var period = await fixture.Periods.ReadAsync(fixture.TenantId,
             fixture.ProgramId, fixture.PeriodId);
 
@@ -230,12 +229,10 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             .HandleAsync(fixture.Context(request), CancellationToken.None);
         var period = await fixture.Periods.ReadAsync(fixture.TenantId,
             fixture.ProgramId, fixture.PeriodId);
-        var calendarBefore = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
-            fixture.TenantId, fixture.ProgramId));
+        var calendarBefore = await fixture.Host.Calendars.ReadAsync(fixture.TenantId, fixture.ProgramId, [fixture.PeriodId]);
         await fixture.Host.ReleaseAsync<ObservationPeriodCloseFrozen>(period.Stream);
         await fixture.Host.ReleaseAsync<ObservationPeriodCloseFrozen>(period.Stream);
-        var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
-            fixture.TenantId, fixture.ProgramId));
+        var calendar = await fixture.Host.Calendars.ReadAsync(fixture.TenantId, fixture.ProgramId, [fixture.PeriodId]);
         var frozen = Assert.Single(await fixture.Host.EventsAsync<ObservationPeriodCloseFrozen>(period.Stream));
         var settlements = await fixture.Host.EventsAsync<TypeIIPeriodRangeSettled>(calendar.Stream);
 
@@ -523,7 +520,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             await TypeIIPeriodSeeds.WriteAsync(Writer, Host.Content, period);
             var persisted = await Reader.HydrateAsync(new TypeIIPeriod(TenantId, ProgramId, PeriodId));
             var intent = persisted.CalendarIntent!;
-            var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+            var calendar = new TypeIICalendarRules(TenantId, ProgramId);
 
             // The calendar holds the range the opening was applied with, exactly as the range process leaves it.
             var provenance = new OperationProvenance(Uuid.CreateVersion4(), PeriodId, null, "SeedRange",
@@ -533,7 +530,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
                 new ObservationRange(PeriodStart, PeriodEnd), null).IsSuccess);
             Assert.True(calendar.Settle(provenance with { LogicalId = Uuid.CreateVersion4() }, intent, PeriodId,
                 TypeIIRangeSettlementKind.Activated, PeriodId, null).IsSuccess);
-            await Writer.SaveAsync(calendar, new RequestDispatchContext(RequestActor.System));
+            await TypeIICalendarSeeds.WriteAsync(Reader, Writer, Events, Host.Content, calendar);
         }
 
         /// <summary>

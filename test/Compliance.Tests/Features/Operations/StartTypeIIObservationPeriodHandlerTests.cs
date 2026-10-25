@@ -41,13 +41,11 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         var admitted = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
         var accepted = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId,
             fixture.PeriodId);
-        var calendarBefore = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(fixture.TenantId,
-            fixture.ProgramId));
+        var calendarBefore = await fixture.Host.Calendars.ReadAsync(fixture.TenantId, fixture.ProgramId, [fixture.PeriodId]);
         var run = await fixture.RunProcessAsync();
         var saved = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId,
             fixture.PeriodId);
-        var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(fixture.TenantId,
-            fixture.ProgramId));
+        var calendar = await fixture.Host.Calendars.ReadAsync(fixture.TenantId, fixture.ProgramId, [fixture.PeriodId]);
 
         // Assert
         Assert.True(admitted.IsSuccess, admitted.Error?.Message);
@@ -197,8 +195,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         var run = await fixture.RunProcessAsync(secondPeriodId);
         var second = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId,
             secondPeriodId);
-        var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(fixture.TenantId,
-            fixture.ProgramId));
+        var calendar = await fixture.Host.Calendars.ReadAsync(fixture.TenantId, fixture.ProgramId, [fixture.PeriodId, secondPeriodId]);
 
         // Assert
         Assert.True(admitted.IsSuccess, admitted.Error?.Message);
@@ -240,8 +237,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
             PeriodId = reopenedId,
         }), CancellationToken.None);
         await fixture.RunProcessAsync(reopenedId);
-        var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(fixture.TenantId,
-            fixture.ProgramId));
+        var calendar = await fixture.Host.Calendars.ReadAsync(fixture.TenantId, fixture.ProgramId, [fixture.PeriodId, reopenedId]);
 
         // Assert
         Assert.True(blocked.IsSuccess, blocked.Error?.Message);

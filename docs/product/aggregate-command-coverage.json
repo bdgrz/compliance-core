@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "de49ad86b15be3a487776779371974cab6fa5140",
+  "sourceCommit": "cc34a8ce80c28e3deedff6902794aed5a5932608",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 487,
-    "factsWithAggregateEmitter": 438,
+    "factsWithAggregateEmitter": 436,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 49,
+    "legacyReducerOnlyFacts": 51,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 118,
+    "aggregateTypesWithCommandPath": 117,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -5052,6 +5052,8 @@
         "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHttpTests.cs",
         "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIICalendarCompactionTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIICalendarNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs",
         "test/Compliance.Tests/Testing/TypeIIRangeHost.cs"
@@ -8638,14 +8640,12 @@
           "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TypeIIPeriodRangeSettled",
@@ -8656,14 +8656,12 @@
           "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TypeIIPlanApproved",
@@ -12106,18 +12104,18 @@
         "TypeIIPeriodRangeSettled"
       ],
       "commandRequests": [],
-      "internalReactionRequests": [
-        "AcquireTypeIIPeriodRange",
-        "SettleTypeIIPeriodRange"
-      ],
+      "internalReactionRequests": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIObservationCalendarTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIICalendarCompactionTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIICalendarMalformedHistoryTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIICalendarNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/TypeIICalendarSeeds.cs",
         "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs",
         "test/Compliance.Tests/Testing/TypeIIRangeFixture.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "TypeIIPeriod",
@@ -12148,10 +12146,10 @@
         "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHttpTests.cs",
         "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIICalendarMalformedHistoryTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIICalendarNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseValidation.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.NativeOwners.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.NativeOwners.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12844,13 +12842,13 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "TypeIIObservationCalendar"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
         "TypeIIRangeReceivers"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIICalendarMalformedHistoryTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIICalendarNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
       ],
       "note": "System-only Type II range process receiver; holds the exact old and new range on the program calendar, or rejects the opening or amendment on a proven overlap. No HTTP/MCP route."
@@ -13174,6 +13172,7 @@
         "TypeIIPeriod"
       ],
       "helperServices": [
+        "TypeIICalendarReader",
         "TypeIIPeriodReader"
       ],
       "testSymbolReferences": [
@@ -30687,13 +30686,12 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "TypeIIObservationCalendar"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
         "TypeIIRangeReceivers"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIICalendarMalformedHistoryTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
       ],
       "note": "System-only Type II range process receiver; settles exactly the reservation named by the period fact. No HTTP/MCP route."

@@ -1,0 +1,19 @@
+{
+  "reviewed": 22,
+  "blockedReviews": 0,
+  "signalsTriaged": 1,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarRules.cs",
+      "sha256": "6cea241e1c343e5f9ccdc7602e4bfaad36dff6956308df90fa0f6a6083f80427",
+      "signals": {
+        "authority_gap": 0.53,
+        "invariant_gap": 0.69,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.55
+      },
+      "classification": "guarded_current_and_historical_range_transitions",
+      "evidence": "Pure Rules.Authorize/Settle enforce live overlap, pending activation, exact period/predecessor, fences and terminal state. Native Append independently recomputes guarded transition and validates immutable before/after/history proof plus native/physical gates. Adversarial review found compact replay headers alone missed malformed unselected roots; added full transient raw transition validation at direct reader and decorated production reader/executor boundary. All6 actual malformed REDs now pass, including accepted retry and before-delegate rejection. 98 focused cases include32 real start/close/release cycles, selected real native metadata, damaged/missing/truncated history, exact replay without later body availability, concurrent/cancellation/recovery and real HTTP202 byte replay/current auth."
+    }
+  ]
+}
