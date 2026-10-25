@@ -20,22 +20,24 @@ public sealed class ApplicationImportSource : Aggregate
     readonly Uuid _tenantId;
     readonly string _sourceKey;
     readonly string _sourceNamespace;
-    readonly Dictionary<Uuid, ApplicationImportSourceSlot> _slots = [];
-    readonly List<Uuid> _published = [];
-    readonly List<DomainEvent> _facts = [];
-    Uuid? _active;
+    readonly ApplicationImportSourceNativeCut _cut = new();
+    readonly Uuid _selectedBatchId;
+    ApplicationImportSourceSlot? _selectedSlot;
+    ApplicationImportSourceSlot? _activeSlot;
+    DomainEvent? _latest;
     long _revision;
 
     /// <summary>Opens the source, selecting the logical operation to resolve from its accepted facts.</summary>
     public ApplicationImportSource(Uuid tenantId, string sourceKey, string sourceNamespace,
-        Uuid selectedLogicalId = default)
+        Uuid selectedLogicalId = default, Uuid selectedBatchId = default)
         : base(IdFor(tenantId, sourceKey, sourceNamespace),
             new EventStreamAddress(tenantId.ToString(), Area, IdFor(tenantId, sourceKey, sourceNamespace).ToString()))
     {
         (_tenantId, _sourceKey, _sourceNamespace) = (tenantId, sourceKey, sourceNamespace);
         Acceptance = new NativeAcceptance(selectedLogicalId);
-        On<ApplicationImportSourceAdmissionRecorded>(Apply);
-        On<ApplicationImportSourceSettled>(Apply);
+        _selectedBatchId = selectedBatchId;
+        On<ApplicationImportSourceAdmissionRecorded>(ApplyFact);
+        On<ApplicationImportSourceSettled>(ApplyFact);
     }
 
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
@@ -45,16 +47,18 @@ public sealed class ApplicationImportSource : Aggregate
     public long Revision => _revision;
 
     /// <summary>The batch that currently holds the source, if any.</summary>
-    public Uuid? ActiveBatchId => _active;
+    public Uuid? ActiveBatchId => _activeSlot?.BatchId;
 
-    /// <summary>The published batches in the order their holds settled.</summary>
-    public IReadOnlyList<Uuid> PublishedBatchIds => _published;
+    public Uuid TenantId => _tenantId;
+    public string SourceKey => _sourceKey;
+    public string SourceNamespace => _sourceNamespace;
+    public DomainEvent? Latest => _latest;
+    internal Uuid SelectedBatchId => _selectedBatchId;
+    internal ApplicationImportSourceNativeCut NativeCut => _cut;
 
-    /// <summary>Every fact of the source in stream order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
-
-    /// <summary>The admission or fence slot of a batch, once recorded.</summary>
-    public ApplicationImportSourceSlot? Find(Uuid batchId) => _slots.GetValueOrDefault(batchId);
+    /// <summary>The active slot or the one historical batch explicitly selected before hydration.</summary>
+    public ApplicationImportSourceSlot? Find(Uuid batchId) => batchId == _selectedBatchId ? _selectedSlot :
+        _activeSlot?.BatchId == batchId ? _activeSlot : null;
 
     /// <summary>The deterministic identity of a source, unchanged from the legacy ledger.</summary>
     public static Uuid IdFor(Uuid tenantId, string sourceKey, string sourceNamespace)
@@ -73,13 +77,14 @@ public sealed class ApplicationImportSource : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
+        if (!ValidLineage(operation, batchId, nameof(ClaimApplicationImportSource)))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The claim differs from its exact first-owner batch lineage."));
         var refused = Check(batchId);
         if (refused is not null)
             return Result.Failure(refused);
-        RaiseEvent(new ApplicationImportSourceAdmissionRecorded(Stream, _revision + 1,
+        return Append(operation, new ApplicationImportSourceAdmissionRecorded(Stream, _revision + 1,
             ApplicationImportEffects.Generation, intent, null, operation, null, null, batchId, _sourceKey,
             _sourceNamespace));
-        return Result.Success;
     }
 
     /// <summary>
@@ -90,15 +95,20 @@ public sealed class ApplicationImportSource : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
-        if (_slots.GetValueOrDefault(batchId) is { Settled: not null })
+        if (batchId == Uuid.Empty || !Enum.IsDefined(disposition) ||
+            !ValidLineage(operation, batchId, nameof(ReleaseApplicationImportSource)))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The settlement differs from its exact first-owner batch lineage or disposition."));
+        if (batchId != _selectedBatchId)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A source settlement requires its batch to be selected before hydration.", true));
+        if (Find(batchId) is { Settled: not null })
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The source claim of this batch is already settled."));
-        if (_slots.GetValueOrDefault(batchId) is null && disposition == ApplicationImportDisposition.Published)
+        if (Find(batchId) is null && disposition == ApplicationImportDisposition.Published)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "A batch that never claimed the source cannot publish."));
-        RaiseEvent(new ApplicationImportSourceSettled(Stream, _revision + 1, ApplicationImportEffects.Generation,
+        return Append(operation, new ApplicationImportSourceSettled(Stream, _revision + 1, ApplicationImportEffects.Generation,
             intent, null, operation, null, null, batchId, disposition));
-        return Result.Success;
     }
 
     /// <summary>The guard of an admission: no existing slot for the batch, no other holder, the frozen revision.</summary>
@@ -106,42 +116,69 @@ public sealed class ApplicationImportSource : Aggregate
     {
         if (batchId == Uuid.Empty)
             return new RequestError(RequestErrorKind.Validation, "A source claim names its batch.");
-        if (_slots.ContainsKey(batchId))
+        if (batchId != _selectedBatchId)
+            return new RequestError(RequestErrorKind.Conflict,
+                "A source claim requires its batch to be selected before hydration.", true);
+        if (Find(batchId) is not null)
             return new RequestError(RequestErrorKind.Conflict, "This batch already holds or has fenced the source.");
-        return _active is not null
+        return _activeSlot is not null
             ? new RequestError(RequestErrorKind.Conflict, "Another batch holds this source.", true)
             : null;
     }
 
-    void Apply(ApplicationImportSourceAdmissionRecorded ev)
+    void ApplyFact(ApplicationImportSourceAdmissionRecorded ev)
     {
         Acceptance.Observe(ev);
         if (ev.Owner != Stream || ev.Operation.Owner != Stream || ev.Revision != _revision + 1 ||
             ev.Generation != ApplicationImportEffects.Generation || ev.SourceKey != _sourceKey ||
-            ev.SourceNamespace != _sourceNamespace || Check(ev.BatchId) is not null)
+            ev.SourceNamespace != _sourceNamespace || ev.BatchId == Uuid.Empty || _activeSlot is not null ||
+            ev.BatchId == _selectedBatchId && _selectedSlot is not null)
             throw new InvalidOperationException("A source admission follows the previous revision and an idle source.");
         _revision = ev.Revision;
-        _active = ev.BatchId;
-        _slots.Add(ev.BatchId, new ApplicationImportSourceSlot(ev.BatchId, ev, null));
-        _facts.Add(ev);
+        _activeSlot = new ApplicationImportSourceSlot(ev.BatchId, ev, null);
+        if (ev.BatchId == _selectedBatchId)
+            _selectedSlot = _activeSlot;
+        _latest = ev;
     }
 
-    void Apply(ApplicationImportSourceSettled ev)
+    void ApplyFact(ApplicationImportSourceSettled ev)
     {
         Acceptance.Observe(ev);
         if (ev.Owner != Stream || ev.Operation.Owner != Stream || ev.Revision != _revision + 1 ||
             ev.Generation != ApplicationImportEffects.Generation)
             throw new InvalidOperationException("A source settlement follows the previous revision of its own source.");
-        var slot = _slots.GetValueOrDefault(ev.BatchId);
+        var slot = Find(ev.BatchId);
         if (slot is { Settled: not null } ||
             slot is null && ev.Disposition == ApplicationImportDisposition.Published)
             throw new InvalidOperationException("A source claim is settled at most once, and only a claim publishes.");
         _revision = ev.Revision;
-        _slots[ev.BatchId] = new ApplicationImportSourceSlot(ev.BatchId, slot?.Admitted, ev);
-        if (_active == ev.BatchId)
-            _active = null;
-        if (ev.Disposition == ApplicationImportDisposition.Published)
-            _published.Add(ev.BatchId);
-        _facts.Add(ev);
+        if (ev.BatchId == _selectedBatchId)
+            _selectedSlot = new ApplicationImportSourceSlot(ev.BatchId, slot?.Admitted, ev);
+        if (_activeSlot?.BatchId == ev.BatchId)
+            _activeSlot = null;
+        _latest = ev;
     }
+
+    bool ValidLineage(OperationProvenance operation, Uuid batchId, string kind) =>
+        batchId != Uuid.Empty && operation.Owner == Stream && operation.CommandKind == kind &&
+        operation.FirstOwner == new ApplicationImportBatch(_tenantId, batchId).Stream &&
+        operation.AffectedOwner == Stream && operation.ExpectedRevisionOwner == Stream &&
+        operation.RootOperationId != Uuid.Empty && operation.CausationEventId is not null;
+
+    Result Append(OperationProvenance operation, DomainEvent fact)
+    {
+        var verified = _cut.Require(this, Acceptance, operation);
+        if (!verified.IsSuccess)
+            return verified;
+        RaiseEvent(fact);
+        return Result.Success;
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        if (!ev.Metadata.IsAudit)
+            _cut.Observe(ev);
+        base.Apply(ev);
+    }
+
 }

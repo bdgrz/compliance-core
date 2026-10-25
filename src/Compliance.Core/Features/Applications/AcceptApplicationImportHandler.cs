@@ -14,7 +14,7 @@ namespace Bdgrz.Compliance.Features.Applications;
 ///     touched; an exact retry replays the original 202 acknowledgment even after the batch or its targets changed.
 /// </summary>
 public sealed class AcceptApplicationImportHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content, TimeProvider clock, IApplicationChangeImpactReader? impactReader = null)
+    IImmutableContentStore content, TimeProvider clock, IDomainEventReader events, IApplicationChangeImpactReader? impactReader = null)
     : IRequestHandler<AcceptApplicationImport, OperationAcceptedResponse>
 {
     const string CommandKind = "AcceptApplicationImport";
@@ -22,6 +22,20 @@ public sealed class AcceptApplicationImportHandler(NativeOperationExecutor opera
 
     public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
         IRequestContext<AcceptApplicationImport> context, CancellationToken ct)
+    {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact import source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<OperationAcceptedResponse>> HandleCoreAsync(IRequestContext<AcceptApplicationImport> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation ||
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId) || RequestActor.IsSystem(context.Actor))
@@ -38,30 +52,41 @@ public sealed class AcceptApplicationImportHandler(NativeOperationExecutor opera
         var provenance = new OperationProvenance(request.CommandId, request.CommandId, null, CommandKind,
             ActorReference.ForMember(memberId, display), snapshot.Stream, InitialEpisode,
             (ulong)request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now, snapshot.Stream,
-            snapshot.Stream);
+            snapshot.Stream, snapshot.Stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         // An acceptance that was already sealed resolves from the owner's facts before any guard is evaluated.
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? plan = null;
         long rowCount = 0, groupCount = 0;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(request, snapshot, provenance, memberId, display, userId, now, ct)
-                .ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (plan, rowCount, groupCount) = frozen.Value;
-            response = await ApplicationImportContent.AcceptedResponseAsync(content, request.TenantId,
-                request.CommandId, now, ct).ConfigureAwait(false);
-        }
+        ApplicationImportBatchPreparedCut? preparedCut = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<ApplicationImportBatch>(binding,
             () => new ApplicationImportBatch(request.TenantId, request.BatchId, request.CommandId),
             batch => batch.Acceptance,
-            batch => Prepare(batch, request.ExpectedRevision, response),
-            (ApplicationImportBatch batch, ImmutableContentRef acknowledgment) => batch.SealPlan(provenance,
-                plan!.Sha256, plan, rowCount, groupCount, acknowledgment)), context, ct).ConfigureAwait(false);
+            async (batch, prepareCt) =>
+            {
+                var prepared = batch.PrepareAcceptance(request.ExpectedRevision);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                var frozen = await FreezeAsync(request, batch, provenance, memberId, display, userId, now, prepareCt)
+                    .ConfigureAwait(false);
+                if (!frozen.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                (plan, rowCount, groupCount) = frozen.Value;
+                response = await ApplicationImportContent.AcceptedResponseAsync(content, request.TenantId,
+                    request.CommandId, now, prepareCt).ConfigureAwait(false);
+
+                preparedCut = ApplicationImportBatchPreparedCut.Capture(batch);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (ApplicationImportBatch batch, ImmutableContentRef acknowledgment) =>
+            {
+                if (preparedCut?.Matches(batch) != true)
+                    return ApplicationImportBatchPreparedCut.Changed();
+                return batch.SealPlan(provenance,
+                plan!.Sha256, plan, rowCount, groupCount, acknowledgment);
+            }), context, ct).ConfigureAwait(false);
         return await ApplicationImportContent.AcknowledgmentAsync(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
     }
@@ -75,19 +100,19 @@ public sealed class AcceptApplicationImportHandler(NativeOperationExecutor opera
         var prepared = batch.PrepareAcceptance(request.ExpectedRevision);
         if (!prepared.IsSuccess)
             return Result<(ImmutableContentRef, long, long)>.Failure(prepared.Error!);
+        var history = await ApplicationImportBatchHistory.ReadAsync(events, batch, ct).ConfigureAwait(false);
         IReadOnlyList<ApplicationImportStagedRow> rows;
         try
         {
-            rows = (await ApplicationImportContent.ReadAsync<ApplicationImportRowsManifest>(content, request.TenantId,
-                staged.RowsManifest, ct).ConfigureAwait(false)).Rows;
+            rows = await ApplicationImportBatchRows.ReadAsync(content, batch, history, ct).ConfigureAwait(false);
         }
-        catch (ImmutableContentIntegrityException)
+        catch (ImmutableContentIntegrityException error)
         {
-            return Fail(RequestErrorKind.Conflict, "The staged rows cannot be verified yet.", true);
+            return Fail(RequestErrorKind.Conflict, "The staged rows cannot be verified.", error is ImmutableContentUnavailableException);
         }
 
-        var loadedSource = await ApplicationImportSourceView.LoadAsync(reader, content, request.TenantId,
-            batch.SourceKey!, batch.SourceNamespace!, ct).ConfigureAwait(false);
+        var loadedSource = await ApplicationImportSourceView.LoadAsync(reader, content, events, request.TenantId,
+            batch.SourceKey!, batch.SourceNamespace!, ct: ct).ConfigureAwait(false);
         if (!loadedSource.IsSuccess)
             return Result<(ImmutableContentRef, long, long)>.Failure(loadedSource.Error!);
         var source = loadedSource.Value!;
@@ -103,9 +128,9 @@ public sealed class AcceptApplicationImportHandler(NativeOperationExecutor opera
                 proposal = await ApplicationImportContent.ReadAsync<ApplicationImportOmissionProposalContent>(content,
                     request.TenantId, batch.Proposal!.Proposal, ct).ConfigureAwait(false);
             }
-            catch (ImmutableContentIntegrityException)
+            catch (ImmutableContentIntegrityException error)
             {
-                return Fail(RequestErrorKind.Conflict, "The sealed omission proposal cannot be verified yet.", true);
+                return Fail(RequestErrorKind.Conflict, "The sealed omission proposal cannot be verified.", error is ImmutableContentUnavailableException);
             }
 
             // A proposal is bound to the exact source snapshot it was prepared against.
@@ -137,7 +162,7 @@ public sealed class AcceptApplicationImportHandler(NativeOperationExecutor opera
             }
         }
 
-        var planned = ApplicationImportPlanner.PlanRows(batch, rows, source, proposal, proposalSha, impacts);
+        var planned = ApplicationImportPlanner.PlanRows(batch, history, rows, source, proposal, proposalSha, impacts);
         if (!planned.IsSuccess)
             return Result<(ImmutableContentRef, long, long)>.Failure(planned.Error!);
         var targets = new Dictionary<Uuid, DeclaredApplication>();
@@ -158,18 +183,6 @@ public sealed class AcceptApplicationImportHandler(NativeOperationExecutor opera
             batch.Id, header, batch, source, planned.Value, groups.Value!, memberId, display, cut, ct)
             .ConfigureAwait(false);
         return Result<(ImmutableContentRef, long, long)>.Success((planRef, planned.Value.Count, frozenGroups.Count));
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(ApplicationImportBatch batch, long expectedRevision,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = batch.PrepareAcceptance(expectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The batch changed while the plan was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static Result<(ImmutableContentRef, long, long)> Fail(RequestErrorKind kind, string message,

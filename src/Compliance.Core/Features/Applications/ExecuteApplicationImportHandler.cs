@@ -35,8 +35,10 @@ sealed class ExecuteApplicationImportHandler(IAggregateReader reader, IAggregate
         if (batch.IsCancelRequested || batch.IsEnded)
             return Result.Success;
         var source = await reader.HydrateAsync(new ApplicationImportSource(request.TenantId, plan.SourceKey,
-            plan.SourceNamespace), ct).ConfigureAwait(false);
-        if (source.Find(batch.Id) is not { IsActive: true })
+            plan.SourceNamespace, selectedBatchId: batch.Id), ct).ConfigureAwait(false);
+        if (source.Find(batch.Id) is not { IsActive: true, Admitted: { } admitted } ||
+            admitted.Intent != loaded.Value.PlanRef || admitted.Operation.CausationEventId != batch.Plan!.Metadata.EventId ||
+            admitted.Operation.RootOperationId != plan.Header.RootOperationId)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The source claim of this batch is not visible yet.", isTransient: true));
 

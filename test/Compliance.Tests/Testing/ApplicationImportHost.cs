@@ -40,6 +40,8 @@ sealed class ApplicationImportHost : IAsyncDisposable
         var events = new InMemoryEventStore();
         services.AddSingleton<IEventStore>(events);
         services.AddSingleton<IDomainEventReader>(events);
+        services.RemoveAll<ISourceFactResolver>();
+        services.AddSingleton<ISourceFactResolver>(new EventStoreSourceFactResolver(events));
         services.AddSingleton<IAuthoritativeSnapshotReader>(new EventStoreSnapshotReader(events));
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<IPlatformUserDirectoryReader>(new ExistingUsers());
@@ -101,13 +103,13 @@ sealed class ApplicationImportHost : IAsyncDisposable
         Reader, Content, Clock);
 
     public CorrelateApplicationImportRowHandler CorrelateHandler => new(
-        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Content, Clock);
+        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Content, Clock, Events);
 
     public FreezeApplicationImportOmissionProposalHandler FreezeHandler => new(
-        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Content, Clock);
+        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Content, Clock, Events);
 
     public AcceptApplicationImportHandler AcceptHandler => new(Services.GetRequiredService<NativeOperationExecutor>(),
-        Reader, Content, Clock, Impacts);
+        Reader, Content, Clock, Events, Impacts);
 
     public CancelApplicationImportHandler CancelHandler => new(Services.GetRequiredService<NativeOperationExecutor>(),
         Reader, Content, Clock);
@@ -127,8 +129,15 @@ sealed class ApplicationImportHost : IAsyncDisposable
 
     public Task<ApplicationImportBatch> BatchAsync(Uuid batchId) => HydrateAsync(NewBatch(batchId));
 
-    public Task<ApplicationImportSource> SourceAsync(string key = "manual", string ns = "applications") =>
-        HydrateAsync(new ApplicationImportSource(TenantId, key, ns));
+    public Task<ApplicationImportBatchHistorySnapshot> BatchHistoryAsync(ApplicationImportBatch batch) =>
+        ApplicationImportBatchHistory.ReadAsync(Events, batch);
+
+    public Task<ApplicationImportSource> SourceAsync(string key = "manual", string ns = "applications",
+        Uuid selectedBatchId = default) => HydrateAsync(new ApplicationImportSource(TenantId, key, ns,
+            selectedBatchId: selectedBatchId));
+
+    public Task<ApplicationImportSourceHistorySnapshot> SourceHistoryAsync(ApplicationImportSource source) =>
+        ApplicationImportSourceHistory.ReadAsync(Events, source);
 
     /// <summary>The application as a fixed-cut read composes it: a batch publication shows before its targets settle.</summary>
     public async Task<DeclaredApplication> PublishedApplicationAsync(Uuid applicationId)
@@ -200,6 +209,7 @@ sealed class ApplicationImportHost : IAsyncDisposable
     {
         await using var scope = Provider.CreateAsyncScope();
         var reactor = scope.ServiceProvider.GetRequiredService<ImportCancellationReactor>();
+        await new ReactorScenario(new TenantId(TenantId.ToString())).RunAsync(reactor);
         var stream = NewBatch(batchId).Stream;
         await foreach (var record in scope.ServiceProvider.GetRequiredService<IDomainEventReader>().ReadAsync(stream, 0))
             if (record.Event is ApplicationImportCancellationAccepted)
@@ -287,8 +297,8 @@ sealed class ApplicationImportHost : IAsyncDisposable
         Uuid? commandId = null)
     {
         var batch = await BatchAsync(batchId);
-        var source = (await ApplicationImportSourceView.LoadAsync(Reader, Content, TenantId, batch.SourceKey!,
-            batch.SourceNamespace!, CancellationToken.None)).Value!;
+        var source = (await ApplicationImportSourceView.LoadAsync(Reader, Content, Events, TenantId, batch.SourceKey!,
+            batch.SourceNamespace!, ct: CancellationToken.None)).Value!;
         var targets = new Dictionary<Uuid, DeclaredApplication>();
         foreach (var id in rows.Select(row => row.ApplicationId).Distinct())
             targets[id] = await Reader.HydrateApplicationAsync(TenantId, id);

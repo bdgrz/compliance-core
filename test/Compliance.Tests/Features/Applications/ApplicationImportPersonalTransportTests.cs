@@ -138,7 +138,7 @@ public sealed class ApplicationImportPersonalTransportTests
         }
 
         public ValueTask<ApplicationImportBatch> BatchAsync(Uuid batchId) =>
-            _reader.HydrateAsync(new ApplicationImportBatch(Tenant, batchId));
+            _reader.HydrateAsync(new ApplicationImportBatch(Tenant, batchId, selectedRowId: ApplicationImportEffects.RowId(batchId, 1)));
 
         public async ValueTask DisposeAsync()
         {

@@ -14,7 +14,7 @@ namespace Bdgrz.Compliance.Features.Applications;
 ///     authority to retire. A batch needs no cap on the number of omissions.
 /// </summary>
 public sealed class FreezeApplicationImportOmissionProposalHandler(NativeOperationExecutor operations,
-    IAggregateReader reader, IImmutableContentStore content, TimeProvider clock)
+    IAggregateReader reader, IImmutableContentStore content, TimeProvider clock, IDomainEventReader events)
     : IRequestHandler<FreezeApplicationImportOmissionProposal>
 {
     const string CommandKind = "FreezeApplicationImportOmissionProposal";
@@ -22,6 +22,20 @@ public sealed class FreezeApplicationImportOmissionProposalHandler(NativeOperati
 
     public async ValueTask<Result> HandleAsync(IRequestContext<FreezeApplicationImportOmissionProposal> context,
         CancellationToken ct)
+    {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact import source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<FreezeApplicationImportOmissionProposal> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
@@ -39,28 +53,39 @@ public sealed class FreezeApplicationImportOmissionProposalHandler(NativeOperati
         var provenance = new OperationProvenance(request.CommandId, request.CommandId, null, CommandKind,
             ActorReference.ForMember(memberId, display), snapshot.Stream, InitialEpisode,
             (ulong)request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now, snapshot.Stream,
-            snapshot.Stream);
+            snapshot.Stream, snapshot.Stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
         ImmutableContentRef? proposal = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(request, snapshot, memberId, display, now, ct).ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result.Failure(frozen.Error!);
-            proposal = frozen.Value;
-            var unit = await ApplicationImportContent.UnitAsync(content, request.TenantId, ct).ConfigureAwait(false);
-            (response, result) = (unit.Response, unit.Result);
-        }
+        ApplicationImportBatchPreparedCut? preparedCut = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<ApplicationImportBatch>(binding,
             () => new ApplicationImportBatch(request.TenantId, request.BatchId, request.CommandId),
             batch => batch.Acceptance,
-            batch => Prepare(batch, request.ExpectedRevision, response),
-            (ApplicationImportBatch batch, ImmutableContentRef frozen) => batch.SealProposal(provenance,
-                proposal!.Sha256, proposal, frozen, result!)), context, ct).ConfigureAwait(false);
+            async (batch, prepareCt) =>
+            {
+                var prepared = batch.PrepareProposal(request.ExpectedRevision);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                var frozen = await FreezeAsync(request, batch, memberId, display, now, prepareCt).ConfigureAwait(false);
+                if (!frozen.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                proposal = frozen.Value;
+                var unit = await ApplicationImportContent.UnitAsync(content, request.TenantId, prepareCt).ConfigureAwait(false);
+                (response, result) = (unit.Response, unit.Result);
+
+                preparedCut = ApplicationImportBatchPreparedCut.Capture(batch);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (ApplicationImportBatch batch, ImmutableContentRef frozen) =>
+            {
+                if (preparedCut?.Matches(batch) != true)
+                    return ApplicationImportBatchPreparedCut.Changed();
+                return batch.SealProposal(provenance,
+                proposal!.Sha256, proposal, frozen, result!);
+            }), context, ct).ConfigureAwait(false);
         return ApplicationImportContent.UnitOutcome(outcome);
     }
 
@@ -79,19 +104,19 @@ public sealed class FreezeApplicationImportOmissionProposalHandler(NativeOperati
         var prepared = batch.PrepareProposal(request.ExpectedRevision);
         if (!prepared.IsSuccess)
             return Result<ImmutableContentRef>.Failure(prepared.Error!);
+        var history = await ApplicationImportBatchHistory.ReadAsync(events, batch, ct).ConfigureAwait(false);
         IReadOnlyList<ApplicationImportStagedRow> rows;
         try
         {
-            rows = (await ApplicationImportContent.ReadAsync<ApplicationImportRowsManifest>(content, request.TenantId,
-                staged.RowsManifest, ct).ConfigureAwait(false)).Rows;
+            rows = await ApplicationImportBatchRows.ReadAsync(content, batch, history, ct).ConfigureAwait(false);
         }
-        catch (ImmutableContentIntegrityException)
+        catch (ImmutableContentIntegrityException error)
         {
-            return Fail(RequestErrorKind.Conflict, "The staged rows cannot be verified yet.", true);
+            return Fail(RequestErrorKind.Conflict, "The staged rows cannot be verified.", error is ImmutableContentUnavailableException);
         }
 
-        var source = await ApplicationImportSourceView.LoadAsync(reader, content, request.TenantId, batch.SourceKey!,
-            batch.SourceNamespace!, ct).ConfigureAwait(false);
+        var source = await ApplicationImportSourceView.LoadAsync(reader, content, events, request.TenantId, batch.SourceKey!,
+            batch.SourceNamespace!, ct: ct).ConfigureAwait(false);
         if (!source.IsSuccess)
             return Result<ImmutableContentRef>.Failure(source.Error!);
         var view = source.Value!;
@@ -107,7 +132,7 @@ public sealed class FreezeApplicationImportOmissionProposalHandler(NativeOperati
         var missing = view.Missing(batch, rows);
         if (missing.Count < 1)
             return Fail(RequestErrorKind.Validation, "A retirement proposal requires at least one missing claim.");
-        if (ApplicationImportOmissions.HasSharedOrPresentAlias(batch, view, missing, rows))
+        if (ApplicationImportOmissions.HasSharedOrPresentAlias(history, view, missing, rows))
             return Fail(RequestErrorKind.Conflict, "A source alias cannot authorize retirement of a shared target.");
         foreach (var claim in missing)
         {
@@ -128,18 +153,6 @@ public sealed class FreezeApplicationImportOmissionProposalHandler(NativeOperati
                 ApplicationImportOmissions.RetirementRow(view.Source.Id, claim)).ToArray()));
         return Result<ImmutableContentRef>.Success(await ApplicationImportContent.WriteAsync(content, request.TenantId,
             ApplicationImportOmissionProposalContent.Schema, proposal, ct).ConfigureAwait(false));
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(ApplicationImportBatch batch, long expectedRevision,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = batch.PrepareProposal(expectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The batch changed while the proposal was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static Result<ImmutableContentRef> Fail(RequestErrorKind kind, string message, bool transient = false) =>

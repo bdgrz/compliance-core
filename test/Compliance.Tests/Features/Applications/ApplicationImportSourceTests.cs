@@ -79,11 +79,11 @@ public sealed class ApplicationImportSourceTests
 
         // Assert
         Assert.IsType<ReceiverOutcome.Superseded>(claim.Value);
-        var slot = source.Find(batch.Id)!;
+        var slot = (await host.SourceHistoryAsync(source)).Find(batch.Id)!;
         Assert.True(slot.IsFence);
         Assert.Equal(ApplicationImportDisposition.Canceled, slot.Settled!.Disposition);
         Assert.Null(source.ActiveBatchId);
-        Assert.Empty(source.PublishedBatchIds);
+        Assert.Empty((await host.SourceHistoryAsync(source)).Published);
     }
 
     [Fact]
@@ -109,10 +109,10 @@ public sealed class ApplicationImportSourceTests
         await host.ReactCancellationAsync(later.Id);
 
         // Act
-        var view = await ApplicationImportSourceView.LoadAsync(host.Reader, host.Content, host.TenantId, "derived",
-            "applications", CancellationToken.None);
-        var other = await ApplicationImportSourceView.LoadAsync(host.Reader, host.Content, host.TenantId, "derived",
-            "other-namespace", CancellationToken.None);
+        var view = await ApplicationImportSourceView.LoadAsync(host.Reader, host.Content, host.Events, host.TenantId, "derived",
+            "applications", ct: CancellationToken.None);
+        var other = await ApplicationImportSourceView.LoadAsync(host.Reader, host.Content, host.Events, host.TenantId, "derived",
+            "other-namespace", ct: CancellationToken.None);
 
         // Assert: the claim keeps the published observation and does not leak to another source identity.
         var claim = Assert.Single(view.Value!.Claims);
@@ -120,7 +120,7 @@ public sealed class ApplicationImportSourceTests
         Assert.Equal(published.Id, claim.LastObservedBatchId);
         Assert.Equal(target, claim.Observation.ApplicationId);
         Assert.Empty(other.Value!.Claims);
-        Assert.Equal([published.Id], view.Value.Source.PublishedBatchIds);
+        Assert.Equal([published.Id], view.Value.History.Published.Select(static fact => fact.BatchId));
         Assert.Equal(["name", "purpose"], claim.ChangedFields(
             (await host.RowsAsync(await host.BatchAsync(later.Id))).Single()));
     }

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
@@ -11,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Applications;
 ///     an unverified plan.
 /// </summary>
 sealed partial class ImportSourceAdmissionReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process,
-    IImmutableContentStore content)
+    IImmutableContentStore content, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(ApplicationImportBatch.Area), WorkloadName),
         IReactorHandler<ApplicationImportPlanSealed>
 {
@@ -19,6 +20,8 @@ sealed partial class ImportSourceAdmissionReactor(IProjectionCheckpointStore che
 
     public async ValueTask HandleAsync(IReactorContext<ApplicationImportPlanSealed> context, CancellationToken ct)
     {
+        await ApplicationImportReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
+            .ConfigureAwait(false);
         var sealedPlan = context.Trigger;
         var tenant = sealedPlan.TenantId;
         string[] targets;
@@ -26,6 +29,11 @@ sealed partial class ImportSourceAdmissionReactor(IProjectionCheckpointStore che
         {
             var plan = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, tenant,
                 sealedPlan.FrozenPlan, ct).ConfigureAwait(false);
+            ApplicationImportIntentBindings.Require(plan.Header, sealedPlan.Operation);
+            if (plan.BatchId != sealedPlan.BatchId || plan.SourceKey != sealedPlan.SourceKey ||
+                plan.SourceNamespace != sealedPlan.SourceNamespace || plan.Rows.Count != sealedPlan.RowCount ||
+                plan.TargetGroups.Count != sealedPlan.TargetGroupCount || sealedPlan.PlanSha256 != sealedPlan.FrozenPlan.Sha256)
+                throw new ImmutableContentIntegrityException("The complete frozen plan differs from its admitted native batch scope and counts.");
             var groups = await ApplicationImportContent.ReadSelectionAsync<ImportTargetGroupIntent>(content, tenant,
                 plan.TargetGroups, ct).ConfigureAwait(false);
             var source = new ApplicationImportSource(tenant, plan.SourceKey, plan.SourceNamespace).Stream;
@@ -38,7 +46,7 @@ sealed partial class ImportSourceAdmissionReactor(IProjectionCheckpointStore che
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen plan cannot be verified yet: {exception.Message}", true));
+                $"The frozen plan cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         _ = await process.StartAsync(ApplicationImportEffects.ProcessName, context, sealedPlan.FrozenPlan, targets,

@@ -17,7 +17,7 @@ namespace Bdgrz.Compliance.Features.Applications;
 ///     its own state: the batch is read only to prove the fact a receiver was handed.
 /// </summary>
 sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content, ApplicationImportVerifier verifier, ITenantActivity tenants, TimeProvider clock,
+    IImmutableContentStore content, ApplicationImportVerifier verifier, ITenantActivity tenants, TimeProvider clock, IDomainEventReader events,
     IApplicationImportRetirementImpactReader? impactReader = null)
 {
     const int MaximumAttempts = 4;
@@ -60,7 +60,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         }
 
         return await AppendAsync(context, () => new ApplicationImportSource(tenant, plan.SourceKey,
-            plan.SourceNamespace, command.CommandId), source => source.Acceptance, Early,
+            plan.SourceNamespace, command.CommandId, batch.Id), source => source.Acceptance, Early,
             (ApplicationImportSource source) => source.Claim(provenance, command.Intent, batch.Id), ct).ConfigureAwait(false);
     }
 
@@ -132,7 +132,8 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Permanent($"The frozen group rows cannot be verified: {exception.Message}");
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    $"The frozen group rows cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         if (rows.Count == 0 || rows.Any(row => row.ApplicationId != command.ApplicationId))
@@ -217,7 +218,8 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Permanent($"The target proof manifest cannot be verified: {exception.Message}");
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    $"The target proof manifest cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         var proven = await VerifyProofsAsync(loaded.Value, rows.Value!, proofs, ct).ConfigureAwait(false);
@@ -230,12 +232,14 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
             return retirements.Value;
 
         var now = clock.GetUtcNow();
+        var operationResult = await ApplicationImportContent.UnitResultAsync(content, tenant, provenance.RootOperationId, ct)
+            .ConfigureAwait(false);
         return await AppendAsync(context, () => new ApplicationImportBatch(tenant, batch.Id, command.CommandId),
             fresh => fresh.Acceptance, fresh => fresh.IsCancelRequested || fresh.IsEnded
                 ? ApplicationImportVerifier.Ended(fresh, "The batch ended before it published.")
                 : null,
             (ApplicationImportBatch fresh) => fresh.Commit(provenance, command.Intent, command.TargetProofManifest, plan.Rows.Content,
-                plan.SourceRevision, now), ct).ConfigureAwait(false);
+                plan.SourceRevision, now, operationResult), ct).ConfigureAwait(false);
     }
 
     public async ValueTask<Result<ReceiverOutcome>> FenceAsync(IExecutionContext context,
@@ -298,7 +302,8 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Permanent($"The cancellation cannot be verified: {exception.Message}");
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    $"The cancellation cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         if (command.Target != batch.Stream || command.Intent != accepted.Intent || command.BatchId != cancellation.BatchId ||
@@ -335,22 +340,38 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         {
             var target = await reader.HydrateAsync(new DeclaredApplication(tenant, fence.ApplicationId), ct)
                 .ConfigureAwait(false);
-            if (target.FindImportHold(batch.Id)?.Fence is not { Metadata: { } metadata } ||
-                metadata.EventId != fence.EventId || metadata.AggregateVersion != fence.EventVersion ||
-                target.CommittedStreamPosition < fence.EventVersion)
+            if (target.FindImportHold(batch.Id)?.Fence is not { Metadata: { } metadata } held ||
+                metadata.EventId != fence.EventId || metadata.AggregateVersion != fence.EventVersion)
                 return SourceUseReceiverSupport.Transient("A target fence is not durable yet.");
+            try
+            {
+                var actual = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, target, ct).ConfigureAwait(false);
+                var stored = actual.SingleOrDefault(fact => fact.Metadata.EventId == fence.EventId);
+                if (stored is null)
+                    return SourceUseReceiverSupport.Transient("The exact target fence is not visible in its captured physical source prefix.");
+                if (stored.GetType() != held.GetType() || stored.Metadata != held.Metadata ||
+                    Kernel.ContentDigest.Sha256(stored, stored.GetType()) != Kernel.ContentDigest.Sha256(held, held.GetType()))
+                    return SourceUseReceiverSupport.Permanent("The cancellation fence differs from its exact committed source payload and metadata.");
+            }
+            catch (ImmutableContentIntegrityException error)
+            {
+                return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    $"The exact target fence cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+            }
         }
 
         var reason = cancellation.CancellationReason ?? string.Empty;
         var actor = cancellation.Header.OriginalActor;
         var actorMember = Uuid.TryParse(actor.Id, CultureInfo.InvariantCulture, out var memberId) ? memberId : Uuid.Empty;
         var now = clock.GetUtcNow();
+        var operationResult = await ApplicationImportContent.UnitResultAsync(content, tenant, provenance.RootOperationId, ct)
+            .ConfigureAwait(false);
         return await AppendAsync(context, () => new ApplicationImportBatch(tenant, batch.Id, command.CommandId),
             fresh => fresh.Acceptance, fresh => fresh.Committed is not null
                 ? SourceUseReceiverSupport.Superseded("The batch already published; the cancellation recovers forward.",
                     NativeFactReference.Of(fresh.Stream, fresh.Committed))
                 : null,
-            (ApplicationImportBatch fresh) => fresh.CompleteCancellation(provenance, command.Intent, reason, actorMember, actor.Display, now), ct)
+            (ApplicationImportBatch fresh) => fresh.CompleteCancellation(provenance, command.Intent, reason, actorMember, actor.Display, now, operationResult), ct)
             .ConfigureAwait(false);
     }
 
@@ -381,7 +402,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         }
 
         return await AppendAsync(context, () => new ApplicationImportSource(tenant, batch.SourceKey!,
-                batch.SourceNamespace!, command.CommandId), source => source.Acceptance, Early,
+                batch.SourceNamespace!, command.CommandId, batch.Id), source => source.Acceptance, Early,
             (ApplicationImportSource source) => source.Settle(provenance, command.Intent, batch.Id, disposition), ct).ConfigureAwait(false);
     }
 
@@ -477,7 +498,8 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         catch (ImmutableContentIntegrityException exception)
         {
             return new CancellationVerification(null, null,
-                SourceUseReceiverSupport.Permanent($"The cancellation cannot be verified: {exception.Message}"));
+                Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    $"The cancellation cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException)));
         }
 
         if (target != new DeclaredApplication(tenant, applicationId).Stream)
@@ -529,7 +551,8 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         catch (ImmutableContentIntegrityException exception)
         {
             return new TerminalVerification(null, null, default,
-                SourceUseReceiverSupport.Transient($"The terminal intent cannot be verified yet: {exception.Message}"));
+                Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    $"The terminal intent cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException)));
         }
     }
 
@@ -549,6 +572,16 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
                 .ConfigureAwait(false);
             if (target.FindImportHold(loaded.Batch.Id) is not { IsActive: true, Fence: null } hold)
                 return SourceUseReceiverSupport.Transient("A target hold is not visible or was fenced.");
+            IReadOnlyList<DomainEvent> actual;
+            try
+            {
+                actual = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, target, ct).ConfigureAwait(false);
+            }
+            catch (ImmutableContentIntegrityException error)
+            {
+                return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    $"The exact physical target source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+            }
             foreach (var proof in proofs.Where(proof => proof.ApplicationId == applicationId))
             {
                 var effect = hold.Effects.FirstOrDefault(candidate => candidate.Row.RowId == proof.RowId);
@@ -557,8 +590,12 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
                 if (metadata.EventId != proof.EventId || metadata.AggregateVersion != proof.EventVersion ||
                     effect.Row != rows.First(row => row.RowId == proof.RowId))
                     return SourceUseReceiverSupport.Permanent("A target proof differs from its frozen row.");
-                if (target.CommittedStreamPosition < proof.EventVersion)
-                    return SourceUseReceiverSupport.Transient("A target effect is not durable yet.");
+                var stored = actual.SingleOrDefault(fact => fact.Metadata.EventId == proof.EventId);
+                if (stored is null)
+                    return SourceUseReceiverSupport.Transient("The exact target effect is not visible in its hydrated physical source cut yet.");
+                if (stored is not ApplicationImportEffectPending || stored.Metadata != effect.Metadata ||
+                    Kernel.ContentDigest.Sha256(stored, stored.GetType()) != Kernel.ContentDigest.Sha256(effect, effect.GetType()))
+                    return SourceUseReceiverSupport.Permanent("The target effect differs from its exact committed source payload and metadata.");
             }
         }
 

@@ -10,36 +10,36 @@ static class ApplicationImportOmissionSources
 
     internal static async ValueTask<Result<(ApplicationImportBatch Batch, ApplicationImportSourceView Source,
         IReadOnlyList<ApplicationImportStagedRow> Rows)>> LoadAsync(IAggregateReader reader,
-        IImmutableContentStore content, Uuid tenant, Uuid batchId, CancellationToken ct)
+        IImmutableContentStore content, IDomainEventReader events, Uuid tenant, Uuid batchId, CancellationToken ct)
     {
         var batch = await reader.HydrateAsync(new ApplicationImportBatch(tenant, batchId), ct).ConfigureAwait(false);
         if (!batch.IsCreated || batch.SourceKey is not { } key || batch.SourceNamespace is not { } space)
             return Result<(ApplicationImportBatch, ApplicationImportSourceView, IReadOnlyList<ApplicationImportStagedRow>)>
                 .Failure(new RequestError(RequestErrorKind.NotFound, "The import batch was not found."));
-        var source = await ApplicationImportSourceView.LoadAsync(reader, content, tenant, key, space, ct)
+        var source = await ApplicationImportSourceView.LoadAsync(reader, content, events, tenant, key, space, ct: ct)
             .ConfigureAwait(false);
         if (!source.IsSuccess)
             return Result<(ApplicationImportBatch, ApplicationImportSourceView, IReadOnlyList<ApplicationImportStagedRow>)>
                 .Failure(source.Error!);
         try
         {
-            var rows = (await ApplicationImportContent.ReadAsync<ApplicationImportRowsManifest>(content, tenant,
-                batch.Staged!.RowsManifest, ct).ConfigureAwait(false)).Rows;
+            var history = await ApplicationImportBatchHistory.ReadAsync(events, batch, ct).ConfigureAwait(false);
+            var rows = await ApplicationImportBatchRows.ReadAsync(content, batch, history, ct).ConfigureAwait(false);
             return Result<(ApplicationImportBatch, ApplicationImportSourceView, IReadOnlyList<ApplicationImportStagedRow>)>
                 .Success((batch, source.Value!, rows));
         }
-        catch (ImmutableContentIntegrityException)
+        catch (ImmutableContentIntegrityException error)
         {
             return Result<(ApplicationImportBatch, ApplicationImportSourceView, IReadOnlyList<ApplicationImportStagedRow>)>
                 .Failure(new RequestError(RequestErrorKind.Conflict, "The staged rows cannot be verified yet.",
-                    isTransient: true));
+                    isTransient: error is ImmutableContentUnavailableException));
         }
     }
 
     internal static async ValueTask<bool> UnchangedAsync(IAggregateReader reader, IImmutableContentStore content,
-        Uuid tenant, ApplicationImportBatch batch, ApplicationImportSourceView source, CancellationToken ct)
+        IDomainEventReader events, Uuid tenant, ApplicationImportBatch batch, ApplicationImportSourceView source, CancellationToken ct)
     {
-        var latest = await LoadAsync(reader, content, tenant, batch.Id, ct).ConfigureAwait(false);
+        var latest = await LoadAsync(reader, content, events, tenant, batch.Id, ct).ConfigureAwait(false);
         return latest.IsSuccess && latest.Value.Batch.CommittedStreamPosition == batch.CommittedStreamPosition &&
             latest.Value.Batch.ContentDigest == batch.ContentDigest && latest.Value.Batch.SourceKey == batch.SourceKey &&
             latest.Value.Batch.SourceNamespace == batch.SourceNamespace &&

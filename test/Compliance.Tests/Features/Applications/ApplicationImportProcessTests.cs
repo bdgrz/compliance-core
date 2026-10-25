@@ -127,7 +127,7 @@ public sealed class ApplicationImportProcessTests
         Assert.Equal(6, plainB.Revision);
         var source = await host.SourceAsync();
         Assert.Null(source.ActiveBatchId);
-        Assert.Equal([batch.Id], source.PublishedBatchIds);
+        Assert.Equal([batch.Id], (await host.SourceHistoryAsync(source)).Published.Select(static fact => fact.BatchId));
     }
 
     [Fact]
@@ -282,7 +282,7 @@ public sealed class ApplicationImportProcessTests
         }
 
         Assert.Null(source.ActiveBatchId);
-        Assert.Empty(source.PublishedBatchIds);
+        Assert.Empty((await host.SourceHistoryAsync(source)).Published);
         var driven = await host.RunProcessAsync(batch.Id);
         Assert.True(driven.IsTerminal);
         Assert.Single(await host.EventsAsync<ApplicationImportCanceled>(ended.Stream));

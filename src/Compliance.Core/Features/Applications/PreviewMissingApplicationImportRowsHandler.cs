@@ -5,7 +5,7 @@ namespace Bdgrz.Compliance.Features.Applications;
 
 public sealed class PreviewMissingApplicationImportRowsHandler(
     ApplicationImportReadConsistency consistency, IAggregateReader reader, IImmutableContentStore content,
-    ApplicationPublicationReader publication)
+    ApplicationPublicationReader publication, IDomainEventReader events)
     : IRequestHandler<PreviewMissingApplicationImportRows, Page<ApplicationImportMissingRow>>
 {
     public async ValueTask<Result<Page<ApplicationImportMissingRow>>> HandleAsync(
@@ -23,7 +23,7 @@ public sealed class PreviewMissingApplicationImportRowsHandler(
             request.MinimumRevision, ct).ConfigureAwait(false);
         if (!fresh.IsSuccess)
             return Result<Page<ApplicationImportMissingRow>>.Failure(fresh.Error);
-        var loaded = await ApplicationImportOmissionSources.LoadAsync(reader, content, request.TenantId,
+        var loaded = await ApplicationImportOmissionSources.LoadAsync(reader, content, events, request.TenantId,
             request.BatchId, ct).ConfigureAwait(false);
         if (!loaded.IsSuccess)
             return Result<Page<ApplicationImportMissingRow>>.Failure(loaded.Error);
@@ -63,7 +63,7 @@ public sealed class PreviewMissingApplicationImportRowsHandler(
                     ? target.Revision : null,
                 "missing_from_source", blockers));
         }
-        if (!await ApplicationImportOmissionSources.UnchangedAsync(reader, content, request.TenantId, batch, source, ct)
+        if (!await ApplicationImportOmissionSources.UnchangedAsync(reader, content, events, request.TenantId, batch, source, ct)
                 .ConfigureAwait(false))
             return Result<Page<ApplicationImportMissingRow>>.Failure(Changed());
         var nextOffset = offset + items.Count;

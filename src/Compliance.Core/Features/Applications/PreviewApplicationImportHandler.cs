@@ -5,7 +5,7 @@ namespace Bdgrz.Compliance.Features.Applications;
 
 public sealed class PreviewApplicationImportHandler(
     IApplicationImportDirectoryReader directory, ApplicationImportReadConsistency consistency,
-    IAggregateReader reader, IImmutableContentStore content, ApplicationPublicationReader publication)
+    IAggregateReader reader, IImmutableContentStore content, ApplicationPublicationReader publication, IDomainEventReader events)
     : IRequestHandler<PreviewApplicationImport, Page<ApplicationImportPreviewRow>>
 {
     public async ValueTask<Result<Page<ApplicationImportPreviewRow>>> HandleAsync(
@@ -23,11 +23,12 @@ public sealed class PreviewApplicationImportHandler(
             request.MinimumRevision, ct).ConfigureAwait(false);
         if (!fresh.IsSuccess)
             return Result<Page<ApplicationImportPreviewRow>>.Failure(fresh.Error);
-        var loaded = await ApplicationImportOmissionSources.LoadAsync(reader, content, request.TenantId,
+        var loaded = await ApplicationImportOmissionSources.LoadAsync(reader, content, events, request.TenantId,
             request.BatchId, ct).ConfigureAwait(false);
         if (!loaded.IsSuccess)
             return Result<Page<ApplicationImportPreviewRow>>.Failure(loaded.Error);
         var (source, view, stagedRows) = loaded.Value;
+        var history = await ApplicationImportBatchHistory.ReadAsync(events, source, ct).ConfigureAwait(false);
         if (source.Revision != fresh.Value.Revision)
             return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The import lifecycle changed while reading the preview.", isTransient: true));
@@ -62,7 +63,7 @@ public sealed class PreviewApplicationImportHandler(
         var cut = await publication.OpenAsync(carried, ct).ConfigureAwait(false);
         foreach (var row in page.Items)
         {
-            var choice = source.GetCorrelation(row.RowId);
+            var choice = history.GetCorrelation(row.RowId);
             var raw = stagedRows.FirstOrDefault(candidate => candidate.RowId == row.RowId);
             if (raw is null || raw.RowNumber != row.RowNumber || raw.SourceRecordId != row.SourceRecordId ||
                 raw.Name != row.Name || raw.Purpose != row.Purpose || raw.OwnerReference != row.OwnerReference ||
@@ -114,7 +115,7 @@ public sealed class PreviewApplicationImportHandler(
                         : null,
             });
         }
-        if (!await ApplicationImportOmissionSources.UnchangedAsync(reader, content, request.TenantId, source, view, ct)
+        if (!await ApplicationImportOmissionSources.UnchangedAsync(reader, content, events, request.TenantId, source, view, ct)
                 .ConfigureAwait(false))
             return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "The import source changed while reading the preview.", isTransient: true));

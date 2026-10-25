@@ -4,7 +4,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Applications;
 
 public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader reader, IImmutableContentStore content,
-    ApplicationPublicationReader publication)
+    ApplicationPublicationReader publication, IDomainEventReader events)
     : IRequestHandler<GetApplicationImportRejectedReport, ApplicationImportRejectedReport>
 {
     public async ValueTask<Result<ApplicationImportRejectedReport>> HandleAsync(IRequestContext<GetApplicationImportRejectedReport> context,
@@ -16,11 +16,12 @@ public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader r
         if (!loaded.IsSuccess)
             return Result<ApplicationImportRejectedReport>.Failure(loaded.Error);
         var batch = loaded.Value;
+        var history = await ApplicationImportBatchHistory.ReadAsync(events, batch, ct).ConfigureAwait(false);
         var state = batch.State;
         var rejected = new List<ApplicationImportRejectedRow>();
         var cut = await publication.BeginAsync(ct).ConfigureAwait(false);
         var batchFindings = new List<string>();
-        var omissions = await ApplicationImportOmissionSources.LoadAsync(reader, content, request.TenantId,
+        var omissions = await ApplicationImportOmissionSources.LoadAsync(reader, content, events, request.TenantId,
             request.BatchId, ct).ConfigureAwait(false);
         if (!omissions.IsSuccess)
             return Result<ApplicationImportRejectedReport>.Failure(omissions.Error);
@@ -43,7 +44,7 @@ public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader r
                 findings.Add("batch_canceled");
             else if (state == "preview_ready" && findings.Count == 0)
             {
-                var choice = batch.GetCorrelation(row.RowId);
+                var choice = history.GetCorrelation(row.RowId);
                 var claim = source.Find(row.SourceRecordId!);
                 if (choice is null && claim is null)
                     findings.Add("correlation_required");

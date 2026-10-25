@@ -21,8 +21,10 @@ public sealed class ApplicationImportBatch : Aggregate
     public const string Area = "application_imports";
 
     readonly Uuid _tenantId;
-    readonly List<DomainEvent> _facts = [];
-    readonly Dictionary<Uuid, ApplicationImportRowCorrelated> _correlations = [];
+    readonly ApplicationImportBatchNativeCut _cut = new();
+    readonly Uuid _selectedRowId;
+    ApplicationImportRowCorrelated? _selectedCorrelation;
+    DomainEvent? _latest;
     ApplicationImportStaged? _staged;
     ApplicationImportRetirementProposalSealed? _proposal;
     ApplicationImportPlanSealed? _plan;
@@ -34,20 +36,21 @@ public sealed class ApplicationImportBatch : Aggregate
     long _revision;
 
     /// <summary>Opens a batch, selecting the logical operation to resolve from its accepted facts.</summary>
-    public ApplicationImportBatch(Uuid tenantId, Uuid batchId, Uuid selectedLogicalId = default)
+    public ApplicationImportBatch(Uuid tenantId, Uuid batchId, Uuid selectedLogicalId = default, Uuid selectedRowId = default)
         : base(batchId, new EventStreamAddress(tenantId.ToString(), Area, batchId.ToString()))
     {
         _tenantId = tenantId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
-        On<ApplicationImportStaged>(Apply);
-        On<ApplicationImportRowCorrelated>(Apply);
-        On<ApplicationImportRetirementProposalSealed>(Apply);
-        On<ApplicationImportPlanSealed>(Apply);
-        On<ApplicationImportExecutionAuthorized>(Apply);
-        On<ApplicationImportCancellationAccepted>(Apply);
-        On<ApplicationImportCommitted>(Apply);
-        On<ApplicationImportCanceled>(Apply);
-        On<ApplicationImportFailed>(Apply);
+        _selectedRowId = selectedRowId;
+        On<ApplicationImportStaged>(ApplyFact);
+        On<ApplicationImportRowCorrelated>(ApplyFact);
+        On<ApplicationImportRetirementProposalSealed>(ApplyFact);
+        On<ApplicationImportPlanSealed>(ApplyFact);
+        On<ApplicationImportExecutionAuthorized>(ApplyFact);
+        On<ApplicationImportCancellationAccepted>(ApplyFact);
+        On<ApplicationImportCommitted>(ApplyFact);
+        On<ApplicationImportCanceled>(ApplyFact);
+        On<ApplicationImportFailed>(ApplyFact);
     }
 
     /// <summary>Maximum serialized size of one staged observation, below the immutable content limit.</summary>
@@ -104,8 +107,10 @@ public sealed class ApplicationImportBatch : Aggregate
     /// <summary>The terminal failure fact.</summary>
     public ApplicationImportFailed? Failed => _failed;
 
-    /// <summary>The facts of the batch in stream order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
+    public Uuid TenantId => _tenantId;
+    public DomainEvent? Latest => _latest;
+    internal Uuid SelectedRowId => _selectedRowId;
+    internal ApplicationImportBatchNativeCut NativeCut => _cut;
 
     /// <summary>True once the batch has a terminal disposition.</summary>
     public bool IsEnded => _committed is not null || _canceled is not null || _failed is not null;
@@ -125,13 +130,10 @@ public sealed class ApplicationImportBatch : Aggregate
     public bool IsPreparing => IsCreated && _plan is null && !IsCancelRequested && !IsEnded;
 
     /// <summary>The correlation decision recorded for a row, if any.</summary>
-    public ApplicationImportRowCorrelated? GetCorrelation(Uuid rowId) => _correlations.GetValueOrDefault(rowId);
+    public ApplicationImportRowCorrelated? GetCorrelation(Uuid rowId) => rowId == _selectedRowId ? _selectedCorrelation : null;
 
     /// <summary>True when the latest omission proposal is still current: nothing changed since it was sealed.</summary>
     public bool HasCurrentProposal => _proposal is not null && _proposal.Revision == _revision;
-
-    /// <summary>The fact with this event id, once recorded.</summary>
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
 
     /// <summary>The deterministic batch identity of a submission; unchanged from the legacy writer.</summary>
     public static Uuid BatchIdFor(StageApplicationImport request) =>
@@ -157,10 +159,9 @@ public sealed class ApplicationImportBatch : Aggregate
         if (operation.Owner != Stream || operation.LogicalId != submissionId)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "Staging is the root operation of its own batch under its submission identity."));
-        RaiseEvent(new ApplicationImportStaged(_tenantId, Id, submissionId, sourceKey, sourceNamespace, coverage,
+        return Append(operation, new ApplicationImportStaged(_tenantId, Id, submissionId, sourceKey, sourceNamespace, coverage,
             contentSha256, rowsManifest, actorMemberId, actorDisplay, submittedAt, operation, firstResponse,
             operationResult, rowCount, invalidCount));
-        return Result.Success;
     }
 
     /// <summary>Checks the batch-local guards of a correlation decision.</summary>
@@ -182,10 +183,9 @@ public sealed class ApplicationImportBatch : Aggregate
         var prepared = PrepareCorrelation((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new ApplicationImportRowCorrelated(_tenantId, SourceKey!, SourceNamespace!, Id, _revision + 1,
+        return Append(operation, new ApplicationImportRowCorrelated(_tenantId, SourceKey!, SourceNamespace!, Id, _revision + 1,
             rowId, sourceRecordId, decision, applicationId, expectedApplicationRevision, reason, actorMemberId,
             actorDisplay, recordedAt, operation, firstResponse, operationResult));
-        return Result.Success;
     }
 
     /// <summary>Checks the batch-local guards of an omission proposal.</summary>
@@ -211,9 +211,8 @@ public sealed class ApplicationImportBatch : Aggregate
         var prepared = PrepareProposal((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new ApplicationImportRetirementProposalSealed(_tenantId, Id, _revision + 1, proposalSha256,
+        return Append(operation, new ApplicationImportRetirementProposalSealed(_tenantId, Id, _revision + 1, proposalSha256,
             operation, firstResponse, operationResult, proposal));
-        return Result.Success;
     }
 
     /// <summary>Checks the batch-local guards of acceptance.</summary>
@@ -234,9 +233,8 @@ public sealed class ApplicationImportBatch : Aggregate
         var prepared = PrepareAcceptance((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new ApplicationImportPlanSealed(_tenantId, Id, _revision + 1, planSha256, operation, frozenPlan,
+        return Append(operation, new ApplicationImportPlanSealed(_tenantId, Id, _revision + 1, planSha256, operation, frozenPlan,
             rowCount, targetGroupCount, SourceKey!, SourceNamespace!, firstResponse, null));
-        return Result.Success;
     }
 
     /// <summary>Checks that execution can still be authorized.</summary>
@@ -261,9 +259,8 @@ public sealed class ApplicationImportBatch : Aggregate
         if (operation.Owner != Stream || _authorized is not null || intent != _plan!.FrozenPlan)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Execution is authorized once, for the sealed plan of this batch."));
-        RaiseEvent(new ApplicationImportExecutionAuthorized(Stream, _revision + 1, ApplicationImportEffects.Generation,
+        return Append(operation, new ApplicationImportExecutionAuthorized(Stream, _revision + 1, ApplicationImportEffects.Generation,
             intent, null, operation, null, null));
-        return Result.Success;
     }
 
     /// <summary>Checks the batch-local guards of a cancellation.</summary>
@@ -292,9 +289,8 @@ public sealed class ApplicationImportBatch : Aggregate
         var prepared = PrepareCancellation((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new ApplicationImportCancellationAccepted(Stream, _revision + 1,
+        return Append(operation, new ApplicationImportCancellationAccepted(Stream, _revision + 1,
             ApplicationImportEffects.Generation, intent, null, operation, firstResponse, null));
-        return Result.Success;
     }
 
     /// <summary>Checks that the batch can publish: authorized, not canceled and not yet published.</summary>
@@ -312,16 +308,15 @@ public sealed class ApplicationImportBatch : Aggregate
 
     /// <summary>Publishes every target together.</summary>
     public Result Commit(OperationProvenance operation, ImmutableContentRef intent, ImmutableContentRef effectsManifest,
-        ImmutableContentRef frozenRows, long sourceGeneration, DateTimeOffset committedAt)
+        ImmutableContentRef frozenRows, long sourceGeneration, DateTimeOffset committedAt, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
         var prepared = PrepareCommit();
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new ApplicationImportCommitted(_tenantId, SourceKey!, SourceNamespace!, Id, _revision + 1,
+        return Append(operation, new ApplicationImportCommitted(_tenantId, SourceKey!, SourceNamespace!, Id, _revision + 1,
             _plan!.PlanSha256, effectsManifest, committedAt, operation, frozenRows, sourceGeneration, intent, null,
-            null));
-        return Result.Success;
+            operationResult));
     }
 
     /// <summary>Checks that an accepted cancellation can complete.</summary>
@@ -337,15 +332,14 @@ public sealed class ApplicationImportBatch : Aggregate
 
     /// <summary>Completes the cancellation once every target is fenced.</summary>
     public Result CompleteCancellation(OperationProvenance operation, ImmutableContentRef intent, string reason,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset canceledAt)
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset canceledAt, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
         var prepared = PrepareCancellationCompletion();
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new ApplicationImportCanceled(_tenantId, Id, _revision + 1, reason, actorMemberId, actorDisplay,
-            canceledAt, operation, intent, null, null));
-        return Result.Success;
+        return Append(operation, new ApplicationImportCanceled(_tenantId, Id, _revision + 1, reason, actorMemberId, actorDisplay,
+            canceledAt, operation, intent, null, operationResult));
     }
 
     Result RequireOpen(string sealedMessage)
@@ -365,7 +359,7 @@ public sealed class ApplicationImportBatch : Aggregate
         ? Result.Success
         : Result.Failure(VersionedRecordRules.StaleRevision("import", _revision).ToRequestError());
 
-    void Apply(ApplicationImportStaged ev)
+    void ApplyFact(ApplicationImportStaged ev)
     {
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || ev.BatchId != Id || _staged is not null || _revision != 0 ||
@@ -374,22 +368,23 @@ public sealed class ApplicationImportBatch : Aggregate
             throw new InvalidOperationException("An import observation is staged once on its own batch stream.");
         _staged = ev;
         _revision = 1;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
-    void Apply(ApplicationImportRowCorrelated ev)
+    void ApplyFact(ApplicationImportRowCorrelated ev)
     {
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || ev.BatchId != Id || _staged is null || ev.Revision != _revision + 1 ||
             ev.Operation.Owner != Stream || ev.FirstResponse is null || _plan is not null || IsEnded ||
             IsCancelRequested)
             throw new InvalidOperationException("A correlation follows the previous revision of an open batch.");
-        _correlations[ev.RowId] = ev;
+        if (ev.RowId == _selectedRowId)
+            _selectedCorrelation = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
-    void Apply(ApplicationImportRetirementProposalSealed ev)
+    void ApplyFact(ApplicationImportRetirementProposalSealed ev)
     {
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || ev.BatchId != Id || _staged is null || ev.Revision != _revision + 1 ||
@@ -398,10 +393,10 @@ public sealed class ApplicationImportBatch : Aggregate
             throw new InvalidOperationException("A proposal follows the previous revision of an open batch.");
         _proposal = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
-    void Apply(ApplicationImportPlanSealed ev)
+    void ApplyFact(ApplicationImportPlanSealed ev)
     {
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || ev.BatchId != Id || _staged is null || ev.Revision != _revision + 1 ||
@@ -411,10 +406,10 @@ public sealed class ApplicationImportBatch : Aggregate
             throw new InvalidOperationException("A plan is sealed once on an open staged batch.");
         _plan = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
-    void Apply(ApplicationImportExecutionAuthorized ev)
+    void ApplyFact(ApplicationImportExecutionAuthorized ev)
     {
         Acceptance.Observe(ev);
         if (ev.Owner != Stream || ev.Revision != _revision + 1 || ev.Operation.Owner != Stream || _plan is null ||
@@ -422,10 +417,10 @@ public sealed class ApplicationImportBatch : Aggregate
             throw new InvalidOperationException("Execution is authorized once for an open sealed batch.");
         _authorized = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
-    void Apply(ApplicationImportCancellationAccepted ev)
+    void ApplyFact(ApplicationImportCancellationAccepted ev)
     {
         Acceptance.Observe(ev);
         if (ev.Owner != Stream || ev.Revision != _revision + 1 || ev.Operation.Owner != Stream ||
@@ -433,10 +428,10 @@ public sealed class ApplicationImportBatch : Aggregate
             throw new InvalidOperationException("A cancellation is accepted once for an open batch.");
         _cancellationAccepted = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
-    void Apply(ApplicationImportCommitted ev)
+    void ApplyFact(ApplicationImportCommitted ev)
     {
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || ev.BatchId != Id || ev.Revision != _revision + 1 ||
@@ -445,10 +440,10 @@ public sealed class ApplicationImportBatch : Aggregate
             throw new InvalidOperationException("A commit publishes an authorized, open sealed batch once.");
         _committed = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
-    void Apply(ApplicationImportCanceled ev)
+    void ApplyFact(ApplicationImportCanceled ev)
     {
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || ev.BatchId != Id || ev.Revision != _revision + 1 ||
@@ -456,10 +451,10 @@ public sealed class ApplicationImportBatch : Aggregate
             throw new InvalidOperationException("A cancellation completes an accepted cancellation once.");
         _canceled = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
-    void Apply(ApplicationImportFailed ev)
+    void ApplyFact(ApplicationImportFailed ev)
     {
         Acceptance.Observe(ev);
         if (ev.TenantId != _tenantId || ev.BatchId != Id || ev.Revision != _revision + 1 ||
@@ -467,7 +462,23 @@ public sealed class ApplicationImportBatch : Aggregate
             throw new InvalidOperationException("A failure ends an open sealed batch once.");
         _failed = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
+    }
+
+    Result Append(OperationProvenance operation, DomainEvent fact)
+    {
+        var verified = _cut.Require(this, Acceptance, operation);
+        if (!verified.IsSuccess)
+            return verified;
+        RaiseEvent(fact);
+        return Result.Success;
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        if (!ev.Metadata.IsAudit)
+            _cut.Observe(ev);
+        base.Apply(ev);
     }
 
     static string Part(string? value) =>

@@ -1,0 +1,28 @@
+{
+  "model": "jev-1.14.0",
+  "files": 36,
+  "threshold": 0.65,
+  "signals": [],
+  "exactSourceAndDependencyHashes": "verified",
+  "dispositions": [
+    {
+      "path": "src/Compliance.Core/Features/Applications/FreezeApplicationImportOmissionProposalHandler.cs",
+      "kind": "invariant_gap",
+      "decision": "No demonstrated unresolved introduced defect after actual native executor, omission/source history and selected process contract review.",
+      "evidence": [
+        "Current personal HTTP identity and ApplicationInventoryAuthorizer gate the request; replay resolves exact original acceptance before omission/row/target bodies.",
+        "Preparation checks expected batch revision/content, full verified batch rows and source cut, durable unchanged idle source, declared-complete coverage, missing claims, shared/present alias rejection and each real target revision/pending state. Apply compares exact prepared batch cut again.",
+        "A proposal carries its exact source position and content digest. Later plan/source claim independently requires the frozen exact source revision; the proposal itself grants no target retirement authority. Actual target hold/fence/effect protocol remains.",
+        "All151focused import tests passed, including original acceptance race, full rows/history, publication/fence proof and cancellation classification cases. Automatic process abort remains a separately documented pre-existing catalog trust mismatch, not a fabricated new receiver."
+      ]
+    }
+  ],
+  "adopted": "merge scoped owner/history/producer repair after final local gates; continue local protocol qualifications and receiver preparation follow-on",
+  "earlierSignals": [
+    {
+      "path": "src/Compliance.Core/Features/Applications/FreezeApplicationImportOmissionProposalHandler.cs",
+      "kind": "invariant_gap",
+      "probability": 0.67
+    }
+  ]
+}
