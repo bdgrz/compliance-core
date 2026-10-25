@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "d8d933e9ce82dee1e908c991344193e4eeb44c2e",
+  "sourceCommit": "9e103349081a3c6204e3b1e57ec9c2f7e79d9432",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -613,7 +613,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackAdmissionTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
-        "test/Compliance.Tests/Testing/AdvisorEvents.cs"
+        "test/Compliance.Tests/Testing/AdvisorEvents.cs",
+        "test/Compliance.Tests/Testing/AdvisorSeed.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -631,6 +632,8 @@
         "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorFeedbackThread.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs"
       ],
       "disposition": "aggregate_fact",
@@ -649,6 +652,7 @@
         "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorFeedbackThread.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorAdmissionPreparationRaceTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackAdmissionTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/FitzAdvisorFeedbackWorkItemDirectoryTests.cs",
@@ -689,6 +693,7 @@
         "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorFeedbackThread.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorPreparationRaceTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs"
       ],
@@ -707,7 +712,10 @@
       "emitters": [
         "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHttpTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -726,6 +734,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs"
       ],
       "disposition": "aggregate_fact",
@@ -762,7 +771,9 @@
       "emitters": [
         "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -780,6 +791,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs"
       ],
       "disposition": "aggregate_fact",
@@ -1947,7 +1959,9 @@
         "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReplayCutTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestUnselectedHistoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9355,11 +9369,12 @@
         "MaterializeAdvisorFeedback"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorAdmissionPreparationRaceTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackScopedIdentityTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/FitzAdvisorFeedbackWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs",
-        "test/Compliance.Tests/Testing/AdvisorHost.cs",
         "test/Compliance.Tests/Testing/AdvisorSeed.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -9385,12 +9400,12 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackAdmissionTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackScopedIdentityTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHttpTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs",
-        "test/Compliance.Tests/Testing/AdvisorHost.cs",
         "test/Compliance.Tests/Testing/AdvisorSeed.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -9723,7 +9738,9 @@
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReplayCutTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestScopedReadHttpTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestUnselectedHistoryTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseNativeBoundaryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -15567,7 +15584,10 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs",
-        "test/Compliance.Tests/Testing/AdvisorHost.cs"
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHttpTests.cs",
+        "test/Compliance.Tests/Testing/AdvisorHost.cs",
+        "test/Compliance.Tests/Testing/AdvisorSeed.cs"
       ],
       "note": ""
     },
@@ -16519,12 +16539,17 @@
       "aggregateTargets": [
         "AdvisorFeedbackThread"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AdvisorFeedbackReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackThreadCommandTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/ListAdvisorFeedbackHandlerTests.cs",
-        "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs"
+        "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs",
+        "test/Compliance.Tests/Testing/AdvisorEvents.cs"
       ],
       "note": ""
     },
@@ -16639,7 +16664,9 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs",
-        "test/Compliance.Tests/Testing/AdvisorHost.cs"
+        "test/Compliance.Tests/Testing/AdvisorEvents.cs",
+        "test/Compliance.Tests/Testing/AdvisorHost.cs",
+        "test/Compliance.Tests/Testing/AdvisorSeed.cs"
       ],
       "note": ""
     },
@@ -21489,11 +21516,10 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AdvisorFeedbackThread"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "AdvisorFeedbackReader",
         "AdvisorHandoffReader"
       ],
       "testSymbolReferences": [
@@ -23932,7 +23958,9 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs",
-        "test/Compliance.Tests/Testing/AdvisorHost.cs"
+        "test/Compliance.Tests/Testing/AdvisorEvents.cs",
+        "test/Compliance.Tests/Testing/AdvisorHost.cs",
+        "test/Compliance.Tests/Testing/AdvisorSeed.cs"
       ],
       "note": ""
     },
@@ -24006,7 +24034,9 @@
         }
       ],
       "handlerRegistration": true,
-      "helperServices": [],
+      "helperServices": [
+        "AdvisorHandoffReader"
+      ],
       "directAggregateReferences": [
         "AdvisorFeedbackThread",
         "AdvisorHandoff"
@@ -24015,7 +24045,9 @@
         "AdvisorFeedbackThread"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackAdmissionTests.cs"
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackAdmissionTests.cs",
+        "test/Compliance.Tests/Testing/AdvisorEvents.cs",
+        "test/Compliance.Tests/Testing/AdvisorSeed.cs"
       ],
       "note": ""
     },
@@ -25897,6 +25929,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackScopedIdentityTests.cs",
         "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs",
+        "test/Compliance.Tests/Testing/AdvisorEvents.cs",
         "test/Compliance.Tests/Testing/AdvisorHost.cs",
         "test/Compliance.Tests/Testing/AdvisorSeed.cs"
       ],
@@ -26125,7 +26158,9 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReplayCutTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestUnselectedHistoryTests.cs"
       ],
       "note": ""
     },
@@ -26154,7 +26189,9 @@
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestHistoryTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReplayCutTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestUnselectedHistoryTests.cs"
       ],
       "note": ""
     },
@@ -28409,11 +28446,15 @@
       "aggregateTargets": [
         "AdvisorFeedbackThread"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AdvisorFeedbackReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackThreadCommandTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Testing/AdvisorEvents.cs"
       ],
       "note": ""
     },
@@ -28528,12 +28569,17 @@
       "aggregateTargets": [
         "AdvisorFeedbackThread"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AdvisorFeedbackReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackThreadCommandTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorPreparationRaceTests.cs",
-        "test/Compliance.Tests/Features/AdvisorCollaboration/ListAdvisorFeedbackHandlerTests.cs"
+        "test/Compliance.Tests/Features/AdvisorCollaboration/ListAdvisorFeedbackHandlerTests.cs",
+        "test/Compliance.Tests/Testing/AdvisorEvents.cs"
       ],
       "note": ""
     },
@@ -29168,6 +29214,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs",
+        "test/Compliance.Tests/Testing/AdvisorEvents.cs",
         "test/Compliance.Tests/Testing/AdvisorHost.cs"
       ],
       "note": ""
@@ -29301,7 +29348,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReplayCutTests.cs"
       ],
       "note": ""
     },
@@ -30014,7 +30062,9 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs",
-        "test/Compliance.Tests/Testing/AdvisorHost.cs"
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/AdvisorHost.cs",
+        "test/Compliance.Tests/Testing/AdvisorSeed.cs"
       ],
       "note": ""
     },

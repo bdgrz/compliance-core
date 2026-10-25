@@ -1,0 +1,54 @@
+{
+  "reason": "Complete authored values move from occupied inline-v1 facts into immutable canonical request references. All7 incompatible payloads advance2; historical10-23 targetcatalog remains preserved. Static implementation counts keyed to target1 therefore decrease despite implementation; these are not current completion counts. No retained v1 conversion/SDK snapshot compatibility or deployment qualified.",
+  "rows": [
+    {
+      "event": "AdvisorHandoffCreated",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.advisor-handoff.created"
+    },
+    {
+      "event": "AdvisorHandoffSelectionRevised",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.advisor-handoff.selection-revised"
+    },
+    {
+      "event": "AdvisorHandoffClosed",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.advisor-handoff.closed"
+    },
+    {
+      "event": "AdvisorHandoffRevoked",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.advisor-handoff.revoked"
+    },
+    {
+      "event": "AdvisorFeedbackRecorded",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.advisor-feedback.recorded"
+    },
+    {
+      "event": "AdvisorFeedbackCorrected",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.advisor-feedback.corrected"
+    },
+    {
+      "event": "AdvisorFeedbackResponded",
+      "actualOccupiedInlineVersion": 1,
+      "historicalTargetVersion": 1,
+      "implementedNativeReferenceVersion": 2,
+      "discriminator": "bdgrz.advisor-feedback.responded"
+    }
+  ]
+}

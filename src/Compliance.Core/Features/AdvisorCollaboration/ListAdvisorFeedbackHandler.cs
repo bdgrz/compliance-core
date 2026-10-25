@@ -10,14 +10,18 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 ///     materialized yet is listed once its independent materialization completes. A contribution is current only while
 ///     its exact source version is still selected and current.
 /// </summary>
-public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader, AdvisorHandoffReader handoffs,
+public sealed class ListAdvisorFeedbackHandler(AdvisorFeedbackReader reader, AdvisorHandoffReader handoffs,
     IAdvisorRecordVersionResolver versions)
     : IRequestHandler<ListAdvisorFeedback, Page<AdvisorFeedbackView>>
 {
     const int DefaultLimit = 50;
     const int MaximumLimit = 200;
 
-    public async ValueTask<Result<Page<AdvisorFeedbackView>>> HandleAsync(
+    public ValueTask<Result<Page<AdvisorFeedbackView>>> HandleAsync(
+        IRequestContext<ListAdvisorFeedback> context, CancellationToken ct) =>
+        AdvisorFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<Page<AdvisorFeedbackView>>> HandleCoreAsync(
         IRequestContext<ListAdvisorFeedback> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -43,7 +47,7 @@ public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader, AdvisorH
                 RequestErrorKind.NotFound,
                 "The advisor handoff was not found in the requested program."));
 
-        var admitted = handoff.Handoff.Admitted.Select(static fact => fact.Operation.LogicalId).ToArray();
+        var admitted = handoff.Admitted.Select(static fact => fact.Operation.LogicalId).ToArray();
         var start = 0;
         if (cursorId is { } after)
         {
@@ -54,11 +58,11 @@ public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader, AdvisorH
         }
 
         var limit = request.Limit ?? DefaultLimit;
-        var threads = new List<AdvisorFeedbackThread>(limit + 1);
+        var threads = new List<AdvisorFeedbackThreadSnapshot>(limit + 1);
         for (var index = start; index < admitted.Length && threads.Count <= limit; index++)
         {
-            var thread = await reader.HydrateAsync(new AdvisorFeedbackThread(request.TenantId, request.ProgramId,
-                request.HandoffId, admitted[index]), ct).ConfigureAwait(false);
+            var thread = await reader.ReadAsync(request.TenantId, request.ProgramId,
+                request.HandoffId, admitted[index], default, ct).ConfigureAwait(false);
             if (thread.IsMaterialized)
                 threads.Add(thread);
         }
@@ -99,7 +103,7 @@ public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader, AdvisorH
         return Result<Page<AdvisorFeedbackView>>.Success(new Page<AdvisorFeedbackView>(pageItems, nextCursor));
     }
 
-    static AdvisorRecordVersion SourceOf(AdvisorFeedbackRecorded recorded) =>
+    static AdvisorRecordVersion SourceOf(AdvisorFeedbackRecordedContent recorded) =>
         recorded.SelectedSource ?? new AdvisorRecordVersion(recorded.RecordId, recorded.RecordVersionId);
 
     static Result<Page<AdvisorFeedbackView>> Invalid(string message) =>

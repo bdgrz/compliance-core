@@ -567,7 +567,7 @@ public sealed class AdvisorFeedbackAdmissionTests
         Assert.True(system.IsSuccess);
     }
 
-    static NativeFactReference NativeFactReferenceOf(AdvisorHandoff handoff, AdvisorFeedbackAdmitted admitted) =>
+    static NativeFactReference NativeFactReferenceOf(AdvisorHandoffSnapshot handoff, AdvisorFeedbackAdmitted admitted) =>
         NativeFactReference.Of(handoff.Stream, admitted);
 
     static async Task<MaterializeAdvisorFeedback> ReceiverCommandAsync(AdvisorHost host, Uuid handoffId,

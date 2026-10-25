@@ -31,9 +31,11 @@ public sealed class AdvisorUnitOperation(NativeOperationExecutor operations, IIm
     {
         var binding = AcceptedOperationBinding.Of(provenance);
         ImmutableContentRef? result = null;
+        AdvisorPreparedCut? preparedCut = null;
         var outcome = await operations.ExecuteAsync(new NativeOperation<TAggregate>(binding, hydrate, acceptance,
             async (owner, token) =>
             {
+                preparedCut = AdvisorPreparedCut.Capture(owner);
                 if (feasibility is not null)
                 {
                     var feasible = await feasibility(owner, token).ConfigureAwait(false);
@@ -46,7 +48,15 @@ public sealed class AdvisorUnitOperation(NativeOperationExecutor operations, IIm
                 var frozen = await AdvisorContent.FreezeUnitAsync(content, tenantId, token).ConfigureAwait(false);
                 result = frozen.Result;
                 return Result<FirstResponseDescriptor>.Success(frozen.Response);
-            }, (owner, frozen) => apply(owner, frozen, result!)), context, ct).ConfigureAwait(false);
+            }, (owner, frozen) =>
+            {
+                var guarded = guard(owner);
+                if (!guarded.IsSuccess)
+                    return guarded;
+                return preparedCut is not null && !preparedCut.Matches(owner)
+                    ? AdvisorPreparedCut.Changed()
+                    : apply(owner, frozen, result!);
+            }), context, ct).ConfigureAwait(false);
         return AdvisorContent.UnitOutcome(outcome);
     }
 }

@@ -16,7 +16,11 @@ public sealed class ReviseAdvisorHandoffSelectionHandler(AdvisorUnitOperation op
 {
     const string CommandKind = "ReviseAdvisorHandoffSelection";
 
-    public async ValueTask<Result> HandleAsync(IRequestContext<ReviseAdvisorHandoffSelection> context,
+    public ValueTask<Result> HandleAsync(IRequestContext<ReviseAdvisorHandoffSelection> context,
+        CancellationToken ct) =>
+        AdvisorFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<ReviseAdvisorHandoffSelection> context,
         CancellationToken ct)
     {
         var request = context.Request;
@@ -35,6 +39,7 @@ public sealed class ReviseAdvisorHandoffSelectionHandler(AdvisorUnitOperation op
         var provenance = AdvisorContent.Provenance(request.CommandId, CommandKind, owner, actor,
             (ulong)request.ExpectedRevision, AuthoredIntentDigest.Compute(canonical), now);
         ImmutableContentRef? manifest = null;
+        ImmutableContentRef? authored = null;
 
         return await operation.ExecuteAsync<AdvisorHandoff>(context, request.TenantId, provenance,
             () => new AdvisorHandoff(request.TenantId, request.ProgramId, request.HandoffId, request.CommandId),
@@ -73,10 +78,11 @@ public sealed class ReviseAdvisorHandoffSelectionHandler(AdvisorUnitOperation op
 
                 manifest = await AdvisorContent.WriteSelectionAsync(content, request.TenantId,
                     AdvisorContent.RevisedSelectionSchema, request.RecordVersions, token).ConfigureAwait(false);
+                authored = await AdvisorAuthored.WriteAsync(content, request.TenantId, canonical, token).ConfigureAwait(false);
                 return Result.Success;
             },
             handoff => handoff.PrepareRevise(request.ExpectedRevision),
-            (handoff, frozen, result) => handoff.ReviseSelection(provenance, manifest!, canonical.ChangeReason, actor,
+            (handoff, frozen, result) => handoff.ReviseSelection(provenance, manifest!, authored!, actor,
                 now, frozen, result), ct).ConfigureAwait(false);
     }
 }

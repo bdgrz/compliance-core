@@ -73,6 +73,7 @@ static class ProgramManagementServices
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         collection.AddVerifiedSourceUseReader();
+        collection.AddVerifiedAuditorRequestReader();
         collection.AddVerifiedMappingLineReader();
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }

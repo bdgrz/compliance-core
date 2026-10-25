@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
@@ -8,12 +10,15 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 ///     stream: feedback admitted before the closure stays admitted and is still materialized, and feedback racing the
 ///     closure is refused by the stream's revision.
 /// </summary>
-public sealed class CloseAdvisorHandoffHandler(AdvisorUnitOperation operation, TimeProvider clock)
+public sealed class CloseAdvisorHandoffHandler(AdvisorUnitOperation operation, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<CloseAdvisorHandoff>
 {
     const string CommandKind = "CloseAdvisorHandoff";
 
-    public ValueTask<Result> HandleAsync(IRequestContext<CloseAdvisorHandoff> context, CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<CloseAdvisorHandoff> context, CancellationToken ct) =>
+        AdvisorFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    ValueTask<Result> HandleCoreAsync(IRequestContext<CloseAdvisorHandoff> context, CancellationToken ct)
     {
         var request = context.Request;
         if (!AdvisorHandoffCommandActor.TryGet(context, request.TenantId, out var actor))
@@ -31,12 +36,18 @@ public sealed class CloseAdvisorHandoffHandler(AdvisorUnitOperation operation, T
         var owner = new AdvisorHandoff(request.TenantId, request.ProgramId, request.HandoffId).Stream;
         var provenance = AdvisorContent.Provenance(request.CommandId, CommandKind, owner, actor,
             (ulong)request.ExpectedRevision, AuthoredIntentDigest.Compute(canonical), now);
+        ImmutableContentRef? authored = null;
         return operation.ExecuteAsync<AdvisorHandoff>(context, request.TenantId, provenance,
             () => new AdvisorHandoff(request.TenantId, request.ProgramId, request.HandoffId, request.CommandId),
-            handoff => handoff.Acceptance, null,
+            handoff => handoff.Acceptance,
+            async (_, token) =>
+            {
+                authored = await AdvisorAuthored.WriteAsync(content, request.TenantId, canonical, token).ConfigureAwait(false);
+                return Result.Success;
+            },
             handoff => AdvisorHandoffRules.InProgram(handoff, request.ProgramId)
                 ? handoff.PrepareEnd(request.ExpectedRevision)
                 : AdvisorHandoffRules.NotFound(),
-            (handoff, frozen, result) => handoff.Close(provenance, canonical.Rationale, actor, now, frozen, result), ct);
+            (handoff, frozen, result) => handoff.Close(provenance, authored!, actor, now, frozen, result), ct);
     }
 }

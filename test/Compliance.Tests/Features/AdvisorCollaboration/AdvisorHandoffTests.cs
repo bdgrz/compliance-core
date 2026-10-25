@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Features.Content;
+using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -144,16 +146,17 @@ public sealed class AdvisorHandoffTests
     }
 
     [Fact]
-    public void ShouldKeepNativeSelectedSourceGivenSerializedFeedbackFact()
+    public async Task ShouldKeepNativeSelectedSourceGivenSerializedFeedbackFact()
     {
         // Arrange
         var selected = AdvisorRecordVersion.PolicyVersion(Uuid.CreateVersion4(), 3, 7);
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var handoffId = Uuid.CreateVersion4();
-        var recorded = AdvisorEvents.Recorded(tenantId, programId, handoffId, Uuid.CreateVersion4(), selected,
+        var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
+        var recorded = (await AdvisorEvents.Recorded(content, tenantId, programId, handoffId, Uuid.CreateVersion4(), selected,
             "change_request", "Clarify this policy requirement.", ActorReference.ForMember(Uuid.CreateVersion4(),
-                "Advisor"), AdvisorHost.Start) with
+                "Advisor"), AdvisorHost.Start)) with
         {
             SelectedSource = selected,
         };
@@ -208,14 +211,14 @@ public sealed class AdvisorHandoffTests
         // Act
         var live = await host.ThreadAsync(handoffId, feedbackId);
         var replay = new AggregateScenario<AdvisorFeedbackThread>(new AdvisorFeedbackThread(host.TenantId,
-            host.ProgramId, handoffId, feedbackId)).Given([live.Recorded!, live.Corrections[0], live.Responses[0],
-            live.Resolved!]).Aggregate;
+            host.ProgramId, handoffId, feedbackId)).Given(live.Facts.ToArray()).Aggregate;
 
         // Assert
         Assert.Equal(4, live.Revision);
         Assert.Equal(live.Revision, replay.Revision);
-        Assert.Equal(live.Recorded, replay.Recorded);
+        Assert.Equal(live.Recorded!.Fact, replay.Recorded);
         Assert.Equal(live.Resolved, replay.Resolved);
-        Assert.Equal("Please clarify the control owner.", replay.Recorded!.Body);
+        Assert.Equal("Please clarify the control owner.", (await AdvisorFeedbackReader.ReadRecordedAsync(host.Content,
+            replay.Recorded!, CancellationToken.None)).Body);
     }
 }

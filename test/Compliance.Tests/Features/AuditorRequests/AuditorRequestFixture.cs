@@ -65,6 +65,7 @@ sealed class AuditorRequestFixture : IAsyncDisposable
             .AddRequestHandler<AbortAuditorRequestResolutionHandler>()
             .AddRequestAuthorizer<AuditorRequestReceiverAuthorizer>();
         services.AddVerifiedSourceUseReader();
+        services.AddVerifiedAuditorRequestReader();
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         _scope = _provider.CreateAsyncScope();
         Reader = Services.GetRequiredService<IAggregateReader>();

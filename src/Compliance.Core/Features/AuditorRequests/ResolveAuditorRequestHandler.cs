@@ -42,6 +42,7 @@ public sealed class ResolveAuditorRequestHandler(NativeOperationExecutor operati
 
         ImmutableContentRef? intent = null;
         FirstResponseDescriptor? response = null;
+        AuditorRequestPreparedCut? preparedCut = null;
         AuditorRequestHistorySnapshot? history = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorRequest>(binding,
@@ -55,10 +56,15 @@ public sealed class ResolveAuditorRequestHandler(NativeOperationExecutor operati
                 if (!frozen.IsSuccess)
                     return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
                 (intent, response) = frozen.Value;
+                preparedCut = AuditorRequestPreparedCut.Capture(snapshot);
                 return Result<FirstResponseDescriptor>.Success(response!);
             },
             (AuditorRequest auditorRequest, ImmutableContentRef acknowledgment) =>
-                auditorRequest.AcceptResolution(provenance, intent!, request.ResponseIds, acknowledgment, history!)), context, ct)
+            {
+                if (preparedCut?.Matches(auditorRequest) != true)
+                    return AuditorRequestPreparedCut.Changed();
+                return auditorRequest.AcceptResolution(provenance, intent!, request.ResponseIds, acknowledgment, history!);
+            }), context, ct)
             .ConfigureAwait(false);
         return await AuditorContent.ResponseAsync<OperationAcceptedResponse>(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);

@@ -6,7 +6,11 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 public sealed class GetAdvisorRequestHandler(AdvisorHandoffReader handoffs)
     : IRequestHandler<GetAdvisorRequest, AdvisorRequestView>
 {
-    public async ValueTask<Result<AdvisorRequestView>> HandleAsync(
+    public ValueTask<Result<AdvisorRequestView>> HandleAsync(
+        IRequestContext<GetAdvisorRequest> context, CancellationToken ct) =>
+        AdvisorFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<AdvisorRequestView>> HandleCoreAsync(
         IRequestContext<GetAdvisorRequest> context, CancellationToken ct)
     {
         var request = context.Request;

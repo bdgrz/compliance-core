@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Work;
@@ -28,7 +29,7 @@ public sealed class AdvisorFeedbackScopedIdentityTests
         var shared = Uuid.CreateVersion4();
         var first = await MaterializeAsync(source, tenant, firstProgram, firstHandoff, shared);
         await MaterializeAsync(source, tenant, secondProgram, secondHandoff, shared);
-        var directory = new FitzAdvisorFeedbackWorkItemDirectory(source.Kv);
+        var directory = new FitzAdvisorFeedbackWorkItemDirectory(source.Kv, source.Content);
         var identity = new CheckpointIdentity(FitzAdvisorFeedbackWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenant.ToString(), AdvisorFeedbackThread.Area));
 
@@ -39,7 +40,10 @@ public sealed class AdvisorFeedbackScopedIdentityTests
         var manager = ActorReference.ForMember(Uuid.CreateVersion4(), "Manager");
         var (response, result) = await AdvisorContent.FreezeUnitAsync(source.Content, tenant, CancellationToken.None);
         var firstResponse = await FirstResponses.FreezeAsync(source.Content, tenant.ToString(), response);
-        var operation = OwnerProvenance.For(first, Uuid.CreateVersion4(), "ResolveAdvisorFeedback", manager, "initial", 1,
+        var commandId = Uuid.CreateVersion4();
+        first = await source.Reader.HydrateAsync(new AdvisorFeedbackThread(tenant, firstProgram, firstHandoff, shared, commandId));
+        _ = await AdvisorNativeHistory.ReadAsync(first, source.Events, CancellationToken.None);
+        var operation = OwnerProvenance.For(first, commandId, "ResolveAdvisorFeedback", manager, "initial", 1,
             new string('a', 64), Now.AddMinutes(1));
         Assert.True(first.Resolve(operation, manager, Now.AddMinutes(1), firstResponse, result).IsSuccess);
         await source.Writer.SaveAsync(first, new RequestDispatchContext(RequestActor.System));
@@ -68,12 +72,12 @@ public sealed class AdvisorFeedbackScopedIdentityTests
         var authored = new RecordAdvisorFeedback(tenant, program, handoff, feedback, Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), "change_request", "Clarify ownership", 1);
         var parent = new AdvisorHandoff(tenant, program, handoff).Stream;
-        var header = new DurableIntentHeader(feedback, parent, parent, parent, author, "initial", 1, new string('a', 64), Now);
+        var header = new DurableIntentHeader(feedback, parent, parent, parent, author, "initial", 1, AuthoredIntentDigest.Compute(authored), Now);
         var authoredContent = await source.Content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(),
             AdvisorContent.FeedbackAuthoredSchema, authored);
         var proofs = await AdvisorContent.EmptyProofsAsync(source.Content, tenant, feedback, CancellationToken.None);
         var intent = await source.Content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(), ChildAdmissionIntent.Schema,
-            new ChildAdmissionIntent(header, handoff, 0, AdmittedChildKind.AdvisorFeedback, feedback, authoredContent, proofs, 2));
+            new ChildAdmissionIntent(header, handoff, 1, AdmittedChildKind.AdvisorFeedback, feedback, authoredContent, proofs, 2));
         var owner = new AdvisorFeedbackThread(tenant, program, handoff, feedback);
         var operation = SourceUseReceiverSupport.Child(Uuid.CreateVersion4(), "MaterializeAdvisorFeedback", Uuid.CreateVersion4(),
             header, owner.Stream, Now);

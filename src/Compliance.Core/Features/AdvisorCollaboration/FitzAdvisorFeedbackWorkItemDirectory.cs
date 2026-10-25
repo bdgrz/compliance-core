@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Work;
@@ -7,7 +8,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
+sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client, "kv://bdgrz/advisor-feedback-work-items/projection-v2",
         ProjectorName), IAdvisorFeedbackWorkItemProjection, IAccountableWorkItemDirectoryReader
 {
@@ -131,12 +132,13 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
 
     async ValueTask RecordAsync(AdvisorFeedbackRecorded ev, CancellationToken ct)
     {
+        var contribution = await AdvisorFeedbackReader.ReadRecordedAsync(content, ev, ct).ConfigureAwait(false);
         var source = ev.SelectedSource ?? new AdvisorRecordVersion(ev.RecordId,
             ev.RecordVersionId);
         if (ev.FeedbackId == Uuid.Empty || ev.RecordId == Uuid.Empty ||
             source.RecordId != ev.RecordId || source.VersionId != ev.RecordVersionId ||
             !source.HasValidIdentity || ev.Kind is not ("comment" or "change_request" or "validated") ||
-            string.IsNullOrWhiteSpace(ev.Body) || ev.Body.Trim() != ev.Body || !ValidActor(ev.Author) ||
+            string.IsNullOrWhiteSpace(contribution.Body) || contribution.Body.Trim() != contribution.Body || !ValidActor(ev.Author) ||
             ev.CreatedAt == default)
             throw InvalidEvent();
         var existing = await AdvisorFeedbackWorkItemSchema.Feedback.GetAsync(Transaction,
@@ -145,29 +147,31 @@ sealed class FitzAdvisorFeedbackWorkItemDirectory(IKvClient client)
             throw InvalidEvent();
         var entry = new AdvisorFeedbackWorkItemEntry(ev.TenantId, ev.ProgramId, ev.HandoffId,
             ev.FeedbackId, AdvisorFeedbackWorkItemSchema.WorkItemId(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.FeedbackId),
-            ev.RecordId, ev.Kind, ev.Body, ev.Author, ev.CreatedAt, false, false);
+            ev.RecordId, ev.Kind, contribution.Body, ev.Author, ev.CreatedAt, false, false);
         await AdvisorFeedbackWorkItemSchema.Feedback.InsertAsync(Transaction, entry, ct)
             .ConfigureAwait(false);
     }
 
     async ValueTask CorrectAsync(AdvisorFeedbackCorrected ev, CancellationToken ct)
     {
+        var authored = await AdvisorAuthored.ReadAsync(content, ev, ct).ConfigureAwait(false);
         if (ev.FeedbackId == Uuid.Empty || ev.CorrectionId == Uuid.Empty ||
-            string.IsNullOrWhiteSpace(ev.CorrectedBody) || ev.CorrectedBody.Trim() != ev.CorrectedBody ||
-            string.IsNullOrWhiteSpace(ev.CorrectionReason) ||
-            ev.CorrectionReason.Trim() != ev.CorrectionReason || !ValidActor(ev.CorrectedBy) ||
+            string.IsNullOrWhiteSpace(authored.CorrectedBody) || authored.CorrectedBody.Trim() != authored.CorrectedBody ||
+            string.IsNullOrWhiteSpace(authored.CorrectionReason) ||
+            authored.CorrectionReason.Trim() != authored.CorrectionReason || !ValidActor(ev.CorrectedBy) ||
             ev.CorrectedAt == default)
             throw InvalidEvent();
         var current = await GetFeedbackAsync(ev.TenantId, ev.ProgramId, ev.HandoffId,
             ev.FeedbackId, ct).ConfigureAwait(false);
         await AdvisorFeedbackWorkItemSchema.Feedback.ReplaceAsync(Transaction, current,
-            current with { Body = ev.CorrectedBody }, ct).ConfigureAwait(false);
+            current with { Body = authored.CorrectedBody }, ct).ConfigureAwait(false);
     }
 
     async ValueTask RespondAsync(AdvisorFeedbackResponded ev, CancellationToken ct)
     {
-        if (ev.FeedbackId == Uuid.Empty || string.IsNullOrWhiteSpace(ev.Response) ||
-            ev.Response.Trim() != ev.Response || !ValidActor(ev.RespondedBy) ||
+        var authored = await AdvisorAuthored.ReadAsync(content, ev, ct).ConfigureAwait(false);
+        if (ev.FeedbackId == Uuid.Empty || string.IsNullOrWhiteSpace(authored.Response) ||
+            authored.Response.Trim() != authored.Response || !ValidActor(ev.RespondedBy) ||
             ev.RespondedAt == default)
             throw InvalidEvent();
         var current = await GetFeedbackAsync(ev.TenantId, ev.ProgramId, ev.HandoffId,

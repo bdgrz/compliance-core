@@ -7,13 +7,22 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 ///     A hydrated handoff with its current selection read from verified content. Readers use this instead of the
 ///     aggregate so no reader reconstructs the selection from the stream itself.
 /// </summary>
-public sealed class AdvisorHandoffSnapshot(AdvisorHandoff handoff, IReadOnlyList<AdvisorRecordVersion> selection)
+public sealed class AdvisorHandoffSnapshot(AdvisorHandoff handoff, IReadOnlyList<AdvisorRecordVersion> selection,
+    string? purpose, IReadOnlyList<DomainEvent> facts)
 {
     /// <summary>The hydrated handoff.</summary>
     public AdvisorHandoff Handoff { get; } = handoff;
 
     /// <summary>The exact selected versions, in selection order.</summary>
     public IReadOnlyList<AdvisorRecordVersion> Selection { get; } = selection;
+
+    public IReadOnlyList<DomainEvent> Facts { get; } = facts;
+    public IReadOnlyList<AdvisorFeedbackAdmitted> Admitted { get; } = [.. facts.OfType<AdvisorFeedbackAdmitted>()];
+    public Uuid Id => Handoff.Id;
+    public Uuid TenantId => Handoff.TenantId;
+    public EventStreamAddress Stream => Handoff.Stream;
+    public ulong Version => Handoff.Version;
+    public Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? SelectionManifest => Handoff.SelectionManifest;
 
     /// <summary>True once the handoff was created.</summary>
     public bool IsCreated => Handoff.IsCreated;
@@ -31,7 +40,7 @@ public sealed class AdvisorHandoffSnapshot(AdvisorHandoff handoff, IReadOnlyList
     public long Generation => Handoff.Generation;
 
     /// <summary>The purpose stated at creation.</summary>
-    public string? Purpose => Handoff.Purpose;
+    public string? Purpose { get; } = purpose;
 
     /// <summary>The last day the handoff stays shared.</summary>
     public DateOnly ExpiresOn => Handoff.ExpiresOn;

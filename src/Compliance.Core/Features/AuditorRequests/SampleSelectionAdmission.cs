@@ -33,6 +33,7 @@ sealed class SampleSelectionAdmission(NativeOperationExecutor operations, IAggre
 
         ImmutableContentRef? intent = null;
         FirstResponseDescriptor? response = null;
+        AuditorRequestPreparedCut? preparedCut = null;
         AuditorRequestHistorySnapshot? history = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorRequest>(binding,
@@ -72,11 +73,16 @@ sealed class SampleSelectionAdmission(NativeOperationExecutor operations, IAggre
                 .ConfigureAwait(false);
                 response = await AuditorContent.AcceptedResponseAsync(content, tenantId, selectionId, now, prepareCt)
                 .ConfigureAwait(false);
+                preparedCut = AuditorRequestPreparedCut.Capture(snapshot);
                 return Result<FirstResponseDescriptor>.Success(response!);
             },
             (AuditorRequest auditorRequest, ImmutableContentRef acknowledgment) =>
-                auditorRequest.AdmitSelection(provenance, intent!, populationId, populationVersion,
-                    supersedesSelectionId, acknowledgment, history!)), context, ct).ConfigureAwait(false);
+            {
+                if (preparedCut?.Matches(auditorRequest) != true)
+                    return AuditorRequestPreparedCut.Changed();
+                return auditorRequest.AdmitSelection(provenance, intent!, populationId, populationVersion,
+                    supersedesSelectionId, acknowledgment, history!);
+            }), context, ct).ConfigureAwait(false);
         return await AuditorContent.ResponseAsync<OperationAcceptedResponse>(content, tenantId, outcome, ct)
             .ConfigureAwait(false);
     }
