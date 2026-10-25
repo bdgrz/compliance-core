@@ -28,31 +28,42 @@ static class EvaluationWork
         Func<ControlEvaluationState, CancellationToken, ValueTask<Result<EvaluationChange>>> decide,
         CancellationToken ct)
     {
-        var (current, state) = await evaluations.ReadAsync(tenantId, evaluationId, commandId, ct).ConfigureAwait(false);
-        if (state is null || !current.Belongs(programId, controlId))
-            return Result<ControlEvaluationView>.Failure(EvaluationNotFound());
-        var provenance = RootOperation.Provenance(commandId, commandKind, current.Stream,
+        var stream = new ControlEvaluation(tenantId, evaluationId).Stream;
+        var provenance = RootOperation.Provenance(commandId, commandKind, stream,
             ActorReference.ForMember(actor.MemberId, actor.Display), expectedRevision, intentDigest, now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         EvaluationChange? change = null;
-        FirstResponseDescriptor? response = null;
+        EvaluationPreparedCut? preparedCut = null;
         ImmutableContentRef? result = null;
-        if (current.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var decided = await decide(state, ct).ConfigureAwait(false);
-            if (!decided.IsSuccess)
-                return Result<ControlEvaluationView>.Failure(decided.Error!);
-            change = decided.Value!;
-            (response, result) = await NativeContent.FreezeAsync(content, tenantId, ControlEvaluationContent.ViewSchema,
-                change.After.ToView([]), ct).ConfigureAwait(false);
-        }
-
         var outcome = await operations.ExecuteAsync(new NativeOperation<ControlEvaluation>(binding,
             () => new ControlEvaluation(tenantId, evaluationId, commandId), owner => owner.Acceptance,
-            owner => Prepare(owner, change, response),
-            (ControlEvaluation owner, ImmutableContentRef frozen) => change!.Raise(owner, provenance, frozen, result!)),
-            context, ct).ConfigureAwait(false);
+            async (owner, token) =>
+            {
+                if (!owner.Belongs(programId, controlId))
+                    return Result<FirstResponseDescriptor>.Failure(EvaluationNotFound());
+                var state = await evaluations.ReadStateAsync(owner, token).ConfigureAwait(false);
+                if (state is null)
+                    return Result<FirstResponseDescriptor>.Failure(EvaluationNotFound());
+                var decided = await decide(state, token).ConfigureAwait(false);
+                if (!decided.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(decided.Error!);
+                change = decided.Value!;
+                var prepared = change.Prepare(owner);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                var (response, frozenResult) = await NativeContent.FreezeAsync(content, tenantId,
+                    ControlEvaluationContent.ViewSchema, change.After.ToView([]), token).ConfigureAwait(false);
+                result = frozenResult;
+                preparedCut = EvaluationPreparedCut.Capture(owner);
+                return Result<FirstResponseDescriptor>.Success(response);
+            },
+            (ControlEvaluation owner, ImmutableContentRef frozen) =>
+            {
+                if (preparedCut?.Matches(owner) != true)
+                    return EvaluationPreparedCut.Changed();
+                return change!.Raise(owner, provenance, frozen, result!);
+            }), context, ct).ConfigureAwait(false);
         return await NativeContent.ResponseAsync<ControlEvaluationView>(content, tenantId, outcome, ct)
             .ConfigureAwait(false);
     }
@@ -60,15 +71,4 @@ static class EvaluationWork
     public static RequestError EvaluationNotFound() =>
         new(RequestErrorKind.NotFound, "The control evaluation was not found.");
 
-    static Result<FirstResponseDescriptor> Prepare(ControlEvaluation owner, EvaluationChange? change,
-        FirstResponseDescriptor? response)
-    {
-        if (change is null || response is null)
-            return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The evaluation changed while the command was prepared; reload and retry.", true));
-        var prepared = change.Prepare(owner);
-        return prepared.IsSuccess
-            ? Result<FirstResponseDescriptor>.Success(response)
-            : Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-    }
 }

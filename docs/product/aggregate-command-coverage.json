@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "8eb6a3b8deb3ea8121713d49bd3b975ab92f1b57",
+  "sourceCommit": "f0591384bbcf774faa608cc587f40f62ca883989",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -2962,7 +2962,9 @@
         "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationProtocolTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationReplayCutTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -10058,13 +10060,14 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationProtocolTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationReplayCutTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
         "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
         "test/Compliance.Tests/Features/Evaluations/PersonalControlEvaluationTransportTests.cs",
         "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Testing/EvaluationSeeds.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -17663,7 +17666,9 @@
       "aggregateTargets": [
         "ControlEvaluation"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ControlEvaluationReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs"
       ],
@@ -19104,10 +19109,12 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "ControlEvaluationReader",
         "ControlReader",
         "FindingReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationProtocolTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
@@ -22212,6 +22219,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "ControlEvaluationReader",
         "ControlReader",
         "FindingReader"
       ],
@@ -25587,6 +25595,7 @@
         "FindingAggregate"
       ],
       "helperServices": [
+        "ControlEvaluationReader",
         "ControlReader",
         "RoutedFinding"
       ],
@@ -26404,15 +26413,18 @@
       "aggregateTargets": [
         "ControlEvaluation"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ControlEvaluationReader"
+      ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationProtocolTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationReplayCutTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
         "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
         "test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs",
         "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs"
       ],
       "note": ""
     },
@@ -28945,7 +28957,9 @@
       "aggregateTargets": [
         "ControlEvaluation"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ControlEvaluationReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
@@ -31047,6 +31061,7 @@
         "ControlEvaluation"
       ],
       "helperServices": [
+        "ControlEvaluationReader",
         "ControlReader"
       ],
       "testSymbolReferences": [
@@ -31161,7 +31176,9 @@
       "aggregateTargets": [
         "ControlEvaluation"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ControlEvaluationReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
         "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",

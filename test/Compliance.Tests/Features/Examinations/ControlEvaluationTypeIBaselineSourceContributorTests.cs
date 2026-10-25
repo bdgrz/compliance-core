@@ -173,7 +173,6 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributorTests
         var content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
         var history = new EvaluationHistory(store, content);
         await build(history);
-        await history.AppendAsync();
         var controlSource = new TypeIBaselineSourceReference("control_version", ControlId,
             baselineControlVersionId ?? ControlVersionId, 1, new string('a', 64));
         var reader = new ControlEvaluationReader(new UnusedAggregateReader(), store, content);
@@ -203,10 +202,7 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributorTests
     /// <summary>Raises evaluation facts on real owners, with their business times as broker commit times.</summary>
     sealed class EvaluationHistory(InMemoryEventStore store, IImmutableContentStore content)
     {
-        readonly ControlEvaluation _owner = new(TenantId, EvaluationId);
-        readonly List<DateTimeOffset> _occurred = [];
-        readonly List<ControlEvaluation> _others = [];
-        readonly List<IReadOnlyList<DateTimeOffset>> _otherOccurred = [];
+        ControlEvaluation _owner = new(TenantId, EvaluationId, EvaluationId);
         readonly ActorReference _actor = ActorReference.ForMember(EvaluatorId, "Evaluator");
         readonly Dictionary<int, EvaluationStepResultView> _results = [];
 
@@ -217,13 +213,16 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributorTests
             var none = await NativeContent.WriteAsync(content, TenantId, ControlEvaluationContent.RetestDeviationsSchema,
                 (IReadOnlyList<Uuid>)[]);
             Assert.True(_owner.Start(NativeFacts.Root(_owner, EvaluationId, "StartControlEvaluation", null, EvaluatorId,
-                at), ProgramId, ControlId, ControlVersionId, PlanVersionId, 1, steps, EvaluatorId, _actor, at, null,
+                at) with
+            { Actor = _actor }, ProgramId, ControlId, ControlVersionId, PlanVersionId, 1, steps, EvaluatorId, _actor, at, null,
                 null, none, NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
-            _occurred.Add(at);
+            await SaveAsync(_owner, at);
         }
 
         public async Task StepAsync(DateTimeOffset at, int index, string result = ControlEvaluationStates.Met)
         {
+            var commandId = Uuid.CreateVersion4();
+            await OpenAsync(commandId);
             var step = ProcedureSteps()[index];
             var recorded = new EvaluationStepResultView(1, result,
                 result == ControlEvaluationStates.NotTested ? "No items were available." : "The control operated.",
@@ -231,15 +230,17 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributorTests
             _results[index] = recorded;
             var reference = await NativeContent.WriteAsync(content, TenantId, ControlEvaluationContent.ResultSchema,
                 recorded);
-            Assert.True(_owner.RecordStep(NativeFacts.Root(_owner, Uuid.CreateVersion4(), "RecordControlEvaluationStep",
+            Assert.True(_owner.RecordStep(NativeFacts.Root(_owner, commandId, "RecordControlEvaluationStep",
                 _owner.Revision, EvaluatorId, at), ControlEvaluationRules.StepId(EvaluationId, index), reference, null,
                 NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
-            _occurred.Add(at);
+            await SaveAsync(_owner, at);
         }
 
         public async Task SubmitAsync(DateTimeOffset at, IReadOnlyList<DateTimeOffset>? recordedAt = null,
             string result = ControlEvaluationStates.Met)
         {
+            var commandId = Uuid.CreateVersion4();
+            await OpenAsync(commandId);
             var steps = ProcedureSteps().Select((procedure, index) => new ControlEvaluationStepView(
                 ControlEvaluationRules.StepId(EvaluationId, index), index, procedure.Assertion, procedure.Method,
                 procedure.InspectedItems, procedure.ExpectedCondition,
@@ -253,14 +254,15 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributorTests
                 _actor, at);
             var reference = await NativeContent.WriteAsync(content, TenantId, ControlEvaluationContent.SubmissionSchema,
                 submission);
-            Assert.True(_owner.Submit(NativeFacts.Root(_owner, Uuid.CreateVersion4(), "SubmitControlEvaluation",
+            Assert.True(_owner.Submit(NativeFacts.Root(_owner, commandId, "SubmitControlEvaluation",
                 _owner.Revision, EvaluatorId, at), reference, NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
-            _occurred.Add(at);
+            await SaveAsync(_owner, at);
         }
 
         public async Task ReviewAsync(DateTimeOffset at)
         {
             var decisionId = Uuid.CreateVersion4();
+            await OpenAsync(decisionId);
             var review = new ControlEvaluationReviewView(decisionId, 1, ControlEvaluationStates.Accepted,
                 "The evaluation is accepted.", ReviewerId, ActorReference.ForMember(ReviewerId, "Reviewer"), at);
             var reference = await NativeContent.WriteAsync(content, TenantId, ControlEvaluationContent.ReviewSchema,
@@ -268,7 +270,7 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributorTests
             Assert.True(_owner.Review(NativeFacts.Root(_owner, decisionId, "ReviewControlEvaluation", _owner.Revision,
                 ReviewerId, at), ControlEvaluationStates.Accepted, reference, NativeFacts.Ref(),
                 NativeFacts.Ref()).IsSuccess);
-            _occurred.Add(at);
+            await SaveAsync(_owner, at);
         }
 
         public async Task StartMalformedOtherControlAsync(DateTimeOffset at)
@@ -280,19 +282,28 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributorTests
             var none = await NativeContent.WriteAsync(content, TenantId, ControlEvaluationContent.RetestDeviationsSchema,
                 (IReadOnlyList<Uuid>)[]);
             Assert.True(other.Start(NativeFacts.Root(other, evaluationId, "StartControlEvaluation", null, EvaluatorId,
-                at), ProgramId, OtherControlId, Uuid.CreateVersion4(), PlanVersionId, 1, steps, EvaluatorId, _actor, at,
+                at) with
+            { Actor = _actor }, ProgramId, OtherControlId, Uuid.CreateVersion4(), PlanVersionId, 1, steps, EvaluatorId, _actor, at,
                 null, null, none, NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
-            _others.Add(other);
-            _otherOccurred.Add([at]);
+            await SaveAsync(other, at);
         }
 
-        public async Task AppendAsync()
+        async Task OpenAsync(Uuid commandId)
         {
-            if (_occurred.Count > 0)
-                await store.AppendAsync(_owner.Stream, 0, NativeFacts.Raised(_owner, [.. _occurred]));
-            for (var index = 0; index < _others.Count; index++)
-                await store.AppendAsync(_others[index].Stream, 0,
-                    NativeFacts.Raised(_others[index], [.. _otherOccurred[index]]));
+            var facts = new List<DomainEvent>();
+            await foreach (var record in store.ReadAsync(_owner.Stream, 0, CancellationToken.None))
+                facts.Add(record.Event);
+            _owner = NativeFacts.Replay(new ControlEvaluation(TenantId, EvaluationId, commandId), facts);
+            _ = await ControlEvaluationHistory.ReadAsync(store, _owner);
         }
+
+        async Task SaveAsync(ControlEvaluation owner, DateTimeOffset at)
+        {
+            var fact = Assert.Single(new AggregateScenario<ControlEvaluation>(owner).PendingEvents);
+            var committed = fact with { };
+            DomainEventSeed.Attach(committed, owner.Id, (ulong)owner.Revision, occurredOn: at);
+            await store.AppendAsync(owner.Stream, owner.CommittedStreamPosition, [committed]);
+        }
+
     }
 }

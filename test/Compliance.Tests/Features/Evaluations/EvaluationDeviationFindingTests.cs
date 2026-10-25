@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -36,11 +37,13 @@ public sealed class EvaluationDeviationFindingTests
         var reference = await NativeContent.WriteAsync(content, TenantId, ControlEvaluationContent.SubmissionSchema,
             submission);
         var owner = new ControlEvaluation(TenantId, EvaluationId);
-        var scenario = new ReactorScenario().Given(Submitted(owner, reference));
+        var trigger = Submitted(owner, reference);
+        var scenario = new ReactorScenario(new TenantId(TenantId.ToString()));
+        var sources = await SourcesAsync(scenario, trigger);
 
         // Act
         await scenario.RunAsync(new ControlEvaluationDeviationFindingReactor(
-            new InMemoryProjectionCheckpointStore(), scenario.Requests, content));
+            new InMemoryProjectionCheckpointStore(), scenario.Requests, content, sources));
 
         // Assert
         var request = Assert.IsType<RaiseEvaluationDeviationFinding>(
@@ -55,17 +58,58 @@ public sealed class EvaluationDeviationFindingTests
     {
         // Arrange
         var content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
-        var scenario = new ReactorScenario().Given(Submitted(new ControlEvaluation(TenantId, EvaluationId),
+        var scenario = new ReactorScenario(new TenantId(TenantId.ToString()));
+        var sources = await SourcesAsync(scenario, Submitted(new ControlEvaluation(TenantId, EvaluationId),
             NativeFacts.Ref(ControlEvaluationContent.SubmissionSchema)));
 
         // Act
         var failure = await Assert.ThrowsAnyAsync<Exception>(() => scenario.RunAsync(
             new ControlEvaluationDeviationFindingReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests,
-                content)));
+                content, sources)));
 
         // Assert
         Assert.Empty(scenario.SentRequests);
         Assert.NotNull(failure);
+    }
+
+    [Fact]
+    public async Task ShouldRejectForgedSubmissionGivenAnotherCommittedPayloadWithSameEventIdentity()
+    {
+        // Arrange
+        var content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+        var material = Deviation("material");
+        var submission = new EvaluationSubmissionView(1, [], "ineffective", [], [material],
+            ActorReference.ForMember(Uuid.CreateVersion4(), "Owner"), DateTimeOffset.UtcNow);
+        var reference = await NativeContent.WriteAsync(content, TenantId, ControlEvaluationContent.SubmissionSchema,
+            submission);
+        var owner = new ControlEvaluation(TenantId, EvaluationId);
+        var actual = Submitted(owner, reference);
+        var store = new InMemoryEventStore();
+        DomainEventSeed.Attach(actual, owner.Id, 1);
+        await store.AppendAsync(owner.Stream, 0, [actual]);
+        var forged = actual with { ProgramId = Uuid.CreateVersion4() };
+        forged.AttachMetadata(actual.Metadata);
+        var scenario = new ReactorScenario(new TenantId(TenantId.ToString())).Given(forged);
+        var sources = new EventStoreSourceFactResolver(store);
+
+        // Act
+        var error = await Record.ExceptionAsync(() => scenario.RunAsync(new ControlEvaluationDeviationFindingReactor(
+            new InMemoryProjectionCheckpointStore(), scenario.Requests, content, sources)));
+
+        // Assert
+        var failure = Assert.IsType<ReactionCommandFailedException>(error);
+        Assert.False(failure.Error.IsTransient);
+        Assert.Contains("differs", failure.Error.Message, StringComparison.Ordinal);
+        Assert.Empty(scenario.SentRequests);
+    }
+
+    static async Task<ISourceFactResolver> SourcesAsync(ReactorScenario scenario, ControlEvaluationSubmitted source)
+    {
+        var store = new InMemoryEventStore();
+        DomainEventSeed.Attach(source, EvaluationId, 1);
+        await store.AppendAsync(source.Operation.Owner, 0, [source]);
+        scenario.Given(source);
+        return new EventStoreSourceFactResolver(store);
     }
 
     static ControlEvaluationSubmitted Submitted(ControlEvaluation owner, Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference) =>

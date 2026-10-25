@@ -20,7 +20,8 @@ public sealed class ControlEvaluation : Aggregate
     public const string Area = "control-evaluations";
 
     readonly Uuid _tenantId;
-    readonly List<DomainEvent> _facts = [];
+    DomainEvent? _latest;
+    ControlEvaluationReviewed? _acceptingReview;
     ControlEvaluationStarted? _started;
     Uuid _programId;
     Uuid _controlId;
@@ -49,6 +50,8 @@ public sealed class ControlEvaluation : Aggregate
     /// <summary>The program this evaluation belongs to; empty before the start.</summary>
     public Uuid ProgramId => _programId;
 
+    internal Uuid TenantId => _tenantId;
+
     /// <summary>The control this evaluation evaluates; empty before the start.</summary>
     public Uuid ControlId => _controlId;
 
@@ -65,13 +68,13 @@ public sealed class ControlEvaluation : Aggregate
     /// <summary>The lifecycle: empty before the start, then in_progress, submitted or accepted.</summary>
     public string Lifecycle => _lifecycle;
 
-    /// <summary>Every fact of the evaluation in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
+    /// <summary>The latest native fact of this evaluation.</summary>
+    public DomainEvent? Latest => _latest;
+
+    internal EvaluationReplayCut ReplayCut { get; } = new();
 
     /// <summary>The fact that accepted the evaluation, once it is accepted.</summary>
-    public ControlEvaluationReviewed? AcceptingReview => _lifecycle == ControlEvaluationStates.Accepted
-        ? _facts.OfType<ControlEvaluationReviewed>().Last()
-        : null;
+    public ControlEvaluationReviewed? AcceptingReview => _acceptingReview;
 
     /// <summary>Checks the start guard without raising anything.</summary>
     public Result PrepareStart() => _started is null
@@ -94,6 +97,9 @@ public sealed class ControlEvaluation : Aggregate
         var prepared = PrepareStart();
         if (!prepared.IsSuccess)
             return prepared;
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new ControlEvaluationStarted(_tenantId, programId, controlId, Id, 1, controlVersionId,
             planVersionId, planVersion, stepsManifest, evaluatorMemberId, startedBy, startedAt, retestOfEvaluationId,
             retestPredecessor, retestDeviationIds, operation, firstResponse, operationResult));
@@ -179,6 +185,9 @@ public sealed class ControlEvaluation : Aggregate
         var prepared = PrepareReview((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new ControlEvaluationReviewed(_tenantId, _programId, _controlId, Id, _revision + 1, decision, review,
             operation, firstResponse, operationResult));
         return Result.Success;
@@ -189,7 +198,8 @@ public sealed class ControlEvaluation : Aggregate
         if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "Evaluator work is a root operation of its own evaluation with an expected revision."));
-        return PrepareWork((long)expected);
+        var prepared = PrepareWork((long)expected);
+        return prepared.IsSuccess ? ReplayCut.Require(this, Acceptance, operation) : prepared;
     }
 
     void Apply(ControlEvaluationStarted ev)
@@ -235,6 +245,7 @@ public sealed class ControlEvaluation : Aggregate
         Acceptance.Observe(ev);
         Require(ev.TenantId, ev.ProgramId, ev.ControlId, ev.EvaluationId, ev.Revision, ControlEvaluationStates.Submitted,
             ev.Operation, ev.FirstResponse);
+        _acceptingReview = ev.Decision == ControlEvaluationStates.Accepted ? ev : null;
         _lifecycle = ev.Decision == ControlEvaluationStates.Accepted
             ? ControlEvaluationStates.Accepted
             : ControlEvaluationStates.InProgress;
@@ -254,7 +265,13 @@ public sealed class ControlEvaluation : Aggregate
     void Advance(DomainEvent ev)
     {
         _revision++;
-        _facts.Add(ev);
+        _latest = ev;
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        ReplayCut.Observe(ev);
     }
 
     static Result NotFound() => Result.Failure(new RequestError(RequestErrorKind.NotFound,

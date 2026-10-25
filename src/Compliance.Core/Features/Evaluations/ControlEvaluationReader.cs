@@ -20,8 +20,13 @@ public sealed class ControlEvaluationReader(IAggregateReader reader, IDomainEven
     {
         var owner = await reader.HydrateAsync(new ControlEvaluation(tenantId, evaluationId, selectedLogicalId), ct)
             .ConfigureAwait(false);
-        return (owner, await ControlEvaluationFold.ReadAsync(owner.Facts, content, tenantId, ct)
-            .ConfigureAwait(false));
+        return (owner, await ReadStateAsync(owner, ct).ConfigureAwait(false));
+    }
+
+    internal async ValueTask<ControlEvaluationState?> ReadStateAsync(ControlEvaluation owner, CancellationToken ct)
+    {
+        var facts = await ControlEvaluationHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
+        return await ControlEvaluationFold.ReadAsync(facts, content, owner.TenantId, ct).ConfigureAwait(false);
     }
 
     /// <summary>The evaluation of a program and control with its retests composed, or null when there is none.</summary>
