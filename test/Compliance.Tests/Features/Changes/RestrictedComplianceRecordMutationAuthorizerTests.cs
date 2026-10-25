@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Features.Incidents;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Changes;
@@ -129,10 +130,10 @@ public sealed class RestrictedComplianceRecordMutationAuthorizerTests
         return change;
     }
 
-    static ComplianceIncident AssessedIncident(Uuid tenantId, Uuid programId, Uuid incidentId,
+    static ComplianceIncidentRules AssessedIncident(Uuid tenantId, Uuid programId, Uuid incidentId,
         Uuid assessorMemberId)
     {
-        var incident = new ComplianceIncident(tenantId, programId, incidentId);
+        var incident = new ComplianceIncidentRules(tenantId, programId, incidentId);
         Assert.Null(incident.Record(new ComplianceIncidentContent(null, null, null, null,
             "A restricted customer data alert", "Customer data was briefly exposed.", "security",
             "high", Now.AddMinutes(-3), Now.AddMinutes(-2),
@@ -178,6 +179,8 @@ public sealed class RestrictedComplianceRecordMutationAuthorizerTests
         public SignificantChangeReader Changes { get; }
         public ValueTask<SignificantChange> SaveAsync(SignificantChangeRules rules) => ChangeSeeds.WriteAsync(writer, Content, rules);
         public IAggregateReader Reader { get; }
+
+        public ValueTask<ComplianceIncident> SaveAsync(ComplianceIncidentRules rules) => IncidentSeeds.WriteAsync(writer, Content, rules);
 
         public ValueTask SaveAsync(Aggregate aggregate) => writer.SaveAsync(aggregate,
             new RequestDispatchContext(RequestActor.System));

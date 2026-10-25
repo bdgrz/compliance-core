@@ -5,7 +5,7 @@ using IncidentAggregate = Bdgrz.Compliance.Features.Incidents.ComplianceIncident
 namespace Bdgrz.Compliance.Features.Changes;
 
 /// <summary>Reads exact current change and incident assessment facts from their owning aggregates.</summary>
-public sealed class AggregateSystemDescriptionDecisionCorrelationReader(IAggregateReader reader, SignificantChangeReader changes)
+public sealed class AggregateSystemDescriptionDecisionCorrelationReader(ComplianceIncidentReader incidents, SignificantChangeReader changes)
     : ISystemDescriptionDecisionCorrelationReader
 {
     public async ValueTask<ComplianceImpactAssessmentCorrelation?> GetCurrentChangeAsync(
@@ -26,9 +26,9 @@ public sealed class AggregateSystemDescriptionDecisionCorrelationReader(IAggrega
     public async ValueTask<ComplianceImpactAssessmentCorrelation?> GetCurrentIncidentAsync(
         Uuid tenantId, Uuid programId, Uuid incidentId, CancellationToken ct = default)
     {
-        var incident = await reader.HydrateAsync(new IncidentAggregate(tenantId, programId, incidentId), ct)
+        var incident = await incidents.ReadCurrentAsync(tenantId, programId, incidentId, ct)
             .ConfigureAwait(false);
-        if (incident.Current is not { CurrentAssessment: { } assessment } current ||
+        if (incident.View is not { CurrentAssessment: { } assessment } current ||
             current.TenantId != tenantId || current.ProgramId != programId ||
             current.ComplianceIncidentId != incidentId ||
             assessment.ContentVersion != current.CurrentVersionNumber)

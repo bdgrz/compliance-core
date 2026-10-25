@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Features.Incidents;
+using Bdgrz.Compliance.Tests.Features.SystemDescription;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Features.Content;
@@ -9,7 +11,7 @@ using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules;
 
 namespace Bdgrz.Compliance.Tests.Features.Changes;
 
@@ -158,7 +160,7 @@ public sealed class ComplianceImpactReactionHandlerTests
             approver);
         await scenario.SaveAsync(description);
         var handler = new RecordSignificantChangeSystemDescriptionDecisionHandler(
-            scenario.ChangeOperations, scenario.Reader);
+            scenario.ChangeOperations, scenario.Descriptions);
         var wrongVersion = new RecordSignificantChangeSystemDescriptionDecision(Uuid.CreateVersion4(), tenantId,
             programId, changeId, 1, descriptionId, Uuid.CreateVersion4(), versionId,
             "approved_successor", SignificantChange.AssessmentSha256(
@@ -218,7 +220,7 @@ public sealed class ComplianceImpactReactionHandlerTests
 
         // Act
         var handler = new RecordComplianceIncidentSystemDescriptionDecisionHandler(
-            scenario.Operations, scenario.Reader, scenario.Content, new FixedTimeProvider(Now));
+            scenario.IncidentOperations, scenario.Descriptions);
         var mismatchedAssessment = await handler.HandleAsync(SystemContext(request with
         {
             CommandId = Uuid.CreateVersion4(),
@@ -228,8 +230,7 @@ public sealed class ComplianceImpactReactionHandlerTests
             SystemContext(request), CancellationToken.None);
         var replayed = await handler.HandleAsync(
             SystemContext(request), CancellationToken.None);
-        var saved = await scenario.Reader.HydrateAsync(new ComplianceIncident(tenantId,
-            programId, incidentId));
+        var saved = await scenario.IncidentRulesAsync(tenantId, programId, incidentId);
 
         // Assert
         Assert.False(mismatchedAssessment.IsSuccess);
@@ -263,7 +264,7 @@ public sealed class ComplianceImpactReactionHandlerTests
             RbacIds.Member(tenantId, Uuid.CreateVersion4()),
             RbacIds.Member(tenantId, Uuid.CreateVersion4())));
         var handler = new RecordSignificantChangeSystemDescriptionDecisionHandler(
-            scenario.ChangeOperations, scenario.Reader);
+            scenario.ChangeOperations, scenario.Descriptions);
         var request = new RecordSignificantChangeSystemDescriptionDecision(Uuid.CreateVersion4(), tenantId,
             programId, changeId, 2, descriptionId, versionId, versionId,
             "approved_successor", SignificantChange.AssessmentSha256(
@@ -303,10 +304,10 @@ public sealed class ComplianceImpactReactionHandlerTests
         return change;
     }
 
-    internal static ComplianceIncident AssessedIncident(Uuid tenantId, Uuid programId, Uuid incidentId,
+    internal static ComplianceIncidentRules AssessedIncident(Uuid tenantId, Uuid programId, Uuid incidentId,
         Uuid assessor, DateTimeOffset assessedAt)
     {
-        var incident = new ComplianceIncident(tenantId, programId, incidentId);
+        var incident = new ComplianceIncidentRules(tenantId, programId, incidentId);
         var sourceId = Uuid.CreateVersion4();
         Assert.Null(incident.Record(new ComplianceIncidentContent(null, null, null, null,
             "A customer data alert", "Customer data was briefly exposed.", "security", "high",
@@ -405,8 +406,16 @@ public sealed class ComplianceImpactReactionHandlerTests
             Operations = new NativeOperationExecutor(Reader, Executor, Content);
             Changes = new SignificantChangeReader(Reader, events, Content);
             ChangeOperations = new SignificantChangeOperations(Operations, Changes, Content, new FixedTimeProvider(Now));
+            Descriptions = new SystemDescriptionReader(Reader, events, Content);
+            Incidents = new ComplianceIncidentReader(Reader, events, Content);
+            IncidentOperations = new IncidentOperations(Operations, Incidents, Content, new FixedTimeProvider(Now));
         }
 
+        public ComplianceIncidentReader Incidents { get; }
+        public IncidentOperations IncidentOperations { get; }
+        public async ValueTask<ComplianceIncidentRules> IncidentRulesAsync(Uuid tenant, Uuid program, Uuid incident) => (await Incidents.ReadAsync(tenant, program, incident)).Rules;
+        public SystemDescriptionReader Descriptions { get; }
+        public ValueTask<Bdgrz.Compliance.Features.SystemDescription.SystemDescription> SaveAsync(SystemDescriptionRules rules) => DescriptionSeeds.WriteAsync(Writer, Content, rules);
         public SignificantChangeReader Changes { get; }
         public SignificantChangeOperations ChangeOperations { get; }
         public ValueTask<SignificantChange> SaveAsync(SignificantChangeRules rules) => ChangeSeeds.WriteAsync(Writer, Content, rules);
@@ -415,6 +424,8 @@ public sealed class ComplianceImpactReactionHandlerTests
         public IAggregateExecutor Executor { get; }
         public IAggregateReader Reader { get; }
         IAggregateWriter Writer { get; }
+
+        public ValueTask<ComplianceIncident> SaveAsync(ComplianceIncidentRules rules) => IncidentSeeds.WriteAsync(Writer, Content, rules);
 
         public ValueTask SaveAsync(Aggregate aggregate) => Writer.SaveAsync(aggregate,
             new RequestDispatchContext(RequestActor.System));

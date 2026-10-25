@@ -1,16 +1,16 @@
 using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Records management wording against its exact validated examination sources.</summary>
 public sealed class RecordManagementAssertionHandler(IAggregateExecutor executor,
-    IAggregateReader reader, AuditPackageReader packages, TypeIIPeriodReader periods, TimeProvider clock) : IRequestHandler<RecordManagementAssertion>
+    IAggregateReader reader, AuditPackageReader packages, TypeIIPeriodReader periods, TimeProvider clock, SystemDescriptionReader descriptions) : IRequestHandler<RecordManagementAssertion>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<RecordManagementAssertion> context,
         CancellationToken ct)
@@ -90,16 +90,24 @@ public sealed class RecordManagementAssertionHandler(IAggregateExecutor executor
             return Conflict("Every assertion input and system-description version must match the exact validated package and frozen snapshot.");
 
         var descriptionId = descriptionSelection.SourceRecordId;
-        var description = await reader.HydrateAsync(new SystemDescriptionAggregate(request.TenantId,
-            request.ProgramId, descriptionId), ct).ConfigureAwait(false);
+        SystemDescriptionReadSnapshot description;
+        SystemDescriptionVersionSource? selectedDescription;
+        try
+        {
+            description = await descriptions.ReadAsync(request.TenantId, request.ProgramId, descriptionId, ct).ConfigureAwait(false);
+            selectedDescription = await descriptions.VersionSourceAsync(request.TenantId, request.ProgramId, descriptionId, content.SystemDescriptionVersionId, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result.Failure(SystemDescriptionReadFailure.Of(failure));
+        }
         var descriptionView = description.Read();
-        var descriptionVersion = description.FindVersion(content.SystemDescriptionVersionId);
+        var descriptionVersion = selectedDescription?.Version;
         var purpose = content.ScopeKind == "type_i" ? "type_i_baseline" : "type_ii_close";
-        var approval = descriptionView.Approvals.FirstOrDefault(item =>
-            item.VersionId == content.SystemDescriptionVersionId);
+        var approval = selectedDescription?.Approval;
         var binding = descriptionView.Bindings.FirstOrDefault(item =>
             item.VersionId == content.SystemDescriptionVersionId && item.Purpose == purpose);
-        if (descriptionVersion is not { Status: "approved" } ||
+        if (selectedDescription?.ApprovalSource is null || descriptionVersion is not { Status: "approved" } ||
             descriptionVersion.TenantId != request.TenantId ||
             descriptionVersion.ProgramId != request.ProgramId ||
             descriptionVersion.SystemDescriptionId != descriptionId ||

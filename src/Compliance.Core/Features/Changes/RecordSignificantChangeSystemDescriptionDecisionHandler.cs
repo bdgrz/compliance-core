@@ -1,13 +1,13 @@
 using Bdgrz.Compliance.Features.SystemDescription;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
 
 namespace Bdgrz.Compliance.Features.Changes;
 
 public sealed class RecordSignificantChangeSystemDescriptionDecisionHandler(
-    SignificantChangeOperations operations, IAggregateReader reader)
+    SignificantChangeOperations operations, SystemDescriptionReader descriptions)
     : IRequestHandler<RecordSignificantChangeSystemDescriptionDecision, UnitResult>
 {
     public ValueTask<Result<UnitResult>> HandleAsync(
@@ -32,8 +32,15 @@ public sealed class RecordSignificantChangeSystemDescriptionDecisionHandler(
             ActorReference.ForSystemProcess("reactor:SystemDescriptionDecision", "SystemDescriptionDecision"),
             async (snapshot, operation, token) =>
             {
-                var description = await reader.HydrateAsync(new SystemDescriptionAggregate(request.TenantId,
-                    request.ProgramId, request.SystemDescriptionId), token).ConfigureAwait(false);
+                SystemDescriptionReadSnapshot description;
+                try
+                {
+                    description = await descriptions.ReadAsync(request.TenantId, request.ProgramId, request.SystemDescriptionId, token).ConfigureAwait(false);
+                }
+                catch (ImmutableContentIntegrityException failure)
+                {
+                    return Result.Failure(SystemDescriptionReadFailure.Of(failure));
+                }
                 var decision = SystemDescriptionDecisionCorrelation.Find(description, request.TenantId, request.ProgramId,
                     request.ChangeId, request.SystemDescriptionVersionId, request.DecisionId, request.Decision, request.AssessmentSha256);
                 if (decision is null)

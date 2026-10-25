@@ -18,7 +18,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 /// are read from verified content; legacy State facts are inspected only at their explicit scoped reference fields.
 /// No directory absence, global identity lookup or invented material identity establishes completeness.
 /// </summary>
-public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, IImmutableContentStore content, RecordedSourceReceiptCutFactory receiptCuts)
+public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, IImmutableContentStore content, SystemDescriptionReader descriptions, RecordedSourceReceiptCutFactory receiptCuts)
 {
     const int MaximumFacts = 25000;
     static readonly string[] Areas = ["audit-packages", "audit-populations", "management-assertions", "audit-outcomes",
@@ -34,6 +34,7 @@ public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, I
         var affected = new HashSet<Uuid> { prior.CloseSnapshotId };
         var affectedPopulations = new HashSet<Uuid>();
         var affectedRequests = new HashSet<Uuid>();
+        var descriptionCuts = new Dictionary<Uuid, SystemDescriptionReadSnapshot>();
         foreach (var record in records)
         {
             if (record.Fact.Stream.Area == AuditPackageManifest.Area)
@@ -61,19 +62,25 @@ public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, I
                 continue;
             if (record.Fact.Stream.Area == "system-descriptions")
             {
-                if (record.Payload.TryGetProperty("version", out var versionJson))
+                var descriptionId = Uuid.Parse(record.Fact.Stream.Resource, CultureInfo.InvariantCulture);
+                if (!descriptionCuts.TryGetValue(descriptionId, out var description))
                 {
-                    var version = JsonSerializer.Deserialize(versionJson, ComplianceCoreJsonContext.Default.SystemDescriptionVersionView)
-                        ?? throw new ImmutableContentIntegrityException("A system description version has no exact frozen scope.");
-                    if (version.TenantId != period.TenantId || version.ProgramId != period.ProgramId ||
-                        version.SystemDescriptionId.ToString() != record.Fact.Stream.Resource)
-                        throw new ImmutableContentIntegrityException("The system description differs from its native material owner scope.");
-                    if (version.Scope.TypeIIPeriodId == period.PeriodId && version.Scope.ExaminationId == period.ExaminationId &&
-                        version.Scope.CloseSnapshotId == prior.CloseSnapshotId)
-                    {
-                        affected.Add(version.SystemDescriptionId);
-                        affected.Add(version.SystemDescriptionVersionId);
-                    }
+                    description = await descriptions.ReadAsync(period.TenantId, period.ProgramId, descriptionId, ct).ConfigureAwait(false);
+                    descriptionCuts.Add(descriptionId, description);
+                }
+                var actual = description.Facts.SingleOrDefault(value => NativeFactReference.Of(description.Stream, value) == record.Fact);
+                if (actual is not ISystemDescriptionFact fact)
+                    throw new ImmutableContentUnavailableException("The exact native description material source is not visible yet.");
+                if (TypeIIPeriodCloseHistory.Capture(description.Stream, actual).PayloadSha256 != record.PayloadSha256 ||
+                    description.FindVersion(fact.Header.CurrentVersionId) is not { } version ||
+                    version.TenantId != period.TenantId || version.ProgramId != period.ProgramId ||
+                    version.SystemDescriptionId != descriptionId)
+                    throw new ImmutableContentIntegrityException("The system description differs from its exact native material source.");
+                if (version.Scope.TypeIIPeriodId == period.PeriodId && version.Scope.ExaminationId == period.ExaminationId &&
+                    version.Scope.CloseSnapshotId == prior.CloseSnapshotId)
+                {
+                    affected.Add(version.SystemDescriptionId);
+                    affected.Add(version.SystemDescriptionVersionId);
                 }
                 continue;
             }

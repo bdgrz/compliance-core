@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Features.SystemDescription;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPopulations;
@@ -14,7 +15,7 @@ using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.AuditOutcome;
 using ExaminationEngagementAggregate = Bdgrz.Compliance.Features.Examinations.ExaminationEngagement;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
 
 namespace Bdgrz.Compliance.Tests.Features.Operations;
@@ -411,7 +412,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
             Assert.Null(description.BindToExamination(1, ExaminationId, "type_i_baseline", BaselineId,
                 ExecutiveId, "Chief Executive", Now.AddMinutes(-6)));
             await Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
-            await Writer.SaveAsync(description, new RequestDispatchContext(RequestActor.System));
+            await DescriptionSeeds.WriteAsync(Writer, Host.Content, description);
 
             var baseline = engagement.Baseline!;
             var outcome = new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId);

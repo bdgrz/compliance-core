@@ -1,10 +1,11 @@
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Content;
+using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Incidents;
 
-public sealed class GetComplianceIncidentHandler(IComplianceIncidentDirectoryReader directory,
-    RestrictedComplianceRecordVisibility visibility)
+public sealed class GetComplianceIncidentHandler(ComplianceIncidentReader changes,
+    RestrictedComplianceRecordVisibility visibility, ComplianceIncidentReadConsistency consistency)
     : IRequestHandler<GetComplianceIncident, ComplianceIncidentView>
 {
     public async ValueTask<Result<ComplianceIncidentView>> HandleAsync(
@@ -14,18 +15,21 @@ public sealed class GetComplianceIncidentHandler(IComplianceIncidentDirectoryRea
         if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
             request.IncidentId == Uuid.Empty)
             return Result<ComplianceIncidentView>.Failure(new RequestError(RequestErrorKind.Validation,
-                "Tenant, program, and incident identities are required."));
+                "Tenant, program, and compliance-incident identities are required."));
 
-        var incident = await directory.GetAsync(request.TenantId,
-            request.IncidentId, ct).ConfigureAwait(false);
-        if (incident is not { Current: { } current } view || view.TenantId != request.TenantId ||
-            view.ProgramId != request.ProgramId || view.ComplianceIncidentId != request.IncidentId ||
-            !await visibility.CanReadAsync(request.TenantId, context.Actor,
-                current.Content.HandlingClass,
-                view.Assessments.Select(static assessment => assessment.AssessedByMemberId).ToArray(), ct)
-                .ConfigureAwait(false))
-            return Result<ComplianceIncidentView>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The compliance incident was not found."));
-        return Result<ComplianceIncidentView>.Success(view);
+        try
+        {
+            var snapshot = await changes.ReadAsync(request.TenantId, request.ProgramId, request.IncidentId, ct).ConfigureAwait(false);
+            if (snapshot.View is not { Current: { } current } view ||
+                !await visibility.CanReadAsync(request.TenantId, context.Actor, current.Content.HandlingClass,
+                    view.Assessments.Select(item => item.AssessedByMemberId).ToArray(), ct).ConfigureAwait(false))
+                return Result<ComplianceIncidentView>.Failure(new RequestError(RequestErrorKind.NotFound, "The compliance incident was not found."));
+            var confirmed = await consistency.ConfirmAsync(snapshot, ct).ConfigureAwait(false);
+            return confirmed.IsSuccess ? Result<ComplianceIncidentView>.Success(view) : Result<ComplianceIncidentView>.Failure(confirmed.Error!);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<ComplianceIncidentView>.Failure(IncidentOperations.ContentFailure(exception));
+        }
     }
 }

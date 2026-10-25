@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.Incidents;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
@@ -8,6 +10,7 @@ namespace Bdgrz.Compliance.Features.Changes;
 
 public sealed partial class SystemDescriptionDecisionReactor(
     IProjectionCheckpointStore checkpoints, IRequestBus bus, IAggregateReader reader,
+    SystemDescriptionReader descriptions, IImmutableContentStore content,
     ISystemDescriptionDecisionCorrelationReader assessments)
     : Reactor(checkpoints, EventStreamPattern.ForTenant("system-descriptions"), WorkloadName),
       IReactorHandler<SystemDescriptionApproved>,
@@ -20,12 +23,16 @@ public sealed partial class SystemDescriptionDecisionReactor(
     {
         var ev = context.Trigger;
         ValidateSource(context.Source.Stream, ev.TenantId, ev.ProgramId, ev.SystemDescriptionId);
-        var description = await reader.HydrateAsync(new SystemDescriptionAggregate(ev.TenantId,
-            ev.ProgramId, ev.SystemDescriptionId), ct).ConfigureAwait(false);
-        var version = description.FindVersion(ev.Approval.VersionId);
-        if (version is null || version.Status != "approved" ||
-            description.FindApproval(ev.Approval.VersionId) != ev.Approval ||
-            version.Version != ev.Approval.Version || version.TenantId != ev.TenantId ||
+        var description = await descriptions.ReadAsync(ev.TenantId, ev.ProgramId, ev.SystemDescriptionId, ct).ConfigureAwait(false);
+        RequireSource(description, context.Source.Stream, ev);
+        if (ev.ChangeCount == 0)
+            return;
+        var approval = ((SystemDescriptionApprovedBody)await SystemDescriptionContent.ReadMutationAsync(content, ev, ct).ConfigureAwait(false)).Approval;
+        var selected = await descriptions.VersionSourceAsync(ev.TenantId, ev.ProgramId, ev.SystemDescriptionId, approval.VersionId, ct).ConfigureAwait(false);
+        var version = selected?.Version;
+        if (selected is null || selected.ApprovalSource != NativeFactReference.Of(description.Stream, ev) || selected.Approval != approval || version is null || version.Status != "approved" ||
+            description.FindApproval(approval.VersionId) != approval ||
+            version.Version != approval.Version || version.TenantId != ev.TenantId ||
             version.ProgramId != ev.ProgramId)
             throw new InvalidOperationException(
                 "An approved description reaction must use the exact committed approval and version.");
@@ -59,45 +66,48 @@ public sealed partial class SystemDescriptionDecisionReactor(
     {
         var ev = context.Trigger;
         ValidateSource(context.Source.Stream, ev.TenantId, ev.ProgramId, ev.SystemDescriptionId);
-        var description = await reader.HydrateAsync(new SystemDescriptionAggregate(ev.TenantId,
-            ev.ProgramId, ev.SystemDescriptionId), ct).ConfigureAwait(false);
-        if (description.FindVersion(ev.Decision.VersionId) is not { } version ||
+        var description = await descriptions.ReadAsync(ev.TenantId, ev.ProgramId, ev.SystemDescriptionId, ct).ConfigureAwait(false);
+        RequireSource(description, context.Source.Stream, ev);
+        if (ev.ChangeCount == 0)
+            return;
+        var decision = ((SystemDescriptionNoChangeRecordedBody)await SystemDescriptionContent.ReadMutationAsync(content, ev, ct).ConfigureAwait(false)).Decision;
+        if (description.FindVersion(decision.VersionId) is not { } version ||
             description.NoChangeDecisions.FirstOrDefault(item =>
-                item.VersionId == ev.Decision.VersionId && item.ChangeId == ev.Decision.ChangeId)
-                != ev.Decision ||
+                item.VersionId == decision.VersionId && item.ChangeId == decision.ChangeId)
+                != decision ||
             version.Content.PeriodChanges.FirstOrDefault(change =>
-                change.ChangeId == ev.Decision.ChangeId) is not { IsMaterial: false })
+                change.ChangeId == decision.ChangeId) is not { IsMaterial: false })
             throw new InvalidOperationException(
                 "A no-change reaction must use the exact committed period-change decision.");
 
         var change = await reader.HydrateAsync(new SignificantChange(ev.TenantId,
-            ev.ProgramId, ev.Decision.ChangeId), ct).ConfigureAwait(false);
+            ev.ProgramId, decision.ChangeId), ct).ConfigureAwait(false);
         var incident = await reader.HydrateAsync(new ComplianceIncident(ev.TenantId,
-            ev.ProgramId, ev.Decision.ChangeId), ct).ConfigureAwait(false);
-        if (change.Revision > 0 && incident.Revision > 0)
+            ev.ProgramId, decision.ChangeId), ct).ConfigureAwait(false);
+        if (change.Revision > 0 && incident.Header?.ProgramId == ev.ProgramId)
             throw new InvalidOperationException(
                 "A no-change decision ambiguously identifies both a change and an incident.");
 
         var changeAssessment = await assessments.GetCurrentChangeAsync(ev.TenantId,
-            ev.ProgramId, ev.Decision.ChangeId, ct).ConfigureAwait(false);
+            ev.ProgramId, decision.ChangeId, ct).ConfigureAwait(false);
         var incidentAssessment = await assessments.GetCurrentIncidentAsync(ev.TenantId,
-            ev.ProgramId, ev.Decision.ChangeId, ct).ConfigureAwait(false);
+            ev.ProgramId, decision.ChangeId, ct).ConfigureAwait(false);
 
         var decisionId = SystemDescriptionDecisionCorrelation.NoChangeDecisionId(
-            ev.Decision.VersionId, ev.Decision.ChangeId);
+            decision.VersionId, decision.ChangeId);
         if (changeAssessment is { RequiresSystemDescriptionReview: true } currentChangeAssessment)
         {
             var correlated = SystemDescriptionDecisionCorrelation.Find(description, ev.TenantId,
-                ev.ProgramId, ev.Decision.ChangeId, ev.Decision.VersionId, decisionId, "no_change",
+                ev.ProgramId, decision.ChangeId, decision.VersionId, decisionId, "no_change",
                 currentChangeAssessment.AssessmentSha256);
             if (correlated is null)
                 throw new InvalidOperationException(
                     "A no-change decision does not retain an exact change correlation.");
             await ImpactReactionOutcomes.SendAsync(bus, new RecordSignificantChangeSystemDescriptionDecision(
-                EffectIdentity.CommandId(ev.Metadata.EventId, "change:system-description-decision", $"{ev.TenantId}:{ev.Decision.ChangeId}", null),
-                ev.TenantId, ev.ProgramId, ev.Decision.ChangeId,
+                EffectIdentity.CommandId(ev.Metadata.EventId, "change:system-description-decision", $"{ev.TenantId}:{decision.ChangeId}", null),
+                ev.TenantId, ev.ProgramId, decision.ChangeId,
                 currentChangeAssessment.ContentVersion, ev.SystemDescriptionId,
-                ev.Decision.VersionId, decisionId, "no_change",
+                decision.VersionId, decisionId, "no_change",
                 currentChangeAssessment.AssessmentSha256), context, ct)
                 .ConfigureAwait(false);
             return;
@@ -106,19 +116,29 @@ public sealed partial class SystemDescriptionDecisionReactor(
         if (incidentAssessment is { RequiresSystemDescriptionReview: true } currentIncidentAssessment)
         {
             var correlated = SystemDescriptionDecisionCorrelation.Find(description, ev.TenantId,
-                ev.ProgramId, ev.Decision.ChangeId, ev.Decision.VersionId, decisionId, "no_change",
+                ev.ProgramId, decision.ChangeId, decision.VersionId, decisionId, "no_change",
                 currentIncidentAssessment.AssessmentSha256);
             if (correlated is null)
                 throw new InvalidOperationException(
                     "A no-change decision does not retain an exact incident correlation.");
             await ImpactReactionOutcomes.SendAsync(bus, new RecordComplianceIncidentSystemDescriptionDecision(
                 EffectIdentity.CommandId(ev.Metadata.EventId, "incident:system-description-decision",
-                    $"{ev.TenantId}:{ev.Decision.ChangeId}", null),
-                ev.TenantId, ev.ProgramId, ev.Decision.ChangeId,
+                    $"{ev.TenantId}:{decision.ChangeId}", null),
+                ev.TenantId, ev.ProgramId, decision.ChangeId,
                 currentIncidentAssessment.ContentVersion, ev.SystemDescriptionId,
-                ev.Decision.VersionId, decisionId, currentIncidentAssessment.AssessmentSha256),
+                decision.VersionId, decisionId, currentIncidentAssessment.AssessmentSha256),
                 context, ct).ConfigureAwait(false);
         }
+    }
+
+    static void RequireSource(SystemDescriptionReadSnapshot description, EventStreamAddress stream, DomainEvent source)
+    {
+        var actual = description.Facts.SingleOrDefault(fact => fact.Metadata.EventId == source.Metadata.EventId);
+        if (actual is null)
+            throw new ImmutableContentUnavailableException("The exact system-description decision source is not visible yet.");
+        if (actual.GetType() != source.GetType() || NativeFactReference.Of(stream, actual) != NativeFactReference.Of(stream, source) ||
+            ContentDigest.Sha256(actual, actual.GetType()) != ContentDigest.Sha256(source, source.GetType()))
+            throw new ImmutableContentIntegrityException("The decision reaction differs from its exact native source fact.");
     }
 
     void ValidateSource(EventStreamAddress source, Uuid tenantId, Uuid programId,

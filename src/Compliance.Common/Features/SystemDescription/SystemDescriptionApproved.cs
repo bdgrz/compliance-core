@@ -1,13 +1,26 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-/// <summary>Persists an approval of one exact narrative version.</summary>
-[Discriminator("bdgrz.systemdescription.system-description-approved", 1)]
-public sealed record SystemDescriptionApproved(
-    Uuid TenantId,
+/// <summary>One selected native fact, compact authority and exact immutable structured business payload.</summary>
+[Discriminator("bdgrz.systemdescription.system-description-approved", 2)]
+public sealed record SystemDescriptionApproved(Uuid TenantId,
     Uuid ProgramId,
     Uuid SystemDescriptionId,
     long AggregateRevision,
-    SystemDescriptionApprovalView Approval,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    ImmutableContentRef ApprovalContent,
+    DateTimeOffset OccurredAt,
+    OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult,
+    SystemDescriptionAuthorityHeader Header,
+    ImmutableContentRef CurrentVersionContent,
+    long NativeSequence,
+    int ChangeCount,
+    Uuid ActorMemberId) : DomainEvent, ISystemDescriptionFact
+{
+    public ImmutableContentRef CurrentAuthorityContent { get; init; } = null!;
+    public ImmutableContentRef? SourceSnapshotContent { get; init; }
+}

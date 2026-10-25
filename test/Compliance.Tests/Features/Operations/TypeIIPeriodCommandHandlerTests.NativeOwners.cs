@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.SystemDescription;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPackages;
@@ -169,7 +170,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             new NativeOperationExecutor(fixture.Reader, executor ?? fixture.Executor, fixture.Host.Content), fixture.Periods,
             fixture.Host.Content, fixture.CloseClock), new ManagementExecutiveAuthority(fixture.Reader,
             new ExecutivePermissions(RbacPermissions.ManagementExecutiveCiso)), sources,
-            new TypeIIPeriodCloseMaterialReader(fixture.Events, fixture.Host.Content,
+            new TypeIIPeriodCloseMaterialReader(fixture.Events, fixture.Host.Content, new SystemDescriptionReader(fixture.Reader, fixture.Events, fixture.Host.Content),
                 new RecordedSourceReceiptCutFactory(fixture.Events, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>())), fixture.Host.Content);
 
     static async Task<TypeIIPeriodCloseSnapshotView> SeedClosedForAmendmentAsync(Fixture fixture)

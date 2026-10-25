@@ -1,13 +1,26 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-/// <summary>Persists a reasoned disposition for one non-material period change.</summary>
-[Discriminator("bdgrz.systemdescription.system-description-no-change-recorded", 1)]
-public sealed record SystemDescriptionNoChangeRecorded(
-    Uuid TenantId,
+/// <summary>One selected native fact, compact authority and exact immutable structured business payload.</summary>
+[Discriminator("bdgrz.systemdescription.system-description-no-change-recorded", 2)]
+public sealed record SystemDescriptionNoChangeRecorded(Uuid TenantId,
     Uuid ProgramId,
     Uuid SystemDescriptionId,
     long AggregateRevision,
-    SystemDescriptionNoChangeDecisionView Decision,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    ImmutableContentRef DecisionContent,
+    DateTimeOffset OccurredAt,
+    OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult,
+    SystemDescriptionAuthorityHeader Header,
+    ImmutableContentRef CurrentVersionContent,
+    long NativeSequence,
+    int ChangeCount,
+    Uuid ActorMemberId) : DomainEvent, ISystemDescriptionFact
+{
+    public ImmutableContentRef CurrentAuthorityContent { get; init; } = null!;
+    public ImmutableContentRef? SourceSnapshotContent { get; init; }
+}

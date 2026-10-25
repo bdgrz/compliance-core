@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.SystemDescription;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules;
 
 namespace Bdgrz.Compliance.Tests.Features.SystemDescription;
 
@@ -17,6 +17,76 @@ public sealed class SystemDescriptionTests
     static readonly Uuid ReviewerId = Uuid.CreateVersion4();
     static readonly Uuid ApproverId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = new(2026, 10, 17, 16, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void ShouldRetainAllGovernedSourcesAndPeriodChangesGivenLargeValidDescription()
+    {
+        // Arrange
+        var description = new SystemDescriptionAggregate(TenantId, ProgramId, DescriptionId);
+        var sources = Enumerable.Range(0, 1000).Select(_ => new SystemDescriptionSourceReference("control", Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), 1, new string('a', 64), "current")).ToArray();
+        var changes = Enumerable.Range(0, 300).Select(_ => new SystemDescriptionPeriodChange(Uuid.CreateVersion4(), true, new string('b', 64))).ToArray();
+        var content = Content() with { Sources = sources, PeriodChanges = changes, SignificantChangeIds = changes.Select(item => item.ChangeId).ToArray() };
+        var scope = new SystemDescriptionScope("type_ii", ExaminationId, BaselineId, Uuid.CreateVersion4(), Uuid.CreateVersion4());
+
+        // Act
+        var recorded = description.Create(Uuid.CreateVersion4(), scope, content, AuthorId, "Author", Now);
+
+        // Assert
+        Assert.Null(recorded);
+        Assert.Equal(1000, description.CurrentVersion!.Content.Sources.Count);
+        Assert.Equal(300, description.CurrentVersion.Content.PeriodChanges.Count);
+        Assert.Equal(300, description.CurrentVersion.Content.SignificantChangeIds.Count);
+    }
+
+    [Fact]
+    public void ShouldPreserveOpeningAndClosingSourceVersionsGivenExactPeriodLineage()
+    {
+        // Arrange
+        var record = Uuid.CreateVersion4();
+        var sources = new[]
+        {
+            new SystemDescriptionSourceReference("control",record,Uuid.CreateVersion4(),1,new string('a',64),"current"),
+            new SystemDescriptionSourceReference("control",record,Uuid.CreateVersion4(),2,new string('b',64),"current"),
+        };
+        var description = new SystemDescriptionAggregate(TenantId, ProgramId, DescriptionId);
+        var content = Content() with { Sources = sources };
+        var scope = new SystemDescriptionScope("type_ii", ExaminationId, BaselineId, Uuid.CreateVersion4(), Uuid.CreateVersion4());
+
+        // Act
+        var recorded = description.Create(Uuid.CreateVersion4(), scope, content, AuthorId, "Author", Now);
+
+        // Assert
+        Assert.Null(recorded);
+        Assert.Equal(2, description.CurrentVersion!.Content.Sources.Count);
+        Assert.Equal([1L, 2L], description.CurrentVersion.Content.Sources.Select(item => item.Revision).Order());
+    }
+
+    [Fact]
+    public async Task ShouldRetainCompleteNarrativeGivenValidContentExceedsOldEventEnvelope()
+    {
+        // Arrange
+        var description = new SystemDescriptionAggregate(TenantId, ProgramId, DescriptionId);
+        var content = Content() with
+        {
+            Sections = Content().Sections.Select(section => section with
+            { Content = new string('x', 6000) }).ToArray()
+        };
+
+        // Act
+        var recorded = description.Create(Uuid.CreateVersion4(), TypeIScope(), content, AuthorId, "Author", Now);
+
+        // Assert
+        Assert.Null(recorded);
+        Assert.Equal(72000, description.CurrentVersion!.Content.Sections.Sum(section => section.Content.Length));
+        await using var fixture = new SystemDescriptionNativeFixture();
+        await DescriptionSeeds.WriteAsync(fixture.Writer, fixture.Content, description);
+        var read = await fixture.Descriptions.ReadAsync(TenantId, ProgramId, DescriptionId);
+        Assert.Equal(72000, read.CurrentVersion!.Content.Sections.Sum(section => section.Content.Length));
+        await foreach (var record in fixture.Events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(), "system-descriptions", DescriptionId.ToString()), EventCursor.Start, CancellationToken.None))
+            if (!record.Event.Metadata.IsAudit)
+                Assert.True(Bdgrz.Compliance.Hosting.Persistence.DomainEventPayload.Size(record.Event) < Bdgrz.Compliance.Hosting.Persistence.DomainEventPayload.MaximumBytes);
+    }
 
     [Fact]
     public void ShouldRejectApprovalGivenIncompleteOrUnjustifiedSections()
@@ -44,7 +114,7 @@ public sealed class SystemDescriptionTests
             Assert.IsType<CommandFailure>(incompleteApproval).Code);
         Assert.Equal(CommandFailureCode.InvalidContent,
             Assert.IsType<CommandFailure>(invalidNotApplicable).Code);
-        Assert.Empty(new AggregateScenario<SystemDescriptionAggregate>(notApplicable).PendingEvents);
+        Assert.Empty(notApplicable.PendingChanges);
     }
 
     [Fact]
@@ -182,9 +252,9 @@ public sealed class SystemDescriptionTests
         Assert.Empty(original.Content.Sources);
         Assert.Single(description.CurrentVersion!.Content.Sources);
         Assert.Equal(2, description.CurrentVersion.Version);
-        Assert.Collection(new AggregateScenario<SystemDescriptionAggregate>(description).PendingEvents,
-            created => Assert.IsType<SystemDescriptionDraftCreated>(created),
-            bound => Assert.IsType<SystemDescriptionSourcesBound>(bound));
+        Assert.Collection(description.PendingChanges,
+            created => Assert.IsType<SystemDescriptionDraftCreatedBody>(created),
+            bound => Assert.IsType<SystemDescriptionSourcesBoundBody>(bound));
     }
 
     static SystemDescriptionAggregate NewDescription(SystemDescriptionDraftContent content,

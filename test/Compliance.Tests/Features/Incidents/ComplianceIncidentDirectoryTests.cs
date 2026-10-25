@@ -1,253 +1,186 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Features.Changes;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using ComplianceIncidentAggregate = Bdgrz.Compliance.Features.Incidents.ComplianceIncident;
 
 namespace Bdgrz.Compliance.Tests.Features.Incidents;
 
 public sealed class ComplianceIncidentDirectoryTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 19, 12, 0, 0, TimeSpan.Zero);
-
     [Fact]
     public async Task ShouldProjectCurrentChronologyAndPageWithinTenantAndProgramGivenReplay()
     {
         // Arrange
-        var directory = new FitzComplianceIncidentDirectory(new InMemoryKvClient());
-        var tenantId = Uuid.CreateVersion4();
-        var programId = Uuid.CreateVersion4();
-        var otherTenantId = Uuid.CreateVersion4();
-        var incidentIds = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() };
-        var events = incidentIds.Select(id => RecordAndAssess(tenantId, programId, id)).ToArray();
-        var otherTenantEvents = RecordAndAssess(otherTenantId, programId, Uuid.CreateVersion4());
+        await using var fixture = new IncidentNativeFixture();
+        var directory = new FitzComplianceIncidentDirectory(new InMemoryKvClient(), fixture.Incidents);
+        var tenant = fixture.Tenant;
+        var program = fixture.Program;
+        var foreign = Uuid.CreateVersion4();
+        var first = Uuid.CreateVersion4();
+        var second = Uuid.CreateVersion4();
+        await RecordAndAssessAsync(fixture, tenant, program, first);
+        await RecordAndAssessAsync(fixture, tenant, program, second);
+        await RecordAndAssessAsync(fixture, foreign, program, Uuid.CreateVersion4());
 
         // Act
-        await ProjectAsync(directory, tenantId, events.SelectMany(static batch => batch));
-        await ProjectAsync(directory, otherTenantId, otherTenantEvents);
-        await ProjectAsync(directory, tenantId, events.SelectMany(static batch => batch));
-        var firstPage = await directory.ListAsync(tenantId, programId, 1, null);
-        var secondPage = await directory.ListAsync(tenantId, programId, 1, firstPage.NextCursor);
-        var detail = await directory.GetAsync(tenantId, incidentIds[0]);
-        var wrongTenantDetail = await directory.GetAsync(otherTenantId, incidentIds[0]);
-        var wrongProgramPage = await directory.ListAsync(tenantId, Uuid.CreateVersion4(), 20, null);
-        var visibility = Visibility();
-        var detailResult = await new GetComplianceIncidentHandler(directory, visibility).HandleAsync(
-            QueryContext(new GetComplianceIncident(tenantId, programId, incidentIds[0])),
-            CancellationToken.None);
-        var wrongProgramDetail = await new GetComplianceIncidentHandler(directory, visibility).HandleAsync(
-            QueryContext(new GetComplianceIncident(tenantId, Uuid.CreateVersion4(), incidentIds[0])),
-            CancellationToken.None);
-        var listResult = await new ListComplianceIncidentsHandler(directory, visibility).HandleAsync(
-            QueryContext(new ListComplianceIncidents(tenantId, programId, 1)),
-            CancellationToken.None);
+        await ProjectAsync(directory, fixture, tenant);
+        await ProjectAsync(directory, fixture, foreign);
+        await ProjectAsync(directory, fixture, tenant);
+        var page = await directory.ListAsync(tenant, program, 1, null);
+        var next = await directory.ListAsync(tenant, program, 1, page.NextCursor);
+        var detail = await directory.GetAsync(tenant, first);
+        var wrongTenant = await directory.GetAsync(foreign, first);
+        var wrongProgram = await directory.ListAsync(tenant, Uuid.CreateVersion4(), 20, null);
+        var get = new GetComplianceIncidentHandler(fixture.Incidents, Visibility(), new(fixture.Reader));
+        var result = await get.HandleAsync(Context(new GetComplianceIncident(tenant, program, first)), CancellationToken.None);
+        var hidden = await get.HandleAsync(Context(new GetComplianceIncident(tenant, Uuid.CreateVersion4(), first)), CancellationToken.None);
+        var list = await new ListComplianceIncidentsHandler(directory, Visibility(), new(directory, fixture.Events)).HandleAsync(
+            Context(new ListComplianceIncidents(tenant, program, 1)), CancellationToken.None);
 
         // Assert
-        Assert.Single(firstPage.Items);
-        Assert.NotNull(firstPage.NextCursor);
-        Assert.Single(secondPage.Items);
-        Assert.Equal(incidentIds.Order(), firstPage.Items.Concat(secondPage.Items)
-            .Select(static item => item.ComplianceIncidentId).Order());
-        Assert.All(firstPage.Items.Concat(secondPage.Items), item =>
-        {
-            Assert.Equal(tenantId, item.TenantId);
-            Assert.Equal(programId, item.ProgramId);
-        });
+        Assert.Single(page.Items);
+        Assert.NotNull(page.NextCursor);
+        Assert.Single(next.Items);
+        Assert.Equal(new[] { first, second }.Order(), page.Items.Concat(next.Items).Select(item => item.ComplianceIncidentId).Order());
+        Assert.All(page.Items.Concat(next.Items), item => { Assert.Equal(tenant, item.TenantId); Assert.Equal(program, item.ProgramId); });
         Assert.Equal(2, detail!.Revision);
         Assert.NotNull(detail.CurrentAssessment);
-        Assert.Null(wrongTenantDetail);
-        Assert.Empty(wrongProgramPage.Items);
-        Assert.True(detailResult.IsSuccess, detailResult.Error?.Message);
-        Assert.Equal(incidentIds[0], detailResult.Value.ComplianceIncidentId);
-        Assert.Equal(RequestErrorKind.NotFound, wrongProgramDetail.Error!.Kind);
-        Assert.True(listResult.IsSuccess, listResult.Error?.Message);
-        Assert.Single(listResult.Value.Items);
+        Assert.Null(wrongTenant);
+        Assert.Empty(wrongProgram.Items);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(first, result.Value.ComplianceIncidentId);
+        Assert.Equal(RequestErrorKind.NotFound, hidden.Error!.Kind);
+        Assert.True(list.IsSuccess, list.Error?.Message);
+        Assert.Single(list.Value.Items);
     }
-
     [Fact]
     public async Task ShouldHideRestrictedIncidentFromProgramListAndDetailGivenOrdinaryProgramReader()
     {
         // Arrange
-        var directory = new FitzComplianceIncidentDirectory(new InMemoryKvClient());
-        var tenantId = Uuid.CreateVersion4();
-        var programId = Uuid.CreateVersion4();
-        var orderedIds = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() }
-            .OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray();
-        var visibleId = orderedIds[0];
-        var restrictedId = orderedIds[1];
-        var events = RecordAndAssess(tenantId, programId, restrictedId, "restricted")
-            .Concat(RecordAndAssess(tenantId, programId, visibleId, "confidential"));
-        await ProjectAsync(directory, tenantId, events);
-        var visibility = Visibility();
-        var list = await new ListComplianceIncidentsHandler(directory, visibility).HandleAsync(
-            QueryContext(new ListComplianceIncidents(tenantId, programId, 1)),
-            CancellationToken.None);
+        await using var fixture = new IncidentNativeFixture();
+        var directory = new FitzComplianceIncidentDirectory(new InMemoryKvClient(), fixture.Incidents);
+        var visible = Uuid.CreateVersion4();
+        var restricted = Uuid.CreateVersion4();
+        await RecordAndAssessAsync(fixture, fixture.Tenant, fixture.Program, visible);
+        await RecordAndAssessAsync(fixture, fixture.Tenant, fixture.Program, restricted, "restricted");
+        await ProjectAsync(directory, fixture, fixture.Tenant);
 
         // Act
-        var restricted = await new GetComplianceIncidentHandler(directory, visibility).HandleAsync(
-            QueryContext(new GetComplianceIncident(tenantId, programId, restrictedId)),
-            CancellationToken.None);
+        var list = await new ListComplianceIncidentsHandler(directory, Visibility(), new(directory, fixture.Events)).HandleAsync(
+            Context(new ListComplianceIncidents(fixture.Tenant, fixture.Program, 1)), CancellationToken.None);
+        var hidden = await new GetComplianceIncidentHandler(fixture.Incidents, Visibility(), new(fixture.Reader)).HandleAsync(
+            Context(new GetComplianceIncident(fixture.Tenant, fixture.Program, restricted)), CancellationToken.None);
 
         // Assert
         Assert.True(list.IsSuccess, list.Error?.Message);
-        Assert.Equal([visibleId], list.Value.Items.Select(static item => item.ComplianceIncidentId));
+        Assert.Equal([visible], list.Value.Items.Select(item => item.ComplianceIncidentId));
         Assert.Null(list.Value.NextCursor);
-        Assert.Equal(RequestErrorKind.NotFound, restricted.Error!.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, hidden.Error!.Kind);
     }
-
     [Fact]
     public async Task ShouldAllowRestrictedIncidentToItsAssessorGivenAssessorMemberIdentity()
     {
         // Arrange
-        var tenantId = Uuid.CreateVersion4();
-        var programId = Uuid.CreateVersion4();
-        var incidentId = Uuid.CreateVersion4();
-        var assessorUserId = Uuid.CreateVersion4();
-        var assessorMemberId = RbacIds.Member(tenantId, assessorUserId);
-        var events = RecordAndAssess(tenantId, programId, incidentId, "restricted", assessorMemberId);
-        var directory = new StubDirectory(Assert.IsType<ComplianceIncidentImpactAssessed>(events[^1]).State);
-        var context = new RequestContext<GetComplianceIncident>(
-            new GetComplianceIncident(tenantId, programId, incidentId), Actor(assessorUserId));
+        await using var fixture = new IncidentNativeFixture();
+        await RecordAndAssessAsync(fixture, fixture.Tenant, fixture.Program, fixture.Incident, "restricted", RbacIds.Member(fixture.Tenant, fixture.User));
+        var context = new RequestContext<GetComplianceIncident>(new(fixture.Tenant, fixture.Program, fixture.Incident), Actor(fixture.User));
 
         // Act
-        var result = await new GetComplianceIncidentHandler(directory, Visibility())
-            .HandleAsync(context, CancellationToken.None);
+        var result = await new GetComplianceIncidentHandler(fixture.Incidents, Visibility(), new(fixture.Reader)).HandleAsync(context, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(incidentId, result.Value.ComplianceIncidentId);
+        Assert.Equal(fixture.Incident, result.Value.ComplianceIncidentId);
     }
-
     [Fact]
     public async Task ShouldRejectRevisionGapAndChangedReplayGivenProjectedIncident()
     {
         // Arrange
-        var directory = new FitzComplianceIncidentDirectory(new InMemoryKvClient());
-        var tenantId = Uuid.CreateVersion4();
-        var events = RecordAndAssess(tenantId, Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        await ProjectAsync(directory, tenantId, [events[0]]);
-        var assessmentEvent = Assert.IsType<ComplianceIncidentImpactAssessed>(events[1]);
+        await using var fixture = new IncidentNativeFixture();
+        var directory = new FitzComplianceIncidentDirectory(new InMemoryKvClient(), fixture.Incidents);
+        var sources = await RecordAndAssessAsync(fixture, fixture.Tenant, fixture.Program, fixture.Incident);
+        await ProjectFactsAsync(directory, fixture.Tenant, [sources[0]]);
+        var fact = Assert.IsType<ComplianceIncidentImpactAssessed>(sources[1]);
 
         // Act
-        var gap = assessmentEvent with
-        {
-            Revision = 3,
-            State = assessmentEvent.State with { Revision = 3 },
-        };
-        var gapFailure = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await ProjectAsync(directory, tenantId, [gap]));
-        await ProjectAsync(directory, tenantId, [assessmentEvent]);
-        var changed = assessmentEvent with
-        {
-            State = assessmentEvent.State with { ActorDisplay = "Different actor display" },
-        };
-        var replayFailure = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await ProjectAsync(directory, tenantId, [changed]));
+        var gap = fact with { Revision = 3, NativeSequence = 3, Header = fact.Header with { Revision = 3 } };
+        var gapFailure = await Assert.ThrowsAsync<InvalidOperationException>(() => ProjectFactsAsync(directory, fixture.Tenant, [gap]));
+        await ProjectFactsAsync(directory, fixture.Tenant, [fact]);
+        var changed = fact with { Header = fact.Header with { ActorDisplay = "Different actor display" } };
+        var replayFailure = await Assert.ThrowsAsync<InvalidOperationException>(() => ProjectFactsAsync(directory, fixture.Tenant, [changed]));
 
         // Assert
-        Assert.Contains("skipped a revision", gapFailure.Message, StringComparison.Ordinal);
-        Assert.Contains("conflicting projection content", replayFailure.Message,
-            StringComparison.Ordinal);
-        Assert.Equal(2, (await directory.GetAsync(tenantId,
-            assessmentEvent.SubjectId))!.Revision);
+        Assert.Contains("skipped a native source fact", gapFailure.Message, StringComparison.Ordinal);
+        Assert.Contains("conflicting same-sequence authority", replayFailure.Message, StringComparison.Ordinal);
+        Assert.Equal(2, (await directory.GetAsync(fixture.Tenant, fixture.Incident))!.Revision);
     }
-
     [Fact]
     public async Task ShouldServeOnlyCurrentAssessmentGivenIncidentDetailQuery()
     {
         // Arrange
-        var tenantId = Uuid.CreateVersion4();
-        var programId = Uuid.CreateVersion4();
-        var incidentId = Uuid.CreateVersion4();
-        var events = RecordAndAssess(tenantId, programId, incidentId);
-        var directory = new StubDirectory(
-            Assert.IsType<ComplianceIncidentImpactAssessed>(events[^1]).State);
-        var request = new GetComplianceImpactAssessment(tenantId, programId, incidentId);
-        var context = new RequestContext<GetComplianceImpactAssessment>(request,
-            RequestActor.CreateSystem("query-test", "tests"));
+        await using var fixture = new IncidentNativeFixture();
+        var rules = await RecordAndAssessAsync(fixture, fixture.Tenant, fixture.Program, fixture.Incident);
+        var request = new GetComplianceImpactAssessment(fixture.Tenant, fixture.Program, fixture.Incident);
+        var handler = new GetComplianceImpactAssessmentHandler(fixture.Incidents, Visibility(), new(fixture.Reader));
 
         // Act
-        var visibility = Visibility();
-        var result = await new GetComplianceImpactAssessmentHandler(directory, visibility)
-            .HandleAsync(context, CancellationToken.None);
-        var wrongProgram = await new GetComplianceImpactAssessmentHandler(directory, visibility)
-            .HandleAsync(new RequestContext<GetComplianceImpactAssessment>(request with
-            {
-                ProgramId = Uuid.CreateVersion4(),
-            }, RequestActor.CreateSystem("assessment-query-test", "tests")),
-                CancellationToken.None);
-        var recorded = Assert.IsType<ComplianceIncidentRecorded>(events[0]);
-        var assessmentMissing = await new GetComplianceImpactAssessmentHandler(
-                new StubDirectory(recorded.State), visibility)
-            .HandleAsync(context, CancellationToken.None);
+        var result = await handler.HandleAsync(Context(request), CancellationToken.None);
+        var foreign = await handler.HandleAsync(Context(request with { ProgramId = Uuid.CreateVersion4() }), CancellationToken.None);
+        var before = (await fixture.Incidents.ReadAsync(fixture.Tenant, fixture.Program, fixture.Incident)).Rules;
+        Assert.Null(before.Revise(before.Revision, before.Current!.Current!.Content with { Title = "Corrected chronology" }, "Correction", Uuid.CreateVersion4(), "Recorder", Now.AddHours(2)));
+        await IncidentSeeds.AppendAsync(fixture.Writer, fixture.Incidents, fixture.Content, before);
+        var missing = await handler.HandleAsync(Context(request), CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Equal(1, result.Value.ContentVersion);
         Assert.Equal("significant", result.Value.Significance);
-        Assert.Equal(RequestErrorKind.NotFound, wrongProgram.Error!.Kind);
-        Assert.Equal(RequestErrorKind.NotFound, assessmentMissing.Error!.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, foreign.Error!.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, missing.Error!.Kind);
+        Assert.Equal(3, (await fixture.Incidents.ReadAsync(fixture.Tenant, fixture.Program, fixture.Incident)).View!.Revision);
+        Assert.Equal(2, rules.Length);
     }
-
-    static RequestContext<T> QueryContext<T>(T request) where T : IRequestBase =>
-        new(request, RequestActor.CreateSystem("incident-query-test", "tests"));
-
-    static RestrictedComplianceRecordVisibility Visibility() =>
-        new(new StubPermissions(false));
-
-    static ClaimsPrincipal Actor(Uuid userId) => new(new ClaimsIdentity(
-        [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));
-
-    static async Task ProjectAsync(FitzComplianceIncidentDirectory directory, Uuid tenantId,
-        IEnumerable<DomainEvent> events)
+    static RequestContext<T> Context<T>(T request) where T : IRequestBase => new(request, Actor(Uuid.CreateVersion4()));
+    static ClaimsPrincipal Actor(Uuid user) => new(new ClaimsIdentity([new Claim("iss", "bdgrz"), new Claim("sub", user.ToString())], "BdgrzSession"));
+    static RestrictedComplianceRecordVisibility Visibility() => new(new StubPermissions());
+    static async Task<DomainEvent[]> RecordAndAssessAsync(IncidentNativeFixture fixture, Uuid tenant, Uuid program, Uuid id, string handling = "confidential", Uuid? assessor = null)
     {
-        await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
-            new CheckpointIdentity(ComplianceIncidentDirectoryProjector.ProjectorName,
-                EventStreamPattern.ForPattern(tenantId.ToString())), ProjectionCheckpoint.Start));
-        foreach (var domainEvent in events)
-            await directory.ApplyAsync(domainEvent);
+        var rules = new ComplianceIncidentRules(tenant, program, id);
+        var source = Uuid.CreateVersion4();
+        Assert.Null(rules.Record(new(null, null, null, null, "Production credential alert", "Customer data was briefly exposed.", "security", "high", Now.AddMinutes(-30),
+            Now.AddMinutes(-20), Uuid.CreateVersion4(), true, false, [source], handling, []), Uuid.CreateVersion4(), "Recorder", Now));
+        Assert.Null(rules.Assess(1, new("significant", "Customer data was affected by the security incident.", true, true, true, true,
+            ["scope", "control", "risk", "vendor", "evidence"], [new("system_instance", source, Uuid.CreateVersion4(), 1)], [], [], false, true, false),
+            assessor ?? Uuid.CreateVersion4(), "Assessor", Now.AddHours(1)));
+        await IncidentSeeds.WriteAsync(fixture.Writer, fixture.Content, rules);
+        var result = new List<DomainEvent>();
+        await foreach (var record in fixture.Events.ReadAsync(EventStreamPattern.ForPattern(tenant.ToString(), ComplianceIncident.Area, id.ToString()), EventCursor.Start, CancellationToken.None))
+            if (!record.Event.Metadata.IsAudit)
+                result.Add(record.Event);
+        return result.ToArray();
+    }
+    static async Task ProjectFactsAsync(FitzComplianceIncidentDirectory directory, Uuid tenant, IReadOnlyList<DomainEvent> facts)
+    {
+        await using var batch = await directory.BeginAsync(new ProjectionBatchContext(new(ComplianceIncidentDirectoryProjector.ProjectorName,
+            EventStreamPattern.ForPattern(tenant.ToString(), ComplianceIncident.Area)), ProjectionCheckpoint.Start));
+        foreach (var fact in facts)
+            await directory.ApplyAsync(fact);
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
-
-    static DomainEvent[] RecordAndAssess(Uuid tenantId, Uuid programId, Uuid incidentId,
-        string handlingClass = "confidential", Uuid? assessorMemberId = null)
+    static async Task ProjectAsync(FitzComplianceIncidentDirectory directory, IncidentNativeFixture fixture, Uuid tenant)
     {
-        var incident = new ComplianceIncidentAggregate(tenantId, programId, incidentId);
-        var actor = Uuid.CreateVersion4();
-        var assessor = assessorMemberId ?? Uuid.CreateVersion4();
-        var owner = Uuid.CreateVersion4();
-        var sourceId = Uuid.CreateVersion4();
-        Assert.Null(incident.Record(new ComplianceIncidentContent(null, null, null, null,
-            "Production credential alert", "Customer data was briefly exposed.", "security",
-            "high", Now.AddMinutes(-30), Now.AddMinutes(-20), owner, true, false,
-            [sourceId], handlingClass, []), actor, "Recorder", Now));
-        Assert.Null(incident.Assess(incident.Revision,
-            new ComplianceIncidentImpactAssessmentContent("significant",
-                "Customer data was affected by the security incident.", true, true, true, true,
-                ["scope", "control", "risk", "vendor", "evidence"],
-                [new ComplianceIncidentAffectedRecordReference("system_instance", sourceId,
-                    Uuid.CreateVersion4(), 1)], [], [], false, true, false), assessor,
-            "Assessor", Now.AddHours(1)));
-        return new AggregateScenario<ComplianceIncidentAggregate>(incident).PendingEvents.ToArray();
+        var start = await directory.LoadCheckpointAsync(tenant);
+        var pattern = EventStreamPattern.ForPattern(tenant.ToString(), ComplianceIncident.Area);
+        await using var batch = await directory.BeginAsync(new ProjectionBatchContext(new(ComplianceIncidentDirectoryProjector.ProjectorName, pattern), start));
+        var cursor = start.Cursor;
+        await foreach (var record in fixture.Events.ReadAsync(pattern, start.Cursor, CancellationToken.None))
+        { if (record.Event is IComplianceIncidentFact) await directory.ApplyAsync(record.Event); cursor = record.NextCursor; }
+        await batch.CommitAsync(new ProjectionCheckpoint(cursor));
     }
-
-    sealed class StubDirectory(ComplianceIncidentView? incident) : IComplianceIncidentDirectoryReader
+    sealed class StubPermissions : IPermissionAuthorizer
     {
-        public ValueTask<ComplianceIncidentView?> GetAsync(Uuid tenantId, Uuid incidentId,
-            CancellationToken ct = default) => ValueTask.FromResult(incident is { } view &&
-                view.TenantId == tenantId && view.ComplianceIncidentId == incidentId ? view : null);
-
-        public ValueTask<Cntryl.Fitz.Extensions.Page<ComplianceIncidentSummaryView>> ListAsync(
-            Uuid tenantId, Uuid programId, int limit, string? cursor, CancellationToken ct = default) =>
-            throw new NotSupportedException();
-    }
-
-    sealed class StubPermissions(bool allowed) : IPermissionAuthorizer
-    {
-        public ValueTask<bool> IsAllowedAsync(Uuid tenantId, Uuid userId, Uuid memberId,
-            string permission, CancellationToken ct = default) => ValueTask.FromResult(allowed);
+        public ValueTask<bool> IsAllowedAsync(Uuid tenant, Uuid user, Uuid member, string permission, CancellationToken ct = default) => ValueTask.FromResult(false);
     }
 }

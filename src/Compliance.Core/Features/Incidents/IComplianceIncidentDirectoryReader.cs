@@ -1,11 +1,12 @@
-using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Incidents;
 
 public interface IComplianceIncidentDirectoryReader
 {
-    ValueTask<ComplianceIncidentView?> GetAsync(Uuid tenantId, Uuid incidentId,
+    ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default);
+
+    ValueTask<ComplianceIncidentView?> GetAsync(Uuid tenantId, Uuid changeId,
         CancellationToken ct = default);
 
     ValueTask<Page<ComplianceIncidentSummaryView>> ListAsync(Uuid tenantId, Uuid programId,

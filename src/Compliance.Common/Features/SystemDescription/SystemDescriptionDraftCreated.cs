@@ -1,13 +1,26 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-/// <summary>Persists the first complete authored version of a system description.</summary>
-[Discriminator("bdgrz.systemdescription.system-description-draft-created", 1)]
-public sealed record SystemDescriptionDraftCreated(
-    Uuid TenantId,
+/// <summary>One selected native fact, compact authority and exact immutable structured business payload.</summary>
+[Discriminator("bdgrz.systemdescription.system-description-draft-created", 2)]
+public sealed record SystemDescriptionDraftCreated(Uuid TenantId,
     Uuid ProgramId,
     Uuid SystemDescriptionId,
     long AggregateRevision,
-    SystemDescriptionVersionView Version,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    ImmutableContentRef VersionContent,
+    DateTimeOffset OccurredAt,
+    OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult,
+    SystemDescriptionAuthorityHeader Header,
+    ImmutableContentRef CurrentVersionContent,
+    long NativeSequence,
+    int ChangeCount,
+    Uuid ActorMemberId) : DomainEvent, ISystemDescriptionFact
+{
+    public ImmutableContentRef CurrentAuthorityContent { get; init; } = null!;
+    public ImmutableContentRef? SourceSnapshotContent { get; init; }
+}

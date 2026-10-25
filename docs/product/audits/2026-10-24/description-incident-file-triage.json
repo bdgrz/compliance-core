@@ -1,0 +1,91 @@
+{
+  "reviewed": 124,
+  "blockedReviews": 0,
+  "signalsTriaged": 7,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Incidents/ComplianceIncidentRules.cs",
+      "sha256": "a8442487c2e894333010d46a1fe4c56a00680b7b238737f1921ce0b81728f468",
+      "signals": {
+        "authority_gap": 0.52,
+        "invariant_gap": 0.5,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.26
+      },
+      "classification": "pure_verified_history_rules",
+      "evidence": "Lifetime32/full-inline envelope caps removed while existing1000-reference/4000-character business bounds, immutable version IDs, exact revisions, actor attribution, current assessment/description decision and resolution evidence/completion rules remain. Production owner stores bounded current header/content/selected native acceptance; full rules replay is transient verified history, not command state. Genuine old cap/frame/clock retry regressions now pass, and exact current mutations can omit unavailable historical narratives."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Incidents/IncidentOperations.cs",
+      "sha256": "ecda01a26af917f7d7285bcf2a62a5021927febe259524a00fd327d1a3ab3774",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.52,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.44
+      },
+      "classification": "central_native_prepare_and_original_unit_response",
+      "evidence": "Exact owner/logical ID/actor/digest/expected-revision binding resolves accepted retry before any new preparation. Current scoped native history and domain rule evaluation, immutable candidate content and frozen Unit publication run inside native Prepare. Append verifies expected native sequence/physical cut and exact computed transition certificate; central equal-winner handling recovers unknown append/preparation outcomes. Missing bytes remain transient; integrity failures permanent. No timestamp-recomputed creation retry."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Incidents/RecordComplianceIncidentHandler.cs",
+      "sha256": "e5720b58d71ec297f8bc07d05495890dad7cfce059584a6379fe14dc3a010244",
+      "signals": {
+        "authority_gap": 0.67,
+        "invariant_gap": 0.49,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.7
+      },
+      "classification": "trusted_current_member_and_program_pipeline",
+      "evidence": "Preserves existing incident request restricted-record/current-member/program pipeline and personal member provenance. Existing MCP eligibility is unchanged; system actor is explicitly forbidden. Root logical ID remains incident ID, native first owner explicit and authored digest stable. Owner/program/source mutation checks occur inside native operations, not derived projection authority. Clock-advance original creation retry passes. Missing approved_successor source-use pair remains a local contract blocker; actual no_change receiver works."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseHistory.cs",
+      "sha256": "8f76eb977b0d1876a0d536bcfad5259a2987c4b0ef00560816e2f85ba9f44567",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.56,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.39
+      },
+      "classification": "current_visibility_and_exact_recorded_cut",
+      "evidence": "Both native change/incident readers require tenant/program and verify immutable complete history at requested authenticated recorded receipt cut. Current restricted visibility and complete directory/checkpoint fences remain. Close source publication captures every exact incident component required by header, not an inline summary or authored timestamp substitute.1000governed-reference archive, receipt-clock contradiction and missing/corrupt component tests pass. Existing unselected opening source-family contract gap remains local."
+    },
+    {
+      "path": "src/Compliance.Core/Features/SystemDescription/FitzKvSystemDescriptionExportProcesses.cs",
+      "sha256": "986fe0ca41a40edebe7f823a9be128047cde5bdb15e509b58f71e9402a372cb7",
+      "signals": {
+        "authority_gap": 0.64,
+        "invariant_gap": 0.72,
+        "recovery_gap": 0.74,
+        "incomplete_path": 0.25
+      },
+      "classification": "single_route_atomic_technical_authority",
+      "evidence": "Actual Fitz KV implementation atomically binds stable process key and root-command index on one tenant route; mismatch conflicts, isolation retries reread winner, replacement CAS checks immutable binding/intent and revision, terminals stay irreversible. Tests use this implementation with InMemoryKvClient, including exact restart, same root other owner/actor/format, unknown admission/completion outcomes and broker-shaped timeout/connection errors. No live broker qualification or retained-data compatibility claim."
+    },
+    {
+      "path": "src/Compliance.Core/Features/SystemDescription/SystemDescriptionExportProcess.cs",
+      "sha256": "9410003cd0475bab5a0012443bf0fa954c8685a0fa4d127de2515e01455139a3",
+      "signals": {
+        "authority_gap": 0.44,
+        "invariant_gap": 0.44,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.27
+      },
+      "classification": "frozen_source_forward_export_recovery",
+      "evidence": "Technical export freezes exact approved native source and immutable version before attempts. Fresh orphan candidate IDs avoid timestamp collisions. Attempts resume persisted original intent; unknown commit response recovers exact terminal or pending without reselection. Validated output/proof/source/actor/digest/result binding and verified artifact length/hash are checked. Actual DOCX/PDF export, unknown admission/completion, restart, wrong identity and unsupported PDF Unicode terminal regressions pass; all3rendered pages inspected. No business revision/event or public ticket."
+    },
+    {
+      "path": "src/Compliance.Core/Features/SystemDescription/SystemDescriptionSnapshotSources.cs",
+      "sha256": "e377b626899f8b67c3a542e7f1eb363405f0e224f6d97b5dc70821be8768a5da",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.33
+      },
+      "classification": "historical_native_snapshot_proof_only",
+      "evidence": "Capture verifies canonical native source stream, exact tenant/program/examination/baseline/period/plan identities, actual event kind/payload digest and immutable content/header equality, complete source population and TypeII approved plan context. Forged claimed/resolved stream and missing event/version tests reject; later baseline amendment preserves original as-of proof. This is historical snapshot evidence; no held-current approval permit is claimed or invented."
+    }
+  ]
+}

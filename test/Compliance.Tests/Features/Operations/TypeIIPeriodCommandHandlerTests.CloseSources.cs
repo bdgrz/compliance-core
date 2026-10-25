@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Tests.Features.Changes;
 using System.Security.Claims;
 using System.Text;
@@ -40,8 +41,8 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             var published = new PublishedTypeIBaselinePreviewReader(new TypeIBaselinePreviewReader(contributors), artifacts, fixture.Host.Content);
             var source = new TypeIIPeriodCloseReconciliation(fixture.Reader, fixture.Events, fixture.Host.Content,
                 fixture.Host.Services.GetRequiredService<ControlOperationsReader>(), fixture.Host.Services.GetRequiredService<FindingReader>(), published,
-                new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events, new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true)),
-                    new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()),
+                new TypeIIPeriodCloseHistory(fixture.Events, new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true)),
+                    new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content, new ComplianceIncidentReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()),
                 new TypeIIPeriodCloseSourcePublication(artifacts, fixture.Host.Content),
                 new RecordedSourceReceiptCutFactory(fixture.Events, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()));
             var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
@@ -87,9 +88,9 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             fixture.ProposerMemberId, "Recorder", StartedAt));
         await ChangeSeeds.WriteAsync(fixture.Writer, fixture.Host.Content, change);
         var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
-        var reader = new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events,
+        var reader = new TypeIIPeriodCloseHistory(fixture.Events,
             new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(false)),
-            new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>());
+            new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content, new ComplianceIncidentReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>());
         var request = await CloseRequestAsync(fixture);
 
         // Act

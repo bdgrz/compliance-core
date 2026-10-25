@@ -11,7 +11,7 @@ public sealed partial class ComplianceIncidentDirectoryProjector(
       IProjectorHandler<ComplianceIncidentSystemDescriptionDecisionRecorded>,
       IProjectorHandler<IncidentResolutionRecorded>
 {
-    public const string ProjectorName = "ComplianceIncidentDirectoryV1";
+    public const string ProjectorName = "ComplianceIncidentDirectoryV2";
 
     public ValueTask HandleAsync(ComplianceIncidentRecorded ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);

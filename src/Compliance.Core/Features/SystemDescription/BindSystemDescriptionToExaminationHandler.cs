@@ -1,33 +1,26 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-public sealed class BindSystemDescriptionToExaminationHandler(IAggregateExecutor executor,
-    TimeProvider clock) : IRequestHandler<BindSystemDescriptionToExamination>
+public sealed class BindSystemDescriptionToExaminationHandler(SystemDescriptionOperations operations) : IRequestHandler<BindSystemDescriptionToExamination>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<BindSystemDescriptionToExamination> context,
-        CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<BindSystemDescriptionToExamination> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (!SystemDescriptionCommandActor.TryGet(context.Actor, request.TenantId,
-                out var actorMemberId, out var actorDisplay))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
-                "Binding a system description requires a Bdgrz member identity.")));
-        return executor.ExecuteAsync(new SystemDescription(request.TenantId, request.ProgramId,
-                request.DescriptionId), aggregate =>
+        return operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.DescriptionId, request.CommandId,
+            nameof(BindSystemDescriptionToExamination), request.ExpectedRevision, (snapshot, operation, token) =>
             {
-                var version = aggregate.FindVersion(request.Version);
-                var snapshotId = version?.Scope.Stage switch
+                var version = snapshot.FindVersion(request.Version);
+                var id = version?.Scope.Stage switch
                 {
                     "type_i" => version.Scope.TypeIBaselineId ?? Uuid.Empty,
                     "type_ii" => version.Scope.CloseSnapshotId ?? Uuid.Empty,
                     _ => Uuid.Empty,
                 };
-                var failure = aggregate.BindToExamination(request.Version, request.ExaminationId,
-                    request.BindingPurpose, snapshotId, actorMemberId, actorDisplay,
-                    clock.GetUtcNow());
-                return CommandFailureRequestAdapter.ToOutcome(failure);
-            }, context, ct);
+                var member = Uuid.Parse(operation.Actor.Id, System.Globalization.CultureInfo.InvariantCulture);
+                return ValueTask.FromResult(SystemDescriptionOperations.Outcome(snapshot.Rules.BindToExamination(request.Version,
+                    request.ExaminationId, request.BindingPurpose, id, member, operation.Actor.Display, operation.AcceptedAt)));
+            }, (rules, operation) => new SystemDescriptionBoundBody(request.TenantId, request.ProgramId, request.DescriptionId, rules.Revision,
+                rules.Read().Bindings.First(item => item.Version == request.Version && item.Purpose == request.BindingPurpose), operation.AcceptedAt), ct);
     }
 }

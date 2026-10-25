@@ -61,17 +61,12 @@ sealed class RestrictedComplianceRecordMutationAuthorizer(
         }
         else
         {
-            var aggregate = await reader.HydrateAsync(
-                new IncidentAggregate(request.TenantId, request.ProgramId, target.Id), ct)
-                .ConfigureAwait(false);
-            var current = aggregate.Current;
-            if (current is not null && (current.TenantId != request.TenantId ||
-                current.ProgramId != request.ProgramId || current.ComplianceIncidentId != target.Id))
+            var aggregate = await reader.HydrateAsync(new IncidentAggregate(request.TenantId, request.ProgramId, target.Id), ct).ConfigureAwait(false);
+            var current = aggregate.Header;
+            if (current is not null && (current.TenantId != request.TenantId || current.ProgramId != request.ProgramId || current.IncidentId != target.Id))
                 return HiddenRecord();
-            currentHandlingClass = current?.Current?.Content.HandlingClass;
-            currentAssessorIds = current?.CurrentAssessment is { } assessment
-                ? [assessment.AssessedByMemberId]
-                : [];
+            currentHandlingClass = current?.HandlingClass;
+            currentAssessorIds = current?.CurrentAssessorMemberId is { } assessor ? [assessor] : [];
         }
 
         if (currentHandlingClass != "restricted" && target.ProposedHandlingClass != "restricted")

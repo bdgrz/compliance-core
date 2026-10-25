@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Features.SystemDescription;
 using Bdgrz.Compliance.Features.Proofs;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -14,8 +15,8 @@ using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using ComplianceIncidentAggregate = Bdgrz.Compliance.Features.Incidents.ComplianceIncident;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using ComplianceIncidentAggregate = Bdgrz.Compliance.Features.Incidents.ComplianceIncidentRules;
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules;
 
 namespace Bdgrz.Compliance.Tests.Features.Incidents;
 
@@ -45,8 +46,7 @@ public sealed class ComplianceIncidentOperationTests
             var description = await host.NoChangeDescriptionAsync(incident.Id, sha, assessment.AssessedAt.AddMinutes(5));
             var request = new RecordComplianceIncidentSystemDescriptionDecision(Uuid.CreateVersion4(), host.TenantId,
                 host.ProgramId, incident.Id, 1, description.DescriptionId, description.VersionId, description.DecisionId, sha);
-            var handler = new RecordComplianceIncidentSystemDescriptionDecisionHandler(host.Operations, host.Reader,
-                host.Content, host.Clock);
+            var handler = new RecordComplianceIncidentSystemDescriptionDecisionHandler(host.Operations, host.Descriptions);
             submit = alter => handler.HandleAsync(Host.System(alter
                 ? request with { AssessmentSha256 = new string('e', 64) } : request), CancellationToken.None).AsTask();
         }
@@ -55,7 +55,7 @@ public sealed class ComplianceIncidentOperationTests
             var completed = await host.CompletedActionAsync(host.ProgramId);
             var incident = await host.AssessedAsync([completed.WorkItemId]);
             var request = Resolution(host, incident, [completed.Fact]);
-            var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier, host.Content, host.Clock);
+            var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier);
             submit = alter => handler.HandleAsync(Host.As(host.AssessorUserId, alter ? request with
             {
                 Content = request.Content with { Resolution = "Changed resolution." },
@@ -68,7 +68,7 @@ public sealed class ComplianceIncidentOperationTests
             {
                 var request = new AssessComplianceIncident(Uuid.CreateVersion4(), host.TenantId, host.ProgramId,
                     incident.Id, incident.Revision, Assessment([]));
-                var handler = new AssessComplianceIncidentHandler(host.Operations, host.Content, host.Clock);
+                var handler = new AssessComplianceIncidentHandler(host.Operations);
                 submit = alter => handler.HandleAsync(Host.As(host.AssessorUserId, alter ? request with
                 {
                     Content = request.Content with { Rationale = "Changed assessment." },
@@ -78,7 +78,7 @@ public sealed class ComplianceIncidentOperationTests
             {
                 var request = new ReviseComplianceIncident(Uuid.CreateVersion4(), host.TenantId, host.ProgramId,
                     incident.Id, incident.Revision, host.Content1 with { Description = "Additional detail." }, "More detail.");
-                var handler = new ReviseComplianceIncidentHandler(host.Operations, host.Content, host.Clock);
+                var handler = new ReviseComplianceIncidentHandler(host.Operations);
                 submit = alter => handler.HandleAsync(Host.As(host.AssessorUserId,
                     alter ? request with { ChangeReason = "Changed reason." } : request), CancellationToken.None).AsTask();
             }
@@ -106,7 +106,7 @@ public sealed class ComplianceIncidentOperationTests
         var incident = await host.RecordedAsync();
         var request = new AssessComplianceIncident(Uuid.CreateVersion4(), host.TenantId, host.ProgramId,
             incident.Id, incident.Revision, Assessment([]));
-        var handler = new AssessComplianceIncidentHandler(host.Operations, host.Content, host.Clock);
+        var handler = new AssessComplianceIncidentHandler(host.Operations);
         var first = await handler.HandleAsync(Host.As(host.AssessorUserId, request), CancellationToken.None);
         var after = await host.HistoryAsync(incident);
 
@@ -129,7 +129,7 @@ public sealed class ComplianceIncidentOperationTests
         var incident = await host.RecordedAsync();
         var request = new AssessComplianceIncident(Uuid.CreateVersion4(), host.TenantId, host.ProgramId,
             incident.Id, incident.Revision, Assessment([]));
-        var handler = new AssessComplianceIncidentHandler(host.Operations, host.Content, host.Clock);
+        var handler = new AssessComplianceIncidentHandler(host.Operations);
         await handler.HandleAsync(Host.As(host.AssessorUserId, request), CancellationToken.None);
         var count = (await host.HistoryAsync(incident)).Count;
 
@@ -152,7 +152,7 @@ public sealed class ComplianceIncidentOperationTests
         // Arrange
         await using var host = new Host();
         var incident = await host.RecordedAsync();
-        var handler = new AssessComplianceIncidentHandler(host.Operations, host.Content, host.Clock);
+        var handler = new AssessComplianceIncidentHandler(host.Operations);
 
         // Act
         var stale = await handler.HandleAsync(Host.As(host.AssessorUserId, new AssessComplianceIncident(
@@ -177,7 +177,7 @@ public sealed class ComplianceIncidentOperationTests
         var revised = host.Content1 with { Description = "A credential was exposed through a build log and revoked" };
         var request = new ReviseComplianceIncident(Uuid.CreateVersion4(), host.TenantId, host.ProgramId, incident.Id,
             incident.Revision, revised, "Added the build log detail.");
-        var handler = new ReviseComplianceIncidentHandler(host.Operations, host.Content, host.Clock);
+        var handler = new ReviseComplianceIncidentHandler(host.Operations);
         var first = await handler.HandleAsync(Host.As(host.AssessorUserId, request), CancellationToken.None);
         var count = (await host.HistoryAsync(incident)).Count;
 
@@ -204,13 +204,12 @@ public sealed class ComplianceIncidentOperationTests
         await using var host = new Host();
         var completed = await host.CompletedActionAsync(host.ProgramId);
         var incident = await host.AssessedAsync([completed.WorkItemId]);
-        var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier, host.Content, host.Clock);
+        var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier);
         var request = Resolution(host, incident, [completed.Fact]);
 
         // Act
         var resolved = await handler.HandleAsync(Host.As(host.AssessorUserId, request), CancellationToken.None);
-        var saved = await host.Reader.HydrateAsync(new ComplianceIncidentAggregate(host.TenantId, host.ProgramId,
-            incident.Id));
+        var saved = await host.ReadAsync(incident.Id);
 
         // Assert
         Assert.True(resolved.IsSuccess, resolved.Error?.Message);
@@ -224,13 +223,68 @@ public sealed class ComplianceIncidentOperationTests
     }
 
     [Fact]
+    public async Task ShouldResolveExactCompletionPositionGivenAuditRecordPrecedesNativeCompletion()
+    {
+        // Arrange
+        await using var host = new Host();
+        var completed = await host.CompletedActionAsync(host.ProgramId);
+        var source = new InMemoryEventStore();
+        var next = 0UL;
+        ulong? originalPosition = null;
+        await foreach (var record in host.Events.ReadAsync(completed.Fact.Stream, 0, CancellationToken.None))
+        {
+            if (record.Event.Metadata.EventId == completed.Fact.EventId)
+            {
+                originalPosition = record.ResourceOffset;
+                var audit = new TenantRegistered(host.TenantId, Uuid.CreateVersion4(), "Source audit", "source-audit");
+                audit.AttachMetadata(new(Uuid.CreateVersion4(), record.Event.Metadata.AggregateId,
+                    record.Event.Metadata.AggregateVersion - 1, Start, IsAudit: true));
+                await source.AppendAsync(completed.Fact.Stream, next++, [audit]);
+            }
+            await source.AppendAsync(completed.Fact.Stream, next++, [record.Event]);
+        }
+        var verifier = new FollowUpCompletionVerifier(new EventStoreSourceFactResolver(source), host.Content, source);
+        var resolution = new ComplianceIncidentResolutionContent("Verified corrective action completion.", Start,
+            [], [completed.Fact]);
+
+        // Act
+        var verified = await verifier.VerifyAsync(host.TenantId, host.ProgramId, resolution, CancellationToken.None);
+
+        // Assert
+        Assert.True(verified.IsSuccess, verified.Error?.Message);
+        var proof = Assert.Single(verified.Value.Completions).Proof;
+        Assert.Equal(completed.Fact.EventId, proof.EventId);
+        Assert.Equal(completed.Fact.AggregateVersion, proof.OwnerRevision);
+        Assert.Equal(originalPosition!.Value + 1, proof.PhysicalPosition);
+    }
+
+    [Fact]
+    public async Task ShouldKeepResolutionPendingGivenNamedNativeCompletionIsNotVisibleYet()
+    {
+        // Arrange
+        await using var host = new Host();
+        var completed = await host.CompletedActionAsync(host.ProgramId);
+        var missing = new InMemoryEventStore();
+        var verifier = new FollowUpCompletionVerifier(new EventStoreSourceFactResolver(missing), host.Content, missing);
+
+        // Act
+        var verified = await verifier.VerifyAsync(host.TenantId, host.ProgramId,
+            new ComplianceIncidentResolutionContent("Awaiting exact committed completion.", Start, [], [completed.Fact]), CancellationToken.None);
+
+        // Assert
+        Assert.False(verified.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, verified.Error.Kind);
+        Assert.True(verified.Error.IsTransient);
+    }
+
+    [Fact]
     public async Task ShouldAppendNothingGivenExactRetryOfResolveAfterTheClockMoved()
     {
         // Arrange
         await using var host = new Host();
         var completed = await host.CompletedActionAsync(host.ProgramId);
         var incident = await host.AssessedAsync([completed.WorkItemId]);
-        var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier, host.Content, host.Clock);
+        var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier);
         var request = Resolution(host, incident, [completed.Fact]);
         var first = await handler.HandleAsync(Host.As(host.AssessorUserId, request), CancellationToken.None);
         var count = (await host.HistoryAsync(incident)).Count;
@@ -258,7 +312,7 @@ public sealed class ComplianceIncidentOperationTests
         await using var host = new Host();
         var completed = await host.CompletedActionAsync(host.ProgramId);
         var incident = await host.AssessedAsync([completed.WorkItemId]);
-        var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier, host.Content, host.Clock);
+        var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier);
         var count = (await host.HistoryAsync(incident)).Count;
         var wrongKind = completed.Raised;
         var wrongStream = completed.Fact with
@@ -297,7 +351,13 @@ public sealed class ComplianceIncidentOperationTests
         // Assert
         Assert.All(results, result => Assert.False(result.IsSuccess));
         Assert.Equal(RequestErrorKind.Conflict, results[0].Error!.Kind);
-        Assert.All(results.Skip(1), result => Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind));
+        Assert.All(new[] { results[2], results[4] }, result =>
+        {
+            Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
+            Assert.True(result.Error.IsTransient);
+        });
+        Assert.All(new[] { results[1], results[3], results[5], results[6], results[7] },
+            result => Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind));
         Assert.Equal(count, (await host.HistoryAsync(incident)).Count);
     }
 
@@ -308,7 +368,7 @@ public sealed class ComplianceIncidentOperationTests
         await using var host = new Host();
         var foreign = await host.CompletedActionAsync(Uuid.CreateVersion4());
         var incident = await host.AssessedAsync([foreign.WorkItemId]);
-        var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier, host.Content, host.Clock);
+        var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier);
 
         // Act
         var result = await handler.HandleAsync(Host.As(host.AssessorUserId,
@@ -326,7 +386,7 @@ public sealed class ComplianceIncidentOperationTests
         await using var host = new Host();
         var completed = await host.CompletedActionAsync(host.ProgramId);
         var incident = await host.AssessedAsync([Uuid.CreateVersion4()]);
-        var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier, host.Content, host.Clock);
+        var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier);
 
         // Act
         var result = await handler.HandleAsync(Host.As(host.AssessorUserId,
@@ -343,14 +403,12 @@ public sealed class ComplianceIncidentOperationTests
         // Arrange
         await using var host = new Host();
         var incident = await host.AssessedAsync([], requiresReview: true);
-        var assessment = (await host.Reader.HydrateAsync(new ComplianceIncidentAggregate(host.TenantId, host.ProgramId,
-            incident.Id))).Current!.CurrentAssessment!;
+        var assessment = (await host.ReadAsync(incident.Id)).Current!.CurrentAssessment!;
         var sha = ComplianceIncidentAggregate.AssessmentSha256(assessment);
         var description = await host.NoChangeDescriptionAsync(incident.Id, sha, assessment.AssessedAt.AddMinutes(5));
         var request = new RecordComplianceIncidentSystemDescriptionDecision(Uuid.CreateVersion4(), host.TenantId,
             host.ProgramId, incident.Id, 1, description.DescriptionId, description.VersionId, description.DecisionId, sha);
-        var handler = new RecordComplianceIncidentSystemDescriptionDecisionHandler(host.Operations, host.Reader,
-            host.Content, host.Clock);
+        var handler = new RecordComplianceIncidentSystemDescriptionDecisionHandler(host.Operations, host.Descriptions);
         var first = await handler.HandleAsync(Host.System(request), CancellationToken.None);
         var count = (await host.HistoryAsync(incident)).Count;
 
@@ -374,16 +432,14 @@ public sealed class ComplianceIncidentOperationTests
         // Arrange
         await using var host = new Host();
         var incident = await host.AssessedAsync([], requiresReview: true);
-        var assessment = (await host.Reader.HydrateAsync(new ComplianceIncidentAggregate(host.TenantId, host.ProgramId,
-            incident.Id))).Current!.CurrentAssessment!;
+        var assessment = (await host.ReadAsync(incident.Id)).Current!.CurrentAssessment!;
         var sha = ComplianceIncidentAggregate.AssessmentSha256(assessment);
         var description = await host.NoChangeDescriptionAsync(incident.Id, sha, assessment.AssessedAt.AddMinutes(5));
-        var revise = await new ReviseComplianceIncidentHandler(host.Operations, host.Content, host.Clock).HandleAsync(
+        var revise = await new ReviseComplianceIncidentHandler(host.Operations).HandleAsync(
             Host.As(host.AssessorUserId, new ReviseComplianceIncident(Uuid.CreateVersion4(), host.TenantId,
                 host.ProgramId, incident.Id, 2, host.Content1 with { Title = "Payment API credential exposure" },
                 "A newer incident version supersedes the first assessment.")), CancellationToken.None);
-        var handler = new RecordComplianceIncidentSystemDescriptionDecisionHandler(host.Operations, host.Reader,
-            host.Content, host.Clock);
+        var handler = new RecordComplianceIncidentSystemDescriptionDecisionHandler(host.Operations, host.Descriptions);
         var count = (await host.HistoryAsync(incident)).Count;
 
         // Act
@@ -457,9 +513,9 @@ public sealed class ComplianceIncidentOperationTests
             _scope = _provider.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             _writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
-            Operations = new NativeOperationExecutor(Reader, _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
-                Content);
-            Verifier = new FollowUpCompletionVerifier(new EventStoreSourceFactResolver(_events), Content);
+            Incidents = new ComplianceIncidentReader(Reader, _events, Content);
+            Operations = new IncidentOperations(new NativeOperationExecutor(Reader, _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), Content), Incidents, Content, Clock);
+            Verifier = new FollowUpCompletionVerifier(new EventStoreSourceFactResolver(_events), Content, _events);
             Content1 = new ComplianceIncidentContent(null, null, null, null, "Payment API credential exposed",
                 "A credential was briefly exposed and revoked", "security", "high", Start.AddMinutes(-30),
                 Start.AddMinutes(-20), RbacIds.Member(TenantId, Uuid.CreateVersion4()), true, false,
@@ -471,11 +527,15 @@ public sealed class ComplianceIncidentOperationTests
         public Uuid AssessorUserId { get; }
         public ComplianceIncidentContent Content1 { get; }
         public IAggregateReader Reader { get; }
+        public SystemDescriptionReader Descriptions => new(Reader, _events, Content);
         public IImmutableContentStore Content { get; }
         public bool RejectContentWrites { set => ((IncidentContentStore)Content).RejectWrites = value; }
         public int ContentWrites => ((IncidentContentStore)Content).Writes;
-        public NativeOperationExecutor Operations { get; }
+        public IncidentOperations Operations { get; }
+        public ComplianceIncidentReader Incidents { get; }
+        public async ValueTask<ComplianceIncidentRules> ReadAsync(Uuid id) => (await Incidents.ReadAsync(TenantId, ProgramId, id)).Rules;
         public FollowUpCompletionVerifier Verifier { get; }
+        public InMemoryEventStore Events => _events;
         public ManualClock Clock { get; } = new(Start);
 
         public static RequestContext<T> As<T>(Uuid userId, T request) where T : IRequestBase => new(request,
@@ -490,7 +550,7 @@ public sealed class ComplianceIncidentOperationTests
         {
             var incident = new ComplianceIncidentAggregate(TenantId, ProgramId, Uuid.CreateVersion4());
             Assert.Null(incident.Record(Content1, _reporterMemberId, "Reporter", Start.AddMinutes(-10)));
-            await _writer.SaveAsync(incident, new RequestDispatchContext(RequestActor.System));
+            await IncidentSeeds.WriteAsync(_writer, Content, incident);
             return incident;
         }
 
@@ -502,7 +562,7 @@ public sealed class ComplianceIncidentOperationTests
             Assert.Null(incident.Record(Content1, _reporterMemberId, "Reporter", Start.AddMinutes(-10)));
             Assert.Null(incident.Assess(incident.Revision, Assessment(followUpWorkIds, requiresReview),
                 RbacIds.Member(TenantId, AssessorUserId), "Assessor", Start.AddMinutes(-5)));
-            await _writer.SaveAsync(incident, new RequestDispatchContext(RequestActor.System));
+            await IncidentSeeds.WriteAsync(_writer, Content, incident);
             return incident;
         }
 
@@ -567,7 +627,7 @@ public sealed class ComplianceIncidentOperationTests
             Assert.Null(description.RecordNoChangeDecision(1, incidentId,
                 "This incident did not alter the approved system description.", decider, "Decision maker",
                 decidedAt));
-            await _writer.SaveAsync(description, new RequestDispatchContext(RequestActor.System));
+            await DescriptionSeeds.WriteAsync(_writer, Content, description);
             return new DescriptionFact(descriptionId, versionId,
                 Uuid.CreateVersion5(versionId, "no-change:" + incidentId));
         }
