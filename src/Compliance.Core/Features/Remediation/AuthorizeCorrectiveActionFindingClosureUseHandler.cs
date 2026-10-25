@@ -62,7 +62,7 @@ sealed class AuthorizeCorrectiveActionFindingClosureUseHandler(IAggregateReader 
         if (action.ContentFactById(request.SourceContentEventId) is not { } pinned)
             return Fail("The pinned corrective action fact does not exist.", false);
 
-        var admitted = finding.Admitted.FirstOrDefault(fact => fact.Operation.LogicalId == request.SourceOwnerId);
+        var admitted = closure.History!.Admitted.FirstOrDefault(fact => fact.Operation.LogicalId == request.SourceOwnerId);
         if (admitted is null)
             return Fail("The action was not admitted by this finding.", false);
         Uuid actionOwner;

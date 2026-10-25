@@ -28,7 +28,9 @@ static class FindingProcesses
             .HydrateAsync(new FindingAggregate(tenantId, programId, findingId), ct);
         var records = scope.ServiceProvider.GetRequiredService<IProcessRecordStore>();
         var driven = new List<ProcessRecord>();
-        foreach (var admitted in finding.Admitted)
+        var history = await FindingHistory.ReadAsync(scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+            finding, ct);
+        foreach (var admitted in history.Admitted)
         {
             var key = ProcessKey.ForRoot(FindingClosureEffects.MaterializationProcessName, admitted.Operation.RootOperationId,
                 NativeFactReference.Of(finding.Stream, admitted));
@@ -48,7 +50,7 @@ static class FindingProcesses
     {
         await using var scope = provider.CreateAsyncScope();
         var finding = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new FindingAggregate(tenantId, programId, findingId), ct);
+            .HydrateAsync(new FindingAggregate(tenantId, programId, findingId, selectedClosureRoot: commandId), ct);
         var accepted = finding.AcceptedClosure(commandId) ?? throw new InvalidOperationException("Not accepted.");
         var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
         var intent = await content.ReadJsonAsync<ClosureIntent>(tenantId.ToString(), accepted.Intent, ct);

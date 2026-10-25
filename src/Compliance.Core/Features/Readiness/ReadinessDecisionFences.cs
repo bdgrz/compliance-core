@@ -23,7 +23,7 @@ sealed class ReadinessDecisionFences(IRequestBus bus, IImmutableContentStore con
         var episode = intent.Header.Episode;
         var proof = await ReadinessContent.WriteDeterministicAsync(content, decision.TenantId, intent.Header.RootOperationId,
             ReadinessContent.FailureSchema, new ReadinessDecisionFailureProof(intent.ProgramId, intent.AssessmentId,
-                reason, gapId), ct).ConfigureAwait(false);
+                reason, gapId, source, intent.Header.RootOperationId, decision.Generation, intentReference), ct).ConfigureAwait(false);
         var abortId = ReadinessEffects.DecisionReceiverCommandId(source.EventId, nameof(AbortReadinessDecision), null,
             episode);
         var aborted = await bus.SendAsync(new AbortReadinessDecision(abortId, intent.Header.RootOperationId,

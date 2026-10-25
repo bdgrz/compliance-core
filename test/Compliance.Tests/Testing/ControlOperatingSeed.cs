@@ -64,7 +64,7 @@ static class ControlOperatingSeed
                 ActorReference.ForMember(approverMemberId, approverDisplay), at, "Independently approved.", null,
                 moves, first, result));
         var line = await ControlOperatingPlanLine.ReadAsync(await services.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ControlOperatingPlan(tenantId, programId, controlId)), content, tenantId,
+            .HydrateAsync(new ControlOperatingPlan(tenantId, programId, controlId)), services.GetRequiredService<IDomainEventReader>(), content, tenantId,
             CancellationToken.None);
         return line.Find(planVersionId)!;
     }
@@ -77,7 +77,7 @@ static class ControlOperatingSeed
         var services = scope.ServiceProvider;
         var line = await ControlOperatingPlanLine.ReadAsync(await services.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new ControlOperatingPlan(tenantId, programId, controlId)),
-            services.GetRequiredService<IImmutableContentStore>(), tenantId, CancellationToken.None);
+            services.GetRequiredService<IDomainEventReader>(), services.GetRequiredService<IImmutableContentStore>(), tenantId, CancellationToken.None);
         return line.Current ?? throw new InvalidOperationException("The control has no approved plan.");
     }
 
@@ -93,7 +93,7 @@ static class ControlOperatingSeed
         var occurrence = new ControlOccurrence(tenantId, programId, controlId, occurrenceId);
         var planStream = new ControlOperatingPlan(tenantId, programId, controlId).Stream;
         var line = await ControlOperatingPlanLine.ReadAsync(await services.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ControlOperatingPlan(tenantId, programId, controlId)), content, tenantId,
+            .HydrateAsync(new ControlOperatingPlan(tenantId, programId, controlId)), services.GetRequiredService<IDomainEventReader>(), content, tenantId,
             CancellationToken.None);
         var commandId = Uuid.CreateVersion4();
         var actor = new OperationsActor(Uuid.Empty, actorMemberId, actorDisplay);
@@ -113,7 +113,7 @@ static class ControlOperatingSeed
         await CommitAsync(services, new ControlOccurrence(tenantId, programId, controlId, occurrenceId, commandId),
             owner => owner.Open(provenance, terms, intentContent, first, result));
         return (await ControlOccurrenceFold.ReadAsync(await services.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ControlOccurrence(tenantId, programId, controlId, occurrenceId)), content, tenantId,
+            .HydrateAsync(new ControlOccurrence(tenantId, programId, controlId, occurrenceId)), services.GetRequiredService<IDomainEventReader>(), content, tenantId,
             CancellationToken.None))!;
     }
 
@@ -140,7 +140,7 @@ static class ControlOperatingSeed
             current.OccurrenceId, commandId), owner => owner.Attest(provenance, attestationContent, first, result, null));
         return (await ControlOccurrenceFold.ReadAsync(await services.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new ControlOccurrence(current.TenantId, current.ProgramId, current.ControlId,
-                current.OccurrenceId)), content, current.TenantId, CancellationToken.None))!;
+                current.OccurrenceId)), services.GetRequiredService<IDomainEventReader>(), content, current.TenantId, CancellationToken.None))!;
     }
 
     /// <summary>Records a review decision on the latest attestation and returns the occurrence view.</summary>
@@ -167,7 +167,7 @@ static class ControlOperatingSeed
             current.OccurrenceId, commandId), owner => owner.Review(provenance, reviewContent, first, result));
         return (await ControlOccurrenceFold.ReadAsync(await services.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new ControlOccurrence(current.TenantId, current.ProgramId, current.ControlId,
-                current.OccurrenceId)), content, current.TenantId, CancellationToken.None))!;
+                current.OccurrenceId)), services.GetRequiredService<IDomainEventReader>(), content, current.TenantId, CancellationToken.None))!;
     }
 
     static async Task<(ImmutableContentRef First, ImmutableContentRef Result)> UnitAsync(IImmutableContentStore content,

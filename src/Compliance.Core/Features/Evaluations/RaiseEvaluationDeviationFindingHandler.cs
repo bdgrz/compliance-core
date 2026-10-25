@@ -25,31 +25,34 @@ public sealed class RaiseEvaluationDeviationFindingHandler(NativeOperationExecut
         IRequestContext<RaiseEvaluationDeviationFinding> context, CancellationToken ct)
     {
         var request = context.Request;
-        var evaluation = await evaluations.ReadViewAsync(request.TenantId, request.ProgramId, request.ControlId,
-            request.EvaluationId, ct).ConfigureAwait(false);
-        var deviation = evaluation?.Submissions.SelectMany(static submission => submission.Deviations)
-            .LastOrDefault(item => item.DeviationId == request.DeviationId);
-        if (evaluation is null || deviation is not { Classification: ControlEvaluationStates.Material } ||
-            deviation.FindingId != request.FindingId)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The submitted material deviation was not found."));
-        var control = await controlSources.ReadAsync(request.TenantId, request.ProgramId, request.ControlId, ct).ConfigureAwait(false);
-        var owner = control.ReadVersions().FirstOrDefault(version =>
-            version.VersionId == evaluation.ControlVersionId)?.OwnerMemberId is { } member &&
-                    member != Uuid.Empty
-            ? member
-            : evaluation.EvaluatorMemberId;
         var now = clock.GetUtcNow();
         var actor = ActorReference.ForSystemProcess(ProcessId,
             ControlEvaluationDeviationFindingReactor.WorkloadName);
-        return await RoutedFinding.RaiseAsync(operations, reader, content, context, "RaiseEvaluationDeviationFinding",
-            request, request.TenantId, request.ProgramId, request.FindingId,
-            new FindingSource("evaluation_deviation", deviation.DeviationId,
-                request.EvaluationId.ToString(), deviation.Description),
-            "Material control evaluation deviation",
-            $"Control {request.ControlId}, evaluation {request.EvaluationId}", owner,
-            [new FindingLink("control", request.ControlId.ToString()),
-                new FindingLink("control_evaluation", request.EvaluationId.ToString())],
-            deviation.Description, actor, now, ct).ConfigureAwait(false);
+        async ValueTask<Result<RoutedFindingSource>> PrepareSourceAsync(CancellationToken token)
+        {
+            var evaluation = await evaluations.ReadViewAsync(request.TenantId, request.ProgramId, request.ControlId,
+                request.EvaluationId, token).ConfigureAwait(false);
+            var deviation = evaluation?.Submissions.SelectMany(static submission => submission.Deviations)
+                .LastOrDefault(item => item.DeviationId == request.DeviationId);
+            if (evaluation is null || deviation is not { Classification: ControlEvaluationStates.Material } ||
+                deviation.FindingId != request.FindingId)
+                return Result<RoutedFindingSource>.Failure(new RequestError(RequestErrorKind.NotFound,
+                    "The submitted material deviation was not found."));
+            var control = await controlSources.ReadAsync(request.TenantId, request.ProgramId, request.ControlId, token)
+                .ConfigureAwait(false);
+            var owner = control.ReadVersions().FirstOrDefault(version =>
+                version.VersionId == evaluation.ControlVersionId)?.OwnerMemberId is { } member && member != Uuid.Empty
+                ? member
+                : evaluation.EvaluatorMemberId;
+            return Result<RoutedFindingSource>.Success(new RoutedFindingSource(
+                new FindingSource("evaluation_deviation", deviation.DeviationId, request.EvaluationId.ToString(),
+                    deviation.Description), "Material control evaluation deviation",
+                $"Control {request.ControlId}, evaluation {request.EvaluationId}", owner,
+                [new FindingLink("control", request.ControlId.ToString()),
+                    new FindingLink("control_evaluation", request.EvaluationId.ToString())], deviation.Description));
+        }
+        return await RoutedFinding.RaiseFromSourceAsync(operations, reader, content, context,
+            "RaiseEvaluationDeviationFinding", request, request.TenantId, request.ProgramId, request.FindingId,
+            actor, now, PrepareSourceAsync, ct).ConfigureAwait(false);
     }
 }

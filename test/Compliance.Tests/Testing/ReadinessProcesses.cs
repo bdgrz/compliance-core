@@ -19,7 +19,7 @@ static class ReadinessProcesses
     {
         await using var scope = provider.CreateAsyncScope();
         var program = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ProgramReadiness(tenantId, programId), ct);
+            .HydrateAsync(new ProgramReadiness(tenantId, programId, assessmentId), ct);
         var requested = program.RequestedRun(assessmentId) ?? throw new InvalidOperationException("Not admitted.");
         return await scope.ServiceProvider.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(
             ProcessRecord.Start(ProcessKey.ForRoot(ReadinessEffects.RunProcessName, assessmentId,
@@ -43,7 +43,7 @@ static class ReadinessProcesses
     {
         await using var scope = provider.CreateAsyncScope();
         var program = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ProgramReadiness(tenantId, programId), ct);
+            .HydrateAsync(new ProgramReadiness(tenantId, programId, commandId), ct);
         var accepted = program.AcceptedDecision(commandId) ?? throw new InvalidOperationException("Not accepted.");
         var terms = ProgramReadiness.DecisionTerms(accepted)!.Value;
         var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();

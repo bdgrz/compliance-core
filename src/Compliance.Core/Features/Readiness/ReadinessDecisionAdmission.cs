@@ -22,7 +22,14 @@ sealed class ReadinessDecisionAdmission(NativeOperationExecutor operations, IAgg
     IImmutableContentStore content, TimeProvider clock)
 {
     /// <summary>Admits one decision, or replays the original acknowledgment of an exact retry.</summary>
-    public async ValueTask<Result<OperationAcceptedResponse>> AdmitAsync<TRequest>(ReadinessDecisionKind kind,
+    public ValueTask<Result<OperationAcceptedResponse>> AdmitAsync<TRequest>(ReadinessDecisionKind kind,
+        IRequestContext<TRequest> context, TRequest request, Uuid commandId, Uuid tenantId, Uuid programId,
+        Uuid assessmentId, long expectedRevision, string outcome, string rationale, IReadOnlyList<Uuid> acknowledged,
+        Uuid? waiverId, CancellationToken ct) where TRequest : IRequestBase =>
+        ReadinessContent.ClassifyAsync(() => AdmitCoreAsync(kind, context, request, commandId, tenantId, programId,
+            assessmentId, expectedRevision, outcome, rationale, acknowledged, waiverId, ct));
+
+    async ValueTask<Result<OperationAcceptedResponse>> AdmitCoreAsync<TRequest>(ReadinessDecisionKind kind,
         IRequestContext<TRequest> context, TRequest request, Uuid commandId, Uuid tenantId, Uuid programId,
         Uuid assessmentId, long expectedRevision, string outcome, string rationale, IReadOnlyList<Uuid> acknowledged,
         Uuid? waiverId, CancellationToken ct) where TRequest : IRequestBase
@@ -33,28 +40,25 @@ sealed class ReadinessDecisionAdmission(NativeOperationExecutor operations, IAgg
         var actor = ReadinessActor.From(context, tenantId);
         var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new ProgramReadiness(tenantId, programId, commandId), ct)
-            .ConfigureAwait(false);
+        var stream = new ProgramReadiness(tenantId, programId).Stream;
         var commandKind = kind == ReadinessDecisionKind.Readiness ? "DecideReadiness" : "DecideTypeIEntry";
-        var provenance = ReadinessContent.Provenance(commandId, commandKind, snapshot.Stream, actorReference,
+        var provenance = ReadinessContent.Provenance(commandId, commandKind, stream, actorReference,
             (ulong)expectedRevision, ReadinessCommands.Digest(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? intent = null;
-        FirstResponseDescriptor? response = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(kind, snapshot, provenance, actor, tenantId, programId, assessmentId,
-                expectedRevision, outcome, rationale, acknowledged, waiverId, now, ct).ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response) = frozen.Value;
-        }
 
         var result = await operations.ExecuteAsync(new NativeOperation<ProgramReadiness>(binding,
-            () => new ProgramReadiness(tenantId, programId, commandId),
+            () => new ProgramReadiness(tenantId, programId, commandId, selectedAssessmentId: assessmentId),
             program => program.Acceptance,
-            program => ReadinessCommands.Prepared(program.PrepareDecision(expectedRevision, assessmentId, kind), response),
+            async (program, token) =>
+            {
+                var frozen = await FreezeAsync(kind, program, provenance, actor, tenantId, programId, assessmentId, expectedRevision, outcome, rationale, acknowledged, waiverId, now, token).ConfigureAwait(false);
+                if (!frozen.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                intent = frozen.Value.Intent;
+                return Result<FirstResponseDescriptor>.Success(frozen.Value.Response);
+            },
             (ProgramReadiness program, ImmutableContentRef acknowledgment) =>
                 program.AcceptDecision(kind, assessmentId, provenance, intent!, acknowledgment)), context, ct)
             .ConfigureAwait(false);
@@ -97,8 +101,8 @@ sealed class ReadinessDecisionAdmission(NativeOperationExecutor operations, IAgg
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return Fail(RequestErrorKind.Conflict, $"The readiness content cannot be verified yet: {exception.Message}",
-                true);
+            return Fail(RequestErrorKind.Conflict, $"The readiness content cannot be verified: {exception.Message}",
+                exception is ImmutableContentUnavailableException);
         }
 
         // The runner may decide only under an approved waiver scoped to this assessment, record kind and revision.
@@ -145,8 +149,8 @@ sealed class ReadinessDecisionAdmission(NativeOperationExecutor operations, IAgg
         {
             var owner = owners.First(item => item.GapId == gap.GapId);
             var latest = owner.Latest;
-            var required = await ReadinessContent.WriteDeterministicAsync(content, tenantId,
-                Uuid.CreateVersion5(provenance.RootOperationId, gap.GapId.ToString()), ReadinessContent.PlanFactsSchema,
+            // Before admission there is no frozen winner: a failed candidate may observe a different current plan.
+            var required = await ReadinessContent.WriteAsync(content, tenantId, ReadinessContent.PlanFactsSchema,
                 new ReadinessPlanFacts(gap.GapId, gap.Plan, null), ct).ConfigureAwait(false);
             requirements.Add(new SourceUseRequirement(owner.Stream,
                 latest is null

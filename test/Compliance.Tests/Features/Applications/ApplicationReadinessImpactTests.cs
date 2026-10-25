@@ -320,7 +320,7 @@ public sealed class ApplicationReadinessImpactTests
         var retainedContent = readiness.MissingContent
             ? new FitzKvImmutableContentStore(new InMemoryKvClient()) : content;
         var reader = new ApplicationReadinessImpactReader(programs,
-            new ReadinessReader(aggregateReader, retainedContent), new ProgramDirectoryReadConsistency(programs, events));
+            new ReadinessReader(aggregateReader, retainedContent, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()), new ProgramDirectoryReadConsistency(programs, events));
         return new ReadinessHarness(provider, scope, reader);
     }
 

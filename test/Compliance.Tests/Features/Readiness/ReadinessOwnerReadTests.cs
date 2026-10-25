@@ -25,7 +25,7 @@ public sealed class ReadinessOwnerReadTests
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
-        var readiness = new ReadinessReader(reader, content);
+        var readiness = new ReadinessReader(reader, content, scope.ServiceProvider.GetRequiredService<IDomainEventReader>());
         var tenant = Uuid.CreateVersion4();
         var program = Uuid.CreateVersion4();
         var runner = Uuid.CreateVersion4();
@@ -59,7 +59,7 @@ public sealed class ReadinessOwnerReadTests
         // Act
         var old = await readiness.ReadViewAsync(tenant, program, oldId);
         var current = await readiness.ReadViewAsync(tenant, program, currentId);
-        var replayed = await new ReadinessReader(reader, content).ReadViewAsync(tenant, program, currentId);
+        var replayed = await new ReadinessReader(reader, content, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadViewAsync(tenant, program, currentId);
         var filtered = await new ListReadinessGapsHandler(readiness).HandleAsync(
             new RequestContext<ListReadinessGaps>(new ListReadinessGaps(tenant, program, currentId, "planned",
                 OwnerMemberId: runner, Kind: "catalog_support_gap", RuleId: "catalog_support_declared",
@@ -95,7 +95,7 @@ public sealed class ReadinessOwnerReadTests
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
-        var readiness = new ReadinessReader(reader, content);
+        var readiness = new ReadinessReader(reader, content, scope.ServiceProvider.GetRequiredService<IDomainEventReader>());
         var tenant = Uuid.CreateVersion4();
         var program = Uuid.CreateVersion4();
         var first = Uuid.CreateVersion4();

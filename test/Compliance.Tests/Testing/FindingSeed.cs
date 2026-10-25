@@ -125,7 +125,8 @@ static class FindingSeed
             closerMemberId, closer, at, null);
         var decisionReference = await FindingContent.WriteAsync(content, tenantId, FindingContent.DecisionSchema, decision,
             CancellationToken.None);
-        var children = finding.Admitted.Select(fact => new AdmittedChild(fact.Operation.LogicalId,
+        var history = await FindingHistory.ReadAsync(scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), finding);
+        var children = history.Admitted.Select(fact => new AdmittedChild(fact.Operation.LogicalId,
             NativeFactReference.Of(finding.Stream, fact))).ToArray();
         var childManifest = await ImmutableSelectionManifests.WriteAsync<AdmittedChild>(content, tenantId.ToString(),
             Uuid.CreateVersion4(), FindingContent.AdmittedChildSchema, children, SelectionOrder.CanonicalKey);
@@ -148,7 +149,7 @@ static class FindingSeed
         var result = await FindingContent.WriteAsync(content, tenantId, "mutation-result-content.v1",
             new MutationResultContent(FindingContent.ViewSchema, new StandardResponseBody(closureContent)),
             CancellationToken.None);
-        var closed = Provenances.Child(Uuid.CreateVersion4(), "CompleteFindingClosure", intent, operation, finding.Stream, at);
+        var closed = Provenances.Child(Uuid.CreateVersion4(), "CompleteFindingClosure", intent, operation, finding.Stream, at, finding.PendingClosure!.Metadata.EventId);
         Assert.True(finding.CompleteClosure(closed, closureContent, proofs, intent, result).IsSuccess);
         if (reopen)
         {
@@ -165,8 +166,8 @@ static class FindingSeed
     static class Provenances
     {
         public static OperationProvenance Child(Uuid commandId, string kind, ImmutableContentRef _,
-            OperationProvenance root, EventStreamAddress owner, DateTimeOffset at) => new(commandId, root.RootOperationId,
-            null, kind, root.Actor, owner, root.Episode, root.OriginalExpectedRevision, root.AuthoredIntentSha256, at, owner,
+            OperationProvenance root, EventStreamAddress owner, DateTimeOffset at, Uuid? cause = null) => new(commandId, root.RootOperationId,
+            cause, kind, root.Actor, owner, root.Episode, root.OriginalExpectedRevision, root.AuthoredIntentSha256, at, owner,
             owner);
     }
 }

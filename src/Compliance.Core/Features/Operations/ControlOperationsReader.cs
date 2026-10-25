@@ -30,8 +30,12 @@ public sealed class ControlOperationsReader(IAggregateReader reader, IDomainEven
     {
         var plan = await reader.HydrateAsync(new ControlOperatingPlan(tenantId, programId, controlId,
             selectedLogicalId), ct).ConfigureAwait(false);
-        return (plan, await ControlOperatingPlanLine.ReadAsync(plan, content, tenantId, ct).ConfigureAwait(false));
+        return (plan, await ControlOperatingPlanLine.ReadAsync(plan, events, content, tenantId, ct).ConfigureAwait(false));
     }
+
+    /// <summary>Composes only the exact native/physical cut already hydrated for admission.</summary>
+    public Task<ControlOperatingPlanLine> ComposeLineAsync(ControlOperatingPlan plan, CancellationToken ct = default) =>
+        ControlOperatingPlanLine.ReadAsync(plan, events, content, plan.TenantId, ct);
 
     /// <summary>The materialized occurrence, or null when it is not materialized.</summary>
     public async ValueTask<(ControlOccurrence Occurrence, ControlOccurrenceView? View)> ReadStateAsync(Uuid tenantId,
@@ -39,7 +43,7 @@ public sealed class ControlOperationsReader(IAggregateReader reader, IDomainEven
     {
         var occurrence = await reader.HydrateAsync(new ControlOccurrence(tenantId, programId, controlId, occurrenceId,
             selectedLogicalId), ct).ConfigureAwait(false);
-        return (occurrence, await ControlOccurrenceFold.ReadAsync(occurrence, content, tenantId, ct)
+        return (occurrence, await ControlOccurrenceFold.ReadAsync(occurrence, events, content, tenantId, ct)
             .ConfigureAwait(false));
     }
 
@@ -63,7 +67,7 @@ public sealed class ControlOperationsReader(IAggregateReader reader, IDomainEven
             var plan = await reader.HydrateAsync(new ControlOperatingPlan(tenantId, programId, control), ct)
                 .ConfigureAwait(false);
             if (plan.Revision > 0)
-                lines.Add(await ControlOperatingPlanLine.ReadAsync(plan, content, tenantId, ct).ConfigureAwait(false));
+                lines.Add(await ControlOperatingPlanLine.ReadAsync(plan, events, content, tenantId, ct).ConfigureAwait(false));
         }
 
         var occurrences = new SortedSet<(Uuid Control, Uuid Occurrence)>(Comparer<(Uuid Control, Uuid Occurrence)>

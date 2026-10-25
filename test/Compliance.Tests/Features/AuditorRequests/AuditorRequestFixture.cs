@@ -117,6 +117,9 @@ sealed class AuditorRequestFixture : IAsyncDisposable
     public ValueTask<AuditorResponse> ResponseAsync(Uuid requestId, Uuid id) =>
         Reader.HydrateAsync(new AuditorResponse(TenantId, ProgramId, requestId, id));
 
+    public async Task<IReadOnlyList<DomainEvent>> ResponseHistoryAsync(Uuid requestId, Uuid id) =>
+        await AuditorResponseHistory.ReadAsync(Events, await ResponseAsync(requestId, id));
+
     public async Task<AuditorRequestTermsContent> TermsAsync(Uuid requestId) =>
         await ReadAsync<AuditorRequestTermsContent>((await RequestAsync(requestId)).Terms!);
 

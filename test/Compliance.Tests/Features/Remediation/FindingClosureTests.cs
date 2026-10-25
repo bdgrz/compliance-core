@@ -111,7 +111,7 @@ public sealed class FindingClosureTests
 
         // Act
         var waiting = await fixture.RunClosureAsync(finding.FindingId, close.CommandId);
-        var pending = await fixture.FindingStreamAsync(finding.FindingId);
+        var pending = await fixture.FindingStreamAsync(finding.FindingId, close.CommandId);
 
         // Assert
         Assert.Equal(ProcessState.Pending, waiting.State);
@@ -145,7 +145,7 @@ public sealed class FindingClosureTests
 
         // Act
         var ended = await fixture.RunClosureAsync(finding.FindingId, close.CommandId);
-        var canceled = await fixture.FindingStreamAsync(finding.FindingId);
+        var canceled = await fixture.FindingStreamAsync(finding.FindingId, close.CommandId);
         var actions = new List<CorrectiveAction>();
         foreach (var action in finding.CorrectiveActions)
             actions.Add(await fixture.ActionAsync(finding.FindingId, action.ActionId));
@@ -189,7 +189,7 @@ public sealed class FindingClosureTests
 
         // Assert
         Assert.Contains("closure of this finding is in progress", late.Error!.Message, StringComparison.Ordinal);
-        Assert.Single((await fixture.FindingStreamAsync(finding.FindingId)).Admitted);
+        Assert.Single((await fixture.FindingHistoryAsync(finding.FindingId)).Admitted);
     }
 
     [Fact]
@@ -275,7 +275,7 @@ public sealed class FindingClosureTests
 
         // Act
         var ended = await fixture.RunClosureAsync(finding.FindingId, close.CommandId);
-        var after = await fixture.FindingStreamAsync(finding.FindingId);
+        var after = await fixture.FindingStreamAsync(finding.FindingId, close.CommandId);
 
         // Assert
         Assert.Equal(ProcessState.Completed, ended.State);
@@ -314,7 +314,7 @@ public sealed class FindingClosureTests
         Assert.IsType<InvalidOperationException>(crashed);
         Assert.NotEqual(ProcessState.Completed, interrupted!.State);
         Assert.Equal(ProcessState.Completed, resumed.State);
-        Assert.Single(after.ClosureHistory);
+        Assert.Single((await fixture.FindingHistoryAsync(finding.FindingId)).ClosureHistory);
         foreach (var action in finding.CorrectiveActions)
         {
             var state = await fixture.ActionAsync(finding.FindingId, action.ActionId);

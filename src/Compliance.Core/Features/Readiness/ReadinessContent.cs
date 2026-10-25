@@ -21,7 +21,7 @@ static class ReadinessContent
     public const string TypeIEntryDecisionSchema = "TypeIEntryDecisionRecorded.DecisionContent.v1";
     public const string DecisionProofsSchema = "ReadinessDecisionRecorded.DecisionProofs.v1";
     public const string AdoptionProofsSchema = "ReadinessAssessmentAdopted.SourceProofs.v1";
-    public const string FailureSchema = "ReadinessDecisionCanceled.FailureProof.v1";
+    public const string FailureSchema = "ReadinessDecisionCanceled.FailureProof.v2";
     public const string WaiverProofSchema = "separation-of-duties-waiver-proof.v1";
     public const string PlanFactsSchema = "readiness-plan-facts.v1";
     public const string GapItemSchema = "readiness-gap-view.v1";
@@ -32,6 +32,19 @@ static class ReadinessContent
     public const string ReadinessDecisionViewSchema = "Readiness.DecisionView.v1";
     public const string TypeIEntryDecisionViewSchema = "Readiness.TypeIEntryDecisionView.v1";
     public const string AcknowledgmentSchema = "operation-accepted-response.v1";
+
+    /// <summary>Classifies expected immutable content failures after native acceptance recovery has had its recheck.</summary>
+    public static async ValueTask<Result<T>> ClassifyAsync<T>(Func<ValueTask<Result<T>>> execute)
+    {
+        try
+        {
+            return await execute().ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<T>.Failure(GetReadinessAssessmentHandler.Unverified(exception));
+        }
+    }
 
     public static string Realm(Uuid tenantId) => tenantId.ToString();
 

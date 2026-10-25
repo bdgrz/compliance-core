@@ -32,7 +32,8 @@ public sealed class PersonalTypeIEntryTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
-        Assert.Empty(after.EntryDecisions);
+        Assert.Empty(await scope.ServiceProvider.GetRequiredService<ReadinessReader>()
+            .ReadEntryDecisionsAsync(source.TenantId, after));
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
     }
 

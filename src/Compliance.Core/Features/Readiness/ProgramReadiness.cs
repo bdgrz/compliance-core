@@ -8,7 +8,7 @@ namespace Bdgrz.Compliance.Features.Readiness;
 
 /// <summary>
 ///     The compact readiness authority of one program: the latest adopted assessment, the one pending latest-adoption
-///     generation, the one pending management decision, the recorded decisions and the Type I entry decisions. The
+///     generation, the one pending management decision and the decisions of the current assessment. The
 ///     logical revision counts every fact of this stream. A run reserves the pending adoption generation before any
 ///     computation, and a decision seals the latest adoption; while either is pending the old latest cannot be decided
 ///     and no second run is admitted. Full assessment and decision content stays in immutable content, and reducers
@@ -39,27 +39,34 @@ public sealed class ProgramReadiness : Aggregate
 
     readonly Uuid _tenantId;
     readonly Uuid _programId;
-    readonly List<DomainEvent> _facts = [];
-    readonly List<Uuid> _adoptedOrder = [];
-    readonly Dictionary<Uuid, ReadinessAssessmentRequested> _requested = [];
-    readonly Dictionary<Uuid, ReadinessAssessmentAdopted> _adopted = [];
-    readonly Dictionary<Uuid, DomainEvent> _acceptedDecisions = [];
-    readonly Dictionary<Uuid, DomainEvent> _terminalDecisions = [];
-    readonly Dictionary<Uuid, ReadinessDecisionRecorded> _decisionByAssessment = [];
-    readonly List<TypeIEntryDecisionRecorded> _entryDecisions = [];
+    readonly Uuid _selectedRoot;
+    readonly Uuid _selectedAssessment;
+    ReadinessAssessmentRequested? _selectedRun;
+    ReadinessAssessmentRequested? _latestRun;
+    DomainEvent? _latestAccepted;
+    DomainEvent? _latestTerminal;
+    ReadinessAssessmentAdopted? _selectedAdoption;
+    DomainEvent? _selectedDecision;
+    DomainEvent? _selectedTerminal;
+    ReadinessAssessmentAdopted? _latestAdoption;
+    ReadinessDecisionRecorded? _latestReadinessDecision;
+    TypeIEntryDecisionRecorded? _latestEntryDecision;
     ReadinessAssessmentRequested? _pendingAdoption;
     DomainEvent? _pendingDecision;
     long _revision;
     long _generation;
 
     /// <summary>Opens the readiness of one program, selecting the logical operation to resolve.</summary>
-    public ProgramReadiness(Uuid tenantId, Uuid programId, Uuid selectedLogicalId = default)
+    public ProgramReadiness(Uuid tenantId, Uuid programId, Uuid selectedLogicalId = default,
+        Uuid selectedRootOperationId = default, Uuid selectedAssessmentId = default)
         : base(IdentityOf(tenantId, programId),
             new EventStreamAddress(tenantId.ToString(), Area, IdentityOf(tenantId, programId).ToString()))
     {
         if (tenantId == Uuid.Empty || programId == Uuid.Empty)
             throw new ArgumentException("A program readiness stream needs tenant and program IDs.");
         (_tenantId, _programId) = (tenantId, programId);
+        _selectedRoot = selectedRootOperationId == Uuid.Empty ? selectedLogicalId : selectedRootOperationId;
+        _selectedAssessment = selectedAssessmentId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
         On<ReadinessAssessmentRequested>(Apply);
         On<ReadinessAssessmentAdopted>(Apply);
@@ -86,45 +93,52 @@ public sealed class ProgramReadiness : Aggregate
     /// <summary>The last adoption generation reserved by a run; zero before the first run.</summary>
     public long AdoptionGeneration => _generation;
 
-    /// <summary>Every fact in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
+    /// <summary>The tenant of this command authority.</summary>
+    public Uuid TenantId => _tenantId;
 
-    /// <summary>The run admitted and not yet adopted, which seals the latest against decisions and new runs.</summary>
+    /// <summary>The last fact at the captured native and physical cut.</summary>
+    public DomainEvent? Latest { get; private set; }
+
+    /// <summary>The run admitted and not yet adopted.</summary>
     public ReadinessAssessmentRequested? PendingAdoption => _pendingAdoption;
 
-    /// <summary>The decision accepted and neither recorded nor canceled, which seals the latest adoption.</summary>
+    /// <summary>The one accepted decision still awaiting completion or cancellation.</summary>
     public DomainEvent? PendingDecision => _pendingDecision;
 
-    /// <summary>The assessments adopted so far, oldest first.</summary>
-    public IReadOnlyList<Uuid> AdoptedAssessments => _adoptedOrder;
+    /// <summary>The latest adopted assessment identity.</summary>
+    public Uuid? LatestAssessmentId => _latestAdoption?.Operation.RootOperationId;
 
-    /// <summary>The latest adopted assessment, or null before the first adoption.</summary>
-    public Uuid? LatestAssessmentId => _adoptedOrder.Count == 0 ? null : _adoptedOrder[^1];
+    /// <summary>The latest adoption, retained as current command authority.</summary>
+    public ReadinessAssessmentAdopted? LatestAdoption => _latestAdoption;
 
-    /// <summary>The adoption fact of the latest assessment, or null before the first adoption.</summary>
-    public ReadinessAssessmentAdopted? LatestAdoption =>
-        LatestAssessmentId is { } latest ? _adopted[latest] : null;
+    /// <summary>The adoption of the latest or explicitly selected assessment only.</summary>
+    public ReadinessAssessmentAdopted? AdoptionOf(Uuid assessmentId) =>
+        LatestAssessmentId == assessmentId ? _latestAdoption :
+        _selectedAdoption?.Operation.RootOperationId == assessmentId ? _selectedAdoption : null;
 
-    /// <summary>The adoption of one assessment, or null when it was never adopted.</summary>
-    public ReadinessAssessmentAdopted? AdoptionOf(Uuid assessmentId) => _adopted.GetValueOrDefault(assessmentId);
+    /// <summary>The latest, pending or explicitly selected root run.</summary>
+    public ReadinessAssessmentRequested? RequestedRun(Uuid rootOperationId) =>
+        _pendingAdoption?.Operation.RootOperationId == rootOperationId ? _pendingAdoption :
+        _selectedRun?.Operation.RootOperationId == rootOperationId ? _selectedRun :
+        _latestRun?.Operation.RootOperationId == rootOperationId ? _latestRun : null;
 
-    /// <summary>The run admitted for a root operation, or null.</summary>
-    public ReadinessAssessmentRequested? RequestedRun(Uuid rootOperationId) => _requested.GetValueOrDefault(rootOperationId);
+    /// <summary>The latest, pending or explicitly selected root decision.</summary>
+    public DomainEvent? AcceptedDecision(Uuid rootOperationId) =>
+        _pendingDecision is not null && PendingRoot(_pendingDecision) == rootOperationId ? _pendingDecision :
+        _selectedDecision is not null && PendingRoot(_selectedDecision) == rootOperationId ? _selectedDecision :
+        _latestAccepted is not null && PendingRoot(_latestAccepted) == rootOperationId ? _latestAccepted : null;
 
-    /// <summary>The decision acceptance for a root operation, or null.</summary>
-    public DomainEvent? AcceptedDecision(Uuid rootOperationId) => _acceptedDecisions.GetValueOrDefault(rootOperationId);
+    /// <summary>The latest terminal fact or the terminal fact of the explicitly selected decision.</summary>
+    public DomainEvent? TerminalDecision(Uuid rootOperationId) =>
+        _selectedTerminal is not null && PendingRoot(_selectedTerminal) == rootOperationId ? _selectedTerminal :
+        _latestTerminal is not null && PendingRoot(_latestTerminal) == rootOperationId ? _latestTerminal : null;
 
-    /// <summary>The recorded or canceled fact that ended a decision, or null while it is pending.</summary>
-    public DomainEvent? TerminalDecision(Uuid rootOperationId) => _terminalDecisions.GetValueOrDefault(rootOperationId);
+    /// <summary>The readiness decision of the current assessment; historical composition lives in ReadinessReader.</summary>
+    public ReadinessDecisionRecorded? DecisionOf(Uuid assessmentId) =>
+        _latestReadinessDecision?.AssessmentId == assessmentId ? _latestReadinessDecision : null;
 
-    /// <summary>The recorded readiness decision of an assessment, or null.</summary>
-    public ReadinessDecisionRecorded? DecisionOf(Uuid assessmentId) => _decisionByAssessment.GetValueOrDefault(assessmentId);
-
-    /// <summary>The recorded Type I entry decisions, oldest first.</summary>
-    public IReadOnlyList<TypeIEntryDecisionRecorded> EntryDecisions => _entryDecisions;
-
-    /// <summary>The fact with this event id.</summary>
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+    /// <summary>The current assessment's Type I entry decision.</summary>
+    public TypeIEntryDecisionRecorded? CurrentEntryDecision => _latestEntryDecision;
 
     /// <summary>The frozen decision intent and generation of an accepted decision fact.</summary>
     public static (ImmutableContentRef Intent, long Generation, ReadinessDecisionKind Kind)? DecisionTerms(DomainEvent? fact) =>
@@ -150,7 +164,7 @@ public sealed class ProgramReadiness : Aggregate
     /// <summary>Checks that the latest assessment can take a new decision of the kind at the expected revision.</summary>
     public Result PrepareDecision(long expectedRevision, Uuid assessmentId, ReadinessDecisionKind kind)
     {
-        if (!_adopted.ContainsKey(assessmentId))
+        if (AdoptionOf(assessmentId) is null)
             return Fail(CommandFailure.MissingRecord("The readiness assessment was not found."));
         if (expectedRevision != _revision)
             return Fail(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("program readiness", _revision)));
@@ -162,9 +176,9 @@ public sealed class ProgramReadiness : Aggregate
             return Fail(CommandFailure.StateConflict(kind == ReadinessDecisionKind.Readiness
                 ? "A later assessment exists; decide the latest assessment."
                 : "A later assessment exists; decide Type I entry on the latest assessment."));
-        if (kind == ReadinessDecisionKind.Readiness && _decisionByAssessment.ContainsKey(assessmentId))
+        if (kind == ReadinessDecisionKind.Readiness && _latestReadinessDecision is not null)
             return Fail(CommandFailure.StateConflict("The readiness assessment was already decided."));
-        return kind == ReadinessDecisionKind.TypeIEntry && _entryDecisions.Any(decision => decision.AssessmentId == assessmentId)
+        return kind == ReadinessDecisionKind.TypeIEntry && _latestEntryDecision is not null
             ? Fail(CommandFailure.StateConflict(
                 "The assessment already has a Type I entry decision; run a new assessment."))
             : Result.Success;
@@ -212,7 +226,7 @@ public sealed class ProgramReadiness : Aggregate
         var prepared = PrepareDecision((long)expected, assessmentId, kind);
         if (!prepared.IsSuccess)
             return prepared;
-        var generation = _adopted[assessmentId].Generation;
+        var generation = _latestAdoption!.Generation;
         RaiseEvent(kind == ReadinessDecisionKind.Readiness
             ? new ReadinessDecisionAccepted(Stream, _revision + 1, generation, intent, null, operation, firstResponse, null)
             : new TypeIEntryDecisionAccepted(Stream, _revision + 1, generation, intent, null, operation, firstResponse, null));
@@ -272,10 +286,12 @@ public sealed class ProgramReadiness : Aggregate
         Acceptance.Observe(ev);
         if (_pendingAdoption is not null || _pendingDecision is not null || ev.Owner != Stream ||
             ev.Revision != _revision + 1 || ev.Generation != _generation + 1 || ev.Operation.Owner != Stream ||
-            ev.Operation.RootOperationId != ev.Operation.LogicalId ||
-            !_requested.TryAdd(ev.Operation.RootOperationId, ev))
+            ev.Operation.RootOperationId != ev.Operation.LogicalId)
             throw new InvalidOperationException(
                 "A run is admitted once, with no pending adoption or decision, at the next revision and generation.");
+        if (ev.Operation.RootOperationId == _selectedRoot)
+            _selectedRun = ev;
+        _latestRun = ev;
         _pendingAdoption = ev;
         _generation = ev.Generation;
         Advance(ev);
@@ -288,9 +304,11 @@ public sealed class ProgramReadiness : Aggregate
             ev.Generation != _pendingAdoption.Generation || ev.Intent != _pendingAdoption.Intent ||
             ev.Operation.RootOperationId != _pendingAdoption.Operation.RootOperationId || ev.Operation.Owner != Stream)
             throw new InvalidOperationException("Only the exact pending adoption generation is adopted.");
-        var assessmentId = ev.Operation.RootOperationId;
-        _adopted.Add(assessmentId, ev);
-        _adoptedOrder.Add(assessmentId);
+        _latestAdoption = ev;
+        _latestReadinessDecision = null;
+        _latestEntryDecision = null;
+        if (ev.Operation.RootOperationId == _selectedRoot || ev.Operation.RootOperationId == _selectedAssessment)
+            _selectedAdoption = ev;
         _pendingAdoption = null;
         Advance(ev);
     }
@@ -298,12 +316,14 @@ public sealed class ProgramReadiness : Aggregate
     void ApplyAccepted(DomainEvent ev, EventStreamAddress owner, long revision, long generation, OperationProvenance operation)
     {
         Acceptance.Observe(ev);
-        if (_adoptedOrder.Count == 0 || _pendingAdoption is not null || _pendingDecision is not null || owner != Stream ||
-            revision != _revision + 1 || generation != _adopted[_adoptedOrder[^1]].Generation ||
-            operation.Owner != Stream || operation.RootOperationId != operation.LogicalId ||
-            !_acceptedDecisions.TryAdd(operation.RootOperationId, ev))
+        if (_latestAdoption is null || _pendingAdoption is not null || _pendingDecision is not null || owner != Stream ||
+            revision != _revision + 1 || generation != _latestAdoption.Generation ||
+            operation.Owner != Stream || operation.RootOperationId != operation.LogicalId)
             throw new InvalidOperationException(
                 "A decision is accepted once, on the latest adopted assessment, with nothing pending.");
+        if (operation.RootOperationId == _selectedRoot)
+            _selectedDecision = ev;
+        _latestAccepted = ev;
         _pendingDecision = ev;
         Advance(ev);
     }
@@ -314,11 +334,14 @@ public sealed class ProgramReadiness : Aggregate
         if (_pendingDecision is not ReadinessDecisionAccepted pending || ev.TenantId != _tenantId ||
             ev.ProgramId != _programId || ev.Revision != _revision + 1 || ev.Intent != pending.Intent ||
             ev.Operation.RootOperationId != pending.Operation.RootOperationId || ev.Operation.Owner != Stream ||
-            ev.AssessmentId != _adoptedOrder[^1] || ev.DecisionId != pending.Operation.RootOperationId ||
-            !_decisionByAssessment.TryAdd(ev.AssessmentId, ev))
+            ev.AssessmentId != LatestAssessmentId || ev.DecisionId != pending.Operation.RootOperationId ||
+            _latestReadinessDecision is not null)
             throw new InvalidOperationException(
                 "Only the exact pending readiness decision of the latest assessment is recorded.");
-        _terminalDecisions[ev.Operation.RootOperationId] = ev;
+        if (ev.Operation.RootOperationId == _selectedRoot)
+            _selectedTerminal = ev;
+        _latestTerminal = ev;
+        _latestReadinessDecision = ev;
         _pendingDecision = null;
         Advance(ev);
     }
@@ -329,11 +352,13 @@ public sealed class ProgramReadiness : Aggregate
         if (_pendingDecision is not TypeIEntryDecisionAccepted pending || ev.TenantId != _tenantId ||
             ev.ProgramId != _programId || ev.Revision != _revision + 1 || ev.Intent != pending.Intent ||
             ev.Operation.RootOperationId != pending.Operation.RootOperationId || ev.Operation.Owner != Stream ||
-            ev.AssessmentId != _adoptedOrder[^1] || ev.DecisionId != pending.Operation.RootOperationId)
+            ev.AssessmentId != LatestAssessmentId || ev.DecisionId != pending.Operation.RootOperationId)
             throw new InvalidOperationException(
                 "Only the exact pending Type I entry decision of the latest assessment is recorded.");
-        _entryDecisions.Add(ev);
-        _terminalDecisions[ev.Operation.RootOperationId] = ev;
+        _latestEntryDecision = ev;
+        if (ev.Operation.RootOperationId == _selectedRoot)
+            _selectedTerminal = ev;
+        _latestTerminal = ev;
         _pendingDecision = null;
         Advance(ev);
     }
@@ -345,7 +370,9 @@ public sealed class ProgramReadiness : Aggregate
             ev.Intent != DecisionTerms(_pendingDecision)!.Value.Intent ||
             ev.Operation.RootOperationId != PendingRoot(_pendingDecision) || ev.Operation.Owner != Stream)
             throw new InvalidOperationException("Only the exact pending decision is canceled.");
-        _terminalDecisions[ev.Operation.RootOperationId] = ev;
+        if (ev.Operation.RootOperationId == _selectedRoot)
+            _selectedTerminal = ev;
+        _latestTerminal = ev;
         _pendingDecision = null;
         Advance(ev);
     }
@@ -353,7 +380,7 @@ public sealed class ProgramReadiness : Aggregate
     void Advance(DomainEvent fact)
     {
         _revision++;
-        _facts.Add(fact);
+        Latest = fact;
     }
 
     static Result Transient(string message) =>

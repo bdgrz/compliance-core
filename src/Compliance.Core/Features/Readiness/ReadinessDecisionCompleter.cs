@@ -112,7 +112,7 @@ sealed class ReadinessDecisionCompleter(IAggregateReader reader, IAggregateExecu
         {
             try
             {
-                var step = await executor.ExecuteAsync(new ProgramReadiness(tenant, programId, commandId), fresh =>
+                var step = await executor.ExecuteAsync(new ProgramReadiness(tenant, programId, commandId, operationId), fresh =>
                     {
                         if (Decide(fresh, binding, operationId) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));

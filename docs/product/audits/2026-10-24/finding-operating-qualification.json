@@ -1,0 +1,43 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Compact Finding, Operating, Readiness and AuditorResponse authority, verified exact history/read/source consumers and existing routed producers/reactors.",
+  "validation": {
+    "genuineOldApiRedFailed": {
+      "finding": 4,
+      "operating": 9,
+      "readiness": 9,
+      "auditorResponse": 3
+    },
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 631,
+    "productionHttpPassed": 9,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "coverageExport": "pass",
+    "backendUnitPassed": 6189,
+    "backendUnitFailed": 0
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 77,
+    "signalsTriaged": 4,
+    "mergeProbability": 0.65,
+    "adopted": "merge scoped repair after final local checks; continue remaining owners"
+  },
+  "parentRefinements": [
+    "Restored ReviseFinding active-member reader dependency alongside compact FindingReader; separated switch pattern bindings and analyzer fixes.",
+    "Fixed real SDK runtime request-context identity, missing domain event-reader registration and readiness fixture source selection.",
+    "Corrected preexisting test plan dates to valid AdHoc boundaries before qualifying genuine old retained-history RED.",
+    "Two focused regressions exposed auth/domain-error priority: new attestation/review native Prepare authorizes and applies domain rules before version gate, while exact accepted retry resolves first."
+  ],
+  "qualification": [
+    "No lifetime owner lists/sets for Finding closures, Operating plans/occurrences, Readiness decisions/plans or AuditorResponse generations; complete history uses verified native/physical cuts outside compact returned command state. O(N) replay/SDK memory not claimed.",
+    "Every native occupied payload/tag retained for these existing schemas; failure content schema advances to2 and binds exact admission, intent, root, generation and frozen action/gap membership. Raw unbound/foreign proofs and changed immutable plan actor/time/revision cannot cancel or release held source pins.",
+    "All existing command identities, tenant/program scope, public current authorization, original typed/Unit responses and HTTP route contracts preserved. Exact accepted retries resolve before volatile Prepare; fresh orphan preparation uses new immutable candidate IDs.",
+    "Finding routed process reactors authenticate actual typed committed bytes and physical offset. Operating close receipt selection uses authenticated recorded cut rather than authored acceptance timestamp. SourceUse finalized selected key/physical/native fences and existing purpose pairs preserved.",
+    "No retained-data conversion, SDK snapshot compatibility, deployment or live broker qualification. Full AuditorRequest/query, Advisor, SystemDescription/Incident and other owner families continue."
+  ]
+}

@@ -9,8 +9,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     Records the external disposition of the exact intentionally delivered response version at the revision of that
 ///     response owner. The disposition is immutable, and a resolution holds the response while it reads it.
 /// </summary>
-sealed class RecordAuditorResponseDispositionHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content, TimeProvider clock) : IRequestHandler<RecordAuditorResponseDisposition>
+sealed class RecordAuditorResponseDispositionHandler(NativeOperationExecutor operations, IImmutableContentStore content, TimeProvider clock) : IRequestHandler<RecordAuditorResponseDisposition>
 {
     const string CommandKind = "RecordAuditorResponseDisposition";
 
@@ -28,37 +27,38 @@ sealed class RecordAuditorResponseDispositionHandler(NativeOperationExecutor ope
             return AuditorCommands.Validation(
                 "A disposition requires a command id, a response and a non-negative expected revision.");
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new AuditorResponse(request.TenantId, request.ProgramId,
-            request.RequestId, request.ResponseId, request.CommandId), ct).ConfigureAwait(false);
+        var snapshot = new AuditorResponse(request.TenantId, request.ProgramId,
+            request.RequestId, request.ResponseId, request.CommandId);
         var provenance = AuditorContent.Provenance(request.CommandId, CommandKind, snapshot.Stream,
             AuditorCommands.Actor(actorMemberId, actorDisplay), (ulong)request.ExpectedRevision,
-            AuditorCommands.Digest(request), now);
+            AuditorCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? disposition = null;
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
         var outcomeToken = string.Empty;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(AuditorResponse owner, CancellationToken token)
         {
-            var prepared = snapshot.PrepareDisposition(request.ExpectedRevision, request.Version);
+            var prepared = owner.PrepareDisposition(request.ExpectedRevision, request.Version);
             if (!prepared.IsSuccess)
-                return prepared;
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
             if (AuditorRequestRules.Disposition(request.Disposition, request.ExternalReference) is not { } recorded)
-                return AuditorCommands.Validation("The response disposition or external reference is invalid.");
+                return AuditorCommands.Validation<FirstResponseDescriptor>("The response disposition or external reference is invalid.");
             outcomeToken = recorded.Outcome;
             disposition = await AuditorContent.WriteAsync(content, request.TenantId, AuditorContent.DispositionSchema,
                 new AuditorResponseDispositionView(versionNumber, recorded.Outcome, recorded.ExternalReference,
-                    actorMemberId, actorDisplay, now), ct).ConfigureAwait(false);
-            (response, result) = await AuditorContent.UnitAsync(content, request.TenantId, ct).ConfigureAwait(false);
+                    actorMemberId, actorDisplay, now), token).ConfigureAwait(false);
+            (response, result) = await AuditorContent.UnitAsync(content, request.TenantId, token).ConfigureAwait(false);
+            return Result<FirstResponseDescriptor>.Success(response!);
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorResponse>(binding,
             () => new AuditorResponse(request.TenantId, request.ProgramId, request.RequestId, request.ResponseId,
                 request.CommandId),
             auditorResponse => auditorResponse.Acceptance,
-            auditorResponse => AuditorContent.Prepared(
-                auditorResponse.PrepareDisposition(request.ExpectedRevision, request.Version), response),
+            PrepareAsync,
             (AuditorResponse auditorResponse, ImmutableContentRef frozen) => auditorResponse.RecordDisposition(
                 provenance, request.Version, outcomeToken, disposition!, actorMemberId, now, frozen, result!)), context, ct)
             .ConfigureAwait(false);

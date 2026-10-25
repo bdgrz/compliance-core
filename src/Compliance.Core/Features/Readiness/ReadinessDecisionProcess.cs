@@ -132,7 +132,7 @@ static class ReadinessDecisionProcess
                         : await ReadinessContent.WriteDeterministicAsync(content, tenant,
                             Uuid.CreateVersion5(record.Source.EventId, "process-abort-proof"), ReadinessContent.FailureSchema,
                             new ReadinessDecisionFailureProof(intent.ProgramId, intent.AssessmentId,
-                                record.Note ?? "The readiness decision process was aborted.", null), ct)
+                                record.Note ?? "The readiness decision process was aborted.", null, record.Source, root, generation, record.Intent), ct)
                             .ConfigureAwait(false);
                     return new AbortReadinessDecision(step.CommandId, root, program.Stream, generation, 0, proof);
                 }

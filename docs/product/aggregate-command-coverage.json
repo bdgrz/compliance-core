@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "eab6f83ac80c9de15a72b4e5d3a7e7d5f9aadb28",
+  "sourceCommit": "4c3005dc2fa8e9ff5b365d3cb5e01c4d34e82341",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 735,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 49,
+    "unwiredAggregateProducerOperations": 52,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 36
+      "no_registered_request_route": 39
     },
     "factReplayGuardRows": 0
   },
@@ -2164,7 +2164,9 @@
       "emitters": [
         "src/Compliance.Core/Features/AuditorRequests/AuditorResponse.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseNativeBoundaryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -2180,7 +2182,9 @@
       "emitters": [
         "src/Compliance.Core/Features/AuditorRequests/AuditorResponse.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseNativeBoundaryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -2978,6 +2982,7 @@
         "src/Compliance.Core/Features/Operations/ControlOccurrence.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ControlOperatingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs",
         "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
@@ -3040,6 +3045,7 @@
         "src/Compliance.Core/Features/Operations/ControlOperatingPlan.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ControlOperatingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs",
         "test/Compliance.Tests/Testing/ControlOperatingEvents.cs"
@@ -3060,6 +3066,9 @@
         "src/Compliance.Core/Features/Operations/ControlOperatingPlan.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ControlOccurrenceFanOutTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingHistoryCompactionTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Testing/ControlOperatingEvents.cs"
       ],
@@ -3201,7 +3210,9 @@
         "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingProcessReactorTests.cs"
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionAcceptedMaterializationReplayTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingProcessReactorTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingReactorSourceTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "The finding accepts one corrective action for its current generation; the action owner is materialized independently from the frozen admission intent."
@@ -3951,7 +3962,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingHistoricalClosureTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": "Appended by the closure process once every admitted action is held under the closure grant."
     },
@@ -3968,7 +3981,8 @@
         "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingProcessReactorTests.cs"
+        "test/Compliance.Tests/Features/Remediation/FindingProcessReactorTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingReactorSourceTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "Root acceptance of a closure decision; seals action admission for the generation and starts FindingClosureProcess."
@@ -6258,7 +6272,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Readiness/ProgramReadiness.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Readiness/ReadinessHistoryVerificationTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -6325,7 +6341,8 @@
         "src/Compliance.Core/Features/Readiness/ProgramReadiness.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs"
+        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHistoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8491,7 +8508,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Readiness/ProgramReadiness.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Readiness/ReadinessHistoryVerificationTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -8508,7 +8527,8 @@
         "src/Compliance.Core/Features/Readiness/ProgramReadiness.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Programs/ProgramStageProjectionTests.cs"
+        "test/Compliance.Tests/Features/Programs/ProgramStageProjectionTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessHistoryVerificationTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9722,7 +9742,8 @@
         "CompleteAuditorRequestResolution"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseNativeBoundaryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9752,7 +9773,8 @@
         "SettleAuditorResponseRequestResolutionUse"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseNativeBoundaryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10063,10 +10085,7 @@
         "ControlOccurrenceReviewed"
       ],
       "commandRequests": [
-        "AttestControlOccurrence",
-        "CorrectControlAttestation",
-        "OpenControlOccurrence",
-        "ReviewControlOccurrence"
+        "OpenControlOccurrence"
       ],
       "internalReactionRequests": [
         "MaterializeControlOccurrence"
@@ -10074,12 +10093,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceFanOutTests.cs",
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingHistoryCompactionTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingTransportTests.cs",
         "test/Compliance.Tests/Features/Operations/PersonalOccurrenceProofTransportTests.cs",
         "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
-        "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/NotApplicableOccurrenceReviewTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10096,13 +10115,14 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ControlOccurrenceFanOutTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingHistoryCompactionTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Operations/ControlOperatingPlanTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingTransportTests.cs",
         "test/Compliance.Tests/Features/Operations/PersonalOperatingPlanApprovalTransportTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlOperatingPlanWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
-        "test/Compliance.Tests/Testing/ControlOperatingEvents.cs",
-        "test/Compliance.Tests/Testing/ControlOperatingSeed.cs"
+        "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10515,8 +10535,8 @@
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
-        "test/Compliance.Tests/Features/Remediation/CorrectiveActionMaterializationContentTests.cs",
-        "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativeHistoryTests.cs"
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionAcceptedMaterializationReplayTests.cs",
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionMaterializationContentTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route",
       "note": "Owns finding terms, triage, acceptance links, action admission and the closure decision. Admission and closure seal by generation; the children and closure are completed by processes. No legacy ledger is read."
@@ -11204,8 +11224,8 @@
         "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalTypeIEntryTransportTests.cs",
         "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
-        "test/Compliance.Tests/Features/Readiness/ReadinessOwnerReadTests.cs",
-        "test/Compliance.Tests/Testing/ReadinessProcesses.cs"
+        "test/Compliance.Tests/Features/Readiness/ReadinessHistoryVerificationTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHistoryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11396,6 +11416,9 @@
         "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalReadinessAnnotationTransportTests.cs",
         "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHttpTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessPlanContentBindingTests.cs",
         "test/Compliance.Tests/Testing/ReadinessSeed.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -12438,7 +12461,10 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs"
+        "test/Compliance.Tests/Features/Remediation/FindingBoundCancellationProofTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingCancellationProofBindingTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingNativeHistoryTests.cs"
       ],
       "note": "System-only abort receiver of FindingClosureProcess; cancels the pending closure and fences its delayed completion."
     },
@@ -12514,7 +12540,8 @@
         "ProgramReadiness"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs"
+        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHistoryTests.cs"
       ],
       "note": ""
     },
@@ -12951,6 +12978,8 @@
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingNativePreparationTests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingTests.cs",
         "test/Compliance.Tests/Testing/FindingSeed.cs"
       ],
@@ -13919,17 +13948,18 @@
         "ControlOperatingPlan"
       ],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ControlOperatingHistoryCompactionTests.cs",
         "test/Compliance.Tests/Features/Operations/ControlOperatingIdentifiedOperationTests.cs",
         "test/Compliance.Tests/Features/Operations/ControlOperatingPlanTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingTransportTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Operations/PersonalOperatingPlanApprovalTransportTests.cs",
         "test/Compliance.Tests/Features/Work/ControlOperatingPlanWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
       ],
       "note": ""
     },
@@ -14500,15 +14530,14 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "ControlOccurrence"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
-        "ControlReader",
-        "OccurrenceProofs"
+        "ControlOperationsReader",
+        "ControlReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingTransportTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs"
       ],
@@ -14606,8 +14635,10 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Content/SourceUseReceiverContractTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingCancellationProofBindingTests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingClosureContentRecoveryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs"
+        "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingHistoricalClosureTests.cs"
       ],
       "note": "System-only acquire receiver of FindingClosureProcess; an unmaterialized action is a wait."
     },
@@ -14903,7 +14934,8 @@
         "ReadinessGapPlan"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs"
+        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHistoryTests.cs"
       ],
       "note": ""
     },
@@ -15627,6 +15659,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
       ],
       "note": "202 admission that seals action admission and starts FindingClosureProcess; an exact separation-of-duties waiver proof replaces a live waiver."
@@ -16317,7 +16350,9 @@
       "aggregateTargets": [
         "ProgramReadiness"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Readiness/ReadinessHistoryVerificationTests.cs"
+      ],
       "note": ""
     },
     {
@@ -16542,16 +16577,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "ControlOccurrence"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
-        "ControlReader",
-        "OccurrenceProofs"
+        "ControlOperationsReader",
+        "ControlReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingHistoryCompactionTests.cs",
         "test/Compliance.Tests/Features/Operations/ControlOperatingIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingTransportTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Operations/PersonalOccurrenceProofTransportTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
@@ -17055,7 +17090,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
-        "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs"
+        "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHistoryTests.cs"
       ],
       "note": ""
     },
@@ -18138,7 +18174,9 @@
         "ControlOperatingPlan"
       ],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ControlOperationsReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceFanOutTests.cs",
         "test/Compliance.Tests/Features/Operations/GenerateDueControlOccurrencesHandlerTests.cs",
@@ -19098,6 +19136,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader"
       ],
       "testSymbolReferences": [
@@ -19122,6 +19161,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader"
       ],
       "testSymbolReferences": [
@@ -20118,7 +20158,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs",
-        "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs"
+        "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessHistoryVerificationTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -22146,6 +22187,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader"
       ],
       "testSymbolReferences": [
@@ -22171,6 +22213,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader"
       ],
       "testSymbolReferences": [
@@ -22631,6 +22674,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader",
         "FindingReader"
       ],
@@ -24070,6 +24114,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceFanOutTests.cs",
+        "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs",
         "test/Compliance.Tests/Testing/TypeIIRangeHost.cs"
       ],
       "note": "System-only control occurrence fan-out receiver; materializes one selected business window once, verifying the frozen creation intent against the selecting period fact and the approved plan fact. No HTTP/MCP route."
@@ -24096,6 +24141,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionAcceptedMaterializationReplayTests.cs",
         "test/Compliance.Tests/Features/Remediation/CorrectiveActionMaterializationContentTests.cs",
         "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativeHistoryTests.cs"
       ],
@@ -24300,6 +24346,7 @@
         "ControlOccurrence"
       ],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader"
       ],
       "testSymbolReferences": [
@@ -24413,7 +24460,9 @@
         "ReadinessReader"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs"
+        "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHttpTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessPlanContentBindingTests.cs"
       ],
       "note": ""
     },
@@ -24672,6 +24721,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader"
       ],
       "testSymbolReferences": [
@@ -25003,9 +25053,13 @@
         "ControlOperatingPlan"
       ],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ControlOperatingHistoryCompactionTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingTransportTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
       ],
       "note": ""
@@ -25316,6 +25370,7 @@
         "TypeIIPlan"
       ],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader",
         "FindingReader"
       ],
@@ -25475,11 +25530,13 @@
         "FindingAggregate"
       ],
       "helperServices": [
+        "ControlOperationsReader",
         "ReadinessReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingNativeHistoryTests.cs"
       ],
       "note": "FindingId is the logical operation identity."
     },
@@ -25501,6 +25558,7 @@
         "FindingAggregate"
       ],
       "helperServices": [
+        "ControlOperationsReader",
         "RoutedFinding"
       ],
       "testSymbolReferences": [
@@ -27144,6 +27202,7 @@
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseSourceBusinessBytes.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseSources.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseValidation.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.OperatingReceipts.cs",
         "test/Compliance.Tests/Testing/TypeIIPeriodTestExtensions.cs"
       ],
       "note": ""
@@ -28095,6 +28154,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingHistoricalClosureTests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
       ],
@@ -28803,15 +28863,14 @@
       "directAggregateReferences": [
         "SeparationOfDutiesWaiver"
       ],
-      "aggregateTargets": [
-        "ControlOccurrence"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
-        "ControlReader",
-        "OccurrenceProofs"
+        "ControlOperationsReader",
+        "ControlReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingTransportTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
       ],
       "note": ""
@@ -29170,7 +29229,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs",
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseNativeBoundaryTests.cs"
       ],
       "note": ""
     },
@@ -30113,6 +30173,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHttpTests.cs",
         "test/Compliance.Tests/Features/Readiness/ReadinessProjectionReadTests.cs"
       ],
       "note": ""
@@ -30934,6 +30996,7 @@
         "TypeIIPeriod"
       ],
       "helperServices": [
+        "ControlOperationsReader",
         "ControlReader",
         "FindingReader"
       ],
@@ -30964,7 +31027,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponsePreparationRaceTests.cs"
       ],
       "note": ""
     },
@@ -31462,6 +31526,39 @@
       "ownerIssue": 545,
       "callerSources": [],
       "methodArgumentCount": 4,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ControlOccurrenceAttested",
+      "aggregate": "ControlOccurrence",
+      "method": "Attest",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/Operations/ControlOccurrence.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ControlOccurrenceOpened",
+      "aggregate": "ControlOccurrence",
+      "method": "Attest",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/Operations/ControlOccurrence.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ControlOccurrenceReviewed",
+      "aggregate": "ControlOccurrence",
+      "method": "Review",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/Operations/ControlOccurrence.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

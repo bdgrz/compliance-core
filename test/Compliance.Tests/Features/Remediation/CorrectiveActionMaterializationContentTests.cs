@@ -29,7 +29,7 @@ public sealed class CorrectiveActionMaterializationContentTests
             new FindingAggregate(fixture.TenantId, fixture.ProgramId, findingId).Stream, Uuid.CreateVersion4(), 1),
             target.Stream, actionId, 1, 0, NativeFacts.Ref(), findingId, actionId);
         var handler = new MaterializeCorrectiveActionHandler(services.GetRequiredService<IAggregateReader>(),
-            services.GetRequiredService<IAggregateExecutor>(), new UnreadableContent(unavailable), TimeProvider.System);
+            services.GetRequiredService<IAggregateExecutor>(), new UnreadableContent(unavailable), TimeProvider.System, services.GetRequiredService<IDomainEventReader>());
 
         // Act
         var result = await handler.HandleAsync(new RequestContext<MaterializeCorrectiveAction>(command,

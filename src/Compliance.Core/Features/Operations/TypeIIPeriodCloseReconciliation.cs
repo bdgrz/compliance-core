@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
@@ -14,9 +15,9 @@ namespace Bdgrz.Compliance.Features.Operations;
 /// all required effective source families plus complete operating/change/incident histories before one native close
 /// proposal. Receipt time and effective interval remain distinct; missing or corrupt source bytes never become ready.
 /// </summary>
-public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IImmutableContentStore content,
+public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content,
     ControlOperationsReader operating, FindingReader findings, PublishedTypeIBaselinePreviewReader sourceFamilies,
-    TypeIIPeriodCloseHistory history, TypeIIPeriodCloseSourcePublication publication)
+    TypeIIPeriodCloseHistory history, TypeIIPeriodCloseSourcePublication publication, RecordedSourceReceiptCutFactory receiptCuts)
     : ITypeIIPeriodCloseReconciliation
 {
     public async ValueTask<Result<TypeIIPeriodCloseValidationContent>> ReadAsync(TypeIIPeriodReadSnapshot period,
@@ -27,6 +28,7 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
             return Failure(RequestErrorKind.Validation, "Close capture requires its exact opened period and server decision.");
         try
         {
+            var operatingReceipts = receiptCuts.Create(current.TenantId, operation.AcceptedAt);
             var engagement = await reader.HydrateAsync(new ExaminationEngagement(current.TenantId, current.ProgramId,
                 current.ExaminationId), ct).ConfigureAwait(false);
             if (engagement.Current is not { } terms || terms.TenantId != current.TenantId || terms.ProgramId != current.ProgramId)
@@ -137,8 +139,8 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
                     if (!original.SameTermsAs(creation) || opened.ControlVersionId != requirement.ControlVersionId ||
                         requirement.DueOn is { } expectedDue && opened.DueOn != expectedDue)
                         throw new ImmutableContentIntegrityException("The materialized occurrence does not match the selected exact content and approved control version.");
-                    if (owner.Facts.OfType<INativeOperationFact>().Any(fact => fact.Operation.AcceptedAt > operation.AcceptedAt))
-                        throw new ImmutableContentUnavailableException("An occurrence changed after the frozen close receipt cutoff; retry the unaccepted operation.");
+                    var ownerFacts = await ControlOccurrenceHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
+                    await RequireOperatingReceiptCutAsync(operatingReceipts, owner.Stream, ownerFacts, ct).ConfigureAwait(false);
                     materialized = true;
                     sourceMatches.Add(new TypeIIPeriodCloseOccurrenceMatch(requirement.OccurrenceId,
                         NativeFactReference.Of(owner.Stream, opened), opened.CreationIntent));
@@ -147,7 +149,7 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
                     if (view.State is ControlOperationStates.ActionRequested or ControlOperationStates.Deferred)
                         unresolved.Add(id);
                     if (capturedOccurrences.Add(id))
-                        foreach (var fact in owner.Facts)
+                        foreach (var fact in ownerFacts)
                             native.Add(await history.CaptureOperatingAsync(owner.Stream, fact, ct).ConfigureAwait(false));
                 }
                 if (materialized)
@@ -157,9 +159,9 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
             foreach (var controlId in completeOperating.PlannedControlIds.OrderBy(id => id.ToString(), StringComparer.Ordinal))
             {
                 var line = await reader.HydrateAsync(new ControlOperatingPlan(current.TenantId, current.ProgramId, controlId), ct).ConfigureAwait(false);
-                if (line.Facts.OfType<INativeOperationFact>().Any(fact => fact.Operation.AcceptedAt > operation.AcceptedAt))
-                    throw new ImmutableContentUnavailableException("An operating plan changed during close capture.");
-                foreach (var fact in line.Facts)
+                var lineFacts = await ControlOperatingPlanHistory.ReadAsync(events, line, ct).ConfigureAwait(false);
+                await RequireOperatingReceiptCutAsync(operatingReceipts, line.Stream, lineFacts, ct).ConfigureAwait(false);
+                foreach (var fact in lineFacts)
                     native.Add(await history.CaptureOperatingAsync(line.Stream, fact, ct).ConfigureAwait(false));
                 foreach (var view in completeOperating.ReadRecordedOccurrences(controlId).Where(item =>
                              item.PeriodStart is { } from && from <= current.PeriodEnd && (item.PeriodEnd is null || item.PeriodEnd >= current.PeriodStart)))
@@ -168,9 +170,9 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
                         continue;
                     var (owner, _) = await operating.ReadStateAsync(current.TenantId, current.ProgramId, controlId, view.OccurrenceId,
                         Uuid.Empty, ct).ConfigureAwait(false);
-                    if (owner.Facts.OfType<INativeOperationFact>().Any(fact => fact.Operation.AcceptedAt > operation.AcceptedAt))
-                        throw new ImmutableContentUnavailableException("An operating occurrence changed during close capture.");
-                    foreach (var fact in owner.Facts)
+                    var ownerFacts = await ControlOccurrenceHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
+                    await RequireOperatingReceiptCutAsync(operatingReceipts, owner.Stream, ownerFacts, ct).ConfigureAwait(false);
+                    foreach (var fact in ownerFacts)
                         native.Add(await history.CaptureOperatingAsync(owner.Stream, fact, ct).ConfigureAwait(false));
                     if (view.State is ControlOperationStates.ActionRequested or ControlOperationStates.Deferred)
                         unresolved.Add(view.OccurrenceId);
@@ -225,6 +227,14 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
         {
             return Failure(RequestErrorKind.Conflict, "Exact close source content cannot be verified.");
         }
+    }
+
+    static async Task RequireOperatingReceiptCutAsync(RecordedSourceReceiptCut cut, EventStreamAddress stream,
+        IReadOnlyList<DomainEvent> facts, CancellationToken ct)
+    {
+        var prefix = await cut.ReadAsync(stream, ct).ConfigureAwait(false);
+        if (facts.Any(fact => !prefix.Includes(fact)) || prefix.Included.Count() != facts.Count)
+            throw new ImmutableContentUnavailableException("The exact operating native source is not a complete committed prefix at the frozen close receipt cutoff.");
     }
 
     static Result<TypeIIPeriodCloseValidationContent> Failure(RequestErrorKind kind, string message, bool transient = false) =>

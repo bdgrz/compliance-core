@@ -32,19 +32,33 @@ public sealed class ControlOperatingPlanLine
 
     /// <summary>Folds the facts of a hydrated plan line, reading each fact's immutable content.</summary>
     public static async Task<ControlOperatingPlanLine> ReadAsync(ControlOperatingPlan plan,
-        IImmutableContentStore content, Uuid tenantId, CancellationToken ct)
+        IDomainEventReader events, IImmutableContentStore content, Uuid tenantId, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(plan);
         ArgumentNullException.ThrowIfNull(content);
+        if (tenantId != plan.TenantId)
+            throw new ImmutableContentIntegrityException("The operating composition belongs to another tenant.");
         var line = new ControlOperatingPlanLine(plan.ControlId) { Revision = plan.Revision };
-        foreach (var fact in plan.Facts)
+        foreach (var fact in await ControlOperatingPlanHistory.ReadAsync(events, plan, ct).ConfigureAwait(false))
             switch (fact)
             {
                 case ControlOperatingPlanProposed proposed:
-                    line._plans.Add(await ControlOperatingContent.ReadAsync<ControlOperatingPlanView>(content,
-                        tenantId, proposed.PlanContent, ct).ConfigureAwait(false));
+                    var body = await ControlOperatingContent.ReadAsync<ControlOperatingPlanView>(content,
+                        tenantId, proposed.PlanContent, ct).ConfigureAwait(false);
+                    if (proposed.PlanContent.Schema != ControlOperatingContent.PlanSchema || body.TenantId != tenantId ||
+                        body.ProgramId != plan.ProgramId || body.ControlId != plan.ControlId ||
+                        body.PlanVersionId != proposed.Operation.LogicalId || body.Revision != proposed.Revision ||
+                        body.Status != ControlOperationStates.PendingApproval || body.ProposedBy != proposed.Operation.Actor ||
+                        body.ProposedAt != proposed.Operation.AcceptedAt || body.ProposerMemberId.ToString() != proposed.Operation.Actor.Id ||
+                        body.ExpectedEvidence is null || line._plans.Any(value => value.PlanVersionId == body.PlanVersionId))
+                        throw new ImmutableContentIntegrityException("The immutable operating plan differs from its native source scope, identity or original attribution.");
+                    line._plans.Add(body);
                     break;
                 case ControlOperatingPlanApproved approved:
+                    if (approved.ReassignmentsManifest.Schema != ControlOperatingContent.ReassignmentsSchema ||
+                        line.Pending?.PlanVersionId != approved.PlanVersionId || approved.ApprovedBy != approved.Operation.Actor ||
+                        approved.ApproverMemberId.ToString() != approved.Operation.Actor.Id)
+                        throw new ImmutableContentIntegrityException("The operating approval differs from its exact pending native version or actor.");
                     line.Approve(approved, await ControlOperatingContent
                         .ReadAsync<IReadOnlyList<OccurrenceReassignmentView>>(content, tenantId,
                             approved.ReassignmentsManifest, ct).ConfigureAwait(false));

@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.Readiness;
 ///     owner of that gap, and decisions from the program readiness. Nothing is read from a legacy ledger or a
 ///     projection, and nothing is retained as command state.
 /// </summary>
-public sealed class ReadinessReader(IAggregateReader reader, IImmutableContentStore content)
+public sealed class ReadinessReader(IAggregateReader reader, IImmutableContentStore content, IDomainEventReader events)
 {
     /// <summary>The verified content of one recorded assessment, without any current plan.</summary>
     public sealed record AssessmentContent(ReadinessAssessmentRecorded Fact, IReadOnlyList<ReadinessInputView> Inputs,
@@ -44,11 +44,16 @@ public sealed class ReadinessReader(IAggregateReader reader, IImmutableContentSt
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(plan);
+        if (tenantId != plan.TenantId)
+            throw new ImmutableContentIntegrityException("The gap plan belongs to another tenant.");
         if (plan.Latest is not { } latest)
             return null;
-        return (await ReadinessContent.ReadAsync<ReadinessGapPlanView>(content, tenantId, latest.PlanContent, ct)
-            .ConfigureAwait(false)) with
-        { Revision = latest.Revision };
+        var view = await ReadinessContent.ReadAsync<ReadinessGapPlanView>(content, tenantId, latest.PlanContent, ct)
+            .ConfigureAwait(false);
+        if (view.GapId != plan.GapId || view.Revision != latest.Revision ||
+            view.PlannedBy != latest.Operation.Actor || view.PlannedAt != latest.Operation.AcceptedAt)
+            throw new ImmutableContentIntegrityException("The immutable plan differs from its native owner or original actor.");
+        return view;
     }
 
     /// <summary>The gaps with the current plan of each gap read from its own plan owner.</summary>
@@ -69,29 +74,37 @@ public sealed class ReadinessReader(IAggregateReader reader, IImmutableContentSt
 
     /// <summary>The recorded readiness decision of an assessment, or null.</summary>
     public async ValueTask<ReadinessDecisionView?> ReadDecisionAsync(Uuid tenantId, ProgramReadiness program,
-        Uuid assessmentId, CancellationToken ct = default) =>
-        program.DecisionOf(assessmentId) is { } recorded
-            ? await ReadinessContent.ReadAsync<ReadinessDecisionView>(content, tenantId, recorded.DecisionContent, ct)
-                .ConfigureAwait(false)
-            : null;
+        Uuid assessmentId, CancellationToken ct = default)
+    {
+        if (tenantId != program.TenantId)
+            throw new ImmutableContentIntegrityException("The readiness owner belongs to another tenant.");
+        var recorded = (await ReadinessHistory.ReadAsync(events, program, ct).ConfigureAwait(false))
+            .OfType<ReadinessDecisionRecorded>().SingleOrDefault(fact => fact.AssessmentId == assessmentId);
+        return recorded is null ? null : await ReadDecisionViewAsync(tenantId, program, recorded, ct).ConfigureAwait(false);
+    }
 
     /// <summary>The Type I entry decision recorded on an assessment, or null.</summary>
     public async ValueTask<TypeIEntryDecisionView?> ReadEntryDecisionAsync(Uuid tenantId, ProgramReadiness program,
-        Uuid assessmentId, CancellationToken ct = default) =>
-        program.EntryDecisions.FirstOrDefault(decision => decision.AssessmentId == assessmentId) is { } recorded
-            ? await ReadinessContent.ReadAsync<TypeIEntryDecisionView>(content, tenantId, recorded.DecisionContent, ct)
-                .ConfigureAwait(false)
-            : null;
+        Uuid assessmentId, CancellationToken ct = default)
+    {
+        if (tenantId != program.TenantId)
+            throw new ImmutableContentIntegrityException("The readiness owner belongs to another tenant.");
+        var recorded = (await ReadinessHistory.ReadAsync(events, program, ct).ConfigureAwait(false))
+            .OfType<TypeIEntryDecisionRecorded>().SingleOrDefault(fact => fact.AssessmentId == assessmentId);
+        return recorded is null ? null : await ReadEntryViewAsync(tenantId, program, recorded, ct).ConfigureAwait(false);
+    }
 
     /// <summary>Every Type I entry decision of the program, newest first.</summary>
     public async ValueTask<IReadOnlyList<TypeIEntryDecisionView>> ReadEntryDecisionsAsync(Uuid tenantId,
         ProgramReadiness program, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(program);
-        var views = new List<TypeIEntryDecisionView>(program.EntryDecisions.Count);
-        foreach (var recorded in program.EntryDecisions.Reverse())
-            views.Add(await ReadinessContent.ReadAsync<TypeIEntryDecisionView>(content, tenantId,
-                recorded.DecisionContent, ct).ConfigureAwait(false));
+        if (tenantId != program.TenantId)
+            throw new ImmutableContentIntegrityException("The readiness owner belongs to another tenant.");
+        var history = await ReadinessHistory.ReadAsync(events, program, ct).ConfigureAwait(false);
+        var views = new List<TypeIEntryDecisionView>();
+        foreach (var recorded in history.OfType<TypeIEntryDecisionRecorded>().Reverse())
+            views.Add(await ReadEntryViewAsync(tenantId, program, recorded, ct).ConfigureAwait(false));
         return views;
     }
 
@@ -108,9 +121,13 @@ public sealed class ReadinessReader(IAggregateReader reader, IImmutableContentSt
         Uuid assessmentId, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(program);
-        if (program.AdoptionOf(assessmentId) is null ||
-            await ReadContentAsync(tenantId, program.ProgramId, assessmentId, ct).ConfigureAwait(false) is not { } loaded)
+        if (tenantId != program.TenantId)
+            throw new ImmutableContentIntegrityException("The readiness owner belongs to another tenant.");
+        var history = await ReadinessHistory.ReadAsync(events, program, ct).ConfigureAwait(false);
+        if (!history.OfType<ReadinessAssessmentAdopted>().Any(fact => fact.Operation.RootOperationId == assessmentId))
             return null;
+        var loaded = await ReadContentAsync(tenantId, program.ProgramId, assessmentId, ct).ConfigureAwait(false)
+            ?? throw new ImmutableContentUnavailableException("The adopted assessment content is not visible yet.");
         var recorded = loaded.Fact;
         var gaps = await WithPlansAsync(tenantId, program.ProgramId, loaded.Gaps, ct).ConfigureAwait(false);
         return new ReadinessAssessmentView(tenantId, program.ProgramId, assessmentId, program.Revision,
@@ -118,8 +135,10 @@ public sealed class ReadinessReader(IAggregateReader reader, IImmutableContentSt
             loaded.Findings, gaps,
             loaded.Findings.Count(static finding => finding.Outcome == ReadinessRules.RuleMet), gaps.Count,
             recorded.RunBy, recorded.RunAt,
-            await ReadDecisionAsync(tenantId, program, assessmentId, ct).ConfigureAwait(false),
-            await ReadEntryDecisionAsync(tenantId, program, assessmentId, ct).ConfigureAwait(false))
+            history.OfType<ReadinessDecisionRecorded>().SingleOrDefault(fact => fact.AssessmentId == assessmentId) is { } decision
+                ? await ReadDecisionViewAsync(tenantId, program, decision, ct).ConfigureAwait(false) : null,
+            history.OfType<TypeIEntryDecisionRecorded>().SingleOrDefault(fact => fact.AssessmentId == assessmentId) is { } entry
+                ? await ReadEntryViewAsync(tenantId, program, entry, ct).ConfigureAwait(false) : null)
         {
             AccessReviewScopes = loaded.AccessReviewScopes,
         };
@@ -130,16 +149,22 @@ public sealed class ReadinessReader(IAggregateReader reader, IImmutableContentSt
         ProgramReadiness program, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(program);
-        var summaries = new List<ReadinessAssessmentSummaryView>(program.AdoptedAssessments.Count);
-        foreach (var assessmentId in program.AdoptedAssessments.Reverse())
+        if (tenantId != program.TenantId)
+            throw new ImmutableContentIntegrityException("The readiness owner belongs to another tenant.");
+        var history = await ReadinessHistory.ReadAsync(events, program, ct).ConfigureAwait(false);
+        var decisions = history.OfType<ReadinessDecisionRecorded>().ToDictionary(static fact => fact.AssessmentId);
+        var summaries = new List<ReadinessAssessmentSummaryView>();
+        foreach (var adoption in history.OfType<ReadinessAssessmentAdopted>().Reverse())
         {
+            var assessmentId = adoption.Operation.RootOperationId;
             var loaded = await ReadContentAsync(tenantId, program.ProgramId, assessmentId, ct).ConfigureAwait(false)
-                ?? throw new ImmutableContentIntegrityException("An adopted assessment has no recorded content.");
+                ?? throw new ImmutableContentUnavailableException("The adopted assessment content is not visible yet.");
             var recorded = loaded.Fact;
             summaries.Add(new ReadinessAssessmentSummaryView(assessmentId, recorded.RuleVersion, recorded.AsOf,
                 loaded.Findings.Count(static finding => finding.Outcome == ReadinessRules.RuleMet), loaded.Gaps.Count,
                 recorded.RunBy, recorded.RunAt,
-                (await ReadDecisionAsync(tenantId, program, assessmentId, ct).ConfigureAwait(false))?.Outcome));
+                decisions.TryGetValue(assessmentId, out var decision)
+                    ? (await ReadDecisionViewAsync(tenantId, program, decision, ct).ConfigureAwait(false)).Outcome : null));
         }
 
         return summaries;
@@ -150,19 +175,26 @@ public sealed class ReadinessReader(IAggregateReader reader, IImmutableContentSt
         ProgramReadiness program, Uuid assessmentId, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(program);
-        if (program.AdoptionOf(assessmentId) is null ||
-            await ReadContentAsync(tenantId, program.ProgramId, assessmentId, ct).ConfigureAwait(false) is not { } loaded)
+        if (tenantId != program.TenantId)
+            throw new ImmutableContentIntegrityException("The readiness owner belongs to another tenant.");
+        if (!await HasAssessmentAsync(program, assessmentId, ct).ConfigureAwait(false))
             return null;
+        var loaded = await ReadContentAsync(tenantId, program.ProgramId, assessmentId, ct).ConfigureAwait(false)
+            ?? throw new ImmutableContentUnavailableException("The adopted assessment content is not visible yet.");
         var current = program.LatestAssessmentId == assessmentId;
         var annotations = new List<ReadinessAnnotationView>();
         foreach (var gap in loaded.Gaps)
         {
             var owner = await reader.HydrateAsync(new ReadinessGapPlan(tenantId, program.ProgramId, gap.GapId), ct)
                 .ConfigureAwait(false);
-            foreach (var fact in owner.Annotations)
+            foreach (var fact in (await ReadinessHistory.ReadAsync(events, owner, ct).ConfigureAwait(false))
+                         .OfType<ReadinessGapAnnotated>())
             {
                 var view = await ReadinessContent.ReadAsync<ReadinessAnnotationView>(content, tenantId,
                     fact.AnnotationContent, ct).ConfigureAwait(false);
+                if (view.GapId != owner.GapId || view.AnnotationId != fact.Operation.RootOperationId ||
+                    view.AuthoredBy != fact.Operation.Actor || view.AnnotatedAt != fact.Operation.AcceptedAt)
+                    throw new ImmutableContentIntegrityException("The annotation differs from its native source.");
                 if (view.AssessmentId == assessmentId)
                     annotations.Add(view with { Current = current });
             }
@@ -181,10 +213,39 @@ public sealed class ReadinessReader(IAggregateReader reader, IImmutableContentSt
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(program);
-        foreach (var assessmentId in program.AdoptedAssessments.Reverse())
-            if (await ReadContentAsync(tenantId, program.ProgramId, assessmentId, ct).ConfigureAwait(false) is { } loaded &&
+        if (tenantId != program.TenantId)
+            throw new ImmutableContentIntegrityException("The readiness owner belongs to another tenant.");
+        foreach (var adoption in (await ReadinessHistory.ReadAsync(events, program, ct).ConfigureAwait(false))
+                     .OfType<ReadinessAssessmentAdopted>().Reverse())
+            if (await ReadContentAsync(tenantId, program.ProgramId, adoption.Operation.RootOperationId, ct).ConfigureAwait(false) is { } loaded &&
                 loaded.Gaps.Any(gap => gap.GapId == gapId))
                 return true;
         return false;
+    }
+    /// <summary>Whether an exact captured program history adopted this assessment.</summary>
+    public async ValueTask<bool> HasAssessmentAsync(ProgramReadiness program, Uuid assessmentId, CancellationToken ct = default) =>
+        (await ReadinessHistory.ReadAsync(events, program, ct).ConfigureAwait(false))
+        .OfType<ReadinessAssessmentAdopted>().Any(fact => fact.Operation.RootOperationId == assessmentId);
+
+    async ValueTask<ReadinessDecisionView> ReadDecisionViewAsync(Uuid tenant, ProgramReadiness program,
+        ReadinessDecisionRecorded recorded, CancellationToken ct)
+    {
+        var view = await ReadinessContent.ReadAsync<ReadinessDecisionView>(content, tenant, recorded.DecisionContent, ct)
+            .ConfigureAwait(false);
+        if (tenant != program.TenantId || view.AssessmentId != recorded.AssessmentId ||
+            view.DecisionId != recorded.DecisionId || view.DecidedBy != recorded.Operation.Actor)
+            throw new ImmutableContentIntegrityException("The immutable decision differs from its exact native source.");
+        return view;
+    }
+
+    async ValueTask<TypeIEntryDecisionView> ReadEntryViewAsync(Uuid tenant, ProgramReadiness program,
+        TypeIEntryDecisionRecorded recorded, CancellationToken ct)
+    {
+        var view = await ReadinessContent.ReadAsync<TypeIEntryDecisionView>(content, tenant, recorded.DecisionContent, ct)
+            .ConfigureAwait(false);
+        if (tenant != program.TenantId || view.AssessmentId != recorded.AssessmentId ||
+            view.DecisionId != recorded.DecisionId || view.DecidedBy != recorded.Operation.Actor)
+            throw new ImmutableContentIntegrityException("The immutable entry decision differs from its native source.");
+        return view;
     }
 }

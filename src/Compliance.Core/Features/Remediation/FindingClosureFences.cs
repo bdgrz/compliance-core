@@ -21,9 +21,10 @@ sealed class FindingClosureFences(IRequestBus bus, IImmutableContentStore conten
     {
         var (finding, intent, decision) = (closure.Finding!, closure.Intent!, closure.Decision!);
         var episode = intent.Header.Episode;
-        var proof = await FindingContent.WriteDeterministicAsync(content, closure.TenantId, intent.Header.RootOperationId,
-            FindingContent.FailureSchema, new FindingClosureFailureProof(decision.ProgramId, finding.FindingId, reason,
-                actionId), ct).ConfigureAwait(false);
+        var proof = finding.TerminalClosure(intent.Header.RootOperationId) is FindingClosureCanceled canceledClosure
+            ? canceledClosure.SourceProofs ?? throw new ImmutableContentIntegrityException("The cancellation has no exact failure proof.")
+            : await FindingContent.WriteAsync(content, closure.TenantId, FindingContent.FailureSchema, new FindingClosureFailureProof(decision.ProgramId, finding.FindingId, reason,
+                actionId, source, intentReference, intent.Header.RootOperationId, (long)intent.ParentGeneration), ct).ConfigureAwait(false);
         var abortId = FindingClosureEffects.ReceiverCommandId(source.EventId, nameof(AbortFindingClosure), null, episode);
         var aborted = await bus.SendAsync(new AbortFindingClosure(abortId, intent.Header.RootOperationId, finding.Stream,
             (long)intent.ParentGeneration, 0, proof), context, ct).ConfigureAwait(false);
@@ -56,7 +57,8 @@ sealed class FindingClosureFences(IRequestBus bus, IImmutableContentStore conten
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Permanent($"The admitted action manifest cannot be verified: {exception.Message}");
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The admitted action manifest cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         foreach (var child in children.OrderBy(item => FindingClosureEffects.ActionKey(tenant, decision.ProgramId,

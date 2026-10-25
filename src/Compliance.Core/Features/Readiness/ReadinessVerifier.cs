@@ -40,13 +40,14 @@ sealed class ReadinessVerifier(IAggregateReader reader, IImmutableContentStore c
         if (intent.Header.RootOperationId != operationId || intent.AssessmentId != operationId ||
             intent.ProgramId == Uuid.Empty)
             return ReadinessRun.Failed(Permanent("The command differs from the frozen run intent."));
-        var program = await reader.HydrateAsync(new ProgramReadiness(tenant, intent.ProgramId, commandId), ct)
+        var program = await reader.HydrateAsync(new ProgramReadiness(tenant, intent.ProgramId, commandId, operationId), ct)
             .ConfigureAwait(false);
         if (program.RequestedRun(operationId) is not { } requested)
             return ReadinessRun.Failed(Transient("The admitted run is not visible yet."));
         return source.Stream != program.Stream || requested.Metadata.EventId != source.EventId ||
                requested.Metadata.AggregateVersion != source.AggregateVersion || requested.Intent != intentReference ||
-               requested.Generation != (long)intent.AdoptionGeneration
+               requested.Generation != (long)intent.AdoptionGeneration ||
+               !HeaderMatches(intent.Header, requested.Operation)
             ? ReadinessRun.Failed(Permanent("The source is not the admitted run of this program."))
             : new ReadinessRun(null, program, requested, intent, tenant);
     }
@@ -64,7 +65,8 @@ sealed class ReadinessVerifier(IAggregateReader reader, IImmutableContentStore c
         var terms = ProgramReadiness.DecisionTerms(accepted)!.Value;
         return source.Stream != program.Stream || accepted.Metadata!.EventId != source.EventId ||
                accepted.Metadata.AggregateVersion != source.AggregateVersion || terms.Intent != intentReference ||
-               terms.Kind != decision.Intent!.DecisionKind
+               terms.Kind != decision.Intent!.DecisionKind ||
+               !HeaderMatches(decision.Intent.Header, ((INativeOperationFact)accepted).Operation)
             ? ReadinessDecision.Failed(Permanent("The source is not the accepted decision of this program."))
             : decision with { Fact = accepted, Generation = terms.Generation };
     }
@@ -86,8 +88,12 @@ sealed class ReadinessVerifier(IAggregateReader reader, IImmutableContentStore c
             ReadinessDecisionCanceled canceled => canceled.Intent,
             _ => null,
         };
-        var generation = ProgramReadiness.DecisionTerms(program.AcceptedDecision(operationId))?.Generation ?? 0;
-        return source.Stream != program.Stream || terminal.Metadata!.EventId != source.EventId ||
+        if (program.AcceptedDecision(operationId) is not INativeOperationFact admission)
+            return ReadinessDecision.Failed(Transient("The original accepted decision is not visible yet."));
+        var terms = ProgramReadiness.DecisionTerms((DomainEvent)admission)!.Value;
+        var generation = terms.Generation;
+        return terms.Intent != intentReference || terms.Kind != decision.Intent!.DecisionKind ||
+               !HeaderMatches(decision.Intent.Header, admission.Operation) || source.Stream != program.Stream || terminal.Metadata!.EventId != source.EventId ||
                terminal.Metadata.AggregateVersion != source.AggregateVersion || intent != intentReference
             ? ReadinessDecision.Failed(Permanent("The source is not the terminal fact of this decision."))
             : decision with { Fact = terminal, Generation = generation };
@@ -115,10 +121,17 @@ sealed class ReadinessVerifier(IAggregateReader reader, IImmutableContentStore c
         if (intent.Header.RootOperationId != operationId || intent.ProgramId == Uuid.Empty ||
             intent.AssessmentId == Uuid.Empty)
             return ReadinessDecision.Failed(Permanent("The command differs from the frozen decision intent."));
-        var program = await reader.HydrateAsync(new ProgramReadiness(tenant, intent.ProgramId, commandId), ct)
+        var program = await reader.HydrateAsync(new ProgramReadiness(tenant, intent.ProgramId, commandId, operationId), ct)
             .ConfigureAwait(false);
         return new ReadinessDecision(null, program, null, intent, 0, tenant);
     }
+
+    internal static bool HeaderMatches(DurableIntentHeader header, OperationProvenance operation) =>
+        header.RootOperationId == operation.RootOperationId && header.FirstOwner == (operation.FirstOwner ?? operation.Owner) &&
+        header.AffectedOwner == operation.AffectedOwner && header.ExpectedRevisionOwner == operation.ExpectedRevisionOwner &&
+        header.OriginalActor == operation.Actor && header.Episode == operation.Episode &&
+        header.OriginalExpectedRevision == operation.OriginalExpectedRevision &&
+        header.AuthoredIntentSha256 == operation.AuthoredIntentSha256 && header.AcceptedAt == operation.AcceptedAt;
 
     static RequestError Permanent(string message) => new(RequestErrorKind.Conflict, message, false);
 

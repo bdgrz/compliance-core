@@ -11,11 +11,15 @@ namespace Bdgrz.Compliance.Features.Readiness;
 ///     first response is the plan view, so an exact retry returns the original plan after later plans; a gap plan held
 ///     by a readiness decision refuses the change until the decision settles.
 /// </summary>
-public sealed class PlanReadinessGapHandler(NativeOperationExecutor operations, IAggregateReader reader,
+public sealed class PlanReadinessGapHandler(NativeOperationExecutor operations,
     ReadinessReader readiness, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<PlanReadinessGap, ReadinessGapPlanView>
 {
-    public async ValueTask<Result<ReadinessGapPlanView>> HandleAsync(IRequestContext<PlanReadinessGap> context,
+    public ValueTask<Result<ReadinessGapPlanView>> HandleAsync(IRequestContext<PlanReadinessGap> context,
+        CancellationToken ct) =>
+        ReadinessContent.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ReadinessGapPlanView>> HandleCoreAsync(IRequestContext<PlanReadinessGap> context,
         CancellationToken ct)
     {
         var request = context.Request;
@@ -25,55 +29,56 @@ public sealed class PlanReadinessGapHandler(NativeOperationExecutor operations, 
         var actor = ReadinessActor.From(context, request.TenantId);
         var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new ReadinessGapPlan(request.TenantId, request.ProgramId,
-            request.GapId, request.CommandId), ct).ConfigureAwait(false);
-        var provenance = ReadinessContent.Provenance(request.CommandId, "PlanReadinessGap", snapshot.Stream,
+        var stream = new ReadinessGapPlan(request.TenantId, request.ProgramId, request.GapId).Stream;
+        var provenance = ReadinessContent.Provenance(request.CommandId, "PlanReadinessGap", stream,
             actorReference, (ulong)request.ExpectedRevision, ReadinessCommands.Digest(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? planContent = null;
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            try
-            {
-                var program = await readiness.ReadProgramAsync(request.TenantId, request.ProgramId, ct)
-                    .ConfigureAwait(false);
-                if (!await readiness.HasGapAsync(request.TenantId, program, request.GapId, ct).ConfigureAwait(false))
-                    return Failure(RequestErrorKind.NotFound, "The readiness gap was not found.");
-            }
-            catch (ImmutableContentIntegrityException exception)
-            {
-                return Result<ReadinessGapPlanView>.Failure(GetReadinessAssessmentHandler.Unverified(exception));
-            }
-
-            var prepared = snapshot.PreparePlan(request.ExpectedRevision);
-            if (!prepared.IsSuccess)
-                return Result<ReadinessGapPlanView>.Failure(prepared.Error!);
-            if (request.OwnerMemberId == Uuid.Empty || request.TargetDate == default ||
-                !ReadinessDecisionRules.IsBoundedText(request.Action))
-                return Failure(RequestErrorKind.Validation,
-                    "A gap plan requires an owner, a target date, and an action of at most 4000 characters.");
-            if (request.TargetDate < DateOnly.FromDateTime(now.UtcDateTime))
-                return Failure(RequestErrorKind.Validation, "A gap plan target date cannot be in the past.");
-            var view = new ReadinessGapPlanView(request.GapId, request.OwnerMemberId, request.TargetDate,
-                request.Action.Trim(), actorReference, now)
-            { Revision = snapshot.Revision + 1 };
-            planContent = await ReadinessContent.WriteAsync(content, request.TenantId, ReadinessContent.PlanSchema, view,
-                ct).ConfigureAwait(false);
-            (response, result) = await ReadinessContent.FreezeAsync(content, request.TenantId,
-                ReadinessContent.PlanViewSchema, view, ct).ConfigureAwait(false);
-        }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<ReadinessGapPlan>(binding,
             () => new ReadinessGapPlan(request.TenantId, request.ProgramId, request.GapId, request.CommandId),
             plan => plan.Acceptance,
-            plan => ReadinessCommands.Prepared(plan.PreparePlan(request.ExpectedRevision), response),
+            PrepareAsync,
             (ReadinessGapPlan plan, ImmutableContentRef frozen) => plan.Plan(provenance, planContent!, frozen, result!)),
             context, ct).ConfigureAwait(false);
         return await ReadinessContent.ResponseAsync<ReadinessGapPlanView>(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
+
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(ReadinessGapPlan plan, CancellationToken token)
+        {
+            try
+            {
+                var program = await readiness.ReadProgramAsync(request.TenantId, request.ProgramId, token)
+                    .ConfigureAwait(false);
+                if (!await readiness.HasGapAsync(request.TenantId, program, request.GapId, token).ConfigureAwait(false))
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound, "The readiness gap was not found."));
+            }
+            catch (ImmutableContentIntegrityException exception)
+            {
+                return Result<FirstResponseDescriptor>.Failure(GetReadinessAssessmentHandler.Unverified(exception));
+            }
+
+            var prepared = plan.PreparePlan(request.ExpectedRevision);
+            if (!prepared.IsSuccess)
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+            if (request.OwnerMemberId == Uuid.Empty || request.TargetDate == default ||
+                !ReadinessDecisionRules.IsBoundedText(request.Action))
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
+                    "A gap plan requires an owner, a target date, and an action of at most 4000 characters."));
+            if (request.TargetDate < DateOnly.FromDateTime(now.UtcDateTime))
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation, "A gap plan target date cannot be in the past."));
+            var view = new ReadinessGapPlanView(request.GapId, request.OwnerMemberId, request.TargetDate,
+                request.Action.Trim(), actorReference, now)
+            { Revision = plan.Revision + 1 };
+            planContent = await ReadinessContent.WriteAsync(content, request.TenantId, ReadinessContent.PlanSchema, view,
+                token).ConfigureAwait(false);
+            var frozen = await ReadinessContent.FreezeAsync(content, request.TenantId,
+                ReadinessContent.PlanViewSchema, view, token).ConfigureAwait(false);
+            result = frozen.Result;
+            return Result<FirstResponseDescriptor>.Success(frozen.Response);
+        }
     }
 
     static Result<ReadinessGapPlanView> Failure(RequestErrorKind kind, string message) =>

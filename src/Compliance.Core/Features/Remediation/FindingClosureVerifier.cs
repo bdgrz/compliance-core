@@ -13,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     authoritative finding. The source reference only names the fact; nothing the caller states is trusted until the
 ///     finding confirms it.
 /// </summary>
-sealed class FindingClosureVerifier(IAggregateReader reader, IImmutableContentStore content)
+sealed class FindingClosureVerifier(IAggregateReader reader, IImmutableContentStore content, IDomainEventReader events)
 {
     /// <summary>Hydrates an owner from the authoritative streams.</summary>
     public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate, CancellationToken ct)
@@ -87,8 +87,17 @@ sealed class FindingClosureVerifier(IAggregateReader reader, IImmutableContentSt
             intent.ParentId == Uuid.Empty || decision.ProgramId == Uuid.Empty || decision.DecisionId != operationId)
             return FindingClosure.Failed(Permanent("The command differs from the frozen closure intent."));
         var finding = await reader.HydrateAsync(new FindingAggregate(tenant, decision.ProgramId, intent.ParentId,
-            commandId), ct).ConfigureAwait(false);
-        return new FindingClosure(null, finding, intent, decision, tenant);
+            commandId, operationId), ct).ConfigureAwait(false);
+        try
+        {
+            var history = await FindingHistory.ReadAsync(events, finding, ct).ConfigureAwait(false);
+            return new FindingClosure(null, finding, intent, decision, tenant, history);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return FindingClosure.Failed(new RequestError(RequestErrorKind.Conflict,
+                $"The exact finding source cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
+        }
     }
 
     static RequestError Permanent(string message) => new(RequestErrorKind.Conflict, message, false);

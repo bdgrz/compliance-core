@@ -19,16 +19,35 @@ static class RoutedFinding
     public const int DefaultDueDays = 30;
     public const string DefaultSeverity = "medium";
 
-    public static async ValueTask<Result> RaiseAsync<TRequest>(NativeOperationExecutor operations,
+    public static ValueTask<Result> RaiseAsync<TRequest>(NativeOperationExecutor operations,
         IAggregateReader reader, IImmutableContentStore content, IExecutionContext context, string commandKind,
         TRequest request, Uuid tenantId, Uuid programId, Uuid findingId, FindingSource source, string title,
         string affectedScope, Uuid ownerMemberId, IReadOnlyList<FindingLink> links, string? correctiveAction,
-        ActorReference actor, DateTimeOffset now, CancellationToken ct) where TRequest : notnull
+        ActorReference actor, DateTimeOffset now, CancellationToken ct) where TRequest : notnull =>
+        RaiseCoreAsync(operations, reader, content, context, commandKind, request, tenantId, programId, findingId,
+            source, title, affectedScope, ownerMemberId, links, correctiveAction, actor, now, null, ct);
+
+    /// <summary>Resolves mutable routed source terms only after exact native acceptance has been checked.</summary>
+    public static ValueTask<Result> RaiseFromSourceAsync<TRequest>(NativeOperationExecutor operations,
+        IAggregateReader reader, IImmutableContentStore content, IExecutionContext context, string commandKind,
+        TRequest request, Uuid tenantId, Uuid programId, Uuid findingId, ActorReference actor, DateTimeOffset now,
+        Func<CancellationToken, ValueTask<Result<RoutedFindingSource>>> prepareSource, CancellationToken ct)
+        where TRequest : notnull =>
+        RaiseCoreAsync(operations, reader, content, context, commandKind, request, tenantId, programId, findingId,
+            null!, string.Empty, string.Empty, Uuid.Empty, [], null, actor, now, prepareSource, ct);
+
+    static async ValueTask<Result> RaiseCoreAsync<TRequest>(NativeOperationExecutor operations,
+        IAggregateReader reader, IImmutableContentStore content, IExecutionContext context, string commandKind,
+        TRequest request, Uuid tenantId, Uuid programId, Uuid findingId, FindingSource source, string title,
+        string affectedScope, Uuid ownerMemberId, IReadOnlyList<FindingLink> links, string? correctiveAction,
+        ActorReference actor, DateTimeOffset now, Func<CancellationToken, ValueTask<Result<RoutedFindingSource>>>? prepareSource,
+        CancellationToken ct) where TRequest : notnull
     {
-        var snapshot = await reader.HydrateAsync(new FindingAggregate(tenantId, programId, findingId, findingId), ct)
-            .ConfigureAwait(false);
+        ArgumentNullException.ThrowIfNull(reader);
+        var snapshot = new FindingAggregate(tenantId, programId, findingId, findingId);
         var provenance = FindingContent.Provenance(findingId, commandKind, snapshot.Stream, actor, null,
-            FindingCommands.Digest(request), now);
+            FindingCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
 
         FindingRaiseTerms? terms = null;
@@ -36,15 +55,24 @@ static class RoutedFinding
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
         InitialActionAdmission? initial = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(FindingAggregate owner, CancellationToken token)
         {
+            if (prepareSource is not null)
+            {
+                var resolved = await prepareSource(token).ConfigureAwait(false);
+                if (!resolved.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(resolved.Error!);
+                var selected = resolved.Value!;
+                (source, title, affectedScope, ownerMemberId, links, correctiveAction) = (selected.Source,
+                    selected.Title, selected.AffectedScope, selected.OwnerMemberId, selected.Links, selected.CorrectiveAction);
+            }
             var dueOn = DateOnly.FromDateTime(now.UtcDateTime).AddDays(DefaultDueDays);
             if (correctiveAction is not null && !FindingRules.IsBoundedText(correctiveAction, FindingRules.MaximumTextLength))
-                return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
                     "An initial corrective action needs bounded description."));
-            var prepared = snapshot.PrepareRaise();
+            var prepared = owner.PrepareRaise();
             if (!prepared.IsSuccess)
-                return Result.Failure(prepared.Error!);
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
             AddCorrectiveAction? authored = null;
             if (correctiveAction is not null)
                 authored = new AddCorrectiveAction(FindingRules.RoutedActionId(findingId), tenantId, programId,
@@ -52,18 +80,19 @@ static class RoutedFinding
             terms = new FindingRaiseTerms(source, title, source.SourceText, DefaultSeverity, affectedScope,
                 ownerMemberId, dueOn, actor, now, "routed", authored is null ? null : ContentDigest.OfJson(authored));
             linksReference = await FindingContent.WriteAsync(content, tenantId, FindingContent.LinksSchema,
-                FindingRules.Trimmed(links), ct).ConfigureAwait(false);
+                FindingRules.Trimmed(links), token).ConfigureAwait(false);
             if (authored is not null)
-                initial = await InitialActionAsync(content, tenantId, snapshot.Stream, provenance, authored, now, ct)
+                initial = await InitialActionAsync(content, tenantId, owner.Stream, provenance, authored, now, token)
                     .ConfigureAwait(false);
-            var unit = await FindingContent.FreezeAsync(content, tenantId, UnitResult.Schema, new UnitResult(), ct)
+            var unit = await FindingContent.FreezeAsync(content, tenantId, UnitResult.Schema, new UnitResult(), token)
                 .ConfigureAwait(false);
             (response, result) = unit;
+            return Result<FirstResponseDescriptor>.Success(response!);
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<FindingAggregate>(binding,
             () => new FindingAggregate(tenantId, programId, findingId, findingId), finding => finding.Acceptance,
-            finding => FindingCommands.Prepared(finding.PrepareRaise(), response),
+            PrepareAsync,
             (FindingAggregate finding, ImmutableContentRef frozen) =>
                 finding.Raise(provenance, terms!, linksReference!, frozen, result!, initial)), context, ct)
             .ConfigureAwait(false);
@@ -75,11 +104,11 @@ static class RoutedFinding
         CancellationToken ct)
     {
         var operation = new OperationProvenance(authored.ActionId, root.RootOperationId, null, "AdmitCorrectiveAction",
-            root.Actor, stream, root.Episode, null, root.AuthoredIntentSha256, now, stream, stream);
+            root.Actor, stream, root.Episode, null, root.AuthoredIntentSha256, now, stream, stream, stream);
         var header = FindingContent.Header(operation, now);
-        var content1 = await FindingContent.WriteDeterministicAsync(content, tenantId, authored.ActionId,
+        var content1 = await FindingContent.WriteAsync(content, tenantId,
             FindingContent.ActionAuthoredSchema, authored, ct).ConfigureAwait(false);
-        var intent = await FindingContent.WriteDeterministicAsync(content, tenantId, authored.ActionId,
+        var intent = await FindingContent.WriteAsync(content, tenantId,
             ChildAdmissionIntent.Schema, new ChildAdmissionIntent(header, authored.FindingId, 1,
                 AdmittedChildKind.CorrectiveAction, authored.ActionId, content1,
                 await EmptyProofsAsync(content, tenantId, authored.ActionId, ct).ConfigureAwait(false), 2), ct)

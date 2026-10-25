@@ -1,7 +1,6 @@
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -44,24 +43,21 @@ static class ControlOccurrenceFanOut
         var tenant = Uuid.Parse(realm, CultureInfo.InvariantCulture);
         var occurrenceId = Uuid.Parse(step.Target, CultureInfo.InvariantCulture);
         var store = services.GetRequiredService<IImmutableContentStore>();
-        ControlOccurrenceSelectionManifest manifest;
-        ControlOccurrenceCreationIntent intent;
-        ControlOccurrenceSelection? selection;
-        try
+        var manifest = await store.ReadJsonAsync<ControlOccurrenceSelectionManifest>(realm, record.Intent, ct)
+            .ConfigureAwait(false);
+        if (manifest.Selections is null)
+            throw new ImmutableContentIntegrityException("The selected occurrence manifest is incomplete.");
+        ControlOccurrenceSelection? selection = null;
+        foreach (var candidate in manifest.Selections.Where(candidate => candidate.OccurrenceId == occurrenceId))
         {
-            manifest = await store.ReadJsonAsync<ControlOccurrenceSelectionManifest>(realm, record.Intent, ct)
-                .ConfigureAwait(false);
-            selection = manifest.Selections.SingleOrDefault(candidate => candidate.OccurrenceId == occurrenceId);
-            if (selection is null)
-                throw new InvalidOperationException($"{step.Target} is not selected by the process record.");
-            intent = await store.ReadJsonAsync<ControlOccurrenceCreationIntent>(realm, selection.Intent, ct)
-                .ConfigureAwait(false);
+            if (selection is not null)
+                throw new ImmutableContentIntegrityException("The process target has more than one frozen selection.");
+            selection = candidate;
         }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            throw new SourceFactVerificationException(
-                $"The frozen selection cannot be verified yet: {exception.Message}");
-        }
+        if (selection is null)
+            throw new ImmutableContentIntegrityException("The process target is outside its exact frozen selection.");
+        var intent = await store.ReadJsonAsync<ControlOccurrenceCreationIntent>(realm, selection.Intent, ct)
+            .ConfigureAwait(false);
 
         var target = new ControlOccurrence(tenant, intent.ProgramId, intent.ControlId, intent.OccurrenceId).Stream;
         return new MaterializeControlOccurrence(step.CommandId, record.Source, target, record.Key.RootOperationId,

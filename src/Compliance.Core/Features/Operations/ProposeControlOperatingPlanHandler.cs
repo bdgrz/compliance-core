@@ -36,62 +36,58 @@ public sealed class ProposeControlOperatingPlanHandler(NativeOperationExecutor o
         var provenance = ControlOperationsSource.Provenance(request.PlanVersionId, CommandKind, stream, actor,
             request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
-        var (current, line) = await operatingReader.ReadLineAsync(request.TenantId, request.ProgramId,
-            request.ControlId, request.PlanVersionId, ct).ConfigureAwait(false);
 
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? planContent = null;
         ImmutableContentRef? result = null;
-        if (current.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var checkedPlan = await OperatingPlanChecks.CheckAsync(controlSources, authority, request.TenantId,
-                request.ProgramId, request.ControlId, request.ControlVersionId, request.Owner, request.BackupOwner,
-                request.ReviewerMemberId, ct).ConfigureAwait(false);
-            if (!checkedPlan.IsSuccess)
-                return Result<ControlOperatingPlanView>.Failure(checkedPlan.Error!);
-            var (version, reviewerHoldsWork) = checkedPlan.Value;
-            SeparationOfDutiesWaiver? waiver = null;
-            if (request.SeparationOfDutiesWaiverId is { } waiverId)
-                waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, waiverId), ct)
-                    .ConfigureAwait(false);
-            var failure = ControlOperationRules.CheckProposal(line, request.TenantId, request.ExpectedRevision,
-                version, request.Owner, request.BackupOwner, request.ReviewerMemberId, reviewerHoldsWork,
-                request.Cadence, request.EffectiveFrom, request.Rationale, now, waiver);
-            if (failure is not null)
-                return Result<ControlOperatingPlanView>.Failure(failure.ToRequestError());
-            var clean = ControlCadenceSchedule.Clean(request.Cadence);
-            var view = new ControlOperatingPlanView(request.TenantId, request.ProgramId, request.ControlId,
-                request.PlanVersionId, request.ExpectedRevision + 1, ControlOperationStates.PendingApproval,
-                version.VersionId, request.Owner, request.BackupOwner, request.ReviewerMemberId, clean,
-                ControlCadenceSchedule.Describe(clean), version.Content.ExpectedEvidenceDescriptions.ToArray(),
-                request.EffectiveFrom, null, request.Rationale.Trim(), actor.MemberId,
-                ActorReference.ForMember(actor.MemberId, actor.Display), now, waiver?.Id);
-            planContent = await ControlOperatingContent.WriteAsync(content, request.TenantId,
-                ControlOperatingContent.PlanSchema, view, ct).ConfigureAwait(false);
-            result = await ControlOperatingContent.WriteResultAsync(content, request.TenantId,
-                ControlOperatingContent.PlanSchema, planContent, ct).ConfigureAwait(false);
-            response = ControlOperatingContent.OkResponse(ControlOperatingContent.PlanSchema, planContent);
-        }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<ControlOperatingPlan>(binding,
             () => new ControlOperatingPlan(request.TenantId, request.ProgramId, request.ControlId,
                 request.PlanVersionId), plan => plan.Acceptance,
-            plan => Prepare(plan, request.ExpectedRevision, response),
+            async (current, token) =>
+            {
+                try
+                {
+                    var line = await operatingReader.ComposeLineAsync(current, token).ConfigureAwait(false);
+                    var checkedPlan = await OperatingPlanChecks.CheckAsync(controlSources, authority, request.TenantId,
+                        request.ProgramId, request.ControlId, request.ControlVersionId, request.Owner, request.BackupOwner,
+                        request.ReviewerMemberId, token).ConfigureAwait(false);
+                    if (!checkedPlan.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(checkedPlan.Error!);
+                    var (version, reviewerHoldsWork) = checkedPlan.Value;
+                    SeparationOfDutiesWaiver? waiver = null;
+                    if (request.SeparationOfDutiesWaiverId is { } waiverId)
+                        waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, waiverId), token)
+                            .ConfigureAwait(false);
+                    var failure = ControlOperationRules.CheckProposal(line, request.TenantId, request.ExpectedRevision,
+                        version, request.Owner, request.BackupOwner, request.ReviewerMemberId, reviewerHoldsWork,
+                        request.Cadence, request.EffectiveFrom, request.Rationale, now, waiver);
+                    if (failure is not null)
+                        return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
+                    var clean = ControlCadenceSchedule.Clean(request.Cadence);
+                    var view = new ControlOperatingPlanView(request.TenantId, request.ProgramId, request.ControlId,
+                        request.PlanVersionId, request.ExpectedRevision + 1, ControlOperationStates.PendingApproval,
+                        version.VersionId, request.Owner, request.BackupOwner, request.ReviewerMemberId, clean,
+                        ControlCadenceSchedule.Describe(clean), version.Content.ExpectedEvidenceDescriptions.ToArray(),
+                        request.EffectiveFrom, null, request.Rationale.Trim(), actor.MemberId,
+                        ActorReference.ForMember(actor.MemberId, actor.Display), now, waiver?.Id);
+                    planContent = await ControlOperatingContent.WriteAsync(content, request.TenantId,
+                        ControlOperatingContent.PlanSchema, view, token).ConfigureAwait(false);
+                    result = await ControlOperatingContent.WriteResultAsync(content, request.TenantId,
+                        ControlOperatingContent.PlanSchema, planContent, token).ConfigureAwait(false);
+                    response = ControlOperatingContent.OkResponse(ControlOperatingContent.PlanSchema, planContent);
+                    return Result<FirstResponseDescriptor>.Success(response!);
+                }
+                catch (ImmutableContentIntegrityException failure)
+                {
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The exact operating source content cannot be verified.", failure is ImmutableContentUnavailableException));
+                }
+            },
             (ControlOperatingPlan plan, ImmutableContentRef frozen) =>
                 plan.Propose(provenance, planContent!, frozen, result!)), context, ct).ConfigureAwait(false);
         return await ControlOperatingContent.ResponseAsync<ControlOperatingPlanView>(content, request.TenantId,
             outcome, ct).ConfigureAwait(false);
     }
 
-    static Result<FirstResponseDescriptor> Prepare(ControlOperatingPlan plan, long expectedRevision,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = plan.PrepareProposal(expectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The operating plan changed while the proposal was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
-    }
 }

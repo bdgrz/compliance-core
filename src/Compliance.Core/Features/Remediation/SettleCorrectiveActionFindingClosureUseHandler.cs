@@ -40,7 +40,8 @@ sealed class SettleCorrectiveActionFindingClosureUseHandler(IAggregateReader rea
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return Fail($"The frozen closure source uses cannot be verified: {exception.Message}");
+            return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen closure source uses cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         var action = Open(request, request.CommandId);

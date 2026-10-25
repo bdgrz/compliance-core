@@ -23,7 +23,7 @@ public sealed class AuditorResponseCommandHandlerTests
                 responseId, 1, "Revised evidence explanation", [])), CancellationToken.None);
         var submitted = await fixture.SubmitAsync(requestId, responseId);
         var saved = await fixture.ResponseAsync(requestId, responseId);
-        var version = await fixture.ReadAsync<AuditorResponseVersionView>(saved.Facts.OfType<AuditResponseDraftRevised>().Single().Change);
+        var version = await fixture.ReadAsync<AuditorResponseVersionView>((await fixture.ResponseHistoryAsync(requestId, responseId)).OfType<AuditResponseDraftRevised>().Single().Change);
 
         // Assert
         Assert.True(created.IsSuccess, created.Error?.Message);

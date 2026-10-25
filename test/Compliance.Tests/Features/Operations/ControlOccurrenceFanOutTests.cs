@@ -245,6 +245,125 @@ public sealed class ControlOccurrenceFanOutTests
         Assert.False(new ControlEventWindow(" release", "4.2").IsValid);
     }
 
+    [Fact]
+    public async Task ShouldReplayOriginalMaterializationGivenArchivedPlanBodyUnavailableAfterAcceptance()
+    {
+        // Arrange
+        await using var fixture = new TypeIIRangeFixture();
+        var (period, _) = await StartAsync(fixture);
+        var selected = await SelectAllAsync(fixture, period);
+        var completed = await fixture.Host.RunFanOutAsync(fixture.TenantId, fixture.ProgramId, period, selected);
+        var target = completed.Targets[0];
+        var command = await fixture.Host.FanOutStepAsync(completed, target);
+        var plan = await fixture.Host.Reader.HydrateAsync(new ControlOperatingPlan(fixture.TenantId,
+            fixture.ProgramId, fixture.ControlId));
+        var proposed = (await ControlOperatingPlanHistory.ReadAsync(fixture.Host.Events, plan))
+            .OfType<ControlOperatingPlanProposed>().Single();
+        var failed = new FaultedOperatingContent(fixture.Host.Content, proposed.PlanContent.ContentId, true);
+        var handler = new MaterializeControlOccurrenceHandler(fixture.Host.Reader, fixture.Host.Events,
+            fixture.Host.Executor, failed, fixture.Clock);
+        var before = await fixture.Host.Reader.HydrateAsync(new ControlOccurrence(fixture.TenantId,
+            fixture.ProgramId, fixture.ControlId, command.OccurrenceId));
+
+        // Act
+        var replay = await handler.HandleAsync(new Cntryl.Portia.RequestContext<MaterializeControlOccurrence>(command,
+            new RequestDispatchContext(RequestActor.System)), CancellationToken.None);
+        var retained = await fixture.Host.Reader.HydrateAsync(new ControlOccurrence(fixture.TenantId,
+            fixture.ProgramId, fixture.ControlId, command.OccurrenceId));
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(NativeFactReference.Of(before.Stream, before.Opened!), Assert.IsType<ReceiverOutcome.Replayed>(replay.Value).Fact);
+        Assert.Equal(0, failed.SelectedReads);
+        Assert.Equal(before.CommittedStreamPosition, retained.CommittedStreamPosition);
+    }
+
+    [Theory]
+    [InlineData("intent", true)]
+    [InlineData("intent", false)]
+    [InlineData("selection", true)]
+    [InlineData("selection", false)]
+    [InlineData("plan", true)]
+    [InlineData("plan", false)]
+    public async Task ShouldClassifyMaterializationSourceFailureWithoutAppendGivenMissingOrCorruptFrozenBytes(string source, bool unavailable)
+    {
+        // Arrange
+        await using var fixture = new TypeIIRangeFixture();
+        var (period, _) = await StartAsync(fixture);
+        var selected = await SelectAllAsync(fixture, period);
+        var record = await fixture.Host.StartFanOutAsync(fixture.TenantId, fixture.ProgramId, period, selected);
+        var command = await fixture.Host.FanOutStepAsync(record, record.Targets[0]);
+        var plan = await fixture.Host.Reader.HydrateAsync(new ControlOperatingPlan(fixture.TenantId,
+            fixture.ProgramId, fixture.ControlId));
+        var proposal = (await ControlOperatingPlanHistory.ReadAsync(fixture.Host.Events, plan))
+            .OfType<ControlOperatingPlanProposed>().Single();
+        var id = source switch
+        {
+            "intent" => command.Intent.ContentId,
+            "selection" => selected.CreationIntentManifest.ContentId,
+            _ => proposal.PlanContent.ContentId,
+        };
+        var failed = new FaultedOperatingContent(fixture.Host.Content, id, unavailable);
+        var handler = new MaterializeControlOccurrenceHandler(fixture.Host.Reader, fixture.Host.Events,
+            fixture.Host.Executor, failed, fixture.Clock);
+
+        // Act
+        var result = await handler.HandleAsync(new Cntryl.Portia.RequestContext<MaterializeControlOccurrence>(command,
+            new RequestDispatchContext(RequestActor.System)), CancellationToken.None);
+        var retained = await fixture.Host.Reader.HydrateAsync(new ControlOccurrence(fixture.TenantId,
+            fixture.ProgramId, fixture.ControlId, command.OccurrenceId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(unavailable, result.Error!.IsTransient);
+        Assert.Equal(0, retained.Revision);
+        Assert.Equal(0UL, retained.CommittedStreamPosition);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldKeepPendingOnlyForUnavailableContentGivenFanOutReceiverFactory(bool unavailable)
+    {
+        // Arrange
+        await using var fixture = new TypeIIRangeFixture();
+        var (period, _) = await StartAsync(fixture);
+        var selected = await SelectAllAsync(fixture, period);
+        var record = await fixture.Host.StartFanOutAsync(fixture.TenantId, fixture.ProgramId, period, selected);
+        var failed = new FaultedOperatingContent(fixture.Host.Content, record.Intent.ContentId, unavailable);
+        var services = new ReplacedContent(fixture.Host.Services, failed);
+        var step = new ProcessStep(record, ControlOccurrenceFanOut.Materialize, nameof(MaterializeControlOccurrence),
+            record.Targets[0], Uuid.CreateVersion4());
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => await fixture.Host.FanOutDefinition.CreateReceiver(step,
+            services, CancellationToken.None));
+
+        // Assert
+        Assert.IsAssignableFrom<ImmutableContentIntegrityException>(failure);
+        Assert.Equal(unavailable, failure is ImmutableContentUnavailableException);
+    }
+
+    sealed class FaultedOperatingContent(IImmutableContentStore inner, Uuid selected, bool unavailable) : IImmutableContentStore
+    {
+        public int SelectedReads { get; private set; }
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id, string schema, string mediaType,
+            ReadOnlyMemory<byte> bytes, CancellationToken ct = default) => inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference, CancellationToken ct = default)
+        {
+            if (reference.ContentId != selected)
+                return inner.ReadVerifiedAsync(realm, reference, ct);
+            SelectedReads++;
+            throw (unavailable ? new ImmutableContentUnavailableException("The exact selected source is unavailable.")
+                : new ImmutableContentIntegrityException("The exact selected source is corrupt."));
+        }
+    }
+
+    sealed class ReplacedContent(IServiceProvider inner, IImmutableContentStore content) : IServiceProvider
+    {
+        public object? GetService(Type serviceType) => serviceType == typeof(IImmutableContentStore) ? content : inner.GetService(serviceType);
+    }
+
     static async Task<(Uuid Period, ControlOperatingPlanView Plan)> StartAsync(TypeIIRangeFixture fixture)
     {
         var period = await fixture.StartPeriodAsync();

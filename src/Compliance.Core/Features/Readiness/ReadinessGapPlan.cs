@@ -26,9 +26,7 @@ public sealed class ReadinessGapPlan : Aggregate, ISourceUseOwner
     readonly Uuid _tenantId;
     readonly Uuid _programId;
     readonly Uuid _gapId;
-    readonly List<ReadinessGapPlanned> _plans = [];
-    readonly List<ReadinessGapAnnotated> _annotations = [];
-    readonly List<DomainEvent> _facts = [];
+    long _revision;
 
     /// <summary>Opens the plan of one gap, selecting the logical operation to resolve.</summary>
     public ReadinessGapPlan(Uuid tenantId, Uuid programId, Uuid gapId, Uuid selectedLogicalId = default)
@@ -46,13 +44,13 @@ public sealed class ReadinessGapPlan : Aggregate, ISourceUseOwner
             if (granted.Revision != Revision)
                 throw new InvalidOperationException("A decision use is granted at the held plan revision.");
             Uses.ApplyGranted(SourceUsePurpose.ReadinessDecision, granted);
-            _facts.Add(granted);
+            LatestFact = granted;
         });
         On<ReadinessGapPlanReadinessDecisionUseSettled>(settled =>
         {
             Acceptance.Observe(settled);
             Uses.ApplySettled(SourceUsePurpose.ReadinessDecision, settled);
-            _facts.Add(settled);
+            LatestFact = settled;
         });
     }
 
@@ -73,16 +71,16 @@ public sealed class ReadinessGapPlan : Aggregate, ISourceUseOwner
     public Uuid ProgramId => _programId;
 
     /// <summary>The plan revision: the number of plans recorded; zero while the gap is unplanned.</summary>
-    public long Revision => _plans.Count;
+    public long Revision => _revision;
 
     /// <summary>The latest plan fact, or null while the gap is unplanned.</summary>
-    public ReadinessGapPlanned? Latest => _plans.Count == 0 ? null : _plans[^1];
+    public ReadinessGapPlanned? Latest { get; private set; }
 
-    /// <summary>Every annotation in order.</summary>
-    public IReadOnlyList<ReadinessGapAnnotated> Annotations => _annotations;
+    /// <summary>The tenant of this command authority.</summary>
+    public Uuid TenantId => _tenantId;
 
-    /// <summary>The fact with this event id.</summary>
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+    /// <summary>The last native fact, including use grants and settlements, at the captured physical cut.</summary>
+    public DomainEvent? LatestFact { get; private set; }
 
     /// <summary>Checks that a plan can be recorded at the expected plan revision.</summary>
     public Result PreparePlan(long expectedRevision)
@@ -166,8 +164,9 @@ public sealed class ReadinessGapPlan : Aggregate, ISourceUseOwner
         if (ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.Revision != Revision + 1 ||
             ev.Operation.Owner != Stream)
             throw new InvalidOperationException("A plan follows the previous plan at the next revision.");
-        _plans.Add(ev);
-        _facts.Add(ev);
+        _revision = ev.Revision;
+        Latest = ev;
+        LatestFact = ev;
     }
 
     void Apply(ReadinessGapAnnotated ev)
@@ -176,8 +175,7 @@ public sealed class ReadinessGapPlan : Aggregate, ISourceUseOwner
         if (ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.Revision != Revision ||
             ev.Operation.Owner != Stream)
             throw new InvalidOperationException("An annotation is recorded at the held plan revision.");
-        _annotations.Add(ev);
-        _facts.Add(ev);
+        LatestFact = ev;
     }
 
     static Result Fail(CommandFailure failure) => Result.Failure(failure.ToRequestError());

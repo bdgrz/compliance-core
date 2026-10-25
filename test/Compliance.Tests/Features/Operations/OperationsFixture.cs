@@ -493,11 +493,19 @@ sealed class OperationsFixture
             .HydrateAsync(new CorrectiveAction(TenantId, ProgramId, findingId, actionId));
     }
 
-    public async Task<FindingAggregate> FindingStreamAsync(Uuid findingId)
+    public async Task<FindingAggregate> FindingStreamAsync(Uuid findingId, Uuid selectedClosureRoot = default)
     {
         await using var scope = Provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new FindingAggregate(TenantId, ProgramId, findingId, selectedClosureRoot: selectedClosureRoot));
+    }
+
+    public async Task<FindingHistorySnapshot> FindingHistoryAsync(Uuid findingId)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        var finding = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new FindingAggregate(TenantId, ProgramId, findingId));
+        return await FindingHistory.ReadAsync(scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), finding);
     }
 
     public Task<ProcessKey> ClosureKey(Uuid commandId) => FindingProcesses.ClosureKey(Provider, TenantId, commandId);

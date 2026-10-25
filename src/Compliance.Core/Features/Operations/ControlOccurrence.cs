@@ -21,7 +21,7 @@ public sealed class ControlOccurrence : Aggregate
     readonly Uuid _tenantId;
     readonly Uuid _programId;
     readonly Uuid _controlId;
-    readonly List<DomainEvent> _facts = [];
+    DomainEvent? _latest;
     ControlOccurrenceOpened? _opened;
     long _revision;
     int _attestations;
@@ -49,6 +49,9 @@ public sealed class ControlOccurrence : Aggregate
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
 
+    /// <summary>The tenant of this exact owner.</summary>
+    public Uuid TenantId => _tenantId;
+
     /// <summary>The program this occurrence belongs to.</summary>
     public Uuid ProgramId => _programId;
 
@@ -64,8 +67,8 @@ public sealed class ControlOccurrence : Aggregate
     /// <summary>The number of attestation versions recorded so far.</summary>
     public int AttestationCount => _attestations;
 
-    /// <summary>Every fact of the occurrence in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
+    /// <summary>The latest exact native fact at this command cut.</summary>
+    public DomainEvent? Latest => _latest;
 
     /// <summary>The deterministic id of the next attestation version.</summary>
     public Uuid NextAttestationId => Uuid.CreateVersion5(Id, "attestation-" +
@@ -179,7 +182,7 @@ public sealed class ControlOccurrence : Aggregate
                 "An occurrence is materialized once, on the stream its tenant, program, control and window derive.");
         _opened = ev;
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
     void Apply(ControlOccurrenceAttested ev)
@@ -191,7 +194,7 @@ public sealed class ControlOccurrence : Aggregate
             throw new InvalidOperationException("An attestation follows the materialization at the next revision.");
         _attestations++;
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
     void Apply(ControlOccurrenceReviewed ev)
@@ -202,7 +205,7 @@ public sealed class ControlOccurrence : Aggregate
             ev.Operation.Owner != Stream)
             throw new InvalidOperationException("A review follows an attestation at the next revision.");
         _revision = ev.Revision;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
     Result Stale() => Result.Failure(VersionedRecordRules.StaleRevision("control occurrence", _revision)

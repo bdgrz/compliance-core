@@ -47,7 +47,7 @@ static class ControlOperationsSource
     public static OperationProvenance Provenance(Uuid logicalId, string commandKind, EventStreamAddress owner,
         OperationsActor actor, long expectedRevision, string intentDigest, DateTimeOffset acceptedAt) => new(
         logicalId, logicalId, null, commandKind, ActorReference.ForMember(actor.MemberId, actor.Display), owner,
-        InitialEpisode, (ulong)expectedRevision, intentDigest, acceptedAt, owner, owner);
+        InitialEpisode, (ulong)expectedRevision, intentDigest, acceptedAt, owner, owner, owner);
 
     public static RequestError ControlNotFound() =>
         new(RequestErrorKind.NotFound, "The control was not found.");

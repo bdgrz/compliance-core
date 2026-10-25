@@ -33,8 +33,7 @@ public sealed class AuditorResponse : Aggregate, ISourceUseOwner
     readonly Uuid _programId;
     readonly Uuid _requestId;
     readonly Uuid _responseId;
-    readonly List<DomainEvent> _facts = [];
-    readonly SortedSet<long> _closedGenerations = [];
+    long? _closedByGeneration;
     AuditResponseDraftCreated? _created;
     DomainEvent? _latest;
     AuditorResponseDispositionRecorded? _disposition;
@@ -66,15 +65,14 @@ public sealed class AuditorResponse : Aggregate, ISourceUseOwner
                 throw new InvalidOperationException(
                     "A resolution use is granted on a materialized response at its held revision.");
             Uses.ApplyGranted(SourceUsePurpose.RequestResolution, granted);
-            _facts.Add(granted);
         });
         On<AuditorResponseRequestResolutionUseSettled>(settled =>
         {
             Acceptance.Observe(settled);
             Uses.ApplySettled(SourceUsePurpose.RequestResolution, settled);
             if (settled.Disposition == SourceUseSettlementDisposition.ParentClosed)
-                _closedGenerations.Add(settled.Generation);
-            _facts.Add(settled);
+                _closedByGeneration ??= settled.Generation;
+
         });
     }
 
@@ -124,14 +122,14 @@ public sealed class AuditorResponse : Aggregate, ISourceUseOwner
     /// <summary>The latest content fact: the last draft, submission, review, delivery or disposition.</summary>
     public DomainEvent? Latest => _latest;
 
-    /// <summary>The request generations whose resolution fenced this response.</summary>
-    public IReadOnlyCollection<long> ClosedGenerations => _closedGenerations;
+    /// <summary>The first resolved parent generation whose verified settlement permanently fenced this response.</summary>
+    public long? ClosedByGeneration => _closedByGeneration;
 
-    /// <summary>Every fact in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
+    /// <summary>The tenant of this response owner.</summary>
+    public Uuid TenantId => _tenantId;
 
-    /// <summary>The fact with this event id.</summary>
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+    /// <summary>The exact latest immutable content fact that a resolution may pin.</summary>
+    public DomainEvent? CurrentContentFactById(Uuid eventId) => _latest?.Metadata.EventId == eventId ? _latest : null;
 
     /// <summary>Checks that the response can be materialized.</summary>
     public Result PrepareMaterialize() => _created is null
@@ -388,14 +386,14 @@ public sealed class AuditorResponse : Aggregate, ISourceUseOwner
     {
         _revision = revision;
         _latest = fact;
-        _facts.Add(fact);
+
     }
 
     Result PrepareWrite(long expectedRevision)
     {
         if (_created is null)
             return Fail(CommandFailure.MissingRecord("The auditor response was not found."));
-        if (_closedGenerations.Count > 0)
+        if (_closedByGeneration is not null)
             return Fail(CommandFailure.StateConflict(
                 "The auditor response is fenced by a resolved request generation."));
         if (Uses.HasActiveUse)

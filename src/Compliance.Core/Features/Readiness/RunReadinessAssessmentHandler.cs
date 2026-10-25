@@ -41,26 +41,24 @@ public sealed class RunReadinessAssessmentHandler(NativeOperationExecutor operat
         var actor = ReadinessActor.From(context, request.TenantId);
         var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new ProgramReadiness(request.TenantId, request.ProgramId,
-            request.AssessmentId), ct).ConfigureAwait(false);
-        var provenance = ReadinessContent.Provenance(request.AssessmentId, CommandKind, snapshot.Stream, actorReference,
+        var stream = new ProgramReadiness(request.TenantId, request.ProgramId).Stream;
+        var provenance = ReadinessContent.Provenance(request.AssessmentId, CommandKind, stream, actorReference,
             (ulong)request.ExpectedProgramRevision, AuthoredIntentDigest.Compute(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? intent = null;
-        FirstResponseDescriptor? response = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(request, snapshot, provenance, actor, now, ct).ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response) = frozen.Value;
-        }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<ProgramReadiness>(binding,
             () => new ProgramReadiness(request.TenantId, request.ProgramId, request.AssessmentId),
             readiness => readiness.Acceptance,
-            readiness => ReadinessCommands.Prepared(readiness.PrepareRun(request.ExpectedProgramRevision), response),
+            async (readiness, token) =>
+            {
+                var frozen = await FreezeAsync(request, readiness, provenance, actor, now, token).ConfigureAwait(false);
+                if (!frozen.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                intent = frozen.Value.Intent;
+                return Result<FirstResponseDescriptor>.Success(frozen.Value.Response);
+            },
             (ProgramReadiness readiness, ImmutableContentRef acknowledgment) =>
                 readiness.RequestRun(provenance, intent!, acknowledgment)), context, ct).ConfigureAwait(false);
         return await ReadinessContent.ResponseAsync<OperationAcceptedResponse>(content, request.TenantId, outcome, ct)
