@@ -475,10 +475,12 @@
     },
     {
       "id": "typeii-calendar-compact-authority",
-      "status": "queued_unblocked",
+      "status": "merged_previously_queue_reconciled",
       "externalDependency": false,
       "evidence": "The independent program non-overlap calendar still retains reservation/fence history; period owner cutover does not claim to compact that separate authority.",
-      "nextWork": "Preserve atomic active range non-overlap and exact selected reservation/fence proof while moving terminal history outside runtime command state."
+      "nextWork": "Preserve atomic active range non-overlap and exact selected reservation/fence proof while moving terminal history outside runtime command state.",
+      "qualificationArtifact": "typeii-calendar-current-reconciliation.json",
+      "resolution": "Current source already has compact scalar/native owner, current live reservation/fence content and immutable released history; terminal histories are transient. Existing32 realcycles cover compaction and explicit selectedsource; no newRED or implementation invented. Existing reader O(N)/legacyv1 limits retained."
     },
     {
       "id": "native-http-first-responses",
@@ -845,30 +847,54 @@
     },
     {
       "id": "service-engagement-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "service-engagement-native-qualification.json",
       "productionFileReviews": 71,
       "focusedPassed": 1904,
       "httpPassed": 168,
-      "unitPassed": 6742
+      "unitPassed": 6742,
+      "pr": 1136,
+      "mergeCommit": "5887b54da690b373153a796e009ad7b297dc2f21"
     },
     {
       "id": "identity-recovery-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "identity-recovery-native-qualification.json",
       "productionFileReviews": 71,
       "focusedPassed": 1904,
       "httpPassed": 168,
-      "unitPassed": 6742
+      "unitPassed": 6742,
+      "pr": 1136,
+      "mergeCommit": "5887b54da690b373153a796e009ad7b297dc2f21"
     },
     {
       "id": "access-source-use-preparation",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "access-source-use-preparation-qualification.json",
       "productionFileReviews": 71,
       "focusedPassed": 1904,
       "httpPassed": 168,
-      "unitPassed": 6742
+      "unitPassed": 6742,
+      "pr": 1136,
+      "mergeCommit": "5887b54da690b373153a796e009ad7b297dc2f21"
+    },
+    {
+      "id": "work-assignment-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "work-assignment-native-qualification.json",
+      "productionFileReviews": 57,
+      "focusedPassed": 256,
+      "httpPassed": 35,
+      "unitPassed": 6771
+    },
+    {
+      "id": "evidence-redaction-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "evidence-redaction-native-qualification.json",
+      "productionFileReviews": 57,
+      "focusedPassed": 256,
+      "httpPassed": 35,
+      "unitPassed": 6771
     }
   ],
   "resolved": [
@@ -915,10 +941,11 @@
     }
   ],
   "continuingPreparation": [
-    "WorkAssignment65 frozen; additional oldAPI2 pendingqualification, then rootintake. TenantManagerGuard next on sameagent.",
-    "ComplianceProgram native3/current/asof history active; rootoutside20testfixtures assigned; ClientService product native3 queued.",
-    "EvidenceRedaction selected native2/current/fullhistory/sourceproofs active; fourgenuineoldAPI casesqualified; generic16MiB responsebytebound remains explicit, no lifetimecountcap/truncation. AuditPopulationnative6 queued.",
-    "RootweeklySchedule technical capture/page/result journal unimplemented after explicitplacementcorrection andgenuine3oldAPI cases; no newbusinessroot or globalatomicity claim.",
-    "Fresh selected-signature finite-owner triage70candidates needsactualsource/behavior qualification; current/caplessowner alone doesnotprove native commandcompletion. Workforce/assertion/representation/preferences/other selectedowners remain towork or preciselyqualify."
+    "WorkAssignment67/root HTTP declarations plus Evidence30 locallyverified6771unit/256focus/35HTTP/57directJev; scoped squashmerge next without CI wait.",
+    "ComplianceProgram127 frozen/current/asof history/native3 +98tests including root20; runtimeintake next. ProductClientService native3 active; oldAPI4 capacity/identity candidates awaiting rootqualification.",
+    "TenantManagerGuard31 frozen after3 genuineoldAPI failures; available/live/selected authority and full external history. TypeIICalendar compact active/selected authority assigned next.",
+    "AuditPopulationnative6/compactcurrent/fullhistory active after7 genuineoldAPI failures; additional lifetimecap candidate awaitsrootqualification. Evidence generic16MiB responsebody bound remains explicit.",
+    "Root WorkDigestPreference native1 offline13path draft after3 genuineoldAPI failures. WeeklySchedule capture/page/result journal remains unimplemented after explicitplacementcorrection and3genuineoldAPI cases.",
+    "Fresh selected-signature finite-owner70candidate triage remains source/behavior work; workforce/assertion/representation/other selectedowners to implement or preciselyqualify. No new GitHubissues."
   ]
 }

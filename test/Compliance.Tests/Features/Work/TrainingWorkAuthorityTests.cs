@@ -98,7 +98,7 @@ public sealed class TrainingWorkAuthorityTests
         var item = Assert.Single(queue.Items);
 
         // Act
-        var result = await fixture.Scenario(fixture.OwnerUserId).When(new AssignWorkItem(
+        var result = await fixture.Scenario(fixture.OwnerUserId).When(new AssignWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0, fixture.LearnerMemberId))
             .ExpectFailure(RequestErrorKind.Validation);
 
@@ -114,7 +114,7 @@ public sealed class TrainingWorkAuthorityTests
         var item = Assert.Single((await fixture.QueueAsync(fixture.OwnerUserId)).Items);
 
         // Act
-        var assigned = await fixture.Scenario(fixture.OwnerUserId).When(new DelegateWorkItem(
+        var assigned = await fixture.Scenario(fixture.OwnerUserId).When(new DelegateWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0,
             fixture.OtherManagerMemberId, "Another manager reviews the proof."))
             .ExpectSuccess();
@@ -162,7 +162,7 @@ public sealed class TrainingWorkAuthorityTests
         // Act
         await fixture.Scenario(fixture.LearnerUserId).When(new GetWorkItem(fixture.TenantId,
             fixture.ProgramId, item.WorkItemId)).ExpectSuccess();
-        var claim = await fixture.Scenario(fixture.LearnerUserId).When(new ClaimWorkItem(
+        var claim = await fixture.Scenario(fixture.LearnerUserId).When(new ClaimWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0))
             .ExpectFailure(RequestErrorKind.Validation);
         var recorded = await fixture.AcknowledgeHttpAsync(fixture.Acknowledgement(), fixture.LearnerUserId);
@@ -253,7 +253,7 @@ public sealed class TrainingWorkAuthorityTests
         var item = Assert.Single((await fixture.QueueAsync(fixture.OwnerUserId)).Items);
 
         // Act
-        var result = await fixture.Scenario(fixture.OwnerUserId).When(new AssignWorkItem(
+        var result = await fixture.Scenario(fixture.OwnerUserId).When(new AssignWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0, fixture.LearnerMemberId))
             .ExpectFailure(RequestErrorKind.Validation);
 

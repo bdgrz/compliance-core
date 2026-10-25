@@ -58,11 +58,9 @@ public sealed class AccessReviewWorkQueueVisibilityTests
             scenario.Fixture.ProgramId,
             new OperationsActor(actorUserId, actorMemberId, actorOwnsWork ? "Owner" : "Lead"),
             scenario.Source.Candidate.WorkItemId, CancellationToken.None);
-        var assignmentHandler = new AssignWorkItemHandler(
-            scenario.Scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
-            scenario.CreateQueue(), TimeProvider.System);
+        var assignmentHandler = AssignmentHandler(scenario);
         var assignment = await assignmentHandler.HandleAsync(new RequestContext<AssignWorkItem>(
-            new AssignWorkItem(scenario.Fixture.TenantId, scenario.Fixture.ProgramId,
+            new AssignWorkItem(Uuid.CreateVersion4(), scenario.Fixture.TenantId, scenario.Fixture.ProgramId,
                 scenario.Source.Candidate.WorkItemId, 0, scenario.Fixture.OwnerMemberId),
             ProgramManagementServices.Actor(scenario.Fixture.LeadUserId)), CancellationToken.None);
 
@@ -92,13 +90,11 @@ public sealed class AccessReviewWorkQueueVisibilityTests
             new RequestContext<GetWorkItem>(new GetWorkItem(scenario.Fixture.TenantId,
                 scenario.Fixture.ProgramId, scenario.Source.Candidate.WorkItemId), actor),
             CancellationToken.None);
-        var assignmentHandler = new AssignWorkItemHandler(
-            scenario.Scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
-            scenario.CreateQueue(), TimeProvider.System);
+        var assignmentHandler = AssignmentHandler(scenario);
 
         // Act
         var assignment = await assignmentHandler.HandleAsync(new RequestContext<AssignWorkItem>(
-            new AssignWorkItem(scenario.Fixture.TenantId, scenario.Fixture.ProgramId,
+            new AssignWorkItem(Uuid.CreateVersion4(), scenario.Fixture.TenantId, scenario.Fixture.ProgramId,
                 scenario.Source.Candidate.WorkItemId, 0, scenario.Fixture.OwnerMemberId),
             actor), CancellationToken.None);
 
@@ -199,6 +195,17 @@ public sealed class AccessReviewWorkQueueVisibilityTests
                 scenario.Fixture.ProgramId, "all", Search: "restricted payroll"),
                 ProgramManagementServices.Actor(actorUserId)), CancellationToken.None);
 
+    static AssignWorkItemHandler AssignmentHandler(QueueScenario scenario)
+    {
+        var services = scenario.Scope.ServiceProvider;
+        var queue = scenario.CreateQueue();
+        return new AssignWorkItemHandler(new WorkAssignmentOperations(services.GetRequiredService<Bdgrz.Compliance.Features.NativeOperations.NativeOperationExecutor>(),
+            services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<WorkAssignmentReader>(), queue,
+            new WorkAssignmentAuthorization(queue, services.GetRequiredService<AccessReviewReader>(),
+                services.GetRequiredService<Bdgrz.Compliance.Features.PolicyDistribution.PolicyAcknowledgementRecorderGuard>()),
+            services.GetRequiredService<Bdgrz.Compliance.Features.Content.IImmutableContentStore>(), TimeProvider.System));
+    }
+
     static async Task<QueueScenario> CreateScenarioAsync(bool allowSystemRead,
         bool requiresSeparationOfDutiesWaiver = false,
         string workKind = WorkSource.AccessReviewReview)
@@ -229,7 +236,7 @@ public sealed class AccessReviewWorkQueueVisibilityTests
             aggregateReader);
         var eligibility = new AccessReviewQueueEligibility(aggregateReader, permissions,
             permissions, visibility);
-        WorkQueueReader CreateQueue() => new(aggregateReader,
+        WorkQueueReader CreateQueue() => new(aggregateReader, services.GetRequiredService<WorkAssignmentReader>(),
             services.GetRequiredService<Bdgrz.Compliance.Features.Controls.ControlReader>(),
             services.GetRequiredService<Bdgrz.Compliance.Features.Policies.PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,

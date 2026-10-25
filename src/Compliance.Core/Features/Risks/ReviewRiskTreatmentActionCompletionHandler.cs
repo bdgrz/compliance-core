@@ -176,8 +176,8 @@ public sealed class ReviewRiskTreatmentActionCompletionHandler(NativeOperationEx
         var workItemId = WorkSource.RiskTreatmentActionReviewWorkItemId(request.ProgramId, request.RiskId, request.ActionId, submissionId);
         var assignment = await reader.HydrateAsync(new WorkItemAssignment(request.TenantId, request.ProgramId,
             workItemId), ct).ConfigureAwait(false);
-        var assigned = assignment.Read().AssigneeMemberId == actor.MemberId;
-        if (!assigned && assignment.Read().Revision == 0)
+        var assigned = assignment.AssigneeMemberId == actor.MemberId;
+        if (!assigned && assignment.Revision == 0)
         {
             var legacy = await reader.HydrateAsync(new LegacyWorkAssignmentLedger(request.TenantId, request.ProgramId),
                 ct).ConfigureAwait(false);

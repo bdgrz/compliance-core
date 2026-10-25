@@ -50,6 +50,14 @@ static class ProgramManagementServices
         collection.AddScoped<IndependenceRuleCatalogReader>();
         collection.AddScoped<IndependenceRuleRatificationReader>();
         collection.AddScoped<IndependenceRuleCatalogOperations>();
+        collection.AddScoped<Bdgrz.Compliance.Features.AccessReviews.AccessReviewManifests>();
+        collection.AddScoped<Bdgrz.Compliance.Features.AccessReviews.AccessReviewReader>();
+        collection.AddScoped<ClientManagementIndependenceGuard>();
+        collection.AddScoped<Bdgrz.Compliance.Features.PolicyDistribution.PolicyAcknowledgementRecorderGuard>();
+        collection.AddScoped<LegacyWorkAssignmentHistory>();
+        collection.AddScoped<WorkAssignmentReader>();
+        collection.AddScoped<WorkAssignmentAuthorization>();
+        collection.AddScoped<WorkAssignmentOperations>();
         collection.AddScoped<WorkDigestHistoryReader>();
         collection.AddScoped<WorkDigestRetryOperations>();
         collection.AddScoped<ControlOperationsReader>();
@@ -84,6 +92,7 @@ static class ProgramManagementServices
         collection.AddVerifiedPracticeCommitmentReader();
         collection.AddVerifiedServiceEngagementReader();
         collection.AddVerifiedWorkDigestReader();
+        collection.AddVerifiedWorkAssignmentReader();
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 

@@ -1,3 +1,4 @@
+using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Risks;
@@ -28,7 +29,7 @@ public sealed class RiskActionWorkIdentityTests
             fixture.Submit(first.ActionId, 1, [evidence]) with { CommandId = submission });
         var queue = await fixture.Scenario(fixture.AssessorUserId).When(new ListWork(fixture.TenantId, fixture.ProgramId, "all")).ExpectSuccess();
         var item = Assert.Single(queue.Value.Items, work => work.Kind == WorkSource.RiskTreatmentActionReview && work.SourceId == submission);
-        await fixture.Scenario(fixture.AssessorUserId).When(new AssignWorkItem(fixture.TenantId, fixture.ProgramId,
+        await fixture.Scenario(fixture.AssessorUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             item.WorkItemId, item.AssignmentRevision, reviewer.MemberId, "Review Action A only.")).ExpectSuccess();
         await PersonalRiskSignoffTransportTests.HttpAsync(provider, fixture.AssessorUserId,
             fixture.Submit(second.ActionId, 1, [evidence]) with { CommandId = submission });
@@ -97,12 +98,12 @@ public sealed class RiskActionWorkIdentityTests
         await PersonalRiskSignoffTransportTests.HttpAsync(provider, fixture.AssessorUserId,
             fixture.Submit(action.ActionId, 1, [evidence]) with { CommandId = submission });
         var oldId = WorkSource.RiskTreatmentWorkItemId(fixture.ProgramId, fixture.RiskId, submission, WorkSource.RiskTreatmentActionReview);
-        await ProgramManagementServices.SeedAsync(provider, new WorkItemAssignment(fixture.TenantId, fixture.ProgramId, oldId), assignment =>
-        {
-            Assert.Null(assignment.AssignTo(0, WorkItemAssignment.Assign, reviewer.MemberId, null, "Old unscoped assignment.",
-                ActorReference.ForMember(RbacIds.Member(fixture.TenantId, fixture.AssessorUserId), "Lead"), DateTimeOffset.UtcNow));
-            return Result.Success;
-        });
+        var oldOwner = new WorkItemAssignment(fixture.TenantId, fixture.ProgramId, oldId);
+        var oldAssignment = DomainEventSeed.Attach(new WorkItemAssigned(fixture.TenantId, fixture.ProgramId, oldId,
+            1, WorkItemAssignment.Assign, reviewer.MemberId, null, "Old unscoped assignment.",
+            ActorReference.ForMember(RbacIds.Member(fixture.TenantId, fixture.AssessorUserId), "Lead"), DateTimeOffset.UtcNow),
+            oldOwner.Id, 1);
+        await provider.GetRequiredService<IEventStore>().AppendAsync(oldOwner.Stream, 0, [oldAssignment]);
 
         // Act
         var refused = await PersonalRiskSignoffTransportTests.HttpAsync(provider, reviewer.UserId,

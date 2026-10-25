@@ -76,6 +76,7 @@ static class AccessReviewCampaignWork
             excluded, state.LaunchedAt)
         {
             ProgramId = state.ProgramId,
+            AccessReviewCampaignId = state.CampaignId,
             RestrictedSystemInstanceId = state.SystemInstanceId,
             RequiresSeparationOfDutiesWaiver = requiresWaiver,
         };

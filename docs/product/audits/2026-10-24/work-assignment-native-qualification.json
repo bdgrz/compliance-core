@@ -1,0 +1,70 @@
+{
+  "base": "5887b54da690b373153a796e009ad7b297dc2f21",
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictReleaseBuildWarnings": 0,
+    "strictReleaseBuildErrors": 0,
+    "focusedPassed": 256,
+    "unitPassed": 6771,
+    "unitFailed": 0,
+    "unitSkipped": 0,
+    "newHttpPassed": 7,
+    "httpIncludingHostSmokePassed": 35,
+    "nodePassed": 24,
+    "coverageExport": "pass1",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass historicalcatalog counters notcurrentcompletion",
+    "format": "pass",
+    "productionFilesJevReviewed": 57,
+    "highProbabilityFileSignals": 0,
+    "allCurrentAggregateHandlerReactorReviewed": 940,
+    "currentOwnerReviewsRefreshed": 3
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "integration": {
+      "decision": {
+        "type": "choice",
+        "choice": "merge_scoped_repair",
+        "confidence": 0.61,
+        "probabilities": {
+          "merge_scoped_repair": 0.74,
+          "refine_before_merge": 0.24,
+          "blocked_by_missing_authority": 0.02
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.35
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.2
+      }
+    },
+    "adopted": "Squash merge scoped repair without waiting CI under explicit user waiver; continue remaining unblocked owners."
+  },
+  "ci": "Not awaited per explicit user instruction. Local evidence is not deployment or live broker qualification.",
+  "scope": "Four authored WorkAssignment native commands at exact per-item owner; compact current accountability and selected receipt; complete external history and original200 replay.",
+  "genuineOldApiRed": 4,
+  "wireChanges": [
+    "Claim/Assign/Delegate/Escalate required CommandId and identified request version2.",
+    "Identified PUT /work/{work_item_id}/claims|assignments|delegations|escalations/{command_id}; custom JSON body schemas and canonical route parameters declared; conflicting body identity fails400 and query does not override path.",
+    "MCP commands retain names and original typed result; marked idempotent."
+  ],
+  "authority": [
+    "Current active canonical member, actual source read/operating/management/Attest restrictions before original replay.",
+    "Current target eligibility/claimability/current assignee are fresh feasibility after no native receipt; actual original delegate result survives later assignment.",
+    "AccessReview frozen launch/item/system and real risk/policy/current person authorities retained; runtime source captures never persisted as authority."
+  ],
+  "history": [
+    "Complete raw payload and metadata/physical/native prefix validated. Immutable original result/envelope descriptors preserved. Unrelated successor body failure cannot erase earlier receipt; full history GET still verifies required bodies.",
+    "Exact complete old program-wide v1 ledger can be imported via immutable full history body and bounded reference event. No historycount cap or truncated response;257-entry test proves old589440byte inline failure removed.",
+    "Unknown per-item occupiedv1 histories remain unqualified; no silent migrated replay or receipt upgrade."
+  ],
+  "integrationRefinements": "See work-evidence-file-triage.json; no guard relaxed.",
+  "remaining": [
+    "Realm-wide operation binding and bare operation status unavailable under existing selected protocol.",
+    "No atomic cross-source held-permit or persisted migration/deployment qualification."
+  ]
+}

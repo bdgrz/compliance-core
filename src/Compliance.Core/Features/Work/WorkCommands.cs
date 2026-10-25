@@ -1,4 +1,3 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
@@ -22,26 +21,6 @@ static class WorkCommands
         var (snapshot, entry) = found.Value;
         return await command(actor, snapshot, entry).ConfigureAwait(false);
     }
-
-    public static async ValueTask<Result<WorkItemDetailView>> ExecuteAsync<TRequest>(
-        IAggregateExecutor executor, IRequestContext<TRequest> context, Uuid tenantId,
-        Uuid programId, WorkQueueEntry entry, DateOnly today,
-        Func<WorkItemAssignment, CommandFailure?> command, CancellationToken ct)
-        where TRequest : IRequestBase =>
-        await executor.ExecuteAsync(new WorkItemAssignment(tenantId, programId,
-            entry.Candidate.WorkItemId), assignment =>
-        {
-            var failure = assignment.ImportLegacy(entry.LegacyState) ?? command(assignment);
-            var state = assignment.Read();
-            // A newly recorded assignee was validated as eligible; otherwise accountability is
-            // unchanged from the read.
-            var assignee = state.AssigneeMemberId != entry.State.AssigneeMemberId
-                ? state.AssigneeMemberId
-                : entry.Item.AssigneeMemberId;
-            return CommandFailureRequestAdapter.ToOutcome(failure, new WorkItemDetailView(
-                WorkQueueReader.Compose(entry.Candidate, state, assignee, today),
-                state.History));
-        }, context, ct).ConfigureAwait(false);
 
     public static Result<WorkItemDetailView> Fail(RequestErrorKind kind, string message) =>
         Result<WorkItemDetailView>.Failure(new RequestError(kind, message));

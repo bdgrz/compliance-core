@@ -395,10 +395,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ReassignAccessReviewResponsibility>(tool => tool.Idempotent())
         .AddMcpTool<ListWork>(tool => tool.ReadOnly())
         .AddMcpTool<GetWorkItem>(tool => tool.ReadOnly())
-        .AddMcpTool<ClaimWorkItem>()
-        .AddMcpTool<AssignWorkItem>()
-        .AddMcpTool<DelegateWorkItem>()
-        .AddMcpTool<EscalateWorkItem>()
+        .AddMcpTool<ClaimWorkItem>(tool => tool.Idempotent())
+        .AddMcpTool<AssignWorkItem>(tool => tool.Idempotent())
+        .AddMcpTool<DelegateWorkItem>(tool => tool.Idempotent())
+        .AddMcpTool<EscalateWorkItem>(tool => tool.Idempotent())
         .AddMcpTool<ListWorkReminders>(tool => tool.ReadOnly())
         .AddMcpTool<GetWorkDigest>(tool => tool.ReadOnly())
         .AddMcpTool<GetWorkDigestPreference>(tool => tool.ReadOnly())
@@ -1514,12 +1514,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Evidence requests");
-    app.MapPortiaPost<PrepareEvidenceRedaction, EvidenceRedactionView>(
-            "/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/preparations", config => config.OnNativeResult()).WithNativeFirstResponse<PrepareEvidenceRedaction>()
+    app.MapPortiaPut<PrepareEvidenceRedaction, EvidenceRedactionView>(
+            "/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/preparations/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<PrepareEvidenceRedaction>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Evidence redactions");
-    app.MapPortiaPost<ApproveEvidenceRedaction, EvidenceRedactionView>(
-            "/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/approvals", config => config.OnNativeResult()).WithNativeFirstResponse<ApproveEvidenceRedaction>()
+    app.MapPortiaPut<ApproveEvidenceRedaction, EvidenceRedactionView>(
+            "/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/approvals/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ApproveEvidenceRedaction>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Evidence redactions");
     app.MapPortiaGet<GetEvidenceRedaction, EvidenceRedactionView>(
@@ -1892,20 +1892,48 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Work");
-    app.MapPortiaPost<ClaimWorkItem, WorkItemDetailView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/claims", config => config.OnNativeResult()).WithNativeFirstResponse<ClaimWorkItem>()
+    app.MapPortiaPut<ClaimWorkItem, WorkItemDetailView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/claims/{command_id}", config => config
+                .OnBind(WorkAssignmentHttp.BindClaimAsync)
+                .Accepts<WorkAssignmentHttp.ClaimBody>("application/json", isOptional: false)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("work_item_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("command_id", PortiaHttpParameterLocation.Route, required: true)
+                .OnNativeResult()).WithNativeFirstResponse<ClaimWorkItem>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Work");
-    app.MapPortiaPost<AssignWorkItem, WorkItemDetailView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/assignments", config => config.OnNativeResult()).WithNativeFirstResponse<AssignWorkItem>()
+    app.MapPortiaPut<AssignWorkItem, WorkItemDetailView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/assignments/{command_id}", config => config
+                .OnBind(WorkAssignmentHttp.BindAssignAsync)
+                .Accepts<WorkAssignmentHttp.AssignBody>("application/json", isOptional: false)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("work_item_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("command_id", PortiaHttpParameterLocation.Route, required: true)
+                .OnNativeResult()).WithNativeFirstResponse<AssignWorkItem>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Work");
-    app.MapPortiaPost<DelegateWorkItem, WorkItemDetailView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/delegations", config => config.OnNativeResult()).WithNativeFirstResponse<DelegateWorkItem>()
+    app.MapPortiaPut<DelegateWorkItem, WorkItemDetailView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/delegations/{command_id}", config => config
+                .OnBind(WorkAssignmentHttp.BindDelegateAsync)
+                .Accepts<WorkAssignmentHttp.DelegateBody>("application/json", isOptional: false)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("work_item_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("command_id", PortiaHttpParameterLocation.Route, required: true)
+                .OnNativeResult()).WithNativeFirstResponse<DelegateWorkItem>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Work");
-    app.MapPortiaPost<EscalateWorkItem, WorkItemDetailView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/escalations", config => config.OnNativeResult()).WithNativeFirstResponse<EscalateWorkItem>()
+    app.MapPortiaPut<EscalateWorkItem, WorkItemDetailView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/escalations/{command_id}", config => config
+                .OnBind(WorkAssignmentHttp.BindEscalateAsync)
+                .Accepts<WorkAssignmentHttp.EscalateBody>("application/json", isOptional: false)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("work_item_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("command_id", PortiaHttpParameterLocation.Route, required: true)
+                .OnNativeResult()).WithNativeFirstResponse<EscalateWorkItem>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Work");
     app.MapPortiaGet<GetWorkDigestPreference, WorkDigestPreferenceView>(

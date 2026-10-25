@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
@@ -20,7 +21,7 @@ namespace Bdgrz.Compliance.Features.Work;
 ///     a member the source's separation of duties excludes. Scoped per request, it memoizes holder,
 ///     membership, and eligibility answers so each is hydrated at most once.
 /// </summary>
-public sealed class WorkQueueReader(IAggregateReader reader, ControlReader controlSources, PolicyReader policySources, OperatingAuthority authority,
+public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignmentReader assignments, ControlReader controlSources, PolicyReader policySources, OperatingAuthority authority,
     TimeProvider clock, WorkQueueReadConsistency queueConsistency,
     ICampaignDirectoryReader? campaigns = null,
     IBoundaryDirectoryReader? boundaries = null,
@@ -89,6 +90,21 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
     }
 
     async ValueTask<Result<WorkQueueSnapshot>> ReadAsync(Uuid tenantId, Uuid programId,
+        OperationsActor actor, int horizonDays, Uuid? workItemId,
+        DateOnly? todayOverride, CancellationToken ct)
+    {
+        try
+        {
+            return await ReadCoreAsync(tenantId, programId, actor, horizonDays, workItemId, todayOverride, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<WorkQueueSnapshot>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The work assignment history cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<WorkQueueSnapshot>> ReadCoreAsync(Uuid tenantId, Uuid programId,
         OperationsActor actor, int horizonDays, Uuid? workItemId,
         DateOnly? todayOverride, CancellationToken ct)
     {
@@ -175,9 +191,6 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
                 return Result<WorkQueueSnapshot>.Failure(decisions.Error);
             candidates.AddRange(decisions.Value);
         }
-        var legacyLedger = await reader.HydrateAsync(new LegacyWorkAssignmentLedger(tenantId,
-            programId), ct)
-            .ConfigureAwait(false);
         var manages = await authority.ManagesProgramAsync(tenantId, actor, programId, ct)
             .ConfigureAwait(false);
         var entries = new List<WorkQueueEntry>();
@@ -185,9 +198,9 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
         {
             var assignment = await reader.HydrateAsync(new WorkItemAssignment(tenantId,
                 programId, candidate.WorkItemId), ct).ConfigureAwait(false);
-            var currentState = assignment.Read();
+            var currentState = (await assignments.ReadAsync(assignment, ct).ConfigureAwait(false)).State;
             var legacyState = currentState.Revision == 0
-                ? legacyLedger.Read(candidate.WorkItemId)
+                ? (await assignments.ReadLegacyAsync(tenantId, programId, candidate.WorkItemId, ct).ConfigureAwait(false)).State
                 : WorkAssignmentState.Empty;
             var state = currentState.Revision == 0 ? legacyState : currentState;
             var accessReviewWork = AccessReviewCampaignWork.IsReview(candidate.Kind) ||
@@ -214,7 +227,7 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
                 oversees && !RiskAcceptanceWork.HasRestrictedAuthority(candidate) &&
                 (candidate.Kind != FindingClosureWork.Kind || eligible)))
                 entries.Add(new WorkQueueEntry(candidate, state, legacyState, item, eligible,
-                    inTeam));
+                    inTeam, assignment));
         }
         var ordered = entries
             .OrderBy(static entry => entry.Item.DueOn is null)

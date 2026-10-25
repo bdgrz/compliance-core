@@ -29,7 +29,7 @@ public sealed class RiskAcceptanceWorkCompositionTests
         // Act
         var list = await bus.SendAsync(new ListWork(tenant, program), RequestActor.Anonymous);
         var get = await bus.SendAsync(new GetWorkItem(tenant, program, work), RequestActor.Anonymous);
-        var assign = await bus.SendAsync(new AssignWorkItem(tenant, program, work, 0, Uuid.CreateVersion4()),
+        var assign = await bus.SendAsync(new AssignWorkItem(Uuid.CreateVersion4(), tenant, program, work, 0, Uuid.CreateVersion4()),
             RequestActor.Anonymous);
         var accept = await bus.SendAsync(new AcceptRisk(Uuid.CreateVersion4(), tenant, program, Uuid.CreateVersion4(), 3,
             Uuid.CreateVersion4(), "compliance_lead", DateTimeOffset.UtcNow.AddMonths(6), "Recorded rationale"),

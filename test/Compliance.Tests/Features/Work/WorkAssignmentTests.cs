@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Risks;
@@ -44,12 +45,12 @@ public sealed class WorkAssignmentTests
         var item = unassigned.Items[0];
         Assert.Null(item.AssigneeMemberId);
         await fixture.Scenario(fixture.OutsiderUserId)
-            .When(new ClaimWorkItem(fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0))
+            .When(new ClaimWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0))
             .ExpectFailure(RequestErrorKind.NotFound);
 
         // Act
         var claimed = await fixture.AsAsync(fixture.BackupUserId,
-            new ClaimWorkItem(fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0));
+            new ClaimWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0));
 
         // Assert
         Assert.Equal(fixture.BackupMemberId, claimed.Item.AssigneeMemberId);
@@ -57,7 +58,7 @@ public sealed class WorkAssignmentTests
         Assert.Equal("claim", entry.Action);
         Assert.Equal(fixture.BackupMemberId.ToString(), entry.By.Id);
         await fixture.Scenario(fixture.OwnerUserId)
-            .When(new ClaimWorkItem(fixture.TenantId, fixture.ProgramId, item.WorkItemId, 1))
+            .When(new ClaimWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, item.WorkItemId, 1))
             .ExpectFailure(RequestErrorKind.Conflict);
         var mine = await fixture.AsAsync(fixture.BackupUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId));
@@ -79,12 +80,12 @@ public sealed class WorkAssignmentTests
             new ListWork(fixture.TenantId, fixture.ProgramId))).Items);
 
         // Act
-        var performer = fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(
+        var performer = fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, review.WorkItemId, 0, fixture.OwnerMemberId));
 
         // Assert
         await performer.ExpectFailure(RequestErrorKind.Validation);
-        await fixture.Scenario(fixture.ReviewerUserId).When(new AssignWorkItem(fixture.TenantId,
+        await fixture.Scenario(fixture.ReviewerUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, review.WorkItemId, 0, fixture.ReviewerMemberId))
             .ExpectFailure(RequestErrorKind.Forbidden);
     }
@@ -110,15 +111,15 @@ public sealed class WorkAssignmentTests
             item => item.Kind == "risk_treatment_action_review");
 
         // Act
-        await fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(fixture.TenantId,
+        await fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, review.WorkItemId, 0, fixture.OwnerMemberId,
                 "Action owner cannot review own work."))
             .ExpectFailure(RequestErrorKind.Validation);
-        await fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(fixture.TenantId,
+        await fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, review.WorkItemId, 0, fixture.ReviewerMemberId,
                 "Reviewer has no scoped program-management grant."))
             .ExpectFailure(RequestErrorKind.Validation);
-        var assigned = await fixture.AsAsync(fixture.LeadUserId, new AssignWorkItem(
+        var assigned = await fixture.AsAsync(fixture.LeadUserId, new AssignWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, review.WorkItemId, 0,
             fixture.ApproverMemberId, "Independent completion review."));
         var reviewerQueue = await fixture.AsAsync(fixture.ApproverUserId,
@@ -150,7 +151,7 @@ public sealed class WorkAssignmentTests
             new ListWork(fixture.TenantId, fixture.ProgramId))).Items[0];
 
         // Act
-        var reassigned = await fixture.AsAsync(fixture.LeadUserId, new AssignWorkItem(
+        var reassigned = await fixture.AsAsync(fixture.LeadUserId, new AssignWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0, fixture.BackupMemberId,
             "Owner is on leave."));
 
@@ -160,10 +161,10 @@ public sealed class WorkAssignmentTests
         Assert.Equal("reassign", entry.Action);
         Assert.Equal(fixture.OwnerMemberId, entry.PreviousAssigneeMemberId);
         Assert.Equal(fixture.LeadMemberId.ToString(), entry.By.Id);
-        await fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(fixture.TenantId,
+        await fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, item.WorkItemId, 1, fixture.Member(fixture.OutsiderUserId)))
             .ExpectFailure(RequestErrorKind.Validation);
-        await fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(fixture.TenantId,
+        await fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, item.WorkItemId, 0, fixture.OwnerMemberId))
             .ExpectFailure(RequestErrorKind.Conflict);
     }
@@ -178,7 +179,7 @@ public sealed class WorkAssignmentTests
             new ListWork(fixture.TenantId, fixture.ProgramId))).Items[0];
 
         // Act
-        await fixture.AsAsync(fixture.LeadUserId, new AssignWorkItem(fixture.TenantId,
+        await fixture.AsAsync(fixture.LeadUserId, new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, item.WorkItemId, 0, fixture.BackupMemberId));
 
         // Assert
@@ -189,7 +190,7 @@ public sealed class WorkAssignmentTests
         await foreach (var record in fixture.Provider.GetRequiredService<IEventStore>()
                            .ReadAsync(stream, 0, CancellationToken.None))
             persisted.Add(record.Event);
-        Assert.IsType<WorkItemAssigned>(Assert.Single(persisted));
+        Assert.IsType<WorkItemAssignmentRecorded>(Assert.Single(persisted));
     }
 
     [Fact]
@@ -213,7 +214,7 @@ public sealed class WorkAssignmentTests
             new GetWorkItem(fixture.TenantId, fixture.ProgramId, item.WorkItemId));
 
         // Act
-        var delegated = await fixture.AsAsync(fixture.OwnerUserId, new DelegateWorkItem(
+        var delegated = await fixture.AsAsync(fixture.OwnerUserId, new DelegateWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, item.WorkItemId, 1,
             fixture.BackupMemberId, "Preserve the existing assignment history."));
         var reloaded = await fixture.AsAsync(fixture.BackupUserId,
@@ -237,8 +238,10 @@ public sealed class WorkAssignmentTests
                            .ReadAsync(stream, 0, CancellationToken.None))
             persisted.Add(record.Event);
         Assert.Equal(2, persisted.Count);
-        Assert.IsNotType<WorkItemAssigned>(persisted[0]);
-        Assert.Equal("delegate", Assert.IsType<WorkItemAssigned>(persisted[1]).Action);
+        Assert.IsType<WorkAssignmentLegacyHistoryImported>(persisted[0]);
+        var fact = Assert.IsType<WorkItemAssignmentRecorded>(persisted[1]);
+        var change = await fixture.Content.ReadJsonAsync<WorkAssignmentChangeContent>(fixture.TenantId.ToString(), fact.Change);
+        Assert.Equal("delegate", change.Entry.Action);
     }
 
     [Fact]
@@ -249,16 +252,16 @@ public sealed class WorkAssignmentTests
         await fixture.PlanAsync(backup: new OperatingHolder("member", fixture.BackupMemberId));
         var item = (await fixture.AsAsync(fixture.OwnerUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId))).Items[0];
-        await fixture.Scenario(fixture.OwnerUserId).When(new DelegateWorkItem(fixture.TenantId,
+        await fixture.Scenario(fixture.OwnerUserId).When(new DelegateWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, item.WorkItemId, 0, fixture.Member(fixture.OutsiderUserId),
                 "Busy."))
             .ExpectFailure(RequestErrorKind.Validation);
-        await fixture.Scenario(fixture.BackupUserId).When(new DelegateWorkItem(fixture.TenantId,
+        await fixture.Scenario(fixture.BackupUserId).When(new DelegateWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, item.WorkItemId, 0, fixture.BackupMemberId, "Mine now."))
             .ExpectFailure(RequestErrorKind.Forbidden);
 
         // Act
-        var delegated = await fixture.AsAsync(fixture.OwnerUserId, new DelegateWorkItem(
+        var delegated = await fixture.AsAsync(fixture.OwnerUserId, new DelegateWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0, fixture.BackupMemberId,
             "Travelling this week."));
 
@@ -280,14 +283,14 @@ public sealed class WorkAssignmentTests
             new ListWork(fixture.TenantId, fixture.ProgramId))).Items);
 
         // Act
-        var escalated = await fixture.AsAsync(fixture.OwnerUserId, new EscalateWorkItem(
+        var escalated = await fixture.AsAsync(fixture.OwnerUserId, new EscalateWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0, "Blocked by vendor."));
 
         // Assert
         Assert.True(escalated.Item.Escalated);
         Assert.Equal("member", escalated.Item.EscalatedBy);
         Assert.Equal(fixture.OwnerMemberId, escalated.Item.AssigneeMemberId);
-        await fixture.Scenario(fixture.OwnerUserId).When(new EscalateWorkItem(fixture.TenantId,
+        await fixture.Scenario(fixture.OwnerUserId).When(new EscalateWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, item.WorkItemId, 1, "Again."))
             .ExpectFailure(RequestErrorKind.Conflict);
         var lead = await fixture.AsAsync(fixture.LeadUserId,
@@ -312,7 +315,7 @@ public sealed class WorkAssignmentTests
         var item = Assert.Single(lead.Items);
         Assert.Equal("system", item.EscalatedBy);
         Assert.Equal(fixture.OwnerMemberId, item.AssigneeMemberId);
-        await fixture.Scenario(fixture.OwnerUserId).When(new EscalateWorkItem(fixture.TenantId,
+        await fixture.Scenario(fixture.OwnerUserId).When(new EscalateWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, item.WorkItemId, 0, "Duplicate."))
             .ExpectFailure(RequestErrorKind.Conflict);
     }
@@ -360,11 +363,11 @@ public sealed class WorkAssignmentTests
         var item = (await fixture.AsAsync(fixture.OwnerUserId,
                 new ListWork(fixture.TenantId, fixture.ProgramId))).Items
             .First(work => work.DueOn >= fixture.Today);
-        await fixture.AsAsync(fixture.OwnerUserId, new EscalateWorkItem(fixture.TenantId,
+        await fixture.AsAsync(fixture.OwnerUserId, new EscalateWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, item.WorkItemId, 0, "Blocked."));
 
         // Act
-        var reassigned = await fixture.AsAsync(fixture.LeadUserId, new AssignWorkItem(
+        var reassigned = await fixture.AsAsync(fixture.LeadUserId, new AssignWorkItem(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, item.WorkItemId, 1, fixture.BackupMemberId));
 
         // Assert

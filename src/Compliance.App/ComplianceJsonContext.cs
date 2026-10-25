@@ -74,4 +74,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(EvidenceArtifactContent))]
 [JsonSerializable(typeof(EvidenceCapture))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkDigestRetryHttpBody))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.ClaimBody))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.AssignBody))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.DelegateBody))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.EscalateBody))]
 sealed partial class ComplianceJsonContext : JsonSerializerContext;

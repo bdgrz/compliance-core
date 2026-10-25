@@ -7,18 +7,27 @@ sealed class EvidenceRedactionSources(EvidenceArtifactReadAccess access, Evidenc
     public async ValueTask<Result<EvidenceRedactionSourcePair>> CaptureAsync(IRequestContext context, Uuid tenantId,
         Uuid originalId, Uuid derivedId, CancellationToken ct)
     {
-        foreach (var id in new[] { originalId, derivedId })
-        {
-            var allowed = await access.RequireAsync(context, tenantId, id, ct).ConfigureAwait(false);
-            if (!allowed.IsSuccess)
-                return Result<EvidenceRedactionSourcePair>.Failure(allowed.Error);
-        }
+        var allowed = await RequireAccessAsync(context, tenantId, originalId, derivedId, ct).ConfigureAwait(false);
+        if (!allowed.IsSuccess)
+            return Result<EvidenceRedactionSourcePair>.Failure(allowed.Error!);
         var original = await read.GetCapturedAsync(tenantId, originalId, ct).ConfigureAwait(false);
         if (!original.IsSuccess)
             return Result<EvidenceRedactionSourcePair>.Failure(original.Error);
         var derived = await read.GetCapturedAsync(tenantId, derivedId, ct).ConfigureAwait(false);
         return derived.IsSuccess ? Result<EvidenceRedactionSourcePair>.Success(new(original.Value, derived.Value)) :
             Result<EvidenceRedactionSourcePair>.Failure(derived.Error);
+    }
+
+    public async ValueTask<Result> RequireAccessAsync(IRequestContext context, Uuid tenantId,
+        Uuid originalId, Uuid derivedId, CancellationToken ct)
+    {
+        foreach (var id in new[] { originalId, derivedId })
+        {
+            var allowed = await access.RequireAsync(context, tenantId, id, ct).ConfigureAwait(false);
+            if (!allowed.IsSuccess)
+                return allowed;
+        }
+        return Result.Success;
     }
 
     public async ValueTask<Result> CheckAsync(IRequestContext context, EvidenceRedactionSourcePair pair, CancellationToken ct)

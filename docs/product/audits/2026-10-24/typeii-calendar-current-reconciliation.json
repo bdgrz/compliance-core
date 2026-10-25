@@ -1,0 +1,152 @@
+{
+  "status": "STALE_QUEUED_MARKER_ALREADY_IMPLEMENTED",
+  "scope": "typeii-calendar-compact-authority",
+  "noProductionPatchNecessary": true,
+  "currentSourceFiles": {
+    "owner": {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+      "sha256": "4a952d1b395d1c827855c993b94bdcac5b6ac0261c2f22d32ffdab09f655c66a"
+    },
+    "authority": {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarAuthority.cs",
+      "sha256": "579d27f444a7858d41bbd5e67c8a738cda81251635fb5c826babdc2ef5dd139e"
+    },
+    "history": {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarHistoryNode.cs",
+      "sha256": "ab32196253dc74e529796f782d21a82b0e93d358d14d07c92258f4b6380e417a"
+    },
+    "reader": {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReader.cs",
+      "sha256": "03a23aea73ba0d79a374d725e626c4a6542a57808d41005d73b88e8e8a718b39"
+    },
+    "content": {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarContent.cs",
+      "sha256": "3051ee85e01cdb3ce1851e22f21792d3921ea1bf6baafd6edc9f4de84626ed7a"
+    },
+    "verifier": {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarNativeHistory.cs",
+      "sha256": "89ad7f308e8658558dd5b7a39c3fc5386c4dc4f6cb7d86e9925ffddccf210d6a"
+    },
+    "installed": {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarAggregateReader.cs",
+      "sha256": "7601979e71a1e528b01cfd4fe654f9e866d4a236897c48bbdbd4204a26aaf173"
+    },
+    "retentionTest": {
+      "path": "test/Compliance.Tests/Features/Operations/TypeIICalendarCompactionTests.cs",
+      "sha256": "8199c617b1c201eb4f06bbfef55a4f2b00cc29644e44a682d183fdd6b4bb858a"
+    },
+    "nativeTests": {
+      "path": "test/Compliance.Tests/Features/Operations/TypeIICalendarNativeHistoryTests.cs",
+      "sha256": "9ef8fdd9eba3d87fb626a5199dfb0ec70c77dd148c9221af5ee17e765df63c3d"
+    },
+    "malformedTests": {
+      "path": "test/Compliance.Tests/Features/Operations/TypeIICalendarMalformedHistoryTests.cs",
+      "sha256": "05046578efeb98a604460f2bba610b4fabcd17d897c2cc8b1dcad848e3349464"
+    },
+    "qualification": {
+      "path": "docs/product/audits/2026-10-24/calendar-qualification.json",
+      "sha256": "52966e654ebcde27fb09d916a3a3a5ecb9ac3a96c69904028c7b19e107b0c2c4"
+    },
+    "ledger": {
+      "path": "docs/product/audits/2026-10-24/review-blockers.json",
+      "sha256": "2a5ec961c95e81f14fe7bdd5497c98c0edd5cc22bdb827cb22f76f7bcb15d327"
+    }
+  },
+  "evidence": [
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+      "line": 23,
+      "finding": "Owner fields are selected NativeAcceptance, scalar Header, immutable CurrentAuthority reference and NativeSequence; no reservation/fence/terminal collection remains."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarAuthority.cs",
+      "line": 7,
+      "finding": "Current immutable body contains all Live ranges and linked ReleasedHistory plus terminal count; terminal entries are separate immutable nodes."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarContent.cs",
+      "line": 31,
+      "finding": "Select verifies ordered immutable chain membership or fully exhausted absence for explicit operation root; missing history is never absence."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarContent.cs",
+      "line": 91,
+      "finding": "Append preparation independently rebuilds exact business decision from every live range plus required roots, and verifies physical content digest/length and next current/history bytes."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReader.cs",
+      "line": 18,
+      "finding": "Reader validates all native transitions transiently, compares exact full live and selected terminal bodies, returns only current live plus selected roots."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarNativeHistory.cs",
+      "line": 13,
+      "finding": "Full external native verifier replays guarded Authorize/Settle and checks every header/count, exact physical+metadata/native cut and selected metadata. Lifetime dictionary is local transient proof, not owner state."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarAggregateReader.cs",
+      "line": 9,
+      "finding": "Installed reader runs native history verification on executor hydration, including accepted child retries without older immutable body reads."
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Operations/TypeIICalendarCompactionTests.cs",
+      "line": 13,
+      "finding": "Existing behavioral test executes32 real StartPeriod -> FreezeClose -> ObservationPeriodCloseFrozen release flows, then asserts no retained owner collections and exact original selected authorization/settlement metadata."
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Operations/TypeIICalendarNativeHistoryTests.cs",
+      "line": 23,
+      "finding": "Existing cases cover unavailable/corrupt terminal chain membership and absence, fail closed without append; original accepted acquisition replays despite later current body unavailable/corrupt."
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Operations/TypeIICalendarMalformedHistoryTests.cs",
+      "line": 20,
+      "finding": "Existing full-history regressions cover malformed unselected history, executor delegate exclusion, and accepted retry rejection."
+    }
+  ],
+  "archivedValidation": {
+    "newGitHubIssuesPermitted": false,
+    "scope": "Compact TypeIIObservationCalendar current/selected authority and immutable terminal history; full transient exact-cut raw validation at reads/retries/executor hydration.",
+    "validation": {
+      "originalBoundednessRedFailed": 1,
+      "malformedHistoryRedFailed": 6,
+      "strictBuildWarnings": 0,
+      "focusedPassed": 98,
+      "productionHttpPassed": 4,
+      "backendUnitPassed": 5910,
+      "backendUnitFailed": 0,
+      "nodeTestsPassed": 24,
+      "format": "pass",
+      "aggregateSpec": "pass",
+      "implementationCoverage": "pass"
+    },
+    "review": {
+      "model": "jev-1.14.0",
+      "files": 22,
+      "signalsTriaged": 1,
+      "mergeProbability": 0.85,
+      "adopted": "merge scoped repair; continue owner batches"
+    },
+    "parentRefinements": [
+      "Replaced strict xUnit2029 empty filtered assertion in old-API and migrated regression; preserved exact old-API RED in recovery.",
+      "Preserved formatted RED when composing migrated tests; fixed missing Kernel namespace import for explicit body digest comparison.",
+      "Adversarial review found compact header replay missed malformed unselected history. Six real current-read/executor/accepted-retry REDs reproduced, then exact raw transition validator + production reader decorator + current/selected body comparison passed. No old immutable body read was added before accepted retry.",
+      "Future SourceUse decorator shared variant explicitly layers original\u2192calendar\u2192source-use via distinct opaque keys."
+    ],
+    "qualification": [
+      "Actual first-authorized and terminal native facts/metadata survive released/fenced historical selection. Missing chain never proves absence.",
+      "Full transient replay/chain work is O(N); returned owner/current read state is bounded by live+selected. No SDK infrastructure memory or constant-time claim.",
+      "Native calendar fact schemas advance to v2. No retained-v1 converter, reset, deployed stream rebuild or broker qualification.",
+      "Original HTTP202, authorization, root actor/gate/FirstOwner and nullable child result semantics retained.",
+      "No deployment or new cross-owner authority contract."
+    ]
+  },
+  "delivery": {
+    "ledgerId": "typeii-calendar-native",
+    "pullRequest": 1115,
+    "mergeCommit": "d3ad9fd6ea4a4c853b7892dca45db78442bfd631",
+    "qualificationArtifact": "docs/product/audits/2026-10-24/calendar-qualification.json"
+  },
+  "requestedLedgerRepair": "Reconcile stale queued_unblocked typeii-calendar-compact-authority with already merged typeii-calendar-native record; preserve v1 persistence/linear transient read qualification. No newly executed test/CI claim.",
+  "boundary": "Read-only current source/previous committed qualification audit; no .NET/Git/main/Jev/issue/worktree changes; no invented failing regression against already passing compact implementation."
+}

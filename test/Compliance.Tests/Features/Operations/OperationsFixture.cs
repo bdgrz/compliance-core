@@ -67,7 +67,8 @@ sealed class OperationsFixture
 
     public Uuid Member(Uuid userId) => RbacIds.Member(TenantId, userId);
 
-    public static async Task<OperationsFixture> CreateAsync(Func<IProcessRecordStore, IProcessRecordStore>? processStore = null)
+    public static async Task<OperationsFixture> CreateAsync(Func<IProcessRecordStore, IProcessRecordStore>? processStore = null,
+        Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
     {
         var permissions = new ManagerPermissions();
         var boundaries = new ProgramBoundaries();
@@ -152,6 +153,9 @@ sealed class OperationsFixture
                     new ProcessCatalog(provider.GetServices<ProcessDefinition>()));
                 services.AddScoped<ProcessDriver>();
                 services.AddScoped<ProcessRootReaction>();
+                if (configureContent is not null)
+                    services.AddSingleton<IImmutableContentStore>(configureContent(new FitzKvImmutableContentStore(
+                        new PersistenceKvClient(new InMemoryKvClient()))));
                 services.AddScoped<WorkQueueReader>();
                 services.AddScoped<WorkQueueReadConsistency>();
                 services.AddSingleton<IDomainEventReader>(provider =>

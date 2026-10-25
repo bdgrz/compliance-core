@@ -112,7 +112,7 @@ public sealed class RiskAcceptanceWorkAuthorityTests
         var before = await fixture.Scenario(fixture.Operations.ApproverUserId).When(new ListWork(
             fixture.Operations.TenantId, fixture.Operations.ProgramId, "unassigned")).ExpectSuccess();
         var item = Assert.Single(before.Value.Items);
-        await fixture.Scenario(fixture.Operations.ApproverUserId).When(new AssignWorkItem(
+        await fixture.Scenario(fixture.Operations.ApproverUserId).When(new AssignWorkItem(Uuid.CreateVersion4(),
             fixture.Operations.TenantId, fixture.Operations.ProgramId, item.WorkItemId, 0,
             fixture.GuestMemberId)).ExpectSuccess();
         if (management)

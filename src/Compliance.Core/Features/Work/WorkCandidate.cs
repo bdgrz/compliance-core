@@ -15,6 +15,9 @@ public sealed record WorkCandidate(Uuid WorkItemId, string Kind, Uuid SourceId, 
     /// <summary>The owning Program of a source candidate, when the source carries one.</summary>
     public Uuid? ProgramId { get; init; }
 
+    /// <summary>Exact immutable campaign scope for access-review source visibility, including after completion.</summary>
+    public Uuid? AccessReviewCampaignId { get; init; }
+
     /// <summary>Current source system whose visibility must be checked for each actor read.</summary>
     public Uuid? RestrictedSystemInstanceId { get; init; }
 

@@ -1,180 +1,145 @@
-using System.Text.Json;
-using System.Security.Cryptography;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evidence;
 
-/// <summary>Retains declared derivative lineage; it never transforms or discloses content.</summary>
+/// <summary>Owns the current exact preparation and independent approval; complete history lives outside the command owner.</summary>
 public sealed class EvidenceRedaction : Aggregate
 {
-    const int MaximumHistory = 100;
     readonly Uuid _tenantId;
-    readonly List<EvidenceRedactionPreparationFact> _preparations = [];
-    readonly List<EvidenceRedactionApprovalFact> _approvals = [];
+    DomainEvent? _selectedLegacy;
     DateTimeOffset _lastChangedAt;
+    bool _emitting;
 
-    public long Revision { get; private set; }
-    public EvidenceRedactionPreparationFact? CurrentPreparation => _preparations.LastOrDefault();
-    public IReadOnlyList<EvidenceRedactionPreparationFact> Preparations => Array.AsReadOnly(_preparations.ToArray());
-    public IReadOnlyList<EvidenceRedactionApprovalFact> Approvals => Array.AsReadOnly(_approvals.ToArray());
-    public EvidenceRedactionApprovalFact? CurrentApproval => _approvals.LastOrDefault(approval => approval.PreparationId == CurrentPreparation?.PreparationId);
-
-    public EvidenceRedaction(Uuid tenantId, Uuid redactionId)
+    public EvidenceRedaction(Uuid tenantId, Uuid redactionId, Uuid selectedCommandId = default)
         : base(redactionId, new EventStreamAddress(tenantId.ToString(), "evidence-redactions", redactionId.ToString()))
     {
         _tenantId = tenantId;
-        On<EvidenceRedactionPrepared>(Apply);
-        On<EvidenceRedactionApproved>(Apply);
+        // A logical id cannot cross preparation/approval kinds on this owner.
+        Acceptance = new NativeAcceptance(selectedCommandId);
+        On<EvidenceRedactionPrepared>(ev => ApplyPreparation(ev, ev.TenantId, ev.RedactionId, ev.ExpectedRevision, ev.Preparation));
+        On<EvidenceRedactionApproved>(ev => ApplyApproval(ev, ev.TenantId, ev.RedactionId, ev.ExpectedRevision, ev.Approval));
+        On<EvidenceRedactionPreparedV2>(ev => ApplyPreparation(ev, ev.TenantId, ev.RedactionId, ev.ExpectedRevision, ev.Preparation));
+        On<EvidenceRedactionApprovedV2>(ev => ApplyApproval(ev, ev.TenantId, ev.RedactionId, ev.ExpectedRevision, ev.Approval));
     }
 
-    internal Result<EvidenceRedactionPreparationFact> Prepare(Uuid requestId, long expectedRevision,
-        EvidenceRedactionSourceCapsule original, EvidenceRedactionSourceCapsule derived,
-        string provenance, string reason, ActorReference actor, DateTimeOffset preparedAt)
+    public long Revision { get; private set; }
+    public EvidenceRedactionPreparationFact? CurrentPreparation { get; private set; }
+    public EvidenceRedactionApprovalFact? CurrentApproval { get; private set; }
+    internal DomainEvent? CurrentPreparationFact { get; private set; }
+    internal NativeAcceptance Acceptance { get; }
+    internal EvidenceRedactionReplayCut ReplayCut { get; } = new();
+    internal bool HasSelectedLegacy => _selectedLegacy is not null;
+    internal DomainEvent? SelectedLegacyFact => _selectedLegacy;
+    internal DateTimeOffset LastChangedAt => _lastChangedAt;
+    internal Uuid TenantId => _tenantId;
+
+    internal Result<EvidenceRedactionPreparationFact> DecidePrepare(Uuid commandId, long expectedRevision,
+        EvidenceRedactionSourceCapsule original, EvidenceRedactionSourceCapsule derived, string provenance,
+        string reason, ActorReference actor, DateTimeOffset at) =>
+        EvidenceRedactionRules.Prepare(_tenantId, Id, Revision, CurrentPreparation, _lastChangedAt, commandId,
+            expectedRevision, original, derived, provenance, reason, actor, at);
+
+    internal Result<EvidenceRedactionApprovalFact> DecideApprove(Uuid commandId, long expectedRevision,
+        Uuid preparationId, long preparedRevision, ulong derivedPosition, ActorReference actor, DateTimeOffset at,
+        DateTimeOffset availableAt, EvidenceRedactionWaiverSnapshot? waiver) =>
+        EvidenceRedactionRules.Approve(_tenantId, Id, Revision, CurrentPreparation, CurrentApproval, _lastChangedAt,
+            commandId, expectedRevision, preparationId, preparedRevision, derivedPosition, actor, at, availableAt, waiver);
+
+    internal Result Append(DomainEvent fact, EvidenceRedactionPreparedCut cut)
     {
-        provenance = provenance?.Trim() ?? "";
-        reason = reason?.Trim() ?? "";
-        if (!ValidIdentity(original) || !ValidIdentity(derived) || original.ArtifactId == derived.ArtifactId ||
-            original.ContentSha256 == derived.ContentSha256 || !ValidActor(actor) || requestId == Uuid.Empty ||
-            provenance.Length is 0 or > 4000 || reason.Length is 0 or > 4000)
-            return Refuse<EvidenceRedactionPreparationFact>(RequestErrorKind.Validation,
-                "Redaction preparation requires distinct immutable artifact identities, attribution and bounded provenance/reason.");
-        if (_preparations.FirstOrDefault(item => item.PreparationId == requestId) is { } prior)
-            return expectedRevision == prior.Revision - 1 && prior.Original == original && prior.Derived == derived &&
-                prior.Provenance == provenance && prior.Reason == reason && SameActor(prior.PreparedBy, actor)
-                ? Result<EvidenceRedactionPreparationFact>.Success(prior)
-                : Refuse<EvidenceRedactionPreparationFact>(RequestErrorKind.Conflict,
-                    "This preparation identity retains different intent or actor.");
-        if (_approvals.Any(item => item.ApprovalId == requestId) || expectedRevision != Revision || _preparations.Count + _approvals.Count >= MaximumHistory ||
-            _preparations.FirstOrDefault() is { } first && (first.Original != original || first.Derived != derived) ||
-            preparedAt == default || preparedAt < original.RegisteredAt || preparedAt < derived.RegisteredAt ||
-            preparedAt < _lastChangedAt)
-            return Refuse<EvidenceRedactionPreparationFact>(RequestErrorKind.Conflict,
-                "Reload the exact source-bound redaction revision; history and source chronology must be preserved.");
-        var view = new EvidenceRedactionPreparationFact(requestId, Revision + 1, original, derived,
-            provenance, reason, actor, preparedAt);
-        var ev = new EvidenceRedactionPrepared(_tenantId, Id, Revision, view);
-        if (!Fits(ev))
-            return Refuse<EvidenceRedactionPreparationFact>(RequestErrorKind.Validation, "The complete redaction event exceeds its payload bound.");
-        RaiseEvent(ev);
-        return Result<EvidenceRedactionPreparationFact>.Success(view);
+        var verified = ReplayCut.Require(this);
+        if (!verified.IsSuccess)
+            return verified;
+        if (!EvidenceRedactionRules.Fits(fact))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The complete native redaction event exceeds its payload bound."));
+        if (cut != EvidenceRedactionPreparedCut.Of(this) || HasSelectedLegacy || Acceptance.SelectedFact is not null ||
+            fact is not INativeOperationFact native || native.Operation is null ||
+            native.Operation.AuthoredIntentSha256 is not { Length: 64 } ||
+            !NativeOwnerHistory.IsOwnRoot(this, native.Operation, fact is EvidenceRedactionPreparedV2
+                ? nameof(PrepareEvidenceRedaction) : nameof(ApproveEvidenceRedaction), (ulong)Revision) ||
+            native.Operation.LogicalId != Acceptance.SelectedLogicalId ||
+            native.Operation.Owner != Stream || native.Operation.RootOperationId != native.Operation.LogicalId ||
+            native.Operation.FirstOwner != Stream || native.Operation.AffectedOwner != Stream || native.Operation.ExpectedRevisionOwner != Stream ||
+            native.Operation.Episode != RootOperation.InitialEpisode || native.FirstResponse is null || OperationResultOf(fact) is null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A redaction append requires its exact selected native preparation and original response cut.", true));
+        _emitting = true;
+        try
+        {
+            RaiseEvent(fact);
+        }
+        finally
+        {
+            _emitting = false;
+        }
+        return Result.Success;
     }
 
-    internal Result<EvidenceRedactionApprovalFact> Approve(Uuid requestId, long expectedRevision,
-        Uuid preparationId, long preparedRevision, ulong derivedSourcePosition,
-        ActorReference actor, DateTimeOffset approvedAt, DateTimeOffset derivedAvailableAt, SeparationOfDutiesWaiver? waiver = null)
+    void ApplyPreparation(DomainEvent fact, Uuid tenantId, Uuid redactionId, long expectedRevision,
+        EvidenceRedactionPreparationFact prepared)
     {
-        if (!ValidActor(actor) || requestId == Uuid.Empty)
-            return Refuse<EvidenceRedactionApprovalFact>(RequestErrorKind.Validation, "Approval requires a canonical attributed member decision.");
-        if (_approvals.FirstOrDefault(item => item.ApprovalId == requestId) is { } prior)
-            return expectedRevision == prior.Revision - 1 && prior.PreparationId == preparationId &&
-                prior.PreparedRevision == preparedRevision && prior.DerivedAvailableAt == derivedAvailableAt && SameActor(prior.ApprovedBy, actor) &&
-                prior.SeparationOfDutiesWaiver?.WaiverId == waiver?.Id
-                ? Result<EvidenceRedactionApprovalFact>.Success(prior)
-                : Refuse<EvidenceRedactionApprovalFact>(RequestErrorKind.Conflict, "This approval identity retains different intent or canonical actor.");
-        if (_preparations.Any(item => item.PreparationId == requestId) || expectedRevision != Revision ||
-            CurrentPreparation is not { } prepared || prepared.PreparationId != preparationId || prepared.Revision != preparedRevision ||
-            CurrentApproval is not null || derivedSourcePosition < 2 || _preparations.Count + _approvals.Count >= MaximumHistory ||
-            approvedAt == default || approvedAt < _lastChangedAt || derivedAvailableAt == default ||
-            derivedAvailableAt < prepared.Derived.RegisteredAt || approvedAt < derivedAvailableAt)
-            return Refuse<EvidenceRedactionApprovalFact>(RequestErrorKind.Conflict, "Approve the current exact preparation and preserve bounded source chronology.");
-        var waiverSnapshot = waiver is null ? null : SnapshotWaiver(waiver);
-        if (waiver is not null && (waiver.TenantId != _tenantId || waiverSnapshot is null ||
-                !ValidWaiver(waiverSnapshot, prepared, actor, approvedAt)) ||
-            SameActor(prepared.PreparedBy, actor) && waiverSnapshot is null)
-            return Refuse<EvidenceRedactionApprovalFact>(RequestErrorKind.Forbidden, "A preparer cannot approve their own derivative without an independently approved exact-scope active waiver.");
-        var view = new EvidenceRedactionApprovalFact(requestId, Revision + 1, preparationId, preparedRevision,
-            derivedSourcePosition, derivedAvailableAt, actor, approvedAt, waiverSnapshot);
-        var ev = new EvidenceRedactionApproved(_tenantId, Id, Revision, view);
-        if (!Fits(ev))
-            return Refuse<EvidenceRedactionApprovalFact>(RequestErrorKind.Validation, "The complete approval event exceeds its payload bound.");
-        RaiseEvent(ev);
-        return Result<EvidenceRedactionApprovalFact>.Success(view);
+        if (tenantId != _tenantId || redactionId != Id || prepared is null)
+            throw new ImmutableContentIntegrityException("The redaction preparation belongs to another owner.");
+        var decided = DecidePrepare(prepared.PreparationId, expectedRevision, prepared.Original, prepared.Derived,
+            prepared.Provenance, prepared.Reason, prepared.PreparedBy, prepared.PreparedAt);
+        if (!decided.IsSuccess || decided.Value != prepared)
+            throw new ImmutableContentIntegrityException("Redaction lineage must preserve exact immutable identities, attribution and chronology.");
+        Observe(fact, prepared.PreparationId);
+        (Revision, CurrentPreparation, CurrentApproval, CurrentPreparationFact, _lastChangedAt) =
+            (prepared.Revision, prepared, null, fact, prepared.PreparedAt);
     }
 
-    void Apply(EvidenceRedactionApproved ev)
+    void ApplyApproval(DomainEvent fact, Uuid tenantId, Uuid redactionId, long expectedRevision,
+        EvidenceRedactionApprovalFact approved)
     {
-        var view = ev.Approval;
-        if (ev.TenantId != _tenantId || ev.RedactionId != Id || ev.ExpectedRevision != Revision ||
-            view is null || view.Revision != Revision + 1 || view.ApprovalId == Uuid.Empty || !ValidActor(view.ApprovedBy) ||
-            _preparations.Any(item => item.PreparationId == view.ApprovalId) || _approvals.Any(item => item.ApprovalId == view.ApprovalId) ||
-            CurrentPreparation is not { } prepared || prepared.PreparationId != view.PreparationId || prepared.Revision != view.PreparedRevision ||
-            CurrentApproval is not null || view.DerivedSourcePosition < 2 || _preparations.Count + _approvals.Count >= MaximumHistory ||
-            view.ApprovedAt == default || view.ApprovedAt < _lastChangedAt || view.DerivedAvailableAt == default ||
-            view.DerivedAvailableAt < prepared.Derived.RegisteredAt || view.ApprovedAt < view.DerivedAvailableAt ||
-            view.SeparationOfDutiesWaiver is { } waiver && !ValidWaiver(waiver, prepared, view.ApprovedBy, view.ApprovedAt) ||
-            SameActor(prepared.PreparedBy, view.ApprovedBy) && view.SeparationOfDutiesWaiver is null || !Fits(ev))
-            throw new InvalidOperationException("Redaction approvals must retain the exact current preparation, attribution, chronology and independent decision.");
-        _approvals.Add(view);
-        Revision = view.Revision;
-        _lastChangedAt = view.ApprovedAt;
+        if (tenantId != _tenantId || redactionId != Id || approved is null)
+            throw new ImmutableContentIntegrityException("The redaction approval belongs to another owner.");
+        var decided = DecideApprove(approved.ApprovalId, expectedRevision, approved.PreparationId, approved.PreparedRevision,
+            approved.DerivedSourcePosition, approved.ApprovedBy, approved.ApprovedAt, approved.DerivedAvailableAt,
+            approved.SeparationOfDutiesWaiver);
+        if (!decided.IsSuccess || decided.Value != approved)
+            throw new ImmutableContentIntegrityException("Redaction approval must preserve the exact current preparation and independent decision.");
+        Observe(fact, approved.ApprovalId);
+        (Revision, CurrentApproval, _lastChangedAt) = (approved.Revision, approved, approved.ApprovedAt);
     }
 
-    static EvidenceRedactionWaiverSnapshot? SnapshotWaiver(SeparationOfDutiesWaiver waiver) =>
-        waiver.Scope is { } scope && waiver.ApproverMemberId is { } approver && waiver.ApprovedAt is { } approvedAt
-            ? new(waiver.TenantId, waiver.Id, scope, waiver.BeneficiaryMemberId, waiver.RequesterMemberId,
-                approver, waiver.RequestedAt, approvedAt, waiver.ExpiresAt)
-            : null;
+    void Observe(DomainEvent fact, Uuid id)
+    {
+        if (fact is INativeOperationFact native)
+        {
+            if (native.Operation is null || native.Operation.AuthoredIntentSha256 is not { Length: 64 })
+                throw new ImmutableContentIntegrityException("The native redaction receipt is missing its complete operation provenance.");
+            if (native.Operation.LogicalId == Acceptance.SelectedLogicalId &&
+                (Acceptance.SelectedFact is not null || _selectedLegacy is not null))
+                throw new ImmutableContentIntegrityException("The selected redaction receipt repeats or upgrades an occupied legacy operation.");
+            Acceptance.Observe(fact);
+        }
+        else if (id == Acceptance.SelectedLogicalId && id != Uuid.Empty)
+        {
+            if (_selectedLegacy is not null)
+                throw new ImmutableContentIntegrityException("The legacy redaction operation is repeated.");
+            _selectedLegacy = fact;
+        }
+    }
 
-    bool ValidWaiver(EvidenceRedactionWaiverSnapshot waiver, EvidenceRedactionPreparationFact prepared,
-        ActorReference actor, DateTimeOffset at) => waiver.TenantId == _tenantId && waiver.WaiverId != Uuid.Empty &&
-        waiver.Scope == WaiverScope(prepared) && waiver.BeneficiaryMemberId.ToString() == actor.Id &&
-        waiver.RequesterMemberId != Uuid.Empty && waiver.ApproverMemberId != Uuid.Empty &&
-        waiver.ApproverMemberId != waiver.BeneficiaryMemberId && waiver.ApproverMemberId != waiver.RequesterMemberId &&
-        waiver.RequestedAt >= prepared.PreparedAt && waiver.ApprovedAt >= waiver.RequestedAt &&
-        at >= waiver.ApprovedAt && at < waiver.ExpiresAt;
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        ReplayCut.Observe(ev, _emitting);
+    }
+
+    internal static ImmutableContentRef? OperationResultOf(DomainEvent fact) => fact switch
+    {
+        EvidenceRedactionPreparedV2 value => value.OperationResult,
+        EvidenceRedactionApprovedV2 value => value.OperationResult,
+        _ => null,
+    };
 
     internal SeparationOfDutiesWaiverScope WaiverScope(EvidenceRedactionPreparationFact prepared) =>
-        new(SeparationOfDutiesRecordTypes.EvidenceRedaction, Id, prepared.PreparationId, prepared.Revision, SeparationOfDutiesActions.Approve);
-
-    static bool SameActor(ActorReference first, ActorReference second) => first.Kind == second.Kind && first.Id == second.Id;
-
-    void Apply(EvidenceRedactionPrepared ev)
-    {
-        var view = ev.Preparation;
-        if (ev.TenantId != _tenantId || ev.RedactionId != Id || ev.ExpectedRevision != Revision ||
-            view is null || view.Revision != Revision + 1 || view.PreparationId == Uuid.Empty ||
-            !ValidIdentity(view.Original) || !ValidIdentity(view.Derived) ||
-            view.Original.ArtifactId == view.Derived.ArtifactId || view.Original.ContentSha256 == view.Derived.ContentSha256 ||
-            !ValidActor(view.PreparedBy) || view.Provenance is not { Length: > 0 and <= 4000 } ||
-            view.Reason is not { Length: > 0 and <= 4000 } || view.Provenance != view.Provenance.Trim() || view.Reason != view.Reason.Trim() ||
-            _preparations.Count + _approvals.Count >= MaximumHistory || _preparations.Any(item => item.PreparationId == view.PreparationId) || _approvals.Any(item => item.ApprovalId == view.PreparationId) ||
-            _preparations.FirstOrDefault() is { } first && (first.Original != view.Original || first.Derived != view.Derived) ||
-            view.PreparedAt == default || view.PreparedAt < view.Original.RegisteredAt || view.PreparedAt < view.Derived.RegisteredAt ||
-            view.PreparedAt < _lastChangedAt || !Fits(ev))
-            throw new InvalidOperationException("Redaction lineage must retain exact distinct source identities, attribution, chronology and bounded history.");
-        _preparations.Add(view);
-        Revision = view.Revision;
-        _lastChangedAt = view.PreparedAt;
-    }
-
-    bool ValidIdentity(EvidenceRedactionSourceCapsule? source) => _tenantId != Uuid.Empty && Id != Uuid.Empty &&
-        source is not null && source.TenantId == _tenantId && source.RegistrationEventId != Uuid.Empty &&
-        ValidDigest(source.ContentSha256) && ValidDigest(source.RegistrationSha256) && source.ContentLength > 0 &&
-        source.ArtifactId != Uuid.Empty && source.RegisteredAt != default &&
-        source.IdentitySha256 == IdentityDigest(source);
-
-    internal static string IdentityDigest(EvidenceRedactionSourceCapsule source) =>
-        Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(source with { IdentitySha256 = "" },
-            typeof(EvidenceRedactionSourceCapsule), ComplianceCoreJsonContext.Default)));
-
-    internal EvidenceRedactionView PublicView(string originalState, string derivedState, bool approvalCurrent) =>
-        new(_tenantId, Id, Revision,
-            Array.AsReadOnly(_preparations.Select(prepared => new EvidenceRedactionPreparationView(
-                prepared.PreparationId, prepared.Revision, PublicIdentity(prepared.Original), PublicIdentity(prepared.Derived),
-                prepared.Provenance, prepared.Reason, prepared.PreparedBy, prepared.PreparedAt)).ToArray()),
-            Array.AsReadOnly(_approvals.Select(approval => new EvidenceRedactionApprovalView(
-                approval.ApprovalId, approval.Revision, approval.PreparationId, approval.PreparedRevision,
-                approval.ApprovedBy, approval.ApprovedAt, approval.SeparationOfDutiesWaiver is not null,
-                approval.SeparationOfDutiesWaiver?.WaiverId)).ToArray()), originalState, derivedState, approvalCurrent);
-
-    static EvidenceRedactionArtifactView PublicIdentity(EvidenceRedactionSourceCapsule source) =>
-        new(source.ArtifactId, source.ContentSha256, source.ContentLength, source.RegisteredAt);
-
-    static bool ValidDigest(string? value) => value is { Length: 64 } && value.All(c => c is >= '0' and <= '9' or >= 'a' and <= 'f');
-    static bool ValidActor(ActorReference? actor) => actor is { Kind: "member", Display.Length: > 0 and <= 200 } &&
-        Uuid.TryParse(actor.Id, out var id) && id != Uuid.Empty;
-    static bool Fits<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value,
-        value!.GetType(), ComplianceCoreJsonContext.Default).Length <= 48 * 1024;
-    static Result<T> Refuse<T>(RequestErrorKind kind, string reason) => Result<T>.Failure(new RequestError(kind, reason));
+        EvidenceRedactionRules.WaiverScope(Id, prepared);
+    internal static string IdentityDigest(EvidenceRedactionSourceCapsule source) => EvidenceRedactionRules.IdentityDigest(source);
 }

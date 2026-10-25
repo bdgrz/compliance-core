@@ -560,7 +560,7 @@ public sealed class RiskGovernanceHandlerTests
                 .ExpectSuccess();
             var item = Assert.Single(queue.Value.Items, candidate => candidate.Kind ==
                 WorkSource.RiskTreatmentActionReview && candidate.SourceId == submissionId);
-            var assigned = await Scenario(AssessorUserId).When(new AssignWorkItem(TenantId,
+            var assigned = await Scenario(AssessorUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), TenantId,
                 ProgramId, item.WorkItemId, item.AssignmentRevision,
                 RbacIds.Member(TenantId, userId ?? ApproverUserId), "Independent completion review."))
                 .ExpectSuccess();
