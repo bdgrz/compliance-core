@@ -16,7 +16,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     ranges until the period applies the amendment. An exact retry replays the original acknowledgment.
 /// </summary>
 public sealed class AmendTypeIIObservationPeriodHandler(NativeOperationExecutor operations, IAggregateReader reader, TypeIIPeriodReader periods,
-    IImmutableContentStore content, TimeProvider clock)
+    IImmutableContentStore content, TimeProvider clock, TypeIICalendarReader calendars)
     : IRequestHandler<AmendTypeIIObservationPeriod, OperationAcceptedResponse>
 {
     const string CommandKind = "AmendTypeIIObservationPeriod";
@@ -99,8 +99,9 @@ public sealed class AmendTypeIIObservationPeriodHandler(NativeOperationExecutor 
         if (period.Owner.CalendarAuthorization is not { } held)
             return Fail(RequestErrorKind.Conflict, "The period holds no live calendar range to amend.");
 
-        var calendar = await reader.HydrateAsync(new TypeIIObservationCalendar(request.TenantId, request.ProgramId),
+        var calendarOwner = await reader.HydrateAsync(new TypeIIObservationCalendar(request.TenantId, request.ProgramId),
             ct).ConfigureAwait(false);
+        var calendar = await calendars.ReadAsync(calendarOwner, [held.AuthorizationId], ct).ConfigureAwait(false);
         if (calendar.Find(held.AuthorizationId) is not { IsLive: true } reservation ||
             reservation.PeriodId != request.PeriodId || reservation.AuthorizedFact is not { } grantFact)
             return Fail(RequestErrorKind.Conflict, "The calendar range of the period is not visible yet.", true);

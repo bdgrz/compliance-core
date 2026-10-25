@@ -18,7 +18,7 @@ public sealed class TypeIIRangeProcessTests
         // Arrange: active inclusive range R1 with grant G1; the amendment accepts a complete R2 intent.
         await using var fixture = new TypeIIRangeFixture();
         var period = await fixture.StartPeriodAsync();
-        var firstGeneration = (await fixture.CalendarAsync()).Find(period)!.Generation;
+        var firstGeneration = (await fixture.CalendarAsync(period)).Find(period)!.Generation;
         var request = fixture.Amendment(period, 1, null, fixture.FirstEnd.AddDays(7));
         var admitted = await fixture.AmendAsync(request);
         var record = await fixture.Host.StartProcessAsync(fixture.TenantId, fixture.ProgramId, period,
@@ -27,7 +27,7 @@ public sealed class TypeIIRangeProcessTests
         // Act: step 1, the old and new range are both held while the amendment is pending.
         var acquired = await fixture.Host.SendAsync(await fixture.Host.StepAsync(record, "acquire",
             nameof(AcquireTypeIIPeriodRange)));
-        var held = await fixture.CalendarAsync();
+        var held = await fixture.CalendarAsync(period, request.CommandId);
         var pending = await fixture.PeriodAsync(period);
 
         // Assert
@@ -45,7 +45,7 @@ public sealed class TypeIIRangeProcessTests
         // Act: step 2, the cancellation lands before the delayed apply and fences it before any calendar release.
         var canceled = await fixture.CancelAsync(fixture.Cancellation(period, request.CommandId, 1));
         var fenced = await fixture.PeriodAsync(period);
-        var beforeRelease = await fixture.CalendarAsync();
+        var beforeRelease = await fixture.CalendarAsync(period, request.CommandId);
 
         // Assert
         Assert.True(canceled.IsSuccess, canceled.Error?.Message);
@@ -62,7 +62,7 @@ public sealed class TypeIIRangeProcessTests
         var lateApply = await fixture.Host.SendAsync(await fixture.Host.StepAsync(withPermit, "apply",
             nameof(ApplyTypeIIPeriodRange)));
         await fixture.Host.ReleaseAsync<TypeIIPeriodAmendmentCanceled>(fixture.StreamOf(period));
-        var released = await fixture.CalendarAsync();
+        var released = await fixture.CalendarAsync(period, request.CommandId);
 
         // Assert: no ObservationPeriodAmended; only the pending new grant is released and old R1 stays active.
         Assert.IsType<ReceiverOutcome.Superseded>(lateApply.Value);
@@ -79,7 +79,7 @@ public sealed class TypeIIRangeProcessTests
         Assert.True((await fixture.AmendAsync(next)).IsSuccess);
         var run = await fixture.RunAsync(period, next.CommandId);
         await fixture.Host.ReleaseAsync<TypeIIPeriodAmendmentCanceled>(fixture.StreamOf(period));
-        var afterOldCancellation = await fixture.CalendarAsync();
+        var afterOldCancellation = await fixture.CalendarAsync(period, next.CommandId);
         await fixture.FreezeCloseAsync(period);
         var closeFact = Assert.Single(await fixture.Host.EventsAsync<ObservationPeriodCloseFrozen>(
             fixture.StreamOf(period)));
@@ -88,9 +88,9 @@ public sealed class TypeIIRangeProcessTests
         var oldClose = await fixture.Host.SendAsync(new SettleTypeIIPeriodRange(Uuid.CreateVersion4(),
             NativeFactReference.Of(closed.Stream, closed.FactById(closeFact.Metadata.EventId)!), fixture.CalendarStream,
             period, 1, null, firstIntent, period));
-        var afterOldClose = await fixture.CalendarAsync();
+        var afterOldClose = await fixture.CalendarAsync(next.CommandId);
         await fixture.Host.ReleaseAsync<ObservationPeriodCloseFrozen>(fixture.StreamOf(period));
-        var afterClose = await fixture.CalendarAsync();
+        var afterClose = await fixture.CalendarAsync(next.CommandId);
 
         // Assert: only the exact CalendarAuthorizationId/CalendarGeneration releases; no newer grant is lost.
         Assert.Equal(ProcessState.Completed, run.State);
@@ -112,15 +112,15 @@ public sealed class TypeIIRangeProcessTests
         var crash = new CrashOnceStore();
         await using var fixture = new TypeIIRangeFixture(crash.Wrap);
         var period = await fixture.AcceptOpeningAsync();
-        var calendarBefore = await fixture.CalendarAsync();
+        var calendarBefore = await fixture.CalendarAsync(period);
         var accepted = await fixture.PeriodAsync(period);
         crash.ArmAfterReplaceCount(1);
 
         // Act: the worker crashes after the acquisition committed and before its checkpoint.
         var crashed = await Record.ExceptionAsync(() => fixture.RunAsync(period, period));
-        var midway = await fixture.CalendarAsync();
+        var midway = await fixture.CalendarAsync(period);
         var resumed = await fixture.RunAsync(period, period);
-        var calendar = await fixture.CalendarAsync();
+        var calendar = await fixture.CalendarAsync(period);
         var started = await fixture.PeriodAsync(period);
 
         // Assert
@@ -178,12 +178,12 @@ public sealed class TypeIIRangeProcessTests
         var run = await fixture.RunAsync(first, intoThird.CommandId);
         await fixture.Host.ReleaseAsync<TypeIIPeriodAmendmentCanceled>(fixture.StreamOf(first));
         var rejected = await fixture.PeriodAsync(first);
-        var calendar = await fixture.CalendarAsync();
+        var calendar = await fixture.CalendarAsync(intoThird.CommandId, first, third);
         var earlier = fixture.Amendment(first, 1, fixture.FirstStart.AddDays(-7), null);
         var earlierAdmitted = await fixture.AmendAsync(earlier);
         Assert.True(earlierAdmitted.IsSuccess, earlierAdmitted.Error?.Message);
         var earlierRun = await fixture.RunAsync(first, earlier.CommandId);
-        var after = await fixture.CalendarAsync();
+        var after = await fixture.CalendarAsync(first, earlier.CommandId, third);
         var amended = await fixture.PeriodAsync(first);
 
         // Assert
@@ -221,7 +221,7 @@ public sealed class TypeIIRangeProcessTests
         await fixture.Host.ReleaseAsync<TypeIIPeriodAmendmentCanceled>(fixture.StreamOf(period));
         var late = await fixture.Host.SendAsync(await fixture.Host.StepAsync(record, "acquire",
             nameof(AcquireTypeIIPeriodRange)));
-        var calendar = await fixture.CalendarAsync();
+        var calendar = await fixture.CalendarAsync(request.CommandId, period);
 
         // Assert
         Assert.IsType<ReceiverOutcome.Superseded>(late.Value);
@@ -290,7 +290,7 @@ public sealed class TypeIIRangeProcessTests
         var started = Assert.Single(await fixture.Host.EventsAsync<ObservationPeriodStarted>(saved.Stream));
         var amendedIntent = TypeIIPeriod.IntentOf(saved.AcceptedFor(request.CommandId))!;
         var openingIntent = TypeIIPeriod.IntentOf(saved.AcceptedFor(period))!;
-        var before = await fixture.CalendarAsync();
+        var before = await fixture.CalendarAsync(request.CommandId);
 
         // Act: the stale opening proof arrives after a later amendment released and replaced its range.
         var stale = await fixture.Host.SendAsync(new SettleTypeIIPeriodRange(Uuid.CreateVersion4(),
@@ -300,7 +300,7 @@ public sealed class TypeIIRangeProcessTests
         var missing = await fixture.Host.SendAsync(new SettleTypeIIPeriodRange(Uuid.CreateVersion4(),
             new NativeFactReference(saved.Stream, Uuid.CreateVersion4(), 99), fixture.CalendarStream,
             request.CommandId, 1, null, amendedIntent, period));
-        var after = await fixture.CalendarAsync();
+        var after = await fixture.CalendarAsync(request.CommandId);
 
         // Assert
         Assert.IsType<ReceiverOutcome.Superseded>(stale.Value);
@@ -321,7 +321,7 @@ public sealed class TypeIIRangeProcessTests
             fixture.FirstEnd.AddYears(1));
         var secondRecord = await fixture.Host.StartProcessAsync(fixture.TenantId, fixture.ProgramId, second, second);
         await fixture.RunAsync(second, second);
-        var calendar = await fixture.CalendarAsync();
+        var calendar = await fixture.CalendarAsync(first);
         var permit = NativeFactReference.Of(calendar.Stream, calendar.Find(first)!.AuthorizedFact!);
         var disjointPeriod = await fixture.PeriodAsync(disjoint);
         var disjointIntent = TypeIIPeriod.IntentOf(disjointPeriod.AcceptedFor(disjoint))!;

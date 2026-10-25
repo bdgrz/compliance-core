@@ -790,6 +790,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ApplicabilityReader>();
         services.AddScoped<ControlEvaluationReader>();
         services.AddScoped<TypeIIOccurrenceCoverage>();
+        services.AddScoped<TypeIICalendarReader>();
         services.AddScoped<TypeIIPeriodReader>();
         services.AddScoped<TypeIIPeriodOperations>();
         services.AddScoped<TypeIIPeriodCloseMaterialReader>();

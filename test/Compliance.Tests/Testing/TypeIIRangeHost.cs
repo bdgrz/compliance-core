@@ -80,6 +80,8 @@ sealed class TypeIIRangeHost : IAsyncDisposable
 
     public IImmutableContentStore Content => Services.GetRequiredService<IImmutableContentStore>();
 
+    public TypeIICalendarReader Calendars => new(Reader, Events, Content);
+
     public TypeIIPeriodReader Periods => new(Reader, Events, Content);
     public TypeIIPeriodOperations PeriodOperations(TimeProvider clock) => new(
         Services.GetRequiredService<NativeOperationExecutor>(), Periods, Content, clock);
@@ -97,7 +99,7 @@ sealed class TypeIIRangeHost : IAsyncDisposable
         clock);
 
     public AmendTypeIIObservationPeriodHandler AmendHandler(TimeProvider clock) => new(
-        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Periods, Content, clock);
+        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Periods, Content, clock, Calendars);
 
     public CancelTypeIIPeriodAmendmentHandler CancelHandler(TimeProvider clock) => new(
         Services.GetRequiredService<NativeOperationExecutor>(), Content, clock);

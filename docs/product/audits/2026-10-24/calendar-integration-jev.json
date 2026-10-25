@@ -1,0 +1,27 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "decision": {
+      "type": "choice",
+      "choice": "merge_scoped_repair",
+      "confidence": 0.77,
+      "probabilities": {
+        "merge_scoped_repair": 0.85,
+        "refine_before_merge": 0.13,
+        "blocked_by_missing_authority": 0.02
+      }
+    },
+    "introduced_regression": {
+      "type": "noul",
+      "noul": 0.24
+    },
+    "scope_misrepresentation": {
+      "type": "noul",
+      "noul": 0.11
+    }
+  },
+  "usage": {
+    "input_tokens": 28933,
+    "output_tokens": 98
+  }
+}

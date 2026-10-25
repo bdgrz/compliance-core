@@ -1,0 +1,1119 @@
+{
+  "version": "implementation-file-review-v1",
+  "total": 22,
+  "reviewed": 22,
+  "blocked": 0,
+  "calls": 4,
+  "cached": 18,
+  "usage": {
+    "input_tokens": 183724,
+    "output_tokens": 1716
+  },
+  "records": [
+    {
+      "path": "src/Compliance.Common/Features/Operations/TypeIIObservationCalendarHeader.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "4be79f959f66b68a713f08495ec7ec213b35dd206b3b35cb90c61430783acbb1",
+      "dependency_sha256": [],
+      "review_key": "447a2339895c16af55f60032094387cc9b85a59b69a3e02d817fd57426068ee2",
+      "reviewed_at": "2026-10-25T00:36:47.647Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.1
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.06
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.06
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.06
+        }
+      },
+      "usage": {
+        "input_tokens": 796,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeAuthorized.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "5ba268bf505d6ce40ddf42e5bd3875bb684335e7d1aba232c12e1a1709e9e62d",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/INativeOperationFact.cs",
+          "sha256": "19e0a8721953d240b75c2ee890a9e0fd784a05a3d20bf96b1c3ad8e8f4133e4a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/ObservationRange.cs",
+          "sha256": "fc95c8375da0f7e6c50fe778c80f76ea086b8816363ea47a8f230dca7fa578d8"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIObservationCalendarHeader.cs",
+          "sha256": "4be79f959f66b68a713f08495ec7ec213b35dd206b3b35cb90c61430783acbb1"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIRangeOperationKind.cs",
+          "sha256": "7ba56e55123055056da470f9a28884fd03a52bc0142e967599ca87d1e5b8e057"
+        }
+      ],
+      "review_key": "404c15a387b0cd7221884606f01ca3f58976061dcc41c0e907c22d00118fec2f",
+      "reviewed_at": "2026-10-25T00:36:47.783Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.16
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.09
+        }
+      },
+      "usage": {
+        "input_tokens": 2386,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeSettled.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "78ca26167c1b99d61e5664e5cf9a609a412406046defb83d35bbca17c4f755e4",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/INativeOperationFact.cs",
+          "sha256": "19e0a8721953d240b75c2ee890a9e0fd784a05a3d20bf96b1c3ad8e8f4133e4a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIObservationCalendarHeader.cs",
+          "sha256": "4be79f959f66b68a713f08495ec7ec213b35dd206b3b35cb90c61430783acbb1"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIRangeSettlementKind.cs",
+          "sha256": "61b76e320833589931be519ba15ae184666d943c0c0e6397f63c5d2a17f58f9d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "a05f100036fba085c3621f17fae5e39ee4ebf05bbc6d2fd1daadbfe3b9c00aa3",
+      "reviewed_at": "2026-10-25T00:36:47.973Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.13
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.09
+        }
+      },
+      "usage": {
+        "input_tokens": 2243,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/ComplianceCoreJsonContext.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "246aecbb726af61402fae48652683cb6dc0bea275596075ad801581c31fdf6eb",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/EngagementPersonalDecisionContent.cs",
+          "sha256": "90da6b19b138997848bb3971319e116d1d68e67143bd19c6c4fcde2109a3f53b"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/IndependenceRuleContent.cs",
+          "sha256": "349d3c58d59c114c65c8f96f62658e0c7aa6ffc11ba61cc546daf16ca3b114b4"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/IndependenceServiceRuleContent.cs",
+          "sha256": "ef20230b1c391c0c4bc5e377cb8e730e3893b41439724cd37d604d6804a0f891"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/NonattestServiceContent.cs",
+          "sha256": "9013c445633a8e837c6c96d273e930df3f6f521a4ea42aa19ec5485fb31afae1"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ServiceEngagementDraftContent.cs",
+          "sha256": "d88ea90b24a2e948204f814236c76de11475fba831e592089ab965da085eae5c"
+        }
+      ],
+      "review_key": "117797ba4296083344a4092e548cfa8bc30a286a28293493b83785395a8f3601",
+      "reviewed_at": "2026-10-25T00:36:48.520Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.16
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.15
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.2
+        }
+      },
+      "usage": {
+        "input_tokens": 55556,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "ac5ceeb08829005bd1f283debf573e8497952449478c8978ee5e3a64b85d7a21",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AdministratorReceiverSupport.cs",
+          "sha256": "a0e0b97ca55ea6fd34d10a417e8db53ae1d74e8117713962dfe938634a76148f"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/EngagementUseVerifier.cs",
+          "sha256": "faa888d0165584ff349b879dcb9af94c088df080c5a6c200ceb2603a348c9d4c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/IFirmProfessionalDutyAssertionVerifier.cs",
+          "sha256": "420205f08670a2d71fa0a7c7647321da5ef3b921c79e1b1ee4bf84cd2d352761"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ProfessionalDutyChangeVerifier.cs",
+          "sha256": "be6f3c783eaaa5ef1cbfbaa8d1da4d2a057d36c3ccbed4f1b39b65339aea494a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Tenants/TenantRegistered.cs",
+          "sha256": "888d59d0e91e78d2eebdb51c22181b298498b1cb43923d663db6c4d440cc7e26"
+        }
+      ],
+      "review_key": "b36804d37016cda03dd1a9375ef52710d9114029db2f79f11429f1da41b38a86",
+      "reviewed_at": "2026-10-25T00:36:48.838Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.29
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.22
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.28
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.27
+        }
+      },
+      "usage": {
+        "input_tokens": 45453,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/AmendTypeIIObservationPeriodHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "252a36c8549d49421fe89e6e1d91471884d1b713b9bfb9a591ef9feb7a7eedbf",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Operations/AmendTypeIIObservationPeriod.cs",
+          "sha256": "ba5378353797df4f8542d7ae321ffcbb59379da4f62608bb2fb0e1d9695c4727"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIRangeContent.cs",
+          "sha256": "33295dcad549c79b61aa7845b27b11e5940c0398d30b312ff7bf66fef57b7fa4"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/AcceptedOperationBinding.cs",
+          "sha256": "6f23964a5b4653b474ae73dde8008fed774abc372803326aa0f57d6fe1ae9083"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/DurableIntentHeader.cs",
+          "sha256": "c6015847a642631160c0a77358db213e4a5e08ea467c6bc7a8321187c0f0678c"
+        }
+      ],
+      "review_key": "808690b4e57c405107cdd0c1376a0f67dca7027d50dcfc7d9eb137d3b286880c",
+      "reviewed_at": "2026-10-25T00:36:48.753Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.4
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.51
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.55
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.22
+        }
+      },
+      "usage": {
+        "input_tokens": 5648,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarAggregateReader.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "7601979e71a1e528b01cfd4fe654f9e866d4a236897c48bbdbd4204a26aaf173",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarNativeHistory.cs",
+          "sha256": "89ad7f308e8658558dd5b7a39c3fc5386c4dc4f6cb7d86e9925ffddccf210d6a"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+          "sha256": "4a952d1b395d1c827855c993b94bdcac5b6ac0261c2f22d32ffdab09f655c66a"
+        }
+      ],
+      "review_key": "34fb03979bf6c21db4333c43d2b4533dfd1842d1f387cf1f86968a01c150bded",
+      "reviewed_at": "2026-10-25T00:55:24.380Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.16
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.38
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.33
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.2
+        }
+      },
+      "usage": {
+        "input_tokens": 3971,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarAuthority.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "579d27f444a7858d41bbd5e67c8a738cda81251635fb5c826babdc2ef5dd139e",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReservationContent.cs",
+          "sha256": "8f87f6f0fcd58c6c9c33c2368573c87083de7847e3d420ba428c563881ffe2d9"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "acd561303d1a04346f218b205b38cfc79b495e9f98985daeae034d996126a8aa",
+      "reviewed_at": "2026-10-25T00:36:48.965Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.13
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.09
+        }
+      },
+      "usage": {
+        "input_tokens": 1315,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarAuthorizationChange.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "f9d725011e6f91e4da6d4b84081f73ca10778848cdaad8ea452e55140a73f61f",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/ObservationRange.cs",
+          "sha256": "fc95c8375da0f7e6c50fe778c80f76ea086b8816363ea47a8f230dca7fa578d8"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIRangeOperationKind.cs",
+          "sha256": "7ba56e55123055056da470f9a28884fd03a52bc0142e967599ca87d1e5b8e057"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "88b91c5b140831e4fcc12d1083186299d8f1cff404fbc621fa30d8a333bc8637",
+      "reviewed_at": "2026-10-25T00:36:49.236Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.08
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.1
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.1
+        }
+      },
+      "usage": {
+        "input_tokens": 1869,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarContent.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "3051ee85e01cdb3ce1851e22f21792d3921ea1bf6baafd6edc9f4de84626ed7a",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/NativeOperations/NativeContent.cs",
+          "sha256": "e182c905af7c310e7cae562a07caf630fd9f2c2b43880bf29a94fd0e3f010fa6"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReservationContent.cs",
+          "sha256": "8f87f6f0fcd58c6c9c33c2368573c87083de7847e3d420ba428c563881ffe2d9"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIObservationCalendarHeader.cs",
+          "sha256": "4be79f959f66b68a713f08495ec7ec213b35dd206b3b35cb90c61430783acbb1"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeAuthorized.cs",
+          "sha256": "5ba268bf505d6ce40ddf42e5bd3875bb684335e7d1aba232c12e1a1709e9e62d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeSettled.cs",
+          "sha256": "78ca26167c1b99d61e5664e5cf9a609a412406046defb83d35bbca17c4f755e4"
+        }
+      ],
+      "review_key": "ad77d782855a62403f982667dbc854ac1d5b83c53d6c940cd95dccecb790c205",
+      "reviewed_at": "2026-10-25T00:36:49.487Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.5
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.54
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.51
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.33
+        }
+      },
+      "usage": {
+        "input_tokens": 6686,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarHistoryNode.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "ab32196253dc74e529796f782d21a82b0e93d358d14d07c92258f4b6380e417a",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReservationContent.cs",
+          "sha256": "8f87f6f0fcd58c6c9c33c2368573c87083de7847e3d420ba428c563881ffe2d9"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "be87179284c69b31243acccd89085de167daa98c43700b9d9f96e0fc361f9600",
+      "reviewed_at": "2026-10-25T00:36:49.741Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.1
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.08
+        }
+      },
+      "usage": {
+        "input_tokens": 1313,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarHistoryRead.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "2b1486139c26e7712fee0a9abfa1afd66902365291b72ca689d77d8088076b28",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarHistoryNode.cs",
+          "sha256": "ab32196253dc74e529796f782d21a82b0e93d358d14d07c92258f4b6380e417a"
+        }
+      ],
+      "review_key": "af0996b45df46be39db4647a6fa1d375672379398b951e2b5b50a625b5410e61",
+      "reviewed_at": "2026-10-25T00:36:49.984Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.08
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.05
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.08
+        }
+      },
+      "usage": {
+        "input_tokens": 1189,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarNativeHistory.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "89ad7f308e8658558dd5b7a39c3fc5386c4dc4f6cb7d86e9925ffddccf210d6a",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarContent.cs",
+          "sha256": "3051ee85e01cdb3ce1851e22f21792d3921ea1bf6baafd6edc9f4de84626ed7a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/INativeOperationFact.cs",
+          "sha256": "19e0a8721953d240b75c2ee890a9e0fd784a05a3d20bf96b1c3ad8e8f4133e4a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIObservationCalendarHeader.cs",
+          "sha256": "4be79f959f66b68a713f08495ec7ec213b35dd206b3b35cb90c61430783acbb1"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeAuthorized.cs",
+          "sha256": "5ba268bf505d6ce40ddf42e5bd3875bb684335e7d1aba232c12e1a1709e9e62d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeSettled.cs",
+          "sha256": "78ca26167c1b99d61e5664e5cf9a609a412406046defb83d35bbca17c4f755e4"
+        }
+      ],
+      "review_key": "7b3142fd1a2c0c00bfa5c887e8c912f1ebc2ffdd447229912638644c3cc72173",
+      "reviewed_at": "2026-10-25T00:55:24.518Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.35
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.36
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.56
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.29
+        }
+      },
+      "usage": {
+        "input_tokens": 6687,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarPrepared.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "3c2c8cb6104174ee71a71c00f393c356b6da9bbce3e62b54a1442e505f1e8973",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarAuthority.cs",
+          "sha256": "579d27f444a7858d41bbd5e67c8a738cda81251635fb5c826babdc2ef5dd139e"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarHistoryNode.cs",
+          "sha256": "ab32196253dc74e529796f782d21a82b0e93d358d14d07c92258f4b6380e417a"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarHistoryRead.cs",
+          "sha256": "2b1486139c26e7712fee0a9abfa1afd66902365291b72ca689d77d8088076b28"
+        }
+      ],
+      "review_key": "cbc446ebc6ac9ec20018f7dc1611fbdfab365ae93184c64375576fbbe434a711",
+      "reviewed_at": "2026-10-25T00:36:50.226Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.15
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.08
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.11
+        }
+      },
+      "usage": {
+        "input_tokens": 1646,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReader.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "03a23aea73ba0d79a374d725e626c4a6542a57808d41005d73b88e8e8a718b39",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarContent.cs",
+          "sha256": "3051ee85e01cdb3ce1851e22f21792d3921ea1bf6baafd6edc9f4de84626ed7a"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReservationContent.cs",
+          "sha256": "8f87f6f0fcd58c6c9c33c2368573c87083de7847e3d420ba428c563881ffe2d9"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/INativeOperationFact.cs",
+          "sha256": "19e0a8721953d240b75c2ee890a9e0fd784a05a3d20bf96b1c3ad8e8f4133e4a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeAuthorized.cs",
+          "sha256": "5ba268bf505d6ce40ddf42e5bd3875bb684335e7d1aba232c12e1a1709e9e62d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeSettled.cs",
+          "sha256": "78ca26167c1b99d61e5664e5cf9a609a412406046defb83d35bbca17c4f755e4"
+        }
+      ],
+      "review_key": "4de1c90d1d2ee50a02c3fbd39c876185d089264ad897cea31854a335b9637374",
+      "reviewed_at": "2026-10-25T00:55:24.741Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.44
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.38
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.63
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.23
+        }
+      },
+      "usage": {
+        "input_tokens": 8230,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReadSnapshot.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "c55781b795f868d848c9250c7159758edc202d56c940b442b7a941a109eeb96f",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReservationContent.cs",
+          "sha256": "8f87f6f0fcd58c6c9c33c2368573c87083de7847e3d420ba428c563881ffe2d9"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/ObservationRange.cs",
+          "sha256": "fc95c8375da0f7e6c50fe778c80f76ea086b8816363ea47a8f230dca7fa578d8"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeAuthorized.cs",
+          "sha256": "5ba268bf505d6ce40ddf42e5bd3875bb684335e7d1aba232c12e1a1709e9e62d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeSettled.cs",
+          "sha256": "78ca26167c1b99d61e5664e5cf9a609a412406046defb83d35bbca17c4f755e4"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarAuthority.cs",
+          "sha256": "579d27f444a7858d41bbd5e67c8a738cda81251635fb5c826babdc2ef5dd139e"
+        }
+      ],
+      "review_key": "75e3641f9f68320025e2e44258a23723a656478be294088094a61e9b97cf6b4d",
+      "reviewed_at": "2026-10-25T00:36:50.772Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.14
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.19
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.18
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.19
+        }
+      },
+      "usage": {
+        "input_tokens": 2947,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReservationContent.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "8f87f6f0fcd58c6c9c33c2368573c87083de7847e3d420ba428c563881ffe2d9",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Operations/ObservationRange.cs",
+          "sha256": "fc95c8375da0f7e6c50fe778c80f76ea086b8816363ea47a8f230dca7fa578d8"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIRangeOperationKind.cs",
+          "sha256": "7ba56e55123055056da470f9a28884fd03a52bc0142e967599ca87d1e5b8e057"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIRangeReservationState.cs",
+          "sha256": "b8ab6b912f86de5b9c40d5bb6bd865b652b8542221aa8c1b0d741a34b65bc491"
+        }
+      ],
+      "review_key": "cbc04c522c189002d4c77c27c57dd21821807e7895fc92631a46d74477ccb760",
+      "reviewed_at": "2026-10-25T00:36:50.988Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.15
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.1
+        }
+      },
+      "usage": {
+        "input_tokens": 1743,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarRules.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "6cea241e1c343e5f9ccdc7602e4bfaad36dff6956308df90fa0f6a6083f80427",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarContent.cs",
+          "sha256": "3051ee85e01cdb3ce1851e22f21792d3921ea1bf6baafd6edc9f4de84626ed7a"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarReservationContent.cs",
+          "sha256": "8f87f6f0fcd58c6c9c33c2368573c87083de7847e3d420ba428c563881ffe2d9"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/ObservationRange.cs",
+          "sha256": "fc95c8375da0f7e6c50fe778c80f76ea086b8816363ea47a8f230dca7fa578d8"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIRangeOperationKind.cs",
+          "sha256": "7ba56e55123055056da470f9a28884fd03a52bc0142e967599ca87d1e5b8e057"
+        }
+      ],
+      "review_key": "b4d0f766b393476356d39a85ff54d7fa524e51f2d6ba568a0e28cb89bf0c5548",
+      "reviewed_at": "2026-10-25T00:36:51.252Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.53
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.69
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.65
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.55
+        }
+      },
+      "usage": {
+        "input_tokens": 7271,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIICalendarSettlementChange.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "c9b841a8117d4f58fb1d57e4cbac8014adec91ee1e3a644e7c64430bb8934a17",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIRangeSettlementKind.cs",
+          "sha256": "61b76e320833589931be519ba15ae184666d943c0c0e6397f63c5d2a17f58f9d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "88a7f9bb0766080ec89c6b0b3632fc9386e94ab8abbd9f0dc8c635e9e4f59d35",
+      "reviewed_at": "2026-10-25T00:36:51.509Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.1
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.1
+        }
+      },
+      "usage": {
+        "input_tokens": 1580,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+      "kinds": [
+        "aggregate"
+      ],
+      "sha256": "4a952d1b395d1c827855c993b94bdcac5b6ac0261c2f22d32ffdab09f655c66a",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarContent.cs",
+          "sha256": "3051ee85e01cdb3ce1851e22f21792d3921ea1bf6baafd6edc9f4de84626ed7a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/INativeOperationFact.cs",
+          "sha256": "19e0a8721953d240b75c2ee890a9e0fd784a05a3d20bf96b1c3ad8e8f4133e4a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIObservationCalendarHeader.cs",
+          "sha256": "4be79f959f66b68a713f08495ec7ec213b35dd206b3b35cb90c61430783acbb1"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeAuthorized.cs",
+          "sha256": "5ba268bf505d6ce40ddf42e5bd3875bb684335e7d1aba232c12e1a1709e9e62d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeSettled.cs",
+          "sha256": "78ca26167c1b99d61e5664e5cf9a609a412406046defb83d35bbca17c4f755e4"
+        }
+      ],
+      "review_key": "bd78cfe0a84f8a04f9c667598ca36936578db1e948b7db47b29095830309e006",
+      "reviewed_at": "2026-10-25T00:36:51.762Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.36
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.41
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.55
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.24
+        }
+      },
+      "usage": {
+        "input_tokens": 7177,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIRangeReceivers.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "e1defbf36ec04915a623d840b1bbab8a18418aa632a2b9945854ea674d6539c9",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarContent.cs",
+          "sha256": "3051ee85e01cdb3ce1851e22f21792d3921ea1bf6baafd6edc9f4de84626ed7a"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIRangeContent.cs",
+          "sha256": "33295dcad549c79b61aa7845b27b11e5940c0398d30b312ff7bf66fef57b7fa4"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AuditPopulations/ObservationPeriodCloseFrozen.cs",
+          "sha256": "20bf64b47a0efb9118fc84cde68648cf9d53c496081dbfb58d0237f2b13d6e46"
+        }
+      ],
+      "review_key": "0de1d91be348aac27fe81a9d01ac260caa82e2a4b4e25d6f66390762aae3b2ec",
+      "reviewed_at": "2026-10-25T00:36:52.027Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.39
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.44
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.55
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.23
+        }
+      },
+      "usage": {
+        "input_tokens": 14243,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Hosting/Persistence/PersistenceServiceCollectionExtensions.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "5f735b67461226336d19027c9d8573bddbe7d8510405470034238241cc902b59",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIICalendarAggregateReader.cs",
+          "sha256": "7601979e71a1e528b01cfd4fe654f9e866d4a236897c48bbdbd4204a26aaf173"
+        },
+        {
+          "path": "src/Compliance.Core/Hosting/Persistence/PersistenceEventStore.cs",
+          "sha256": "0dbe3f04dc1f7f77f0b99f67eac8bbe2a388973e03761bd20d8d138dcade9d44"
+        },
+        {
+          "path": "src/Compliance.Core/Hosting/Persistence/PersistenceKvClient.cs",
+          "sha256": "2012034555a56e9076d7cb459f6547e66d86cfeede0fdf4796843ac9c066a82e"
+        },
+        {
+          "path": "src/Compliance.Core/Hosting/Persistence/PersistenceValidationRequestBus.cs",
+          "sha256": "56e2d707b1d8575bfad1b29a096e580130190d545e86657f6322b90d270e5488"
+        }
+      ],
+      "review_key": "6513f6030b0d0e237f6c12bcfcb78a52225a00df2da3eb5e3a7eb81fdfac9709",
+      "reviewed_at": "2026-10-25T00:55:24.941Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.08
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.26
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.37
+        }
+      },
+      "usage": {
+        "input_tokens": 3775,
+        "output_tokens": 78
+      }
+    }
+  ]
+}

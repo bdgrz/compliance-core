@@ -17,11 +17,14 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     intent or invalid proof is a permanent conflict; missing period state is never proof to release anything.
 /// </summary>
 sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor executor, IImmutableContentStore content,
-    IRequestBus bus, TimeProvider clock, TypeIIRangeVerifier verifier, TypeIIPeriodReader periods)
+    IRequestBus bus, TimeProvider clock, TypeIIRangeVerifier verifier, TypeIIPeriodReader periods, TypeIICalendarReader calendars)
 {
     const int MaximumAttempts = 4;
 
-    public async ValueTask<Result<ReceiverOutcome>> AcquireAsync(IExecutionContext context,
+    public ValueTask<Result<ReceiverOutcome>> AcquireAsync(IExecutionContext context,
+        AcquireTypeIIPeriodRange command, CancellationToken ct) => GuardAsync(() => AcquireCoreAsync(context, command, ct));
+
+    async ValueTask<Result<ReceiverOutcome>> AcquireCoreAsync(IExecutionContext context,
         AcquireTypeIIPeriodRange command, CancellationToken ct)
     {
         if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty ||
@@ -52,8 +55,11 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
         {
             try
             {
-                var calendar = await reader.HydrateAsync(new TypeIIObservationCalendar(tenant, intent.ProgramId,
+                var owner = await reader.HydrateAsync(new TypeIIObservationCalendar(tenant, intent.ProgramId,
                     command.CommandId), ct).ConfigureAwait(false);
+                if (NativeStep(owner, binding) is { } replay)
+                    return replay.Outcome;
+                var calendar = await calendars.ReadAsync(owner, new[] { command.OperationId, priorOperation ?? Uuid.Empty }, ct).ConfigureAwait(false);
                 var early = Evaluate(calendar, binding, intent);
                 if (early is Decided decided)
                     return decided.Outcome;
@@ -61,24 +67,27 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
                     return await RejectConflictAsync(context, command, change, blocked.Reservation, calendar, ct)
                         .ConfigureAwait(false);
 
+                var authorized = calendar.Rules.Authorize(provenance, command.Intent, intent.PeriodId,
+                    intent.OperationKind, intent.NewRange, priorOperation);
+                if (!authorized.IsSuccess)
+                    return Result<ReceiverOutcome>.Failure(authorized.Error!);
+                var prepared = await TypeIICalendarContent.FreezeAsync(content, calendar, calendar.Rules, ct).ConfigureAwait(false);
+                var native = TypeIICalendarContent.Fact(prepared);
                 var step = await executor.ExecuteAsync(new TypeIIObservationCalendar(tenant, intent.ProgramId,
                     command.CommandId), fresh =>
                     {
-                        var current = Evaluate(fresh, binding, intent);
-                        if (current is not null)
+                        if (NativeStep(fresh, binding) is { } current)
                             return AggregateOutcome.Discard(Result<Step>.Success(current));
-                        var raised = fresh.Authorize(provenance, command.Intent, intent.PeriodId,
-                            intent.OperationKind, intent.NewRange, priorOperation);
+                        var raised = fresh.Append(native, prepared, owner.NativeSequence, owner.CommittedStreamPosition);
                         return raised.IsSuccess
                             ? AggregateOutcome.Commit(Result<Step>.Success(new Decided(SourceUseReceiverSupport.Applied(
                                 Fact(fresh.Stream, fresh.Acceptance.SelectedFact!)))))
                             : AggregateOutcome.Discard(Result<Step>.Failure(raised.Error!));
                     }, context, ct).ConfigureAwait(false);
+                if (!step.IsSuccess && step.Error!.IsTransient && attempt < MaximumAttempts)
+                    continue;
                 if (!step.IsSuccess)
                     return Result<ReceiverOutcome>.Failure(step.Error!);
-                if (step.Value is Conflicted conflicted)
-                    return await RejectConflictAsync(context, command, change, conflicted.Reservation, calendar, ct)
-                        .ConfigureAwait(false);
                 return ((Decided)step.Value!).Outcome;
             }
             catch (EventStreamConcurrencyException) when (attempt < MaximumAttempts)
@@ -88,7 +97,10 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
         }
     }
 
-    public async ValueTask<Result<ReceiverOutcome>> ApplyAsync(IExecutionContext context,
+    public ValueTask<Result<ReceiverOutcome>> ApplyAsync(IExecutionContext context,
+        ApplyTypeIIPeriodRange command, CancellationToken ct) => GuardAsync(() => ApplyCoreAsync(context, command, ct));
+
+    async ValueTask<Result<ReceiverOutcome>> ApplyCoreAsync(IExecutionContext context,
         ApplyTypeIIPeriodRange command, CancellationToken ct)
     {
         if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty ||
@@ -110,7 +122,10 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
         if (DecidePeriod(period, binding, operation, intent) is { } early)
             return early;
 
-        var calendar = await reader.HydrateAsync(new TypeIIObservationCalendar(tenant, intent.ProgramId), ct)
+        var expectedCalendar = new TypeIIObservationCalendar(tenant, intent.ProgramId).Stream;
+        if (command.Source.Stream != expectedCalendar)
+            return SourceUseReceiverSupport.Permanent("The permit is not a fact of this program calendar.");
+        var calendar = await calendars.ReadForAuthorizationAsync(tenant, intent.ProgramId, command.Source.EventId, ct)
             .ConfigureAwait(false);
         if (command.Source.Stream != calendar.Stream)
             return SourceUseReceiverSupport.Permanent("The permit is not a fact of this program calendar.");
@@ -184,7 +199,10 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
         }
     }
 
-    public async ValueTask<Result<ReceiverOutcome>> SettleAsync(IExecutionContext context,
+    public ValueTask<Result<ReceiverOutcome>> SettleAsync(IExecutionContext context,
+        SettleTypeIIPeriodRange command, CancellationToken ct) => GuardAsync(() => SettleCoreAsync(context, command, ct));
+
+    async ValueTask<Result<ReceiverOutcome>> SettleCoreAsync(IExecutionContext context,
         SettleTypeIIPeriodRange command, CancellationToken ct)
     {
         if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty ||
@@ -214,25 +232,33 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
         {
             try
             {
-                var calendar = await reader.HydrateAsync(new TypeIIObservationCalendar(tenant, intent.ProgramId,
+                var owner = await reader.HydrateAsync(new TypeIIObservationCalendar(tenant, intent.ProgramId,
                     command.CommandId), ct).ConfigureAwait(false);
-                if (DecideSettlement(calendar, binding, command.OperationId, plan) is Decided early)
+                if (NativeStep(owner, binding) is { } replay)
+                    return replay.Outcome;
+                var calendar = await calendars.ReadAsync(owner, new[] { command.OperationId, plan.Replaces ?? Uuid.Empty }, ct).ConfigureAwait(false);
+                var current = DecideSettlement(calendar, binding, command.OperationId, plan);
+                if (current is Decided early)
                     return early.Outcome;
-
+                var action = (Settlement)current;
+                var settled = calendar.Rules.Settle(provenance, command.Intent, intent.PeriodId, action.Kind, command.OperationId, action.Released);
+                if (!settled.IsSuccess)
+                    return Result<ReceiverOutcome>.Failure(settled.Error!);
+                var prepared = await TypeIICalendarContent.FreezeAsync(content, calendar, calendar.Rules, ct).ConfigureAwait(false);
+                var native = TypeIICalendarContent.Fact(prepared);
                 var step = await executor.ExecuteAsync(new TypeIIObservationCalendar(tenant, intent.ProgramId,
                     command.CommandId), fresh =>
                     {
-                        var current = DecideSettlement(fresh, binding, command.OperationId, plan);
-                        if (current is Decided decided)
+                        if (NativeStep(fresh, binding) is { } decided)
                             return AggregateOutcome.Discard(Result<Step>.Success(decided));
-                        var action = (Settlement)current!;
-                        var raised = fresh.Settle(provenance, command.Intent, intent.PeriodId, action.Kind,
-                            command.OperationId, action.Released);
+                        var raised = fresh.Append(native, prepared, owner.NativeSequence, owner.CommittedStreamPosition);
                         return raised.IsSuccess
                             ? AggregateOutcome.Commit(Result<Step>.Success(new Decided(SourceUseReceiverSupport.Applied(
                                 Fact(fresh.Stream, fresh.Acceptance.SelectedFact!)))))
                             : AggregateOutcome.Discard(Result<Step>.Failure(raised.Error!));
                     }, context, ct).ConfigureAwait(false);
+                if (!step.IsSuccess && step.Error!.IsTransient && attempt < MaximumAttempts)
+                    continue;
                 return step.IsSuccess
                     ? ((Decided)step.Value!).Outcome
                     : Result<ReceiverOutcome>.Failure(step.Error!);
@@ -255,6 +281,11 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
         ct);
 
     async ValueTask<Result<ReceiverOutcome>> RejectAsync(IExecutionContext context, Uuid commandId, Uuid operationId,
+        EventStreamAddress target, long generation, long expectedRevision, ImmutableContentRef failureProof,
+        bool opening, CancellationToken ct) => await GuardAsync(() => RejectCoreAsync(context, commandId, operationId,
+            target, generation, expectedRevision, failureProof, opening, ct)).ConfigureAwait(false);
+
+    async ValueTask<Result<ReceiverOutcome>> RejectCoreAsync(IExecutionContext context, Uuid commandId, Uuid operationId,
         EventStreamAddress target, long generation, long expectedRevision, ImmutableContentRef failureProof,
         bool opening, CancellationToken ct)
     {
@@ -283,7 +314,10 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
                 "A rejection requires the exact pending operation of its period at its accepted revision.");
 
         // The authoritative calendar must hold another period's range that overlaps this one.
-        var calendar = await reader.HydrateAsync(new TypeIIObservationCalendar(tenant, intent.ProgramId), ct)
+        var expectedCalendar = new TypeIIObservationCalendar(tenant, intent.ProgramId).Stream;
+        if (proof.Conflicting.Stream != expectedCalendar)
+            return SourceUseReceiverSupport.Permanent("The calendar conflict is not proven by the failure proof.");
+        var calendar = await calendars.ReadForAuthorizationAsync(tenant, intent.ProgramId, proof.Conflicting.EventId, ct)
             .ConfigureAwait(false);
         if (proof.Conflicting.Stream != calendar.Stream ||
             calendar.FindByAuthorization(proof.Conflicting.EventId) is not { } conflicting ||
@@ -344,7 +378,7 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
     ///     apply, and the process ends. The pending reservation, if any, is released only after that fence.
     /// </summary>
     async ValueTask<Result<ReceiverOutcome>> RejectConflictAsync(IExecutionContext context,
-        AcquireTypeIIPeriodRange command, TypeIIRangeChange change, TypeIIRangeReservation conflicting, TypeIIObservationCalendar calendar,
+        AcquireTypeIIPeriodRange command, TypeIIRangeChange change, TypeIIRangeReservation conflicting, TypeIICalendarReadSnapshot calendar,
         CancellationToken ct)
     {
         var (period, accepted, intent) = (change.Period!, change.Accepted!, change.Intent!);
@@ -374,14 +408,14 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
     }
 
     /// <summary>The acquisition decision: an exact replay, a fence, a refused prior range or an overlap.</summary>
-    static Step? Evaluate(TypeIIObservationCalendar calendar, AcceptedOperationBinding binding,
+    static Step? Evaluate(TypeIICalendarReadSnapshot calendar, AcceptedOperationBinding binding,
         TypeIIRangeIntent intent)
     {
-        switch (calendar.Acceptance.Decide(binding))
+        switch (calendar.Owner.Acceptance.Decide(binding))
         {
             case NativeAcceptanceDecision.Replayed:
                 return new Decided(SourceUseReceiverSupport.Replayed(Fact(calendar.Stream,
-                    calendar.Acceptance.SelectedFact!)));
+                    calendar.Owner.Acceptance.SelectedFact!)));
             case NativeAcceptanceDecision.Conflict:
                 return new Decided(Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError));
         }
@@ -433,14 +467,14 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
     }
 
     /// <summary>What the calendar does for a settlement proof: replay, supersede, wait, refuse, or settle.</summary>
-    static Step DecideSettlement(TypeIIObservationCalendar calendar, AcceptedOperationBinding binding,
+    static Step DecideSettlement(TypeIICalendarReadSnapshot calendar, AcceptedOperationBinding binding,
         Uuid operation, SettlementPlan plan)
     {
-        switch (calendar.Acceptance.Decide(binding))
+        switch (calendar.Owner.Acceptance.Decide(binding))
         {
             case NativeAcceptanceDecision.Replayed:
                 return new Decided(SourceUseReceiverSupport.Replayed(Fact(calendar.Stream,
-                    calendar.Acceptance.SelectedFact!)));
+                    calendar.Owner.Acceptance.SelectedFact!)));
             case NativeAcceptanceDecision.Conflict:
                 return new Decided(Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError));
         }
@@ -500,6 +534,24 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
             new SettlementPlan(SettlementSource.Ended, null, null),
         _ => null,
     };
+
+    static Decided? NativeStep(TypeIIObservationCalendar owner, AcceptedOperationBinding binding) => owner.Acceptance.Decide(binding) switch
+    {
+        NativeAcceptanceDecision.Replayed => new(SourceUseReceiverSupport.Replayed(Fact(owner.Stream, owner.Acceptance.SelectedFact!))),
+        NativeAcceptanceDecision.Conflict => new(Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError)),
+        _ => null,
+    };
+    static async ValueTask<Result<ReceiverOutcome>> GuardAsync(Func<ValueTask<Result<ReceiverOutcome>>> action)
+    {
+        try
+        { return await action().ConfigureAwait(false); }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return failure is ImmutableContentUnavailableException
+                ? SourceUseReceiverSupport.Transient("The calendar's exact immutable range authority is not visible yet.")
+                : SourceUseReceiverSupport.Permanent("The calendar's exact immutable range authority cannot be verified.");
+        }
+    }
 
     static NativeFactReference Fact(EventStreamAddress stream, DomainEvent fact) => NativeFactReference.Of(stream, fact);
 
