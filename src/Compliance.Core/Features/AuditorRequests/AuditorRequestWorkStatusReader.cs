@@ -1,33 +1,23 @@
-using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditorRequests;
 
-/// <summary>Derives request work status from verified terms and the independent response owners.</summary>
-sealed class AuditorRequestWorkStatusReader(IAggregateReader reader, IImmutableContentStore content)
+/// <summary>Derives status from verified request content and independent response owners.</summary>
+sealed class AuditorRequestWorkStatusReader(AuditorRequestReader requests)
 {
     public async ValueTask<Result<string>> ReadAsync(Uuid tenantId, Uuid programId, Uuid requestId, DateOnly asOf,
         CancellationToken ct = default)
     {
-        var request = await reader.HydrateAsync(new AuditorRequest(tenantId, programId, requestId), ct)
-            .ConfigureAwait(false);
-        if (!request.IsRecorded)
-            return Result<string>.Success("missing");
-        var terms = await AuditorCommands.TermsAsync(content, tenantId, request, ct).ConfigureAwait(false);
-        if (!terms.IsSuccess)
-            return Result<string>.Failure(terms.Error!);
-        if (request.Resolved is not null)
-            return Result<string>.Success("resolved");
-        var responses = new List<AuditorResponse>();
-        foreach (var admitted in request.Responses)
-            responses.Add(await reader.HydrateAsync(new AuditorResponse(tenantId, programId, requestId,
-                admitted.Operation.LogicalId), ct).ConfigureAwait(false));
-        if (responses.Any(static response => response.Disposition?.Outcome == "accepted"))
-            return Result<string>.Success("accepted");
-        if (responses.Any(static response => response.Status == "rejected"))
-            return Result<string>.Success("blocked");
-        if (responses.Any(static response => response.Status is "submitted" or "approved" or "delivered"))
-            return Result<string>.Success("submitted");
-        return Result<string>.Success(asOf > terms.Value.DueOn ? "overdue" : "open");
+        try
+        {
+            var snapshot = await requests.ReadAsync(tenantId, programId, requestId, ct).ConfigureAwait(false);
+            return Result<string>.Success(snapshot.View is not { } view ? "missing" :
+                AuditorRequestReader.WorkStatus(snapshot.Owner, view.Responses, view.DueOn, asOf));
+        }
+        catch (Content.ImmutableContentIntegrityException error)
+        {
+            return Result<string>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The request work status cannot be verified: {error.Message}", error is Content.ImmutableContentUnavailableException));
+        }
     }
 }

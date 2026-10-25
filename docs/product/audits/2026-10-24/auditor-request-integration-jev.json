@@ -1,0 +1,81 @@
+{
+  "initial": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "decision": {
+        "type": "choice",
+        "choice": "refine_before_merge",
+        "confidence": 0.25,
+        "probabilities": {
+          "merge_scoped_repair": 0.49,
+          "refine_before_merge": 0.5,
+          "blocked_by_missing_authority": 0.01
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.42
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.26
+      }
+    },
+    "usage": {
+      "input_tokens": 63278,
+      "output_tokens": 97
+    }
+  },
+  "targeted": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "admission_retry": {
+        "type": "noul",
+        "noul": 0.35
+      },
+      "failure_binding": {
+        "type": "noul",
+        "noul": 0.49
+      },
+      "history_certification": {
+        "type": "noul",
+        "noul": 0.49
+      },
+      "actor_attribution": {
+        "type": "noul",
+        "noul": 0.21
+      },
+      "read_authority": {
+        "type": "noul",
+        "noul": 0.14
+      },
+      "directory_or_selection": {
+        "type": "noul",
+        "noul": 0.49
+      },
+      "paging": {
+        "type": "noul",
+        "noul": 0.4
+      },
+      "technical_integration": {
+        "type": "noul",
+        "noul": 0.23
+      },
+      "next_action": {
+        "type": "choice",
+        "choice": "merge_after_full_units",
+        "confidence": 0.69,
+        "probabilities": {
+          "refine_concrete_defect": 0.21,
+          "merge_after_full_units": 0.79,
+          "needs_selected_external_contract": 0
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 81592,
+      "output_tokens": 200
+    }
+  },
+  "adjudication": "Initial split0.50refine/0.49merge retained. Follow-up includes real pipeline and new regression sources with bounded defect categories; all category probabilities <=0.49 and action recommends merge_after_full_units0.79. Root accepts scoped merge after final local suite; existing separate contract gaps remain qualified."
+}

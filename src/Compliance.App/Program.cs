@@ -1600,6 +1600,41 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReopenFinding>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
+    app.MapPortiaGet<GetAuditorRequest, AuditorRequestView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{auditor_request_id}", endpoint => endpoint
+                .OnBind(Program.BindAuditorRequestRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("auditor_request_id", PortiaHttpParameterLocation.Route, required: true))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Auditor requests");
+    app.MapPortiaGet<ListAuditorRequests, Page<AuditorRequestSummaryView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests", endpoint => endpoint
+                .OnBind(Program.BindAuditorRequestsRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<int?>("limit", PortiaHttpParameterLocation.Query, required: false)
+                .Parameter<string?>("cursor", PortiaHttpParameterLocation.Query, required: false))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Auditor requests");
+    app.MapPortiaGet<ListRequestResponses, Page<AuditorRequestResponseView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{auditor_request_id}/responses", endpoint => endpoint
+                .OnBind(Program.BindAuditorRequestResponsesRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("auditor_request_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<int?>("limit", PortiaHttpParameterLocation.Query, required: false)
+                .Parameter<string?>("cursor", PortiaHttpParameterLocation.Query, required: false))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Auditor requests");
+    app.MapPortiaGet<GetSampleSelection, SampleSelectionView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/sample-selections/{sample_selection_id}", endpoint => endpoint
+                .OnBind(Program.BindAuditorSampleSelectionRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("sample_selection_id", PortiaHttpParameterLocation.Route, required: true))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Auditor requests");
     app.MapPortiaPut<RecordAuditorRequest>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/record-auditor-request", config => config.OnNativeResult()).WithNativeFirstResponse<RecordAuditorRequest>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
@@ -3098,6 +3133,31 @@ public partial class Program
                 throw new BadHttpRequestException("The description version limit is invalid.");
         return new ListSystemDescriptionVersions(ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
             ApplicationRouteId(context, "description_id"), limit, PortiaHttpBinding.ReadQuery(context, "cursor"));
+    }
+
+    internal static GetAuditorRequest BindAuditorRequestRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
+        ApplicationRouteId(context, "auditor_request_id"));
+
+    internal static ListAuditorRequests BindAuditorRequestsRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
+        AuditorReadLimit(context), PortiaHttpBinding.ReadQuery(context, "cursor"));
+
+    internal static ListRequestResponses BindAuditorRequestResponsesRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
+        ApplicationRouteId(context, "auditor_request_id"), AuditorReadLimit(context), PortiaHttpBinding.ReadQuery(context, "cursor"));
+
+    internal static GetSampleSelection BindAuditorSampleSelectionRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
+        ApplicationRouteId(context, "sample_selection_id"));
+
+    static int? AuditorReadLimit(HttpContext context)
+    {
+        var raw = PortiaHttpBinding.ReadQuery(context, "limit");
+        if (raw is null)
+            return null;
+        return int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value :
+            throw new BadHttpRequestException("The auditor-request read limit is invalid.");
     }
 
     internal static GetObservationPeriod BindObservationPeriodRead(HttpContext context) => new(

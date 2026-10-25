@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "9788f1d221682600157ba099e352df0850c0aae1",
+  "sourceCommit": "d8d933e9ce82dee1e908c991344193e4eeb44c2e",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -24,7 +24,7 @@
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 738,
+    "registeredCoreHandlerRegistrations": 742,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 52,
     "unwiredAggregateProducerClassifications": {
@@ -1996,7 +1996,10 @@
       "emitters": [
         "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestScopedReadHttpTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -2095,6 +2098,7 @@
         "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorChildMaterializationReplayTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs"
       ],
       "disposition": "aggregate_fact",
@@ -2217,7 +2221,9 @@
         "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestScopedReadHttpTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9713,7 +9719,11 @@
         "CompleteAuditorRequestResolution"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestActorProofTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestScopedReadHttpTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseNativeBoundaryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -9744,6 +9754,7 @@
         "SettleAuditorResponseRequestResolutionUse"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorChildMaterializationReplayTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseNativeBoundaryTests.cs"
       ],
@@ -9760,6 +9771,7 @@
         "MaterializeAuditorSampleSelection"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorSelectionIdentityTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/SampleSelectionCommandHandlerTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -12395,7 +12407,10 @@
       "aggregateTargets": [
         "AuditorRequest"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestUnboundCancellationTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorResolutionReplayTests.cs"
+      ],
       "note": ""
     },
     {
@@ -14543,7 +14558,9 @@
       "aggregateTargets": [
         "AuditorResponse"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestUnboundCancellationTests.cs"
+      ],
       "note": ""
     },
     {
@@ -18588,12 +18605,22 @@
       "contract": "src/Compliance.Common/Features/AuditorRequests/GetAuditorRequest.cs",
       "interfaces": "IRequest<AuditorRequestView>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "GetAuditorRequestHandler",
+          "source": "src/Compliance.Core/Features/AuditorRequests/GetAuditorRequestHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "AuditorRequestReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -20268,12 +20295,22 @@
       "contract": "src/Compliance.Common/Features/AuditorRequests/GetSampleSelection.cs",
       "interfaces": "IRequest<SampleSelectionView>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "GetSampleSelectionHandler",
+          "source": "src/Compliance.Core/Features/AuditorRequests/GetSampleSelectionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "AuditorRequestReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -21708,12 +21745,22 @@
       "contract": "src/Compliance.Common/Features/AuditorRequests/ListAuditorRequests.cs",
       "interfaces": "IRequest<Page<AuditorRequestSummaryView>>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "ListAuditorRequestsHandler",
+          "source": "src/Compliance.Core/Features/AuditorRequests/ListAuditorRequestsHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "AuditorRequestReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -23164,12 +23211,22 @@
       "contract": "src/Compliance.Common/Features/AuditorRequests/ListRequestResponses.cs",
       "interfaces": "IRequest<Page<AuditorRequestResponseView>>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "ListRequestResponsesHandler",
+          "source": "src/Compliance.Core/Features/AuditorRequests/ListRequestResponsesHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "AuditorRequestReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -24007,7 +24064,9 @@
       "aggregateTargets": [
         "AuditorResponse"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorChildMaterializationReplayTests.cs"
+      ],
       "note": ""
     },
     {
@@ -26092,6 +26151,9 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestHistoryTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs"
       ],
       "note": ""
@@ -26888,6 +26950,8 @@
         "SampleSelectionAdmission"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestScopedReadHttpTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/SampleSelectionCommandHandlerTests.cs"
       ],
       "note": ""
@@ -28106,7 +28170,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestUnboundCancellationTests.cs"
       ],
       "note": ""
     },
@@ -29207,6 +29272,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseNativeBoundaryTests.cs"
@@ -29234,7 +29300,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestReadHandlerTests.cs"
       ],
       "note": ""
     },

@@ -50,7 +50,7 @@ public sealed class AuditorResponseCommandHandlerTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Empty(saved.Responses);
+        Assert.Empty((await fixture.RequestHistoryAsync(requestId)).Responses);
         Assert.Equal(1, saved.Revision);
     }
 
@@ -68,7 +68,7 @@ public sealed class AuditorResponseCommandHandlerTests
 
         // Assert
         Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
-        Assert.Empty(saved.Responses);
+        Assert.Empty((await fixture.RequestHistoryAsync(requestId)).Responses);
         Assert.Equal(1, saved.Revision);
     }
 

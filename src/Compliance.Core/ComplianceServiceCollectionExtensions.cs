@@ -779,6 +779,11 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(FindingClosureProcess.Definition());
         services.AddSingleton<IChildMaterializationReceiver, Features.Remediation.IndependentChildMaterialization>();
         services.AddSingleton<IChildMaterializationReceiver, Features.PolicyDistribution.IndependentChildMaterialization>();
+        services.AddScoped<AuditorRequestReader>();
+        services.AddScoped<FitzAuditorRequestDirectory>();
+        services.AddScoped<IAuditorRequestDirectoryReader>(provider => provider.GetRequiredService<FitzAuditorRequestDirectory>());
+        services.AddScoped<IAuditorRequestDirectoryProjection>(provider => provider.GetRequiredService<FitzAuditorRequestDirectory>());
+        services.AddScoped<AuditorRequestDirectoryReadConsistency>();
         services.AddSingleton(AuditorRequestResolutionProcess.Definition());
         services.AddSingleton<IChildMaterializationReceiver, AuditorResponseMaterializationReceiver>();
         services.AddSingleton<IChildMaterializationReceiver, AuditorCommentMaterializationReceiver>();
@@ -1311,6 +1316,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<GenerateAuditPopulationHandler>()
             .AddRequestHandler<GenerateAuditPopulationExportHandler>()
             .AddRequestHandler<ReconcileAuditPopulationHandler>()
+            .AddRequestHandler<GetAuditorRequestHandler>()
+            .AddRequestHandler<ListAuditorRequestsHandler>()
+            .AddRequestHandler<ListRequestResponsesHandler>()
+            .AddRequestHandler<GetSampleSelectionHandler>()
             .AddRequestHandler<RecordAuditorRequestHandler>()
             .AddRequestHandler<ReviseAuditorRequestHandler>()
             .AddRequestHandler<AssignAuditorRequestHandler>()
@@ -1717,6 +1726,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<MethodologyTemplateDirectoryProjector>(FitzMethodologyTemplateDirectory.ProjectorName, WorkloadScope.Global)
             .AddProjector<ObservationPeriodDirectoryProjector>(FitzObservationPeriodDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AuditPackageDirectoryProjector>(FitzAuditPackageDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<AuditorRequestDirectoryProjector>(FitzAuditorRequestDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<PlatformUserDirectoryProjector>("PlatformUserDirectoryV2", WorkloadScope.Global)
             .AddProjector<IdentityDirectoryProjector>("UserIdentityDirectory", WorkloadScope.Global)
             .AddProjector<EmailAddressDirectoryProjector>("EmailAddressDirectory", WorkloadScope.Global)

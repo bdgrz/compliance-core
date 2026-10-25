@@ -42,6 +42,7 @@ sealed class AuditorRequestFixture : IAsyncDisposable
         services.AddSingleton<ISourceFactResolver>(provider =>
             new EventStoreSourceFactResolver(provider.GetRequiredService<IDomainEventReader>()));
         services.AddScoped<NativeOperationExecutor>();
+        services.AddScoped<AuditorRequestReader>();
         services.AddScoped<ProcessDriver>();
         services.AddScoped<ProcessRootReaction>();
         services.AddScoped<AuditorRequestResolutionVerifier>();
@@ -114,6 +115,10 @@ sealed class AuditorRequestFixture : IAsyncDisposable
     }
 
     public ValueTask<AuditorRequest> RequestAsync(Uuid id) => Reader.HydrateAsync(new AuditorRequest(TenantId, ProgramId, id));
+    public async Task<AuditorRequestHistorySnapshot> RequestHistoryAsync(Uuid id) =>
+        await AuditorRequestHistory.ReadAsync(Events, await RequestAsync(id));
+    public AuditorRequestReader Requests => Services.GetRequiredService<AuditorRequestReader>();
+
     public ValueTask<AuditorResponse> ResponseAsync(Uuid requestId, Uuid id) =>
         Reader.HydrateAsync(new AuditorResponse(TenantId, ProgramId, requestId, id));
 
@@ -187,7 +192,7 @@ sealed class AuditorRequestFixture : IAsyncDisposable
         var request = await RequestAsync(requestId);
         var command = new ResolveAuditorRequest(Uuid.CreateVersion4(), TenantId, ProgramId, requestId,
             "The delivered responses were accepted.", request.Revision,
-            request.Responses.Select(static response => response.Operation.LogicalId).ToArray());
+            (await RequestHistoryAsync(requestId)).Responses.Select(static response => response.Operation.LogicalId).ToArray());
         return (await Handler<ResolveAuditorRequestHandler>().HandleAsync(Context(command), CancellationToken.None),
             command.CommandId);
     }

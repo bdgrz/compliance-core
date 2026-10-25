@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     actor come from the frozen admission, which is confirmed on the authoritative request; a request that resolved
 ///     since does not discard the comment. An exact replay returns the original fact.
 /// </summary>
-sealed class MaterializeAuditorCommentHandler(IAggregateReader reader, IAggregateExecutor executor,
+sealed class MaterializeAuditorCommentHandler(IAggregateReader reader, IAggregateExecutor executor, IDomainEventReader events,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<MaterializeAuditorComment, ReceiverOutcome>
 {
@@ -26,6 +26,19 @@ sealed class MaterializeAuditorCommentHandler(IAggregateReader reader, IAggregat
             command.CommentId == Uuid.Empty || command.ExpectedRevision is not (null or 0) ||
             !Uuid.TryParse(command.Target.Realm, CultureInfo.InvariantCulture, out var tenant))
             return SourceUseReceiverSupport.Permanent("The materialization names another operation, comment or realm.");
+
+        try
+        {
+            if (await AuditorChildMaterializationReplay.ResolveAsync(events, command.Source, command.Target, tenant,
+                command.RequestId, command.CommentId, command.CommandId, command.OperationId, command.Generation,
+                command.Intent, AdmittedRequestChildKind.Comment, ct).ConfigureAwait(false) is { } replay)
+                return replay;
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact child materialization cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
 
         ChildAdmissionIntent intent;
         AuditorCommentContent authored;
@@ -53,11 +66,16 @@ sealed class MaterializeAuditorCommentHandler(IAggregateReader reader, IAggregat
             command.Target != target || command.Source.Stream != parent || command.Generation != (long)intent.ParentGeneration)
             return SourceUseReceiverSupport.Permanent("The materialization differs from the frozen admission.");
 
-        var admitted = await AdmittedChildVerifier.VerifyAsync<AuditorCommentAdmitted>(reader, tenant,
+        var admitted = await AdmittedChildVerifier.VerifyAsync<AuditorCommentAdmitted>(reader, events, content, tenant,
             authored.ProgramId, command.RequestId, command.Source, command.Intent, command.OperationId,
             command.CommentId, fact => fact.Intent, ct).ConfigureAwait(false);
         if (!admitted.IsSuccess)
             return Result<ReceiverOutcome>.Failure(admitted.Error!);
+        if (!AdmittedChildVerifier.HeaderMatches(admitted.Value!.Operation, intent.Header) ||
+            admitted.Value.Generation != (long)intent.ParentGeneration || (ulong)admitted.Value.Revision != intent.ParentAdmissionRevision)
+            return SourceUseReceiverSupport.Permanent("The frozen header differs from the exact native admission.");
+        if (authored.ActorMemberId.ToString() != intent.Header.OriginalActor.Id || authored.At != intent.Header.AcceptedAt)
+            return SourceUseReceiverSupport.Permanent("The admitted comment differs from its native author or acceptance time.");
 
         var provenance = AuditorRequestResolutionEffects.Child(command.CommandId, nameof(MaterializeAuditorComment),
             command.Source.EventId, intent.Header, target, clock.GetUtcNow());

@@ -1,0 +1,8 @@
+{
+  "reviewed": 50,
+  "blockedReviews": 0,
+  "signalsTriaged": 0,
+  "threshold": 0.65,
+  "rows": [],
+  "adversarialRefinement": "Two persisted actor corruption regressions reproduced malformed UUID FormatException and nonmember-kind unsafe read. Explicit guard verifies member kind and nonempty parsed UUID in full native history before read projection; original attached Metadata and kind-only original member UUID preserved in tests."
+}

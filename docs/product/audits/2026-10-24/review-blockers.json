@@ -224,7 +224,11 @@
     "description-incident-integration-jev.json",
     "description-incident-qualification.json",
     "description-native-version-reconciliation.json",
-    "description-export-render-qualification.json"
+    "description-export-render-qualification.json",
+    "auditor-request-file-reviews.json",
+    "auditor-request-file-triage.json",
+    "auditor-request-integration-jev.json",
+    "auditor-request-qualification.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 102,
@@ -591,9 +595,19 @@
     },
     {
       "id": "description-incident-native",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "qualificationArtifact": "description-incident-qualification.json",
-      "fileReviews": 124
+      "fileReviews": 124,
+      "pr": 1122,
+      "mergeCommit": "d8d933e9ce82dee1e908c991344193e4eeb44c2e"
+    },
+    {
+      "id": "auditor-request-native-and-scoped-reads",
+      "status": "locally_verified_pending_merge",
+      "qualificationArtifact": "auditor-request-qualification.json",
+      "fileReviews": 50,
+      "oldApiRedFailed": 7,
+      "actorRedFailed": 2
     }
   ],
   "resolved": [
@@ -614,8 +628,10 @@
   "preparedUnqualifiedQueue": [
     {
       "id": "system-description-native",
-      "status": "locally_verified_pending_merge",
-      "artifactDirectory": "/tmp/compliance-system-description-prepared"
+      "status": "merged",
+      "artifactDirectory": "/tmp/compliance-system-description-prepared",
+      "pr": 1122,
+      "mergeCommit": "d8d933e9ce82dee1e908c991344193e4eeb44c2e"
     },
     {
       "id": "risk-native",
@@ -631,8 +647,10 @@
     },
     {
       "id": "compliance-incident-native",
-      "status": "locally_verified_pending_merge",
-      "artifactDirectory": "/tmp/compliance-incident-native-prepared"
+      "status": "merged",
+      "artifactDirectory": "/tmp/compliance-incident-native-prepared",
+      "pr": 1122,
+      "mergeCommit": "d8d933e9ce82dee1e908c991344193e4eeb44c2e"
     }
   ],
   "continuingPreparation": [

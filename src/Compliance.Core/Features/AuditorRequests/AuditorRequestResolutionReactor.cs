@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -13,7 +14,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     an unverified resolution.
 /// </summary>
 sealed partial class AuditorRequestResolutionReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process,
-    IImmutableContentStore content)
+    IImmutableContentStore content, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(AuditorRequest.Area), WorkloadName),
         IReactorHandler<AuditorRequestResolutionAccepted>
 {
@@ -22,6 +23,8 @@ sealed partial class AuditorRequestResolutionReactor(IProjectionCheckpointStore 
     public async ValueTask HandleAsync(IReactorContext<AuditorRequestResolutionAccepted> context, CancellationToken ct)
     {
         var accepted = context.Trigger;
+        await AuditorRequestReactorSources.VerifyAsync(sources, content, Pattern, context, accepted.Owner, ct)
+            .ConfigureAwait(false);
         var tenant = Uuid.Parse(context.Source.Stream.Realm, CultureInfo.InvariantCulture);
         IReadOnlyList<AdmittedRequestChild> children;
         ClosureIntent intent;
@@ -38,7 +41,7 @@ sealed partial class AuditorRequestResolutionReactor(IProjectionCheckpointStore 
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen resolution cannot be verified yet: {exception.Message}", true));
+                $"The frozen resolution cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         _ = await process.StartAsync(AuditorRequestResolutionEffects.ProcessName, context, accepted.Intent,

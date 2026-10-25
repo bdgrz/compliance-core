@@ -16,6 +16,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     is proven by <c>AuditorRequestResolutionProcess</c>, which appends the resolution once every response is held.
 /// </summary>
 public sealed class ResolveAuditorRequestHandler(NativeOperationExecutor operations, IAggregateReader reader,
+    IDomainEventReader events,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ResolveAuditorRequest, OperationAcceptedResponse>
 {
@@ -34,37 +35,37 @@ public sealed class ResolveAuditorRequestHandler(NativeOperationExecutor operati
                 "A resolution requires a command id and a non-negative expected revision.");
         var now = clock.GetUtcNow();
         var actor = AuditorCommands.Actor(actorMemberId, actorDisplay);
-        var snapshot = await reader.HydrateAsync(new AuditorRequest(request.TenantId, request.ProgramId,
-            request.RequestId, request.CommandId), ct).ConfigureAwait(false);
-        var provenance = AuditorContent.Provenance(request.CommandId, CommandKind, snapshot.Stream, actor,
+        var address = new AuditorRequest(request.TenantId, request.ProgramId, request.RequestId, request.CommandId);
+        var provenance = AuditorContent.Provenance(request.CommandId, CommandKind, address.Stream, actor,
             (ulong)request.ExpectedRevision, AuditorCommands.Digest(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? intent = null;
         FirstResponseDescriptor? response = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(request, snapshot, provenance, actorMemberId, actor, now, ct)
-                .ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response) = frozen.Value;
-        }
+        AuditorRequestHistorySnapshot? history = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorRequest>(binding,
             () => new AuditorRequest(request.TenantId, request.ProgramId, request.RequestId, request.CommandId),
             auditorRequest => auditorRequest.Acceptance,
-            auditorRequest => AuditorContent.Prepared(
-                auditorRequest.PrepareResolution(request.ExpectedRevision, request.ResponseIds), response),
+            async (snapshot, prepareCt) =>
+            {
+                history = await AuditorRequestHistory.ReadAsync(events, snapshot, prepareCt).ConfigureAwait(false);
+                var frozen = await FreezeAsync(request, snapshot, history, provenance, actorMemberId, actor, now, prepareCt)
+                    .ConfigureAwait(false);
+                if (!frozen.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                (intent, response) = frozen.Value;
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
             (AuditorRequest auditorRequest, ImmutableContentRef acknowledgment) =>
-                auditorRequest.AcceptResolution(provenance, intent!, request.ResponseIds, acknowledgment)), context, ct)
+                auditorRequest.AcceptResolution(provenance, intent!, request.ResponseIds, acknowledgment, history!)), context, ct)
             .ConfigureAwait(false);
         return await AuditorContent.ResponseAsync<OperationAcceptedResponse>(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
     }
 
     async ValueTask<Result<(ImmutableContentRef Intent, FirstResponseDescriptor Response)>> FreezeAsync(
-        ResolveAuditorRequest request, AuditorRequest snapshot, OperationProvenance provenance, Uuid actorMemberId,
+        ResolveAuditorRequest request, AuditorRequest snapshot, AuditorRequestHistorySnapshot history, OperationProvenance provenance, Uuid actorMemberId,
         ActorReference actor, DateTimeOffset now, CancellationToken ct)
     {
         var scoped = await AuditorCommands.TermsAsync(content, request.TenantId, snapshot, ct).ConfigureAwait(false);
@@ -78,14 +79,14 @@ public sealed class ResolveAuditorRequestHandler(NativeOperationExecutor operati
         var resolution = AuditorRequestRules.CleanText(request.Resolution);
         if (!AuditorRequestRules.Bounded(resolution, 1, AuditorRequestRules.MaximumRationaleLength))
             return Fail(RequestErrorKind.Validation, "Request resolution needs a bounded explanation.");
-        var prepared = snapshot.PrepareResolution(request.ExpectedRevision, request.ResponseIds);
+        var prepared = snapshot.PrepareResolution(request.ExpectedRevision, request.ResponseIds, history);
         if (!prepared.IsSuccess)
             return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(prepared.Error!);
 
         // A response that is already materialized without an accepted external disposition can never be held, so the
         // resolution is refused instead of accepted and canceled. Unmaterialized responses are proven by the process.
         var tenant = request.TenantId;
-        foreach (var admitted in snapshot.Responses)
+        foreach (var admitted in history.Responses)
         {
             var owner = await reader.HydrateAsync(new AuditorResponse(tenant, request.ProgramId, request.RequestId,
                 admitted.Operation.LogicalId), ct).ConfigureAwait(false);
@@ -95,15 +96,15 @@ public sealed class ResolveAuditorRequestHandler(NativeOperationExecutor operati
         }
 
         var tenantRealm = tenant.ToString();
-        var children = snapshot.Responses.Select(fact => new AdmittedRequestChild(fact.Operation.LogicalId,
+        var children = history.Responses.Select(fact => new AdmittedRequestChild(fact.Operation.LogicalId,
                 AdmittedRequestChildKind.Response, NativeFactReference.Of(snapshot.Stream, fact)))
-            .Concat(snapshot.Comments.Select(fact => new AdmittedRequestChild(fact.Operation.LogicalId,
+            .Concat(history.Comments.Select(fact => new AdmittedRequestChild(fact.Operation.LogicalId,
                 AdmittedRequestChildKind.Comment, NativeFactReference.Of(snapshot.Stream, fact))))
-            .Concat(snapshot.Selections.Select(fact => new AdmittedRequestChild(fact.Operation.LogicalId,
+            .Concat(history.Selections.Select(fact => new AdmittedRequestChild(fact.Operation.LogicalId,
                 AdmittedRequestChildKind.SampleSelection, NativeFactReference.Of(snapshot.Stream, fact))))
             .OrderBy(child => (int)child.Kind).ThenBy(child => child.ChildId.ToString(), StringComparer.Ordinal)
             .ToArray();
-        var uses = snapshot.Responses
+        var uses = history.Responses
             .Select(fact => new SourceUseRequirement(new AuditorResponse(tenant, request.ProgramId, request.RequestId,
                     fact.Operation.LogicalId).Stream, NativeFactReference.Of(snapshot.Stream, fact), 0,
                 SourceUsePurpose.RequestResolution, fact.Intent))

@@ -22,9 +22,14 @@ sealed class AuditorRequestResolutionFences(IRequestBus bus, IImmutableContentSt
     {
         var (request, intent, decision) = (resolution.Request!, resolution.Intent!, resolution.Decision!);
         var episode = intent.Header.Episode;
-        var proof = await AuditorContent.WriteAsync(content, resolution.TenantId, AuditorContent.FailureSchema,
-            new AuditorRequestFailureProof(decision.ProgramId, request.RequestId, reason, responseId), ct)
-            .ConfigureAwait(false);
+        var accepted = resolution.History!.AcceptedResolution(intent.Header.RootOperationId)
+            ?? throw new ImmutableContentUnavailableException("The exact resolution admission is not visible yet.");
+        var proof = request.TerminalResolution(intent.Header.RootOperationId) is AuditorRequestResolutionCanceled prior
+            ? prior.SourceProofs ?? throw new ImmutableContentIntegrityException("The original cancellation has no failure proof.")
+            : await AuditorContent.WriteAsync(content, resolution.TenantId, AuditorContent.FailureSchema,
+                new AuditorRequestFailureProof(decision.ProgramId, request.RequestId, reason, responseId,
+                    intent.Header.RootOperationId, (long)intent.ParentGeneration,
+                    NativeFactReference.Of(request.Stream, accepted), intentReference), ct).ConfigureAwait(false);
         var abortId = AuditorRequestResolutionEffects.ReceiverCommandId(source.EventId,
             nameof(AbortAuditorRequestResolution), null, episode);
         var aborted = await bus.SendAsync(new AbortAuditorRequestResolution(abortId, intent.Header.RootOperationId,
