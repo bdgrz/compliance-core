@@ -4,7 +4,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 public sealed partial class ExaminationEngagementDirectoryProjector(
     IExaminationEngagementDirectoryProjection projection)
-    : Projector(projection, EventStreamPattern.ForTenant(),
+    : Projector(projection, EventStreamPattern.ForTenant("examinations"),
         FitzExaminationEngagementDirectory.ProjectorName),
       IProjectorHandler<ExaminationEngagementOpened>,
       IProjectorHandler<ExaminationEngagementRevised>,

@@ -328,7 +328,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
             fixture.BaselineId);
 
         // Act
-        var result = await new GetTypeIBaselineHandler(fixture.Directory)
+        var result = await new GetTypeIBaselineHandler(fixture.Directory, fixture.Events)
             .HandleAsync(fixture.Context(request), CancellationToken.None);
 
         // Assert
@@ -351,7 +351,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
             fixture.BaselineId);
 
         // Act
-        var result = await new GetTypeIBaselineHandler(fixture.Directory)
+        var result = await new GetTypeIBaselineHandler(fixture.Directory, fixture.Events)
             .HandleAsync(fixture.Context(request), CancellationToken.None);
 
         // Assert
@@ -415,6 +415,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
         public FitzExaminationEngagementDirectory Directory { get; }
+        public InMemoryEventStore Events { get; } = new();
         public IImmutableContentStore Content { get; } = new FitzKvImmutableContentStore(new InMemoryKvClient());
         public TimeProvider Clock { get; } = new FixedTimeProvider(Now);
 
@@ -425,7 +426,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(Events);
             services.AddPortia();
             Directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
@@ -508,11 +509,15 @@ public sealed class ExaminationEngagementCommandHandlerTests
         async Task ProjectAsync(DomainEvent domainEvent)
         {
             var identity = new CheckpointIdentity(FitzExaminationEngagementDirectory.ProjectorName,
-                EventStreamPattern.ForPattern(TenantId.ToString()));
+                EventStreamPattern.ForPattern(TenantId.ToString(), "examinations"));
             await using var batch = await Directory.BeginAsync(new ProjectionBatchContext(identity,
-                ProjectionCheckpoint.Start));
+                await Directory.LoadCheckpointAsync(TenantId)));
             await Directory.ApplyAsync(domainEvent);
-            await batch.CommitAsync(ProjectionCheckpoint.Start);
+            var cursor = EventCursor.Start;
+            await foreach (var record in Events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(), "examinations"),
+                EventCursor.Start, CancellationToken.None))
+                cursor = record.NextCursor;
+            await batch.CommitAsync(new ProjectionCheckpoint(cursor));
         }
 
         public async ValueTask DisposeAsync()

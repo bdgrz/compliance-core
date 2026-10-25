@@ -1,0 +1,31 @@
+{
+  "reviewed": 5,
+  "blockedReviews": 0,
+  "signalsTriaged": 2,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Examinations/FitzExaminationEngagementDirectory.cs",
+      "sha256": "5d1cb42f72c0cc59076ed1fd7869f4afcd74134f889cf9a34fbdf58c9da9e1d3",
+      "signals": {
+        "authority_gap": 0.63,
+        "invariant_gap": 0.5,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.33
+      },
+      "classification": "verified_scoped_immutable_rows_and_caught_up_locator",
+      "evidence": "Tenant examination-area batch guard, exact engagement+baseline primary/predecessor key, at-most-two program+baseline owner matches, fresh projection v3 and SourceContentManifest replay equality. Four actual cross-owner freeze/amendment REDs and proof-descriptor RED reproduced; focused positive/negative scope/checkpoint/lineage tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/GetTypeIBaselineHandler.cs",
+      "sha256": "8a348b6a3650de6e576be8e04ae19fdea6367ce28041011245460bc93370cdf8",
+      "signals": {
+        "authority_gap": 0.68,
+        "invariant_gap": 0.47,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.39
+      },
+      "classification": "verified_scoped_immutable_rows_and_caught_up_locator",
+      "evidence": "Public DTO/path remains unchanged. Current trusted program authorization is the dispatch boundary. Exact tenant examination checkpoint is caught up before and after discovery; invalid rows and multiple owner matches refuse. Selected baseline row and source publication bytes are immutable and exact scope is checked. This read may linearize at the confirmed discovery fence; no claim of excluding future concurrent admissions. Null-match handling short-circuits without indexing an empty result."
+    }
+  ]
+}
