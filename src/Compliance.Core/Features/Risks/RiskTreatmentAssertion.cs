@@ -25,8 +25,10 @@ public sealed class RiskTreatmentAssertion : Aggregate
     readonly Uuid _programId;
     readonly Uuid _riskId;
     readonly Uuid _controlId;
-    readonly List<RiskTreatmentLine> _lines = [];
-    readonly List<DomainEvent> _facts = [];
+    RiskTreatmentLine? _pending;
+    RiskTreatmentLine? _accepted;
+    DomainEvent? _latest;
+    readonly bool _replayOnly;
     long _revision;
 
     /// <summary>Opens one line, selecting the logical operation to resolve.</summary>
@@ -41,6 +43,22 @@ public sealed class RiskTreatmentAssertion : Aggregate
         On<RiskControlTreatmentReviewed>(Apply);
         On<RiskControlTreatmentRetired>(Apply);
     }
+
+    RiskTreatmentAssertion(Uuid tenant, Uuid program, Uuid risk, EventStreamAddress source, Uuid logical)
+        : base(Uuid.Parse(source.Resource, System.Globalization.CultureInfo.InvariantCulture), source)
+    {
+        (_tenantId, _programId, _riskId, _controlId) = (tenant, program, risk, Uuid.Empty);
+        _replayOnly = true;
+        Acceptance = new NativeAcceptance(logical);
+        On<RiskControlTreatmentProposed>(Apply);
+        On<RiskControlTreatmentReviewed>(Apply);
+        On<RiskControlTreatmentRetired>(Apply);
+    }
+
+    internal static RiskTreatmentAssertion ForAcceptedReplay(Uuid tenant, Uuid program, Uuid risk,
+        EventStreamAddress source, Uuid logical) => source.Realm == tenant.ToString() && source.Area == Area
+            ? new RiskTreatmentAssertion(tenant, program, risk, source, logical)
+            : throw new InvalidOperationException("An accepted assertion owner must belong to the exact requested tenant scope.");
 
     /// <summary>The identity of the line of a risk and control.</summary>
     public static Uuid IdentityOf(Uuid tenantId, Uuid programId, Uuid riskId, Uuid controlId) =>
@@ -58,20 +76,11 @@ public sealed class RiskTreatmentAssertion : Aggregate
     /// <summary>The logical revision: the number of facts of this line.</summary>
     public long Revision => _revision;
 
-    /// <summary>Every treatment of the line in the order proposed.</summary>
-    public IReadOnlyList<RiskTreatmentLine> Treatments => _lines;
-
-    /// <summary>Every fact in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
-
-    /// <summary>The treatment awaiting review, or null.</summary>
-    public RiskTreatmentLine? Pending => _lines.FirstOrDefault(static line => line.Status == RiskStates.TreatmentProposed);
-
-    /// <summary>The accepted treatment in force, or null.</summary>
-    public RiskTreatmentLine? Accepted => _lines.FirstOrDefault(static line => line.Status == RiskStates.TreatmentAccepted);
-
-    /// <summary>The treatment with this identity, or null.</summary>
-    public RiskTreatmentLine? Find(Uuid treatmentId) => _lines.FirstOrDefault(line => line.TreatmentId == treatmentId);
+    public DomainEvent? Latest => _latest;
+    public Uuid TenantId => _tenantId;
+    public Uuid ProgramId => _programId;
+    public RiskTreatmentLine? Pending => _pending;
+    public RiskTreatmentLine? Accepted => _accepted;
 
     /// <summary>Checks that a treatment can be proposed at the expected revision.</summary>
     public Result PreparePropose(long expectedRevision)
@@ -86,7 +95,7 @@ public sealed class RiskTreatmentAssertion : Aggregate
     /// <summary>Checks that the pending treatment can be reviewed at the expected revision.</summary>
     public Result PrepareReview(Uuid treatmentId, long expectedRevision)
     {
-        if (Find(treatmentId) is not { } line)
+        if (Pending is not { } line || line.TreatmentId != treatmentId)
             return Fail(CommandFailure.MissingRecord("The risk control treatment was not found."));
         if (line.Status != RiskStates.TreatmentProposed)
             return Fail(CommandFailure.StateConflict("The control treatment has no pending assertion to review."));
@@ -96,7 +105,7 @@ public sealed class RiskTreatmentAssertion : Aggregate
     /// <summary>Checks that the accepted treatment can be retired at the expected revision.</summary>
     public Result PrepareRetire(Uuid treatmentId, long expectedRevision)
     {
-        if (Find(treatmentId) is not { } line)
+        if (Accepted is not { } line || line.TreatmentId != treatmentId)
             return Fail(CommandFailure.MissingRecord("The risk control treatment was not found."));
         if (expectedRevision != _revision)
             return Stale();
@@ -151,57 +160,73 @@ public sealed class RiskTreatmentAssertion : Aggregate
 
     void Apply(RiskControlTreatmentProposed ev)
     {
-        Acceptance.Observe(ev);
+        if (ev.Operation.CommandKind != nameof(ProposeRiskControlTreatment) || ev.Operation.Actor.Id != ev.ProposerMemberId.ToString() ||
+            ev.TreatmentContent.Schema != RiskContent.TreatmentSchema || ev.FirstResponse is null || ev.OperationResult is null)
+            throw new InvalidOperationException("The assertion proposal has another exact native kind or proposer.");
         EnsureNext(ev.TenantId, ev.ProgramId, ev.RiskId, ev.Revision, ev.Operation);
-        if (Pending is not null || Find(ev.Operation.LogicalId) is not null)
+        Acceptance.Observe(ev);
+        if (Pending is not null || Accepted?.TreatmentId == ev.Operation.LogicalId)
             throw new InvalidOperationException("A line holds one pending proposal and never reuses a treatment id.");
-        _lines.Add(new RiskTreatmentLine(ev));
+        _pending = new RiskTreatmentLine(ev);
         Advance(ev);
     }
 
     void Apply(RiskControlTreatmentReviewed ev)
     {
-        Acceptance.Observe(ev);
+        if (ev.Operation.CommandKind != nameof(ReviewRiskControlTreatment) || ev.Reviewer != ev.Operation.Actor || ev.ReviewedAt != ev.Operation.AcceptedAt ||
+            ev.DecisionId != ev.Operation.LogicalId || ev.FirstResponse is null || ev.OperationResult is null)
+            throw new InvalidOperationException("The assertion review has another exact native decision or actor.");
         EnsureNext(ev.TenantId, ev.ProgramId, ev.RiskId, ev.Revision, ev.Operation);
-        var line = Find(ev.TreatmentId);
+        Acceptance.Observe(ev);
+        var line = Pending?.TreatmentId == ev.TreatmentId ? Pending : null;
         if (line is null || line.Status != RiskStates.TreatmentProposed)
             throw new InvalidOperationException("Only the pending proposal of the line is reviewed.");
-        if (ev.Outcome == RiskStates.Accept)
-            foreach (var previous in _lines.Where(static item => item.Status == RiskStates.TreatmentAccepted))
-                previous.Status = RiskStates.TreatmentSuperseded;
+        if (ev.Outcome is not (RiskStates.Accept or RiskStates.Reject))
+            throw new InvalidOperationException("An assertion review requires its exact accepted or rejected outcome.");
         line.Reviewed = ev;
         line.Status = ev.Outcome == RiskStates.Accept ? RiskStates.TreatmentAccepted : RiskStates.TreatmentRejected;
+        if (ev.Outcome == RiskStates.Accept)
+            _accepted = line;
+        _pending = null;
         Advance(ev);
     }
 
     void Apply(RiskControlTreatmentRetired ev)
     {
-        Acceptance.Observe(ev);
+        if (ev.Operation.CommandKind != nameof(RetireRiskControlTreatment) || ev.RetiredBy != ev.Operation.Actor || ev.RetiredAt != ev.Operation.AcceptedAt ||
+            ev.FirstResponse is null || ev.OperationResult is null)
+            throw new InvalidOperationException("The assertion retirement has another exact native kind or actor.");
         EnsureNext(ev.TenantId, ev.ProgramId, ev.RiskId, ev.Revision, ev.Operation);
-        var line = Find(ev.TreatmentId);
+        Acceptance.Observe(ev);
+        var line = Accepted?.TreatmentId == ev.TreatmentId ? Accepted : null;
         if (line is null || line.Status != RiskStates.TreatmentAccepted)
             throw new InvalidOperationException("Only the accepted treatment of the line is retired.");
         line.Retired = ev;
         line.Status = RiskStates.TreatmentRetired;
+        _accepted = null;
         Advance(ev);
     }
 
     void EnsureNext(Uuid tenantId, Uuid programId, Uuid riskId, long revision, OperationProvenance operation)
     {
         if (tenantId != _tenantId || programId != _programId || riskId != _riskId || revision != _revision + 1 ||
-            operation.Owner != Stream)
+            operation.Owner != Stream || (operation.FirstOwner ?? operation.Owner) != Stream || operation.Actor.Kind != "member" ||
+            !Uuid.TryParse(operation.Actor.Id, out var actor) || actor == Uuid.Empty ||
+            !NativeOwnerHistory.IsOwnRoot(this, operation, operation.CommandKind, (ulong)_revision) ||
+            operation.CommandKind is not (nameof(ProposeRiskControlTreatment) or nameof(ReviewRiskControlTreatment) or nameof(RetireRiskControlTreatment)))
             throw new InvalidOperationException("A line fact follows the previous one at the next revision.");
     }
 
     void Advance(DomainEvent fact)
     {
         _revision++;
-        _facts.Add(fact);
+        _latest = fact;
     }
 
     Result PrepareOwn(OperationProvenance operation, Func<long, Result> prepare)
     {
-        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
+        if (_replayOnly || operation.Owner != Stream || operation.LogicalId != Acceptance.SelectedLogicalId ||
+            operation.OriginalExpectedRevision is not { } expected)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A line write is a root operation of its own line with an expected revision."));
         return prepare((long)expected);

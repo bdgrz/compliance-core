@@ -256,7 +256,7 @@ public sealed class RiskOwnerBoundaryTests
         Assert.Equal([evidence], view.EvidenceRequestIds);
         Assert.Equal("open", view.Status);
         Assert.Equal(2, action.Revision);
-        var revised = Assert.IsType<RiskTreatmentActionRevised>(action.Facts[^1]);
+        var revised = Assert.IsType<RiskTreatmentActionRevised>(action.Latest!);
         Assert.Equal(edit.CommandId, revised.RequestId);
         Assert.Equal(view.CreatedBy, action.Added!.Operation.Actor);
         Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.AssessorUserId).ToString(), revised.RevisedBy.Id);
@@ -283,7 +283,8 @@ public sealed class RiskOwnerBoundaryTests
         var action = await fixture.ActionAsync(added.Value.ActionId);
         Assert.Equal(2, action.Revision);
         Assert.Equal("Updated action", Assert.Single((await fixture.GovernanceAsync()).TreatmentActions).Title);
-        Assert.Single(action.Facts.OfType<RiskTreatmentActionRevised>());
+        Assert.Single((await RiskTreatmentActionHistory.ReadAsync(
+            provider.GetRequiredService<IDomainEventReader>(), action)).OfType<RiskTreatmentActionRevised>());
     }
 
     [Fact]
@@ -370,14 +371,17 @@ public sealed class RiskOwnerBoundaryTests
         Assert.Empty((await fixture.GovernanceAsync()).TreatmentActions);
     }
 
-    static RiskTreatmentAssertion NewLine() => new(TenantId, ProgramId, RiskId, ControlId);
+    static RiskTreatmentAssertionRules NewLine() => new(TenantId, ProgramId, RiskId, ControlId);
 
-    static Uuid Propose(RiskTreatmentAssertion line, ulong revision)
+    static Uuid Propose(RiskTreatmentAssertionRules line, ulong revision)
     {
         var id = Uuid.CreateVersion4();
         Assert.True(line.Propose(Operation(line, id, revision, Proposer), Content, ProposerId, Content, Content).IsSuccess);
         return id;
     }
+
+    static OperationProvenance Operation(RiskTreatmentAssertionRules owner, Uuid id, ulong expected, ActorReference actor) =>
+        new(id, id, null, "RiskOwnerTest", actor, owner.Stream, "0", expected, new string('a', 64), Now, owner.Stream, owner.Stream);
 
     static OperationProvenance Operation(Aggregate owner, Uuid id, ulong expected, ActorReference actor) =>
         new(id, id, null, "RiskOwnerTest", actor, owner.Stream, "0", expected, new string('a', 64), Now, owner.Stream, owner.Stream);

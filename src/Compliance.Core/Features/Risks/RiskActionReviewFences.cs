@@ -26,9 +26,12 @@ sealed class RiskActionReviewFences(IRequestBus bus, IImmutableContentStore cont
         var accepted = action.AcceptedReview(intent.Header.RootOperationId)
             ?? throw new InvalidOperationException("A fence needs the accepted review.");
         var episode = intent.Header.Episode;
-        var proof = await FindingContent.WriteDeterministicAsync(content, review.TenantId, intent.Header.RootOperationId,
-            RiskContent.FailureSchema, new RiskActionReviewFailureProof(decision.ProgramId, decision.RiskId,
-                intent.ActionId, reason, evidenceRequestId), ct).ConfigureAwait(false);
+        var proof = action.TerminalReview(intent.Header.RootOperationId) is RiskTreatmentActionCompletionReviewCanceled canceledReview
+            ? canceledReview.SourceProofs ?? throw new ImmutableContentIntegrityException("The cancellation has no exact failure proof.")
+            : await FindingContent.WriteAsync(content, review.TenantId, RiskContent.FailureSchema,
+                new RiskActionReviewFailureProof(decision.ProgramId, decision.RiskId, intent.ActionId, reason,
+                    evidenceRequestId, source, intent.Header.RootOperationId, accepted.Generation, intentReference), ct)
+                .ConfigureAwait(false);
         var abortId = RiskActionReviewEffects.ReceiverCommandId(source.EventId, nameof(AbortRiskTreatmentActionReview),
             null, episode);
         var aborted = await bus.SendAsync(new AbortRiskTreatmentActionReview(abortId, intent.Header.RootOperationId,

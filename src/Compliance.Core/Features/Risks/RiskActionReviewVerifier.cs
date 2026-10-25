@@ -79,11 +79,27 @@ sealed class RiskActionReviewVerifier(IAggregateReader reader, IImmutableContent
                 $"The frozen review cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
-        if (intent.Header.RootOperationId != operationId || intent.ActionId == Uuid.Empty ||
+        if (intent.Header is null || intent.Header.RootOperationId != operationId || intent.ActionId == Uuid.Empty ||
             decision.ProgramId == Uuid.Empty || decision.RiskId == Uuid.Empty || decision.DecisionId != operationId)
             return RiskActionReview.Failed(Permanent("The command differs from the frozen review intent."));
         var action = await reader.HydrateAsync(new RiskTreatmentAction(tenant, decision.ProgramId, decision.RiskId,
-            intent.ActionId, commandId), ct).ConfigureAwait(false);
+            intent.ActionId, commandId, operationId), ct).ConfigureAwait(false);
+        if (action.Stream != source.Stream)
+            return RiskActionReview.Failed(Permanent("The frozen review belongs to another exact action stream."));
+        if (action.AcceptedReview(operationId) is { } accepted)
+        {
+            var operation = accepted.Operation;
+            var header = intent.Header;
+            var submission = action.SubmissionForReview(operationId);
+            if (header.FirstOwner != action.Stream || header.AffectedOwner != action.Stream ||
+                header.ExpectedRevisionOwner != action.Stream || header.OriginalActor != operation.Actor ||
+                header.Episode != operation.Episode || header.OriginalExpectedRevision != operation.OriginalExpectedRevision ||
+                header.AuthoredIntentSha256 != operation.AuthoredIntentSha256 || header.AcceptedAt != operation.AcceptedAt ||
+                submission is null || submission.SubmissionId != intent.SubmissionId ||
+                decision.Reviewer != operation.Actor || decision.DecidedAt != operation.AcceptedAt ||
+                decision.ReviewerMemberId.ToString() != operation.Actor.Id)
+                return RiskActionReview.Failed(Permanent("The sealed review differs from its exact admitted submission or original authority."));
+        }
         return new RiskActionReview(null, action, intent, decision, tenant);
     }
 

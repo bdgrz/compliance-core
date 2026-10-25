@@ -82,18 +82,59 @@ public sealed class RiskGovernanceReader(IAggregateReader reader, IDomainEventRe
     public ValueTask<RiskGovernanceSnapshot> ReadRiskAsync(Uuid tenantId, Uuid programId, Uuid riskId,
         CancellationToken ct = default) => CollectAsync(tenantId, programId, riskId, ct);
 
-    /// <summary>The control a treatment of the risk belongs to, or null when the risk has no such treatment.</summary>
+    /// <summary>Resolves an immutable treatment locator in its exact tenant/program/risk scope, retaining ambiguity.</summary>
     public async ValueTask<Uuid?> LocateControlAsync(Uuid tenantId, Uuid programId, Uuid riskId, Uuid treatmentId,
         CancellationToken ct = default)
     {
+        var matches = new HashSet<Uuid>();
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(),
-                           RiskTreatmentAssertion.Area), EventCursor.Start, ct).ConfigureAwait(false))
-            if (!record.Event.Metadata.IsAudit && record.Event is RiskControlTreatmentProposed proposed &&
-                proposed.TenantId == tenantId && proposed.ProgramId == programId && proposed.RiskId == riskId &&
-                proposed.Operation.LogicalId == treatmentId)
-                return (await FindingContent.ReadAsync<RiskControlTreatmentView>(content, tenantId,
-                    proposed.TreatmentContent, ct).ConfigureAwait(false)).ControlId;
-        return null;
+            RiskTreatmentAssertion.Area), EventCursor.Start, ct).ConfigureAwait(false))
+        {
+            if (record.Event.Metadata.IsAudit || record.Event is not RiskControlTreatmentProposed proposed ||
+                proposed.TenantId != tenantId || proposed.ProgramId != programId || proposed.RiskId != riskId ||
+                proposed.Operation.LogicalId != treatmentId)
+                continue;
+            var view = await FindingContent.ReadAsync<RiskControlTreatmentView>(content, tenantId, proposed.TreatmentContent, ct).ConfigureAwait(false);
+            if (view.RiskId != riskId || view.TreatmentId != treatmentId || view.ControlId == Uuid.Empty ||
+                record.Stream != new RiskTreatmentAssertion(tenantId, programId, riskId, view.ControlId).Stream ||
+                proposed.Operation.Owner != record.Stream || (proposed.Operation.FirstOwner ?? proposed.Operation.Owner) != record.Stream)
+                throw new ImmutableContentIntegrityException("The immutable treatment locator differs from its exact native owner.");
+            matches.Add(view.ControlId);
+        }
+        if (matches.Count > 1)
+            throw new ImmutableContentIntegrityException("The scoped treatment identity is ambiguous across control assertion owners.");
+        return matches.Count == 0 ? null : matches.Single();
+    }
+
+    /// <summary>Uses exact existing native admission facts to route an authorized retry before fresh source reads.</summary>
+    internal async Task<EventStreamAddress?> LocateAssertionAdmissionAsync(Uuid tenantId, Uuid programId, Uuid riskId,
+        Uuid commandId, CancellationToken ct = default)
+    {
+        var owners = new HashSet<EventStreamAddress>();
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(),
+            RiskTreatmentAssertion.Area), EventCursor.Start, ct).ConfigureAwait(false))
+        {
+            if (record.Event.Metadata.IsAudit)
+                continue;
+            var matches = record.Event switch
+            {
+                RiskControlTreatmentProposed fact => fact.TenantId == tenantId && fact.ProgramId == programId && fact.RiskId == riskId && fact.Operation.LogicalId == commandId,
+                RiskControlTreatmentReviewed fact => fact.TenantId == tenantId && fact.ProgramId == programId && fact.RiskId == riskId && fact.Operation.LogicalId == commandId,
+                RiskControlTreatmentRetired fact => fact.TenantId == tenantId && fact.ProgramId == programId && fact.RiskId == riskId && fact.Operation.LogicalId == commandId,
+                _ => false,
+            };
+            if (!matches)
+                continue;
+            var operation = ((INativeOperationFact)record.Event).Operation;
+            if (record.Stream.Realm != tenantId.ToString() || record.Stream.Area != RiskTreatmentAssertion.Area ||
+                record.Stream.Resource != record.Event.Metadata.AggregateId.ToString() || operation.Owner != record.Stream ||
+                (operation.FirstOwner ?? operation.Owner) != record.Stream || record.Event.Metadata.EventId == Uuid.Empty || record.Event.Metadata.AggregateVersion == 0)
+                throw new ImmutableContentIntegrityException("The assertion admission locator has another exact native source binding.");
+            owners.Add(record.Stream);
+        }
+        if (owners.Count > 1)
+            throw new ImmutableContentIntegrityException("The scoped command identity is ambiguous across assertion owners.");
+        return owners.Count == 0 ? null : owners.Single();
     }
 
     /// <summary>The treatments of a line composed from its facts, in the order proposed.</summary>
@@ -102,10 +143,17 @@ public sealed class RiskGovernanceReader(IAggregateReader reader, IDomainEventRe
     {
         ArgumentNullException.ThrowIfNull(line);
         var views = new List<RiskControlTreatmentView>();
-        foreach (var treatment in line.Treatments)
+        var facts = await RiskTreatmentAssertionHistory.ReadAsync(events, line, ct).ConfigureAwait(false);
+        var composed = RiskTreatmentAssertionRules.FromFacts(tenantId, line.ProgramId, line.RiskId, line.ControlId, facts);
+        foreach (var treatment in composed.Treatments)
         {
             var proposed = await FindingContent.ReadAsync<RiskControlTreatmentView>(content, tenantId,
                 treatment.Proposed.TreatmentContent, ct).ConfigureAwait(false);
+            if (proposed.TreatmentId != treatment.TreatmentId || proposed.RiskId != line.RiskId ||
+                proposed.ControlId != line.ControlId || proposed.ControlVersionId == Uuid.Empty ||
+                proposed.ProposedBy != treatment.Proposed.Operation.Actor || proposed.ProposedAt != treatment.Proposed.Operation.AcceptedAt ||
+                proposed.Status != RiskStates.TreatmentProposed || RiskCommands.InvalidText(proposed.Rationale) || proposed.Rationale != proposed.Rationale.Trim())
+                throw new ImmutableContentIntegrityException("The immutable treatment differs from its exact source line, proposal or original author.");
             var view = proposed with { Status = treatment.Status };
             if (treatment.Reviewed is { } reviewed)
                 view = view with
@@ -134,12 +182,12 @@ public sealed class RiskGovernanceReader(IAggregateReader reader, IDomainEventRe
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(action);
-        if (action.Added is not { } added)
+        if (tenantId != action.TenantId)
+            throw new ImmutableContentIntegrityException("The action composition belongs to another tenant.");
+        if (await RiskTreatmentActionHistory.ReadInitialAsync(content, action, ct).ConfigureAwait(false) is not { } view)
             return null;
-        var view = await FindingContent.ReadAsync<RiskTreatmentActionView>(content, tenantId, added.ActionContent, ct)
-            .ConfigureAwait(false);
         var completions = new List<RiskTreatmentActionCompletionView>();
-        foreach (var fact in action.Facts)
+        foreach (var fact in await RiskTreatmentActionHistory.ReadAsync(events, action, ct).ConfigureAwait(false))
         {
             switch (fact)
             {
@@ -187,8 +235,10 @@ public sealed class RiskGovernanceReader(IAggregateReader reader, IDomainEventRe
     }
 
     /// <summary>The submitting members of the action's completion submissions, by submission id.</summary>
-    public static IReadOnlyDictionary<Uuid, Uuid> SubmittersOf(RiskTreatmentAction action) =>
-        action.Submissions.ToDictionary(static submission => submission.SubmissionId,
+    public async Task<IReadOnlyDictionary<Uuid, Uuid>> SubmittersOfAsync(RiskTreatmentAction action,
+        CancellationToken ct = default) =>
+        (await RiskTreatmentActionHistory.ReadAsync(events, action, ct).ConfigureAwait(false))
+        .OfType<RiskTreatmentActionCompletionSubmitted>().ToDictionary(static submission => submission.SubmissionId,
             static submission => submission.SubmitterMemberId);
 
     /// <summary>
@@ -267,7 +317,7 @@ public sealed class RiskGovernanceReader(IAggregateReader reader, IDomainEventRe
             }
 
             var views = new List<RiskTreatmentActionView>();
-            var submitters = new Dictionary<Uuid, Uuid>();
+            var submitters = new Dictionary<(Uuid ActionId, Uuid SubmissionId), Uuid>();
             foreach (var (_, actionId) in actions.Where(action => action.Risk == riskId))
             {
                 var action = await reader.HydrateAsync(new RiskTreatmentAction(tenantId, programId, riskId, actionId),
@@ -275,8 +325,8 @@ public sealed class RiskGovernanceReader(IAggregateReader reader, IDomainEventRe
                 if (await ComposeActionAsync(tenantId, action, ct).ConfigureAwait(false) is not { } view)
                     continue;
                 views.Add(view);
-                foreach (var (submission, submitter) in SubmittersOf(action))
-                    submitters[submission] = submitter;
+                foreach (var (submission, submitter) in await SubmittersOfAsync(action, ct).ConfigureAwait(false))
+                    submitters[(action.ActionId, submission)] = submitter;
             }
 
             records.Add(riskId, new RiskGovernanceRecord(governance.Revision, owner, treatments.OrderBy(

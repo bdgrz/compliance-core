@@ -10,8 +10,8 @@ using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Tests.Features.Risks;
 using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Processes;
@@ -45,7 +45,7 @@ public sealed class SourceUseCancellationRecoveryTests
         var reader = services.GetRequiredService<IAggregateReader>();
         var content = services.GetRequiredService<IImmutableContentStore>();
         var action = await reader.HydrateAsync(new RiskTreatmentAction(fixture.TenantId, fixture.ProgramId,
-            fixture.RiskId, request.ActionId));
+            fixture.RiskId, request.ActionId, selectedReviewRoot: request.CommandId));
         var accepted = action.AcceptedReview(request.CommandId)!;
         var source = NativeFactReference.Of(action.Stream, accepted);
         var key = ProcessKey.ForRoot(RiskActionReviewEffects.ProcessName, request.CommandId, source);
@@ -61,7 +61,7 @@ public sealed class SourceUseCancellationRecoveryTests
         record = await records.ReplaceAsync(record with { StageIndex = stageIndex }, record.Version);
         var proof = await content.WriteJsonAsync(fixture.TenantId.ToString(), Uuid.CreateVersion4(), RiskContent.FailureSchema,
             new RiskActionReviewFailureProof(fixture.ProgramId, fixture.RiskId, request.ActionId,
-                "The completion can no longer be accepted.", null));
+                "The completion can no longer be accepted.", null, source, request.CommandId, accepted.Generation, accepted.Intent));
         var abort = new AbortRiskTreatmentActionReview(CommandId(record, nameof(AbortRiskTreatmentActionReview), null),
             request.CommandId, action.Stream, accepted.Generation, 0, proof);
         var aborted = Assert.IsType<ReceiverOutcome.Applied>((await SendAsync(provider, abort)).Value);
@@ -87,10 +87,11 @@ public sealed class SourceUseCancellationRecoveryTests
             Assert.False((await reader.HydrateAsync(new EvidenceRequest(fixture.TenantId, fixture.ProgramId, id)))
                 .Uses.HasActiveUse);
         var retained = await reader.HydrateAsync(new RiskTreatmentAction(fixture.TenantId, fixture.ProgramId,
-            fixture.RiskId, request.ActionId));
+            fixture.RiskId, request.ActionId, selectedReviewRoot: request.CommandId));
         Assert.Null(retained.PendingReview);
         Assert.IsType<RiskTreatmentActionCompletionReviewCanceled>(retained.TerminalReview(request.CommandId));
-        Assert.Empty(retained.Reviews);
+        Assert.Empty((await RiskTreatmentActionHistory.ReadAsync(
+            services.GetRequiredService<IDomainEventReader>(), retained)).OfType<RiskTreatmentActionCompletionReviewed>());
         Assert.IsType<ReceiverOutcome.Rejected>(delayed.Value);
     }
 

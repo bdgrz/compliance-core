@@ -675,7 +675,7 @@ public sealed class WorkQueueTests
         var before = await fixture.AsAsync(fixture.OwnerUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId));
         await EvidenceSeeds.FulfilAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, evidenceId, Uuid.CreateVersion4(), lead, DateTimeOffset.UtcNow);
-        await RiskSeeds.SubmitActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, actionId, Uuid.CreateVersion4(), "Done.", [evidenceId], fixture.OwnerMemberId, lead, DateTimeOffset.UtcNow);
+        await RiskSeeds.SubmitActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, actionId, Uuid.CreateVersion4(), "Done.", [evidenceId], fixture.OwnerMemberId, ActorReference.ForMember(fixture.OwnerMemberId, "Owner"), DateTimeOffset.UtcNow);
         var after = await fixture.AsAsync(fixture.OwnerUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId));
 

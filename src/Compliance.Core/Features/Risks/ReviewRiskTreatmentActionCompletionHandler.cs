@@ -31,42 +31,61 @@ public sealed class ReviewRiskTreatmentActionCompletionHandler(NativeOperationEx
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
             return Refuse(RequestErrorKind.Forbidden, "Risk sign-off requires a personal HTTP invocation.");
         var request = context.Request;
-        if (request.CommandId == Uuid.Empty || request.ActionId == Uuid.Empty || request.ExpectedRevision < 0)
+        if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty || request.RiskId == Uuid.Empty ||
+            request.CommandId == Uuid.Empty || request.ActionId == Uuid.Empty || request.ExpectedRevision < 0)
             return Refuse(RequestErrorKind.Validation,
                 "A completion review requires a command id, an action id and a non-negative expected revision.");
-        var risk = await RiskOwnerResolution.RequireRiskAsync(reader, request.TenantId, request.ProgramId,
-            request.RiskId, ct).ConfigureAwait(false);
-        if (!risk.IsSuccess)
-            return Result<OperationAcceptedResponse>.Failure(risk.Error!);
         var actor = RiskActor.From(context.Actor, request.TenantId);
         var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new RiskTreatmentAction(request.TenantId, request.ProgramId,
-            request.RiskId, request.ActionId, request.CommandId), ct).ConfigureAwait(false);
+        var snapshot = new RiskTreatmentAction(request.TenantId, request.ProgramId,
+            request.RiskId, request.ActionId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, "ReviewRiskTreatmentActionCompletion",
-            snapshot.Stream, actorReference, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now);
+            snapshot.Stream, actorReference, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? intent = null;
         FirstResponseDescriptor? response = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(request, snapshot, provenance, actor, actorReference, now, ct)
-                .ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response) = frozen.Value;
-        }
 
-        var outcome = await operations.ExecuteAsync(new NativeOperation<RiskTreatmentAction>(binding,
-            () => new RiskTreatmentAction(request.TenantId, request.ProgramId, request.RiskId, request.ActionId,
-                request.CommandId),
-            action => action.Acceptance,
-            action => FindingCommands.Prepared(action.PrepareReview(request.ExpectedRevision), response),
-            (RiskTreatmentAction action, ImmutableContentRef acknowledgment) =>
-                action.AcceptReview(provenance, intent!, acknowledgment)), context, ct).ConfigureAwait(false);
-        return await FindingContent.ResponseAsync<OperationAcceptedResponse>(content, request.TenantId, outcome, ct)
-            .ConfigureAwait(false);
+        try
+        {
+            var outcome = await operations.ExecuteAsync(new NativeOperation<RiskTreatmentAction>(binding,
+                () => new RiskTreatmentAction(request.TenantId, request.ProgramId, request.RiskId, request.ActionId,
+                    request.CommandId),
+                action => action.Acceptance,
+                async (action, token) =>
+                {
+                    try
+                    {
+                        var risk = await RiskOwnerResolution.RequireRiskAsync(reader, request.TenantId, request.ProgramId,
+                            request.RiskId, token).ConfigureAwait(false);
+                        if (!risk.IsSuccess)
+                            return Result<FirstResponseDescriptor>.Failure(risk.Error!);
+                        var frozen = await FreezeAsync(request, action, provenance, actor, actorReference, now, token)
+                            .ConfigureAwait(false);
+                        if (!frozen.IsSuccess)
+                            return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                        (intent, response) = frozen.Value;
+                        return Result<FirstResponseDescriptor>.Success(response!);
+                    }
+                    catch (ImmutableContentIntegrityException failure)
+                    {
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "The exact treatment action source content cannot be verified.",
+                            failure is ImmutableContentUnavailableException));
+                    }
+                },
+                (RiskTreatmentAction action, ImmutableContentRef acknowledgment) =>
+                    action.AcceptReview(provenance, intent!, acknowledgment)), context, ct).ConfigureAwait(false);
+            return await FindingContent.ResponseAsync<OperationAcceptedResponse>(content, request.TenantId, outcome, ct)
+                .ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact treatment action content cannot be verified.", failure is ImmutableContentUnavailableException));
+        }
     }
 
     async ValueTask<Result<(ImmutableContentRef Intent, FirstResponseDescriptor Response)>> FreezeAsync(
@@ -77,6 +96,7 @@ public sealed class ReviewRiskTreatmentActionCompletionHandler(NativeOperationEx
         if (!prepared.IsSuccess)
             return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(prepared.Error!);
         var tenant = request.TenantId;
+        var candidate = Uuid.CreateVersion4();
         var pending = action.PendingSubmission!;
         var view = (await governanceReader.ComposeActionAsync(tenant, action, ct).ConfigureAwait(false))!;
 
@@ -123,7 +143,7 @@ public sealed class ReviewRiskTreatmentActionCompletionHandler(NativeOperationEx
                 var pinned = NativeFactReference.Of(evidence.Stream, fulfilled);
                 cited.Add(new ReviewedEvidenceRequest(id, pinned));
                 var facts = await FindingContent.WriteDeterministicAsync(content, tenant,
-                    Uuid.CreateVersion5(request.CommandId, id.ToString()), RiskContent.EvidenceFactsSchema,
+                    Uuid.CreateVersion5(candidate, id.ToString()), RiskContent.EvidenceFactsSchema,
                     new ReviewEvidenceFacts(id, true, fulfilled.ArtifactId, null), ct).ConfigureAwait(false);
                 uses.Add(new SourceUseRequirement(evidence.Stream, pinned, (ulong)evidence.Revision,
                     SourceUsePurpose.ActionCompletionReview, facts));
@@ -132,16 +152,16 @@ public sealed class ReviewRiskTreatmentActionCompletionHandler(NativeOperationEx
         var decision = new RiskActionReviewDecision(request.CommandId, request.ProgramId, request.RiskId,
             request.Outcome, request.Rationale.Trim(), actor.MemberId, actorReference, now,
             request.SeparationOfDutiesWaiverId, waiverReference);
-        var decisionReference = await FindingContent.WriteDeterministicAsync(content, tenant, request.CommandId,
+        var decisionReference = await FindingContent.WriteDeterministicAsync(content, tenant, candidate,
             RiskContent.AuthoredReviewSchema, decision, ct).ConfigureAwait(false);
         var realm = tenant.ToString();
         var evidenceManifest = await ImmutableSelectionManifests.WriteAsync<ReviewedEvidenceRequest>(content, realm,
-            Uuid.CreateVersion5(request.CommandId, "completion-evidence"), RiskContent.ReviewedEvidenceSchema, cited,
+            Uuid.CreateVersion5(candidate, "completion-evidence"), RiskContent.ReviewedEvidenceSchema, cited,
             SelectionOrder.CanonicalKey, ct).ConfigureAwait(false);
         var useManifest = await ImmutableSelectionManifests.WriteAsync<SourceUseRequirement>(content, realm,
-            Uuid.CreateVersion5(request.CommandId, "source-uses"), SourceUseRequirement.Schema, uses,
+            Uuid.CreateVersion5(candidate, "source-uses"), SourceUseRequirement.Schema, uses,
             SelectionOrder.CanonicalKey, ct).ConfigureAwait(false);
-        var intent = await FindingContent.WriteDeterministicAsync(content, tenant, request.CommandId,
+        var intent = await FindingContent.WriteDeterministicAsync(content, tenant, candidate,
             RiskActionCompletionReviewIntent.Schema, new RiskActionCompletionReviewIntent(
                 FindingContent.Header(provenance, now), request.ActionId, pending.SubmissionId, decisionReference,
                 evidenceManifest, useManifest), ct).ConfigureAwait(false);
@@ -153,8 +173,7 @@ public sealed class ReviewRiskTreatmentActionCompletionHandler(NativeOperationEx
     async ValueTask<bool> IsAssignedReviewerAsync(ReviewRiskTreatmentActionCompletion request, Uuid submissionId,
         RiskActor actor, CancellationToken ct)
     {
-        var workItemId = WorkSource.RiskTreatmentWorkItemId(request.ProgramId, request.RiskId, submissionId,
-            WorkSource.RiskTreatmentActionReview);
+        var workItemId = WorkSource.RiskTreatmentActionReviewWorkItemId(request.ProgramId, request.RiskId, request.ActionId, submissionId);
         var assignment = await reader.HydrateAsync(new WorkItemAssignment(request.TenantId, request.ProgramId,
             workItemId), ct).ConfigureAwait(false);
         var assigned = assignment.Read().AssigneeMemberId == actor.MemberId;

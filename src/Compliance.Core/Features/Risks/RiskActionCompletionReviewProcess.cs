@@ -57,14 +57,14 @@ static class RiskActionCompletionReviewProcess
         }
         catch (ImmutableContentUnavailableException exception)
         {
-            throw new SourceFactVerificationException($"The frozen review cannot be verified yet: {exception.Message}");
+            throw new SourceFactUnavailableException($"The frozen review cannot be verified yet: {exception.Message}");
         }
 
-        var action = await reader.HydrateAsync(new RiskTreatmentAction(tenant, decision.ProgramId, decision.RiskId,
-            intent.ActionId), ct).ConfigureAwait(false);
         var root = record.Key.RootOperationId;
+        var action = await reader.HydrateAsync(new RiskTreatmentAction(tenant, decision.ProgramId, decision.RiskId,
+            intent.ActionId, selectedReviewRoot: root), ct).ConfigureAwait(false);
         if (action.AcceptedReview(root) is not { } accepted)
-            throw new SourceFactVerificationException("The accepted review is not visible yet.");
+            throw new SourceFactUnavailableException("The accepted review is not visible yet.");
         var generation = accepted.Generation;
         switch (step.Receiver)
         {
@@ -97,7 +97,7 @@ static class RiskActionCompletionReviewProcess
                         if (!held.IsSuccess)
                         {
                             if (held.Error!.IsTransient)
-                                throw new SourceFactVerificationException(held.Error.Message);
+                                throw new SourceFactUnavailableException(held.Error.Message);
                             throw new ImmutableContentIntegrityException(held.Error.Message);
                         }
                         proofs = await FindingContent.WriteDeterministicAsync(content, tenant, step.CommandId,
@@ -113,7 +113,7 @@ static class RiskActionCompletionReviewProcess
                     var terminal = action.TerminalReview(root);
                     var decided = terminal is null
                         ? record.Facts.GetValueOrDefault(nameof(CompleteRiskTreatmentActionReview))
-                            ?? throw new SourceFactVerificationException(
+                            ?? throw new SourceFactUnavailableException(
                                 "The review decision is not recorded on the process yet.")
                         : NativeFactReference.Of(action.Stream, terminal);
                     var item = EvidenceOf(step, tenant, decision, cited);
@@ -132,7 +132,7 @@ static class RiskActionCompletionReviewProcess
                         : await FindingContent.WriteDeterministicAsync(content, tenant,
                             Uuid.CreateVersion5(record.Source.EventId, "process-abort-proof"), RiskContent.FailureSchema,
                             new RiskActionReviewFailureProof(decision.ProgramId, decision.RiskId, intent.ActionId,
-                                record.Note ?? "The review process was aborted.", null), ct).ConfigureAwait(false);
+                                record.Note ?? "The review process was aborted.", null, record.Source, root, generation, record.Intent), ct).ConfigureAwait(false);
                     return new AbortRiskTreatmentActionReview(step.CommandId, root, action.Stream, generation, 0, proof);
                 }
             default:
