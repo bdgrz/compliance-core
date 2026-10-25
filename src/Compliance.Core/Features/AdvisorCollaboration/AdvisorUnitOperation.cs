@@ -11,8 +11,7 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 ///     feasibility checks that read other owners, the owner guard and the frozen first response, then the append.
 ///     An exact retry replays the original result even after the owner changed; a changed intent conflicts.
 /// </summary>
-public sealed class AdvisorUnitOperation(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content)
+public sealed class AdvisorUnitOperation(NativeOperationExecutor operations, IImmutableContentStore content)
 {
     /// <summary>Executes the operation and returns its unit result.</summary>
     /// <param name="context">The dispatch context.</param>
@@ -31,27 +30,23 @@ public sealed class AdvisorUnitOperation(NativeOperationExecutor operations, IAg
         where TAggregate : Aggregate
     {
         var binding = AcceptedOperationBinding.Of(provenance);
-        var snapshot = await reader.HydrateAsync(hydrate(), ct).ConfigureAwait(false);
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (acceptance(snapshot).Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            if (feasibility is not null)
-            {
-                var feasible = await feasibility(snapshot, ct).ConfigureAwait(false);
-                if (!feasible.IsSuccess)
-                    return feasible;
-            }
-
-            var guarded = guard(snapshot);
-            if (!guarded.IsSuccess)
-                return guarded;
-            (response, result) = await AdvisorContent.FreezeUnitAsync(content, tenantId, ct).ConfigureAwait(false);
-        }
-
         var outcome = await operations.ExecuteAsync(new NativeOperation<TAggregate>(binding, hydrate, acceptance,
-            owner => AdvisorContent.Prepared(guard(owner), response),
-            (owner, frozen) => apply(owner, frozen, result!)), context, ct).ConfigureAwait(false);
+            async (owner, token) =>
+            {
+                if (feasibility is not null)
+                {
+                    var feasible = await feasibility(owner, token).ConfigureAwait(false);
+                    if (!feasible.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(feasible.Error!);
+                }
+                var guarded = guard(owner);
+                if (!guarded.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(guarded.Error!);
+                var frozen = await AdvisorContent.FreezeUnitAsync(content, tenantId, token).ConfigureAwait(false);
+                result = frozen.Result;
+                return Result<FirstResponseDescriptor>.Success(frozen.Response);
+            }, (owner, frozen) => apply(owner, frozen, result!)), context, ct).ConfigureAwait(false);
         return AdvisorContent.UnitOutcome(outcome);
     }
 }

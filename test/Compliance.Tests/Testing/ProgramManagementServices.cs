@@ -73,6 +73,7 @@ static class ProgramManagementServices
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         collection.AddVerifiedSourceUseReader();
+        collection.AddVerifiedMappingLineReader();
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 
@@ -354,6 +355,34 @@ static class ProgramManagementServices
     public static IProgramResourceScopeResolver ResourceScopes(Uuid? programId = null,
         bool applicationExists = true) =>
         new TestProgramResourceScopeResolver(programId, applicationExists);
+
+    public static async Task SeedAsync(IServiceProvider provider, ControlCriterionMappingRules selected,
+        Func<ControlCriterionMappingRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<ControlMappingReader>();
+        var owner = await reader.ReadLineAsync(selected.TenantId, selected.ProgramId, selected.ControlId, selected.EditionId, selected.CriterionIdentifier);
+        var rules = await reader.ComposeAsync(owner);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await MappingNativeSeeds.AppendAsync(services.GetRequiredService<IAggregateReader>(),
+            services.GetRequiredService<IAggregateWriter>(), services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+
+    public static async Task SeedAsync(IServiceProvider provider, CriterionApplicabilityRules selected,
+        Func<CriterionApplicabilityRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<ApplicabilityReader>();
+        var owner = await reader.ReadLineAsync(selected.TenantId, selected.ProgramId, selected.EditionId, selected.CriterionIdentifier);
+        var rules = await reader.ComposeAsync(owner);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await MappingNativeSeeds.AppendAsync(services.GetRequiredService<IAggregateReader>(),
+            services.GetRequiredService<IAggregateWriter>(), services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
 
     public static async Task SeedAsync<TAggregate>(IServiceProvider provider, TAggregate aggregate,
         Func<TAggregate, Result> operation) where TAggregate : Aggregate

@@ -7,6 +7,7 @@ using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -98,7 +99,7 @@ public sealed class OwnerScopedProjectionIdentityTests
         var first = await source.ProposeMappingAsync(tenant, program, firstControl, edition, "CC6.1", shared);
         _ = await source.ProposeMappingAsync(tenant, program, secondControl, edition, secondCriterion, shared);
         var directory = new FitzControlMappingWorkItemDirectory(source.Kv);
-        var locator = new ControlMappingReader(source.Reader, source.Events);
+        var locator = new ControlMappingReader(source.Reader, source.Events, source.Content);
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await locator.LocateAsync(tenant, program, shared));
 
         // Act
@@ -137,7 +138,7 @@ public sealed class OwnerScopedProjectionIdentityTests
         var first = await source.ProposeApplicabilityAsync(tenant, program, firstEdition, "CC6.1", shared);
         await source.ProposeApplicabilityAsync(tenant, program, secondEdition, secondCriterion, shared);
         var directory = new FitzCriterionApplicabilityWorkItemDirectory(source.Kv);
-        var locator = new ApplicabilityReader(source.Reader, source.Events);
+        var locator = new ApplicabilityReader(source.Reader, source.Events, source.Content);
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await locator.LocateAsync(tenant, program, shared));
 
         // Act
@@ -271,51 +272,43 @@ public sealed class OwnerScopedProjectionIdentityTests
         public async Task<ControlCriterionMapping> ProposeMappingAsync(Uuid tenant, Uuid program, Uuid control,
             Uuid edition, string criterion, Uuid id)
         {
-            var owner = new ControlCriterionMapping(tenant, program, control, edition, criterion, id);
+            var rules = new ControlCriterionMappingRules(tenant, program, control, edition, criterion);
             var member = Uuid.CreateVersion4();
-            var actor = ActorReference.ForMember(member, "Proposer");
-            var (first, result) = await ResponsesAsync(tenant, ControlCriterionMapping.RegistrationSchema,
-                new ControlCriterionMappingRegistration(id, 1, 1));
-            Assert.True(owner.Propose(Operation(owner, id, "ProposeControlCriterionMapping", actor, 0), Uuid.CreateVersion4(),
-                "security", "Addresses criterion", "Applies to the environment", member, "Proposer", Now, first, result).IsSuccess);
-            await Writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System));
-            return owner;
+            Assert.True(rules.Propose(MappingRuleFacts.Root(rules, id, "ProposeControlCriterionMapping", 0, member),
+                Uuid.CreateVersion4(), "security", "Addresses criterion", "Applies to the environment", member, "Proposer", Now).IsSuccess);
+            await MappingNativeSeeds.AppendAsync(Reader, Writer, Content, rules);
+            return await Reader.HydrateAsync(new ControlCriterionMapping(tenant, program, control, edition, criterion));
         }
 
         public async Task<DomainEvent> ReviewMappingAsync(ControlCriterionMapping owner, Uuid id)
         {
+            var rules = await new ControlMappingReader(Reader, Events, Content).ComposeAsync(owner);
             var member = Uuid.CreateVersion4();
-            var actor = ActorReference.ForMember(member, "Reviewer");
-            var (first, result) = await ResponsesAsync(Uuid.Parse(owner.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture));
-            Assert.True(owner.Review(Operation(owner, Uuid.CreateVersion4(), "ReviewControlCriterionMapping", actor, 1),
-                id, "accept", "Independent review", member, "Reviewer", Now.AddMinutes(1), null, first, result).IsSuccess);
-            await Writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System));
-            return (await FactsAsync(Uuid.Parse(owner.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture), ControlCriterionMapping.Area)).OfType<ControlCriterionMappingReviewed>().Single();
+            Assert.True(rules.Review(MappingRuleFacts.Root(rules, Uuid.CreateVersion4(), "ReviewControlCriterionMapping", 1, member),
+                id, "accept", "Independent review", member, "Reviewer", Now.AddMinutes(1), null).IsSuccess);
+            await MappingNativeSeeds.AppendAsync(Reader, Writer, Content, rules);
+            return (await FactsAsync(rules.TenantId, ControlCriterionMapping.Area)).OfType<ControlCriterionMappingReviewed>().Single();
         }
 
         public async Task<CriterionApplicability> ProposeApplicabilityAsync(Uuid tenant, Uuid program,
             Uuid edition, string criterion, Uuid id)
         {
-            var owner = new CriterionApplicability(tenant, program, edition, criterion, id);
+            var rules = new CriterionApplicabilityRules(tenant, program, edition, criterion);
             var member = Uuid.CreateVersion4();
-            var actor = ActorReference.ForMember(member, "Proposer");
-            var (first, result) = await ResponsesAsync(tenant, CriterionApplicability.RegistrationSchema,
-                new CriterionApplicabilityRegistration(id, 1, 1));
-            Assert.True(owner.Propose(Operation(owner, id, "ProposeCriterionNotApplicable", actor, 0), "Outside scope",
-                member, actor, Now, first, result).IsSuccess);
-            await Writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System));
-            return owner;
+            Assert.True(rules.Propose(MappingRuleFacts.Root(rules, id, "ProposeCriterionNotApplicable", 0, member),
+                "Outside scope", member, ActorReference.ForMember(member, "Proposer"), Now).IsSuccess);
+            await MappingNativeSeeds.AppendAsync(Reader, Writer, Content, rules);
+            return await Reader.HydrateAsync(new CriterionApplicability(tenant, program, edition, criterion));
         }
 
         public async Task<DomainEvent> ReviewApplicabilityAsync(CriterionApplicability owner, Uuid id)
         {
+            var rules = await new ApplicabilityReader(Reader, Events, Content).ComposeAsync(owner);
             var member = Uuid.CreateVersion4();
-            var actor = ActorReference.ForMember(member, "Reviewer");
-            var (first, result) = await ResponsesAsync(Uuid.Parse(owner.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture));
-            Assert.True(owner.Review(Operation(owner, Uuid.CreateVersion4(), "ReviewCriterionApplicability", actor, 1),
-                id, "accept", "Independent review", member, actor, Now.AddMinutes(1), null, first, result).IsSuccess);
-            await Writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System));
-            return (await FactsAsync(Uuid.Parse(owner.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture), CriterionApplicability.Area)).OfType<CriterionApplicabilityReviewed>().Single();
+            Assert.True(rules.Review(MappingRuleFacts.Root(rules, Uuid.CreateVersion4(), "ReviewCriterionApplicability", 1, member),
+                id, "accept", "Independent review", member, ActorReference.ForMember(member, "Reviewer"), Now.AddMinutes(1), null).IsSuccess);
+            await MappingNativeSeeds.AppendAsync(Reader, Writer, Content, rules);
+            return (await FactsAsync(rules.TenantId, CriterionApplicability.Area)).OfType<CriterionApplicabilityReviewed>().Single();
         }
 
         public async Task<IReadOnlyList<DomainEvent>> FactsAsync(Uuid tenant, string area)

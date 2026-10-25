@@ -14,8 +14,8 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     by a finding closure refuses the completion until the use settles, and the frozen first response is the finding
 ///     view after the completion.
 /// </summary>
-public sealed class CompleteCorrectiveActionHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    FindingReader findings, OperatingAuthority authority, IImmutableContentStore content, TimeProvider clock)
+public sealed class CompleteCorrectiveActionHandler(NativeOperationExecutor operations, FindingReader findings,
+    OperatingAuthority authority, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<CompleteCorrectiveAction, FindingView>
 {
     public async ValueTask<Result<FindingView>> HandleAsync(IRequestContext<CompleteCorrectiveAction> context,
@@ -28,43 +28,44 @@ public sealed class CompleteCorrectiveActionHandler(NativeOperationExecutor oper
         var now = clock.GetUtcNow();
         var actor = OperationsActor.From(context.Actor, request.TenantId);
         var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
-        var snapshot = await reader.HydrateAsync(new CorrectiveAction(request.TenantId, request.ProgramId,
-            request.FindingId, request.ActionId, request.CommandId), ct).ConfigureAwait(false);
+        var snapshot = new CorrectiveAction(request.TenantId, request.ProgramId,
+            request.FindingId, request.ActionId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, "CompleteCorrectiveAction", snapshot.Stream,
-            actorReference, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now);
+            actorReference, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? evidence = null;
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
         IReadOnlyList<EvidenceReference> normalized = [];
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(CorrectiveAction owner, CancellationToken token)
         {
-            var current = await findings.ReadOneAsync(request.TenantId, request.ProgramId, request.FindingId, now, ct)
+            var current = await findings.ReadOneAsync(request.TenantId, request.ProgramId, request.FindingId, now, token)
                 .ConfigureAwait(false);
             if (!current.IsSuccess)
-                return current;
+                return Result<FirstResponseDescriptor>.Failure(current.Error!);
             var view = current.Value!;
             var action = view.CorrectiveActions.FirstOrDefault(item => item.ActionId == request.ActionId);
             if (action?.OwnerMemberId != actor.MemberId && !await authority.ManagesProgramAsync(request.TenantId, actor,
-                    request.ProgramId, ct).ConfigureAwait(false))
-                return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                    request.ProgramId, token).ConfigureAwait(false))
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Forbidden,
                     "Only the corrective action owner or a program manager may complete it."));
             if (action is null)
-                return Result<FindingView>.Failure(new RequestError(RequestErrorKind.NotFound,
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound,
                     "The corrective action was not found."));
-            if (!snapshot.IsMaterialized)
-                return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Conflict,
+            if (!owner.IsMaterialized)
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
                     "The corrective action is not materialized yet; retry shortly.", true));
             var failure = FindingRules.ValidateCompletion(request.ResolutionNotes, request.Evidence);
             if (failure is not null)
-                return Result<FindingView>.Failure(failure.ToRequestError());
-            var prepared = snapshot.PrepareComplete(request.ExpectedRevision);
+                return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
+            var prepared = owner.PrepareComplete(request.ExpectedRevision);
             if (!prepared.IsSuccess)
-                return Result<FindingView>.Failure(prepared.Error!);
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
             normalized = FindingRules.AsUnresolved(request.Evidence);
             evidence = await FindingContent.WriteAsync(content, request.TenantId, FindingContent.EvidenceSchema,
-                normalized, ct).ConfigureAwait(false);
+                normalized, token).ConfigureAwait(false);
             var completed = action with
             {
                 Status = FindingStates.Completed,
@@ -73,17 +74,18 @@ public sealed class CompleteCorrectiveActionHandler(NativeOperationExecutor oper
                 CompletedByMemberId = actor.MemberId,
                 CompletedBy = actorReference,
                 CompletedAt = now,
-                Revision = snapshot.Revision + 1,
+                Revision = owner.Revision + 1,
             };
             (response, result) = await FindingContent.FreezeAsync(content, request.TenantId, FindingContent.ViewSchema,
-                FindingViews.WithCompletedAction(view, completed, now), ct).ConfigureAwait(false);
+                FindingViews.WithCompletedAction(view, completed, now), token).ConfigureAwait(false);
+            return Result<FirstResponseDescriptor>.Success(response!);
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<CorrectiveAction>(binding,
             () => new CorrectiveAction(request.TenantId, request.ProgramId, request.FindingId, request.ActionId,
                 request.CommandId),
             action => action.Acceptance,
-            action => FindingCommands.Prepared(action.PrepareComplete(request.ExpectedRevision), response),
+            PrepareAsync,
             (CorrectiveAction action, ImmutableContentRef frozen) => action.Complete(provenance,
                 request.ResolutionNotes.Trim(), evidence!, actor.MemberId, actorReference, now, frozen, result!)),
             context, ct).ConfigureAwait(false);

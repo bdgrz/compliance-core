@@ -22,8 +22,8 @@ public sealed class ControlCriterionMappingProtocolTests
             PersonalMappingDecisionTransportTests.Context(fixture.AuthorUserId, "direct"), CancellationToken.None);
     }
 
-    static async Task<int> FactsAsync(ControlCriterionMappingHandlerTests.Fixture fixture, Uuid mappingId) =>
-        (await ReadLineAsync(fixture, mappingId)).Facts.Count;
+    static async Task<long> FactsAsync(ControlCriterionMappingHandlerTests.Fixture fixture, Uuid mappingId) =>
+        (await ReadLineAsync(fixture, mappingId)).Revision;
 
     static async Task<ControlCriterionMapping> ReadLineAsync(ControlCriterionMappingHandlerTests.Fixture fixture,
         Uuid mappingId)

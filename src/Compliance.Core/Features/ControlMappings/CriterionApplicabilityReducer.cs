@@ -9,9 +9,9 @@ namespace Bdgrz.Compliance.Features.ControlMappings;
 static class CriterionApplicabilityReducer
 {
     public static CriterionApplicabilityView Apply(CriterionApplicabilityView? current,
-        DomainEvent domainEvent) => domainEvent switch
+        object domainEvent) => domainEvent switch
         {
-            CriterionNotApplicableProposed proposed => WithStatus((current ??
+            CriterionNotApplicableProposedChange proposed => WithStatus((current ??
                 new CriterionApplicabilityView(proposed.TenantId, proposed.ProgramId,
                     proposed.DecisionId, proposed.EditionId, proposed.CriterionIdentifier, 0,
                     "pending", null, [])) with
@@ -21,8 +21,8 @@ static class CriterionApplicabilityReducer
                 proposed.VersionNumber, proposed.DecisionId, "proposed", proposed.Rationale, proposed.Actor,
                 proposed.ProposedAt, null, null, null, null, null, null, null, null)],
             }),
-            CriterionApplicabilityReviewed reviewed => Reviewed(Require(current), reviewed),
-            CriterionNotApplicableWithdrawn withdrawn => WithStatus(Require(current) with
+            CriterionApplicabilityReviewedChange reviewed => Reviewed(Require(current), reviewed),
+            CriterionNotApplicableWithdrawnChange withdrawn => WithStatus(Require(current) with
             {
                 Revision = withdrawn.Revision,
                 ActiveVersionNumber = null,
@@ -42,7 +42,7 @@ static class CriterionApplicabilityReducer
         };
 
     static CriterionApplicabilityView Reviewed(CriterionApplicabilityView current,
-        CriterionApplicabilityReviewed reviewed)
+        CriterionApplicabilityReviewedChange reviewed)
     {
         var accepted = reviewed.Outcome == "accept";
         return WithStatus(current with

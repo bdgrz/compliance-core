@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "b31c3a390ebd963c0c3527626bb47b8ee008b972",
+  "sourceCommit": "eab6f83ac80c9de15a72b4e5d3a7e7d5f9aadb28",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 487,
-    "factsWithAggregateEmitter": 429,
+    "factsWithAggregateEmitter": 423,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 58,
+    "legacyReducerOnlyFacts": 64,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 112,
+    "aggregateTypesWithCommandPath": 110,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -689,6 +689,7 @@
         "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorFeedbackThread.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorPreparationRaceTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs"
       ],
       "disposition": "aggregate_fact",
@@ -2745,15 +2746,14 @@
           "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlCriterionMappingRetired",
@@ -2764,14 +2764,12 @@
           "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlCriterionMappingReviewed",
@@ -2782,17 +2780,16 @@
           "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
         "test/Compliance.Tests/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlDraftCreated",
@@ -3185,7 +3182,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativeHistoryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": "Materialization of an admitted action on its own owner at revision one."
     },
@@ -3221,6 +3220,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativeHistoryTests.cs",
         "test/Compliance.Tests/IncidentFacts.cs"
       ],
       "disposition": "aggregate_fact",
@@ -3238,7 +3238,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativeHistoryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": "Holds a completed action for a finding closure without advancing its public revision."
     },
@@ -3254,7 +3256,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativeHistoryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": "Ends or fences a closure use; a parent-closed settlement installs the closed-generation fence."
     },
@@ -3287,16 +3291,15 @@
           "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "CriterionNotApplicableProposed",
@@ -3307,15 +3310,15 @@
           "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/ControlMappings/ApplicabilityNativeActorBindingTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "CriterionNotApplicableWithdrawn",
@@ -3326,14 +3329,12 @@
           "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "DataFlowRevisionRecorded",
@@ -3766,7 +3767,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Evidence/EvidenceRequest.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evidence/EvidenceRequestNativeHistoryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -3782,7 +3785,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Evidence/EvidenceRequest.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evidence/EvidenceRequestNativeHistoryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -3817,6 +3822,7 @@
         "src/Compliance.Core/Features/Evidence/EvidenceRequest.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evidence/EvidenceRequestNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzEvidenceWorkItemDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -3835,6 +3841,7 @@
         "src/Compliance.Core/Features/Evidence/EvidenceRequest.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evidence/EvidenceRequestNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRequestTests.cs",
         "test/Compliance.Tests/Features/Work/FitzEvidenceWorkItemDirectoryTests.cs"
       ],
@@ -9951,22 +9958,21 @@
         "ControlCriterionMappingRetired",
         "ControlCriterionMappingReviewed"
       ],
-      "commandRequests": [
-        "ProposeControlCriterionMapping",
-        "RetireControlCriterionMapping",
-        "ReviewControlCriterionMapping"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingProtocolTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
-        "test/Compliance.Tests/Testing/MappingSeeds.cs"
+        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "ControlDraft",
@@ -10120,12 +10126,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionMaterializationContentTests.cs",
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
         "test/Compliance.Tests/Features/Work/RiskOwnerWorkSourceTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
-        "test/Compliance.Tests/IncidentFacts.cs",
-        "test/Compliance.Tests/Testing/FindingSeed.cs"
+        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route",
       "note": "Independent corrective action owner, materialized from the finding admission at revision one and completed at revision two; closure uses hold it through the source-use reservations."
@@ -10155,20 +10161,20 @@
         "CriterionNotApplicableProposed",
         "CriterionNotApplicableWithdrawn"
       ],
-      "commandRequests": [
-        "ProposeCriterionNotApplicable",
-        "ReviewCriterionApplicability",
-        "WithdrawCriterionNotApplicable"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/ControlMappings/ApplicabilityNativeActorBindingTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityProtocolTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/OwnerScopedProjectionIdentityTests.cs",
-        "test/Compliance.Tests/Testing/MappingSeeds.cs"
+        "test/Compliance.Tests/Testing/MappingNativeSeeds.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "DataFlow",
@@ -10404,13 +10410,13 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRequestNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRequestNativePreparationTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRequestTests.cs",
         "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskOwnerBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionCancellationProofTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionNativeTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionUnboundCancellationTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionCancellationProofTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10509,8 +10515,8 @@
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingProcessReactorTests.cs"
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionMaterializationContentTests.cs",
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativeHistoryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route",
       "note": "Owns finding terms, triage, acceptance links, action admission and the closure decision. Admission and closure seal by generation; the children and closure are completed by processes. No legacy ledger is read."
@@ -15961,6 +15967,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativePreparationTests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingTests.cs",
         "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
       ],
@@ -18051,6 +18059,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRequestNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Work/FitzEvidenceWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Testing/EvidenceSeeds.cs"
@@ -18933,7 +18942,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ControlMappingReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs"
       ],
@@ -19197,7 +19208,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ApplicabilityReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs"
       ],
@@ -24082,7 +24095,10 @@
         "CorrectiveAction"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionMaterializationContentTests.cs",
+        "test/Compliance.Tests/Features/Remediation/CorrectiveActionNativeHistoryTests.cs"
+      ],
       "note": "System-only receiver of IndependentChildMaterialization; verifies the frozen admission on the authoritative finding."
     },
     {
@@ -24316,12 +24332,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRequestNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRequestNativePreparationTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRequestTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Work/FitzEvidenceWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueSearchTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+        "test/Compliance.Tests/Features/Work/WorkQueueSearchTests.cs"
       ],
       "note": ""
     },
@@ -24952,14 +24968,17 @@
         "ComplianceProgram",
         "ControlCriterionMapping"
       ],
-      "aggregateTargets": [
-        "ControlCriterionMapping"
+      "aggregateTargets": [],
+      "helperServices": [
+        "ControlMappingReader"
       ],
-      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingProtocolTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs"
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
+        "test/Compliance.Tests/Testing/MappingNativeSeeds.cs"
       ],
       "note": ""
     },
@@ -25053,15 +25072,19 @@
         "ComplianceProgram",
         "CriterionApplicability"
       ],
-      "aggregateTargets": [
-        "CriterionApplicability"
+      "aggregateTargets": [],
+      "helperServices": [
+        "ApplicabilityReader"
       ],
-      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ApplicabilityNativeActorBindingTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityProtocolTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs"
+        "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
+        "test/Compliance.Tests/Testing/MappingNativeSeeds.cs"
       ],
       "note": ""
     },
@@ -28404,6 +28427,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorFeedbackThreadCommandTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorPreparationRaceTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/ListAdvisorFeedbackHandlerTests.cs"
       ],
       "note": ""
@@ -28516,13 +28540,15 @@
       "directAggregateReferences": [
         "ControlCriterionMapping"
       ],
-      "aggregateTargets": [
-        "ControlCriterionMapping"
+      "aggregateTargets": [],
+      "helperServices": [
+        "ControlMappingReader"
       ],
-      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingProtocolTests.cs"
+        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingProtocolTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/MappingNativeSeeds.cs"
       ],
       "note": ""
     },
@@ -28719,14 +28745,17 @@
         "ControlCriterionMapping",
         "SeparationOfDutiesWaiver"
       ],
-      "aggregateTargets": [
-        "ControlCriterionMapping"
+      "aggregateTargets": [],
+      "helperServices": [
+        "ControlMappingReader"
       ],
-      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/MappingNativeSeeds.cs"
       ],
       "note": ""
     },
@@ -28805,14 +28834,17 @@
         "CriterionApplicability",
         "SeparationOfDutiesWaiver"
       ],
-      "aggregateTargets": [
-        "CriterionApplicability"
+      "aggregateTargets": [],
+      "helperServices": [
+        "ApplicabilityReader"
       ],
-      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/MappingNativeSeeds.cs"
       ],
       "note": ""
     },
@@ -30075,6 +30107,7 @@
         "ProgramReadiness"
       ],
       "helperServices": [
+        "ControlMappingReader",
         "ControlReader"
       ],
       "testSymbolReferences": [
@@ -31207,13 +31240,15 @@
       "directAggregateReferences": [
         "CriterionApplicability"
       ],
-      "aggregateTargets": [
-        "CriterionApplicability"
+      "aggregateTargets": [],
+      "helperServices": [
+        "ApplicabilityReader"
       ],
-      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityProtocolTests.cs"
+        "test/Compliance.Tests/Features/ControlMappings/ControlMappingNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityProtocolTests.cs",
+        "test/Compliance.Tests/Testing/MappingNativeSeeds.cs"
       ],
       "note": ""
     },

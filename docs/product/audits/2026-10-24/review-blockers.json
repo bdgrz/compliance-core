@@ -105,6 +105,13 @@
       "status": "contract_selection_gap",
       "evidence": "Opening commits plan/outcome/SystemDescription hashes while selectedSourceReferences/SourceContentManifest are copied from TypeI source families. No separate opening publication entry/package-selection source-kind contract is selected.",
       "nextWork": "Preserve selected baseline sources and existing artifact contract; do not invent new archive entry authority while continuing independent owners."
+    },
+    {
+      "id": "mapping-current-source-proof-and-hold-contract",
+      "status": "contract_selection_gap",
+      "evidence": "Current selected mapping/applicability lane has no actual source-use purpose/receiver/pin for ControlVersion/program edition/catalog/waiver, and ControlReader exposes no selected VersionSource proof API here. Existing exact current approved UUID/edition/catalog/waiver guards remain; owner/history implementation does not establish stronger persisted producer-proof or through-append held-current authority.",
+      "nextWork": "Select and implement a concrete trusted source/receiver proof contract; continue independent owners meanwhile.",
+      "qualificationArtifact": "mapping-remediation-qualification.json"
     }
   ],
   "remainingSlices": [
@@ -537,12 +544,23 @@
     },
     {
       "id": "risk-treatment-native",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "fullUnitPassed": 6085,
       "focusedPassed": 408,
       "productionHttpPassed": 2,
       "directJevProductionFilesReviewed": 28,
-      "qualificationArtifact": "risk-treatment-qualification.json"
+      "qualificationArtifact": "risk-treatment-qualification.json",
+      "pullRequest": 1119,
+      "mergeCommit": "eab6f83ac80c9de15a72b4e5d3a7e7d5f9aadb28"
+    },
+    {
+      "id": "mapping-evidence-corrective-advisor-unit",
+      "status": "locally_verified_pending_merge",
+      "fullUnitPassed": 6119,
+      "focusedPassed": 446,
+      "productionHttpPassed": 5,
+      "directJevProductionFilesReviewed": 53,
+      "qualificationArtifact": "mapping-remediation-qualification.json"
     }
   ],
   "resolved": [

@@ -37,44 +37,45 @@ public sealed class FulfilEvidenceRequestHandler(NativeOperationExecutor operati
             return Result<EvidenceRequestView>.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Only the request owner or a program manager may fulfil this request."));
         var provenance = FindingContent.Provenance(request.CommandId, "FulfilEvidenceRequest", snapshot.Stream,
-            actorReference, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now);
+            actorReference, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
 
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(EvidenceRequest owner, CancellationToken token)
         {
-            var prepared = snapshot.PrepareDecision(request.ExpectedRevision);
+            var prepared = owner.PrepareDecision(request.ExpectedRevision);
             if (!prepared.IsSuccess)
-                return Result<EvidenceRequestView>.Failure(prepared.Error!);
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
             if (request.ArtifactId == Uuid.Empty)
-                return Result<EvidenceRequestView>.Failure(new RequestError(RequestErrorKind.Validation,
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
                     "Fulfilment requires an evidence artifact."));
-            var artifact = await reader.HydrateAsync(new EvidenceArtifact(request.TenantId, request.ArtifactId), ct)
+            var artifact = await reader.HydrateAsync(new EvidenceArtifact(request.TenantId, request.ArtifactId), token)
                 .ConfigureAwait(false);
             if (!artifact.IsCreated)
-                return Result<EvidenceRequestView>.Failure(new RequestError(RequestErrorKind.Validation,
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
                     "The evidence artifact was not found."));
             if (artifact.State != EvidenceArtifactStates.Available)
-                return Result<EvidenceRequestView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
                     "Only an available evidence artifact can fulfil a request."));
-            var view = snapshot.View()! with
+            var view = owner.View()! with
             {
-                Revision = snapshot.Revision + 1,
+                Revision = owner.Revision + 1,
                 Status = EvidenceRequest.Fulfilled,
                 ArtifactId = request.ArtifactId,
                 FulfilledBy = actorReference,
                 FulfilledAt = now,
             };
             (response, result) = await FindingContent.FreezeAsync(content, request.TenantId,
-                EvidenceRequestRules.ViewSchema, view, ct).ConfigureAwait(false);
+                EvidenceRequestRules.ViewSchema, view, token).ConfigureAwait(false);
+            return Result<FirstResponseDescriptor>.Success(response!);
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<EvidenceRequest>(binding,
             () => new EvidenceRequest(request.TenantId, request.ProgramId, request.EvidenceRequestId, request.CommandId),
             evidenceRequest => evidenceRequest.Acceptance,
-            evidenceRequest => FindingCommands.Prepared(evidenceRequest.PrepareDecision(request.ExpectedRevision),
-                response),
+            PrepareAsync,
             (EvidenceRequest evidenceRequest, ImmutableContentRef frozen) => evidenceRequest.Fulfil(provenance,
                 request.ArtifactId, actorReference, now, frozen, result!)), context, ct).ConfigureAwait(false);
         return await FindingContent.ResponseAsync<EvidenceRequestView>(content, request.TenantId, outcome, ct)

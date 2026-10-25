@@ -1,0 +1,46 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Compact mapping/applicability, evidence request and corrective action histories; actual source-use/read consumers; advisor unit preparation recovery; applicability native proposer actor binding.",
+  "validation": {
+    "genuineOldApiInScopeRedFailed": {
+      "mapping": 2,
+      "evidence": 2,
+      "corrective": 3,
+      "advisorUnitPreparation": 2
+    },
+    "adversarialCurrentV3ActorRedFailed": 6,
+    "positiveControlPassed": 1,
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 446,
+    "productionHttpPassed": 5,
+    "backendUnitPassed": 6119,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "coverageExport": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 53,
+    "signalsTriaged": 2,
+    "mergeProbability": 0.72,
+    "adopted": "merge scoped repair; continue remaining owners"
+  },
+  "parentRefinements": [
+    "Preserved SourceUse reader composition and current shared registration while adding MappingLine finalization with a distinct opaque key.",
+    "Fixed missing Kernel/Testing namespaces, SDK reference-type/nullability assumptions, IServiceCollection descriptor typing and culture-invariant UUID parsing.",
+    "Removed outer reader implementation-type assertion; actual grant/settle/finalized selected-history behavior remains tested through installed executor.",
+    "Separated narrow AdvisorUnitOperation preparation fix from pending full advisor history/text slice; both real immutable winner and cancellation REDs now pass.",
+    "Adversarial review distinguished computed mapping Actor from independently stored applicability Actor. Six persisted current-v3 facts with wrong/nonmember/malformed proposer identity passed default/executor raw loading before fix. New canonical member-kind/UUID/equality guard rejects them before delegate."
+  ],
+  "qualification": [
+    "Existing command IDs/routes/current auth and plain Unit/typed first responses retained; six incompatible native mappingv2 payloads advance to3 with complete authored text in immutable content.",
+    "Mapping full native prefix commitment and transient complete transition/uniqueness validation bind unselected history, physical/native cuts and selected full metadata. Returned owner state bounded; O(N) work remains.",
+    "Evidence/corrective lifecycle schemas remain. Original2 lifecycle facts plus first irreversible closed-parent fence retained; SourceUse72 live/selected key+native/physical proof untouched.",
+    "No Mapping/Applicability SourceUsePurpose or receiver/pin contract and no selected Control VersionSource API supplied for this lane. Exact current approved UUID/edition/catalog/waiver guards preserved; stronger persisted producer-proof/current-held qualification remains local follow-up, without invented permit.",
+    "No retained nativev2 conversion, SDK snapshot compatibility, deployment or production/broker qualification. Other full Finding/Operating/Readiness/Advisor families continue separately. Future negative fixtures were preserved and removed from this scoped merge."
+  ]
+}

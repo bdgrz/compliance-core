@@ -9,9 +9,9 @@ namespace Bdgrz.Compliance.Features.ControlMappings;
 static class ControlCriterionMappingReducer
 {
     public static ControlCriterionMappingView Apply(ControlCriterionMappingView? current,
-        DomainEvent domainEvent) => domainEvent switch
+        object domainEvent) => domainEvent switch
         {
-            ControlCriterionMappingProposed proposed => WithStatus((current ??
+            ControlCriterionMappingProposedChange proposed => WithStatus((current ??
                 new ControlCriterionMappingView(proposed.TenantId, proposed.ProgramId,
                     proposed.MappingId, proposed.ControlId, proposed.EditionId,
                     proposed.CriterionIdentifier, proposed.CriterionKind, 0, "pending", null, null,
@@ -23,8 +23,8 @@ static class ControlCriterionMappingReducer
                 proposed.Rationale, proposed.ApplicabilityExplanation, proposed.Actor,
                 proposed.ProposedAt, null, null, null, null, null, null, null, null)],
             }),
-            ControlCriterionMappingReviewed reviewed => Reviewed(Require(current), reviewed),
-            ControlCriterionMappingRetired retired => WithStatus(Require(current) with
+            ControlCriterionMappingReviewedChange reviewed => Reviewed(Require(current), reviewed),
+            ControlCriterionMappingRetiredChange retired => WithStatus(Require(current) with
             {
                 Revision = retired.Revision,
                 ActiveVersionNumber = null,
@@ -45,7 +45,7 @@ static class ControlCriterionMappingReducer
         };
 
     static ControlCriterionMappingView Reviewed(ControlCriterionMappingView current,
-        ControlCriterionMappingReviewed reviewed)
+        ControlCriterionMappingReviewedChange reviewed)
     {
         var accepted = reviewed.Outcome == "accept";
         var versions = current.Versions.Select(version =>

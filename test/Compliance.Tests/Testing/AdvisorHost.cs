@@ -100,7 +100,7 @@ sealed class AdvisorHost : IAsyncDisposable
         }
     }
 
-    AdvisorUnitOperation Unit => new(Operations, Reader, Content);
+    AdvisorUnitOperation Unit => new(Operations, Content);
 
     public CreateAdvisorHandoffHandler CreateHandler => new(Unit, Handoffs, Resolver, Content, Clock);
 

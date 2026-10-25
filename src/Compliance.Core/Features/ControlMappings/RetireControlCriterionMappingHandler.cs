@@ -19,7 +19,11 @@ public sealed class RetireControlCriterionMappingHandler(NativeOperationExecutor
 {
     const string CommandKind = "RetireControlCriterionMapping";
 
-    public async ValueTask<Result> HandleAsync(IRequestContext<RetireControlCriterionMapping> context,
+    public ValueTask<Result> HandleAsync(IRequestContext<RetireControlCriterionMapping> context,
+        CancellationToken ct) =>
+        MappingLineFailures.ExecuteAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result> HandleCoreAsync(IRequestContext<RetireControlCriterionMapping> context,
         CancellationToken ct)
     {
         var request = context.Request;
@@ -40,36 +44,28 @@ public sealed class RetireControlCriterionMappingHandler(NativeOperationExecutor
             AuthoredIntentDigest.Compute(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        FirstResponseDescriptor? response = null;
-        ImmutableContentRef? result = null;
-        if (line.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var prepared = line.PrepareRetirement(request.MappingId, request.ExpectedRevision, request.Rationale);
-            if (!prepared.IsSuccess)
-                return prepared;
-            (response, result) = await NativeContent.FreezeUnitAsync(content, request.TenantId, ct)
-                .ConfigureAwait(false);
-        }
-
+        MappingLinePrepared? prepared = null;
         var outcome = await operations.ExecuteAsync(new NativeOperation<ControlCriterionMapping>(binding,
-            () => new ControlCriterionMapping(request.TenantId, request.ProgramId, tuple.ControlId, tuple.EditionId,
-                tuple.CriterionIdentifier, request.CommandId), owner => owner.Acceptance,
-            owner => Prepare(owner, request, response),
-            (ControlCriterionMapping owner, ImmutableContentRef frozen) => owner.Retire(provenance, request.MappingId,
-                request.Rationale, actor.MemberId, actor.Display, now, frozen, result!)), context, ct)
-            .ConfigureAwait(false);
-        return NativeContent.UnitOutcome(outcome);
-    }
+            () => new ControlCriterionMapping(request.TenantId, request.ProgramId, tuple.ControlId, tuple.EditionId, tuple.CriterionIdentifier, request.CommandId), owner => owner.Acceptance,
+            async (owner, token) =>
+            {
+                var rules = await mappings.ComposeAsync(owner, token).ConfigureAwait(false);
+                FirstResponseDescriptor? response = null;
+                ImmutableContentRef? result = null;
+                var guard = rules.PrepareRetirement(request.MappingId, request.ExpectedRevision, request.Rationale);
+                if (!guard.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(guard.Error!);
+                (response, result) = await NativeContent.FreezeUnitAsync(content, request.TenantId, token)
+                    .ConfigureAwait(false);
 
-    static Result<FirstResponseDescriptor> Prepare(ControlCriterionMapping owner, RetireControlCriterionMapping request,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareRetirement(request.MappingId, request.ExpectedRevision, request.Rationale);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The mapping line changed while the retirement was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
+                var applied = rules.Retire(provenance, request.MappingId, request.Rationale, actor.MemberId, actor.Display, now);
+                if (!applied.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(applied.Error!);
+                prepared = await MappingLineContent.PrepareAsync(content, owner, request, rules.Changes[^1],
+                    MappingLineContent.Current(rules), MappingLineContent.Header(rules), result!, token).ConfigureAwait(false);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            }, (owner, frozen) => owner.Apply(prepared ?? throw new InvalidOperationException("The native line was not prepared."), frozen)),
+            context, ct).ConfigureAwait(false);
+        return NativeContent.UnitOutcome(outcome);
     }
 }

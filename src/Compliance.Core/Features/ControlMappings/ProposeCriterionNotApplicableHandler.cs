@@ -22,7 +22,11 @@ public sealed class ProposeCriterionNotApplicableHandler(NativeOperationExecutor
 {
     const string CommandKind = "ProposeCriterionNotApplicable";
 
-    public async ValueTask<Result<CriterionApplicabilityRegistration>> HandleAsync(
+    public ValueTask<Result<CriterionApplicabilityRegistration>> HandleAsync(
+        IRequestContext<ProposeCriterionNotApplicable> context, CancellationToken ct) =>
+        MappingLineFailures.ExecuteAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<CriterionApplicabilityRegistration>> HandleCoreAsync(
         IRequestContext<ProposeCriterionNotApplicable> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
@@ -43,48 +47,40 @@ public sealed class ProposeCriterionNotApplicableHandler(NativeOperationExecutor
             request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        FirstResponseDescriptor? response = null;
-        ImmutableContentRef? result = null;
-        if (line.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var program = await reader.HydrateAsync(new ComplianceProgram(request.TenantId, request.ProgramId), ct)
-                .ConfigureAwait(false);
-            if (!program.IsCreated)
-                return Failure(RequestErrorKind.NotFound, "The program was not found.");
-            if (program.CriteriaEditionId != request.EditionId)
-                return Failure(RequestErrorKind.Conflict,
-                    "A not-applicable decision must target the criteria edition the program has selected.");
-            if (catalog.GetEntry(request.EditionId, request.CriterionIdentifier) is not { Kind: "criterion" })
-                return Failure(RequestErrorKind.Validation,
-                    "Not-applicable decisions apply to a criterion of the selected edition, not a point of focus.");
-            var prepared = line.PrepareProposal(request.ExpectedRevision, request.Rationale);
-            if (!prepared.IsSuccess)
-                return Result<CriterionApplicabilityRegistration>.Failure(prepared.Error!);
-            (response, result) = await NativeContent.FreezeAsync(content, request.TenantId,
-                CriterionApplicability.RegistrationSchema, new CriterionApplicabilityRegistration(request.DecisionId,
-                    request.ExpectedRevision + 1, (line.View?.Versions.Count ?? 0) + 1), ct).ConfigureAwait(false);
-        }
-
+        MappingLinePrepared? prepared = null;
         var outcome = await operations.ExecuteAsync(new NativeOperation<CriterionApplicability>(binding,
-            () => new CriterionApplicability(request.TenantId, request.ProgramId, request.EditionId,
-                request.CriterionIdentifier, request.DecisionId), owner => owner.Acceptance,
-            owner => Prepare(owner, request, response),
-            (CriterionApplicability owner, ImmutableContentRef frozen) => owner.Propose(provenance,
-                request.Rationale, actor.MemberId, member, now, frozen, result!)), context, ct).ConfigureAwait(false);
-        return await NativeContent.ResponseAsync<CriterionApplicabilityRegistration>(content, request.TenantId,
-            outcome, ct).ConfigureAwait(false);
-    }
+            () => new CriterionApplicability(request.TenantId, request.ProgramId, request.EditionId, request.CriterionIdentifier, request.DecisionId), owner => owner.Acceptance,
+            async (owner, token) =>
+            {
+                var rules = await applicability.ComposeAsync(owner, token).ConfigureAwait(false);
+                FirstResponseDescriptor? response = null;
+                ImmutableContentRef? result = null;
+                var program = await reader.HydrateAsync(new ComplianceProgram(request.TenantId, request.ProgramId), token)
+                    .ConfigureAwait(false);
+                if (!program.IsCreated)
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound, "The program was not found."));
+                if (program.CriteriaEditionId != request.EditionId)
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "A not-applicable decision must target the criteria edition the program has selected."));
+                if (catalog.GetEntry(request.EditionId, request.CriterionIdentifier) is not { Kind: "criterion" })
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
+                        "Not-applicable decisions apply to a criterion of the selected edition, not a point of focus."));
+                var guard = rules.PrepareProposal(request.ExpectedRevision, request.Rationale);
+                if (!guard.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(guard.Error!);
+                (response, result) = await NativeContent.FreezeAsync(content, request.TenantId,
+                    CriterionApplicability.RegistrationSchema, new CriterionApplicabilityRegistration(request.DecisionId,
+                        request.ExpectedRevision + 1, (rules.View?.Versions.Count ?? 0) + 1), token).ConfigureAwait(false);
 
-    static Result<FirstResponseDescriptor> Prepare(CriterionApplicability owner, ProposeCriterionNotApplicable request,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareProposal(request.ExpectedRevision, request.Rationale);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The applicability line changed while the proposal was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
+                var applied = rules.Propose(provenance, request.Rationale, actor.MemberId, member, now);
+                if (!applied.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(applied.Error!);
+                prepared = await MappingLineContent.PrepareAsync(content, owner, request, rules.Changes[^1],
+                    MappingLineContent.Current(rules), MappingLineContent.Header(rules), result!, token).ConfigureAwait(false);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            }, (owner, frozen) => owner.Apply(prepared ?? throw new InvalidOperationException("The native line was not prepared."), frozen)),
+            context, ct).ConfigureAwait(false);
+        return await NativeContent.ResponseAsync<CriterionApplicabilityRegistration>(content, request.TenantId, outcome, ct).ConfigureAwait(false);
     }
 
     static Result<CriterionApplicabilityRegistration> Failure(RequestErrorKind kind, string message) =>

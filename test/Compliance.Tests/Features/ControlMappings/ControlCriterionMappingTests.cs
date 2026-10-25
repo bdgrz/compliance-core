@@ -21,23 +21,22 @@ public sealed class ControlCriterionMappingTests
     static readonly Uuid ReviewerId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = NativeFacts.Now;
 
-    static ControlCriterionMapping Line(string criterion = "CC6.1", Uuid? control = null, Uuid logicalId = default) =>
-        new(TenantId, ProgramId, control ?? ControlId, EditionId, criterion, logicalId);
+    static ControlCriterionMappingRules Line(string criterion = "CC6.1", Uuid? control = null) =>
+        new(TenantId, ProgramId, control ?? ControlId, EditionId, criterion);
 
-    static Result Propose(ControlCriterionMapping line, Uuid mappingId, long expected, Uuid? controlVersion = null,
+    static Result Propose(ControlCriterionMappingRules line, Uuid mappingId, long expected, Uuid? controlVersion = null,
         string rationale = "Restricts access") => line.Propose(
-        NativeFacts.Root(line, mappingId, "ProposeControlCriterionMapping", expected, AuthorId), controlVersion ?? ControlVersionId,
-        "criterion", rationale, "All production systems", AuthorId, "Author", Now, NativeFacts.Ref(), NativeFacts.Ref());
+        MappingRuleFacts.Root(line, mappingId, "ProposeControlCriterionMapping", expected, AuthorId), controlVersion ?? ControlVersionId,
+        "criterion", rationale, "All production systems", AuthorId, "Author", Now);
 
-    static Result Review(ControlCriterionMapping line, Uuid mappingId, long expected, string outcome,
+    static Result Review(ControlCriterionMappingRules line, Uuid mappingId, long expected, string outcome,
         SeparationOfDutiesWaiver? waiver = null, Uuid? reviewer = null) => line.Review(
-        NativeFacts.Root(line, Uuid.CreateVersion4(), "ReviewControlCriterionMapping", expected, reviewer ?? ReviewerId),
-        mappingId, outcome, "Fits", reviewer ?? ReviewerId, "Reviewer", Now.AddMinutes(2), waiver, NativeFacts.Ref(),
-        NativeFacts.Ref());
+        MappingRuleFacts.Root(line, Uuid.CreateVersion4(), "ReviewControlCriterionMapping", expected, reviewer ?? ReviewerId),
+        mappingId, outcome, "Fits", reviewer ?? ReviewerId, "Reviewer", Now.AddMinutes(2), waiver);
 
-    static Result Retire(ControlCriterionMapping line, Uuid mappingId, long expected) => line.Retire(
-        NativeFacts.Root(line, Uuid.CreateVersion4(), "RetireControlCriterionMapping", expected, ReviewerId), mappingId,
-        "Superseded by redesign", ReviewerId, "Reviewer", Now.AddDays(1), NativeFacts.Ref(), NativeFacts.Ref());
+    static Result Retire(ControlCriterionMappingRules line, Uuid mappingId, long expected) => line.Retire(
+        MappingRuleFacts.Root(line, Uuid.CreateVersion4(), "RetireControlCriterionMapping", expected, ReviewerId), mappingId,
+        "Superseded by redesign", ReviewerId, "Reviewer", Now.AddDays(1));
 
     static SeparationOfDutiesWaiver Waiver(Uuid mappingId, long revision)
     {
@@ -104,10 +103,10 @@ public sealed class ControlCriterionMappingTests
         Assert.True(Propose(line, second, 2, Uuid.CreateVersion4(), "Narrowed").IsSuccess);
         Assert.True(Review(line, second, 3, "accept").IsSuccess);
         Assert.True(Retire(line, second, 4).IsSuccess);
-        var facts = NativeFacts.Raised(line);
+        var facts = MappingRuleFacts.Raised(line);
 
         // Act
-        var replayed = NativeFacts.Replay(Line(), facts);
+        var replayed = MappingRuleFacts.Replay(Line(), facts);
 
         // Assert
         Assert.Equal(5, facts.Length);
@@ -206,7 +205,7 @@ public sealed class ControlCriterionMappingTests
         // Act
         ControlCriterionMappingView? projected = null;
         var stages = new List<string>();
-        foreach (var fact in NativeFacts.Raised(line))
+        foreach (var fact in MappingRuleFacts.Raised(line))
         {
             projected = ControlCriterionMappingReducer.Apply(projected, fact);
             stages.Add(projected.Status);
@@ -230,9 +229,9 @@ public sealed class ControlCriterionMappingTests
         Assert.True(Propose(other, Uuid.CreateVersion4(), 0).IsSuccess);
 
         // Act
-        var foreign = NativeFacts.Raised(other);
+        var foreign = MappingRuleFacts.Raised(other);
 
         // Assert
-        Assert.ThrowsAny<Exception>(() => NativeFacts.Replay(Line(), foreign));
+        Assert.ThrowsAny<Exception>(() => MappingRuleFacts.Replay(Line(), foreign));
     }
 }
