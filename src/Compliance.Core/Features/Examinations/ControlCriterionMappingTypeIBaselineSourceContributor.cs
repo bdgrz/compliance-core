@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -27,11 +29,27 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
         ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context,
         CancellationToken ct)
     {
+        try
+        {
+            return await ReadCoreAsync(engagement, context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact mapping broker receipt source cannot be verified: " + exception.Message,
+                isTransient: exception is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<TypeIBaselineSourceContribution>> ReadCoreAsync(
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context, CancellationToken ct)
+    {
         if (engagement is null || context is null || context.PreviouslyCapturedSources is null)
             return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(
                 RequestErrorKind.Validation,
                 "A control-mapping baseline read requires its engagement and source context."));
 
+        var receiptCut = context.RecordedThrough is null ? null : context.RequireReceipts(engagement.TenantId);
         var editionSources = context.PreviouslyCapturedSources.Where(static source =>
             source.Kind == "criteria_edition").ToArray();
         if (editionSources.Length != 1 || editionSources[0].RecordId == Uuid.Empty ||
@@ -96,13 +114,16 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
                     RequestErrorKind.Conflict,
                     "A control mapping does not identify an entry in the selected criteria edition."));
 
+            var receiptStream = receiptCut is null ? null : await receiptCut.ReadAsync(new ControlCriterionMapping(
+                engagement.TenantId, engagement.ProgramId, mapping.ControlId, mapping.EditionId,
+                mapping.CriterionIdentifier).Stream, ct).ConfigureAwait(false);
             var capturedVersions = new List<ControlCriterionMappingVersionView>();
             for (var index = 0; index < mapping.Versions.Count; index++)
             {
                 var version = mapping.Versions[index];
-                if (version.ProposedAt > through)
+                if (receiptStream is null ? version.ProposedAt > through : !ProposalIncluded(receiptStream, version))
                     continue;
-                if (!TryAsOfVersion(mapping, index, through, out var asOfVersion))
+                if (!TryAsOfVersion(mapping, index, through, out var asOfVersion, receiptStream))
                     return SourceConflict();
                 capturedVersions.Add(asOfVersion);
 
@@ -281,13 +302,16 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
     }
 
     static bool TryAsOfVersion(ControlCriterionMappingView mapping, int index,
-        DateTimeOffset through, out ControlCriterionMappingVersionView asOf)
+        DateTimeOffset through, out ControlCriterionMappingVersionView asOf, RecordedSourceReceiptPrefix? receipts = null)
     {
         var version = mapping.Versions[index];
-        var reviewed = version.ReviewedAt is { } reviewedAt && reviewedAt <= through;
+        var reviewed = receipts is null ? version.ReviewedAt is { } reviewedAt && reviewedAt <= through
+            : ReviewIncluded(receipts, version);
         var accepted = reviewed && version.Status is ("accepted" or "superseded" or "retired");
         var rejected = reviewed && version.Status == "rejected";
-        var retired = accepted && version.RetiredAt is { } retiredAt && retiredAt <= through;
+        var retired = accepted && (receipts is null ? version.RetiredAt is { } retiredAt && retiredAt <= through
+            : version.RetiredAt is not null && receipts.Includes(fact => fact is ControlCriterionMappingRetired retiredFact &&
+                retiredFact.MappingId == version.MappingId && retiredFact.VersionNumber == version.VersionNumber));
         if (!reviewed)
             asOf = version with
             {
@@ -321,8 +345,8 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
                  candidateIndex++)
             {
                 var candidate = mapping.Versions[candidateIndex];
-                if (candidate.ReviewedAt is { } candidateReviewedAt &&
-                    candidateReviewedAt <= through &&
+                if ((receipts is null ? candidate.ReviewedAt is { } candidateReviewedAt && candidateReviewedAt <= through
+                        : ReviewIncluded(receipts, candidate)) &&
                     candidate.Status is ("accepted" or "superseded" or "retired"))
                 {
                     hasAcceptedSuccessor = true;
@@ -340,6 +364,15 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
         }
         return true;
     }
+
+    static bool ProposalIncluded(RecordedSourceReceiptPrefix receipts, ControlCriterionMappingVersionView version) =>
+        receipts.Includes(fact => fact is ControlCriterionMappingProposed proposed &&
+            proposed.MappingId == version.MappingId && proposed.VersionNumber == version.VersionNumber &&
+            proposed.ControlVersionId == version.ControlVersionId);
+
+    static bool ReviewIncluded(RecordedSourceReceiptPrefix receipts, ControlCriterionMappingVersionView version) =>
+        version.ReviewDecisionId is { } decision && receipts.Includes(fact => fact is ControlCriterionMappingReviewed reviewed &&
+            reviewed.MappingId == version.MappingId && reviewed.VersionNumber == version.VersionNumber && reviewed.DecisionId == decision);
 
     static string Digest(ControlCriterionMappingView mapping,
         IReadOnlyList<ControlCriterionMappingVersionView> versions)

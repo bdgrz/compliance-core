@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Snapshots;
@@ -48,7 +49,10 @@ public sealed class BoundaryTypeIBaselineSourceContributor(
             }
             else
             {
-                if (context.RecordedThrough is { } cutoff && version.ChangedAt > cutoff)
+                if (context.RecordedThrough is not null && !(await context.RequireReceipts(engagement.TenantId)
+                        .ReadAsync(new EventStreamAddress(engagement.TenantId.ToString(), SystemBoundary.Area, version.BoundaryId.ToString()), ct)
+                        .ConfigureAwait(false)).Includes(fact => fact is BoundaryApproved approved && approved.ChangeCount > 0 &&
+                            approved.DraftVersionId == version.VersionId && approved.Revision == version.Revision))
                     return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
                         "The effective boundary changed after the frozen close receipt cutoff.", true));
                 try

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
@@ -227,7 +228,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     {
         // Arrange
         await using var fixture = await Fixture("service_commitment");
-        var context = fixture.Context with { RecordedThrough = DayOne.AddDays(1) };
+        var context = await ReceiptContextAsync(fixture, DayOne.AddDays(1));
 
         // Act
         var result = await fixture.Contributor.ReadAsync(Engagement(), context, CancellationToken.None);
@@ -244,7 +245,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
         // Arrange
         await using var fixture = await Fixture("service_commitment", retire: true,
             retirementEffectiveOn: new DateOnly(2026, 6, 1));
-        var context = fixture.Context with { RecordedThrough = DayOne.AddDays(9) };
+        var context = await ReceiptContextAsync(fixture, DayOne.AddDays(9));
 
         // Act
         var result = await fixture.Contributor.ReadAsync(Engagement(), context, CancellationToken.None);
@@ -253,6 +254,19 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
         Assert.False(result.IsSuccess);
         Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
         Assert.True(result.Error.IsTransient);
+    }
+
+    static async Task<TypeIBaselineSourceReadContext> ReceiptContextAsync(FixtureState fixture, DateTimeOffset through)
+    {
+        var receipts = new ScriptedNativeEventReceipts();
+        var stream = new EventStreamAddress(TenantId.ToString(), CommitmentDraft.Area, fixture.DraftId.ToString());
+        await foreach (var record in fixture.Source.Events.ReadAsync(stream, 0, CancellationToken.None))
+            receipts.Record(record, record.Event is CommitmentRetired ? DayOne.AddDays(10) : DayOne.AddDays(2));
+        return fixture.Context with
+        {
+            RecordedThrough = through,
+            ReceiptCut = new RecordedSourceReceiptCutFactory(fixture.Source.Events, receipts).Create(TenantId, through)
+        };
     }
 
     static async Task<FixtureState> Fixture(string kind, bool includeSuccessor = false,

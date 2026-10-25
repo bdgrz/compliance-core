@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
@@ -62,6 +63,13 @@ public sealed class ControlTypeIBaselineSourceContributor(
                     control.ProgramId != engagement.ProgramId || control.Revision != item.Revision)
                     return SourceConflict();
 
+                var receiptStream = context.RecordedThrough is null ? null :
+                    await context.RequireReceipts(engagement.TenantId).ReadAsync(new EventStreamAddress(
+                        engagement.TenantId.ToString(), ControlDraft.Area, control.Id.ToString()), ct).ConfigureAwait(false);
+                if (receiptStream is not null && control.ReadRetirementHistory().Any(retirement =>
+                        retirement.EffectiveUntil <= engagement.PeriodStart && !receiptStream.Includes(retirement)))
+                    return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "An effective control retirement changed after the frozen close receipt cutoff.", true));
                 var version = control.EffectiveVersion(engagement.PeriodStart);
                 if (version is null)
                 {
@@ -71,7 +79,8 @@ public sealed class ControlTypeIBaselineSourceContributor(
                     continue;
                 }
 
-                if (context.RecordedThrough is { } cutoff && version.ApprovedAt > cutoff)
+                if (receiptStream is not null && !receiptStream.Includes(fact => fact is ControlApproved approved && approved.ChangeCount > 0 &&
+                            approved.VersionId == version.VersionId && approved.ApprovalDecisionId == version.ApprovalDecisionId))
                     return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
                         "An effective control changed after the frozen close receipt cutoff.", true));
                 if (!IsValidEffectiveVersion(version, engagement, control, item.Identifier))

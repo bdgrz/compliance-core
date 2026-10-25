@@ -1,0 +1,115 @@
+{
+  "reviewed": 29,
+  "blockedReviews": 0,
+  "signalsTriaged": 9,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributor.cs",
+      "sha256": "7f47b02f254028b9732b2493c38ce6a2af843ffdc1635681dd0682f5d8e6c44e",
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.52,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.27
+      },
+      "classification": "verified_source_prefix_and_scoped_failure_behavior",
+      "evidence": "Native metadata/version/scope checks remain; closing selection uses exact committed receipts, ordinary Type I chronology is unchanged. Backdated late append and regressing occurrence/independent exception regressions pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributor.cs",
+      "sha256": "9e7806192dc05b72ba4c910ee6efcf31673152ccd300dc4a3cc522265afbb0c4",
+      "signals": {
+        "authority_gap": 0.6,
+        "invariant_gap": 0.56,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.27
+      },
+      "classification": "verified_source_prefix_and_scoped_failure_behavior",
+      "evidence": "Selection matches exact native mapping line, proposal/review/retirement fact and version. Receipt-prefixed selection composes verified current history; late revisions are excluded, missing/malformed exact source evidence fails typed. Query locators remain scope-bound."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/EvidenceGovernanceTypeIBaselineSourceContributor.cs",
+      "sha256": "f92ca38d8fa677235f0e9662b13cc1dfb37811b710b64af8d4991a7752dc7919",
+      "signals": {
+        "authority_gap": 0.57,
+        "invariant_gap": 0.52,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.26
+      },
+      "classification": "verified_source_prefix_and_scoped_failure_behavior",
+      "evidence": "Artifact, handling policy, retention and legal-hold sources retain exact event scope. Included policy/hold references cannot point beyond the included artifact revision. Real late-head causal dependency regression passes; current restricted authorization remains independent."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/InformationAssetTypeIBaselineSourceContributor.cs",
+      "sha256": "f14459163bdaad81072c8e7b127c44c581cf2f9a161b9c81de1179cd0ddcbb09",
+      "signals": {
+        "authority_gap": 0.59,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.21
+      },
+      "classification": "verified_source_prefix_and_scoped_failure_behavior",
+      "evidence": "Selects the exact included native revision within the tenant asset stream while retaining current restricted visibility and boundary/source fences. Current/Type I path stays unchanged when no receipt cutoff is requested."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/RiskTypeIBaselineSourceContributor.cs",
+      "sha256": "2535a165b6012026a5aeeac5863486d0bdaf00ccc5f4f26616c912dca4b7d796",
+      "signals": {
+        "authority_gap": 0.59,
+        "invariant_gap": 0.55,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.29
+      },
+      "classification": "verified_source_prefix_and_scoped_failure_behavior",
+      "evidence": "Current-main risk, evaluation and method readers use exact receipt prefix while retaining native scope, original canonical digest preimages and current source consistency. Queued compact Risk owner overlay is separate; this slice does not claim that owner complete."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/TechnologyComponentTypeIBaselineSourceContributor.cs",
+      "sha256": "bb03c2ba4796ea9cdc9368007e4e7e9d9e7f04ef5956369d02e66823c6b93fa4",
+      "signals": {
+        "authority_gap": 0.53,
+        "invariant_gap": 0.47,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.21
+      },
+      "classification": "verified_source_prefix_and_scoped_failure_behavior",
+      "evidence": "Receipt prefix selects exact system-component revision independent of backdated presentation clocks; original schema/digest and boundary consistency remain. Genuine late revision regression passes."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/TypeIBaselineSourceReadContext.cs",
+      "sha256": "ab18fc01c2048c57e5e3be573d676db3614c764ee00a6f2ac0e26913116af99b",
+      "signals": {
+        "authority_gap": 0.68,
+        "invariant_gap": 0.67,
+        "recovery_gap": 0.53,
+        "incomplete_path": 0.46
+      },
+      "classification": "verified_source_prefix_and_scoped_failure_behavior",
+      "evidence": "Server-created context is not a wire request. Factory/callers supply exact tenant and cutoff. RequireReceipts validates both; underlying selector refuses foreign stream realms. Null cutoff is inert and performs no receipt RPC, including explicit regression proof."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseHistory.cs",
+      "sha256": "fea9d3b8d18f0a78c0cc5162409aef048d2d081c0558a2661e25ff4999356fd9",
+      "signals": {
+        "authority_gap": 0.55,
+        "invariant_gap": 0.56,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.41
+      },
+      "classification": "verified_source_prefix_and_scoped_failure_behavior",
+      "evidence": "Discovery verifies actual broker receipts and the complete per-resource business-fact prefix before group.Last legacy Incident composition. Valid prefix/non-prefix controlled tests pass, exact receipt is sealed in captured source. Native Incident compaction remains queued."
+    },
+    {
+      "path": "src/Compliance.Core/Features/SourceFacts/RecordedSourceReceiptCut.cs",
+      "sha256": "103928fcb77747f7c010e82c0f7002aeccb6ad485967cb339b8f258390e1463d",
+      "signals": {
+        "authority_gap": 0.49,
+        "invariant_gap": 0.44,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.2
+      },
+      "classification": "verified_source_prefix_and_scoped_failure_behavior",
+      "evidence": "Request-local Lazy cache captures one exact stream prefix, verifies physical offsets/unique event identities and uses actual tuple/body-verified broker receipt adapter. Fault/cancellation remains scoped to that request; new requests retry. Missing receipt is transient; foreign/corrupt/non-prefix evidence refuses. Same-ms values tie inclusively; no sub-ms or realm watermark claim."
+    }
+  ]
+}

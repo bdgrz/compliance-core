@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Examinations;
@@ -20,6 +22,126 @@ public sealed class ApplicationTypeIBaselineSourceContributorTests
     static readonly DateTimeOffset DayOne = new(2026, 6, 1, 12, 0, 0, TimeSpan.Zero);
     static readonly string[] ScheduledRetirementSourceKinds =
         ["application_revision", "application_retirement"];
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldUseBrokerReceiptPrefixGivenApplicationPayloadTimesDisagree(bool lateBrokerReceipt)
+    {
+        // Arrange
+        var cutoff = new DateTimeOffset(2026, 6, 30, 23, 59, 59, TimeSpan.Zero);
+        var fixture = Fixture([Revision(1, "Payroll", DayOne), Revision(2, "Payroll successor",
+            lateBrokerReceipt ? DayOne.AddDays(1) : cutoff.AddDays(1))]);
+        var sourceEvents = new InMemoryEventStore();
+        await sourceEvents.AppendAsync(fixture.Source.Stream, 0, NativeFacts.Raised(fixture.Source));
+        var receipts = new ScriptedNativeEventReceipts();
+        await foreach (var record in sourceEvents.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(),
+            DeclaredApplication.Area), EventCursor.Start, CancellationToken.None))
+            receipts.Record(record, lateBrokerReceipt && record.Event is ApplicationRevised ? cutoff.AddMilliseconds(1) : cutoff);
+        var context = fixture.Context with
+        {
+            RecordedThrough = cutoff,
+            ReceiptCut = new RecordedSourceReceiptCut(TenantId, cutoff, sourceEvents, receipts),
+        };
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(new DateOnly(2026, 6, 30)), context, CancellationToken.None);
+        var receiptReads = receipts.Reads;
+        var legacy = await fixture.Contributor.ReadAsync(Engagement(new DateOnly(2026, 6, 30)),
+            fixture.Context with { ReceiptCut = context.ReceiptCut }, CancellationToken.None);
+        var legacyWithoutPort = await fixture.Contributor.ReadAsync(Engagement(new DateOnly(2026, 6, 30)),
+            fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(lateBrokerReceipt ? 1 : 2, Assert.Single(result.Value.Sources).Revision);
+        Assert.True(receipts.Reads > 0);
+        Assert.Equal(legacyWithoutPort.Value.Sources, legacy.Value.Sources);
+        Assert.Equal(receiptReads, receipts.Reads);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task ShouldBindImportedApplicationToVerifiedEffectAndPublicationReceiptGivenCommittedImport(bool latePublication, bool lateSiblingEffect)
+    {
+        // Arrange
+        await using var host = new ApplicationImportHost();
+        var applicationId = Uuid.CreateVersion4();
+        var batch = await host.StageBatchAsync();
+        var siblingId = Uuid.CreateVersion4();
+        await host.SealPlanAsync(batch.Id, [ApplicationImportHost.Create(applicationId, "record-a", "Imported payroll", "Process payroll"),
+            ApplicationImportHost.Create(siblingId, "record-b", "Imported sibling", "Manage sibling service")]);
+        _ = await host.RunProcessAsync(batch.Id);
+        await host.CatchUpAsync("ApplicationDirectoryV2");
+        var committed = (await host.BatchAsync(batch.Id)).Committed!;
+        var cutoff = ApplicationImportHost.StartedAt.AddDays(1);
+        var receipts = new ScriptedNativeEventReceipts();
+        ulong? commitPosition = null;
+        await foreach (var record in host.Events.ReadAsync(EventStreamPattern.ForPattern(host.TenantId.ToString(),
+            ApplicationImportBatch.Area, batch.Id.ToString()), EventCursor.Start, CancellationToken.None))
+            if (record.Event.Metadata.EventId == committed.Metadata.EventId)
+                commitPosition = record.ResourceOffset;
+        var publicationPosition = commitPosition ?? throw new InvalidOperationException("The committed import marker has no native source position.");
+        DomainEventRecord? siblingEffect = null;
+        await foreach (var record in host.Events.ReadAsync(EventStreamPattern.ForPattern(host.TenantId.ToString()), EventCursor.Start, CancellationToken.None))
+            if (record.Event is ApplicationImportEffectPending pending && pending.ApplicationId == siblingId)
+                siblingEffect = record;
+        Assert.NotNull(siblingEffect);
+        var sourceCursor = EventCursor.Start;
+        await foreach (var record in host.Events.ReadAsync(EventStreamPattern.ForPattern(host.TenantId.ToString()),
+            EventCursor.Start, CancellationToken.None))
+        {
+            receipts.Record(record, latePublication && record.Stream == batch.Stream && record.ResourceOffset >= publicationPosition ||
+                lateSiblingEffect && record.Stream == siblingEffect.Stream && record.ResourceOffset >= siblingEffect.ResourceOffset
+                ? cutoff.AddMilliseconds(1) : cutoff);
+            sourceCursor = record.NextCursor;
+        }
+        var sourceCheckpoint = new ProjectionCheckpoint(sourceCursor);
+        var inclusion = new BoundaryScopeEntry(Uuid.CreateVersion4(), "inclusion", "application", applicationId.ToString(),
+            applicationId, string.Empty, "Included imported application", false);
+        var version = new BoundaryVersionView(host.TenantId, BoundaryId, ProgramId, Uuid.CreateVersion4(), 1,
+            new BoundaryContent("In-scope system", "type_i", ["security"], [inclusion]), "approved",
+            new DateOnly(2026, 10, 1), AuthorId, "Examiner", ApplicationImportHost.StartedAt);
+        var boundaries = new BoundaryDirectory(new BoundaryView(host.TenantId, BoundaryId, ProgramId, null, version, null, 1), version,
+            sourceCheckpoint);
+        var contributor = new ApplicationTypeIBaselineSourceContributor(host.Services.GetRequiredService<IApplicationDirectoryReader>(),
+            host.Reader, RestrictedApplicationVisibilityFixture.Create(host.Reader), host.Services.GetRequiredService<SystemInstanceReadConsistency>(),
+            boundaries, new ProgramSetupWorkReadConsistency(new ProgramDirectory(sourceCheckpoint), boundaries, host.Events), host.Content);
+        var context = new TypeIBaselineSourceReadContext(Uuid.Empty,
+            [new TypeIBaselineSourceReference("approved_boundary", BoundaryId, version.VersionId, version.Revision,
+                SnapshotContentIdentity.ApprovedBoundaryVersion(version))])
+        {
+            RecordedThrough = cutoff,
+            ReceiptCut = new RecordedSourceReceiptCut(host.TenantId, cutoff, host.Events, receipts),
+        };
+        var engagement = Engagement(new DateOnly(2026, 10, 31)) with { TenantId = host.TenantId };
+
+        // Act
+        var result = await contributor.ReadAsync(engagement, context, CancellationToken.None);
+
+        // Assert
+        if (lateSiblingEffect)
+        {
+            Assert.False(result.IsSuccess);
+            Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+            Assert.False(result.Error.IsTransient);
+            return;
+        }
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        if (latePublication)
+        {
+            Assert.Empty(result.Value.Sources);
+            Assert.Contains(result.Value.Blockers, value => value.Contains("no version recorded", StringComparison.Ordinal));
+        }
+        else
+        {
+            Assert.Equal(applicationId, Assert.Single(result.Value.Sources).RecordId);
+            Assert.Equal(1, result.Value.Sources[0].Revision);
+        }
+        Assert.True(receipts.Reads > 0);
+    }
 
     [Fact]
     public async Task ShouldCaptureRevisionEffectiveOnTypeIDateGivenLaterApplicationRevision()
@@ -152,7 +274,7 @@ public sealed class ApplicationTypeIBaselineSourceContributorTests
         var boundaryReference = new TypeIBaselineSourceReference("approved_boundary", BoundaryId,
             version.VersionId, version.Revision, SnapshotContentIdentity.ApprovedBoundaryVersion(version));
         var context = new TypeIBaselineSourceReadContext(RequesterId, [boundaryReference]);
-        return new FixtureState(contributor, context);
+        return new FixtureState(contributor, context, source);
     }
 
     static DeclaredApplication Source(IReadOnlyList<ApplicationRevisionView> history)
@@ -197,7 +319,7 @@ public sealed class ApplicationTypeIBaselineSourceContributorTests
         BoundaryId, [], "draft", 1, DayOne, AuthorId, "Examiner");
 
     sealed record FixtureState(ApplicationTypeIBaselineSourceContributor Contributor,
-        TypeIBaselineSourceReadContext Context);
+        TypeIBaselineSourceReadContext Context, DeclaredApplication Source);
 
     sealed class AggregateReader(DeclaredApplication source) : IAggregateReader
     {
@@ -243,7 +365,7 @@ public sealed class ApplicationTypeIBaselineSourceContributorTests
             ValueTask.FromResult(new Page<SystemInstanceView>([], null));
     }
 
-    sealed class BoundaryDirectory(BoundaryView boundary, BoundaryVersionView version)
+    sealed class BoundaryDirectory(BoundaryView boundary, BoundaryVersionView version, ProjectionCheckpoint? checkpoint = null)
         : IBoundaryDirectoryReader
     {
         public ValueTask<BoundaryView?> GetAsync(Uuid tenantId, Uuid boundaryId,
@@ -266,10 +388,10 @@ public sealed class ApplicationTypeIBaselineSourceContributorTests
             Uuid boundaryId, int limit, string? cursor, CancellationToken ct = default) =>
             ValueTask.FromResult<Page<BoundaryDecisionView>?>(new Page<BoundaryDecisionView>([], null));
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+            CancellationToken ct = default) => ValueTask.FromResult(checkpoint ?? ProjectionCheckpoint.Start);
     }
 
-    sealed class ProgramDirectory : IProgramDirectoryReader
+    sealed class ProgramDirectory(ProjectionCheckpoint? checkpoint = null) : IProgramDirectoryReader
     {
         public ValueTask<ProgramView?> GetAsync(Uuid tenantId, Uuid programId,
             CancellationToken ct = default) => ValueTask.FromResult<ProgramView?>(null);
@@ -281,6 +403,6 @@ public sealed class ApplicationTypeIBaselineSourceContributorTests
         public ValueTask<ProgramRevisionView?> GetRevisionAsync(Uuid tenantId, Uuid programId,
             long revision, CancellationToken ct = default) => ValueTask.FromResult<ProgramRevisionView?>(null);
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+            CancellationToken ct = default) => ValueTask.FromResult(checkpoint ?? ProjectionCheckpoint.Start);
     }
 }

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
@@ -32,6 +33,77 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
     static readonly DateTimeOffset LaunchAt = new(2027, 2, 15, 12, 0, 0, TimeSpan.Zero);
     static readonly DateTimeOffset AfterTypeIDate = new(2027, 4, 1, 12, 0, 0, TimeSpan.Zero);
     static readonly ActorReference Manager = ActorReference.ForMember(ManagerId, "Manager");
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldUseParticipantReceiptPrefixGivenAcknowledgementPayloadTimeDisagrees(bool lateBrokerReceipt)
+    {
+        // Arrange
+        await using var fixture = await PolicyCampaign();
+        var cutoff = new DateTimeOffset(2027, 3, 31, 23, 59, 59, TimeSpan.Zero);
+        var before = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+        Assert.True((await fixture.AcknowledgeAsync(Bob, lateBrokerReceipt ? LaunchAt.AddDays(20) : cutoff.AddDays(1))).IsSuccess);
+        var receipts = new ScriptedNativeEventReceipts();
+        await foreach (var record in fixture.Events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString()),
+            EventCursor.Start, CancellationToken.None))
+            receipts.Record(record, lateBrokerReceipt && record.Event is PolicyAcknowledgementRecorded { PersonId: var person } && person == Bob
+                ? cutoff.AddMilliseconds(1) : cutoff);
+        var context = fixture.Context with
+        {
+            RecordedThrough = cutoff,
+            ReceiptCut = new RecordedSourceReceiptCut(TenantId, cutoff, fixture.Events, receipts),
+        };
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var selected = Assert.Single(result.Value.Sources, source => source.Kind == "policy_communication");
+        var opening = Assert.Single(before.Value.Sources, source => source.Kind == "policy_communication");
+        if (lateBrokerReceipt)
+            Assert.Equal(opening.ContentSha256, selected.ContentSha256);
+        else
+            Assert.NotEqual(opening.ContentSha256, selected.ContentSha256);
+        Assert.Equal(lateBrokerReceipt ? opening.Revision : opening.Revision + 1, selected.Revision);
+        Assert.True(receipts.Reads > 0);
+    }
+
+    [Fact]
+    public async Task ShouldRejectNoncausalReceiptSelectionGivenParticipantResultBeforeExcludedAdmission()
+    {
+        // Arrange
+        await using var fixture = await PolicyCampaign();
+        Assert.True((await fixture.AcknowledgeAsync(Bob, LaunchAt.AddDays(20))).IsSuccess);
+        var cutoff = new DateTimeOffset(2027, 3, 31, 23, 59, 59, TimeSpan.Zero);
+        var records = new List<DomainEventRecord>();
+        await foreach (var record in fixture.Events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString()),
+            EventCursor.Start, CancellationToken.None))
+            records.Add(record);
+        var resultFact = Assert.Single(records.Select(record => record.Event).OfType<PolicyAcknowledgementRecorded>(),
+            fact => fact.PersonId == Bob);
+        var admissionId = resultFact.Operation.CausationEventId
+            ?? throw new InvalidOperationException("The native result has no admission identity.");
+        var admission = Assert.Single(records, record => record.Event.Metadata.EventId == admissionId);
+        var receipts = new ScriptedNativeEventReceipts();
+        foreach (var record in records)
+            receipts.Record(record, record.Stream == admission.Stream && record.ResourceOffset >= admission.ResourceOffset
+                ? cutoff.AddMilliseconds(1) : cutoff);
+        var context = fixture.Context with
+        {
+            RecordedThrough = cutoff,
+            ReceiptCut = new RecordedSourceReceiptCut(TenantId, cutoff, fixture.Events, receipts),
+        };
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
+        Assert.False(result.Error.IsTransient);
+    }
 
     [Fact]
     public async Task ShouldKeepPolicyCommunicationStableGivenAcknowledgementAfterTypeIDate()
@@ -212,6 +284,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
     sealed class Fixture : IAsyncDisposable
     {
         readonly InMemoryEventStore _events = new();
+        public InMemoryEventStore Events => _events;
 
         public Fixture()
         {

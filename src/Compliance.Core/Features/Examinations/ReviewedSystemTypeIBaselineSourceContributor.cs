@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -173,8 +174,13 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributor(
                 continue;
             }
 
-            var latestAsOf = history.Value.Where(state =>
-                    state.ChangeKind != "retired" && state.ChangedAt <= through)
+            var eligibleHistory = new List<ReviewedSystemState>();
+            foreach (var state in history.Value)
+                if (context.RecordedThrough is null ? state.ChangedAt <= through :
+                    state.Source is { } source && await context.IncludesAsync(source.Stream, source.Event, ct).ConfigureAwait(false))
+                    eligibleHistory.Add(state);
+            var latestAsOf = eligibleHistory.Where(state =>
+                    state.ChangeKind != "retired")
                 .OrderBy(static state => state.Revision).LastOrDefault();
             if (latestAsOf is null)
             {
@@ -204,7 +210,10 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributor(
             }
 
             var retirement = history.Value.SingleOrDefault(static state => state.ChangeKind == "retired");
-            if (retirement is null || retirement.ChangedAt > through && retirement.EffectiveAt > effectiveThrough)
+            if (context.RecordedThrough is not null && retirement is not null &&
+                !eligibleHistory.Contains(retirement) && retirement.EffectiveAt <= effectiveThrough)
+                return SourceConflict();
+            if (retirement is null || !eligibleHistory.Contains(retirement) && retirement.EffectiveAt > effectiveThrough)
                 continue;
             try
             {
@@ -221,7 +230,7 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributor(
             }
             if (retirement.EffectiveAt > effectiveThrough)
                 scopeDifferences.Add($"Reviewed system {instanceId} has a retirement scheduled after the Type I date.");
-            else if (retirement.ChangedAt > through)
+            else if (!eligibleHistory.Contains(retirement))
                 scopeDifferences.Add($"Reviewed system {instanceId} was retired retroactively after the Type I date.");
         }
 
@@ -274,7 +283,7 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributor(
             if (state is null || history.Count == 0 && state.ChangeKind != "registered" ||
                 history.Count > 0 && state.ChangeKind == "registered")
                 return InvalidHistory();
-            history.Add(state);
+            history.Add(state with { Source = record });
             nextRevision++;
             retired = state.ChangeKind == "retired";
         }
@@ -289,13 +298,17 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributor(
         var stream = new EventStreamAddress(tenantId.ToString(), "applications",
             current.ApplicationId.ToString());
         var declarations = new List<SystemInstanceDeclared>();
+        DomainEventRecord? declarationSource = null;
         await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
         {
             if (record.Stream != stream)
                 return InvalidHistory();
             if (record.Event is SystemInstanceDeclared candidate &&
                 candidate.SystemInstanceId == current.SystemInstanceId)
+            {
                 declarations.Add(candidate);
+                declarationSource = record;
+            }
         }
         if (declarations.Count != 1)
             return InvalidHistory();
@@ -315,7 +328,7 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributor(
                 declaration.AccessBoundaryReference, declaration.SourceIdentifier,
                 declaration.ActorMemberId, declaration.ActorDisplay, declaration.Actor,
                 declaration.ChangedAt, "legacy_declared", null, null, null,
-                declaration.ApplicationRevision)]);
+                declaration.ApplicationRevision) { Source = declarationSource }]);
     }
 
     static bool MatchesCurrentAggregate(SystemInstanceView current,
@@ -489,5 +502,8 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributor(
         string? AccessBoundaryReference, string? SourceIdentifier, Uuid ActorMemberId,
         string ActorDisplay, ActorReference Actor, DateTimeOffset ChangedAt, string ChangeKind,
         string? Rationale, DateTimeOffset? EffectiveAt, string? RetirementReason,
-        long? LegacyApplicationRevision = null);
+        long? LegacyApplicationRevision = null)
+    {
+        public DomainEventRecord? Source { get; init; }
+    }
 }

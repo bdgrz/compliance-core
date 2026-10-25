@@ -10,8 +10,8 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>
 ///     Captures control evaluation history known by the Type I examination date. Every evaluation is its own stream,
-///     folded only through the facts committed by that date; the whole program history is read twice and a write
-///     between the reads makes the capture transient.
+///     folded at the existing Type I occurrence date, or an explicit authenticated close receipt cut. The whole program
+///     history is read twice and a write between the reads makes the capture transient.
 /// </summary>
 public sealed class ControlEvaluationTypeIBaselineSourceContributor(ControlEvaluationReader evaluations)
     : ITypeIBaselineSourceContributor
@@ -47,9 +47,10 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributor(ControlEvalu
 
         var through = context.RecordedThrough ?? new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
             DateTimeKind.Utc));
-        var firstRead = await evaluations.ReadStatesAsync(engagement.TenantId, engagement.ProgramId, through, ct)
+        var receiptCut = context.RecordedThrough is null ? null : context.RequireReceipts(engagement.TenantId);
+        var firstRead = await evaluations.ReadStatesAsync(engagement.TenantId, engagement.ProgramId, through, receiptCut, ct)
             .ConfigureAwait(false);
-        var confirmation = await evaluations.ReadStatesAsync(engagement.TenantId, engagement.ProgramId, through, ct)
+        var confirmation = await evaluations.ReadStatesAsync(engagement.TenantId, engagement.ProgramId, through, receiptCut, ct)
             .ConfigureAwait(false);
         if (firstRead.Fence != confirmation.Fence)
             return SourceChanged();
@@ -59,7 +60,7 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributor(ControlEvalu
         {
             if (!controlVersions.ContainsKey(state.ControlId))
                 continue;
-            if (!IsValid(state, through) || !histories.TryAdd(state.EvaluationId, state))
+            if (!IsValid(state, context.RecordedThrough is null ? through : DateTimeOffset.MaxValue) || !histories.TryAdd(state.EvaluationId, state))
                 return SourceConflict();
         }
 

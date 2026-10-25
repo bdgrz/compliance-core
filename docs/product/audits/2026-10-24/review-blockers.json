@@ -157,7 +157,35 @@
     "template-application-integration-jev.json",
     "typeii-period-file-reviews.json",
     "typeii-period-file-triage.json",
-    "typeii-period-integration-jev.json"
+    "typeii-period-integration-jev.json",
+    "http-native-file-reviews.json",
+    "http-native-file-triage.json",
+    "http-native-integration-jev.json",
+    "http-native-qualification.json",
+    "commitment-file-reviews.json",
+    "commitment-file-triage.json",
+    "commitment-integration-jev.json",
+    "commitment-qualification.json",
+    "boundary-file-reviews.json",
+    "boundary-file-triage.json",
+    "boundary-integration-jev.json",
+    "boundary-qualification.json",
+    "roster-file-reviews.json",
+    "roster-file-triage.json",
+    "roster-integration-jev.json",
+    "roster-qualification.json",
+    "change-file-reviews.json",
+    "change-file-triage.json",
+    "change-integration-jev.json",
+    "change-qualification.json",
+    "identity-file-reviews.json",
+    "identity-file-triage.json",
+    "identity-integration-jev.json",
+    "identity-qualification.json",
+    "all-receipts-file-reviews.json",
+    "all-receipts-file-triage.json",
+    "all-receipts-integration-jev.json",
+    "all-receipts-qualification.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 91,
@@ -374,6 +402,69 @@
       "externalDependency": false,
       "evidence": "The independent program non-overlap calendar still retains reservation/fence history; period owner cutover does not claim to compact that separate authority.",
       "nextWork": "Preserve atomic active range non-overlap and exact selected reservation/fence proof while moving terminal history outside runtime command state."
+    },
+    {
+      "id": "native-http-first-responses",
+      "status": "merged",
+      "pullRequest": 1107,
+      "mergeCommit": "96116e54b71f83c85c2811eb1e4bb6574e968031",
+      "fullUnitPassed": 5743,
+      "directJevProductionFilesReviewed": 12,
+      "qualification": "See matching per-slice qualification and file-triage audits; no deployment or retained-state conversion claim."
+    },
+    {
+      "id": "native-commitment-authority-and-consumers",
+      "status": "merged",
+      "pullRequest": 1108,
+      "mergeCommit": "da6c705607749771e9837f91bcd19d2e23aca8d7",
+      "fullUnitPassed": 5763,
+      "directJevProductionFilesReviewed": 70,
+      "qualification": "See matching per-slice qualification and file-triage audits; no deployment or retained-state conversion claim."
+    },
+    {
+      "id": "native-boundary-authority-and-consumers",
+      "status": "merged",
+      "pullRequest": 1109,
+      "mergeCommit": "d544bb3f53fc97b27f8b4bc1364acab010b78872",
+      "fullUnitPassed": 5784,
+      "directJevProductionFilesReviewed": 79,
+      "qualification": "See matching per-slice qualification and file-triage audits; no deployment or retained-state conversion claim."
+    },
+    {
+      "id": "native-platform-operator-roster",
+      "status": "merged",
+      "pullRequest": 1110,
+      "mergeCommit": "43db7646dd153ce300ced1dda99d0a6a4318f3a9",
+      "fullUnitPassed": 5797,
+      "directJevProductionFilesReviewed": 18,
+      "qualification": "See matching per-slice qualification and file-triage audits; no deployment or retained-state conversion claim."
+    },
+    {
+      "id": "native-significant-change-and-verified-receipt-port",
+      "status": "merged",
+      "pullRequest": 1111,
+      "mergeCommit": "b28c50df51b415302cbd354c0ed30ea86da31476",
+      "fullUnitPassed": 5829,
+      "directJevProductionFilesReviewed": 52,
+      "qualification": "See matching per-slice qualification and file-triage audits; no deployment or retained-state conversion claim."
+    },
+    {
+      "id": "owner-scoped-projection-identities",
+      "status": "merged",
+      "pullRequest": 1112,
+      "mergeCommit": "8743b1b9229ca5ab9f2e21b65dd3e3525d9cb479",
+      "fullUnitPassed": 5845,
+      "directJevProductionFilesReviewed": 14,
+      "qualification": "See matching per-slice qualification and file-triage audits; no deployment or retained-state conversion claim."
+    },
+    {
+      "id": "all-source-receipt-selection",
+      "status": "locally_verified_pending_merge",
+      "focusedPassed": 228,
+      "fullUnitPassed": 5885,
+      "directJevProductionFilesReviewed": 29,
+      "modelMergeProbability": 0.68,
+      "qualificationArtifact": "all-receipts-qualification.json"
     }
   ],
   "resolved": [
@@ -390,5 +481,37 @@
       "nextWork": "Repair web test host configuration and stale contract assertions after current backend owner slices; no new GitHub issue.",
       "resolution": "Test host supplies required scoped HTTPS digest links, route assertions consume selected identified PUT paths, and snake_case validation applies to query/path values. All28websmoke tests pass."
     }
+  ],
+  "preparedUnqualifiedQueue": [
+    {
+      "id": "system-description-native",
+      "status": "frozen_runtime_pending",
+      "artifactDirectory": "/tmp/compliance-system-description-prepared"
+    },
+    {
+      "id": "risk-native",
+      "status": "frozen_runtime_pending",
+      "artifactDirectory": "/tmp/compliance-risk-native-prepared"
+    },
+    {
+      "id": "typeii-observation-calendar-native",
+      "status": "frozen_runtime_pending",
+      "artifactDirectory": "/tmp/compliance-calendar-prepared"
+    },
+    {
+      "id": "independence-catalogs-native",
+      "status": "frozen_runtime_pending",
+      "artifactDirectory": "/tmp/compliance-ratification-native-prepared"
+    },
+    {
+      "id": "typei-baseline-projection-identity",
+      "status": "frozen_runtime_pending",
+      "artifactDirectory": "/tmp/compliance-baseline-identity-prepared"
+    }
+  ],
+  "continuingPreparation": [
+    "ComplianceIncident native authority/consumers and exact completion proofs",
+    "Generic SourceUseReservations bounded active/terminal authority",
+    "Actual remaining owner/reactor inventory; lexical inventory counts are not completion evidence"
   ]
 }

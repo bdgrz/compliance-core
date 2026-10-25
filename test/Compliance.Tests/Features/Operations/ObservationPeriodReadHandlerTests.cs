@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -377,6 +378,7 @@ public sealed class ObservationPeriodReadHandlerTests
         public Uuid Program { get; } = Uuid.CreateVersion4();
         public Uuid Member { get; } = Uuid.CreateVersion4();
         public InMemoryEventStore Events { get; } = new();
+        public ReceiptTrackingEventStore Receipts { get; }
         public IImmutableContentStore Content { get; } = TypeIIPeriodSeeds.NewContentStore();
         public FitzObservationPeriodDirectory Directory { get; } = new(new InMemoryKvClient());
         public IAggregateReader Reader { get; }
@@ -384,7 +386,8 @@ public sealed class ObservationPeriodReadHandlerTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(Events);
+            Receipts = new ReceiptTrackingEventStore(Events, new ReceiptClock());
+            services.AddSingleton<IEventStore>(Receipts);
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
@@ -444,7 +447,7 @@ public sealed class ObservationPeriodReadHandlerTests
             var reconciliation = new TypeIIPeriodCloseValidationContent([source], prior.ExpectedOccurrenceIds, prior.ExpectedOccurrenceIds,
                 [], [], prior.AcknowledgedMaterialItemIds)
             { SourceContentManifest = publication, RecordedThrough = at };
-            var proof = await new TypeIIPeriodCloseMaterialReader(Events, Content).FreezeAsync(period.Current, prior, reconciliation, operation, CancellationToken.None);
+            var proof = await new TypeIIPeriodCloseMaterialReader(Events, Content, new RecordedSourceReceiptCutFactory(Events, Receipts)).FreezeAsync(period.Current, prior, reconciliation, operation, CancellationToken.None);
             var evidence = await Content.ReadJsonAsync<TypeIIPeriodCloseMaterialProof>(Tenant.ToString(), proof);
             Assert.Null(period.AmendClose(period.Revision, new TypeIIPeriodCloseSnapshotContent(Uuid.CreateVersion4(), [source],
                 prior.ExpectedOccurrenceIds, prior.AcknowledgedMaterialItemIds)
@@ -482,6 +485,10 @@ public sealed class ObservationPeriodReadHandlerTests
                 cursor = record.NextCursor;
             }
             await batch.CommitAsync(new ProjectionCheckpoint(cursor));
+        }
+        sealed class ReceiptClock : TimeProvider
+        {
+            public override DateTimeOffset GetUtcNow() => Now;
         }
         public async ValueTask DisposeAsync()
         {

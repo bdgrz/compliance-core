@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -15,7 +17,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 public sealed class ApplicationTypeIBaselineSourceContributor(
     IApplicationDirectoryReader applications, IAggregateReader reader,
     RestrictedApplicationVisibility visibility, SystemInstanceReadConsistency consistency,
-    IBoundaryDirectoryReader boundaries, ProgramSetupWorkReadConsistency boundaryConsistency)
+    IBoundaryDirectoryReader boundaries, ProgramSetupWorkReadConsistency boundaryConsistency, IImmutableContentStore? content = null)
     : ITypeIBaselineSourceContributor
 {
     const int PageSize = 200;
@@ -29,13 +31,28 @@ public sealed class ApplicationTypeIBaselineSourceContributor(
         ReadAsync(engagement, new TypeIBaselineSourceReadContext(Uuid.Empty, []), ct);
 
     public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
-        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context,
-        CancellationToken ct)
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context, CancellationToken ct)
+    {
+        try
+        {
+            return await ReadCoreAsync(engagement, context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact application source cannot be verified: " + exception.Message,
+                isTransient: exception is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<TypeIBaselineSourceContribution>> ReadCoreAsync(
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context, CancellationToken ct)
     {
         if (engagement is null || context is null || context.PreviouslyCapturedSources is null)
             return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(
                 RequestErrorKind.Validation, "An application baseline read requires its engagement and source context."));
 
+        var receiptCut = context.RecordedThrough is null ? null : context.RequireReceipts(engagement.TenantId);
         var priorBoundary = context.PreviouslyCapturedSources.Where(static source =>
             source.Kind == "approved_boundary").ToArray();
         if (priorBoundary.Length != 1 || priorBoundary[0].RecordId != engagement.BoundaryId)
@@ -52,8 +69,9 @@ public sealed class ApplicationTypeIBaselineSourceContributor(
 
         var boundary = await boundaries.GetAsync(engagement.TenantId, engagement.BoundaryId, ct)
             .ConfigureAwait(false);
-        var boundaryVersion = await boundaries.GetEffectiveVersionAsync(engagement.TenantId,
-            engagement.BoundaryId, engagement.PeriodStart, ct).ConfigureAwait(false);
+        var boundaryVersion = receiptCut is null
+            ? await boundaries.GetEffectiveVersionAsync(engagement.TenantId, engagement.BoundaryId, engagement.PeriodStart, ct).ConfigureAwait(false)
+            : await boundaries.GetVersionAsync(engagement.TenantId, engagement.BoundaryId, priorBoundary[0].VersionId, ct).ConfigureAwait(false);
         if (boundary is null || boundary.TenantId != engagement.TenantId ||
             boundary.ProgramId != engagement.ProgramId || boundary.BoundaryId != engagement.BoundaryId ||
             boundaryVersion is null || boundaryVersion.TenantId != engagement.TenantId ||
@@ -139,8 +157,18 @@ public sealed class ApplicationTypeIBaselineSourceContributor(
                 retirementRows.Length == 1 && history.Value[^1].ChangeKind != "retired")
                 return InvalidDirectory();
 
+            Dictionary<long, bool>? includedRevisions = null;
+            if (receiptCut is not null)
+            {
+                includedRevisions = [];
+                var stream = await receiptCut.ReadAsync(aggregate.Stream, ct).ConfigureAwait(false);
+                foreach (var revision in history.Value)
+                    includedRevisions.Add(revision.Revision, await RevisionIncludedAsync(engagement.TenantId,
+                        aggregate, revision, stream, receiptCut, ct).ConfigureAwait(false));
+            }
             var applicationVersion = history.Value.Where(revision =>
-                    revision.ChangeKind != "retired" && revision.LastChangedAt <= through)
+                    revision.ChangeKind != "retired" && (includedRevisions is null
+                        ? revision.LastChangedAt <= through : includedRevisions[revision.Revision]))
                 .OrderBy(static revision => revision.Revision).LastOrDefault();
             if (applicationVersion is null)
             {
@@ -149,7 +177,8 @@ public sealed class ApplicationTypeIBaselineSourceContributor(
             }
 
             var retirement = retirementRows.SingleOrDefault(revision =>
-                revision.LastChangedAt <= through || revision.Retirement!.EffectiveAt <= effectiveThrough);
+                includedRevisions is null ? revision.LastChangedAt <= through || revision.Retirement!.EffectiveAt <= effectiveThrough
+                    : includedRevisions[revision.Revision]);
             var authorized = true;
             if (applicationVersion.IsRestricted || retirement?.IsRestricted == true)
                 authorized = context.RequesterUserId != Uuid.Empty &&
@@ -192,7 +221,7 @@ public sealed class ApplicationTypeIBaselineSourceContributor(
                 }
                 if (retirement.Retirement!.EffectiveAt > effectiveThrough)
                     scopeDifferences.Add($"Application {applicationId} has a retirement scheduled after the Type I date.");
-                else if (retirement.LastChangedAt > through)
+                else if (receiptCut is null && retirement.LastChangedAt > through)
                     scopeDifferences.Add($"Application {applicationId} was retired retroactively after the Type I date.");
             }
         }
@@ -208,6 +237,118 @@ public sealed class ApplicationTypeIBaselineSourceContributor(
 
         return Success(sources, blockers, scopeDifferences);
     }
+
+    async Task<bool> RevisionIncludedAsync(Uuid tenant, DeclaredApplication application, ApplicationRevisionView revision,
+        RecordedSourceReceiptPrefix stream, RecordedSourceReceiptCut cut, CancellationToken ct)
+    {
+        var direct = stream.Records.Where(record => RevisionIdentity(record.Event, revision)).ToArray();
+        if (direct.Length > 1)
+            throw new ImmutableContentIntegrityException("The application revision has more than one exact native source fact.");
+        if (direct.Length == 1)
+        {
+            if (!DirectRevision(direct[0].Event, revision))
+                throw new ImmutableContentIntegrityException("The application revision body differs from its exact native source fact.");
+            return stream.Includes(direct[0].Event);
+        }
+        if (revision.ChangeKind is not ("imported" or "retired"))
+            throw new ImmutableContentUnavailableException("The application revision has no exact native source fact.");
+        if (content is null)
+            throw new ImmutableContentUnavailableException("The committed application import source content is not configured.");
+        var selected = new List<(ApplicationImportEffectPending Effect, ApplicationImportCommitted Marker, EventStreamAddress Stream)>();
+        foreach (var effect in application.GetPendingImportEffects().Where(effect => effect.ResultingRevision == revision.Revision &&
+                     effect.Row.Decision == (revision.ChangeKind == "imported" ? "create_new" : "retire")))
+        {
+            var batch = await reader.HydrateAsync(new ApplicationImportBatch(tenant, effect.BatchId), ct).ConfigureAwait(false);
+            if (batch.Committed is not { } marker)
+                continue;
+            var plan = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, tenant, marker.Intent, ct).ConfigureAwait(false);
+            var rows = await ApplicationImportContent.ReadSelectionAsync<ApplicationImportPlannedRow>(content, tenant, plan.Rows, ct).ConfigureAwait(false);
+            var proofs = await ApplicationImportContent.ReadAsync<IReadOnlyList<ApplicationImportEffectProof>>(content, tenant,
+                marker.EffectsManifest, ct).ConfigureAwait(false);
+            if (marker.TenantId != tenant || marker.BatchId != batch.Id || marker.BatchId != effect.BatchId || plan.BatchId != batch.Id ||
+                marker.Operation.Owner != batch.Stream || marker.Operation.RootOperationId != plan.Header.RootOperationId ||
+                marker.PlanSha256 != marker.Intent.Sha256 || marker.Intent != effect.FrozenPlan || marker.PlanSha256 != effect.PlanSha256 ||
+                marker.SourceKey != plan.SourceKey || marker.SourceNamespace != plan.SourceNamespace ||
+                marker.SourceGeneration != plan.SourceRevision || marker.FrozenRows != plan.Rows.Content ||
+                marker.Metadata.EventId == Uuid.Empty || batch.CommittedStreamPosition < marker.Metadata.AggregateVersion ||
+                proofs.Count != rows.Count || proofs.Select(proof => proof.EventId).Distinct().Count() != proofs.Count ||
+                proofs.Any(proof => proof.EventId == Uuid.Empty || proof.EventVersion == 0) ||
+                rows.Any(row => proofs.Count(proof => proof.RowId == row.RowId && proof.ApplicationId == row.ApplicationId) != 1))
+                throw new ImmutableContentIntegrityException("The imported revision lacks its exact complete committed frozen plan.");
+            var publicationIncluded = (await cut.ReadAsync(batch.Stream, ct).ConfigureAwait(false)).Includes(marker);
+            foreach (var proof in proofs)
+            {
+                var target = proof.ApplicationId == application.Id ? application : await reader.HydrateAsync(
+                    new DeclaredApplication(tenant, proof.ApplicationId), ct).ConfigureAwait(false);
+                var actual = target.GetPendingImportEffect(batch.Id, proof.RowId);
+                var row = rows.Single(item => item.RowId == proof.RowId && item.ApplicationId == proof.ApplicationId);
+                if (actual is null || actual.Metadata.EventId != proof.EventId || actual.Metadata.AggregateVersion != proof.EventVersion ||
+                    target.CommittedStreamPosition < proof.EventVersion || actual.Row != row || actual.FrozenPlan != marker.Intent ||
+                    actual.PlanSha256 != marker.PlanSha256 || actual.Operation.Owner != target.Stream)
+                    throw new ImmutableContentIntegrityException("The committed import effect proof differs from its exact durable target row.");
+                if (publicationIncluded && !(await cut.ReadAsync(target.Stream, ct).ConfigureAwait(false)).Includes(actual))
+                    throw new ImmutableContentIntegrityException("The committed import receipt cutoff excludes a required frozen target effect.");
+            }
+            if (!rows.Contains(effect.Row) || effect.TenantId != tenant || effect.ApplicationId != application.Id ||
+                effect.Operation.Owner != application.Stream || effect.Row.ApplicationId != application.Id)
+                throw new ImmutableContentIntegrityException("The application import revision belongs to another exact frozen row.");
+            if (revision.LastChangedAt != marker.CommittedAt || revision.LastChangedByMemberId != plan.ApproverMemberId ||
+                revision.LastChangedByDisplay != plan.ApproverDisplay ||
+                (revision.ChangeKind == "imported" ? revision.Revision != 1 || revision.SourceKind != "import" ||
+                    revision.SourceIdentifier != effect.Row.SourceRecordId || revision.Name != effect.Row.Name.Trim() ||
+                    revision.Purpose != effect.Row.Purpose.Trim() || revision.OwnerReference != Optional(effect.Row.OwnerReference)
+                    : revision.Lifecycle != "retired" || revision.Retirement is not { } retirement || retirement.EffectiveAt != marker.CommittedAt ||
+                        retirement.Reason != effect.Row.RetirementReason ||
+                        effect.Row.ExpectedApplicationRevision != revision.Revision - 1))
+                continue;
+            selected.Add((effect, marker, batch.Stream));
+        }
+        if (selected.Count == 0)
+            throw new ImmutableContentUnavailableException("The application revision has no visible exact committed import source.");
+        if (selected.Count > 1)
+            throw new ImmutableContentIntegrityException("The application revision has more than one exact committed import source.");
+        var winner = selected[0];
+        return stream.Includes(winner.Effect) &&
+            (await cut.ReadAsync(winner.Stream, ct).ConfigureAwait(false)).Includes(winner.Marker);
+    }
+
+    static string? Optional(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    static bool RevisionIdentity(DomainEvent fact, ApplicationRevisionView row) => fact switch
+    {
+        ApplicationDeclared item => row.ChangeKind == "declared" && row.Revision == 1 && item.TenantId == row.TenantId && item.ApplicationId == row.ApplicationId,
+        ApplicationRevised item => row.ChangeKind == "revised" && item.Revision == row.Revision && item.TenantId == row.TenantId && item.ApplicationId == row.ApplicationId,
+        SystemInstanceDeclared item => row.ChangeKind == "system_instance_declared" && item.ApplicationRevision == row.Revision &&
+            item.TenantId == row.TenantId && item.ApplicationId == row.ApplicationId && item.SystemInstanceId == row.SystemInstanceId,
+        ApplicationRetired item => row.ChangeKind == "retired" && item.Revision == row.Revision && item.TenantId == row.TenantId && item.ApplicationId == row.ApplicationId,
+        _ => false,
+    };
+
+    static bool DirectRevision(DomainEvent fact, ApplicationRevisionView row) => fact switch
+    {
+        ApplicationDeclared item => row.ChangeKind == "declared" && row.Revision == 1 && item.TenantId == row.TenantId &&
+            item.ApplicationId == row.ApplicationId && item.Name == row.Name && item.Purpose == row.Purpose &&
+            item.OwnerReference == row.OwnerReference && item.Actor == row.Actor && item.ChangedAt == row.LastChangedAt &&
+            item.Classification == row.Classification && item.SystemOwnerPersonId == row.SystemOwnerPersonId &&
+            item.AccessOwnerPersonId == row.AccessOwnerPersonId && item.IsRestricted == row.IsRestricted &&
+            item.ApplicationKind == row.ApplicationKind && item.Criticality == row.Criticality,
+        ApplicationRevised item => row.ChangeKind == "revised" && item.Revision == row.Revision && item.TenantId == row.TenantId &&
+            item.ApplicationId == row.ApplicationId && item.Name == row.Name && item.Purpose == row.Purpose &&
+            item.OwnerReference == row.OwnerReference && item.Actor == row.Actor && item.ChangedAt == row.LastChangedAt &&
+            item.Classification == row.Classification && item.SystemOwnerPersonId == row.SystemOwnerPersonId &&
+            item.AccessOwnerPersonId == row.AccessOwnerPersonId && item.IsRestricted == row.IsRestricted &&
+            (item.ApplicationKind is null || item.ApplicationKind == row.ApplicationKind) && (item.Criticality is null || item.Criticality == row.Criticality),
+        SystemInstanceDeclared item => row.ChangeKind == "system_instance_declared" && item.ApplicationRevision == row.Revision &&
+            item.TenantId == row.TenantId && item.ApplicationId == row.ApplicationId && item.SystemInstanceId == row.SystemInstanceId &&
+            item.Actor == row.Actor && item.ChangedAt == row.LastChangedAt && row.SystemInstance is { } instance &&
+            instance.Name == item.Name && instance.Kind == item.Kind && instance.AccessBoundaryReference == item.AccessBoundaryReference &&
+            instance.SourceIdentifier == item.SourceIdentifier,
+        ApplicationRetired item => row.ChangeKind == "retired" && item.Revision == row.Revision && item.TenantId == row.TenantId &&
+            item.ApplicationId == row.ApplicationId && item.Actor == row.Actor && item.ChangedAt == row.LastChangedAt &&
+            row.Retirement is { } retirement && retirement.EffectiveAt == item.EffectiveAt && retirement.Reason == item.Reason &&
+            retirement.MergedIntoApplicationId == item.MergedIntoApplicationId && retirement.MergedIntoApplicationRevision == item.MergedIntoApplicationRevision,
+        _ => false,
+    };
 
     async ValueTask<Result<IReadOnlyList<ApplicationRevisionView>>> ReadHistoryAsync(Uuid tenantId,
         Uuid applicationId, CancellationToken ct)

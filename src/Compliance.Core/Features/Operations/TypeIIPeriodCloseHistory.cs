@@ -77,6 +77,7 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
         DateTimeOffset through, CancellationToken ct)
     {
         var result = new List<TypeIIPeriodCloseNativeSource>();
+        var receiptCut = new RecordedSourceReceiptCutFactory(events, receipts).Create(tenant, through);
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(tenant.ToString(), area), EventCursor.Start, ct).ConfigureAwait(false))
         {
             if (record.Event.Metadata.IsAudit)
@@ -89,9 +90,10 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
                 throw new ImmutableContentIntegrityException("A close source scan returned an unrecognized native record.");
             if (state.Value.Program != program)
                 continue;
-            var recordedAt = await receipts.RecordedAtAsync(record, ct).ConfigureAwait(false);
-            if (recordedAt > through)
+            var receiptStream = await receiptCut.ReadAsync(record.Stream, ct).ConfigureAwait(false);
+            if (!receiptStream.Includes(record.Event))
                 continue;
+            var recordedAt = receiptStream.RecordedAt(record.Event);
             if (state.Value.Tenant != tenant || state.Value.Record.ToString() != record.Stream.Resource)
                 throw new ImmutableContentIntegrityException("A close source payload differs from its native tenant or record identity.");
             if (result.Count >= MaximumRecords)

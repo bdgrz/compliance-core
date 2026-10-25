@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
@@ -66,11 +67,11 @@ public sealed class RiskTypeIBaselineSourceContributor(
             DateTimeKind.Utc));
         var seenEventIds = new HashSet<Uuid>();
 
-        var methodHistory = await ReadMethodHistoryAsync(engagement.TenantId,
+        var methodHistory = await ReadMethodHistoryAsync(context, engagement.TenantId,
             engagement.ProgramId, through, seenEventIds, ct).ConfigureAwait(false);
         if (!methodHistory.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(methodHistory.Error);
-        var governance = await ReadGovernanceHistoryAsync(engagement.TenantId,
+        var governance = await ReadGovernanceHistoryAsync(context, engagement.TenantId,
             engagement.ProgramId, through, knownRiskIds, ct).ConfigureAwait(false);
         if (!governance.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(governance.Error);
@@ -81,7 +82,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
         foreach (var summary in summaries.OrderBy(static item => item.RiskId.ToString(),
                      StringComparer.Ordinal))
         {
-            var draftHistory = await ReadDraftHistoryAsync(engagement.TenantId,
+            var draftHistory = await ReadDraftHistoryAsync(context, engagement.TenantId,
                 engagement.ProgramId, summary, through, seenEventIds, ct).ConfigureAwait(false);
             if (!draftHistory.IsSuccess)
                 return Result<TypeIBaselineSourceContribution>.Failure(draftHistory.Error);
@@ -92,7 +93,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
                 continue;
             }
 
-            var evaluationHistory = await ReadEvaluationHistoryAsync(engagement.TenantId,
+            var evaluationHistory = await ReadEvaluationHistoryAsync(context, engagement.TenantId,
                 engagement.ProgramId, summary.RiskId, through, seenEventIds, ct)
                 .ConfigureAwait(false);
             if (!evaluationHistory.IsSuccess)
@@ -170,7 +171,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
         return Result<IReadOnlyList<RiskDraftView>>.Success(summaries.AsReadOnly());
     }
 
-    async ValueTask<Result<DraftHistory>> ReadDraftHistoryAsync(Uuid tenantId, Uuid programId,
+    async ValueTask<Result<DraftHistory>> ReadDraftHistoryAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid programId,
         RiskDraftView summary, DateTimeOffset through, HashSet<Uuid> seenEventIds,
         CancellationToken ct)
     {
@@ -193,7 +194,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
             if (++count > MaximumEventsPerStream || record.Stream != stream ||
                 record.Event?.Metadata is not { } metadata ||
                 !ValidMetadata(metadata, summary.RiskId, expectedVersion, seenEventIds) ||
-                priorRecordedAt is { } prior && metadata.OccurredOn < prior)
+                context.RecordedThrough is null && priorRecordedAt is { } prior && metadata.OccurredOn < prior)
                 return InvalidHistory<DraftHistory>();
             var domainEvent = record.Event;
             DateTimeOffset occurredAt;
@@ -231,7 +232,8 @@ public sealed class RiskTypeIBaselineSourceContributor(
             }
             if (occurredAt == default || metadata.OccurredOn == default)
                 return InvalidHistory<DraftHistory>();
-            var isAsOf = occurredAt <= through && metadata.OccurredOn <= through;
+            var isAsOf = context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
+                await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
             if (isAsOf && excluded)
                 return InvalidHistory<DraftHistory>();
             if (isAsOf)
@@ -262,7 +264,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
         return Result<DraftHistory>.Success(new DraftHistory(asOfRevision, asOfEvents));
     }
 
-    async ValueTask<Result<EvaluationHistory>> ReadEvaluationHistoryAsync(Uuid tenantId,
+    async ValueTask<Result<EvaluationHistory>> ReadEvaluationHistoryAsync(TypeIBaselineSourceReadContext context, Uuid tenantId,
         Uuid programId, Uuid riskId, DateTimeOffset through, HashSet<Uuid> seenEventIds,
         CancellationToken ct)
     {
@@ -281,13 +283,14 @@ public sealed class RiskTypeIBaselineSourceContributor(
             if (++count > MaximumEventsPerStream || record.Stream != stream ||
                 record.Event?.Metadata is not { } metadata ||
                 !ValidMetadata(metadata, riskId, expectedVersion, seenEventIds) ||
-                priorRecordedAt is { } prior && metadata.OccurredOn < prior ||
+                context.RecordedThrough is null && priorRecordedAt is { } prior && metadata.OccurredOn < prior ||
                 !TryEvaluationEvent(record.Event, tenantId, programId, riskId,
                     expectedRevision, out var occurredAt))
                 return InvalidHistory<EvaluationHistory>();
             if (!currentState.Apply(record.Event!))
                 return InvalidHistory<EvaluationHistory>();
-            var isAsOf = occurredAt <= through && metadata.OccurredOn <= through;
+            var isAsOf = context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
+                await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
             if (isAsOf && excluded)
                 return InvalidHistory<EvaluationHistory>();
             if (isAsOf)
@@ -326,7 +329,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
             asOfEvents, asOfState));
     }
 
-    async ValueTask<Result<MethodHistory>> ReadMethodHistoryAsync(Uuid tenantId, Uuid programId,
+    async ValueTask<Result<MethodHistory>> ReadMethodHistoryAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid programId,
         DateTimeOffset through, HashSet<Uuid> seenEventIds, CancellationToken ct)
     {
         var methodId = RiskMethod.IdFor(tenantId, programId);
@@ -344,13 +347,14 @@ public sealed class RiskTypeIBaselineSourceContributor(
             if (++count > MaximumEventsPerStream || record.Stream != stream ||
                 record.Event?.Metadata is not { } metadata ||
                 !ValidMetadata(metadata, methodId, expectedVersion, seenEventIds) ||
-                priorRecordedAt is { } prior && metadata.OccurredOn < prior ||
+                context.RecordedThrough is null && priorRecordedAt is { } prior && metadata.OccurredOn < prior ||
                 record.Event is not RiskMethodVersionPublished published ||
                 !TryMethodEvent(published, tenantId, programId, versions.Count + 1,
                     out var occurredAt))
                 return InvalidHistory<MethodHistory>();
             versions.Add(published.Version);
-            var isAsOf = occurredAt <= through && metadata.OccurredOn <= through;
+            var isAsOf = context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
+                await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
             if (isAsOf && excluded)
                 return InvalidHistory<MethodHistory>();
             if (isAsOf)
@@ -377,7 +381,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
             asOfEvents.AsReadOnly()));
     }
 
-    async ValueTask<Result<GovernanceHistory>> ReadGovernanceHistoryAsync(Uuid tenantId, Uuid programId,
+    async ValueTask<Result<GovernanceHistory>> ReadGovernanceHistoryAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid programId,
         DateTimeOffset through, HashSet<Uuid> knownRiskIds, CancellationToken ct)
     {
         var discovered = await governanceReader.DiscoverAsync(tenantId, programId, null, ct).ConfigureAwait(false);
@@ -394,14 +398,14 @@ public sealed class RiskTypeIBaselineSourceContributor(
                 histories.Add(riskId, history);
                 var governance = await reader.HydrateAsync(new RiskGovernance(tenantId, programId, riskId), ct)
                     .ConfigureAwait(false);
-                if (!await history.CaptureAsync(governance.Stream, governance.Facts, tenantId, content, through, ct)
+                if (!await history.CaptureAsync(governance.Stream, governance.Facts, tenantId, content, through, context, ct)
                         .ConfigureAwait(false))
                     return InvalidHistory<GovernanceHistory>();
                 foreach (var (_, controlId) in discovered.Lines.Where(line => line.Risk == riskId))
                 {
                     var line = await reader.HydrateAsync(new RiskTreatmentAssertion(tenantId, programId, riskId,
                         controlId), ct).ConfigureAwait(false);
-                    if (!await history.CaptureAsync(line.Stream, line.Facts, tenantId, content, through, ct)
+                    if (!await history.CaptureAsync(line.Stream, line.Facts, tenantId, content, through, context, ct)
                             .ConfigureAwait(false))
                         return InvalidHistory<GovernanceHistory>();
                 }
@@ -410,7 +414,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
                 {
                     var action = await reader.HydrateAsync(new RiskTreatmentAction(tenantId, programId, riskId,
                         actionId), ct).ConfigureAwait(false);
-                    if (!await history.CaptureAsync(action.Stream, action.Facts, tenantId, content, through, ct)
+                    if (!await history.CaptureAsync(action.Stream, action.Facts, tenantId, content, through, context, ct)
                             .ConfigureAwait(false))
                         return InvalidHistory<GovernanceHistory>();
                 }
@@ -714,14 +718,15 @@ public sealed class RiskTypeIBaselineSourceContributor(
         ///     an invalid history.
         /// </summary>
         public async ValueTask<bool> CaptureAsync(EventStreamAddress stream, IReadOnlyList<DomainEvent> facts,
-            Uuid tenantId, IImmutableContentStore content, DateTimeOffset through, CancellationToken ct)
+            Uuid tenantId, IImmutableContentStore content, DateTimeOffset through, TypeIBaselineSourceReadContext context, CancellationToken ct)
         {
             var excluded = false;
             foreach (var fact in facts)
             {
                 if (fact is not INativeOperationFact native || fact.Metadata is not { } metadata)
                     return false;
-                var inside = native.Operation.AcceptedAt <= through && metadata.OccurredOn <= through;
+                var inside = context.RecordedThrough is null ? native.Operation.AcceptedAt <= through && metadata.OccurredOn <= through :
+                    await context.IncludesAsync(stream, fact, ct).ConfigureAwait(false);
                 if (!inside)
                 {
                     excluded = true;

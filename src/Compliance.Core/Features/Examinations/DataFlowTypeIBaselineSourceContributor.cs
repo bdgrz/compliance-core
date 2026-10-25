@@ -124,8 +124,16 @@ public sealed class DataFlowTypeIBaselineSourceContributor(
                 !MatchesCurrent(current, aggregate, history.Value))
                 return SourceConflict();
 
-            var throughRevision = history.Value.Where(revision => revision.ChangedAt <= through)
-                .ToArray();
+            var eligibleHistory = history.Value;
+            if (context.RecordedThrough is not null)
+            {
+                var receipts = await context.RequireReceipts(engagement.TenantId).ReadAsync(new(engagement.TenantId.ToString(),
+                    TechnologyInventoryStreams.Area, flowId.ToString()), ct).ConfigureAwait(false);
+                eligibleHistory = history.Value.Where(revision => receipts.Includes(revision)).ToArray();
+            }
+            else
+                eligibleHistory = history.Value.Where(revision => revision.ChangedAt <= through).ToArray();
+            var throughRevision = eligibleHistory.ToArray();
             var version = throughRevision.LastOrDefault(revision =>
                 revision.Content.EffectiveFrom <= engagement.PeriodStart);
             if (version is null)
@@ -166,7 +174,7 @@ public sealed class DataFlowTypeIBaselineSourceContributor(
             if (throughRevision.Any(revision => revision.Revision > version.Revision &&
                     revision.Content.EffectiveFrom > engagement.PeriodStart))
                 scopeDifferences.Add($"Data flow {flowId} has a version scheduled after the Type I date.");
-            if (history.Value.Any(revision => revision.ChangedAt > through &&
+            if (history.Value.Any(revision => !eligibleHistory.Contains(revision) &&
                     revision.Content.EffectiveFrom <= engagement.PeriodStart))
                 scopeDifferences.Add($"Data flow {flowId} was revised after the Type I date with an effective date on or before it.");
         }

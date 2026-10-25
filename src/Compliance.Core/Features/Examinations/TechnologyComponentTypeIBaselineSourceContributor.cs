@@ -123,7 +123,16 @@ public sealed class TechnologyComponentTypeIBaselineSourceContributor(
                 !MatchesCurrent(current, aggregate, history.Value))
                 return SourceConflict();
 
-            var version = history.Value.LastOrDefault(revision => revision.ChangedAt <= through);
+            var eligibleHistory = history.Value;
+            if (context.RecordedThrough is not null)
+            {
+                var receipts = await context.RequireReceipts(engagement.TenantId).ReadAsync(new(engagement.TenantId.ToString(),
+                    TechnologyInventoryStreams.Area, componentId.ToString()), ct).ConfigureAwait(false);
+                eligibleHistory = history.Value.Where(revision => receipts.Includes(revision)).ToArray();
+            }
+            else
+                eligibleHistory = history.Value.Where(revision => revision.ChangedAt <= through).ToArray();
+            var version = eligibleHistory.Count == 0 ? null : eligibleHistory[^1];
             if (version is null)
             {
                 blockers.Add("A component included by the approved boundary has no revision recorded by the Type I date.");

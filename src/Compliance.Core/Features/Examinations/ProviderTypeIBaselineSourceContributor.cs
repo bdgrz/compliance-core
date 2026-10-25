@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
@@ -54,11 +55,11 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         var listed = await ListProvidersAsync(engagement.TenantId, ct).ConfigureAwait(false);
         if (!listed.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(listed.Error);
-        var providerHistories = await ReadProviderHistoryAsync(engagement.TenantId,
+        var providerHistories = await ReadProviderHistoryAsync(context, engagement.TenantId,
             engagement.ProgramId, through, listed.Value, ct).ConfigureAwait(false);
         if (!providerHistories.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(providerHistories.Error);
-        var assuranceHistories = await ReadAssuranceHistoryAsync(engagement.TenantId, through,
+        var assuranceHistories = await ReadAssuranceHistoryAsync(context, engagement.TenantId, through,
             providerHistories.Value, ct).ConfigureAwait(false);
         if (!assuranceHistories.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(assuranceHistories.Error);
@@ -155,8 +156,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         return Result<IReadOnlyList<ProviderView>>.Success(values.AsReadOnly());
     }
 
-    async ValueTask<Result<Dictionary<Uuid, ProviderHistory>>> ReadProviderHistoryAsync(
-        Uuid tenantId, Uuid programId, DateTimeOffset through,
+    async ValueTask<Result<Dictionary<Uuid, ProviderHistory>>> ReadProviderHistoryAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid programId, DateTimeOffset through,
         IReadOnlyList<ProviderView> summaries, CancellationToken ct)
     {
         var pattern = EventStreamPattern.ForPattern(tenantId.ToString(), Provider.Area);
@@ -176,7 +176,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
                 !eventIds.Add(metadata.EventId) || metadata.AggregateId != providerId ||
                 metadata.AggregateVersion != versions.GetValueOrDefault(record.Stream) + 1 ||
                 metadata.OccurredOn == default ||
-                priorAt.TryGetValue(record.Stream, out var prior) && metadata.OccurredOn < prior)
+                context.RecordedThrough is null && priorAt.TryGetValue(record.Stream, out var prior) && metadata.OccurredOn < prior)
                 return InvalidHistory<Dictionary<Uuid, ProviderHistory>>();
             versions[record.Stream] = metadata.AggregateVersion;
             priorAt[record.Stream] = metadata.OccurredOn;
@@ -221,7 +221,8 @@ public sealed class ProviderTypeIBaselineSourceContributor(
                 return InvalidHistory<Dictionary<Uuid, ProviderHistory>>();
 
             var sourceEvent = SerializeEvent(record.Event, Provider.Area, providerId, metadata, providerContent);
-            var isAsOf = recordedAt <= through && metadata.OccurredOn <= through;
+            var isAsOf = context.RecordedThrough is null ? recordedAt <= through && metadata.OccurredOn <= through :
+                await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
             if (!history.Apply(view, sourceEvent, isAsOf))
                 return InvalidHistory<Dictionary<Uuid, ProviderHistory>>();
         }
@@ -243,8 +244,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         return Result<Dictionary<Uuid, ProviderHistory>>.Success(histories);
     }
 
-    async ValueTask<Result<Dictionary<Uuid, ProviderAssuranceHistory>>> ReadAssuranceHistoryAsync(
-        Uuid tenantId, DateTimeOffset through,
+    async ValueTask<Result<Dictionary<Uuid, ProviderAssuranceHistory>>> ReadAssuranceHistoryAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, DateTimeOffset through,
         IReadOnlyDictionary<Uuid, ProviderHistory> providerHistories, CancellationToken ct)
     {
         var pattern = EventStreamPattern.ForPattern(tenantId.ToString(), ProviderAssuranceStreams.Area);
@@ -265,7 +265,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
                 !eventIds.Add(metadata.EventId) ||
                 metadata.AggregateVersion != versions.GetValueOrDefault(stream) + 1 ||
                 metadata.OccurredOn == default ||
-                occurred.TryGetValue(stream, out var prior) && metadata.OccurredOn < prior)
+                context.RecordedThrough is null && occurred.TryGetValue(stream, out var prior) && metadata.OccurredOn < prior)
                 return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
             versions[stream] = metadata.AggregateVersion;
             occurred[stream] = metadata.OccurredOn;
@@ -285,7 +285,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
             if (providerRevision == 0 && priorAssurance is not null)
                 providerRevision = priorAssurance.Current.ProviderRevisionForGap(fact.GapId);
             var observed = providerHistory!.GetRevision(providerRevision);
-            if (observed is null || observed.RecordedAt > fact.RecordedAt || !ValidMemberActor(fact.Actor))
+            if (observed is null || context.RecordedThrough is null && observed.RecordedAt > fact.RecordedAt || !ValidMemberActor(fact.Actor))
                 return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
 
             if (!histories.TryGetValue(fact.ProviderId, out var history))
@@ -296,9 +296,12 @@ public sealed class ProviderTypeIBaselineSourceContributor(
             if (!history.Current.Apply(fact, observed))
                 return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
 
-            var isAsOf = fact.RecordedAt <= through && metadata.OccurredOn <= through;
+            var isAsOf = context.RecordedThrough is null ? fact.RecordedAt <= through && metadata.OccurredOn <= through :
+                await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false);
             if (isAsOf)
             {
+                if (context.RecordedThrough is not null && providerRevision > providerHistory.AsOfRevision)
+                    return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
                 if (excluded.Contains(stream) || !history.AsOf.Apply(fact, observed))
                     return InvalidHistory<Dictionary<Uuid, ProviderAssuranceHistory>>();
                 history.AsOf.Events.Add(SerializeFact(fact, stream.Resource, metadata));

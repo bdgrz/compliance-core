@@ -1,4 +1,6 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
@@ -7,9 +9,11 @@ public sealed class TypeIBaselinePreviewReader : ITypeIBaselinePreviewReader
 {
     const int MaximumSources = 256;
     readonly Dictionary<string, ITypeIBaselineSourceContributor> _contributors;
+    readonly RecordedSourceReceiptCutFactory? _receiptCuts;
 
-    public TypeIBaselinePreviewReader(IEnumerable<ITypeIBaselineSourceContributor> contributors)
+    public TypeIBaselinePreviewReader(IEnumerable<ITypeIBaselineSourceContributor> contributors, RecordedSourceReceiptCutFactory? receiptCuts = null)
     {
+        _receiptCuts = receiptCuts;
         var required = TypeIBaselineSourceFamilies.Required.ToHashSet(StringComparer.Ordinal);
         var registered = new Dictionary<string, ITypeIBaselineSourceContributor>(
             StringComparer.Ordinal);
@@ -45,6 +49,7 @@ public sealed class TypeIBaselinePreviewReader : ITypeIBaselinePreviewReader
         var sourceCoverage = new List<TypeIBaselineSourceCoverage>();
         var blockers = new List<string>();
         var scopeDifferences = new List<string>();
+        var receiptCut = recordedThrough is { } through ? _receiptCuts?.Create(engagement.TenantId, through) : null;
         foreach (var family in TypeIBaselineSourceFamilies.Required)
         {
             if (!_contributors.TryGetValue(family, out var contributor))
@@ -55,9 +60,12 @@ public sealed class TypeIBaselinePreviewReader : ITypeIBaselinePreviewReader
 
             var context = new TypeIBaselineSourceReadContext(requesterUserId,
                 Array.AsReadOnly(sources.ToArray()))
-            { RecordedThrough = recordedThrough };
-            var result = await contributor.ReadAsync(engagement, context, ct)
-                .ConfigureAwait(false);
+            { RecordedThrough = recordedThrough, ReceiptCut = receiptCut };
+            Result<TypeIBaselineSourceContribution> result;
+            try
+            { result = await contributor.ReadAsync(engagement, context, ct).ConfigureAwait(false); }
+            catch (ImmutableContentIntegrityException exception)
+            { return Result<TypeIBaselinePreview>.Failure(new RequestError(RequestErrorKind.Conflict, "The exact closing source receipt cannot be verified.", exception is ImmutableContentUnavailableException)); }
             if (!result.IsSuccess)
                 return Result<TypeIBaselinePreview>.Failure(result.Error);
             var contribution = result.Value;

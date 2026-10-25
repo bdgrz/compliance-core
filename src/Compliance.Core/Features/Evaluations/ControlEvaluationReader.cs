@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
@@ -66,11 +67,16 @@ public sealed class ControlEvaluationReader(IAggregateReader reader, IDomainEven
 
     /// <summary>
     ///     The folded state of every evaluation of the program in the order of their first facts. When
-    ///     <paramref name="through" /> is given, only facts committed at or before it are folded; the fence always
-    ///     covers every fact of the program, so a later write changes it.
+    ///     <paramref name="receiptCut" /> is given, only its authenticated broker-receipt prefix is folded.
+    ///     Without that explicit close cut, <paramref name="through" /> preserves the Type I occurrence-date selection.
+    ///     The fence always covers every fact of the program, so a later write changes it.
     /// </summary>
+    internal ValueTask<(IReadOnlyList<ControlEvaluationState> States, SourceFence Fence)> ReadStatesAsync(
+        Uuid tenantId, Uuid programId, DateTimeOffset? through, CancellationToken ct = default) =>
+        ReadStatesAsync(tenantId, programId, through, null, ct);
+
     internal async ValueTask<(IReadOnlyList<ControlEvaluationState> States, SourceFence Fence)> ReadStatesAsync(
-        Uuid tenantId, Uuid programId, DateTimeOffset? through, CancellationToken ct = default)
+        Uuid tenantId, Uuid programId, DateTimeOffset? through, RecordedSourceReceiptCut? receiptCut, CancellationToken ct = default)
     {
         var order = new List<string>();
         var streams = new Dictionary<string, List<DomainEvent>>(StringComparer.Ordinal);
@@ -91,7 +97,14 @@ public sealed class ControlEvaluationReader(IAggregateReader reader, IDomainEven
 
             facts++;
             last = record.Event.Metadata.EventId;
-            if (through is { } limit && record.Event.Metadata.OccurredOn > limit)
+            if (receiptCut is not null)
+            {
+                if (receiptCut.TenantId != tenantId || receiptCut.RecordedThrough != through)
+                    throw new ImmutableContentIntegrityException("The evaluation receipt selection has another exact scope or cutoff.");
+                if (!await receiptCut.IncludesAsync(record, ct).ConfigureAwait(false))
+                    continue;
+            }
+            else if (through is { } limit && record.Event.Metadata.OccurredOn > limit)
                 continue;
             stream.Add(record.Event);
         }

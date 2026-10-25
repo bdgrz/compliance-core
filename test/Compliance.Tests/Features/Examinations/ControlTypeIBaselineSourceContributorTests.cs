@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Microsoft.Extensions.DependencyInjection;
 using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Features.Content;
@@ -140,6 +141,39 @@ public sealed class ControlTypeIBaselineSourceContributorTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+    }
+
+    [Fact]
+    public async Task ShouldRefuseMissingEffectiveControlGivenRetroactiveRetirementCommitsAfterReceiptCut()
+    {
+        // Arrange
+        var control = ApprovedControl("AC-RECEIPT", new DateOnly(2026, 9, 1));
+        var cutoff = Now.AddDays(3);
+        Assert.Null(control.ProposeRetirement(ProgramId, control.ApprovedVersion!.VersionId, new DateOnly(2026, 9, 15),
+            "Replaced by an automated control.", AuthorId, "Author", Now.AddHours(1)));
+        var review = Uuid.CreateVersion4();
+        Assert.Null(control.Review(ProgramId, control.Revision, review, "accept", "Retirement justified.", ReviewerId, "Reviewer", Now.AddHours(2)));
+        Assert.Null(control.Retire(ProgramId, control.Revision, Uuid.CreateVersion4(), review, "impact-digest",
+            "Retire at the approved date.", ApproverId, "Approver", Now.AddHours(3)));
+        await using var source = await NativeSource.CreateAsync(control);
+        var stream = new EventStreamAddress(TenantId.ToString(), ControlDraft.Area, control.Id.ToString());
+        var receipts = new ScriptedNativeEventReceipts();
+        await foreach (var record in source.Events.ReadAsync(stream, 0, CancellationToken.None))
+            receipts.Record(record, record.Event is ControlRetired ? cutoff.AddMilliseconds(1) : cutoff.AddMilliseconds(-1));
+        var context = new TypeIBaselineSourceReadContext(Uuid.Empty, [])
+        {
+            RecordedThrough = cutoff,
+            ReceiptCut = new RecordedSourceReceiptCutFactory(source.Events, receipts).Create(TenantId, cutoff)
+        };
+        var contributor = Contributor(new Directory([control]), source);
+
+        // Act
+        var result = await contributor.ReadAsync(Engagement(new DateOnly(2026, 9, 30)), context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.True(result.Error.IsTransient);
     }
 
     static ControlTypeIBaselineSourceContributor Contributor(
