@@ -2,6 +2,7 @@ using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
@@ -13,7 +14,7 @@ namespace Bdgrz.Compliance.Features.Risks;
 ///     decision in the same append. A review that already decided the completion is an irreversible decision: the abort
 ///     is a terminal no-op and the review recovers forward. A review that is not visible yet is a transient wait.
 /// </summary>
-sealed class AbortRiskTreatmentActionReviewHandler(IAggregateReader reader, IAggregateExecutor executor,
+sealed class AbortRiskTreatmentActionReviewHandler(RiskActionReviewVerifier verifier, IAggregateExecutor executor,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<AbortRiskTreatmentActionReview, ReceiverOutcome>
 {
@@ -26,6 +27,8 @@ sealed class AbortRiskTreatmentActionReviewHandler(IAggregateReader reader, IAgg
         if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty || command.Generation < 1 ||
             !Uuid.TryParse(command.Target.Realm, CultureInfo.InvariantCulture, out var tenant))
             return SourceUseReceiverSupport.Permanent("The abort names another operation, generation or realm.");
+        if (command.FailureProof.Schema != RiskContent.FailureSchema)
+            return SourceUseReceiverSupport.Permanent("The cancellation requires the current exact admitted-review failure schema.");
         RiskActionReviewFailureProof proof;
         try
         {
@@ -39,40 +42,49 @@ sealed class AbortRiskTreatmentActionReviewHandler(IAggregateReader reader, IAgg
         }
 
         var stream = new RiskTreatmentAction(tenant, proof.ProgramId, proof.RiskId, proof.ActionId).Stream;
-        if (stream != command.Target)
-            return SourceUseReceiverSupport.Permanent("The failure proof names another action.");
+        if (proof.Admission is null || proof.Intent is null || stream != command.Target || proof.OperationId != command.OperationId || proof.Generation != command.Generation ||
+            proof.Admission.Stream != stream || proof.EvidenceRequestId == Uuid.Empty ||
+            string.IsNullOrWhiteSpace(proof.Reason))
+            return SourceUseReceiverSupport.Permanent("The failure proof names another exact action, review or generation.");
         for (var attempt = 1; ; attempt++)
         {
             try
             {
-                var action = await reader.HydrateAsync(new RiskTreatmentAction(tenant, proof.ProgramId, proof.RiskId,
-                    proof.ActionId, command.CommandId), ct).ConfigureAwait(false);
-                if (action.AcceptedReview(command.OperationId) is not { } accepted)
-                    return SourceUseReceiverSupport.Transient("The accepted review is not visible yet.");
-                RiskActionCompletionReviewIntent intent;
-                try
+                var review = await verifier.VerifyAcceptedAsync(proof.Admission, proof.Intent, command.OperationId,
+                    command.CommandId, ct).ConfigureAwait(false);
+                if (review.Error is not null)
+                    return Result<ReceiverOutcome>.Failure(review.Error);
+                var action = review.Action!;
+                var intent = review.Intent!;
+                var accepted = action.AcceptedReview(command.OperationId)!;
+                if (accepted.Generation != command.Generation || accepted.Intent != proof.Intent ||
+                    NativeFactReference.Of(action.Stream, accepted) != proof.Admission)
+                    return SourceUseReceiverSupport.Permanent("The abort differs from the exact admitted review source.");
+                if (proof.EvidenceRequestId is { } evidenceRequestId)
                 {
-                    intent = await FindingContent.ReadAsync<RiskActionCompletionReviewIntent>(content, tenant,
-                        accepted.Intent, ct).ConfigureAwait(false);
+                    try
+                    {
+                        var cited = await ImmutableSelectionManifests.ReadAsync<ReviewedEvidenceRequest>(content,
+                            tenant.ToString(), intent.CompletionEvidence, ct).ConfigureAwait(false);
+                        if (cited.All(item => item.EvidenceRequestId != evidenceRequestId))
+                            return SourceUseReceiverSupport.Permanent("The failure evidence is outside the frozen review selection.");
+                    }
+                    catch (ImmutableContentIntegrityException failure)
+                    {
+                        return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "The exact cancellation evidence selection cannot be verified.", failure is ImmutableContentUnavailableException));
+                    }
                 }
-                catch (ImmutableContentIntegrityException exception)
-                {
-                    return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen review cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
-                }
-
-                if (accepted.Generation != command.Generation || intent.Header.RootOperationId != command.OperationId)
-                    return SourceUseReceiverSupport.Permanent("The abort differs from the accepted review.");
                 var provenance = RiskActionReviewEffects.Child(command.CommandId,
                     nameof(AbortRiskTreatmentActionReview), accepted.Metadata.EventId, intent.Header, action.Stream,
                     clock.GetUtcNow());
                 var binding = AcceptedOperationBinding.Of(provenance);
-                if (Decide(action, binding, command.OperationId) is { } early)
+                if (Decide(action, binding, command.OperationId, command.FailureProof) is { } early)
                     return early;
                 var step = await executor.ExecuteAsync(new RiskTreatmentAction(tenant, proof.ProgramId, proof.RiskId,
-                    proof.ActionId, command.CommandId), fresh =>
+                    proof.ActionId, command.CommandId, command.OperationId), fresh =>
                     {
-                        if (Decide(fresh, binding, command.OperationId) is { } decided)
+                        if (Decide(fresh, binding, command.OperationId, command.FailureProof) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
                         var raised = fresh.CancelReview(provenance, command.FailureProof);
                         return raised.IsSuccess
@@ -91,11 +103,15 @@ sealed class AbortRiskTreatmentActionReviewHandler(IAggregateReader reader, IAgg
     }
 
     /// <summary>An exact replay, a review that already decided the completion, or one canceled by another operation.</summary>
-    static Result<ReceiverOutcome>? Decide(RiskTreatmentAction action, AcceptedOperationBinding binding, Uuid operationId)
+    static Result<ReceiverOutcome>? Decide(RiskTreatmentAction action, AcceptedOperationBinding binding, Uuid operationId,
+        ImmutableContentRef failureProof)
     {
         switch (action.Acceptance.Decide(binding))
         {
             case NativeAcceptanceDecision.Replayed:
+                if (action.Acceptance.SelectedFact is not RiskTreatmentActionCompletionReviewCanceled selected ||
+                    selected.SourceProofs != failureProof)
+                    return Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
                 return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(action.Stream,
                     action.Acceptance.SelectedFact!));
             case NativeAcceptanceDecision.Conflict:

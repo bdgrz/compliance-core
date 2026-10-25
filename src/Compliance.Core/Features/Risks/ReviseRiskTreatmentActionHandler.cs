@@ -19,56 +19,75 @@ public sealed class ReviseRiskTreatmentActionHandler(NativeOperationExecutor ope
     public async ValueTask<Result> HandleAsync(IRequestContext<ReviseRiskTreatmentAction> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (request.CommandId == Uuid.Empty || request.ActionId == Uuid.Empty || request.ExpectedRevision < 0)
+        if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty || request.RiskId == Uuid.Empty ||
+            request.CommandId == Uuid.Empty || request.ActionId == Uuid.Empty || request.ExpectedRevision < 0)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A revision requires a command id, an action id and a non-negative expected revision."));
-        var risk = await RiskOwnerResolution.RequireRiskAsync(reader, request.TenantId, request.ProgramId,
-            request.RiskId, ct).ConfigureAwait(false);
-        if (!risk.IsSuccess)
-            return risk;
         var actor = RiskActor.From(context.Actor, request.TenantId);
         var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new RiskTreatmentAction(request.TenantId, request.ProgramId,
-            request.RiskId, request.ActionId, request.CommandId), ct).ConfigureAwait(false);
+        var snapshot = new RiskTreatmentAction(request.TenantId, request.ProgramId,
+            request.RiskId, request.ActionId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, "ReviseRiskTreatmentAction", snapshot.Stream,
-            actorReference, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now);
+            actorReference, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? evidenceManifest = null;
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var prepared = snapshot.PrepareRevise(request.ExpectedRevision);
-            if (!prepared.IsSuccess)
-                return prepared;
-            var invalid = RiskCommands.ValidateAction(request.Title, request.TargetState, request.ExpectedEvidence,
-                request.DueOn, request.AccountableMemberId, now);
-            if (invalid is not null || request.EvidenceRequestIds?.Any(static id => id == Uuid.Empty) is true)
-                return Result.Failure((invalid ?? CommandFailure.InvalidContent(
-                    "A treatment action edit requires valid evidence references.")).ToRequestError());
-            if (!await FindingCommands.IsActiveMemberAsync(reader, request.TenantId, request.AccountableMemberId, ct)
-                    .ConfigureAwait(false))
-                return Result.Failure(FindingCommands.InactiveOwner());
-            var evidence = RiskCommands.Distinct(request.EvidenceRequestIds);
-            if (await RiskCommands.RequireCitableEvidenceAsync(reader, request.TenantId, request.ProgramId, evidence, ct)
-                    .ConfigureAwait(false) is { } unciteable)
-                return Result.Failure(unciteable);
-            evidenceManifest = await FindingContent.WriteAsync<IReadOnlyList<Uuid>>(content, request.TenantId,
-                RiskContent.RevisedEvidenceSchema, evidence, ct).ConfigureAwait(false);
-            (response, result) = await RiskCommands.FreezeUnitAsync(content, request.TenantId, ct).ConfigureAwait(false);
-        }
 
-        var outcome = await operations.ExecuteAsync(new NativeOperation<RiskTreatmentAction>(binding,
-            () => new RiskTreatmentAction(request.TenantId, request.ProgramId, request.RiskId, request.ActionId,
-                request.CommandId),
-            action => action.Acceptance,
-            action => FindingCommands.Prepared(action.PrepareRevise(request.ExpectedRevision), response),
-            (RiskTreatmentAction action, ImmutableContentRef frozen) => action.Revise(provenance, request.Title.Trim(),
-                request.TargetState.Trim(), request.ExpectedEvidence.Trim(), request.DueOn,
-                request.AccountableMemberId, evidenceManifest!, actorReference, now, frozen, result!)), context, ct)
-            .ConfigureAwait(false);
-        return await RiskCommands.UnitAsync(content, request.TenantId, outcome, ct).ConfigureAwait(false);
+        try
+        {
+            var outcome = await operations.ExecuteAsync(new NativeOperation<RiskTreatmentAction>(binding,
+                () => new RiskTreatmentAction(request.TenantId, request.ProgramId, request.RiskId, request.ActionId,
+                    request.CommandId),
+                action => action.Acceptance,
+                async (action, token) =>
+                {
+                    try
+                    {
+                        var risk = await RiskOwnerResolution.RequireRiskAsync(reader, request.TenantId, request.ProgramId,
+                            request.RiskId, token).ConfigureAwait(false);
+                        if (!risk.IsSuccess)
+                            return Result<FirstResponseDescriptor>.Failure(risk.Error!);
+                        var prepared = action.PrepareRevise(request.ExpectedRevision);
+                        if (!prepared.IsSuccess)
+                            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                        var invalid = RiskCommands.ValidateAction(request.Title, request.TargetState, request.ExpectedEvidence,
+                            request.DueOn, request.AccountableMemberId, now);
+                        if (invalid is not null || request.EvidenceRequestIds?.Any(static id => id == Uuid.Empty) is true)
+                            return Result<FirstResponseDescriptor>.Failure((invalid ?? CommandFailure.InvalidContent(
+                                "A treatment action edit requires valid evidence references.")).ToRequestError());
+                        if (!await FindingCommands.IsActiveMemberAsync(reader, request.TenantId, request.AccountableMemberId, token)
+                                .ConfigureAwait(false))
+                            return Result<FirstResponseDescriptor>.Failure(FindingCommands.InactiveOwner());
+                        var evidence = RiskCommands.Distinct(request.EvidenceRequestIds);
+                        if (await RiskCommands.RequireCitableEvidenceAsync(reader, request.TenantId, request.ProgramId, evidence, token)
+                                .ConfigureAwait(false) is { } unciteable)
+                            return Result<FirstResponseDescriptor>.Failure(unciteable);
+                        evidenceManifest = await FindingContent.WriteAsync<IReadOnlyList<Uuid>>(content, request.TenantId,
+                            RiskContent.RevisedEvidenceSchema, evidence, token).ConfigureAwait(false);
+                        (response, result) = await RiskCommands.FreezeUnitAsync(content, request.TenantId, token).ConfigureAwait(false);
+                        return Result<FirstResponseDescriptor>.Success(response!);
+                    }
+                    catch (ImmutableContentIntegrityException failure)
+                    {
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "The exact treatment action source content cannot be verified.",
+                            failure is ImmutableContentUnavailableException));
+                    }
+                },
+                (RiskTreatmentAction action, ImmutableContentRef frozen) => action.Revise(provenance, request.Title.Trim(),
+                    request.TargetState.Trim(), request.ExpectedEvidence.Trim(), request.DueOn,
+                    request.AccountableMemberId, evidenceManifest!, actorReference, now, frozen, result!)), context, ct)
+                .ConfigureAwait(false);
+            return await RiskCommands.UnitAsync(content, request.TenantId, outcome, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact treatment action content cannot be verified.", failure is ImmutableContentUnavailableException));
+        }
     }
 }

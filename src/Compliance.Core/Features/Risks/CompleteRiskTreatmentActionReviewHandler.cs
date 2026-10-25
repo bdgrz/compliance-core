@@ -85,7 +85,7 @@ sealed class CompleteRiskTreatmentActionReviewHandler(IAggregateReader reader, I
             try
             {
                 var step = await executor.ExecuteAsync(new RiskTreatmentAction(tenant, decision.ProgramId,
-                    decision.RiskId, intent.ActionId, command.CommandId), fresh =>
+                    decision.RiskId, intent.ActionId, command.CommandId, command.OperationId), fresh =>
                     {
                         if (Decide(fresh, binding, command.OperationId) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));

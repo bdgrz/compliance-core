@@ -27,12 +27,13 @@ public sealed class RiskTreatmentAction : Aggregate
     readonly Uuid _programId;
     readonly Uuid _riskId;
     readonly Uuid _actionId;
-    readonly List<RiskTreatmentActionRevised> _revisions = [];
-    readonly List<RiskTreatmentActionCompletionSubmitted> _submissions = [];
-    readonly List<RiskTreatmentActionCompletionReviewed> _reviews = [];
-    readonly Dictionary<Uuid, RiskTreatmentActionCompletionReviewAccepted> _accepted = [];
-    readonly Dictionary<Uuid, DomainEvent> _terminal = [];
-    readonly List<DomainEvent> _facts = [];
+    readonly Uuid _selectedReviewRoot;
+    RiskTreatmentActionCompletionSubmitted? _submission;
+    RiskTreatmentActionCompletionSubmitted? _selectedSubmission;
+    RiskTreatmentActionCompletionReviewAccepted? _selectedAccepted;
+    DomainEvent? _selectedTerminal;
+    DomainEvent? _latest;
+    long _generation;
     RiskTreatmentActionAdded? _added;
     RiskTreatmentActionCancelled? _cancelled;
     RiskTreatmentActionCompletionReviewAccepted? _pending;
@@ -40,12 +41,14 @@ public sealed class RiskTreatmentAction : Aggregate
     long _revision;
 
     /// <summary>Opens one action, selecting the logical operation to resolve.</summary>
-    public RiskTreatmentAction(Uuid tenantId, Uuid programId, Uuid riskId, Uuid actionId, Uuid selectedLogicalId = default)
+    public RiskTreatmentAction(Uuid tenantId, Uuid programId, Uuid riskId, Uuid actionId, Uuid selectedLogicalId = default,
+        Uuid selectedReviewRoot = default)
         : base(IdentityOf(tenantId, programId, riskId, actionId), new EventStreamAddress(tenantId.ToString(), Area,
             IdentityOf(tenantId, programId, riskId, actionId).ToString()))
     {
         (_tenantId, _programId, _riskId, _actionId) = (tenantId, programId, riskId, actionId);
         Acceptance = new NativeAcceptance(selectedLogicalId);
+        _selectedReviewRoot = selectedReviewRoot;
         On<RiskTreatmentActionAdded>(Apply);
         On<RiskTreatmentActionRevised>(Apply);
         On<RiskTreatmentActionCancelled>(Apply);
@@ -80,14 +83,14 @@ public sealed class RiskTreatmentAction : Aggregate
     /// <summary>The current status: open, completion submitted, completed or canceled.</summary>
     public string Status => _status;
 
-    /// <summary>The revisions in order.</summary>
-    public IReadOnlyList<RiskTreatmentActionRevised> Revisions => _revisions;
+    /// <summary>The tenant of this exact action owner.</summary>
+    public Uuid TenantId => _tenantId;
 
-    /// <summary>The submissions in order; the ordinal of a submission is its generation.</summary>
-    public IReadOnlyList<RiskTreatmentActionCompletionSubmitted> Submissions => _submissions;
+    /// <summary>The program of this exact action owner.</summary>
+    public Uuid ProgramId => _programId;
 
-    /// <summary>The decided reviews in order.</summary>
-    public IReadOnlyList<RiskTreatmentActionCompletionReviewed> Reviews => _reviews;
+    /// <summary>The latest native fact at the captured command cut.</summary>
+    public DomainEvent? Latest => _latest;
 
     /// <summary>The cancellation fact, once canceled.</summary>
     public RiskTreatmentActionCancelled? CancelledFact => _cancelled;
@@ -97,20 +100,21 @@ public sealed class RiskTreatmentAction : Aggregate
 
     /// <summary>The submission awaiting review, or null.</summary>
     public RiskTreatmentActionCompletionSubmitted? PendingSubmission =>
-        _status == RiskStates.ActionSubmitted ? _submissions[^1] : null;
+        _status == RiskStates.ActionSubmitted ? _submission : null;
 
-    /// <summary>Every fact in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
-
-    /// <summary>The review accepted for a root operation, or null.</summary>
+    /// <summary>The accepted review selected for recovery, or the currently pending review.</summary>
     public RiskTreatmentActionCompletionReviewAccepted? AcceptedReview(Uuid rootOperationId) =>
-        _accepted.GetValueOrDefault(rootOperationId);
+        _pending?.Operation.RootOperationId == rootOperationId ? _pending :
+        _selectedReviewRoot == rootOperationId ? _selectedAccepted : null;
 
-    /// <summary>The decided or canceled fact that ended a root operation, or null while it is pending.</summary>
-    public DomainEvent? TerminalReview(Uuid rootOperationId) => _terminal.GetValueOrDefault(rootOperationId);
+    /// <summary>The exact submitted completion sealed by a selected or currently pending review.</summary>
+    public RiskTreatmentActionCompletionSubmitted? SubmissionForReview(Uuid rootOperationId) =>
+        _pending?.Operation.RootOperationId == rootOperationId ? _submission :
+        _selectedReviewRoot == rootOperationId ? _selectedSubmission : null;
 
-    /// <summary>The fact with this event id.</summary>
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+    /// <summary>The terminal fact of the selected review. Historical selections never change with current state.</summary>
+    public DomainEvent? TerminalReview(Uuid rootOperationId) =>
+        _selectedReviewRoot == rootOperationId ? _selectedTerminal : null;
 
     /// <summary>Checks that the action can be added.</summary>
     public Result PrepareAdd() => _added is null
@@ -172,7 +176,8 @@ public sealed class RiskTreatmentAction : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(actionContent);
-        if (operation.Owner != Stream || operation.LogicalId != _actionId || operation.OriginalExpectedRevision != 0)
+        if (!NativeOwnerHistory.IsOwnRoot(this, operation, nameof(AddRiskTreatmentAction), 0) ||
+            operation.LogicalId != _actionId)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "An action is created by its own operation at expected revision zero."));
         var prepared = PrepareAdd();
@@ -245,7 +250,7 @@ public sealed class RiskTreatmentAction : Aggregate
         var prepared = PrepareOwn(operation, PrepareReview);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new RiskTreatmentActionCompletionReviewAccepted(Stream, _revision + 1, _submissions.Count, intent,
+        RaiseEvent(new RiskTreatmentActionCompletionReviewAccepted(Stream, _revision + 1, _generation, intent,
             null, operation, firstResponse, null));
         return Result.Success;
     }
@@ -258,7 +263,7 @@ public sealed class RiskTreatmentAction : Aggregate
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(reviewer);
         if (_pending is null || _pending.Operation.RootOperationId != operation.RootOperationId ||
-            _pending.Intent != intent || operation.Owner != Stream)
+            _pending.Intent != intent || !IsReviewChild(operation, nameof(CompleteRiskTreatmentActionReview)))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending review can decide the completion.", false));
         RaiseEvent(new RiskTreatmentActionCompletionReviewed(_tenantId, _programId, _riskId, _revision + 1, _actionId,
@@ -272,7 +277,7 @@ public sealed class RiskTreatmentAction : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         if (_pending is null || _pending.Operation.RootOperationId != operation.RootOperationId ||
-            operation.Owner != Stream)
+            !IsReviewChild(operation, nameof(AbortRiskTreatmentActionReview)))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending review can be canceled.", false));
         RaiseEvent(new RiskTreatmentActionCompletionReviewCanceled(Stream, _revision + 1, _pending.Generation,
@@ -284,7 +289,8 @@ public sealed class RiskTreatmentAction : Aggregate
     {
         Acceptance.Observe(ev);
         if (_added is not null || ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.RiskId != _riskId ||
-            ev.Revision != 1 || ev.Operation.Owner != Stream || ev.Operation.LogicalId != _actionId)
+            ev.Revision != 1 || !NativeOwnerHistory.IsOwnRoot(this, ev.Operation, nameof(AddRiskTreatmentAction), 0) ||
+            ev.Operation.LogicalId != _actionId)
             throw new InvalidOperationException("An action is added once, at revision one, by its own operation.");
         _added = ev;
         Advance(ev);
@@ -294,9 +300,10 @@ public sealed class RiskTreatmentAction : Aggregate
     {
         Acceptance.Observe(ev);
         EnsureNext(ev.TenantId, ev.ProgramId, ev.RiskId, ev.ActionId, ev.Revision, ev.Operation);
-        if (_status != RiskStates.ActionOpen)
-            throw new InvalidOperationException("Only open work is revised.");
-        _revisions.Add(ev);
+        if (_status != RiskStates.ActionOpen || !NativeOwnerHistory.IsOwnRoot(this, ev.Operation,
+                nameof(ReviseRiskTreatmentAction), (ulong)_revision) || ev.RequestId != ev.Operation.LogicalId ||
+            ev.ExpectedRevision != _revision || ev.RevisedBy != ev.Operation.Actor || ev.RevisedAt != ev.Operation.AcceptedAt)
+            throw new InvalidOperationException("Only the exact attributed open work is revised.");
         Advance(ev);
     }
 
@@ -304,7 +311,10 @@ public sealed class RiskTreatmentAction : Aggregate
     {
         Acceptance.Observe(ev);
         EnsureNext(ev.TenantId, ev.ProgramId, ev.RiskId, ev.ActionId, ev.Revision, ev.Operation);
-        if (_status is not (RiskStates.ActionOpen or RiskStates.ActionSubmitted) || _pending is not null)
+        if (_status is not (RiskStates.ActionOpen or RiskStates.ActionSubmitted) || _pending is not null ||
+            !NativeOwnerHistory.IsOwnRoot(this, ev.Operation, nameof(CancelRiskTreatmentAction), (ulong)_revision) ||
+            ev.CancellationId != ev.Operation.LogicalId || ev.CancelledBy != ev.Operation.Actor ||
+            ev.CancelledAt != ev.Operation.AcceptedAt)
             throw new InvalidOperationException("Only unfinished work without a pending review is canceled.");
         _cancelled = ev;
         _status = RiskStates.ActionCancelled;
@@ -315,9 +325,13 @@ public sealed class RiskTreatmentAction : Aggregate
     {
         Acceptance.Observe(ev);
         EnsureNext(ev.TenantId, ev.ProgramId, ev.RiskId, ev.ActionId, ev.Revision, ev.Operation);
-        if (_status != RiskStates.ActionOpen)
-            throw new InvalidOperationException("A completion is submitted for open work only.");
-        _submissions.Add(ev);
+        if (_status != RiskStates.ActionOpen || !NativeOwnerHistory.IsOwnRoot(this, ev.Operation,
+                nameof(SubmitRiskTreatmentActionCompletion), (ulong)_revision) || ev.SubmissionId != ev.Operation.LogicalId ||
+            ev.SubmittedBy != ev.Operation.Actor || ev.SubmittedAt != ev.Operation.AcceptedAt ||
+            ev.SubmitterMemberId == Uuid.Empty || ev.SubmitterMemberId.ToString() != ev.Operation.Actor.Id)
+            throw new InvalidOperationException("An exact attributed completion is submitted for open work only.");
+        _submission = ev;
+        _generation++;
         _status = RiskStates.ActionSubmitted;
         Advance(ev);
     }
@@ -326,12 +340,17 @@ public sealed class RiskTreatmentAction : Aggregate
     {
         Acceptance.Observe(ev);
         if (_added is null || _status != RiskStates.ActionSubmitted || _pending is not null || ev.Owner != Stream ||
-            ev.Revision != _revision + 1 || ev.Generation != _submissions.Count || ev.Operation.Owner != Stream ||
-            ev.Operation.RootOperationId != ev.Operation.LogicalId ||
-            !_accepted.TryAdd(ev.Operation.RootOperationId, ev))
+            ev.Revision != _revision + 1 || ev.Generation != _generation || ev.Operation.Owner != Stream ||
+            !NativeOwnerHistory.IsOwnRoot(this, ev.Operation, nameof(ReviewRiskTreatmentActionCompletion), (ulong)_revision) ||
+            _selectedReviewRoot == ev.Operation.RootOperationId && _selectedAccepted is not null)
             throw new InvalidOperationException(
                 "A review is accepted once for the pending submission of the current generation.");
         _pending = ev;
+        if (_selectedReviewRoot == ev.Operation.RootOperationId)
+        {
+            _selectedAccepted = ev;
+            _selectedSubmission = _submission;
+        }
         Advance(ev);
     }
 
@@ -340,10 +359,12 @@ public sealed class RiskTreatmentAction : Aggregate
         Acceptance.Observe(ev);
         if (_pending is null || ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.RiskId != _riskId ||
             ev.ActionId != _actionId || ev.Revision != _revision + 1 || ev.Intent != _pending.Intent ||
-            ev.Operation.RootOperationId != _pending.Operation.RootOperationId || ev.Operation.Owner != Stream)
+            !IsReviewChild(ev.Operation, nameof(CompleteRiskTreatmentActionReview)) ||
+            ev.DecisionId != _pending.Operation.RootOperationId || ev.Reviewer != _pending.Operation.Actor ||
+            ev.ReviewedAt != _pending.Operation.AcceptedAt || ev.Outcome is not (RiskStates.Accept or RiskStates.Reject))
             throw new InvalidOperationException("Only the exact pending review decides the completion.");
-        _terminal[ev.Operation.RootOperationId] = ev;
-        _reviews.Add(ev);
+        if (_selectedReviewRoot == ev.Operation.RootOperationId)
+            _selectedTerminal = ev;
         _status = ev.Outcome == RiskStates.Accept ? RiskStates.ActionCompleted : RiskStates.ActionOpen;
         _pending = null;
         Advance(ev);
@@ -354,9 +375,10 @@ public sealed class RiskTreatmentAction : Aggregate
         Acceptance.Observe(ev);
         if (_pending is null || ev.Owner != Stream || ev.Revision != _revision + 1 ||
             ev.Generation != _pending.Generation || ev.Intent != _pending.Intent ||
-            ev.Operation.RootOperationId != _pending.Operation.RootOperationId || ev.Operation.Owner != Stream)
+            !IsReviewChild(ev.Operation, nameof(AbortRiskTreatmentActionReview)) || ev.SourceProofs is null)
             throw new InvalidOperationException("Only the exact pending review is canceled.");
-        _terminal[ev.Operation.RootOperationId] = ev;
+        if (_selectedReviewRoot == ev.Operation.RootOperationId)
+            _selectedTerminal = ev;
         _pending = null;
         Advance(ev);
     }
@@ -372,12 +394,24 @@ public sealed class RiskTreatmentAction : Aggregate
     void Advance(DomainEvent fact)
     {
         _revision++;
-        _facts.Add(fact);
+        _latest = fact;
     }
+
+    bool IsReviewChild(OperationProvenance operation, string kind) => _pending is { } accepted &&
+        operation.LogicalId != Uuid.Empty && operation.Owner == Stream &&
+        (operation.FirstOwner ?? operation.Owner) == Stream && operation.AffectedOwner == Stream &&
+        operation.ExpectedRevisionOwner == Stream && operation.RootOperationId == accepted.Operation.RootOperationId &&
+        operation.CausationEventId == accepted.Metadata.EventId && operation.CommandKind == kind &&
+        operation.Actor == accepted.Operation.Actor && operation.Episode == accepted.Operation.Episode &&
+        operation.OriginalExpectedRevision == accepted.Operation.OriginalExpectedRevision &&
+        operation.AuthoredIntentSha256 == accepted.Operation.AuthoredIntentSha256 && operation.AcceptedAt != default;
 
     Result PrepareOwn(OperationProvenance operation, Func<long, Result> prepare)
     {
-        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
+        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected ||
+            operation.RootOperationId != operation.LogicalId || operation.LogicalId == Uuid.Empty ||
+            operation.CausationEventId is not null || (operation.FirstOwner ?? operation.Owner) != Stream ||
+            operation.AffectedOwner != Stream || operation.ExpectedRevisionOwner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "An action write is a root operation of its own action with an expected revision."));
         return prepare((long)expected);

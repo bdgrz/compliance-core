@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "0ab96e64fbf091f737e52ff15d973afb9199917c",
+  "sourceCommit": "b31c3a390ebd963c0c3527626bb47b8ee008b972",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -12,7 +12,7 @@
     "factsWithoutReducerOrEmitter": 22,
     "legacyReducerOnlyFacts": 58,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 113,
+    "aggregateTypesWithCommandPath": 112,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 735,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 46,
+    "unwiredAggregateProducerOperations": 49,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 33
+      "no_registered_request_route": 36
     },
     "factReplayGuardRows": 0
   },
@@ -6701,7 +6701,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Risks/RiskTreatmentAction.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionNativeTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -6734,6 +6736,7 @@
         "src/Compliance.Core/Features/Risks/RiskTreatmentAction.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionNativeTests.cs",
         "test/Compliance.Tests/Testing/RiskActionProcesses.cs"
       ],
       "disposition": "aggregate_fact",
@@ -6769,7 +6772,10 @@
       "emitters": [
         "src/Compliance.Core/Features/Risks/RiskTreatmentAction.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionNativeTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -10064,10 +10070,10 @@
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceTests.cs",
         "test/Compliance.Tests/Features/Operations/PersonalOccurrenceProofTransportTests.cs",
         "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
         "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/NotApplicableOccurrenceReviewTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskOwnerWorkSourceTests.cs"
+        "test/Compliance.Tests/Features/Work/NotApplicableOccurrenceReviewTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10115,6 +10121,7 @@
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentOperationTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
         "test/Compliance.Tests/Features/Work/RiskOwnerWorkSourceTests.cs",
         "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
         "test/Compliance.Tests/IncidentFacts.cs",
@@ -10399,11 +10406,11 @@
         "test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRequestTests.cs",
         "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskOwnerBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzEvidenceWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskOwnerWorkSourceTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionCancellationProofTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionNativeTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionUnboundCancellationTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11499,12 +11506,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
         "test/Compliance.Tests/Features/Risks/PersonalRiskSignoffTransportTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskOwnerWorkSourceTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
-        "test/Compliance.Tests/Testing/RiskActionProcesses.cs",
-        "test/Compliance.Tests/Testing/RiskSeeds.cs"
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionCancellationProofTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionCompactionTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionNativeTests.cs",
+        "test/Compliance.Tests/Features/Work/RiskOwnerWorkSourceTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11516,19 +11523,17 @@
         "RiskControlTreatmentRetired",
         "RiskControlTreatmentReviewed"
       ],
-      "commandRequests": [
-        "ProposeRiskControlTreatment",
-        "RetireRiskControlTreatment",
-        "ReviewRiskControlTreatment"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/PersonalRiskSignoffTransportTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskOwnerBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentAssertionNativeTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "Role",
@@ -12291,6 +12296,7 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
         "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -12519,7 +12525,9 @@
         }
       ],
       "handlerRegistration": true,
-      "helperServices": [],
+      "helperServices": [
+        "RiskActionReviewVerifier"
+      ],
       "directAggregateReferences": [
         "RiskTreatmentAction"
       ],
@@ -12527,7 +12535,9 @@
         "RiskTreatmentAction"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs"
+        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionCancellationProofTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionUnboundCancellationTests.cs"
       ],
       "note": ""
     },
@@ -12963,6 +12973,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionCompactionTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionHttpTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
       ],
       "note": ""
@@ -14458,13 +14470,13 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Work/AccessReviewWorkQueueVisibilityTests.cs",
         "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
         "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
         "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkCompositionTests.cs",
-        "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkCompositionTests.cs"
       ],
       "note": ""
     },
@@ -14670,13 +14682,17 @@
         }
       ],
       "handlerRegistration": true,
-      "helperServices": [],
+      "helperServices": [
+        "RiskActionReviewVerifier"
+      ],
       "directAggregateReferences": [],
       "aggregateTargets": [
         "EvidenceRequest"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs"
+        "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionCancellationProofTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionUnboundCancellationTests.cs"
       ],
       "note": ""
     },
@@ -16193,7 +16209,9 @@
         }
       ],
       "handlerRegistration": true,
-      "helperServices": [],
+      "helperServices": [
+        "RiskActionReviewVerifier"
+      ],
       "directAggregateReferences": [
         "RiskTreatmentAction"
       ],
@@ -16202,6 +16220,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionNativeTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
       ],
       "note": ""
@@ -23667,13 +23686,13 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Work/AccessReviewWorkQueueVisibilityTests.cs",
         "test/Compliance.Tests/Features/Work/AssignedDecisionAuthorityTests.cs",
         "test/Compliance.Tests/Features/Work/CommitmentDecisionWorkTests.cs",
         "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs",
-        "test/Compliance.Tests/Features/Work/ControlDecisionWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs"
+        "test/Compliance.Tests/Features/Work/ControlDecisionWorkTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -25161,12 +25180,9 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "RiskEvaluation",
-        "RiskTreatmentAssertion"
+        "RiskEvaluation"
       ],
-      "aggregateTargets": [
-        "RiskTreatmentAssertion"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
         "RiskGovernanceReader"
       ],
@@ -25175,6 +25191,8 @@
         "test/Compliance.Tests/Features/Risks/PersonalRiskSignoffTransportTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskOwnerBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentAssertionNativeTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentAssertionRetryTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
       ],
       "note": ""
@@ -28546,16 +28564,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "RiskTreatmentAssertion"
-      ],
-      "aggregateTargets": [
-        "RiskTreatmentAssertion"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [
         "RiskGovernanceReader"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentAssertionNativeTests.cs"
+      ],
       "note": ""
     },
     {
@@ -28866,17 +28882,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "RiskTreatmentAssertion"
-      ],
-      "aggregateTargets": [
-        "RiskTreatmentAssertion"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [
         "RiskGovernanceReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentAssertionNativeTests.cs",
         "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
       ],
@@ -28910,6 +28923,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/PersonalRiskSignoffTransportTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionCompactionTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionHttpTests.cs",
         "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
       ],
@@ -29630,7 +29645,10 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskOwnerBoundaryTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskOwnerBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionCompactionTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionHttpTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentActionNativeTests.cs"
       ],
       "note": ""
     },
@@ -30432,7 +30450,9 @@
         }
       ],
       "handlerRegistration": true,
-      "helperServices": [],
+      "helperServices": [
+        "RiskActionReviewVerifier"
+      ],
       "directAggregateReferences": [],
       "aggregateTargets": [
         "EvidenceRequest"
@@ -31525,6 +31545,39 @@
       "method": "Append",
       "methodArgumentCount": 4,
       "source": "src/Compliance.Core/Features/Risks/RiskMethod.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "RiskControlTreatmentProposed",
+      "aggregate": "RiskTreatmentAssertion",
+      "method": "Propose",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/Risks/RiskTreatmentAssertion.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "RiskControlTreatmentRetired",
+      "aggregate": "RiskTreatmentAssertion",
+      "method": "Retire",
+      "methodArgumentCount": 7,
+      "source": "src/Compliance.Core/Features/Risks/RiskTreatmentAssertion.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "RiskControlTreatmentReviewed",
+      "aggregate": "RiskTreatmentAssertion",
+      "method": "Review",
+      "methodArgumentCount": 9,
+      "source": "src/Compliance.Core/Features/Risks/RiskTreatmentAssertion.cs",
       "callerSources": [],
       "classification": "no_registered_request_route",
       "ownerIssue": 1022,

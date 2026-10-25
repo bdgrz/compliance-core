@@ -57,8 +57,8 @@ public sealed class RiskGovernanceSnapshot(Uuid tenantId, Uuid programId,
         Record(riskId).Actions.FirstOrDefault(item => item.ActionId == actionId);
 
     /// <summary>The member who submitted the completion, or null.</summary>
-    public Uuid? SubmitterMemberId(Uuid riskId, Uuid submissionId) =>
-        Record(riskId).Submitters.TryGetValue(submissionId, out var memberId) ? memberId : null;
+    public Uuid? SubmitterMemberId(Uuid riskId, Uuid actionId, Uuid submissionId) =>
+        Record(riskId).Submitters.TryGetValue((actionId, submissionId), out var memberId) ? memberId : null;
 
     /// <summary>Triggers not yet answered by an inherent assessment recorded at or after them.</summary>
     public IReadOnlyList<RiskReassessmentTriggerView> OpenTriggers(Uuid riskId,

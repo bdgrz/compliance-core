@@ -526,12 +526,23 @@
     },
     {
       "id": "source-use-byte-closure",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "fullUnitPassed": 6058,
       "focusedPassed": 613,
       "productionHttpPassed": 12,
       "directJevProductionFilesReviewed": 51,
-      "qualificationArtifact": "source-use-byte-qualification.json"
+      "qualificationArtifact": "source-use-byte-qualification.json",
+      "pullRequest": 1118,
+      "mergeCommit": "b31c3a390ebd963c0c3527626bb47b8ee008b972"
+    },
+    {
+      "id": "risk-treatment-native",
+      "status": "locally_verified_pending_merge",
+      "fullUnitPassed": 6085,
+      "focusedPassed": 408,
+      "productionHttpPassed": 2,
+      "directJevProductionFilesReviewed": 28,
+      "qualificationArtifact": "risk-treatment-qualification.json"
     }
   ],
   "resolved": [

@@ -47,15 +47,18 @@ static class RiskSeeds
         var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new RiskTreatmentAssertion(tenant, program, risk, control));
         var view = new RiskControlTreatmentView(treatment, risk, control, version, RiskStates.TreatmentProposed,
-            rationale, actor, at, null, null, null, null, null, null, null, null)
+            rationale.Trim(), actor, at, null, null, null, null, null, null, null, null)
         { Revision = owner.Revision + 1 };
         var body = await FindingContent.WriteAsync(content, tenant, RiskContent.TreatmentSchema, view, CancellationToken.None);
         var (response, result) = await FindingContent.FreezeAsync(content, tenant,
             RiskContent.ControlTreatmentRegistrationSchema, new RiskControlTreatmentRegistration(treatment, owner.Revision + 1),
             CancellationToken.None);
         var first = await FirstResponses.FreezeAsync(content, tenant.ToString(), response);
-        var operation = Operation(owner, treatment, (ulong)owner.Revision, actor, at, nameof(ProposeRiskControlTreatment), view);
-        await ProgramManagementServices.SeedAsync(provider, new RiskTreatmentAssertion(tenant, program, risk, control),
+        var request = new ProposeRiskControlTreatment(treatment, tenant, program, risk, owner.Revision, control, version, rationale);
+        var operation = RootOperation.Provenance(treatment, nameof(ProposeRiskControlTreatment), owner.Stream, actor,
+            owner.Revision, AuthoredIntentDigest.Compute(request), at) with
+        { FirstOwner = owner.Stream };
+        await ProgramManagementServices.SeedAsync(provider, new RiskTreatmentAssertion(tenant, program, risk, control, treatment),
             source => source.Propose(operation, body, proposer, first, result));
     }
 
@@ -67,9 +70,12 @@ static class RiskSeeds
         var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new RiskTreatmentAssertion(tenant, program, risk, control));
         var (first, result) = await UnitAsync(content, tenant);
-        var operation = Operation(owner, Uuid.CreateVersion4(), (ulong)owner.Revision, actor, at,
-            nameof(ReviewRiskControlTreatment), new { treatment, outcome, rationale });
-        await ProgramManagementServices.SeedAsync(provider, new RiskTreatmentAssertion(tenant, program, risk, control),
+        var command = Uuid.CreateVersion4();
+        var request = new ReviewRiskControlTreatment(command, tenant, program, risk, treatment, owner.Revision, outcome, rationale);
+        var operation = RootOperation.Provenance(command, nameof(ReviewRiskControlTreatment), owner.Stream, actor,
+            owner.Revision, AuthoredIntentDigest.Compute(request), at) with
+        { FirstOwner = owner.Stream };
+        await ProgramManagementServices.SeedAsync(provider, new RiskTreatmentAssertion(tenant, program, risk, control, command),
             source => source.Review(operation, treatment, outcome, rationale, actor, at, null, first, result));
     }
 
@@ -97,7 +103,7 @@ static class RiskSeeds
         var (response, result) = await FindingContent.FreezeAsync(content, tenant, RiskContent.ActionRegistrationSchema,
             new RiskTreatmentActionRegistration(action, 1), CancellationToken.None);
         var first = await FirstResponses.FreezeAsync(content, tenant.ToString(), response);
-        var operation = Operation(owner, action, 0, actor, at, nameof(AddRiskTreatmentAction), view);
+        var operation = ActionOperation(owner, action, 0, actor, at, nameof(AddRiskTreatmentAction), view);
         await ProgramManagementServices.SeedAsync(provider, owner, source => source.Add(operation, body, first, result));
     }
 
@@ -113,7 +119,7 @@ static class RiskSeeds
         var (response, result) = await FindingContent.FreezeAsync(content, tenant, RiskContent.CompletionRegistrationSchema,
             new RiskTreatmentActionCompletionRegistration(submission, owner.Revision + 1), CancellationToken.None);
         var first = await FirstResponses.FreezeAsync(content, tenant.ToString(), response);
-        var operation = Operation(owner, submission, (ulong)owner.Revision, actor, at,
+        var operation = ActionOperation(owner, submission, (ulong)owner.Revision, actor, at,
             nameof(SubmitRiskTreatmentActionCompletion), new { action, summary, evidence, submitter });
         await ProgramManagementServices.SeedAsync(provider, new RiskTreatmentAction(tenant, program, risk, action),
             source => source.Submit(operation, summary, body, submitter, actor, at, first, result));
@@ -127,7 +133,7 @@ static class RiskSeeds
         var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new RiskTreatmentAction(tenant, program, risk, action));
         var id = Uuid.CreateVersion4();
-        var operation = Operation(owner, id, (ulong)owner.Revision, actor, at, nameof(ReviewRiskTreatmentActionCompletion),
+        var operation = ActionOperation(owner, id, (ulong)owner.Revision, actor, at, nameof(ReviewRiskTreatmentActionCompletion),
             new { outcome, rationale });
         var decision = await FindingContent.WriteAsync(content, tenant, RiskContent.AuthoredReviewSchema,
             new RiskActionReviewDecision(id, program, risk, outcome, rationale, Uuid.Parse(actor.Id, System.Globalization.CultureInfo.InvariantCulture), actor, at, null, null),
@@ -167,11 +173,16 @@ static class RiskSeeds
         var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new RiskTreatmentAction(tenant, program, risk, action));
         var (first, result) = await UnitAsync(content, tenant);
-        var operation = Operation(owner, Uuid.CreateVersion4(), (ulong)owner.Revision, actor, at,
+        var operation = ActionOperation(owner, Uuid.CreateVersion4(), (ulong)owner.Revision, actor, at,
             nameof(CancelRiskTreatmentAction), rationale);
         await ProgramManagementServices.SeedAsync(provider, new RiskTreatmentAction(tenant, program, risk, action),
             source => source.Cancel(operation, rationale, actor, at, first, result));
     }
+
+    static OperationProvenance ActionOperation<T>(Aggregate owner, Uuid id, ulong? expected,
+        ActorReference actor, DateTimeOffset at, string kind, T authored) where T : notnull =>
+        Operation(owner, id, expected, actor, at, kind, authored) with
+        { Episode = RootOperation.InitialEpisode, FirstOwner = owner.Stream };
 
     static async Task<(ImmutableContentRef First, ImmutableContentRef Result)> UnitAsync(IImmutableContentStore content, Uuid tenant)
     {

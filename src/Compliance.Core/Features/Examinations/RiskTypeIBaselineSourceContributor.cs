@@ -407,7 +407,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
                 {
                     var line = await reader.HydrateAsync(new RiskTreatmentAssertion(tenantId, programId, riskId,
                         controlId), ct).ConfigureAwait(false);
-                    if (!await history.CaptureAsync(line.Stream, line.Facts, tenantId, content, through, context, ct)
+                    if (!await history.CaptureAsync(line.Stream, await RiskTreatmentAssertionHistory.ReadAsync(events, line, ct).ConfigureAwait(false), tenantId, content, through, context, ct)
                             .ConfigureAwait(false))
                         return InvalidHistory<GovernanceHistory>();
                 }
@@ -416,7 +416,8 @@ public sealed class RiskTypeIBaselineSourceContributor(
                 {
                     var action = await reader.HydrateAsync(new RiskTreatmentAction(tenantId, programId, riskId,
                         actionId), ct).ConfigureAwait(false);
-                    if (!await history.CaptureAsync(action.Stream, action.Facts, tenantId, content, through, context, ct)
+                    if (!await history.CaptureAsync(action.Stream,
+                            await RiskTreatmentActionHistory.ReadAsync(events, action, ct).ConfigureAwait(false), tenantId, content, through, context, ct)
                             .ConfigureAwait(false))
                         return InvalidHistory<GovernanceHistory>();
                 }

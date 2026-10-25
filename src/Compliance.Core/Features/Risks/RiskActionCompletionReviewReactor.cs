@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Remediation;
 using Cntryl.Portia;
 
@@ -12,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Risks;
 ///     is created from an unverified review.
 /// </summary>
 sealed partial class RiskActionCompletionReviewReactor(IProjectionCheckpointStore checkpoints,
-    ProcessRootReaction process, IImmutableContentStore content)
+    ProcessRootReaction process, IImmutableContentStore content, RiskActionReviewVerifier verifier)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(RiskTreatmentAction.Area), WorkloadName),
         IReactorHandler<RiskTreatmentActionCompletionReviewAccepted>
 {
@@ -22,6 +23,10 @@ sealed partial class RiskActionCompletionReviewReactor(IProjectionCheckpointStor
         CancellationToken ct)
     {
         var accepted = context.Trigger;
+        var verified = await verifier.VerifyAcceptedAsync(NativeFactReference.Of(context.Source.Stream, accepted),
+            accepted.Intent, accepted.Operation.RootOperationId, accepted.Operation.LogicalId, ct).ConfigureAwait(false);
+        if (verified.Error is not null)
+            throw new ReactionCommandFailedException(verified.Error);
         var tenant = Uuid.Parse(context.Source.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
         IReadOnlyList<ReviewedEvidenceRequest> cited;
         RiskActionCompletionReviewIntent intent;
@@ -38,7 +43,7 @@ sealed partial class RiskActionCompletionReviewReactor(IProjectionCheckpointStor
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen review cannot be verified yet: {exception.Message}", true));
+                $"The frozen review cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         _ = await process.StartAsync(RiskActionReviewEffects.ProcessName, context, accepted.Intent,

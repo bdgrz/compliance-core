@@ -1,0 +1,44 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Compact RiskTreatmentAssertion/RiskTreatmentAction command state, verified scoped historical readers and async native preparation; exact cancellation-proof binding and ActionId-qualified review work/submitter identity.",
+  "validation": {
+    "genuineOldApiRedFailed": {
+      "assertionRetryAndAmbiguity": 2,
+      "actionHistoryReplayAttributionOrphan": 4,
+      "actualReviewAssignmentAndQueueAliasing": 3,
+      "unboundEarlierCancellationProof": 1
+    },
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 408,
+    "productionHttpPassed": 2,
+    "backendUnitPassed": 6085,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "coverageExport": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 28,
+    "signalsTriaged": 2,
+    "mergeProbability": 0.72,
+    "adopted": "merge scoped repair; continue remaining independent owners"
+  },
+  "parentRefinements": [
+    "Composed Assertion14, Action25 non-shared paths, explicit four-file shared union and WorkID6 without overwriting merged native Risk/Method/source bytes.",
+    "Corrected nullable Result<T>? test access, missing retire handler registration, deliberate event clone full metadata and actual independent SDK audit-session fixture.",
+    "Seeded real ComplianceProgram source in actual HTTP fixtures; retained production program-scope authorization and permission revocation.",
+    "Added standalone prior-owner-compatible raw JSON failure proof RED: actual old receiver accepted unbound earlier payload against later pending root. Preserved SHA-verified40 current C# paths before temporary old-code execution, then restored exactly; same regression passes current required binding and preserves pending root/held evidence."
+  ],
+  "qualification": [
+    "Existing unchanged nativev2 event tags, public DTO/path/response shapes remain. Incompatible internal failure proof content advances1\u21922, requiring native admission/intent/root/generation and frozen evidence membership. No legacy proof converter.",
+    "Current personal user authorization precedes public native replay. Internal callback requires immutable exact authority; missing proof/selection is a typed wait and does not release held evidence. Irreversible reviewed terminal recovers forward.",
+    "Review workIDv2 includes Program/Risk/Action/Submission; submitter map includes ActionId. Ordinary action work IDs unchanged. Old ambiguous assignments/projections require deliberate workflow cutover; no guessed aliases or transferred authority.",
+    "Scoped ambiguous treatment UUID lookup fails closed; no realm-wide command identity guarantee inferred.",
+    "Existing current approved Control gate preserved; absent atomic Control source-use pair is not invented.",
+    "Historical read/identity scans are transient O(N), not retained lifetime command collections or constant-time claims. No retained-state conversion, deployment or production broker qualification. Remaining owner/reactor work continues separately."
+  ]
+}

@@ -427,6 +427,7 @@ public sealed class RiskGovernanceHandlerTests
                     .AddRequestHandler<AssignRiskOwnerHandler>()
                     .AddRequestHandler<ProposeRiskControlTreatmentHandler>()
                     .AddRequestHandler<ReviewRiskControlTreatmentHandler>()
+                    .AddRequestHandler<RetireRiskControlTreatmentHandler>()
                     .AddRequestHandler<GetRiskGovernanceHandler>()
                     .AddRequestHandler<AddRiskTreatmentActionHandler>()
                     .AddRequestHandler<ReviseRiskTreatmentActionHandler>()

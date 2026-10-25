@@ -58,6 +58,8 @@ static class WorkSource
         bool WantedRiskAction(Uuid riskId, Uuid sourceId, string kind) =>
             workItemId is not { } wanted ||
             RiskTreatmentWorkItemId(programId, riskId, sourceId, kind) == wanted;
+        bool WantedRiskReview(Uuid riskId, Uuid actionId, Uuid submissionId) =>
+            workItemId is not { } wanted || RiskTreatmentActionReviewWorkItemId(programId, riskId, actionId, submissionId) == wanted;
         var candidates = new List<WorkCandidate>();
         var prefix = $"/api/v1/tenants/{tenantId}/programs/{programId}";
         ControlOperationsSnapshot? operations = null;
@@ -151,16 +153,15 @@ static class WorkSource
                     var completion = action.Completions.LastOrDefault(static item =>
                         item.ReviewOutcome is null);
                     if (completion is null ||
-                        !WantedRiskAction(action.RiskId, completion.SubmissionId,
-                            RiskTreatmentActionReview))
+                        !WantedRiskReview(action.RiskId, action.ActionId, completion.SubmissionId))
                         continue;
                     var excluded = new HashSet<Uuid> { action.AccountableMemberId };
-                    if (governance.SubmitterMemberId(action.RiskId,
+                    if (governance.SubmitterMemberId(action.RiskId, action.ActionId,
                             completion.SubmissionId) is { } submitter)
                         excluded.Add(submitter);
                     candidates.Add(new WorkCandidate(
-                        RiskTreatmentWorkItemId(programId, action.RiskId,
-                            completion.SubmissionId, RiskTreatmentActionReview),
+                        RiskTreatmentActionReviewWorkItemId(programId, action.RiskId, action.ActionId,
+                            completion.SubmissionId),
                         RiskTreatmentActionReview, completion.SubmissionId, null, null,
                         $"Review completion for {action.Title}",
                         "A risk treatment action completion is awaiting independent review.",
@@ -321,6 +322,11 @@ static class WorkSource
     public static Uuid RiskTreatmentWorkItemId(Uuid programId, Uuid riskId, Uuid sourceId,
         string kind) => WorkCandidate.IdFor(Uuid.CreateVersion5(programId,
         $"risk-treatment-work\n{riskId}\n{sourceId}"), kind);
+
+    /// <summary>Review work belongs to one action's submission; no command UUID uniqueness across actions is assumed.</summary>
+    public static Uuid RiskTreatmentActionReviewWorkItemId(Uuid programId, Uuid riskId, Uuid actionId, Uuid submissionId) =>
+        WorkCandidate.IdFor(Uuid.CreateVersion5(programId,
+            $"risk-treatment-action-review-work-v2\n{riskId}\n{actionId}\n{submissionId}"), RiskTreatmentActionReview);
 
     public static WorkCandidate ControlOccurrenceCandidate(Uuid tenantId, Uuid programId,
         Uuid controlId, string identifier, Uuid occurrenceId, DateOnly? periodStart,

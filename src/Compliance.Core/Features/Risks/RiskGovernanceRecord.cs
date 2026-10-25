@@ -9,10 +9,10 @@ namespace Bdgrz.Compliance.Features.Risks;
 /// </summary>
 public sealed class RiskGovernanceRecord(long revision, RiskOwnerView? owner,
     IReadOnlyList<RiskControlTreatmentView> treatments, IReadOnlyList<RiskReassessmentTriggerView> triggers,
-    IReadOnlyList<RiskTreatmentActionView> actions, IReadOnlyDictionary<Uuid, Uuid> submitters)
+    IReadOnlyList<RiskTreatmentActionView> actions, IReadOnlyDictionary<(Uuid ActionId, Uuid SubmissionId), Uuid> submitters)
 {
     /// <summary>An empty record for a risk with no governance facts yet.</summary>
-    public static RiskGovernanceRecord Empty { get; } = new(0, null, [], [], [], new Dictionary<Uuid, Uuid>());
+    public static RiskGovernanceRecord Empty { get; } = new(0, null, [], [], [], new Dictionary<(Uuid ActionId, Uuid SubmissionId), Uuid>());
 
     /// <summary>The revision of the risk's governance stream.</summary>
     public long Revision { get; } = revision;
@@ -30,5 +30,5 @@ public sealed class RiskGovernanceRecord(long revision, RiskOwnerView? owner,
     public IReadOnlyList<RiskTreatmentActionView> Actions { get; } = actions;
 
     /// <summary>The submitting member of every completion submission.</summary>
-    public IReadOnlyDictionary<Uuid, Uuid> Submitters { get; } = submitters;
+    public IReadOnlyDictionary<(Uuid ActionId, Uuid SubmissionId), Uuid> Submitters { get; } = submitters;
 }

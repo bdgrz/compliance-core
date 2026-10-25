@@ -1,0 +1,31 @@
+{
+  "reviewed": 28,
+  "blockedReviews": 0,
+  "signalsTriaged": 2,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Risks/AbortRiskTreatmentActionReviewHandler.cs",
+      "sha256": "7ee8fdfdbb25230bc78092f3c314d2fe1c6bed2a042cf16fc3259e208fe608fd",
+      "signals": {
+        "authority_gap": 0.7,
+        "invariant_gap": 0.52,
+        "recovery_gap": 0.79,
+        "incomplete_path": 0.37
+      },
+      "classification": "exact_admitted_review_cancellation_and_forward_recovery",
+      "evidence": "Failure content schema advances to2 and binds native admission stream/event/version, operation root, generation and immutable intent; optional evidence must be a member of frozen reviewed evidence selection. Verifier re-reads exact accepted native source. Atomic action append resolves current native acceptance and terminal review before fencing/canceling; an irreversible reviewed terminal recovers forward and never becomes another cancellation. Wrong earlier admission/root/generation/intent/evidence regressions preserve held evidence; exact cancel/replay/forward recovery pass. Missing immutable proof/selection deliberately remains a typed transient wait without releasing authority; no proof-free internal callback recovery is claimed. Additional standalone raw legacy payload RED on actual prior receiver accepted an unbound earlier proof against a later pending review; same test passes with required current binding and preserves held evidence."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Risks/SubmitRiskTreatmentActionCompletionHandler.cs",
+      "sha256": "ab60ae8ced6804f595cbb56b1e4ccbc085dc704b447bb8cb4566391dfc17889a",
+      "signals": {
+        "authority_gap": 0.59,
+        "invariant_gap": 0.62,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.29
+      },
+      "classification": "personal_native_submission_with_frozen_evidence_selection",
+      "evidence": "Requires personal Bdgrz HTTP actor, current request authorization, exact scoped IDs and expected revision. Native acceptance replay precedes fresh risk/evidence selection; changed actor/intent conflicts. New submission verifies fulfilled evidence then freezes manifest/result, and native reducer validates submitter against original operation actor. Completion remains submitted until separate independently authorized exact evidence-use review commits. Typed preparation failures use kernel winner recheck. Forged submitter, changed-source retry, orphan candidate, work assignment/SoD and source archive cases pass."
+    }
+  ]
+}
