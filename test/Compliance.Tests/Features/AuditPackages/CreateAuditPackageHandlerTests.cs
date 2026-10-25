@@ -160,7 +160,7 @@ public sealed class CreateAuditPackageHandlerTests
             new NativeOperationExecutor(fixture.Reader, fixture.Executor, fixture.ContentStore), fixture.ContentStore,
             new FixedTimeProvider(Now.AddDays(1)));
         var retryHandler = new CreateAuditPackageHandler(retryOperations,
-            new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods), fixture.ContentStore);
+            new AuditPackageSourceBuilder(fixture.Examinations, fixture.Periods), fixture.ContentStore);
 
         // Act
         var replay = await retryHandler.HandleAsync(Fixture.Context(fixture.UserId, command), CancellationToken.None);
@@ -192,7 +192,7 @@ public sealed class CreateAuditPackageHandlerTests
         var operations = new AuditPackageRootOperation(reader, packages,
             new NativeOperationExecutor(reader, fixture.Executor, fixture.ContentStore), fixture.ContentStore,
             new FixedTimeProvider(Now));
-        var handler = new CreateAuditPackageHandler(operations, new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods),
+        var handler = new CreateAuditPackageHandler(operations, new AuditPackageSourceBuilder(fixture.Examinations, fixture.Periods),
             fixture.ContentStore);
 
         // Act
@@ -227,6 +227,7 @@ public sealed class CreateAuditPackageHandlerTests
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public InMemoryEventStore PeriodEvents { get; } = new();
         public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, ContentStore);
+        public ExaminationEngagementReader Examinations => new(Reader, PeriodEvents, ContentStore);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -246,6 +247,7 @@ public sealed class CreateAuditPackageHandlerTests
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
+            ExaminationSeeds.Configure(services, PeriodEvents);
             PackageSeeds.Configure(services, PeriodEvents);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
@@ -256,7 +258,7 @@ public sealed class CreateAuditPackageHandlerTests
         }
 
         public CreateAuditPackageHandler Handler() => new(RootOperation,
-            new AuditPackageSourceBuilder(Reader, Periods), ContentStore);
+            new AuditPackageSourceBuilder(Examinations, Periods), ContentStore);
 
         public CreateAuditPackage Command(Uuid packageId, TypeIBaselineView baseline) =>
             new(TenantId, ProgramId, packageId, Content(baseline));
@@ -275,7 +277,7 @@ public sealed class CreateAuditPackageHandlerTests
 
         public async Task<TypeIBaselineView> SeedTypeIBaselineAsync()
         {
-            var engagement = new ExaminationEngagement(TenantId, ProgramId, ExaminationId);
+            var engagement = new ExaminationEngagementRules(TenantId, ProgramId, ExaminationId);
             var memberId = RbacIds.Member(TenantId, UserId);
             var boundaryId = Uuid.CreateVersion4();
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i",
@@ -290,7 +292,7 @@ public sealed class CreateAuditPackageHandlerTests
                 "Confirmed the exact Type I source snapshot.", memberId, "Engagement lead",
                 Now.AddMinutes(1)));
             _baseline = engagement.Baseline;
-            await Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
+            await ExaminationSeeds.WriteAsync(Reader, Writer, PeriodEvents, ContentStore, engagement);
             return _baseline!;
         }
 

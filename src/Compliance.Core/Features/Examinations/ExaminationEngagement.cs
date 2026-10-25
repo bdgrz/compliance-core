@@ -1,562 +1,168 @@
-using Bdgrz.Compliance.Features.Snapshots;
+using System.Globalization;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
-using System.Collections.ObjectModel;
-using System.Text;
-using System.Text.Json;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>
-///     One Type I engagement stream owns its setup and immutable baseline lineage.
-///     Independent auditor requests, packages, and later Type II periods have their own roots.
-/// </summary>
+/// <summary>Bounded engagement authority. No complete terms, source lists or baseline history are retained.</summary>
 public sealed class ExaminationEngagement : Aggregate
 {
-    public NativeAcceptance ReplayAcceptance { get; }
-    OperationProvenance? _pendingOperation;
-
-    const int MaximumSources = 256;
-    const int MaximumAmendmentDepth = 8;
-    const int MaximumEventBytes = 48 * 1024;
-    const int MaximumAuditFirmLength = 200;
-    const int MaximumActorDisplayLength = 200;
-    const int MaximumRationaleLength = 2000;
-    const int MaximumScopeDifferenceLength = 1000;
-    static readonly HashSet<string> Categories = new(StringComparer.Ordinal)
+    public const string Area = "examinations";
+    readonly Uuid _tenant;
+    readonly Uuid _program;
+    readonly Uuid _selectedBaseline;
+    ImmutableContentRef? _selectedBaselineContent;
+    public ExaminationEngagement(Uuid tenant, Uuid program, Uuid examination, Uuid selectedCommandId = default,
+        string? selectedCommandKind = null, Uuid selectedBaselineId = default)
+        : base(examination, new EventStreamAddress(tenant.ToString(), Area, examination.ToString()))
     {
-        "security", "availability", "confidentiality", "processing_integrity", "privacy"
+        (_tenant, _program, _selectedBaseline) = (tenant, program, selectedBaselineId);
+        Acceptance = new NativeAcceptance(selectedCommandId, selectedCommandKind);
+        On<ExaminationEngagementOpened>(ApplyFact);
+        On<ExaminationEngagementRevised>(ApplyFact);
+        On<TypeIBaselineFrozen>(ApplyFact);
+        On<TypeIBaselineAmended>(ApplyFact);
+    }
+    public Uuid TenantId => _tenant;
+    public Uuid ProgramId => Header?.ProgramId ?? _program;
+    public long Revision => Header?.Revision ?? 0;
+    public ExaminationEngagementHeader? Header { get; private set; }
+    public NativeAcceptance Acceptance { get; }
+    public ImmutableContentRef? CurrentContent { get; private set; }
+    public ImmutableContentRef? InitialContent { get; private set; }
+    public ImmutableContentRef? BaselineContent { get; private set; }
+    public ImmutableContentRef? SelectedBaselineContent => _selectedBaseline == Header?.BaselineId
+        ? BaselineContent : _selectedBaselineContent;
+    public Uuid SelectedBaselineId => _selectedBaseline;
+    public DomainEvent? Latest { get; private set; }
+    internal ExaminationEngagementReplayCut ReplayCut { get; } = new();
+
+    public Result PrepareCreate(Uuid program) => Header is not null
+        ? Fail(RequestErrorKind.Conflict, "The examination engagement already exists.")
+        : _tenant == Uuid.Empty || program == Uuid.Empty || Id == Uuid.Empty
+            ? Fail(RequestErrorKind.Validation, "An examination requires exact tenant/program/engagement identities.")
+            : Result.Success;
+    public Result PrepareWrite(Uuid program, long expected, bool requireFrozen)
+    {
+        if (Header is null || Header.ProgramId != program)
+            return Fail(RequestErrorKind.NotFound, "The examination engagement was not found.");
+        if (expected != Revision)
+            return Fail(RequestErrorKind.Conflict, "The examination engagement revision is stale.");
+        if ((Header.BaselineId is not null) != requireFrozen)
+            return Fail(RequestErrorKind.Conflict, requireFrozen ? "A frozen Type I baseline is required."
+                : "A frozen engagement can change only through an attributable baseline amendment.");
+        return Result.Success;
+    }
+
+    internal Result Accept(OperationProvenance operation, ExaminationEngagementState state,
+        ImmutableContentRef change, ImmutableContentRef response, ImmutableContentRef result)
+    {
+        var view = state.Engagement;
+        var creating = operation.CommandKind == nameof(CreateExaminationEngagement);
+        var frozen = operation.CommandKind == nameof(AmendTypeIBaseline);
+        var baseline = operation.CommandKind is nameof(FreezeTypeIBaseline) or nameof(AmendTypeIBaseline);
+        if (operation.CommandKind is not (nameof(CreateExaminationEngagement) or nameof(ReviseExaminationEngagement) or
+                nameof(FreezeTypeIBaseline) or nameof(AmendTypeIBaseline)) ||
+            !creating && operation.OriginalExpectedRevision is null ||
+            view.Status != (baseline ? "baseline_frozen" : "draft") || baseline != (state.Baseline is not null) ||
+            view.ActorDisplay != operation.Actor.Display || change.Schema != ExaminationEngagementState.Schema ||
+            response.Schema != FirstResponses.Schema || result.Schema != "mutation-result-content.v1")
+            return Fail(RequestErrorKind.Conflict, "The prepared engagement has another lifecycle or result/content schema.");
+        if (state.Baseline is { } selected && (selected.TenantId != _tenant || selected.ProgramId != view.ProgramId ||
+            selected.ExaminationEngagementId != Id || selected.TypeIBaselineId != operation.LogicalId ||
+            selected.Revision != (Header?.BaselineRevision ?? 0) + 1 || selected.ActorMemberId != Member(operation) ||
+            selected.ActorDisplay != operation.Actor.Display || selected.UpdatedAt != operation.AcceptedAt ||
+            selected.Status != (frozen ? "amended" : "frozen")))
+            return Fail(RequestErrorKind.Conflict, "The prepared baseline differs from its exact root/actor/revision authority.");
+        var guard = creating ? PrepareCreate(view.ProgramId) : PrepareWrite(view.ProgramId,
+            checked((long)operation.OriginalExpectedRevision!.Value), frozen);
+        if (!guard.IsSuccess)
+            return guard;
+        if (!OwnRoot(operation, operation.CommandKind, creating ? null : (ulong)Revision) ||
+            view.TenantId != _tenant || view.ExaminationEngagementId != Id || view.Revision != Revision + 1 ||
+            view.ActorMemberId != Member(operation) || view.UpdatedAt != operation.AcceptedAt ||
+            Header is { } header && (view.EngagementType != header.EngagementType || view.BoundaryId != header.BoundaryId))
+            return Fail(RequestErrorKind.Conflict, "The prepared engagement differs from its exact root/actor/revision authority.");
+        if (ReplayCut.Require(this, Acceptance, operation) is { IsSuccess: false } missing)
+            return missing;
+        DomainEvent fact = operation.CommandKind switch
+        {
+            nameof(CreateExaminationEngagement) => new ExaminationEngagementOpened(_tenant, Id, view.ProgramId,
+                view.Revision, view.EngagementType, view.BoundaryId, null, 0, change, operation.AcceptedAt,
+                operation, response, result, view.ActorMemberId),
+            nameof(ReviseExaminationEngagement) => new ExaminationEngagementRevised(_tenant, Id, view.ProgramId,
+                view.Revision, view.EngagementType, view.BoundaryId, null, 0, change, operation.AcceptedAt,
+                operation, response, result, view.ActorMemberId),
+            nameof(FreezeTypeIBaseline) => new TypeIBaselineFrozen(_tenant, Id, view.ProgramId, view.Revision,
+                view.EngagementType, view.BoundaryId, state.Baseline!.TypeIBaselineId, state.Baseline.Revision,
+                change, operation.AcceptedAt, operation, response, result, view.ActorMemberId),
+            nameof(AmendTypeIBaseline) => new TypeIBaselineAmended(_tenant, Id, view.ProgramId, view.Revision,
+                view.EngagementType, view.BoundaryId, state.Baseline!.TypeIBaselineId, state.Baseline.Revision,
+                change, operation.AcceptedAt, operation, response, result, view.ActorMemberId),
+            _ => throw new InvalidOperationException("The examination root kind is unsupported.")
+        };
+        RaiseEvent(fact);
+        return Result.Success;
+    }
+
+    internal bool OwnRoot(OperationProvenance operation, string kind, ulong? expected) =>
+        NativeOwnerHistory.IsOwnRoot(this, operation, kind, expected) && Member(operation) != Uuid.Empty;
+    internal static Uuid Member(OperationProvenance operation) => operation.Actor.Kind == "member" &&
+        Uuid.TryParse(operation.Actor.Id, CultureInfo.InvariantCulture, out var member) ? member : Uuid.Empty;
+    internal static string Kind(DomainEvent fact) => fact switch
+    {
+        ExaminationEngagementOpened => nameof(CreateExaminationEngagement),
+        ExaminationEngagementRevised => nameof(ReviseExaminationEngagement),
+        TypeIBaselineFrozen => nameof(FreezeTypeIBaseline),
+        TypeIBaselineAmended => nameof(AmendTypeIBaseline),
+        _ => throw new ImmutableContentIntegrityException("The native engagement fact kind is unsupported.")
     };
-
-    readonly Uuid _tenantId;
-    readonly Uuid _programId;
-    readonly List<TypeIBaselineView> _baselineHistory = [];
-    ExaminationEngagementView? _current;
-    ExaminationEngagementView? _initial;
-    TypeIBaselineView? _baseline;
-
-    public long Revision => _current?.Revision ?? 0;
-
-    public ExaminationEngagementView? Current => _current;
-
-    public TypeIBaselineView? Baseline => _baseline;
-
-    public IReadOnlyList<TypeIBaselineView> BaselineHistory =>
-        Array.AsReadOnly(_baselineHistory.ToArray());
-
-    public ExaminationEngagement(Uuid tenantId, Uuid programId, Uuid engagementId, Uuid selectedCommandId = default)
-        : base(engagementId, new EventStreamAddress(tenantId.ToString(), "examinations",
-            engagementId.ToString()))
+    void ApplyFact(DomainEvent domainEvent)
     {
-        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
-        _tenantId = tenantId;
-        _programId = programId;
-        On<ExaminationEngagementOpened>(Apply);
-        On<ExaminationEngagementRevised>(Apply);
-        On<TypeIBaselineFrozen>(Apply);
-        On<TypeIBaselineAmended>(Apply);
-    }
-
-    public CommandFailure? Create(ExaminationEngagementContent content, Uuid actorMemberId,
-        string actorDisplay, DateTimeOffset occurredAt)
-    {
-        if (_current is not null)
-            return SameContent(_initial!, content) && _initial!.ActorMemberId == actorMemberId
-                ? null
-                : CommandFailure.StateConflict(
-                    "The examination engagement already exists with different terms.");
-        if (_tenantId == Uuid.Empty || _programId == Uuid.Empty || Id == Uuid.Empty)
-            return CommandFailure.InvalidContent(
-                "An examination engagement requires tenant, program, and engagement identities.");
-        if (ValidateActor(actorMemberId, actorDisplay, occurredAt) is { } actorFailure)
-            return actorFailure;
-        if (NormalizeContent(content) is not { } normalized)
-            return InvalidEngagement();
-
-        var engagement = View(normalized, "draft", 1, actorMemberId, actorDisplay.Trim(), occurredAt);
-        var opened = new ExaminationEngagementOpened(_tenantId, engagement, occurredAt);
-        if (!Fits(opened))
-            return CommandFailure.InvalidContent(
-                "The examination engagement exceeds the bounded event payload.");
-        RaiseEvent(opened);
-        return null;
-    }
-
-    public CommandFailure? Revise(long expectedRevision, ExaminationEngagementContent content,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset occurredAt,
-        OperationProvenance? operation = null)
-    {
-        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure;
-        _pendingOperation = operation;
-        if (_current is null)
-            return CommandFailure.MissingRecord("The examination engagement was not found.");
-        if (expectedRevision != Revision)
-            return CommandFailure.ForVersion(
-                VersionedRecordRules.StaleRevision("examination engagement", Revision));
-        if (_baseline is not null)
-            return CommandFailure.StateConflict(
-                "A frozen Type I engagement can only change through a baseline amendment.");
-        if (ValidateActor(actorMemberId, actorDisplay, occurredAt) is { } actorFailure)
-            return actorFailure;
-        if (NormalizeContent(content) is not { } normalized)
-            return InvalidEngagement();
-        if (SameContent(_current, normalized))
-            return null;
-
-        var engagement = View(normalized, "draft", Revision + 1, actorMemberId,
-            actorDisplay.Trim(), occurredAt);
-        var revised = new ExaminationEngagementRevised(_tenantId, engagement, occurredAt) { Operation = _pendingOperation };
-        if (!Fits(revised))
-            return CommandFailure.InvalidContent(
-                "The revised examination engagement exceeds the bounded event payload.");
-        RaiseEvent(revised);
-        return null;
-    }
-
-    public CommandFailure? FreezeBaseline(long expectedRevision, Uuid baselineId,
-        TypeIBaselinePreview preview, string confirmationRationale, Uuid actorMemberId,
-        string actorDisplay, DateTimeOffset frozenAt)
-    {
-
-        confirmationRationale = confirmationRationale?.Trim() ?? string.Empty;
-        if (preview is null)
-            return CommandFailure.InvalidContent("A complete baseline preview is required.");
-        if (_baseline is { } existing)
-            return SameFreeze(existing, baselineId, preview, confirmationRationale,
-                    actorMemberId, actorDisplay)
-                ? null
-                : CommandFailure.StateConflict(
-                    "The Type I baseline is already frozen; changes require an attributable amendment.");
-        if (_current is null)
-            return CommandFailure.MissingRecord("The examination engagement was not found.");
-        if (expectedRevision != Revision)
-            return CommandFailure.ForVersion(
-                VersionedRecordRules.StaleRevision("examination engagement", Revision));
-        if (ValidateActor(actorMemberId, actorDisplay, frozenAt) is { } actorFailure)
-            return actorFailure;
-        if (baselineId == Uuid.Empty || !BoundedText(confirmationRationale, MaximumRationaleLength))
-            return CommandFailure.InvalidContent(
-                "Baseline confirmation requires a stable identity and a bounded rationale.");
-        if (preview.Blockers is null || preview.Blockers.Count > 1000)
-            return InvalidPreview("The baseline preview is invalid.");
-        if (preview.Blockers.Count != 0)
-            return CommandFailure.StateConflict(
-                "The baseline cannot be frozen while source blockers remain.");
-        if (!PreviewMatchesEngagement(preview))
-            return InvalidPreview("The baseline preview does not match this engagement.");
-        if (ValidatePreview(preview, _current.BoundaryId) is { } previewFailure)
-            return previewFailure;
-
-        var sources = Freeze(preview.Sources);
-        var differences = FreezeText(preview.ScopeDifferences);
-        var frozen = new TypeIBaselineView(_tenantId, _programId, Id, baselineId, "frozen", 1,
-            sources, differences, preview.CanonicalManifest, preview.ContentSha256, frozenAt,
-            actorMemberId, actorDisplay.Trim(), confirmationRationale, null, null, [], [], 0)
+        var fact = (IExaminationEngagementFact)domainEvent;
+        if (fact.TenantId != _tenant || fact.SubjectId != Id || fact.ProgramId == Uuid.Empty ||
+            fact.Revision != Revision + 1 || fact.Change.Schema != ExaminationEngagementState.Schema ||
+            fact.OccurredAt != fact.Operation.AcceptedAt || fact.ActorMemberId != Member(fact.Operation) ||
+            fact.FirstResponse is null || fact.OperationResult is null ||
+            !OwnRoot(fact.Operation, Kind(domainEvent), Revision == 0 ? null : (ulong)Revision))
+            throw Invalid("The native engagement fact differs from its exact scope/root/actor/revision.");
+        var baseline = domainEvent is TypeIBaselineFrozen or TypeIBaselineAmended;
+        if (Header is null)
         {
-            SourceCoverage = FreezeCoverage(preview.SourceCoverage),
-            SourceContentManifest = preview.SourceContentManifest,
-        };
-        var engagement = _current with
-        {
-            Status = "baseline_frozen",
-            Revision = Revision + 1,
-            UpdatedAt = frozenAt,
-            ActorMemberId = actorMemberId,
-            ActorDisplay = actorDisplay.Trim(),
-        };
-        var ev = new TypeIBaselineFrozen(_tenantId, engagement, frozen, frozenAt);
-        if (!Fits(ev))
-            return CommandFailure.InvalidContent(
-                "The complete Type I baseline exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? AmendBaseline(long expectedRevision, Uuid baselineId,
-        TypeIBaselinePreview preview, IReadOnlyList<Uuid> changedRecordIds,
-        IReadOnlyList<Uuid> affectedPackageMaterialIds, string reason, Uuid approverMemberId,
-        string approverDisplay, DateTimeOffset amendedAt)
-    {
-        reason = reason?.Trim() ?? string.Empty;
-        if (_current is null || _baseline is null)
-            return CommandFailure.MissingRecord("A frozen Type I baseline was not found.");
-        if (preview is null || changedRecordIds is null || affectedPackageMaterialIds is null)
-            return CommandFailure.InvalidContent(
-                "A baseline amendment requires a complete preview and impact list.");
-        if (baselineId != Uuid.Empty && _baselineHistory.FirstOrDefault(item =>
-                item.TypeIBaselineId == baselineId) is { } prior)
-            return SameAmendment(prior, preview, changedRecordIds, affectedPackageMaterialIds,
-                    reason, approverMemberId, approverDisplay)
-                ? null
-                : CommandFailure.StateConflict(
-                    "A Type I baseline amendment identity cannot be reused with different content.");
-        if (expectedRevision != Revision)
-            return CommandFailure.ForVersion(
-                VersionedRecordRules.StaleRevision("examination engagement", Revision));
-        if (ValidateActor(approverMemberId, approverDisplay, amendedAt) is { } actorFailure)
-            return actorFailure;
-        if (baselineId == Uuid.Empty || !BoundedText(reason, MaximumRationaleLength))
-            return CommandFailure.InvalidContent(
-                "A baseline amendment requires a new identity and a bounded reason.");
-        if (_baseline.AmendmentDepth >= MaximumAmendmentDepth)
-            return CommandFailure.StateConflict(
-                "The Type I baseline amendment lineage reached its supported limit.");
-        if (preview.Blockers is null || preview.Blockers.Count != 0)
-            return CommandFailure.StateConflict(
-                "The baseline amendment cannot include unresolved source blockers.");
-        if (!PreviewMatchesEngagement(preview))
-            return InvalidPreview("The baseline amendment preview does not match this engagement.");
-        if (ValidatePreview(preview, _current.BoundaryId) is { } previewFailure)
-            return previewFailure;
-        if (baselineId == _baseline.TypeIBaselineId ||
-            _baselineHistory.Any(item => item.TypeIBaselineId == baselineId))
-            return CommandFailure.StateConflict(
-                "A baseline amendment must use a new immutable identity.");
-
-        var expectedChanges = ChangedRecords(_baseline.Sources, preview.Sources);
-        var suppliedChanges = changedRecordIds.Distinct().OrderBy(static id => id.ToString(),
-            StringComparer.Ordinal).ToArray();
-        if (expectedChanges.Length == 0 || !expectedChanges.SequenceEqual(suppliedChanges))
-            return CommandFailure.InvalidContent(
-                "A baseline amendment must identify every changed source record exactly once.");
-        if (affectedPackageMaterialIds.Any(static id => id == Uuid.Empty) ||
-            affectedPackageMaterialIds.Distinct().Count() != affectedPackageMaterialIds.Count)
-            return CommandFailure.InvalidContent(
-                "Affected package material identities must be unique and nonempty.");
-
-        var sources = Freeze(preview.Sources);
-        var differences = FreezeText(preview.ScopeDifferences);
-        var amended = new TypeIBaselineView(_tenantId, _programId, Id, baselineId, "amended",
-            _baseline.Revision + 1, sources, differences, preview.CanonicalManifest,
-            preview.ContentSha256, amendedAt, approverMemberId, approverDisplay.Trim(),
-            _baseline.ConfirmationRationale, _baseline.TypeIBaselineId, reason,
-            Array.AsReadOnly(suppliedChanges), FreezeIds(affectedPackageMaterialIds),
-            _baseline.AmendmentDepth + 1)
-        {
-            SourceCoverage = FreezeCoverage(preview.SourceCoverage),
-            SourceContentManifest = preview.SourceContentManifest,
-        };
-        var engagement = _current with
-        {
-            Revision = Revision + 1,
-            UpdatedAt = amendedAt,
-            ActorMemberId = approverMemberId,
-            ActorDisplay = approverDisplay.Trim(),
-        };
-        var ev = new TypeIBaselineAmended(_tenantId, engagement, amended, amendedAt);
-        if (!Fits(ev))
-            return CommandFailure.InvalidContent(
-                "The complete Type I baseline amendment exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    void Apply(ExaminationEngagementOpened ev)
-    {
-        if (ev.TenantId != _tenantId || ev.Engagement.TenantId != _tenantId ||
-            ev.Engagement.ProgramId != _programId || ev.Engagement.ExaminationEngagementId != Id ||
-            ev.Engagement.Status != "draft" || ev.Engagement.Revision != 1 ||
-            ev.Engagement.UpdatedAt != ev.OccurredAt || _current is not null ||
-            ValidateActor(ev.Engagement.ActorMemberId, ev.Engagement.ActorDisplay,
-                ev.OccurredAt) is not null ||
-            NormalizeContent(Content(ev.Engagement)) is not { } content ||
-            !SameContent(ev.Engagement, content))
-            throw new InvalidOperationException("The examination engagement opening event is invalid.");
-        _current = FreezeView(ev.Engagement);
-        _initial = _current;
-    }
-
-    void Apply(ExaminationEngagementRevised ev)
-    {
-        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
-        if (_current is null || _baseline is not null || ev.TenantId != _tenantId ||
-            ev.Engagement.TenantId != _tenantId || ev.Engagement.ProgramId != _programId ||
-            ev.Engagement.ExaminationEngagementId != Id || ev.Engagement.Status != "draft" ||
-            ev.Engagement.Revision != Revision + 1 || ev.Engagement.UpdatedAt != ev.OccurredAt ||
-            ValidateActor(ev.Engagement.ActorMemberId, ev.Engagement.ActorDisplay,
-                ev.OccurredAt) is not null ||
-            NormalizeContent(Content(ev.Engagement)) is not { } content ||
-            !SameContent(ev.Engagement, content))
-            throw new InvalidOperationException("The examination engagement revision is invalid.");
-        _current = FreezeView(ev.Engagement);
-    }
-
-    void Apply(TypeIBaselineFrozen ev)
-    {
-        if (_current is null || _baseline is not null || ev.TenantId != _tenantId ||
-            ev.Engagement.TenantId != _tenantId || ev.Engagement.ProgramId != _programId ||
-            ev.Engagement.ExaminationEngagementId != Id || ev.Engagement.Status != "baseline_frozen" ||
-            ev.Engagement.Revision != Revision + 1 || ev.Engagement.UpdatedAt != ev.OccurredAt ||
-            ev.Baseline.TenantId != _tenantId || ev.Baseline.ProgramId != _programId ||
-            ev.Baseline.ExaminationEngagementId != Id || ev.Baseline.Status != "frozen" ||
-            ev.Baseline.Revision != 1 || ev.Baseline.AmendsBaselineId is not null ||
-            ev.Baseline.UpdatedAt != ev.OccurredAt || ev.Baseline.ActorMemberId != ev.Engagement.ActorMemberId ||
-            !BaselineMatchesManifest(ev.Baseline, ev.Engagement.BoundaryId) ||
-            ValidateActor(ev.Baseline.ActorMemberId, ev.Baseline.ActorDisplay,
-                ev.OccurredAt) is not null)
-            throw new InvalidOperationException("The Type I baseline freeze event is invalid.");
-        _current = FreezeView(ev.Engagement);
-        _baseline = FreezeBaselineView(ev.Baseline);
-        _baselineHistory.Add(_baseline);
-    }
-
-    void Apply(TypeIBaselineAmended ev)
-    {
-        if (_current is null || _baseline is null || ev.TenantId != _tenantId ||
-            ev.Engagement.TenantId != _tenantId || ev.Engagement.ProgramId != _programId ||
-            ev.Engagement.ExaminationEngagementId != Id || ev.Engagement.Status != "baseline_frozen" ||
-            ev.Engagement.Revision != Revision + 1 || ev.Engagement.UpdatedAt != ev.OccurredAt ||
-            ev.Baseline.TenantId != _tenantId || ev.Baseline.ProgramId != _programId ||
-            ev.Baseline.ExaminationEngagementId != Id || ev.Baseline.Status != "amended" ||
-            ev.Baseline.Revision != _baseline.Revision + 1 ||
-            ev.Baseline.AmendsBaselineId != _baseline.TypeIBaselineId ||
-            ev.Baseline.AmendmentDepth != _baseline.AmendmentDepth + 1 ||
-            ev.Baseline.UpdatedAt != ev.OccurredAt ||
-            !BaselineMatchesManifest(ev.Baseline, ev.Engagement.BoundaryId) ||
-            ValidateActor(ev.Baseline.ActorMemberId, ev.Baseline.ActorDisplay,
-                ev.OccurredAt) is not null ||
-            !ChangedRecords(_baseline.Sources, ev.Baseline.Sources)
-                .SequenceEqual(ev.Baseline.ChangedRecordIds.OrderBy(static id => id.ToString(),
-                    StringComparer.Ordinal)))
-            throw new InvalidOperationException("The Type I baseline amendment event is invalid.");
-        _current = FreezeView(ev.Engagement);
-        _baseline = FreezeBaselineView(ev.Baseline);
-        _baselineHistory.Add(_baseline);
-    }
-
-    bool PreviewMatchesEngagement(TypeIBaselinePreview preview) =>
-        preview.TenantId == _tenantId && preview.ProgramId == _programId &&
-        preview.ExaminationEngagementId == Id;
-
-    static CommandFailure? ValidatePreview(TypeIBaselinePreview preview, Uuid expectedBoundaryId)
-    {
-        if (preview.Sources is null || preview.Sources.Count is 0 or > MaximumSources ||
-            preview.ScopeDifferences is null || preview.ScopeDifferences.Count > 1000 ||
-            !ValidSourceCoverage(preview.SourceCoverage))
-            return InvalidPreview("A Type I baseline requires a bounded, complete source manifest.");
-        var identities = new HashSet<(string Kind, Uuid RecordId)>();
-        foreach (var source in preview.Sources)
-        {
-            if (source is null || !ValidKind(source.Kind) || source.RecordId == Uuid.Empty ||
-                source.VersionId == Uuid.Empty || source.Revision <= 0 ||
-                !ValidDigest(source.ContentSha256) ||
-                !identities.Add((source.Kind, source.RecordId)))
-                return InvalidPreview(
-                    "Every baseline source must have one exact, unique version and content digest.");
+            if (domainEvent is not ExaminationEngagementOpened || fact.Operation.LogicalId != Id || baseline ||
+                fact.BaselineId is not null || fact.BaselineRevision != 0 || fact.BoundaryId == Uuid.Empty ||
+                fact.EngagementType != "type_i")
+                throw Invalid("An engagement must be created once with exact initial authority.");
+            InitialContent = fact.Change;
         }
-        if (!HasExactApprovedBoundary(preview.Sources, expectedBoundaryId))
-            return InvalidPreview(
-                "The Type I baseline must bind the engagement's exact approved boundary.");
-        if (!SnapshotSourcePublicationReader.ValidReference(preview.SourceContentManifest))
-            return InvalidPreview("The source publication requires a verified immutable manifest reference.");
-        if (preview.ScopeDifferences.Any(difference =>
-                !BoundedText(difference?.Trim() ?? string.Empty, MaximumScopeDifferenceLength)))
-            return InvalidPreview("Scope differences must be described with bounded text.");
-        return null;
-    }
-
-    static bool BaselineMatchesManifest(TypeIBaselineView baseline, Uuid expectedBoundaryId)
-    {
-        try
+        else
         {
-            if (!SnapshotSourcePublicationReader.ValidReference(baseline.SourceContentManifest) ||
-                !HasExactApprovedBoundary(baseline.Sources, expectedBoundaryId))
-                return false;
-            if (!ValidSourceCoverage(baseline.SourceCoverage))
-                return false;
-            var preview = TypeIBaselinePreview.Create(baseline.TenantId, baseline.ProgramId,
-                baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences,
-                baseline.SourceCoverage) with
-            { SourceContentManifest = baseline.SourceContentManifest };
-            return preview.ContentSha256 == baseline.ContentSha256 &&
-                   preview.CanonicalManifest == baseline.CanonicalManifest &&
-                   ValidDigest(baseline.ContentSha256) && baseline.Sources.Count is > 0 and <= MaximumSources &&
-                   baseline.ScopeDifferences.All(difference =>
-                       BoundedText(difference, MaximumScopeDifferenceLength));
+            if (domainEvent is ExaminationEngagementOpened || Header.ProgramId != fact.ProgramId ||
+                Header.EngagementType != fact.EngagementType || Header.BoundaryId != fact.BoundaryId ||
+                domainEvent is ExaminationEngagementRevised && (Header.BaselineId is not null || baseline ||
+                    fact.BaselineId is not null || fact.BaselineRevision != 0) ||
+                domainEvent is TypeIBaselineFrozen && (Header.BaselineId is not null || fact.BaselineRevision != 1) ||
+                domainEvent is TypeIBaselineAmended && (Header.BaselineId is null ||
+                    fact.BaselineRevision != Header.BaselineRevision + 1))
+                throw Invalid("The native engagement lifecycle or baseline lineage is invalid.");
         }
-        catch (Exception exception) when (exception is ArgumentException or NullReferenceException)
+        if (baseline && (fact.BaselineId is not { } id || id == Uuid.Empty || fact.Operation.LogicalId != id))
+            throw Invalid("A baseline root must retain its exact accepted baseline identity.");
+        Header = new ExaminationEngagementHeader(fact.ProgramId, fact.EngagementType, fact.BoundaryId,
+            baseline ? "baseline_frozen" : "draft", fact.Revision, fact.BaselineId, fact.BaselineRevision);
+        CurrentContent = fact.Change;
+        if (baseline)
         {
-            return false;
+            BaselineContent = fact.Change;
+            if (fact.BaselineId == _selectedBaseline)
+                _selectedBaselineContent = fact.Change;
         }
+        Latest = domainEvent;
+        Acceptance.Observe(domainEvent);
+        ReplayCut.Observe(domainEvent);
     }
-
-    static bool HasExactApprovedBoundary(
-        IReadOnlyList<TypeIBaselineSourceReference>? sources, Uuid expectedBoundaryId)
-    {
-        if (sources is null || expectedBoundaryId == Uuid.Empty)
-            return false;
-        TypeIBaselineSourceReference? boundary = null;
-        foreach (var source in sources)
-        {
-            if (source is null || source.Kind != "approved_boundary")
-                continue;
-            if (boundary is not null)
-                return false;
-            boundary = source;
-        }
-        return boundary?.RecordId == expectedBoundaryId;
-    }
-
-    bool SameFreeze(TypeIBaselineView existing, Uuid baselineId, TypeIBaselinePreview preview,
-        string rationale, Uuid actorMemberId, string actorDisplay) =>
-        existing.TypeIBaselineId == baselineId && PreviewMatchesEngagement(preview) &&
-        existing.ContentSha256 == SafeDigest(preview) &&
-        existing.ConfirmationRationale == rationale && existing.ActorMemberId == actorMemberId &&
-        existing.ActorDisplay == actorDisplay?.Trim();
-
-    static bool SameAmendment(TypeIBaselineView existing, TypeIBaselinePreview preview,
-        IReadOnlyList<Uuid> changedRecordIds, IReadOnlyList<Uuid> affectedPackageMaterialIds,
-        string reason, Uuid actorMemberId, string actorDisplay) =>
-        existing.ContentSha256 == SafeDigest(preview) && existing.AmendmentReason == reason &&
-        existing.ActorMemberId == actorMemberId && existing.ActorDisplay == actorDisplay?.Trim() &&
-        existing.ChangedRecordIds.SequenceEqual(changedRecordIds.OrderBy(static id => id.ToString(),
-            StringComparer.Ordinal)) &&
-        existing.AffectedPackageMaterialIds.SequenceEqual(affectedPackageMaterialIds.OrderBy(
-            static id => id.ToString(), StringComparer.Ordinal));
-
-    static Uuid[] ChangedRecords(
-        IReadOnlyList<TypeIBaselineSourceReference> before,
-        IReadOnlyList<TypeIBaselineSourceReference> after)
-    {
-        var prior = before.ToDictionary(static source => (source.Kind, source.RecordId));
-        var next = after.ToDictionary(static source => (source.Kind, source.RecordId));
-        return prior.Keys.Union(next.Keys)
-            .Where(key => !prior.TryGetValue(key, out var oldSource) ||
-                          !next.TryGetValue(key, out var newSource) ||
-                          (oldSource with { Content = null }) != (newSource with { Content = null }))
-            .Select(static key => key.RecordId).Distinct()
-            .OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray();
-    }
-
-    static CommandFailure? ValidateActor(Uuid memberId, string display, DateTimeOffset at) =>
-        memberId == Uuid.Empty || !BoundedText(display?.Trim() ?? string.Empty,
-            MaximumActorDisplayLength) || at == default
-            ? CommandFailure.InvalidContent(
-                "An attributed engagement decision requires a member, display name, and time.")
-            : null;
-
-    static ExaminationEngagementContent? NormalizeContent(ExaminationEngagementContent? content)
-    {
-        var auditFirm = content?.AuditFirm?.Trim() ?? string.Empty;
-        if (content is null || content.EngagementType != "type_i" ||
-            !BoundedText(auditFirm, MaximumAuditFirmLength) ||
-            content.PeriodStart == default || content.PeriodEnd is { } end && end != content.PeriodStart ||
-            content.BoundaryId == Uuid.Empty || content.TrustServicesCategories is null ||
-            content.TrustServicesCategories.Count is 0 or > 5 ||
-            content.ManagementContactMemberIds is null || content.ManagementContactMemberIds.Count > 20)
-            return null;
-        var categories = content.TrustServicesCategories.Select(static value => value?.Trim() ?? string.Empty)
-            .OrderBy(static value => value, StringComparer.Ordinal).ToArray();
-        if (categories.Any(category => !Categories.Contains(category)) ||
-            categories.Distinct(StringComparer.Ordinal).Count() != categories.Length)
-            return null;
-        var contacts = content.ManagementContactMemberIds.OrderBy(static id => id.ToString(),
-            StringComparer.Ordinal).ToArray();
-        if (contacts.Any(static id => id == Uuid.Empty) || contacts.Distinct().Count() != contacts.Length)
-            return null;
-        return new ExaminationEngagementContent("type_i", auditFirm,
-            content.PeriodStart, content.PeriodEnd, Array.AsReadOnly(categories), content.BoundaryId,
-            Array.AsReadOnly(contacts));
-    }
-
-    static bool SameContent(ExaminationEngagementView current,
-        ExaminationEngagementContent? content) => NormalizeContent(content) is { } normalized &&
-        current.EngagementType == normalized.EngagementType && current.AuditFirm == normalized.AuditFirm &&
-        current.PeriodStart == normalized.PeriodStart && current.PeriodEnd == normalized.PeriodEnd &&
-        current.TrustServicesCategories.SequenceEqual(normalized.TrustServicesCategories) &&
-        current.BoundaryId == normalized.BoundaryId &&
-        current.ManagementContactMemberIds.SequenceEqual(normalized.ManagementContactMemberIds);
-
-    ExaminationEngagementView View(ExaminationEngagementContent content, string status,
-        long revision, Uuid actorMemberId, string actorDisplay, DateTimeOffset updatedAt) =>
-        new(_tenantId, _programId, Id, content.EngagementType, content.AuditFirm,
-            content.PeriodStart, content.PeriodEnd, content.TrustServicesCategories,
-            content.BoundaryId, content.ManagementContactMemberIds, status, revision,
-            updatedAt, actorMemberId, actorDisplay);
-
-    static ExaminationEngagementContent Content(ExaminationEngagementView view) => new(
-        view.EngagementType, view.AuditFirm, view.PeriodStart, view.PeriodEnd,
-        view.TrustServicesCategories, view.BoundaryId, view.ManagementContactMemberIds);
-
-    static ExaminationEngagementView FreezeView(ExaminationEngagementView view) => view with
-    {
-        TrustServicesCategories = Array.AsReadOnly(view.TrustServicesCategories.ToArray()),
-        ManagementContactMemberIds = Array.AsReadOnly(view.ManagementContactMemberIds.ToArray()),
-    };
-
-    static TypeIBaselineView FreezeBaselineView(TypeIBaselineView baseline) => baseline with
-    {
-        Sources = Freeze(baseline.Sources),
-        SourceCoverage = FreezeCoverage(baseline.SourceCoverage),
-        ScopeDifferences = FreezeText(baseline.ScopeDifferences),
-        ChangedRecordIds = FreezeIds(baseline.ChangedRecordIds),
-        AffectedPackageMaterialIds = FreezeIds(baseline.AffectedPackageMaterialIds),
-    };
-
-    static ReadOnlyCollection<TypeIBaselineSourceReference> Freeze(
-        IReadOnlyList<TypeIBaselineSourceReference> sources) => Array.AsReadOnly(sources
-        .Select(static source => source with { Content = null })
-        .OrderBy(static source => source.Kind, StringComparer.Ordinal)
-        .ThenBy(static source => source.RecordId.ToString(), StringComparer.Ordinal).ToArray());
-
-    static ReadOnlyCollection<TypeIBaselineSourceCoverage> FreezeCoverage(
-        IReadOnlyList<TypeIBaselineSourceCoverage> coverage) => Array.AsReadOnly(coverage
-        .OrderBy(static family => family.Family, StringComparer.Ordinal).ToArray());
-
-    static ReadOnlyCollection<string> FreezeText(IReadOnlyList<string> values) => Array.AsReadOnly(values
-        .Select(static value => value.Trim().Normalize(NormalizationForm.FormC))
-        .OrderBy(static value => value, StringComparer.Ordinal).ToArray());
-
-    static ReadOnlyCollection<Uuid> FreezeIds(IReadOnlyList<Uuid> values) => Array.AsReadOnly(values
-        .OrderBy(static value => value.ToString(), StringComparer.Ordinal).ToArray());
-
-    static bool ValidKind(string value) => !string.IsNullOrWhiteSpace(value) && value.Length <= 64 &&
-        value[0] is >= 'a' and <= 'z' && value.All(static character =>
-            character is >= 'a' and <= 'z' or >= '0' and <= '9' or '_');
-
-    static bool ValidDigest(string? value) => value is { Length: 64 } && value.All(static character =>
-        character is >= '0' and <= '9' or >= 'a' and <= 'f');
-
-    static bool ValidSourceCoverage(IReadOnlyList<TypeIBaselineSourceCoverage>? coverage)
-    {
-        if (coverage is null || coverage.Count != TypeIBaselineSourceFamilies.Required.Count)
-            return false;
-        var families = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var item in coverage)
-        {
-            if (item is null || item.RecordCount is < 0 or > MaximumSources ||
-                !ValidDigest(item.ContentSha256) ||
-                !families.Add(item.Family) ||
-                !TypeIBaselineSourceFamilies.Required.Contains(item.Family,
-                    StringComparer.Ordinal))
-                return false;
-        }
-        return families.SetEquals(TypeIBaselineSourceFamilies.Required);
-    }
-
-    static bool BoundedText(string value, int maximumLength) =>
-        !string.IsNullOrWhiteSpace(value) && value.Length <= maximumLength;
-
-    static string? SafeDigest(TypeIBaselinePreview preview)
-    {
-        try
-        {
-            return preview.ContentSha256;
-        }
-        catch (Exception exception) when (exception is ArgumentException or NullReferenceException)
-        {
-            return null;
-        }
-    }
-
-    static bool Fits<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value,
-        value!.GetType(), ComplianceCoreJsonContext.Default).Length <= MaximumEventBytes;
-
-    static CommandFailure InvalidEngagement() => CommandFailure.InvalidContent(
-        "A Type I engagement requires an audit firm, one point-in-time date, a boundary, " +
-        "supported Trust Services categories, and valid management contacts.");
-
-    static CommandFailure InvalidPreview(string message) => CommandFailure.InvalidContent(message);
+    static ImmutableContentIntegrityException Invalid(string message) => new(message);
+    static Result Fail(RequestErrorKind kind, string message) => Result.Failure(new RequestError(kind, message));
 }

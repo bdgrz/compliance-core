@@ -1,11 +1,12 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Freezes the exact baseline and advances the owning engagement lifecycle.</summary>
-[Discriminator("bdgrz.examinations.type-i-baseline-frozen", 1)]
-public sealed record TypeIBaselineFrozen(
-    Uuid TenantId,
-    ExaminationEngagementView Engagement,
-    TypeIBaselineView Baseline,
-    DateTimeOffset OccurredAt) : DomainEvent;
+/// <summary>One exact attributed native engagement transition; complete business bytes stay immutable.</summary>
+[Discriminator("bdgrz.examinations.type-i-baseline-frozen", 2)]
+public sealed record TypeIBaselineFrozen(Uuid TenantId, Uuid SubjectId, Uuid ProgramId, long Revision,
+    string EngagementType, Uuid BoundaryId, Uuid? BaselineId, long BaselineRevision, ImmutableContentRef Change,
+    DateTimeOffset OccurredAt, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult, Uuid ActorMemberId) : DomainEvent, IExaminationEngagementFact;

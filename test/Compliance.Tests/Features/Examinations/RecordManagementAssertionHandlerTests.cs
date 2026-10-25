@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Tests.Features.SystemDescription;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Proofs;
@@ -34,7 +35,7 @@ public sealed class RecordManagementAssertionHandlerTests
         var sources = await fixture.SeedSourcesAsync();
         var descriptions = new SystemDescriptionReader(fixture.Reader, fixture.PeriodEvents, new FailingPackageContentStore(unavailable));
         var handler = new RecordManagementAssertionHandler(fixture.Executor, fixture.Reader, fixture.Packages,
-            fixture.Periods, fixture.Clock, descriptions);
+            fixture.Periods, fixture.Clock, descriptions, fixture.Examinations);
 
         // Act
         var result = await handler.HandleAsync(fixture.Context(fixture.Request(sources.Content)), CancellationToken.None);
@@ -55,7 +56,7 @@ public sealed class RecordManagementAssertionHandlerTests
         await using var fixture = new Fixture();
         var sources = await fixture.SeedSourcesAsync();
         var packages = new AuditPackageReader(fixture.Reader, new FailingPackageContentStore(unavailable), fixture.PeriodEvents);
-        var handler = new RecordManagementAssertionHandler(fixture.Executor, fixture.Reader, packages, fixture.Periods, fixture.Clock, fixture.Descriptions);
+        var handler = new RecordManagementAssertionHandler(fixture.Executor, fixture.Reader, packages, fixture.Periods, fixture.Clock, fixture.Descriptions, fixture.Examinations);
 
         // Act
         var result = await handler.HandleAsync(fixture.Context(fixture.Request(sources.Content)), CancellationToken.None);
@@ -239,6 +240,7 @@ public sealed class RecordManagementAssertionHandlerTests
         public InMemoryEventStore PeriodEvents { get; } = new();
         public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, ContentStore);
         public SystemDescriptionReader Descriptions => new(Reader, PeriodEvents, ContentStore);
+        public ExaminationEngagementReader Examinations => new(Reader, PeriodEvents, ContentStore);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -254,6 +256,7 @@ public sealed class RecordManagementAssertionHandlerTests
             services.AddSingleton(ContentStore);
             services.AddScoped<AuditPackageReader>();
             services.AddPortia();
+            ExaminationSeeds.Configure(services, PeriodEvents);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
@@ -264,7 +267,7 @@ public sealed class RecordManagementAssertionHandlerTests
         }
 
         public RecordManagementAssertionHandler Handler() =>
-            new(Executor, Reader, Packages, Periods, Clock, Descriptions);
+            new(Executor, Reader, Packages, Periods, Clock, Descriptions, Examinations);
 
         public async Task<SeededSources> SeedSourcesAsync(bool validatePackage = true,
             string wordingArtifactSource = "auditor")
@@ -290,7 +293,7 @@ public sealed class RecordManagementAssertionHandlerTests
                     control.VersionId, control.Version, control.ContentSha256),
                 descriptionReference,
             };
-            var engagement = new ExaminationEngagement(TenantId, ProgramId, ExaminationId);
+            var engagement = new ExaminationEngagementRules(TenantId, ProgramId, ExaminationId);
             var boundaryId = Uuid.CreateVersion4();
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i",
                 "Independent Audit LLP", new DateOnly(2026, 1, 1), null,
@@ -310,7 +313,7 @@ public sealed class RecordManagementAssertionHandlerTests
             Assert.Null(description.BindToExamination(1, ExaminationId, "type_i_baseline",
                 BaselineId, ApproverMemberId, "CEO", Now.AddMinutes(4)));
             await DescriptionSeeds.WriteAsync(Writer, ContentStore, description);
-            await Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
+            await ExaminationSeeds.WriteAsync(Reader, Writer, PeriodEvents, ContentStore, engagement);
 
             var selected = new[] { criteria, control, Reference("system_description") with
             { RecordId = DescriptionId, VersionId = DescriptionVersionId, Version = 1,

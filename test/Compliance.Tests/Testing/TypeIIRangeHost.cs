@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Bdgrz.Compliance.Features.Controls;
 using System.Security.Claims;
@@ -97,7 +98,7 @@ sealed class TypeIIRangeHost : IAsyncDisposable
     public StartTypeIIObservationPeriodHandler StartHandler(TimeProvider clock) => new(
         Services.GetRequiredService<NativeOperationExecutor>(), Reader, new ControlReader(Reader, Events, Content),
         Services.GetRequiredService<FindingReader>(), Services.GetRequiredService<ControlOperationsReader>(), Content,
-        clock, new SystemDescriptionReader(Reader, Events, Content));
+        clock, new SystemDescriptionReader(Reader, Events, Content), new ExaminationEngagementReader(Reader, Events, Content));
 
     public AmendTypeIIObservationPeriodHandler AmendHandler(TimeProvider clock) => new(
         Services.GetRequiredService<NativeOperationExecutor>(), Reader, Periods, Content, clock, Calendars);

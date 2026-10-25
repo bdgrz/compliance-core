@@ -1,3 +1,7 @@
+using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
@@ -81,6 +85,9 @@ public sealed class PreviewTypeIBaselineHandlerTests
         public Uuid ExaminationId { get; } = Uuid.CreateVersion4();
         public Uuid BoundaryId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
+        public InMemoryEventStore Events { get; } = new();
+        public IImmutableContentStore Content { get; } = new FitzKvImmutableContentStore(new InMemoryKvClient());
+        public ExaminationEngagementReader Examinations => new(AggregateReader, Events, Content);
         public IAggregateReader AggregateReader { get; }
         public IAggregateWriter AggregateWriter { get; }
         public TypeIBaselinePreview Preview { get; }
@@ -95,8 +102,9 @@ public sealed class PreviewTypeIBaselineHandlerTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(Events);
             services.AddPortia();
+            ExaminationSeeds.Configure(services, Events);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
@@ -108,17 +116,16 @@ public sealed class PreviewTypeIBaselineHandlerTests
             Preview = TypeIBaselinePreview.Create(TenantId, ProgramId, ExaminationId, [boundary],
                 ["The workforce source family has not been captured."]);
             SourceReader = new StaticPreviewReader(Preview);
-            Handler = new PreviewTypeIBaselineHandler(AggregateReader, Directory, SourceReader);
+            Handler = new PreviewTypeIBaselineHandler(Examinations, Directory, SourceReader);
         }
 
         public async Task SeedEngagementAsync()
         {
-            var engagement = new ExaminationEngagement(TenantId, ProgramId, ExaminationId);
+            var engagement = new ExaminationEngagementRules(TenantId, ProgramId, ExaminationId);
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i", "Audit Firm",
                 new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, []),
                 RbacIds.Member(TenantId, UserId), "Lead", Now));
-            await AggregateWriter.SaveAsync(engagement,
-                new RequestDispatchContext(RequestActor.System));
+            await ExaminationSeeds.WriteAsync(AggregateReader, AggregateWriter, Events, Content, engagement);
             Directory.Engagement = engagement.Current;
         }
 

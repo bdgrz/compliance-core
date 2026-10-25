@@ -23,7 +23,7 @@ public sealed class ValidateAuditPackageHandlerTests
         await fixture.SeedBuiltPackageAsync(packageId, baseline);
         var command = new ValidateAuditPackage(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, packageId, 1, await fixture.ManifestRevisionAsync(packageId), "validate-exact-type-i");
         var handler = new ValidateAuditPackageHandler(fixture.RootOperation,
-            new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods), fixture.ArtifactStore, fixture.ContentStore);
+            new AuditPackageSourceBuilder(fixture.Examinations, fixture.Periods), fixture.ArtifactStore, fixture.ContentStore);
 
         // Act
         var result = await handler.HandleAsync(Fixture.Context(fixture.UserId, command),
@@ -49,7 +49,7 @@ public sealed class ValidateAuditPackageHandlerTests
         await fixture.SeedBuiltPackageAsync(packageId, baseline, firstSourceHash: new string('d', 64));
         var command = new ValidateAuditPackage(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, packageId, 1, await fixture.ManifestRevisionAsync(packageId), "validate-source-mismatch");
         var handler = new ValidateAuditPackageHandler(fixture.RootOperation,
-            new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods), fixture.ArtifactStore, fixture.ContentStore);
+            new AuditPackageSourceBuilder(fixture.Examinations, fixture.Periods), fixture.ArtifactStore, fixture.ContentStore);
 
         // Act
         var result = await handler.HandleAsync(Fixture.Context(fixture.UserId, command),
@@ -78,7 +78,7 @@ public sealed class ValidateAuditPackageHandlerTests
         await fixture.SeedBuiltPackageAsync(packageId, baseline, storeArchive: false);
         var command = new ValidateAuditPackage(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, packageId, 1, await fixture.ManifestRevisionAsync(packageId), "validate-missing-archive");
         var handler = new ValidateAuditPackageHandler(fixture.RootOperation,
-            new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods), fixture.ArtifactStore, fixture.ContentStore);
+            new AuditPackageSourceBuilder(fixture.Examinations, fixture.Periods), fixture.ArtifactStore, fixture.ContentStore);
 
         // Act
         var result = await handler.HandleAsync(Fixture.Context(fixture.UserId, command),
@@ -102,7 +102,7 @@ public sealed class ValidateAuditPackageHandlerTests
         await fixture.SeedBuiltPackageAsync(packageId, baseline, corruptArchiveEntry: true);
         var command = new ValidateAuditPackage(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, packageId, 1, await fixture.ManifestRevisionAsync(packageId), "validate-tampered-archive-entry");
         var handler = new ValidateAuditPackageHandler(fixture.RootOperation,
-            new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods), fixture.ArtifactStore, fixture.ContentStore);
+            new AuditPackageSourceBuilder(fixture.Examinations, fixture.Periods), fixture.ArtifactStore, fixture.ContentStore);
 
         // Act
         var result = await handler.HandleAsync(Fixture.Context(fixture.UserId, command),
@@ -123,7 +123,7 @@ public sealed class ValidateAuditPackageHandlerTests
         await using var fixture = new Fixture();
         var command = new ValidateAuditPackage(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4(), 1, await fixture.ManifestRevisionAsync(Uuid.CreateVersion4()), "validate-system-actor");
         var handler = new ValidateAuditPackageHandler(fixture.RootOperation,
-            new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods), fixture.ArtifactStore, fixture.ContentStore);
+            new AuditPackageSourceBuilder(fixture.Examinations, fixture.Periods), fixture.ArtifactStore, fixture.ContentStore);
 
         // Act
         var result = await handler.HandleAsync(Fixture.SystemContext(command),

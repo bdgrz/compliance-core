@@ -2787,15 +2787,27 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Examinations");
     app.MapPortiaGet<GetExaminationEngagement, ExaminationEngagementView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}")
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}", endpoint => endpoint
+                .OnBind(Program.BindExaminationEngagementRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("examination_id", PortiaHttpParameterLocation.Route, required: true))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Examinations");
     app.MapPortiaGet<GetTypeIBaseline, TypeIBaselineView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-i-baselines/{type_i_baseline_id}")
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-i-baselines/{type_i_baseline_id}", endpoint => endpoint
+                .OnBind(Program.BindTypeIBaselineRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("type_i_baseline_id", PortiaHttpParameterLocation.Route, required: true))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Examinations");
     app.MapPortiaGet<PreviewTypeIBaseline, TypeIBaselinePreviewView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baseline-preview")
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baseline-preview", endpoint => endpoint
+                .OnBind(Program.BindTypeIBaselinePreviewRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("examination_id", PortiaHttpParameterLocation.Route, required: true))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Examinations");
     app.MapPortiaPost<FreezeTypeIBaseline>(
@@ -3134,6 +3146,18 @@ public partial class Program
         return new ListSystemDescriptionVersions(ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
             ApplicationRouteId(context, "description_id"), limit, PortiaHttpBinding.ReadQuery(context, "cursor"));
     }
+
+    internal static GetExaminationEngagement BindExaminationEngagementRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
+        ApplicationRouteId(context, "examination_id"));
+
+    internal static GetTypeIBaseline BindTypeIBaselineRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
+        ApplicationRouteId(context, "type_i_baseline_id"));
+
+    internal static PreviewTypeIBaseline BindTypeIBaselinePreviewRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
+        ApplicationRouteId(context, "examination_id"));
 
     internal static GetAuditorRequest BindAuditorRequestRead(HttpContext context) => new(
         ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),

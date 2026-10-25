@@ -21,7 +21,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
             fixture.ProgramId, content.ExaminationId, Uuid.CreateVersion4(), content);
         var handler = new RecordManagementExaminationReviewHandler(fixture.Executor,
             fixture.Reader, fixture.Packages, fixture.Periods, new ManagementExecutiveAuthority(fixture.Reader,
-                new DenyPermissions()), new FixedTimeProvider(DateTimeOffset.UtcNow));
+                new DenyPermissions()), new FixedTimeProvider(DateTimeOffset.UtcNow), fixture.Examinations);
         var context = AmendAuditPackageHandlerTests.Fixture.SystemContext(request);
 
         // Act
@@ -46,7 +46,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
             fixture.ProgramId, fixture.ExaminationId, signOffId, content);
         var handler = new RecordManagementExaminationReviewHandler(fixture.Executor,
             fixture.Reader, fixture.Packages, fixture.Periods, new ManagementExecutiveAuthority(fixture.Reader,
-                new AllowPermissions()), new FixedTimeProvider(DateTimeOffset.UtcNow));
+                new AllowPermissions()), new FixedTimeProvider(DateTimeOffset.UtcNow), fixture.Examinations);
 
         // Act
         var result = await handler.HandleAsync(
@@ -76,7 +76,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
             fixture.ProgramId, fixture.ExaminationId, signOffId, content);
         var handler = new RecordManagementExaminationReviewHandler(fixture.Executor,
             fixture.Reader, fixture.Packages, fixture.Periods, new ManagementExecutiveAuthority(fixture.Reader,
-                new DenyPermissions()), new FixedTimeProvider(DateTimeOffset.UtcNow));
+                new DenyPermissions()), new FixedTimeProvider(DateTimeOffset.UtcNow), fixture.Examinations);
 
         // Act
         var result = await handler.HandleAsync(
@@ -104,16 +104,15 @@ public sealed class RecordManagementExaminationReviewHandlerTests
             Uuid.CreateVersion4(), 2, new string('c', 64));
         var control = new TypeIBaselineSourceReference("control", Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), 3, new string('d', 64));
-        var engagement = await fixture.Reader.HydrateAsync(new ExaminationEngagement(
-            fixture.TenantId, fixture.ProgramId, fixture.ExaminationId));
+        var engagement = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
         var amendmentPreview = TypeIBaselinePreviewTestFactory.Create(fixture.TenantId, fixture.ProgramId,
             fixture.ExaminationId, baseline.Sources.Append(criteria).Append(control).ToArray());
-        Assert.Null(engagement.AmendBaseline(engagement.Revision, Uuid.CreateVersion4(),
+        Assert.Null(engagement.Rules.AmendBaseline(engagement.Owner.Revision, Uuid.CreateVersion4(),
             amendmentPreview, [criteria.RecordId, control.RecordId], [],
             "Include the exact criteria and control inputs reviewed by management.", memberId,
             "Management executive", new DateTimeOffset(2026, 10, 18, 17, 1, 0, TimeSpan.Zero)));
-        await fixture.Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
-        baseline = engagement.Baseline!;
+        await ExaminationSeeds.WriteAsync(fixture.Reader, fixture.Writer, fixture.PeriodEvents, fixture.ContentStore, engagement.Rules);
+        baseline = engagement.Rules.Baseline!;
         var packageId = Uuid.CreateVersion4();
         var selectedInputs = baseline.Sources.Where(item => item.Kind is "criteria" or "control")
             .Select(item => new AuditPackageSelectionEntry("examination", item.Kind,
@@ -199,7 +198,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
         var handler = new RecordManagementExaminationReviewHandler(fixture.Executor,
             fixture.Reader, fixture.Packages, fixture.Periods, new ManagementExecutiveAuthority(fixture.Reader,
                 new AllowPermissions()), new FixedTimeProvider(
-                new DateTimeOffset(2026, 10, 18, 17, 12, 0, TimeSpan.Zero)));
+                new DateTimeOffset(2026, 10, 18, 17, 12, 0, TimeSpan.Zero)), fixture.Examinations);
 
         // Act
         var result = await handler.HandleAsync(
@@ -218,7 +217,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
         var retry = await new RecordManagementExaminationReviewHandler(fixture.Executor,
                 fixture.Reader, fixture.Packages, fixture.Periods, new ManagementExecutiveAuthority(fixture.Reader,
                     new AllowPermissions()), new FixedTimeProvider(
-                    new DateTimeOffset(2026, 10, 18, 17, 14, 0, TimeSpan.Zero)))
+                    new DateTimeOffset(2026, 10, 18, 17, 14, 0, TimeSpan.Zero)), fixture.Examinations)
             .HandleAsync(AmendAuditPackageHandlerTests.Fixture.Context(fixture.UserId, request),
                 CancellationToken.None);
         var tamperedRequest = request with

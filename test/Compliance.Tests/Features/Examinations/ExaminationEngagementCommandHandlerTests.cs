@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
@@ -28,16 +30,14 @@ public sealed class ExaminationEngagementCommandHandlerTests
         Assert.True((await fixture.ReviseHandler().HandleAsync(fixture.Context(request), CancellationToken.None)).IsSuccess);
         var next = request with { CommandId = Uuid.CreateVersion4(), ExpectedRevision = 2, AuditFirm = "Latest LLP" };
         Assert.True((await fixture.ReviseHandler().HandleAsync(fixture.Context(next), CancellationToken.None)).IsSuccess);
-        var before = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var before = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Act
         var replay = await fixture.ReviseHandler().HandleAsync(fixture.Context(request), CancellationToken.None);
         var changed = await fixture.ReviseHandler().HandleAsync(fixture.Context(request with { ExpectedRevision = 2 }),
             CancellationToken.None);
-        var after = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
-        var originalCreate = after.Create(new ExaminationEngagementContent("type_i", "Original LLP",
+        var after = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
+        var originalCreate = after.Rules.Create(new ExaminationEngagementContent("type_i", "Original LLP",
             new DateOnly(2026, 9, 30), null, ["security"], fixture.BoundaryId, []),
             RbacIds.Member(fixture.TenantId, fixture.UserId), "Renamed member", Now.AddHours(1));
 
@@ -45,8 +45,88 @@ public sealed class ExaminationEngagementCommandHandlerTests
         Assert.True(replay.IsSuccess, replay.Error?.Message);
         Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
         Assert.Null(originalCreate);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
-        Assert.Equal("Latest LLP", after.Current!.AuditFirm);
+        Assert.Equal(before.Owner.CommittedStreamPosition, after.Owner.CommittedStreamPosition);
+        Assert.Equal("Latest LLP", after.View!.AuditFirm);
+    }
+
+    [Fact]
+    public async Task ShouldReplayOriginalEngagementCreateGivenLaterDeferredEntryDecision()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedTypeIEntryDecisionAsync(ProgramReadiness.Approve);
+        var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
+            null, ["security", "availability"], fixture.BoundaryId);
+        Assert.True((await fixture.CreateHandler().HandleAsync(fixture.Context(request), CancellationToken.None)).IsSuccess);
+        await fixture.SeedTypeIEntryDecisionAsync(ProgramReadiness.Defer);
+
+        // Act
+        var replay = await fixture.CreateHandler().HandleAsync(fixture.Context(request), CancellationToken.None);
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(1, saved.Owner.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldReplayOriginalNoOpRevisionGivenLaterTermsAndUnavailableHistoricalContent()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedEngagementAsync();
+        var request = new ReviseExaminationEngagement(Uuid.CreateVersion4(), fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId, 1, "Original LLP", new DateOnly(2026, 9, 30), null, ["security"]);
+        Assert.True((await fixture.ReviseHandler().HandleAsync(fixture.Context(request), CancellationToken.None)).IsSuccess);
+        var later = request with { CommandId = Uuid.CreateVersion4(), ExpectedRevision = 2, AuditFirm = "Later LLP" };
+        Assert.True((await fixture.ReviseHandler().HandleAsync(fixture.Context(later), CancellationToken.None)).IsSuccess);
+        var before = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
+        var original = Assert.Single(before.History.Facts.OfType<ExaminationEngagementRevised>(), fact =>
+            fact.Operation.LogicalId == request.CommandId);
+        var unavailable = new UnavailableStateContent(fixture.Content);
+        var operations = new ExaminationEngagementOperations(new NativeOperationExecutor(fixture.Reader, fixture.Executor,
+            unavailable), new ExaminationEngagementReader(fixture.Reader, fixture.Events, unavailable), unavailable, fixture.Clock);
+        var handler = new ReviseExaminationEngagementHandler(operations, fixture.Reader);
+
+        // Act
+        var replay = await handler.HandleAsync(fixture.Context(request), CancellationToken.None);
+        var after = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
+        var response = await FirstResponses.ReplayAsync(fixture.Content, fixture.TenantId.ToString(), original.FirstResponse!);
+        var result = await fixture.Content.ReadJsonAsync<MutationResultContent>(fixture.TenantId.ToString(), original.OperationResult!);
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(0, unavailable.StateReads);
+        Assert.Equal(3, after.Owner.Revision);
+        Assert.Equal(before.Owner.CommittedStreamPosition, after.Owner.CommittedStreamPosition);
+        Assert.Equal("Later LLP", after.View!.AuditFirm);
+        Assert.Equal(200, response.HttpStatus);
+        Assert.Equal(UnitResult.Schema, result.Schema);
+    }
+
+    [Fact]
+    public async Task ShouldResumeOriginalRevisionWithoutDuplicateFactGivenLostAppendAcknowledgment()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedEngagementAsync();
+        var request = new ReviseExaminationEngagement(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId, 1, "Updated LLP", new DateOnly(2026, 9, 30), null, ["security"]);
+        var operations = new ExaminationEngagementOperations(new NativeOperationExecutor(fixture.Reader,
+            new CommitThenFailOnceExecutor(fixture.Executor), fixture.Content), fixture.Examinations, fixture.Content, fixture.Clock);
+        var handler = new ReviseExaminationEngagementHandler(operations, fixture.Reader);
+
+        // Act
+        var first = await handler.HandleAsync(fixture.Context(request), CancellationToken.None);
+        var replay = await handler.HandleAsync(fixture.Context(request), CancellationToken.None);
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
+
+        // Assert
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(2, saved.Owner.Revision);
+        Assert.Single(saved.History.Facts.OfType<ExaminationEngagementRevised>());
     }
 
     [Fact]
@@ -61,12 +141,11 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Act
         var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Equal(0, saved.Revision);
+        Assert.Equal(0, saved.Owner.Revision);
     }
 
     [Fact]
@@ -82,12 +161,11 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Act
         var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Equal(0, saved.Revision);
+        Assert.Equal(0, saved.Owner.Revision);
     }
 
     [Fact]
@@ -103,16 +181,15 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Act
         var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("draft", saved.Current!.Status);
-        Assert.Equal(1, saved.Revision);
-        Assert.Equal("Independent Audit LLP", saved.Current.AuditFirm);
-        Assert.Equal(fixture.BoundaryId, saved.Current.BoundaryId);
-        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), saved.Current.ActorMemberId);
+        Assert.Equal("draft", saved.View!.Status);
+        Assert.Equal(1, saved.Owner.Revision);
+        Assert.Equal("Independent Audit LLP", saved.View.AuditFirm);
+        Assert.Equal(fixture.BoundaryId, saved.View.BoundaryId);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), saved.View.ActorMemberId);
     }
 
     [Fact]
@@ -129,13 +206,12 @@ public sealed class ExaminationEngagementCommandHandlerTests
         var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request,
             new McpInvocation("bdgrz.examinations.create-examination-engagement")),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("draft", saved.Current?.Status);
-        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), saved.Current?.ActorMemberId);
+        Assert.Equal("draft", saved.View?.Status);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), saved.View?.ActorMemberId);
     }
 
     [Fact]
@@ -155,12 +231,11 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Act
         var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal([contactMemberId], saved.Current!.ManagementContactMemberIds);
+        Assert.Equal([contactMemberId], saved.View!.ManagementContactMemberIds);
     }
 
     [Fact]
@@ -180,12 +255,11 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Act
         var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
-        Assert.Equal(0, saved.Revision);
+        Assert.Equal(0, saved.Owner.Revision);
     }
 
     [Fact]
@@ -201,14 +275,13 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Act
         var result = await fixture.ReviseHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("Updated Independent Audit LLP", saved.Current!.AuditFirm);
-        Assert.Equal(2, saved.Revision);
-        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), saved.Current.ActorMemberId);
+        Assert.Equal("Updated Independent Audit LLP", saved.View!.AuditFirm);
+        Assert.Equal(2, saved.Owner.Revision);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), saved.View.ActorMemberId);
     }
 
     [Fact]
@@ -231,12 +304,11 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Act
         var result = await fixture.ReviseHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal([replacementMemberId], saved.Current!.ManagementContactMemberIds);
+        Assert.Equal([replacementMemberId], saved.View!.ManagementContactMemberIds);
     }
 
     [Fact]
@@ -255,12 +327,11 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Act
         var result = await fixture.ReviseHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal([contactMemberId], saved.Current!.ManagementContactMemberIds);
+        Assert.Equal([contactMemberId], saved.View!.ManagementContactMemberIds);
     }
 
     [Fact]
@@ -273,7 +344,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
             fixture.EngagementId);
 
         // Act
-        var result = await new GetExaminationEngagementHandler(fixture.Directory)
+        var result = await new GetExaminationEngagementHandler(fixture.Examinations)
             .HandleAsync(fixture.Context(request), CancellationToken.None);
 
         // Assert
@@ -294,7 +365,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
             fixture.EngagementId);
 
         // Act
-        var result = await new GetExaminationEngagementHandler(fixture.Directory)
+        var result = await new GetExaminationEngagementHandler(fixture.Examinations)
             .HandleAsync(fixture.Context(request), CancellationToken.None);
 
         // Assert
@@ -311,7 +382,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
             fixture.EngagementId);
 
         // Act
-        var result = await new GetExaminationEngagementHandler(fixture.Directory)
+        var result = await new GetExaminationEngagementHandler(fixture.Examinations)
             .HandleAsync(fixture.Context(request), CancellationToken.None);
 
         // Assert
@@ -328,7 +399,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
             fixture.BaselineId);
 
         // Act
-        var result = await new GetTypeIBaselineHandler(fixture.Directory, fixture.Events)
+        var result = await new GetTypeIBaselineHandler(fixture.Directory, fixture.Events, fixture.Examinations, fixture.Content)
             .HandleAsync(fixture.Context(request), CancellationToken.None);
 
         // Assert
@@ -351,7 +422,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
             fixture.BaselineId);
 
         // Act
-        var result = await new GetTypeIBaselineHandler(fixture.Directory, fixture.Events)
+        var result = await new GetTypeIBaselineHandler(fixture.Directory, fixture.Events, fixture.Examinations, fixture.Content)
             .HandleAsync(fixture.Context(request), CancellationToken.None);
 
         // Assert
@@ -371,12 +442,11 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Act
         var result = await fixture.ReviseHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Equal(1, saved.Revision);
+        Assert.Equal(1, saved.Owner.Revision);
     }
 
     [Fact]
@@ -393,12 +463,11 @@ public sealed class ExaminationEngagementCommandHandlerTests
 
         // Act
         var result = await fixture.CreateHandler().HandleAsync(context, CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.EngagementId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.EngagementId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
-        Assert.Equal(0, saved.Revision);
+        Assert.Equal(0, saved.Owner.Revision);
     }
 
     sealed class Fixture : IAsyncDisposable
@@ -411,6 +480,9 @@ public sealed class ExaminationEngagementCommandHandlerTests
         public Uuid BaselineId { get; } = Uuid.CreateVersion4();
         public Uuid BoundaryId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
+        public ExaminationEngagementReader Examinations => new(Reader, Events, Content);
+        public ExaminationEngagementOperations Operations => new(new NativeOperationExecutor(Reader, Executor, Content),
+            Examinations, Content, Clock);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -428,7 +500,8 @@ public sealed class ExaminationEngagementCommandHandlerTests
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(Events);
             services.AddPortia();
-            Directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
+            ExaminationSeeds.Configure(services, Events);
+            Directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient(), Content);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
@@ -436,9 +509,9 @@ public sealed class ExaminationEngagementCommandHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public CreateExaminationEngagementHandler CreateHandler() => new(Reader, Executor, new ReadinessReader(Reader, Content, Events), Clock);
+        public CreateExaminationEngagementHandler CreateHandler() => new(Operations, Reader, new ReadinessReader(Reader, Content, Events));
 
-        public ReviseExaminationEngagementHandler ReviseHandler() => new(Reader, Executor, Clock);
+        public ReviseExaminationEngagementHandler ReviseHandler() => new(Operations, Reader);
 
         public Cntryl.Portia.RequestContext<T> Context<T>(T request,
             RequestInvocation? invocation = null) where T : IRequestBase => new(request,
@@ -447,14 +520,13 @@ public sealed class ExaminationEngagementCommandHandlerTests
 
         public async Task SeedEngagementAsync(IReadOnlyList<Uuid>? managementContactMemberIds = null)
         {
-            var aggregate = new ExaminationEngagement(TenantId, ProgramId, EngagementId);
+            var aggregate = new ExaminationEngagementRules(TenantId, ProgramId, EngagementId);
             Assert.Null(aggregate.Create(new ExaminationEngagementContent("type_i", "Original LLP",
                 new DateOnly(2026, 9, 30), null, ["security"], BoundaryId,
                 managementContactMemberIds ?? []),
                 RbacIds.Member(TenantId, UserId), "Examiner", Now));
-            await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
-            await ProjectAsync(new ExaminationEngagementOpened(TenantId,
-                aggregate.Current!, Now));
+            await ExaminationSeeds.WriteAsync(Reader, Writer, Events, Content, aggregate);
+            await ProjectAsync();
         }
 
         public async Task SeedMemberAsync(Uuid userId, string affiliation)
@@ -483,40 +555,28 @@ public sealed class ExaminationEngagementCommandHandlerTests
         public async Task SeedBaselineAsync()
         {
             await SeedEngagementAsync();
-            var engagement = await Directory.GetAsync(TenantId, EngagementId);
+            var snapshot = await Examinations.ReadAsync(TenantId, ProgramId, EngagementId);
             var source = new TypeIBaselineSourceReference("approved_boundary", BoundaryId,
                 Uuid.CreateVersion4(), 1, new string('b', 64));
-            var preview = TypeIBaselinePreviewTestFactory.Create(TenantId, ProgramId,
-                EngagementId, [source]);
-            var frozenAt = Now.AddMinutes(1);
-            var baseline = new TypeIBaselineView(TenantId, ProgramId, EngagementId, BaselineId,
-                "frozen", 1, preview.Sources, [], preview.CanonicalManifest, preview.ContentSha256,
-                frozenAt, RbacIds.Member(TenantId, UserId), "Examiner", "Confirmed", null,
-                null, [], [], 0)
-            { SourceCoverage = preview.SourceCoverage };
-            var current = engagement ?? throw new InvalidOperationException(
-                "The seeded examination engagement was not projected.");
-            var frozenEngagement = current with
-            {
-                Status = "baseline_frozen",
-                Revision = current.Revision + 1,
-                UpdatedAt = frozenAt,
-            };
-            await ProjectAsync(new TypeIBaselineFrozen(TenantId, frozenEngagement, baseline,
-                frozenAt));
+            var preview = TypeIBaselinePreviewTestFactory.Create(TenantId, ProgramId, EngagementId, [source]);
+            Assert.Null(snapshot.Rules.FreezeBaseline(snapshot.Owner.Revision, BaselineId, preview, "Confirmed",
+                RbacIds.Member(TenantId, UserId), "Examiner", Now.AddMinutes(1)));
+            await ExaminationSeeds.WriteAsync(Reader, Writer, Events, Content, snapshot.Rules);
+            await ProjectAsync();
         }
 
-        async Task ProjectAsync(DomainEvent domainEvent)
+        async Task ProjectAsync()
         {
-            var identity = new CheckpointIdentity(FitzExaminationEngagementDirectory.ProjectorName,
-                EventStreamPattern.ForPattern(TenantId.ToString(), "examinations"));
-            await using var batch = await Directory.BeginAsync(new ProjectionBatchContext(identity,
-                await Directory.LoadCheckpointAsync(TenantId)));
-            await Directory.ApplyAsync(domainEvent);
-            var cursor = EventCursor.Start;
-            await foreach (var record in Events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(), "examinations"),
-                EventCursor.Start, CancellationToken.None))
+            var pattern = EventStreamPattern.ForPattern(TenantId.ToString(), "examinations");
+            var identity = new CheckpointIdentity(FitzExaminationEngagementDirectory.ProjectorName, pattern);
+            var before = await Directory.LoadCheckpointAsync(TenantId);
+            await using var batch = await Directory.BeginAsync(new ProjectionBatchContext(identity, before));
+            var cursor = before.Cursor;
+            await foreach (var record in Events.ReadAsync(pattern, before.Cursor, CancellationToken.None))
+            {
+                await Directory.ApplyAsync(record.Event);
                 cursor = record.NextCursor;
+            }
             await batch.CommitAsync(new ProjectionCheckpoint(cursor));
         }
 
@@ -524,6 +584,22 @@ public sealed class ExaminationEngagementCommandHandlerTests
         {
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
+        }
+    }
+
+    sealed class UnavailableStateContent(IImmutableContentStore inner) : IImmutableContentStore
+    {
+        public int StateReads { get; private set; }
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id, string schema, string mediaType,
+            ReadOnlyMemory<byte> bytes, CancellationToken ct = default) => inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference, CancellationToken ct = default)
+        {
+            if (reference.Schema == ExaminationEngagementState.Schema)
+            {
+                StateReads++;
+                throw new ImmutableContentUnavailableException("The historical state body is not readable yet.");
+            }
+            return inner.ReadVerifiedAsync(realm, reference, ct);
         }
     }
 

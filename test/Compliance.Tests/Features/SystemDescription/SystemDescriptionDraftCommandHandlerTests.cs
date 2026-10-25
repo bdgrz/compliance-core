@@ -1,3 +1,4 @@
+using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Content;
 using System.Security.Claims;
@@ -297,8 +298,9 @@ public sealed partial class SystemDescriptionDraftCommandHandlerTests
         public IImmutableContentStore PeriodContent { get; } = TypeIIPeriodSeeds.NewContentStore();
         public SystemDescriptionReader Descriptions => new(Reader, PeriodEvents, PeriodContent);
         public SystemDescriptionOperations Operations => new(new NativeOperationExecutor(Reader, Executor, PeriodContent), Descriptions, PeriodContent, _clock);
-        public SystemDescriptionSourceResolver Sources => new(Reader, Periods, new SystemDescriptionSnapshotSources(PeriodEvents, PeriodContent));
+        public SystemDescriptionSourceResolver Sources => new(Reader, Periods, new SystemDescriptionSnapshotSources(PeriodEvents, PeriodContent), Examinations);
         public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, PeriodContent);
+        public ExaminationEngagementReader Examinations => new(Reader, PeriodEvents, PeriodContent);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -312,6 +314,7 @@ public sealed partial class SystemDescriptionDraftCommandHandlerTests
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
+            ExaminationSeeds.Configure(services, PeriodEvents);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
@@ -336,7 +339,7 @@ public sealed partial class SystemDescriptionDraftCommandHandlerTests
 
         public async Task<TypeIBaselineView> SeedBaselineAsync(bool includeAdditionalSource = false)
         {
-            var aggregate = new ExaminationEngagement(TenantId, ProgramId, ExaminationId);
+            var aggregate = new ExaminationEngagementRules(TenantId, ProgramId, ExaminationId);
             Assert.Null(aggregate.Create(new ExaminationEngagementContent("type_i", "Audit LLP",
                 new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, []),
                 UserMemberId, "Examiner", Now));
@@ -352,7 +355,7 @@ public sealed partial class SystemDescriptionDraftCommandHandlerTests
                 sources);
             Assert.Null(aggregate.FreezeBaseline(1, BaselineId, preview,
                 "The initial source manifest is complete.", UserMemberId, "Examiner", Now.AddMinutes(1)));
-            await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
+            await ExaminationSeeds.WriteAsync(Reader, Writer, PeriodEvents, PeriodContent, aggregate);
             return aggregate.Baseline!;
         }
 

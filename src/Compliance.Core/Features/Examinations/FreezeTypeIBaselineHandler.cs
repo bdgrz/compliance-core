@@ -1,76 +1,46 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-public sealed class FreezeTypeIBaselineHandler(IAggregateReader reader,
-    IAggregateExecutor executor, IExaminationEngagementDirectoryReader directory,
-    ITypeIBaselinePreviewReader previews, TimeProvider clock)
+public sealed class FreezeTypeIBaselineHandler(ExaminationEngagementOperations operations,
+    IExaminationEngagementDirectoryReader directory, ITypeIBaselinePreviewReader previews)
     : IRequestHandler<FreezeTypeIBaseline>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<FreezeTypeIBaseline> context,
-        CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<FreezeTypeIBaseline> context, CancellationToken ct)
     {
         var request = context.Request;
         if (!ExaminationManagementActor.TryGet(context.Actor, context.Invocation, request.TenantId,
-                out var memberId, out var display) ||
-            !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var requesterUserId))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Freezing a Type I baseline requires an authenticated personal actor."));
+                out _, out _) || !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var requester))
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "A baseline decision requires its authenticated personal actor.")));
         if (request.ExpectedRevision <= 0 || request.BaselineId == Uuid.Empty ||
-            string.IsNullOrWhiteSpace(request.ConfirmationRationale) ||
-            request.ConfirmationRationale.Length > 2000 || !ValidDigest(request.ExpectedPreviewSha256))
-            return Invalid("A baseline confirmation requires a stable identity, current revision, rationale, and preview digest.");
-
-        var projected = await directory.GetAsync(request.TenantId, request.ExaminationId, ct)
-            .ConfigureAwait(false);
-        if (projected is null || projected.ProgramId != request.ProgramId ||
-            projected.TenantId != request.TenantId ||
-            projected.ExaminationEngagementId != request.ExaminationId)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The examination engagement was not found."));
-
-        var engagement = await reader.HydrateAsync(new ExaminationEngagement(request.TenantId,
-            request.ProgramId, request.ExaminationId), ct).ConfigureAwait(false);
-        if (engagement.Current is not { } current)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The examination engagement was not found."));
-
-        TypeIBaselinePreview preview;
-        var readCurrentPreview = true;
-        if (engagement.Baseline is { Status: "frozen" } existing &&
-            existing.TypeIBaselineId == request.BaselineId)
-        {
-            preview = FromBaseline(existing);
-            readCurrentPreview = false;
-        }
-        else
-        {
-            var result = await previews.ReadAsync(current, requesterUserId, ct)
-                .ConfigureAwait(false);
-            if (!result.IsSuccess)
-                return Result.Failure(result.Error);
-            preview = result.Value;
-        }
-        if (!StringComparer.Ordinal.Equals(preview.ContentSha256, request.ExpectedPreviewSha256))
-            return Conflict("The Type I baseline preview changed. Review the current preview before confirming.");
-        if (readCurrentPreview)
-        {
-            var confirmed = await reader.HydrateAsync(new ExaminationEngagement(request.TenantId,
-                request.ProgramId, request.ExaminationId), ct).ConfigureAwait(false);
-            if (confirmed.Current is not { } afterRead ||
-                !ExaminationEngagementSourceMatch.Matches(current, afterRead))
-                return Conflict("The examination engagement changed during preview confirmation. Retry the command.",
-                    transient: true);
-        }
-
-        return await executor.ExecuteAsync(new ExaminationEngagement(request.TenantId,
-                request.ProgramId, request.ExaminationId), aggregate =>
-                CommandFailureRequestAdapter.ToOutcome(aggregate.FreezeBaseline(
-                    request.ExpectedRevision, request.BaselineId, preview,
-                    request.ConfirmationRationale, memberId, display, clock.GetUtcNow())),
-            context, ct).ConfigureAwait(false);
+            string.IsNullOrWhiteSpace(request.ConfirmationRationale) || request.ConfirmationRationale.Length > 2000 ||
+            !ValidDigest(request.ExpectedPreviewSha256))
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A baseline decision requires a stable identity, current revision, rationale and complete preview digest.")));
+        return operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.ExaminationId,
+            request.BaselineId, nameof(FreezeTypeIBaseline), request.ExpectedRevision,
+            owner => owner.PrepareWrite(request.ProgramId, request.ExpectedRevision, requireFrozen: false),
+            async (snapshot, operation, token) =>
+            {
+                var projected = await directory.GetAsync(request.TenantId, request.ExaminationId, token).ConfigureAwait(false);
+                if (projected is null || projected.TenantId != request.TenantId || projected.ProgramId != request.ProgramId ||
+                    projected.ExaminationEngagementId != request.ExaminationId)
+                    return Result<ExaminationEngagementState>.Failure(new RequestError(RequestErrorKind.NotFound,
+                        "The examination engagement was not found."));
+                var source = await previews.ReadAsync(snapshot.View!, requester, token).ConfigureAwait(false);
+                if (!source.IsSuccess)
+                    return Result<ExaminationEngagementState>.Failure(source.Error!);
+                var preview = source.Value!;
+                if (!StringComparer.Ordinal.Equals(preview.ContentSha256, request.ExpectedPreviewSha256))
+                    return Result<ExaminationEngagementState>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The Type I baseline preview changed. Review the current preview before confirming."));
+                if (snapshot.Rules.FreezeBaseline(request.ExpectedRevision, request.BaselineId, preview, request.ConfirmationRationale,
+                        ExaminationEngagement.Member(operation), operation.Actor.Display, operation.AcceptedAt) is { } failure)
+                    return ExaminationEngagementOperations.Failure(failure);
+                return ExaminationEngagementOperations.FromRules(snapshot.Rules);
+            }, ct);
     }
 
     internal static TypeIBaselinePreview FromBaseline(TypeIBaselineView baseline) =>
@@ -81,10 +51,4 @@ public sealed class FreezeTypeIBaselineHandler(IAggregateReader reader,
 
     static bool ValidDigest(string? value) => value is { Length: 64 } && value.All(
         static character => character is >= '0' and <= '9' or >= 'a' and <= 'f');
-
-    static Result Invalid(string message) =>
-        Result.Failure(new RequestError(RequestErrorKind.Validation, message));
-
-    static Result Conflict(string message, bool transient = false) =>
-        Result.Failure(new RequestError(RequestErrorKind.Conflict, message, isTransient: transient));
 }

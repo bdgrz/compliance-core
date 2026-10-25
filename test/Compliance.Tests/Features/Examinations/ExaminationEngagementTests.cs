@@ -1,7 +1,6 @@
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 
@@ -20,7 +19,7 @@ public sealed class ExaminationEngagementTests
     public void ShouldRejectIncompleteEngagementGivenCreate()
     {
         // Arrange
-        var engagement = new ExaminationEngagement(TenantId, ProgramId, EngagementId);
+        var engagement = new ExaminationEngagementRules(TenantId, ProgramId, EngagementId);
         var content = ValidContent() with { AuditFirm = " " };
 
         // Act
@@ -29,7 +28,7 @@ public sealed class ExaminationEngagementTests
         // Assert
         Assert.Equal(CommandFailureCode.InvalidContent,
             Assert.IsType<CommandFailure>(failure).Code);
-        Assert.Empty(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents);
+        Assert.Empty(engagement.PendingChanges);
         Assert.Equal(0, engagement.Revision);
     }
 
@@ -37,7 +36,7 @@ public sealed class ExaminationEngagementTests
     public void ShouldKeepEngagementIdentityAndRejectStaleRevisionGivenRevision()
     {
         // Arrange
-        var engagement = new ExaminationEngagement(TenantId, ProgramId, EngagementId);
+        var engagement = new ExaminationEngagementRules(TenantId, ProgramId, EngagementId);
         Assert.Null(engagement.Create(ValidContent(), MemberId, "Lead", Now));
 
         // Act
@@ -52,11 +51,11 @@ public sealed class ExaminationEngagementTests
         Assert.Null(changed);
         Assert.Equal("Second Firm", engagement.Current!.AuditFirm);
         Assert.Equal(2, engagement.Revision);
-        Assert.Collection(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents,
+        Assert.Collection(engagement.PendingChanges,
             created => Assert.Equal(ValidContent().AuditFirm,
-                Assert.IsType<ExaminationEngagementOpened>(created).Engagement.AuditFirm),
+                Assert.IsType<ExaminationEngagementRuleOpened>(created).Engagement.AuditFirm),
             revised => Assert.Equal("Second Firm",
-                Assert.IsType<ExaminationEngagementRevised>(revised).Engagement.AuditFirm));
+                Assert.IsType<ExaminationEngagementRuleRevised>(revised).Engagement.AuditFirm));
     }
 
     [Fact]
@@ -75,7 +74,7 @@ public sealed class ExaminationEngagementTests
         Assert.Equal(CommandFailureCode.StateConflict,
             Assert.IsType<CommandFailure>(failure).Code);
         Assert.Null(engagement.Baseline);
-        Assert.Single(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents);
+        Assert.Single(engagement.PendingChanges);
     }
 
     [Fact]
@@ -95,7 +94,7 @@ public sealed class ExaminationEngagementTests
         Assert.Equal(CommandFailureCode.InvalidContent,
             Assert.IsType<CommandFailure>(failure).Code);
         Assert.Null(engagement.Baseline);
-        Assert.Single(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents);
+        Assert.Single(engagement.PendingChanges);
     }
 
     [Fact]
@@ -115,7 +114,7 @@ public sealed class ExaminationEngagementTests
         Assert.Equal(CommandFailureCode.InvalidContent,
             Assert.IsType<CommandFailure>(failure).Code);
         Assert.Null(engagement.Baseline);
-        Assert.Single(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents);
+        Assert.Single(engagement.PendingChanges);
     }
 
     [Fact]
@@ -138,7 +137,7 @@ public sealed class ExaminationEngagementTests
         Assert.Equal(CommandFailureCode.InvalidContent,
             Assert.IsType<CommandFailure>(failure).Code);
         Assert.Null(engagement.Baseline);
-        Assert.Single(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents);
+        Assert.Single(engagement.PendingChanges);
     }
 
     [Fact]
@@ -146,9 +145,8 @@ public sealed class ExaminationEngagementTests
     {
         // Arrange
         var openedAggregate = NewEngagement();
-        var opened = Assert.IsType<ExaminationEngagementOpened>(
-            Assert.Single(new AggregateScenario<ExaminationEngagement>(openedAggregate)
-                .PendingEvents));
+        var opened = Assert.IsType<ExaminationEngagementRuleOpened>(
+            Assert.Single(openedAggregate.PendingChanges));
         var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId,
             [new TypeIBaselineSourceReference("control", Uuid.CreateVersion4(),
                 Uuid.CreateVersion4(), 1, new string('a', 64))]);
@@ -163,11 +161,15 @@ public sealed class ExaminationEngagementTests
             "frozen", 1, preview.Sources, [], preview.CanonicalManifest,
             preview.ContentSha256, frozenAt, MemberId, "Lead", "Scope confirmed", null,
             null, [], [], 0);
-        var frozen = new TypeIBaselineFrozen(TenantId, frozenEngagement, baseline, frozenAt);
+        var frozen = new ExaminationEngagementRuleFrozen(TenantId, frozenEngagement, baseline, frozenAt);
 
         // Act
-        var replay = () => new AggregateScenario<ExaminationEngagement>(
-            new ExaminationEngagement(TenantId, ProgramId, EngagementId)).Given(opened, frozen);
+        var replay = () =>
+        {
+            var rules = new ExaminationEngagementRules(TenantId, ProgramId, EngagementId);
+            rules.Replay(opened);
+            rules.Replay(frozen);
+        };
 
         // Assert
         Assert.Throws<InvalidOperationException>(replay);
@@ -243,12 +245,12 @@ public sealed class ExaminationEngagementTests
         Assert.Null(exactRetry);
         Assert.Equal(CommandFailureCode.StateConflict,
             Assert.IsType<CommandFailure>(changedRetry).Code);
-        Assert.Equal(2, new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents.Count);
+        Assert.Equal(2, engagement.PendingChanges.Count);
     }
 
-    static ExaminationEngagement NewEngagement()
+    static ExaminationEngagementRules NewEngagement()
     {
-        var engagement = new ExaminationEngagement(TenantId, ProgramId, EngagementId);
+        var engagement = new ExaminationEngagementRules(TenantId, ProgramId, EngagementId);
         Assert.Null(engagement.Create(ValidContent(), MemberId, "Lead", Now));
         return engagement;
     }

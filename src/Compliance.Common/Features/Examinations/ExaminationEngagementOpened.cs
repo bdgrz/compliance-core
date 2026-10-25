@@ -1,10 +1,12 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Opens a tenant-owned Type I examination engagement with its initial terms.</summary>
-[Discriminator("bdgrz.examinations.examination-engagement-opened", 1)]
-public sealed record ExaminationEngagementOpened(
-    Uuid TenantId,
-    ExaminationEngagementView Engagement,
-    DateTimeOffset OccurredAt) : DomainEvent;
+/// <summary>One exact attributed native engagement transition; complete business bytes stay immutable.</summary>
+[Discriminator("bdgrz.examinations.examination-engagement-opened", 2)]
+public sealed record ExaminationEngagementOpened(Uuid TenantId, Uuid SubjectId, Uuid ProgramId, long Revision,
+    string EngagementType, Uuid BoundaryId, Uuid? BaselineId, long BaselineRevision, ImmutableContentRef Change,
+    DateTimeOffset OccurredAt, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult, Uuid ActorMemberId) : DomainEvent, IExaminationEngagementFact;

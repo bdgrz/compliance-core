@@ -18,8 +18,8 @@ public sealed class TypeIBaselineScopedIdentityTests
     public async Task ShouldPreserveBothOwnerLineagesGivenReusedBaselineAndAmendmentIds(bool differentPrograms, bool amend)
     {
         // Arrange
-        var source = await Sources.CreateAsync(differentPrograms, amend);
-        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
+        await using var source = await Sources.CreateAsync(differentPrograms, amend);
+        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient(), source.Content);
 
         // Act
         await source.ProjectAsync(directory);
@@ -43,10 +43,10 @@ public sealed class TypeIBaselineScopedIdentityTests
     public async Task ShouldResolveOnlyUniqueProgramOwnerGivenExistingScopedBaselineQuery(bool differentPrograms)
     {
         // Arrange
-        var source = await Sources.CreateAsync(differentPrograms, true);
-        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
+        await using var source = await Sources.CreateAsync(differentPrograms, true);
+        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient(), source.Content);
         await source.ProjectAsync(directory);
-        var handler = new GetTypeIBaselineHandler(directory, source.Events);
+        var handler = new GetTypeIBaselineHandler(directory, source.Events, source.Examinations, source.Content);
 
         // Act
         foreach (var owner in source.Owners)
@@ -88,10 +88,10 @@ public sealed class TypeIBaselineScopedIdentityTests
     public async Task ShouldRefuseUniqueLookupGivenBaselineSourcePendingBeforeOrDuringRead(bool appendDuringLookup)
     {
         // Arrange
-        var source = await Sources.CreateAsync(true, false);
-        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
+        await using var source = await Sources.CreateAsync(true, false);
+        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient(), source.Content);
         await source.ProjectAsync(directory);
-        var extra = new ExaminationEngagement(source.Tenant, source.Program, Uuid.CreateVersion4());
+        var extra = new ExaminationEngagementRules(source.Tenant, source.Program, Uuid.CreateVersion4());
         var boundary = Uuid.CreateVersion4();
         var actor = Uuid.CreateVersion4();
         var at = DateTimeOffset.UtcNow;
@@ -102,13 +102,13 @@ public sealed class TypeIBaselineScopedIdentityTests
         Assert.Null(extra.FreezeBaseline(1, source.SharedBaseline, preview, "Confirmed", actor, "Examiner", at.AddMinutes(1)));
         async Task AppendAsync()
         {
-            await source.Events.AppendAsync(extra.Stream, 0, NativeFacts.Raised(extra));
+            await source.SaveAsync(extra);
         }
         if (!appendDuringLookup)
             await AppendAsync();
         IExaminationEngagementDirectoryReader selected = appendDuringLookup
             ? new ChangingDirectory(directory, AppendAsync) : directory;
-        var handler = new GetTypeIBaselineHandler(selected, source.Events);
+        var handler = new GetTypeIBaselineHandler(selected, source.Events, source.Examinations, source.Content);
 
         // Act
         var result = await handler.HandleAsync(new Cntryl.Portia.RequestContext<GetTypeIBaseline>(
@@ -125,14 +125,14 @@ public sealed class TypeIBaselineScopedIdentityTests
     public async Task ShouldIgnoreOtherTenantExaminationActivityGivenUniqueScopedBaselineQuery()
     {
         // Arrange
-        var source = await Sources.CreateAsync(true, false);
-        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
+        await using var source = await Sources.CreateAsync(true, false);
+        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient(), source.Content);
         await source.ProjectAsync(directory);
-        var foreign = new ExaminationEngagement(Uuid.CreateVersion4(), source.Program, Uuid.CreateVersion4());
+        var foreign = new ExaminationEngagementRules(Uuid.CreateVersion4(), source.Program, Uuid.CreateVersion4());
         Assert.Null(foreign.Create(new ExaminationEngagementContent("type_i", "Other tenant audit", new DateOnly(2026, 9, 30),
             null, ["security"], Uuid.CreateVersion4(), []), Uuid.CreateVersion4(), "Examiner", DateTimeOffset.UtcNow));
-        await source.Events.AppendAsync(foreign.Stream, 0, NativeFacts.Raised(foreign));
-        var handler = new GetTypeIBaselineHandler(directory, source.Events);
+        await source.SaveAsync(foreign);
+        var handler = new GetTypeIBaselineHandler(directory, source.Events, source.Examinations, source.Content);
 
         // Act
         var result = await handler.HandleAsync(new Cntryl.Portia.RequestContext<GetTypeIBaseline>(
@@ -155,7 +155,7 @@ public sealed class TypeIBaselineScopedIdentityTests
         var oldCheckpoint = new ProjectionCheckpoint(new EventCursor("old-flat-baseline-rows"));
         await using (var batch = await legacy.BeginAsync(new ProjectionBatchContext(oldIdentity, ProjectionCheckpoint.Start)))
             await batch.CommitAsync(oldCheckpoint);
-        var current = new FitzExaminationEngagementDirectory(client);
+        var current = new FitzExaminationEngagementDirectory(client, new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(new InMemoryKvClient()));
 
         // Act
         var actual = await current.LoadCheckpointAsync(tenant);
@@ -194,8 +194,8 @@ public sealed class TypeIBaselineScopedIdentityTests
     public async Task ShouldRejectConflictingReplayGivenOnlyFrozenSourceProofDescriptorChanged()
     {
         // Arrange
-        var source = await Sources.CreateAsync(false, false, 1);
-        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
+        await using var source = await Sources.CreateAsync(false, false, 1);
+        var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient(), source.Content);
         await source.ProjectAsync(directory);
         var owner = source.Owners[0];
         var changed = owner.Baseline! with
@@ -210,20 +210,28 @@ public sealed class TypeIBaselineScopedIdentityTests
 
         // Act
         var error = await Record.ExceptionAsync(async () =>
-            await directory.ApplyAsync(new TypeIBaselineFrozen(source.Tenant, owner.Current!, changed, changed.UpdatedAt)));
+            await directory.ApplyAsync(await ExaminationScenario.ReplaceStateAsync(source.Content,
+                (await source.FactsAsync(owner)).Single(fact => fact is TypeIBaselineFrozen),
+                new ExaminationEngagementState(owner.Current!, changed))));
 
         // Assert
         Assert.IsType<InvalidOperationException>(error);
     }
 
-    sealed class Sources
+    sealed class Sources : IAsyncDisposable
     {
         public Uuid Tenant { get; } = Uuid.CreateVersion4();
         public Uuid Program { get; } = Uuid.CreateVersion4();
         public Uuid SharedBaseline { get; } = Uuid.CreateVersion4();
         public Uuid SharedAmendment { get; } = Uuid.CreateVersion4();
-        public InMemoryEventStore Events { get; } = new();
-        public List<ExaminationEngagement> Owners { get; } = [];
+        readonly ExaminationScenario _scenario = new();
+        public InMemoryEventStore Events => _scenario.Events;
+        public Bdgrz.Compliance.Features.Content.IImmutableContentStore Content => _scenario.Content;
+        public ExaminationEngagementReader Examinations => _scenario.Examinations;
+        public List<ExaminationEngagementRules> Owners { get; } = [];
+        public Task SaveAsync(ExaminationEngagementRules rules) => _scenario.SaveAsync(rules);
+        public Task<IReadOnlyList<DomainEvent>> FactsAsync(ExaminationEngagementRules rules) => _scenario.FactsAsync(rules);
+        public ValueTask DisposeAsync() => _scenario.DisposeAsync();
 
         public static async Task<Sources> CreateAsync(bool differentPrograms, bool amend, int ownerCount = 2)
         {
@@ -232,7 +240,7 @@ public sealed class TypeIBaselineScopedIdentityTests
             for (var index = 0; index < ownerCount; index++)
             {
                 var program = differentPrograms && index == 1 ? Uuid.CreateVersion4() : source.Program;
-                var owner = new ExaminationEngagement(source.Tenant, program, Uuid.CreateVersion4());
+                var owner = new ExaminationEngagementRules(source.Tenant, program, Uuid.CreateVersion4());
                 var boundary = Uuid.CreateVersion4();
                 var actor = Uuid.CreateVersion4();
                 Assert.Null(owner.Create(new ExaminationEngagementContent("type_i", "Audit LLP", new DateOnly(2026, 9, 30),
@@ -249,7 +257,7 @@ public sealed class TypeIBaselineScopedIdentityTests
                         Uuid.CreateVersion4(), "Approver", at.AddMinutes(2)));
                 }
                 source.Owners.Add(owner);
-                await source.Events.AppendAsync(owner.Stream, 0, NativeFacts.Raised(owner));
+                await source.SaveAsync(owner);
             }
             return source;
         }

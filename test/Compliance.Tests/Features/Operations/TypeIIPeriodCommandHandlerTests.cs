@@ -452,6 +452,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         public IAggregateWriter Writer => Host.Writer;
         public IAggregateReader Reader => Host.Reader;
         public IDomainEventReader Events => Host.Events;
+        public ExaminationEngagementReader Examinations => new(Reader, Events, Host.Content);
         public TypeIIPeriodReader Periods => Host.Periods;
         public AmendTypeIIObservationPeriodHandler Handler { get; }
         public TimeProvider Clock { get; } = new FixedTimeProvider(AmendedAt);

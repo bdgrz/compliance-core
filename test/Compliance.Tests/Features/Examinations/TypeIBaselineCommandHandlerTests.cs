@@ -1,3 +1,7 @@
+using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
@@ -25,15 +29,42 @@ public sealed class TypeIBaselineCommandHandlerTests
         // Act
         var result = await fixture.FreezeHandler.HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.ExaminationId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("baseline_frozen", saved.Current?.Status);
+        Assert.Equal("baseline_frozen", saved.View?.Status);
         Assert.Equal(fixture.SourceReader.Preview.ContentSha256, saved.Baseline?.ContentSha256);
         Assert.Equal(fixture.SourceReader.Preview.SourceCoverage.OrderBy(static item => item.Family,
                 StringComparer.Ordinal), saved.Baseline?.SourceCoverage);
+    }
+
+    [Fact]
+    public async Task ShouldReplayEqualWinningFreezeGivenSourceFailureAfterNativeAcceptance()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedEngagementAsync();
+        fixture.SourceReader.Preview = fixture.PreviewWith(fixture.BoundarySource);
+        var request = new FreezeTypeIBaseline(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId,
+            fixture.BaselineId, 1, "Confirmed exact preview", fixture.SourceReader.Preview.ContentSha256);
+        fixture.SourceReader.BeforeRead = async () =>
+        {
+            fixture.SourceReader.BeforeRead = null;
+            var winner = await fixture.FreezeHandler.HandleAsync(fixture.Context(request), CancellationToken.None);
+            Assert.True(winner.IsSuccess, winner.Error?.Message);
+            throw new ImmutableContentUnavailableException("The losing preparation saw a later source outage.");
+        };
+
+        // Act
+        var recovered = await fixture.FreezeHandler.HandleAsync(fixture.Context(request), CancellationToken.None);
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
+
+        // Assert
+        Assert.True(recovered.IsSuccess, recovered.Error?.Message);
+        Assert.Equal(2, saved.Owner.Revision);
+        Assert.Single(saved.History.Facts.OfType<TypeIBaselineFrozen>());
+        Assert.Equal(fixture.BaselineId, saved.Baseline!.TypeIBaselineId);
     }
 
     [Fact]
@@ -71,8 +102,7 @@ public sealed class TypeIBaselineCommandHandlerTests
         // Act
         var result = await fixture.FreezeHandler.HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.ExaminationId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -114,8 +144,7 @@ public sealed class TypeIBaselineCommandHandlerTests
         // Act
         var result = await fixture.FreezeHandler.HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.ExaminationId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -137,8 +166,7 @@ public sealed class TypeIBaselineCommandHandlerTests
         // Act
         var result = await fixture.FreezeHandler.HandleAsync(fixture.Context(request,
             actor: actor), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.ExaminationId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
@@ -193,12 +221,11 @@ public sealed class TypeIBaselineCommandHandlerTests
         // Act
         var result = await fixture.AmendHandler.HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.ExaminationId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Collection(saved.BaselineHistory,
+        Assert.Collection(saved.Rules.BaselineHistory,
             baseline => Assert.Equal(fixture.BaselineId, baseline.TypeIBaselineId),
             amendment => Assert.Equal(fixture.AmendmentId, amendment.TypeIBaselineId));
         Assert.Equal("amended", saved.Baseline?.Status);
@@ -264,12 +291,11 @@ public sealed class TypeIBaselineCommandHandlerTests
         // Act
         var result = await fixture.AmendHandler.HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.ExaminationId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Single(saved.BaselineHistory);
+        Assert.Single(saved.Rules.BaselineHistory);
     }
 
     [Fact]
@@ -295,12 +321,11 @@ public sealed class TypeIBaselineCommandHandlerTests
         // Act
         var result = await fixture.AmendHandler.HandleAsync(fixture.Context(request,
             actor: actor), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
-            fixture.ProgramId, fixture.ExaminationId));
+        var saved = await fixture.Examinations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
-        Assert.Single(saved.BaselineHistory);
+        Assert.Single(saved.Rules.BaselineHistory);
     }
 
     sealed class Fixture : IAsyncDisposable
@@ -314,6 +339,11 @@ public sealed class TypeIBaselineCommandHandlerTests
         public Uuid BaselineId { get; } = Uuid.CreateVersion4();
         public Uuid AmendmentId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
+        public InMemoryEventStore Events { get; } = new();
+        public IImmutableContentStore Content { get; } = new FitzKvImmutableContentStore(new InMemoryKvClient());
+        public ExaminationEngagementReader Examinations => new(Reader, Events, Content);
+        public ExaminationEngagementOperations Operations => new(new NativeOperationExecutor(Reader, Executor, Content),
+            Examinations, Content, Clock);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -336,18 +366,17 @@ public sealed class TypeIBaselineCommandHandlerTests
             ControlSource = new TypeIBaselineSourceReference("control", Uuid.CreateVersion4(),
                 Uuid.CreateVersion4(), 1, new string('b', 64));
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(Events);
             services.AddPortia();
+            ExaminationSeeds.Configure(services, Events);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-            FreezeHandler = new FreezeTypeIBaselineHandler(Reader, Executor, Directory, SourceReader,
-                Clock);
-            AmendHandler = new AmendTypeIBaselineHandler(Reader, Executor, Directory, SourceReader,
-                Clock);
+            FreezeHandler = new FreezeTypeIBaselineHandler(Operations, Directory, SourceReader);
+            AmendHandler = new AmendTypeIBaselineHandler(Operations, Directory, SourceReader);
         }
 
         public TypeIBaselinePreview PreviewWith(params TypeIBaselineSourceReference[] sources) =>
@@ -355,12 +384,11 @@ public sealed class TypeIBaselineCommandHandlerTests
 
         public async Task SeedEngagementAsync()
         {
-            var engagement = new ExaminationEngagement(TenantId, ProgramId, ExaminationId);
+            var engagement = new ExaminationEngagementRules(TenantId, ProgramId, ExaminationId);
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i", "Audit Firm",
                 new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, []),
                 RbacIds.Member(TenantId, UserId), "Examiner", Now));
-            await Writer.SaveAsync(engagement,
-                new RequestDispatchContext(RequestActor.System));
+            await ExaminationSeeds.WriteAsync(Reader, Writer, Events, Content, engagement);
             Directory.Engagement = engagement.Current;
         }
 
@@ -380,10 +408,15 @@ public sealed class TypeIBaselineCommandHandlerTests
     sealed class StubPreviewReader : ITypeIBaselinePreviewReader
     {
         public TypeIBaselinePreview Preview { get; set; } = null!;
+        public Func<Task>? BeforeRead { get; set; }
 
-        public ValueTask<Result<TypeIBaselinePreview>> ReadAsync(
-            ExaminationEngagementView engagement, CancellationToken ct = default) =>
-            ValueTask.FromResult(Result<TypeIBaselinePreview>.Success(Preview));
+        public async ValueTask<Result<TypeIBaselinePreview>> ReadAsync(
+            ExaminationEngagementView engagement, CancellationToken ct = default)
+        {
+            if (BeforeRead is { } before)
+                await before();
+            return Result<TypeIBaselinePreview>.Success(Preview);
+        }
     }
 
     sealed class StaticEngagementDirectory : IExaminationEngagementDirectoryReader

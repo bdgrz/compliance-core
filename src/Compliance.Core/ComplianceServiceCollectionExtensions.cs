@@ -585,6 +585,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IControlImpactContributor, ReadinessControlImpactContributor>();
         services.AddScoped<IControlImpactContributor, EvidenceControlImpactContributor>();
         services.AddScoped<IControlImpactContributor, WorkControlImpactContributor>();
+        services.AddScoped<ExaminationEngagementReader>();
+        services.AddScoped<ExaminationEngagementOperations>();
         services.AddScoped<FitzExaminationEngagementDirectory>();
         services.AddScoped<IExaminationEngagementDirectoryReader>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());

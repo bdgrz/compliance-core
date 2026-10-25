@@ -75,11 +75,11 @@ public sealed class SystemDescriptionSnapshotSources(IDomainEventReader events, 
         {
             case TypeIBaselineFrozen frozen when scope.Stage == "type_i" &&
                 proof.Facts[0].Fact.Stream == new ExaminationEngagement(tenant, program, scope.ExaminationId).Stream:
-                selected = Baseline(frozen.Baseline, tenant, program, scope);
+                selected = Baseline((await ExaminationEngagementContentReader.ReadAsync(content, frozen, ct).ConfigureAwait(false)).Baseline!, tenant, program, scope);
                 break;
             case TypeIBaselineAmended amended when scope.Stage == "type_i" &&
                 proof.Facts[0].Fact.Stream == new ExaminationEngagement(tenant, program, scope.ExaminationId).Stream:
-                selected = Baseline(amended.Baseline, tenant, program, scope);
+                selected = Baseline((await ExaminationEngagementContentReader.ReadAsync(content, amended, ct).ConfigureAwait(false)).Baseline!, tenant, program, scope);
                 break;
             case ITypeIIPeriodStateFact period when scope.Stage == "type_ii" &&
                 period.TenantId == tenant && period.Header.ProgramId == program && period.SubjectId == scope.TypeIIPeriodId &&

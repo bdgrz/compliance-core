@@ -7,26 +7,26 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
 /// <summary>Resolves one complete exact frozen snapshot population inside the accepting operation's preparation.</summary>
-public sealed class SystemDescriptionSourceResolver(IAggregateReader reader, TypeIIPeriodReader periods, SystemDescriptionSnapshotSources proofs)
+public sealed class SystemDescriptionSourceResolver(IAggregateReader reader, TypeIIPeriodReader periods, SystemDescriptionSnapshotSources proofs, ExaminationEngagementReader examinations)
 {
     public async ValueTask<Result<SystemDescriptionResolvedSources>> ResolveAsync(Uuid tenant, Uuid program, Uuid examination,
         SystemDescriptionScope? selected, CancellationToken ct)
     {
         if (selected is null || selected.Stage == "type_i")
         {
-            var engagement = await reader.HydrateAsync(new ExaminationEngagement(tenant, program, examination), ct).ConfigureAwait(false);
+            var engagement = await examinations.ReadAsync(tenant, program, examination, ct).ConfigureAwait(false);
             var baseline = engagement.Baseline;
-            if (engagement.Current is not { Status: "baseline_frozen" } || baseline is null || baseline.Status is not ("frozen" or "amended") ||
+            if (engagement.View is not { Status: "baseline_frozen" } || baseline is null || baseline.Status is not ("frozen" or "amended") ||
                 baseline.TenantId != tenant || baseline.ProgramId != program || baseline.ExaminationEngagementId != examination ||
                 selected is not null && baseline.TypeIBaselineId != selected.TypeIBaselineId)
                 return Fail("The description requires the examination's current exact frozen Type I baseline.");
             var scope = selected ?? new SystemDescriptionScope("type_i", examination, baseline.TypeIBaselineId, null, null);
             var sources = baseline.Sources.Select(item => new SystemDescriptionSourceReference(item.Kind, item.RecordId, item.VersionId,
                 item.Revision, item.ContentSha256, "current")).ToArray();
-            var proof = await proofs.CaptureAsync(tenant, program, scope, sources, engagement.Stream, value => value switch
+            var proof = await proofs.CaptureAsync(tenant, program, scope, sources, engagement.Owner.Stream, value => value switch
             {
-                TypeIBaselineFrozen item => item.Baseline.TypeIBaselineId == baseline.TypeIBaselineId && item.Baseline.Revision == baseline.Revision && item.Baseline.ContentSha256 == baseline.ContentSha256,
-                TypeIBaselineAmended item => item.Baseline.TypeIBaselineId == baseline.TypeIBaselineId && item.Baseline.Revision == baseline.Revision && item.Baseline.ContentSha256 == baseline.ContentSha256,
+                TypeIBaselineFrozen item => item.BaselineId == baseline.TypeIBaselineId && item.BaselineRevision == baseline.Revision && item.Change == engagement.History.BaselineContent(baseline.TypeIBaselineId),
+                TypeIBaselineAmended item => item.BaselineId == baseline.TypeIBaselineId && item.BaselineRevision == baseline.Revision && item.Change == engagement.History.BaselineContent(baseline.TypeIBaselineId),
                 _ => false,
             }, ct).ConfigureAwait(false);
             return Result<SystemDescriptionResolvedSources>.Success(new(scope, sources, proof));

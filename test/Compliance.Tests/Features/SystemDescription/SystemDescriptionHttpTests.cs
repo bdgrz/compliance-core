@@ -240,13 +240,17 @@ public sealed class SystemDescriptionHttpTests
             await using var scope = _factory.Services.CreateAsyncScope();
             var examination = Uuid.CreateVersion4();
             var boundary = Uuid.CreateVersion4();
-            var engagement = new Bdgrz.Compliance.Features.Examinations.ExaminationEngagement(Tenant, Program, examination);
+            var engagement = new Bdgrz.Compliance.Features.Examinations.ExaminationEngagementRules(Tenant, Program, examination);
             Assert.Null(engagement.Create(new Bdgrz.Compliance.Features.Examinations.ExaminationEngagementContent("type_i", "Audit LLP",
                 new DateOnly(2026, 10, 18), null, ["security"], boundary, []), Member, "Examiner", Now));
             var preview = Bdgrz.Compliance.Tests.Features.Examinations.TypeIBaselinePreviewTestFactory.Create(Tenant, Program, examination,
                 [new Bdgrz.Compliance.Features.Examinations.TypeIBaselineSourceReference("approved_boundary", boundary, Uuid.CreateVersion4(), 1, new string('a', 64))]);
             Assert.Null(engagement.FreezeBaseline(1, Uuid.CreateVersion4(), preview, "Frozen complete source scope", Member, "Examiner", Now));
-            await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
+            await Bdgrz.Compliance.Tests.Testing.ExaminationSeeds.WriteAsync(
+                scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
+                scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+                scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), engagement);
             return new CreateSystemDescriptionDraft(Tenant, Program, Uuid.CreateVersion4(), examination, "HTTP created narrative", SystemDescriptionNativeFixture.Body().Sections);
         }
         public async Task<HttpResponseMessage> PutAsync(CreateSystemDescriptionDraft request)

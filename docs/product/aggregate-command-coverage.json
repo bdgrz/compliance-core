@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "55dc8c235a4f930f9b1db7d4da035f9da388974e",
+  "sourceCommit": "f592e3c3c69025a571c84e473600ed67f8031ac2",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -12,7 +12,7 @@
     "factsWithoutReducerOrEmitter": 22,
     "legacyReducerOnlyFacts": 77,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 108,
+    "aggregateTypesWithCommandPath": 107,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 742,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 52,
+    "unwiredAggregateProducerOperations": 56,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 39
+      "no_registered_request_route": 43
     },
     "factReplayGuardRows": 0
   },
@@ -3914,9 +3914,7 @@
         "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementTests.cs",
-        "test/Compliance.Tests/Features/Examinations/FitzExaminationEngagementDirectoryTests.cs"
+        "test/Compliance.Tests/Testing/ExaminationScenario.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3934,8 +3932,9 @@
         "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementTests.cs",
-        "test/Compliance.Tests/Features/Examinations/FitzExaminationEngagementDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/ExaminationScenario.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8474,7 +8473,8 @@
         "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/FitzExaminationEngagementDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Examinations/FitzExaminationEngagementDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ExaminationScenario.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8492,10 +8492,11 @@
         "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/Examinations/FitzExaminationEngagementDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Examinations/TypeIBaselineScopedIdentityTests.cs"
+        "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Examinations/TypeIBaselineScopedIdentityTests.cs",
+        "test/Compliance.Tests/Testing/ExaminationScenario.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -10483,24 +10484,15 @@
         "TypeIBaselineAmended",
         "TypeIBaselineFrozen"
       ],
-      "commandRequests": [
-        "AmendTypeIBaseline",
-        "CreateExaminationEngagement",
-        "FreezeTypeIBaseline",
-        "ReviseExaminationEngagement"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/AmendAuditPackageHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementTests.cs",
-        "test/Compliance.Tests/Features/Examinations/PreviewTypeIBaselineHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/RecordManagementAssertionHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/RecordManagementExaminationReviewHandlerTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/ExaminationSeeds.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "ExaminationSignOff",
@@ -11236,13 +11228,13 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementNativeHttpTests.cs",
         "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
         "test/Compliance.Tests/Features/Programs/ProgramStageProjectionTests.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalTypeIEntryTransportTests.cs",
         "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
-        "test/Compliance.Tests/Features/Readiness/ReadinessHistoryVerificationTests.cs",
-        "test/Compliance.Tests/Features/Readiness/ReadinessNativeHistoryTests.cs"
+        "test/Compliance.Tests/Features/Readiness/ReadinessHistoryVerificationTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -13188,7 +13180,7 @@
     {
       "request": "AmendTypeIBaseline",
       "contract": "src/Compliance.Common/Features/Examinations/AmendTypeIBaseline.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -13198,15 +13190,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ExaminationEngagement"
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "ExaminationEngagementOperations"
       ],
-      "aggregateTargets": [
-        "ExaminationEngagement"
-      ],
-      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/ExaminationSeeds.cs"
       ],
       "note": ""
     },
@@ -16863,7 +16854,7 @@
     {
       "request": "CreateExaminationEngagement",
       "contract": "src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16873,17 +16864,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ExaminationEngagement"
-      ],
-      "aggregateTargets": [
-        "ExaminationEngagement"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [
+        "ExaminationEngagementOperations",
         "ReadinessReader"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementNativeHttpTests.cs",
+        "test/Compliance.Tests/Testing/ExaminationSeeds.cs"
       ],
       "note": ""
     },
@@ -18020,7 +18010,7 @@
     {
       "request": "FreezeTypeIBaseline",
       "contract": "src/Compliance.Common/Features/Examinations/FreezeTypeIBaseline.cs",
-      "interfaces": "IRequest, IProgramScopedRequest,\n    IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest,\n    IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -18030,16 +18020,15 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ExaminationEngagement"
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "ExaminationEngagementOperations"
       ],
-      "aggregateTargets": [
-        "ExaminationEngagement"
-      ],
-      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
-        "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/ExaminationSeeds.cs"
       ],
       "note": ""
     },
@@ -25026,9 +25015,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ExaminationEngagement"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -26708,7 +26695,6 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "EvidenceArtifact",
-        "ExaminationEngagement",
         "ManagementAssertion"
       ],
       "aggregateTargets": [
@@ -29562,15 +29548,15 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ExaminationEngagement"
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "ExaminationEngagementOperations"
       ],
-      "aggregateTargets": [
-        "ExaminationEngagement"
-      ],
-      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementNativeHttpTests.cs",
+        "test/Compliance.Tests/Testing/ExaminationSeeds.cs"
       ],
       "note": ""
     },
@@ -31707,6 +31693,50 @@
       "method": "Review",
       "methodArgumentCount": 4,
       "source": "src/Compliance.Core/Features/Operations/ControlOccurrence.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ExaminationEngagementOpened",
+      "aggregate": "ExaminationEngagement",
+      "method": "Accept",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ExaminationEngagementRevised",
+      "aggregate": "ExaminationEngagement",
+      "method": "Accept",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "TypeIBaselineAmended",
+      "aggregate": "ExaminationEngagement",
+      "method": "Accept",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "TypeIBaselineFrozen",
+      "aggregate": "ExaminationEngagement",
+      "method": "Accept",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
       "callerSources": [],
       "classification": "no_registered_request_route",
       "ownerIssue": 1022,

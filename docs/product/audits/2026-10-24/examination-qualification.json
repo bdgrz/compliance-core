@@ -1,0 +1,51 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "ExaminationEngagement compact native four-command authority, complete immutable body/baseline history, verified raw executor reads, source/projection consumers and canonical scoped read binding.",
+  "validation": {
+    "genuineOldApiRedFailed": 2,
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 613,
+    "productionHttpPassed": 39,
+    "backendUnit": {
+      "passed": 6365,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "exactFileAndDependencyHashes": "verified"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 50,
+    "signalsTriaged": 2,
+    "integration": "merge scoped repair recommended",
+    "mergeProbability": 0.87,
+    "introducedRegressionProbability": 0.21,
+    "scopeMisrepresentationProbability": 0.18,
+    "adopted": "merge scoped current native migration after final local format gate; continue explicit qualifications and remaining owner families; no CI wait per user direction"
+  },
+  "qualification": [
+    "Owner keeps scalar header plus initial/current/current-baseline/one-selected immutable refs, latest fact, selected native acceptance and bounded ordered replay commitment. Full terms, sources, baseline history and Rules remain transient read/preparation composition.",
+    "Four occupied inlinev1 fact tags advance to nativev2 ref envelopes. Existing public JSON fields/routes remain; explicit IIdentifiedRequest marker exposes existing identities. Unit200{} receipt/result formats retained. An authored no-op receives one durable acceptance and advances logical revision once; exact retry remains original. Personal authenticated MCP remains supported.",
+    "Body-free native history verifies exact tenant/program/owner/root/actor/clock/revision/lineage, unique logical+kind pairs, full selected metadata and ordered immutable metadata/payload commitment at exact native/physical cut before explicit or executor-internal reads return. Preparation compares exact source cut through append.",
+    "Supported complete256-source baseline is frozen into immutable content instead of exceeding48KiB inline frame; twelve-baseline native history preserves original exact baseline/digest. Existing source validation, canonical manifests, physical publication descriptors and logical source digests retained.",
+    "Directory namespace/name moves fromv3 to freshv4. Scoped canonical read binder uses route examination identity and ignores misleading query identities. Directory is discovery only; exact native/body authority plus source/checkpoint fences remain mandatory.",
+    "Legacy inlinev1 data and old projection rows/checkpoints are not qualified; no migration, dual-read, replay, reset, deployment, live broker, SDKsnapshot or O(1) claim. Current readiness/member guards remain after native acceptance; missing selected held-current source pairs remain local qualification. Generic snapshot delta-chain ADR bounds are unchanged."
+  ],
+  "rootRefinements": [
+    "Composed current opaque-key reader chain and appended EX wrapper, preserving Calendar/SourceUse/Mapping/Advisor/Auditor/Manifest/Access/Evaluation lifetimes.",
+    "Removed unused new ExReader parameter accidentally added to ControlPlansMatchAsync (helper only reads Control/Operating/Member).",
+    "Corrected nonexistent RulesContent test type, added3 missing test namespaces and used xUnit Single predicate overload.",
+    "Migrated one outside SystemDescriptionHttpTests creation fixture to Rules plus real ExaminationSeeds native event/content writes. Original acceptance names/assertions retained."
+  ],
+  "remainingWork": [
+    "PolicyCampaign52 frozen36production sources and shared receiver helper next; Complete retains required immutable manifest binding before receipt replay, body-free Complete rows explicitly excluded.",
+    "ImportSource34 frozen, ImportBatch native/history and Digest owners active; Provider gap preparing. StaffRED2 qualified/parked; independence/identity/guard and remaining source inventory continue.",
+    "Existing Access receiver preparation recovery follow-on after actual shared helper qualification. No new issues."
+  ]
+}

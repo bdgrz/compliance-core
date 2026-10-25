@@ -30,7 +30,7 @@ static class ExaminationSignOffSourceValidator
     }
 
     public static async ValueTask<Result<DateTimeOffset>> ValidateAsync(IAggregateReader reader,
-        AuditPackageReader packages, TypeIIPeriodReader periods,
+        AuditPackageReader packages, TypeIIPeriodReader periods, ExaminationEngagementReader examinations,
         Uuid tenantId, Uuid programId, ExaminationSignOffContent content, CancellationToken ct)
     {
         if (tenantId == Uuid.Empty || programId == Uuid.Empty || content is null ||
@@ -65,7 +65,7 @@ static class ExaminationSignOffSourceValidator
             !HashEquals(packageVersion.SourceSnapshotSha256, content.SourceSnapshotSha256))
             return Conflict("The management review must use the exact delivered package version and manifest.");
 
-        var snapshot = await ReadSnapshotAsync(reader, periods, tenantId, programId, content,
+        var snapshot = await ReadSnapshotAsync(examinations, periods, tenantId, programId, content,
             packageVersion.SourcePeriodId, ct).ConfigureAwait(false);
         if (!snapshot.IsSuccess)
             return Result<DateTimeOffset>.Failure(snapshot.Error!);
@@ -171,16 +171,14 @@ static class ExaminationSignOffSourceValidator
         return Result<DateTimeOffset>.Success(sourceTime);
     }
 
-    static async ValueTask<Result<SnapshotSources>> ReadSnapshotAsync(IAggregateReader reader, TypeIIPeriodReader periods,
+    static async ValueTask<Result<SnapshotSources>> ReadSnapshotAsync(ExaminationEngagementReader examinations, TypeIIPeriodReader periods,
         Uuid tenantId, Uuid programId, ExaminationSignOffContent content, Uuid sourcePeriodId,
         CancellationToken ct)
     {
         if (content.ScopeKind == "type_i")
         {
-            var engagement = await reader.HydrateAsync(new ExaminationEngagement(tenantId,
-                programId, content.ExaminationId), ct).ConfigureAwait(false);
-            var baseline = engagement.BaselineHistory.SingleOrDefault(item =>
-                item.TypeIBaselineId == content.SourceSnapshotId);
+            var baseline = await examinations.ReadBaselineAsync(tenantId, programId, content.ExaminationId,
+                content.SourceSnapshotId, ct).ConfigureAwait(false);
             if (baseline is null || baseline.TenantId != tenantId || baseline.ProgramId != programId ||
                 baseline.ExaminationEngagementId != content.ExaminationId ||
                 baseline.Status is not ("frozen" or "amended") ||

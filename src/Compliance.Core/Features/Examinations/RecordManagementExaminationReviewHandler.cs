@@ -8,10 +8,14 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Records an immutable management decision after resolving its exact examination sources.</summary>
 public sealed class RecordManagementExaminationReviewHandler(IAggregateExecutor executor,
-    IAggregateReader reader, AuditPackageReader packages, TypeIIPeriodReader periods, ManagementExecutiveAuthority executiveAuthority, TimeProvider clock)
+    IAggregateReader reader, AuditPackageReader packages, TypeIIPeriodReader periods, ManagementExecutiveAuthority executiveAuthority, TimeProvider clock, ExaminationEngagementReader examinations)
     : IRequestHandler<RecordManagementExaminationReview>
 {
-    public async ValueTask<Result> HandleAsync(
+    public ValueTask<Result> HandleAsync(
+        IRequestContext<RecordManagementExaminationReview> context, CancellationToken ct) =>
+        ExaminationSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result> HandleCoreAsync(
         IRequestContext<RecordManagementExaminationReview> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -42,7 +46,7 @@ public sealed class RecordManagementExaminationReviewHandler(IAggregateExecutor 
                         memberId, role, display, prior.SignedOffAt)), context, ct)
                 .ConfigureAwait(false);
 
-        var sources = await ExaminationSignOffSourceValidator.ValidateAsync(reader, packages, periods,
+        var sources = await ExaminationSignOffSourceValidator.ValidateAsync(reader, packages, periods, examinations,
             request.TenantId, request.ProgramId, request.Content, ct).ConfigureAwait(false);
         if (!sources.IsSuccess)
             return Result.Failure(sources.Error!);
