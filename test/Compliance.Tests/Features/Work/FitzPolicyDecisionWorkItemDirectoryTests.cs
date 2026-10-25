@@ -121,7 +121,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var directory = new FitzPolicyDecisionWorkItemDirectory(client, services.GetRequiredService<PolicyReader>(), TimeProvider.System);
         var authority = services.GetRequiredService<OperatingAuthority>();
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId, "Approver");
-        WorkQueueReader Queue(FitzPolicyDecisionWorkItemDirectory source) => new(reader, services.GetRequiredService<Bdgrz.Compliance.Features.Controls.ControlReader>(), services.GetRequiredService<PolicyReader>(), authority, TimeProvider.System,
+        WorkQueueReader Queue(FitzPolicyDecisionWorkItemDirectory source) => new(reader, services.GetRequiredService<WorkAssignmentReader>(), services.GetRequiredService<Bdgrz.Compliance.Features.Controls.ControlReader>(), services.GetRequiredService<PolicyReader>(), authority, TimeProvider.System,
             new WorkQueueReadConsistency(events, [source]), accountableWorkItems: [source],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),

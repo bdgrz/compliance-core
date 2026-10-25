@@ -166,7 +166,7 @@ public sealed class WorkSourceCompositionTests
         var after = await Scenario().When(list).ExpectSuccess();
 
         var closureItem = Assert.Single(after.Value.Items, item => item.Kind == "finding_closure_review");
-        await Scenario().When(new AssignWorkItem(fixture.TenantId, fixture.ProgramId, closureItem.WorkItemId,
+        await Scenario().When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, closureItem.WorkItemId,
             0, fixture.ApproverMemberId)).ExpectSuccess();
         var closure = fixture.Close(verified);
         await PersonalReadinessClosureTransportTests.CloseHttpAsync(provider, fixture.ApproverUserId, closure);
@@ -360,7 +360,7 @@ public sealed class WorkSourceCompositionTests
         }).ExpectSuccess();
         var detail = await Scenario().When(new GetWorkItem(fixture.TenantId,
             fixture.ProgramId, candidate.WorkItemId)).ExpectFailure(RequestErrorKind.NotFound);
-        var assignment = await Scenario().When(new AssignWorkItem(fixture.TenantId,
+        var assignment = await Scenario().When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, candidate.WorkItemId, 0, fixture.LeadMemberId))
             .ExpectFailure(RequestErrorKind.NotFound);
 
@@ -842,9 +842,9 @@ public sealed class WorkSourceCompositionTests
         // Act
         var oversight = await Scenario(fixture.ApproverUserId)
             .When(new GetWorkItem(fixture.TenantId, fixture.ProgramId, item.WorkItemId)).ExpectSuccess();
-        await Scenario(fixture.ApproverUserId).When(new AssignWorkItem(fixture.TenantId, fixture.ProgramId,
+        await Scenario(fixture.ApproverUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             item.WorkItemId, 0, fixture.OwnerMemberId)).ExpectFailure(RequestErrorKind.Forbidden);
-        var assigned = await Scenario(fixture.LeadUserId).When(new AssignWorkItem(fixture.TenantId,
+        var assigned = await Scenario(fixture.LeadUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, item.WorkItemId, 0, fixture.OwnerMemberId)).ExpectSuccess();
 
         // Assert
@@ -869,7 +869,7 @@ public sealed class WorkSourceCompositionTests
         var before = await Scenario(fixture.ApproverUserId)
             .When(new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned")).ExpectSuccess();
         var item = Assert.Single(before.Value.Items);
-        await Scenario(fixture.LeadUserId).When(new AssignWorkItem(fixture.TenantId, fixture.ProgramId,
+        await Scenario(fixture.LeadUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             item.WorkItemId, 0, fixture.ApproverMemberId)).ExpectSuccess();
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId, fixture.ApproverUserId,
             revoked: revoked);
@@ -883,15 +883,15 @@ public sealed class WorkSourceCompositionTests
             .When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine")).ExpectSuccess();
         var orphan = await Scenario(fixture.OwnerUserId)
             .When(new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned")).ExpectSuccess();
-        await Scenario(fixture.ApproverUserId).When(new DelegateWorkItem(fixture.TenantId,
+        await Scenario(fixture.ApproverUserId).When(new DelegateWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, item.WorkItemId, 1, fixture.OwnerMemberId, "Replacement needed."))
             .ExpectFailure(RequestErrorKind.Forbidden);
-        await Scenario(fixture.ApproverUserId).When(new EscalateWorkItem(fixture.TenantId,
+        await Scenario(fixture.ApproverUserId).When(new EscalateWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, item.WorkItemId, 1, "Replacement needed."))
             .ExpectFailure(RequestErrorKind.Forbidden);
-        await Scenario(fixture.LeadUserId).When(new AssignWorkItem(fixture.TenantId, fixture.ProgramId,
+        await Scenario(fixture.LeadUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             item.WorkItemId, 1, fixture.ApproverMemberId)).ExpectFailure(RequestErrorKind.Validation);
-        await Scenario(fixture.LeadUserId).When(new AssignWorkItem(fixture.TenantId, fixture.ProgramId,
+        await Scenario(fixture.LeadUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             item.WorkItemId, 1, fixture.OwnerMemberId)).ExpectSuccess();
         await PersonalOperatingPlanApprovalTransportTests.HttpAsync(provider, fixture.OwnerUserId,
             new ApproveControlOperatingPlan(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
@@ -971,12 +971,12 @@ public sealed class WorkSourceCompositionTests
             .When(new ListWork(fixture.TenantId, fixture.ProgramId, "all")).ExpectSuccess();
         var unassigned = await Scenario(fixture.OwnerUserId)
             .When(new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned")).ExpectSuccess();
-        await Scenario(fixture.OwnerUserId).When(new ClaimWorkItem(fixture.TenantId,
+        await Scenario(fixture.OwnerUserId).When(new ClaimWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, item.WorkItemId, 0)).ExpectFailure(RequestErrorKind.Forbidden);
-        await Scenario(fixture.OwnerUserId).When(new AssignWorkItem(fixture.TenantId,
+        await Scenario(fixture.OwnerUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, item.WorkItemId, 0, fixture.Member(fixture.OutsiderUserId)))
             .ExpectFailure(RequestErrorKind.Forbidden);
-        var claimed = await Scenario(fixture.OutsiderUserId).When(new ClaimWorkItem(fixture.TenantId,
+        var claimed = await Scenario(fixture.OutsiderUserId).When(new ClaimWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, item.WorkItemId, 0)).ExpectSuccess();
 
         // Assert
@@ -1035,11 +1035,11 @@ public sealed class WorkSourceCompositionTests
             Assert.Empty(actionable.Value.Items);
             Assert.Equal(0, actionable.Value.Counts.Total);
         }
-        await Scenario().When(new ClaimWorkItem(fixture.TenantId, fixture.ProgramId,
+        await Scenario().When(new ClaimWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             item.WorkItemId, 0)).ExpectFailure(RequestErrorKind.Forbidden);
-        await Scenario().When(new AssignWorkItem(fixture.TenantId, fixture.ProgramId,
+        await Scenario().When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             item.WorkItemId, 0, fixture.OwnerMemberId)).ExpectFailure(RequestErrorKind.Forbidden);
-        await Scenario().When(new DelegateWorkItem(fixture.TenantId, fixture.ProgramId,
+        await Scenario().When(new DelegateWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             item.WorkItemId, 0, fixture.BackupMemberId, "No source action authority."))
             .ExpectFailure(RequestErrorKind.Forbidden);
 

@@ -1,0 +1,38 @@
+{
+  "reviewed": 57,
+  "signalsAtOrAbove065": 0,
+  "triage": [],
+  "manualAdversarialReview": [
+    {
+      "hypothesis": "Old approval replay might check latest artifact pair rather than historical pair.",
+      "disposition": "Rejected by actual EvidenceRedactionRules.Prepare immutable complete-pair equality for every v1/v2 successor; full production history replays it. Every original/current view is the same pair; current source read grants checked before original response."
+    }
+  ],
+  "rootIntegrationRefinements": [
+    "Work current-assignee risk completion consumer uses compact scalar authority; historical ambiguous old assignment negative fixture appends actual occupiedv1 fact.",
+    "All four custom Work HTTP binders now declare actual JSON body schemas and every canonical route UUID, including source-generated App JSON registrations.",
+    "New Work claim and HTTP fixtures select actual unassigned team work. HTTP composition passes the real BoundaryReader required by its supplied boundary directory.",
+    "Evidence native result references are inspected on concrete facts; strict analyzer parameter/locale/indexing fixes preserve authority.",
+    "Evidence positive retry fixtures carry metadata matching required command identities. Waiver expiry fixture supplies actual artifact read grants to its independent approver; production authorization is preserved."
+  ],
+  "noBrokerOrDeploymentQualification": true,
+  "runtime": {
+    "strictReleaseBuildWarnings": 0,
+    "strictReleaseBuildErrors": 0,
+    "focusedPassed": 256,
+    "unitPassed": 6771,
+    "unitFailed": 0,
+    "unitSkipped": 0,
+    "newHttpPassed": 7,
+    "httpIncludingHostSmokePassed": 35,
+    "nodePassed": 24,
+    "coverageExport": "pass1",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass historicalcatalog counters notcurrentcompletion",
+    "format": "pass",
+    "productionFilesJevReviewed": 57,
+    "highProbabilityFileSignals": 0,
+    "allCurrentAggregateHandlerReactorReviewed": 940,
+    "currentOwnerReviewsRefreshed": 3
+  }
+}

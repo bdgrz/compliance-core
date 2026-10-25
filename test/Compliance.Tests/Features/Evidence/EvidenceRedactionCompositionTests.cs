@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Fitz;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Evidence;
 
-public sealed class EvidenceRedactionCompositionTests
+public sealed partial class EvidenceRedactionCompositionTests
 {
     [Fact]
     public async Task ShouldRetainExactLineageGivenRealSourcesAndDeliberateArtifactGrants()
@@ -27,7 +28,7 @@ public sealed class EvidenceRedactionCompositionTests
                 ArtifactMetadataAccessTests.Fixture.Now));
         Assert.True((await fixture.DispatchAsync(fixture.Grant(derived, BuiltInRbac.ViewerRoleId(fixture.TenantId)))).IsSuccess);
         await fixture.ProjectAsync();
-        var request = new PrepareEvidenceRedaction(fixture.TenantId, Uuid.CreateVersion4(), 0,
+        var request = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
             fixture.ArtifactId, derived, "Manual replacement", "Remove private employee fields");
         await using var scope = fixture.Provider.CreateAsyncScope();
 
@@ -56,13 +57,13 @@ public sealed class EvidenceRedactionCompositionTests
         var lead = await SeedMemberAsync(fixture, BuiltInRbac.PowerUsersTeamId(fixture.TenantId));
         await GrantPairAsync(fixture, contributor, derived);
         await GrantPairAsync(fixture, lead, derived);
-        var prepared = await DispatchAsync(fixture, contributor, new PrepareEvidenceRedaction(fixture.TenantId,
+        var prepared = await DispatchAsync(fixture, contributor, new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual replacement", "Remove private fields"));
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
         var preparation = prepared.Value.Preparations[0];
 
         // Act
-        var approved = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(fixture.TenantId,
+        var approved = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             prepared.Value.RedactionId, 1, preparation.PreparationId, preparation.Revision));
         var retained = await ProgramManagementServices.HydrateAsync(fixture.Provider,
             new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
@@ -83,7 +84,7 @@ public sealed class EvidenceRedactionCompositionTests
         await fixture.AllowAsync();
         var derived = await SeedDerivedAsync(fixture);
         await GrantPairAsync(fixture, fixture.UserId, derived);
-        var prepared = await DispatchAsync(fixture, fixture.UserId, new PrepareEvidenceRedaction(fixture.TenantId,
+        var prepared = await DispatchAsync(fixture, fixture.UserId, new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields"));
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
 
@@ -171,7 +172,7 @@ public sealed class EvidenceRedactionCompositionTests
         else
             // Synthetic accepted history exercises the existing denial-only wall, not professional authority.
             await AttestAssignmentHistoryFixture.SeedAsync(fixture.Provider, fixture.TenantId, fixture.UserId);
-        var request = new PrepareEvidenceRedaction(fixture.TenantId, Uuid.CreateVersion4(), 0,
+        var request = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
             fixture.ArtifactId, derived, "Manual", "Private fields");
 
         // Act
@@ -181,7 +182,7 @@ public sealed class EvidenceRedactionCompositionTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(0UL, retained.CommittedStreamPosition);
-        Assert.Empty(retained.Preparations);
+        Assert.Empty((await ReadHistoryAsync(fixture.Provider, fixture.TenantId, request.RedactionId)).Preparations);
     }
 
     [Theory]
@@ -204,7 +205,7 @@ public sealed class EvidenceRedactionCompositionTests
         var contributor = fault == "self" ? lead : await SeedMemberAsync(fixture, BuiltInRbac.StandardUsersTeamId(fixture.TenantId));
         await GrantPairAsync(fixture, contributor, derived);
         var grants = await GrantPairAsync(fixture, lead, derived);
-        var prepared = await DispatchAsync(fixture, contributor, new PrepareEvidenceRedaction(fixture.TenantId,
+        var prepared = await DispatchAsync(fixture, contributor, new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields"));
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
         var preparation = prepared.Value.Preparations[0];
@@ -222,7 +223,7 @@ public sealed class EvidenceRedactionCompositionTests
             new HttpInvocation("POST", "/test", "/test", "test");
 
         // Act
-        var result = await DispatchAsync(fixture, decisionActor, new ApproveEvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId,
+        var result = await DispatchAsync(fixture, decisionActor, new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, prepared.Value.RedactionId,
             1, fault == "stale" ? Uuid.CreateVersion4() : preparation.PreparationId, 1), invocation);
         var after = await ProgramManagementServices.HydrateAsync(fixture.Provider, new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
 
@@ -230,7 +231,7 @@ public sealed class EvidenceRedactionCompositionTests
         Assert.False(result.IsSuccess);
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
         Assert.Equal(before.CurrentPreparation, after.CurrentPreparation);
-        Assert.Empty(after.Approvals);
+        Assert.Empty((await ReadHistoryAsync(fixture.Provider, fixture.TenantId, prepared.Value.RedactionId)).Approvals);
         if (fault == "unavailable")
         {
             var current = await DispatchAsync(fixture, lead, new GetEvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
@@ -254,7 +255,7 @@ public sealed class EvidenceRedactionCompositionTests
         await GrantPairAsync(fixture, lead, derived);
         await GrantPairAsync(fixture, fixture.UserId, derived);
         await GrantPairAsync(fixture, approver, derived);
-        var prepared = await DispatchAsync(fixture, lead, new PrepareEvidenceRedaction(fixture.TenantId,
+        var prepared = await DispatchAsync(fixture, lead, new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields"));
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
         var preparation = prepared.Value.Preparations[0];
@@ -273,7 +274,7 @@ public sealed class EvidenceRedactionCompositionTests
         var before = await ProgramManagementServices.HydrateAsync(fixture.Provider, new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
 
         // Act
-        var approved = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(fixture.TenantId,
+        var approved = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             prepared.Value.RedactionId, 1, preparation.PreparationId, 1, recorded.Value.WaiverId));
         var after = await ProgramManagementServices.HydrateAsync(fixture.Provider, new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
 
@@ -285,14 +286,14 @@ public sealed class EvidenceRedactionCompositionTests
             Assert.True(approved.Value.Approvals[0].SeparationOfDutiesWaived);
             Assert.Equal(recorded.Value.WaiverId, after.CurrentApproval!.SeparationOfDutiesWaiver!.WaiverId);
             var events = await fixture.TenantEventsAsync();
-            var preparedEvent = Assert.Single(events.OfType<EvidenceRedactionPrepared>(),
+            var preparedEvent = Assert.Single(events.OfType<EvidenceRedactionPreparedV2>(),
                 item => item.RedactionId == prepared.Value.RedactionId);
-            var approvedEvent = Assert.Single(events.OfType<EvidenceRedactionApproved>(),
+            var approvedEvent = Assert.Single(events.OfType<EvidenceRedactionApprovedV2>(),
                 item => item.RedactionId == prepared.Value.RedactionId);
-            var preparedJson = JsonSerializer.Serialize(preparedEvent, ComplianceCoreJsonContext.Default.EvidenceRedactionPrepared);
-            var approvedJson = JsonSerializer.Serialize(approvedEvent, ComplianceCoreJsonContext.Default.EvidenceRedactionApproved);
-            var restoredPreparation = JsonSerializer.Deserialize(preparedJson, ComplianceCoreJsonContext.Default.EvidenceRedactionPrepared)!;
-            var restoredApproval = JsonSerializer.Deserialize(approvedJson, ComplianceCoreJsonContext.Default.EvidenceRedactionApproved)!;
+            var preparedJson = JsonSerializer.Serialize(preparedEvent, ComplianceCoreJsonContext.Default.EvidenceRedactionPreparedV2);
+            var approvedJson = JsonSerializer.Serialize(approvedEvent, ComplianceCoreJsonContext.Default.EvidenceRedactionApprovedV2);
+            var restoredPreparation = JsonSerializer.Deserialize(preparedJson, ComplianceCoreJsonContext.Default.EvidenceRedactionPreparedV2)!;
+            var restoredApproval = JsonSerializer.Deserialize(approvedJson, ComplianceCoreJsonContext.Default.EvidenceRedactionApprovedV2)!;
             Assert.Equal(preparedEvent.Preparation, restoredPreparation.Preparation);
             Assert.Equal(approvedEvent.Approval, restoredApproval.Approval);
             Assert.NotEqual(Uuid.Empty, restoredPreparation.Preparation.Original.RegistrationEventId);
@@ -302,23 +303,29 @@ public sealed class EvidenceRedactionCompositionTests
             Assert.True(restoredApproval.Approval.DerivedSourcePosition >= 2);
             Assert.Equal(ArtifactMetadataAccessTests.Fixture.Now, restoredApproval.Approval.DerivedAvailableAt);
             Assert.Equal(recorded.Value.WaiverId, restoredApproval.Approval.SeparationOfDutiesWaiver!.WaiverId);
+            restoredPreparation.AttachMetadata(preparedEvent.Metadata);
+            restoredApproval.AttachMetadata(approvedEvent.Metadata);
+            var replayHistory = await ReadGivenAsync(fixture.Provider, fixture.TenantId, prepared.Value.RedactionId,
+                restoredPreparation, restoredApproval);
             var replay = new AggregateScenario<EvidenceRedaction>(new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId))
                 .Given(restoredPreparation, restoredApproval).Aggregate;
             Assert.Equal(after.CurrentPreparation, replay.CurrentPreparation);
             Assert.Equal(after.CurrentApproval, replay.CurrentApproval);
             Assert.Equal(after.Revision, replay.Revision);
+            Assert.Equal(2, replayHistory.Facts.Count);
+            Assert.Equal(0, replayHistory.LegacyFactCount);
         }
         else
         {
             Assert.False(approved.IsSuccess);
             Assert.Equal(RequestErrorKind.Forbidden, approved.Error!.Kind);
             Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
-            Assert.Empty(after.Approvals);
+            Assert.Empty((await ReadHistoryAsync(fixture.Provider, fixture.TenantId, prepared.Value.RedactionId)).Approvals);
         }
     }
 
     [Fact]
-    public async Task ShouldReturnCurrentApprovalWithoutAppendGivenExactPreparationRetry()
+    public async Task ShouldReturnOriginalPreparationWithoutAppendGivenLaterApprovalAndExactPreparationRetry()
     {
         // Arrange
         await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
@@ -327,12 +334,12 @@ public sealed class EvidenceRedactionCompositionTests
         var lead = await SeedMemberAsync(fixture, BuiltInRbac.PowerUsersTeamId(fixture.TenantId));
         await GrantPairAsync(fixture, contributor, derived);
         await GrantPairAsync(fixture, lead, derived);
-        var request = new PrepareEvidenceRedaction(fixture.TenantId, Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields");
-        var metadata = RequestMetadata.Create();
+        var request = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields");
+        var metadata = new RequestMetadata(request.CommandId, request.CommandId);
         var prepared = await DispatchAsync(fixture, contributor, request, metadata: metadata);
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
         var preparation = prepared.Value.Preparations[0];
-        var approved = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(fixture.TenantId,
+        var approved = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             request.RedactionId, 1, preparation.PreparationId, 1));
         Assert.True(approved.IsSuccess, approved.Error?.Message);
         var before = await ProgramManagementServices.HydrateAsync(fixture.Provider, new EvidenceRedaction(fixture.TenantId, request.RedactionId));
@@ -343,8 +350,9 @@ public sealed class EvidenceRedactionCompositionTests
 
         // Assert
         Assert.True(retried.IsSuccess, retried.Error?.Message);
-        Assert.True(retried.Value.ApprovalCurrent);
-        Assert.Equal(approved.Value.Approvals, retried.Value.Approvals);
+        Assert.False(retried.Value.ApprovalCurrent);
+        Assert.Equal(prepared.Value.Approvals, retried.Value.Approvals);
+        Assert.Equal(prepared.Value.Revision, retried.Value.Revision);
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
         Assert.Equal(preparation, retried.Value.Preparations[0]);
     }
@@ -362,7 +370,7 @@ public sealed class EvidenceRedactionCompositionTests
         await GrantPairAsync(fixture, lead, derived);
         await GrantPairAsync(fixture, fixture.UserId, derived);
         await GrantPairAsync(fixture, approver, derived);
-        var prepared = await DispatchAsync(fixture, lead, new PrepareEvidenceRedaction(fixture.TenantId,
+        var prepared = await DispatchAsync(fixture, lead, new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields"));
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
         var preparation = prepared.Value.Preparations[0];
@@ -403,7 +411,7 @@ public sealed class EvidenceRedactionCompositionTests
         await GrantPairAsync(fixture, lead, derived);
         await GrantPairAsync(fixture, fixture.UserId, derived);
         await GrantPairAsync(fixture, approver, derived);
-        var prepared = await DispatchAsync(fixture, lead, new PrepareEvidenceRedaction(fixture.TenantId,
+        var prepared = await DispatchAsync(fixture, lead, new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields"));
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
         var preparation = prepared.Value.Preparations[0];
@@ -419,7 +427,7 @@ public sealed class EvidenceRedactionCompositionTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            new ApproveEvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId, 1, preparation.PreparationId, 1, recorded.Value.WaiverId),
+            new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, prepared.Value.RedactionId, 1, preparation.PreparationId, 1, recorded.Value.WaiverId),
             new RequestDispatchContext(ProgramManagementServices.Actor(lead), new HttpInvocation("POST", "/test", "/test", "test")));
         var after = await ProgramManagementServices.HydrateAsync(fixture.Provider, new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
 
@@ -427,7 +435,7 @@ public sealed class EvidenceRedactionCompositionTests
         Assert.False(result.IsSuccess);
         Assert.Equal(RequestErrorKind.Forbidden, result.Error!.Kind);
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
-        Assert.Empty(after.Approvals);
+        Assert.Empty((await ReadHistoryAsync(fixture.Provider, fixture.TenantId, prepared.Value.RedactionId)).Approvals);
     }
 
     [Theory]
@@ -440,7 +448,7 @@ public sealed class EvidenceRedactionCompositionTests
         await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
         var derived = await SeedDerivedAsync(fixture);
         await GrantPairAsync(fixture, fixture.UserId, derived);
-        var prepared = await DispatchAsync(fixture, fixture.UserId, new PrepareEvidenceRedaction(fixture.TenantId,
+        var prepared = await DispatchAsync(fixture, fixture.UserId, new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields"));
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
         var outsider = await SeedMemberAsync(fixture, BuiltInRbac.AdministratorsTeamId(fixture.TenantId));
@@ -494,14 +502,14 @@ public sealed class EvidenceRedactionCompositionTests
         var lead = await SeedMemberAsync(fixture, BuiltInRbac.PowerUsersTeamId(fixture.TenantId));
         await GrantPairAsync(fixture, fixture.UserId, derived);
         await GrantPairAsync(fixture, lead, derived);
-        var prepared = await DispatchAsync(fixture, fixture.UserId, new PrepareEvidenceRedaction(fixture.TenantId,
+        var prepared = await DispatchAsync(fixture, fixture.UserId, new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields"));
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
         var preparation = prepared.Value.Preparations[0];
         var before = await ProgramManagementServices.HydrateAsync(fixture.Provider, new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
 
         // Act
-        var result = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(fixture.TenantId,
+        var result = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             prepared.Value.RedactionId, 1, preparation.PreparationId, 1));
         var after = await ProgramManagementServices.HydrateAsync(fixture.Provider, new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
 
@@ -509,7 +517,7 @@ public sealed class EvidenceRedactionCompositionTests
         Assert.False(result.IsSuccess);
         Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
-        Assert.Empty(after.Approvals);
+        Assert.Empty((await ReadHistoryAsync(fixture.Provider, fixture.TenantId, prepared.Value.RedactionId)).Approvals);
     }
 
     [Theory]
@@ -523,12 +531,12 @@ public sealed class EvidenceRedactionCompositionTests
         var lead = await SeedMemberAsync(fixture, BuiltInRbac.PowerUsersTeamId(fixture.TenantId));
         await GrantPairAsync(fixture, fixture.UserId, derived);
         await GrantPairAsync(fixture, lead, derived);
-        var preparationRequest = new PrepareEvidenceRedaction(fixture.TenantId,
+        var preparationRequest = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields");
-        var preparationMetadata = RequestMetadata.Create();
+        var preparationMetadata = new RequestMetadata(preparationRequest.CommandId, preparationRequest.CommandId);
         var prepared = await DispatchAsync(fixture, fixture.UserId, preparationRequest, metadata: preparationMetadata);
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
-        var approved = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(fixture.TenantId,
+        var approved = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             prepared.Value.RedactionId, 1, prepared.Value.Preparations[0].PreparationId, 1));
         Assert.True(approved.IsSuccess, approved.Error?.Message);
         var before = await ProgramManagementServices.HydrateAsync(fixture.Provider,
@@ -574,10 +582,17 @@ public sealed class EvidenceRedactionCompositionTests
 
         DomainEventRecord Change(DomainEventRecord record)
         {
-            if (record.Event is not EvidenceRedactionApproved ev || ev.RedactionId != redactionId)
+            var changed = record.Event switch
+            {
+                EvidenceRedactionApproved ev when ev.RedactionId == redactionId =>
+                    (DomainEvent)(ev with { Approval = ev.Approval with { DerivedSourcePosition = 999 } }),
+                EvidenceRedactionApprovedV2 ev when ev.RedactionId == redactionId =>
+                    ev with { Approval = ev.Approval with { DerivedSourcePosition = 999 } },
+                _ => record.Event,
+            };
+            if (ReferenceEquals(changed, record.Event))
                 return record;
-            var changed = ev with { Approval = ev.Approval with { DerivedSourcePosition = 999 } };
-            changed.AttachMetadata(ev.Metadata);
+            changed.AttachMetadata(record.Event.Metadata);
             return record with { Event = changed };
         }
 
@@ -603,7 +618,7 @@ public sealed class EvidenceRedactionCompositionTests
         foreach (var (role, permission) in assignments)
             await RbacPermissionFacts.RevokeAsync(fixture.Provider, fixture.TenantId, role, permission);
         await fixture.ProjectAsync();
-        var request = new PrepareEvidenceRedaction(fixture.TenantId, Uuid.CreateVersion4(), 0,
+        var request = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
             fixture.ArtifactId, derived, "Manual", "Private fields");
         Assert.False((await DispatchAsync(fixture, fixture.UserId, request)).IsSuccess);
         var before = await fixture.TenantEventsAsync();
@@ -636,10 +651,10 @@ public sealed class EvidenceRedactionCompositionTests
         var lead = await SeedMemberAsync(fixture, BuiltInRbac.PowerUsersTeamId(fixture.TenantId));
         await GrantPairAsync(fixture, fixture.UserId, derived);
         await GrantPairAsync(fixture, lead, derived);
-        var prepared = await DispatchAsync(fixture, fixture.UserId, new PrepareEvidenceRedaction(fixture.TenantId,
+        var prepared = await DispatchAsync(fixture, fixture.UserId, new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields"));
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
-        Assert.True((await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(fixture.TenantId,
+        Assert.True((await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             prepared.Value.RedactionId, 1, prepared.Value.Preparations[0].PreparationId, 1))).IsSuccess);
 
         // Act
@@ -670,7 +685,7 @@ public sealed class EvidenceRedactionCompositionTests
         var other = await SeedMemberAsync(fixture, BuiltInRbac.StandardUsersTeamId(fixture.TenantId));
         await GrantPairAsync(fixture, lead, derived);
         await GrantPairAsync(fixture, fixture.UserId, derived);
-        var prepared = await DispatchAsync(fixture, lead, new PrepareEvidenceRedaction(fixture.TenantId,
+        var prepared = await DispatchAsync(fixture, lead, new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
             Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields"));
         Assert.True(prepared.IsSuccess, prepared.Error?.Message);
         var preparation = prepared.Value.Preparations[0];
@@ -691,7 +706,8 @@ public sealed class EvidenceRedactionCompositionTests
         Assert.False(retained.IsRecorded);
     }
 
-    static ServiceProvider Compose(ArtifactMetadataAccessTests.Fixture fixture, MutableClock clock, Uuid approver, IEventStore? events = null)
+    static ServiceProvider Compose(ArtifactMetadataAccessTests.Fixture fixture, MutableClock clock, Uuid approver,
+        IEventStore? events = null, Bdgrz.Compliance.Features.Content.IImmutableContentStore? immutable = null)
     {
         var services = new ServiceCollection();
         services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
@@ -701,7 +717,11 @@ public sealed class EvidenceRedactionCompositionTests
         }).Build(), developerAuthentication: true);
         services.AddSingleton(events ?? fixture.Provider.GetRequiredService<IEventStore>());
         services.AddSingleton<IDomainEventReader>(events ?? fixture.Provider.GetRequiredService<IDomainEventReader>());
+        services.AddSingleton<ISourceFactResolver>(provider =>
+            new EventStoreSourceFactResolver(provider.GetRequiredService<IDomainEventReader>()));
         services.AddSingleton(fixture.Provider.GetRequiredService<IKvClient>());
+        if (immutable is not null)
+            services.AddSingleton(immutable);
         services.AddSingleton<TimeProvider>(clock);
         services.AddScoped<IPermissionAuthorizer>(provider =>
             new AdvancingPermissionAuthorizer(provider.GetRequiredService<FitzPermissionAuthorizer>(), approver, clock));
@@ -726,7 +746,7 @@ public sealed class EvidenceRedactionCompositionTests
         }
     }
 
-    static async Task<Uuid> SeedDerivedAsync(ArtifactMetadataAccessTests.Fixture fixture, EvidenceInspectionOutcome outcome = EvidenceInspectionOutcome.Clean, DateTimeOffset? availableAt = null, bool release = false)
+    internal static async Task<Uuid> SeedDerivedAsync(ArtifactMetadataAccessTests.Fixture fixture, EvidenceInspectionOutcome outcome = EvidenceInspectionOutcome.Clean, DateTimeOffset? availableAt = null, bool release = false)
     {
         var derived = Uuid.CreateVersion4();
         await ProgramManagementServices.SeedAsync(fixture.Provider, new EvidenceArtifact(fixture.TenantId, derived), artifact =>
@@ -752,7 +772,7 @@ public sealed class EvidenceRedactionCompositionTests
         return derived;
     }
 
-    static async Task<Uuid> SeedMemberAsync(ArtifactMetadataAccessTests.Fixture fixture, Uuid team)
+    internal static async Task<Uuid> SeedMemberAsync(ArtifactMetadataAccessTests.Fixture fixture, Uuid team)
     {
         var user = Uuid.CreateVersion4();
         await ProgramManagementServices.SeedAsync(fixture.Provider, new Member(fixture.TenantId, user), member => member.Register());
@@ -763,7 +783,7 @@ public sealed class EvidenceRedactionCompositionTests
         return user;
     }
 
-    static async Task<List<Uuid>> GrantPairAsync(ArtifactMetadataAccessTests.Fixture fixture, Uuid user, Uuid derived)
+    internal static async Task<List<Uuid>> GrantPairAsync(ArtifactMetadataAccessTests.Fixture fixture, Uuid user, Uuid derived)
     {
         var grants = new List<Uuid>();
         foreach (var artifact in new[] { fixture.ArtifactId, derived })
@@ -783,12 +803,20 @@ public sealed class EvidenceRedactionCompositionTests
         return grants;
     }
 
-    static async Task<Result<T>> DispatchAsync<T>(ArtifactMetadataAccessTests.Fixture fixture, Uuid user, IRequest<T> request,
-        RequestInvocation? invocation = null, RequestMetadata? metadata = null)
+    internal static async Task<Result<T>> DispatchAsync<T>(ArtifactMetadataAccessTests.Fixture fixture, Uuid user, IRequest<T> request,
+        RequestInvocation? invocation = null, RequestMetadata? metadata = null, string? display = null)
     {
         await using var scope = fixture.Provider.CreateAsyncScope();
+        var actor = ProgramManagementServices.Actor(user);
+        if (display is not null)
+        {
+            var identity = (System.Security.Claims.ClaimsIdentity)actor.Identity!;
+            foreach (var claim in identity.FindAll("email").ToArray())
+                identity.RemoveClaim(claim);
+            identity.AddClaim(new System.Security.Claims.Claim("email", display));
+        }
         return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
-            new RequestDispatchContext(ProgramManagementServices.Actor(user),
+            new RequestDispatchContext(actor,
                 invocation ?? new HttpInvocation("POST", "/test", "/test", "test"), metadata));
     }
 

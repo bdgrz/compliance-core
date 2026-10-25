@@ -1,0 +1,68 @@
+{
+  "base": "5887b54da690b373153a796e009ad7b297dc2f21",
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictReleaseBuildWarnings": 0,
+    "strictReleaseBuildErrors": 0,
+    "focusedPassed": 256,
+    "unitPassed": 6771,
+    "unitFailed": 0,
+    "unitSkipped": 0,
+    "newHttpPassed": 7,
+    "httpIncludingHostSmokePassed": 35,
+    "nodePassed": 24,
+    "coverageExport": "pass1",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass historicalcatalog counters notcurrentcompletion",
+    "format": "pass",
+    "productionFilesJevReviewed": 57,
+    "highProbabilityFileSignals": 0,
+    "allCurrentAggregateHandlerReactorReviewed": 940,
+    "currentOwnerReviewsRefreshed": 3
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "integration": {
+      "decision": {
+        "type": "choice",
+        "choice": "merge_scoped_repair",
+        "confidence": 0.61,
+        "probabilities": {
+          "merge_scoped_repair": 0.74,
+          "refine_before_merge": 0.24,
+          "blocked_by_missing_authority": 0.02
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.35
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.2
+      }
+    },
+    "adopted": "Squash merge scoped repair without waiting CI under explicit user waiver; continue remaining unblocked owners."
+  },
+  "ci": "Not awaited per explicit user instruction. Local evidence is not deployment or live broker qualification.",
+  "scope": "Native preparation and personal approval with compact current/selected owner, complete external lineage, actual immutable artifact/availability/waiver proof locators and original200 results.",
+  "genuineOldApiRed": 4,
+  "wireChanges": [
+    "RequiredCommandId, IIdentifiedRequest, occupied request tags version2.",
+    "Identified PUT /evidence-redactions/{redaction_id}/preparations|approvals/{command_id}; approval remains personal HTTP only."
+  ],
+  "authority": [
+    "Current canonical membership, redaction core permission, historical Attest wall and both current artifact read grants before original result replay.",
+    "Complete immutable artifactpair remains identical across all v1/v2 successor preparations. Waiver requires exact independently recorded+approved scope and eligibility; expiry crossing async result freeze is rechecked at actual append."
+  ],
+  "history": [
+    "Full actual source locators use observed physical ResourceOffset, never nativeversion-minus-one. Complete raw/metadata exact cuts validated before owner/source authority returns.",
+    "All preparations/approvals external/transient;101preparations followed by independent approval works. Old arbitrary100 lifetime cap removed; complete first response preserved.",
+    "Existing immutable generic16MiB complete-response budget is explicit deterministic Validation before append. No historycount cap, pruning/truncation, segmented or unlimited response protocol.",
+    "Occupied v1 facts retain original tags and safe lineage checks; unqualified old identities cannot become native receipts."
+  ],
+  "remaining": [
+    "Scanner/provider/byte-transformation/disclosure qualification remains outside metadata lineage.",
+    "No source hold, trusted persisted-data cutover or future cross-owner atomicity invented."
+  ]
+}

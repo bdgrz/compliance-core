@@ -124,7 +124,7 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
             fixture.ProgramId, now.AddHours(1), DateOnly.MaxValue, null);
         await using var queueScope = fixture.Provider.CreateAsyncScope();
         var queueReader = new WorkQueueReader(
-            queueScope.ServiceProvider.GetRequiredService<IAggregateReader>(), queueScope.ServiceProvider.GetRequiredService<ControlReader>(), queueScope.ServiceProvider.GetRequiredService<PolicyReader>(),
+            queueScope.ServiceProvider.GetRequiredService<IAggregateReader>(), queueScope.ServiceProvider.GetRequiredService<WorkAssignmentReader>(), queueScope.ServiceProvider.GetRequiredService<ControlReader>(), queueScope.ServiceProvider.GetRequiredService<PolicyReader>(),
             queueScope.ServiceProvider.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
             consistency, boundaries: fixture.Boundaries, accountableWorkItems: [directory],
             operatingReader: queueScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(),

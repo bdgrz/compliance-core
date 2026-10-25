@@ -120,7 +120,7 @@ public sealed class ReviewerWorkAuthorityTests
         var item = Assert.Single(oversight.Value.Items, candidate => candidate.SourceId == pending.Id);
 
         // Act
-        await fixture.Scenario(operations.ApproverUserId).When(new AssignWorkItem(operations.TenantId,
+        await fixture.Scenario(operations.ApproverUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), operations.TenantId,
             operations.ProgramId, item.WorkItemId, 0, fixture.GuestMemberId))
             .ExpectFailure(RequestErrorKind.Validation);
         await fixture.ReviewAsync("risk_completion", pending, RequestErrorKind.Forbidden);
@@ -151,7 +151,7 @@ public sealed class ReviewerWorkAuthorityTests
         var before = await fixture.Scenario(fixture.Operations.ApproverUserId).When(new ListWork(
             fixture.Operations.TenantId, fixture.Operations.ProgramId, "unassigned")).ExpectSuccess();
         var item = Assert.Single(before.Value.Items);
-        await fixture.Scenario(fixture.Operations.ApproverUserId).When(new AssignWorkItem(
+        await fixture.Scenario(fixture.Operations.ApproverUserId).When(new AssignWorkItem(Uuid.CreateVersion4(),
             fixture.Operations.TenantId, fixture.Operations.ProgramId, item.WorkItemId, 0,
             fixture.GuestMemberId)).ExpectSuccess();
         fixture.Operations.Permissions.Managers.Remove(fixture.GuestMemberId);
@@ -165,7 +165,7 @@ public sealed class ReviewerWorkAuthorityTests
         var manager = await fixture.Scenario(fixture.Operations.ApproverUserId).When(
             new ListWork(fixture.Operations.TenantId, fixture.Operations.ProgramId,
                 "unassigned")).ExpectSuccess();
-        await fixture.Scenario(fixture.Operations.ApproverUserId).When(new AssignWorkItem(
+        await fixture.Scenario(fixture.Operations.ApproverUserId).When(new AssignWorkItem(Uuid.CreateVersion4(),
             fixture.Operations.TenantId, fixture.Operations.ProgramId, item.WorkItemId, 1,
             fixture.GuestMemberId)).ExpectFailure(RequestErrorKind.Validation);
 
@@ -225,7 +225,7 @@ public sealed class ReviewerWorkAuthorityTests
             operations.ProgramId, "all")).ExpectFailure(RequestErrorKind.Forbidden);
         await fixture.Scenario().When(new GetWorkItem(operations.TenantId, operations.ProgramId,
             candidate.WorkItemId)).ExpectFailure(RequestErrorKind.Forbidden);
-        await fixture.Scenario(operations.BackupUserId).When(new AssignWorkItem(operations.TenantId,
+        await fixture.Scenario(operations.BackupUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), operations.TenantId,
             operations.ProgramId, candidate.WorkItemId, 0, fixture.GuestMemberId))
             .ExpectFailure(RequestErrorKind.Validation);
 

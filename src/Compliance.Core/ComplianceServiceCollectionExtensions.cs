@@ -572,6 +572,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IAdvisorHandoffListAccess>(provider =>
             provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
+        services.AddScoped<LegacyWorkAssignmentHistory>();
+        services.AddScoped<WorkAssignmentReader>();
+        services.AddScoped<WorkAssignmentAuthorization>();
+        services.AddScoped<WorkAssignmentOperations>();
         services.AddScoped<WorkQueueReader>();
         services.AddScoped<FindingReader>();
         services.AddScoped<WeeklyWorkDigestRecipientResolver>();
@@ -684,6 +688,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<EvidenceRedactionWaiverRead>();
         services.AddScoped<EvidenceRedactionRead>();
         services.AddScoped<EvidenceRedactionSources>();
+        services.AddScoped<EvidenceRedactionProofs>();
+        services.AddScoped<EvidenceRedactionOperations>();
         services.AddScoped<EvidenceRedactionAccess>();
         services.AddScoped<EvidenceArtifactReadAccess>();
         services.AddScoped<EvidenceArtifactMetadataRead>();

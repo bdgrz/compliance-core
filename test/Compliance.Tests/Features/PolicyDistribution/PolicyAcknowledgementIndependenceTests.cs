@@ -233,10 +233,10 @@ public sealed class PolicyAcknowledgementIndependenceTests
             .ExpectSuccess();
         var oversight = await Scenario().When(new GetWorkItem(fixture.Source.TenantId,
             fixture.Source.ProgramId, item.WorkItemId)).ExpectSuccess();
-        await Scenario().When(new AssignWorkItem(fixture.Source.TenantId, fixture.Source.ProgramId,
+        await Scenario().When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.Source.TenantId, fixture.Source.ProgramId,
             item.WorkItemId, 0, RbacIds.Member(fixture.Source.TenantId, fixture.Source.ManagerUserId)))
             .ExpectFailure(RequestErrorKind.Forbidden);
-        await Scenario().When(new DelegateWorkItem(fixture.Source.TenantId, fixture.Source.ProgramId,
+        await Scenario().When(new DelegateWorkItem(Uuid.CreateVersion4(), fixture.Source.TenantId, fixture.Source.ProgramId,
             item.WorkItemId, 0, RbacIds.Member(fixture.Source.TenantId, fixture.Source.MemberUserId), "Reconcile source eligibility."))
             .ExpectFailure(RequestErrorKind.Forbidden);
 
@@ -270,7 +270,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
         var item = Assert.Single(before.Value.Items);
 
         // Act
-        var assignment = await Scenario().When(new AssignWorkItem(fixture.Source.TenantId,
+        var assignment = await Scenario().When(new AssignWorkItem(Uuid.CreateVersion4(), fixture.Source.TenantId,
             fixture.Source.ProgramId, item.WorkItemId, 0,
             RbacIds.Member(fixture.Source.TenantId, fixture.Source.ManagerUserId))).ExpectFailure(RequestErrorKind.Conflict);
         var recorded = await fixture.AcknowledgeAsync(fixture.Source.ManagerUserId, fixture.Source.NonMemberPersonId);
@@ -305,7 +305,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
         // Act
         await Scenario().When(new GetWorkItem(fixture.Source.TenantId,
             fixture.Source.ProgramId, item.WorkItemId)).ExpectSuccess();
-        var claim = await Scenario().When(new ClaimWorkItem(fixture.Source.TenantId,
+        var claim = await Scenario().When(new ClaimWorkItem(Uuid.CreateVersion4(), fixture.Source.TenantId,
             fixture.Source.ProgramId, item.WorkItemId, 0)).ExpectFailure(RequestErrorKind.Validation);
         var recorded = await fixture.AcknowledgeAsync(fixture.Source.MemberUserId, fixture.Source.MemberPersonId);
         await CatchUpWorkAsync(fixture.Provider, fixture.Source.TenantId);

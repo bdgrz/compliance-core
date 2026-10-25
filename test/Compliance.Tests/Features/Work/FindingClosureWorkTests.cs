@@ -27,7 +27,7 @@ public sealed class FindingClosureWorkTests
         var queue = await fixture.AsAsync(fixture.ApproverUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
         var item = Assert.Single(queue.Items);
-        await fixture.AsAsync(fixture.ApproverUserId, new AssignWorkItem(fixture.TenantId,
+        await fixture.AsAsync(fixture.ApproverUserId, new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, item.WorkItemId, 0, fixture.ApproverMemberId));
 
         // Act
@@ -105,7 +105,7 @@ public sealed class FindingClosureWorkTests
         var fixture = await OperationsFixture.CreateAsync();
         var finding = await ReadyAsync(fixture, fixture.OwnerUserId);
         var candidate = FindingClosureWork.Candidate(finding)!;
-        await fixture.AsAsync(fixture.ApproverUserId, new AssignWorkItem(fixture.TenantId,
+        await fixture.AsAsync(fixture.ApproverUserId, new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, candidate.WorkItemId, 0, fixture.ApproverMemberId));
 
         // Act
@@ -137,7 +137,7 @@ public sealed class FindingClosureWorkTests
 
         // Act
         var assigned = await fixture.Scenario(fixture.ApproverUserId).When(
-            new AssignWorkItem(fixture.TenantId, fixture.ProgramId, candidate.WorkItemId,
+            new AssignWorkItem(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, candidate.WorkItemId,
                 0, fixture.OwnerMemberId)).ExpectFailure(RequestErrorKind.Validation);
 
         // Assert
@@ -173,7 +173,7 @@ public sealed class FindingClosureWorkTests
         var captured = await consistency.CaptureAsync(fixture.TenantId, CancellationToken.None);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<WorkAssignmentReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [directory],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),

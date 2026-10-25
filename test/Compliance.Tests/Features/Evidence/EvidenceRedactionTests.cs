@@ -1,7 +1,13 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.SourceFacts;
+using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using static Bdgrz.Compliance.Tests.Features.Evidence.EvidenceRedactionCompositionTests;
 
 namespace Bdgrz.Compliance.Tests.Features.Evidence;
 
@@ -12,42 +18,55 @@ public sealed class EvidenceRedactionTests
     static readonly ActorReference Contributor = ActorReference.ForMember(Uuid.CreateVersion4(), "Contributor");
 
     [Fact]
-    public void ShouldRetainExactOriginalAndDistinctDerivativeGivenAttributedPreparation()
+    public async Task ShouldRetainExactOriginalAndDistinctDerivativeGivenAttributedPreparation()
     {
         // Arrange
-        var redaction = new EvidenceRedaction(Tenant, Uuid.CreateVersion4());
-        var original = Identity('a');
-        var derived = Identity('b');
-        var request = Uuid.CreateVersion4();
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        var derived = await SeedDerivedAsync(fixture);
+        await GrantPairAsync(fixture, fixture.UserId, derived);
+        var request = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
+            fixture.ArtifactId, derived, "Manually prepared replacement", "Remove private employee fields");
 
         // Act
-        var result = redaction.Prepare(request, 0, original, derived,
-            "Manually prepared replacement", "Remove private employee fields", Contributor, Now);
+        var result = await DispatchAsync(fixture, fixture.UserId, request);
+        var history = await ReadHistoryAsync(fixture.Provider, fixture.TenantId, request.RedactionId);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(original, result.Value.Original);
-        Assert.Equal(derived, result.Value.Derived);
-        Assert.Equal(request, result.Value.PreparationId);
-        Assert.Equal(Contributor, result.Value.PreparedBy);
-        Assert.IsType<EvidenceRedactionPrepared>(Assert.Single(new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents));
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(fixture.ArtifactId, history.CurrentPreparation!.Original.ArtifactId);
+        Assert.Equal(derived, history.CurrentPreparation.Derived.ArtifactId);
+        Assert.Equal(request.CommandId, history.CurrentPreparation.PreparationId);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId).ToString(), history.CurrentPreparation.PreparedBy.Id);
+        Assert.IsType<EvidenceRedactionPreparedV2>(Assert.Single(history.Facts));
+        Assert.Equal(0, history.LegacyFactCount);
     }
 
     [Fact]
-    public void ShouldRetainNativeRegistrationIdentityGivenVerifiedNonIntakeArtifact()
+    public async Task ShouldRetainNativeRegistrationIdentityGivenVerifiedNonIntakeArtifact()
     {
         // Arrange
-        var redaction = new EvidenceRedaction(Tenant, Uuid.CreateVersion4());
-        var native = Identity('a') with { ArtifactId = Uuid.CreateVersion4() };
-        native = native with { IdentitySha256 = EvidenceRedaction.IdentityDigest(native) };
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        var derived = await SeedDerivedAsync(fixture);
+        await GrantPairAsync(fixture, fixture.UserId, derived);
+        var request = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
+            fixture.ArtifactId, derived, "Manual", "Private fields");
+        Assert.True((await DispatchAsync(fixture, fixture.UserId, request)).IsSuccess);
+        var history = await ReadHistoryAsync(fixture.Provider, fixture.TenantId, request.RedactionId);
+        var fact = Assert.IsType<EvidenceRedactionPreparedV2>(Assert.Single(history.Facts));
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var sources = await NativeContent.ReadAsync<EvidenceRedactionNativeSources>(content, fixture.TenantId, fact.SourceProofs);
 
         // Act
-        var result = redaction.Prepare(Uuid.CreateVersion4(), 0, native, Identity('b'),
-            "Manual", "Private fields", Contributor, Now);
+        var verified = await scope.ServiceProvider.GetRequiredService<ISourceFactResolver>().VerifyAsync(sources.DerivedRegistration);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(native, result.Value.Original);
+        Assert.Equal(derived, fact.Preparation.Derived.ArtifactId);
+        Assert.NotEqual(EvidenceIntake.IdFor(fixture.TenantId, new string('b', 64)), derived);
+        Assert.Equal(fact.Preparation.Derived.RegistrationEventId, verified.EventId);
+        Assert.Equal(fact.Preparation.Derived.RegistrationSha256, verified.PayloadSha256.ToLowerInvariant());
+        Assert.Equal(new EvidenceArtifact(fixture.TenantId, derived).Stream, verified.Source);
+        Assert.Equal(0, history.LegacyFactCount);
     }
 
     [Theory]
@@ -76,8 +95,7 @@ public sealed class EvidenceRedactionTests
         };
 
         // Act
-        var result = redaction.Prepare(Uuid.CreateVersion4(), 0, original, derived,
-            "Manual preparation", "Remove personal fields", Contributor, Now);
+        var result = redaction.DecidePrepare(Uuid.CreateVersion4(), 0, original, derived, "Manual preparation", "Remove personal fields", Contributor, Now);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -85,92 +103,103 @@ public sealed class EvidenceRedactionTests
     }
 
     [Fact]
-    public void ShouldReturnOriginalAttributedPreparationGivenExactRetryAndDenyChangedActor()
+    public async Task ShouldReturnOriginalAttributedPreparationGivenExactRetryAndDenyChangedActor()
     {
         // Arrange
-        var redaction = new EvidenceRedaction(Tenant, Uuid.CreateVersion4());
-        var original = Identity('a');
-        var derived = Identity('b');
-        var request = Uuid.CreateVersion4();
-        var first = redaction.Prepare(request, 0, original, derived, "Manual", "Private fields", Contributor, Now);
-        Assert.True(first.IsSuccess);
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        var derived = await SeedDerivedAsync(fixture);
+        var other = await SeedMemberAsync(fixture, BuiltInRbac.StandardUsersTeamId(fixture.TenantId));
+        await GrantPairAsync(fixture, fixture.UserId, derived);
+        await GrantPairAsync(fixture, other, derived);
+        var request = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
+            fixture.ArtifactId, derived, "Manual", "Private fields");
+        var first = await DispatchAsync(fixture, fixture.UserId, request);
+        Assert.True(first.IsSuccess, first.Error?.Message);
 
         // Act
-        var retry = redaction.Prepare(request, 0, original, derived, "Manual", "Private fields", Contributor, Now.AddMinutes(1));
-        var changed = redaction.Prepare(request, 0, original, derived, "Manual", "Private fields",
-            ActorReference.ForMember(Uuid.CreateVersion4(), "Other contributor"), Now.AddMinutes(1));
+        var retry = await DispatchAsync(fixture, fixture.UserId, request);
+        var changed = await DispatchAsync(fixture, other, request);
+        var history = await ReadHistoryAsync(fixture.Provider, fixture.TenantId, request.RedactionId);
 
         // Assert
-        Assert.Equal(first.Value, retry.Value);
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(first.Value.Preparations, retry.Value.Preparations);
         Assert.False(changed.IsSuccess);
-        Assert.Single(new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error!.Kind);
+        Assert.Single(history.Facts);
     }
 
     [Fact]
-    public void ShouldReplayFrozenLineageAndRetainPriorPreparationGivenNewAttributedRevision()
+    public async Task ShouldReplayFrozenLineageAndRetainPriorPreparationGivenNewAttributedRevision()
     {
         // Arrange
         var id = Uuid.CreateVersion4();
-        var redaction = new EvidenceRedaction(Tenant, id);
         var original = Identity('a');
         var derived = Identity('b');
-        Assert.True(redaction.Prepare(Uuid.CreateVersion4(), 0, original, derived, "Manual", "First reason", Contributor, Now).IsSuccess);
-        Assert.True(redaction.Prepare(Uuid.CreateVersion4(), 1, original, derived, "Manual", "Revised reason", Contributor, Now.AddMinutes(1)).IsSuccess);
-        var events = new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents.ToArray();
+        var first = Legacy(id, 0, new EvidenceRedactionPreparationFact(Uuid.CreateVersion4(), 1, original, derived,
+            "Manual", "First reason", Contributor, Now));
+        var second = Legacy(id, 1, new EvidenceRedactionPreparationFact(Uuid.CreateVersion4(), 2, original, derived,
+            "Manual", "Revised reason", Contributor, Now.AddMinutes(1)));
 
         // Act
-        var replay = new AggregateScenario<EvidenceRedaction>(new EvidenceRedaction(Tenant, id)).Given(events).Aggregate;
+        var replay = await ReadGivenAsync(null, Tenant, id, first, second);
 
         // Assert
         Assert.Equal(2, replay.Revision);
         Assert.Equal("First reason", replay.Preparations[0].Reason);
         Assert.Equal("Revised reason", replay.CurrentPreparation!.Reason);
         Assert.Throws<NotSupportedException>(() => ((IList<EvidenceRedactionPreparationFact>)replay.Preparations).Clear());
+        Assert.Equal(2, replay.LegacyFactCount);
     }
 
     [Fact]
-    public void ShouldRetainExactPreparedApprovalGivenIndependentLeadDecision()
+    public async Task ShouldRetainExactPreparedApprovalGivenIndependentLeadDecision()
     {
         // Arrange
-        var redaction = new EvidenceRedaction(Tenant, Uuid.CreateVersion4());
-        var preparationId = Uuid.CreateVersion4();
-        Assert.True(redaction.Prepare(preparationId, 0, Identity('a'), Identity('b'),
-            "Manual", "Private fields", Contributor, Now).IsSuccess);
-        var lead = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
-        var decisionId = Uuid.CreateVersion4();
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        var derived = await SeedDerivedAsync(fixture);
+        var lead = await SeedMemberAsync(fixture, BuiltInRbac.PowerUsersTeamId(fixture.TenantId));
+        await GrantPairAsync(fixture, fixture.UserId, derived);
+        await GrantPairAsync(fixture, lead, derived);
+        var preparation = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
+            fixture.ArtifactId, derived, "Manual", "Private fields");
+        Assert.True((await DispatchAsync(fixture, fixture.UserId, preparation)).IsSuccess);
+        var decision = new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, preparation.RedactionId,
+            1, preparation.CommandId, 1);
 
         // Act
-        var result = redaction.Approve(decisionId, 1, preparationId, 1, 2,
-            lead, Now.AddMinutes(1), Now);
+        var approved = await DispatchAsync(fixture, lead, decision);
+        var history = await ReadHistoryAsync(fixture.Provider, fixture.TenantId, preparation.RedactionId);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(preparationId, result.Value.PreparationId);
-        Assert.Equal(1, result.Value.PreparedRevision);
-        Assert.Equal(lead, result.Value.ApprovedBy);
-        Assert.IsType<EvidenceRedactionApproved>(new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents[^1]);
+        Assert.True(approved.IsSuccess, approved.Error?.Message);
+        Assert.Equal(preparation.CommandId, approved.Value.Approvals[0].PreparationId);
+        Assert.Equal(1, approved.Value.Approvals[0].PreparedRevision);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, lead).ToString(), approved.Value.Approvals[0].ApprovedBy.Id);
+        Assert.IsType<EvidenceRedactionApprovedV2>(history.Facts[^1]);
     }
 
     [Fact]
-    public void ShouldReturnOriginalPresentationGivenSameCanonicalPreparerAfterDisplayChange()
+    public async Task ShouldReturnOriginalPresentationGivenSameCanonicalPreparerAfterDisplayChange()
     {
         // Arrange
-        var redaction = new EvidenceRedaction(Tenant, Uuid.CreateVersion4());
-        var original = Identity('a');
-        var derived = Identity('b');
-        var request = Uuid.CreateVersion4();
-        var first = redaction.Prepare(request, 0, original, derived, "Manual", "Private fields", Contributor, Now);
-        Assert.True(first.IsSuccess);
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        var derived = await SeedDerivedAsync(fixture);
+        await GrantPairAsync(fixture, fixture.UserId, derived);
+        var request = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
+            fixture.ArtifactId, derived, "Manual", "Private fields");
+        var first = await DispatchAsync(fixture, fixture.UserId, request);
+        Assert.True(first.IsSuccess, first.Error?.Message);
 
         // Act
-        var renamed = redaction.Prepare(request, 0, original, derived, "Manual", "Private fields",
-            Contributor with { Display = "Renamed contributor" }, Now.AddMinutes(1));
+        var renamed = await DispatchAsync(fixture, fixture.UserId, request, display: "Renamed contributor");
+        var history = await ReadHistoryAsync(fixture.Provider, fixture.TenantId, request.RedactionId);
 
         // Assert
-        Assert.True(renamed.IsSuccess);
-        Assert.Equal(first.Value, renamed.Value);
-        Assert.Equal(Contributor, renamed.Value.PreparedBy);
-        Assert.Single(new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents);
+        Assert.True(renamed.IsSuccess, renamed.Error?.Message);
+        Assert.Equal(first.Value.Preparations, renamed.Value.Preparations);
+        Assert.Equal(first.Value.Preparations[0].PreparedBy, renamed.Value.Preparations[0].PreparedBy);
+        Assert.Single(history.Facts);
     }
 
     [Theory]
@@ -182,93 +211,118 @@ public sealed class EvidenceRedactionTests
     {
         // Arrange
         var id = Uuid.CreateVersion4();
-        var redaction = new EvidenceRedaction(Tenant, id);
-        Assert.True(redaction.Prepare(Uuid.CreateVersion4(), 0, Identity('a'), Identity('b'),
-            "Manual", "Private fields", Contributor, Now).IsSuccess);
-        var ev = Assert.IsType<EvidenceRedactionPrepared>(Assert.Single(new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents));
-        var original = scenario switch
+        var original = Identity('a');
+        var changed = scenario switch
         {
-            "registration_event" => ev.Preparation.Original with { RegistrationEventId = Uuid.CreateVersion4() },
-            "registration_payload" => ev.Preparation.Original with { RegistrationSha256 = new string('d', 64) },
-            "content_length" => ev.Preparation.Original with { ContentLength = 124 },
-            "registration_time" => ev.Preparation.Original with { RegisteredAt = Now.AddDays(-2) },
+            "registration_event" => original with { RegistrationEventId = Uuid.CreateVersion4() },
+            "registration_payload" => original with { RegistrationSha256 = new string('d', 64) },
+            "content_length" => original with { ContentLength = 124 },
+            "registration_time" => original with { RegisteredAt = Now.AddDays(-2) },
             _ => throw new InvalidOperationException()
         };
-        var malformed = ev with { Preparation = ev.Preparation with { Original = original } };
+        var malformed = Legacy(id, 0, new EvidenceRedactionPreparationFact(Uuid.CreateVersion4(), 1, changed, Identity('b'),
+            "Manual", "Private fields", Contributor, Now));
 
         // Act
         Action replay = () => new AggregateScenario<EvidenceRedaction>(new EvidenceRedaction(Tenant, id)).Given(malformed);
 
         // Assert
-        Assert.Throws<InvalidOperationException>(replay);
+        Assert.Throws<ImmutableContentIntegrityException>(replay);
     }
 
     [Fact]
-    public void ShouldPreserveApprovalPresentationAndDenyAnotherCanonicalActorGivenExactRetry()
+    public async Task ShouldPreserveApprovalPresentationAndDenyAnotherCanonicalActorGivenExactRetry()
     {
         // Arrange
-        var redaction = new EvidenceRedaction(Tenant, Uuid.CreateVersion4());
-        var preparationId = Uuid.CreateVersion4();
-        Assert.True(redaction.Prepare(preparationId, 0, Identity('a'), Identity('b'), "Manual", "Private fields", Contributor, Now).IsSuccess);
-        var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
-        var request = Uuid.CreateVersion4();
-        var first = redaction.Approve(request, 1, preparationId, 1, 2, actor, Now.AddMinutes(1), Now);
-        Assert.True(first.IsSuccess);
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        var derived = await SeedDerivedAsync(fixture);
+        var lead = await SeedMemberAsync(fixture, BuiltInRbac.PowerUsersTeamId(fixture.TenantId));
+        var other = await SeedMemberAsync(fixture, BuiltInRbac.PowerUsersTeamId(fixture.TenantId));
+        await GrantPairAsync(fixture, fixture.UserId, derived);
+        await GrantPairAsync(fixture, lead, derived);
+        await GrantPairAsync(fixture, other, derived);
+        var request = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
+            fixture.ArtifactId, derived, "Manual", "Private fields");
+        Assert.True((await DispatchAsync(fixture, fixture.UserId, request)).IsSuccess);
+        var approval = new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, request.RedactionId, 1, request.CommandId, 1);
+        var first = await DispatchAsync(fixture, lead, approval);
+        Assert.True(first.IsSuccess, first.Error?.Message);
 
         // Act
-        var renamed = redaction.Approve(request, 1, preparationId, 1, 3,
-            actor with { Display = "Renamed lead" }, Now.AddMinutes(2), Now);
-        var other = redaction.Approve(request, 1, preparationId, 1, 3,
-            ActorReference.ForMember(Uuid.CreateVersion4(), "Other lead"), Now.AddMinutes(2), Now);
+        var renamed = await DispatchAsync(fixture, lead, approval, display: "Renamed lead");
+        var changed = await DispatchAsync(fixture, other, approval);
+        var history = await ReadHistoryAsync(fixture.Provider, fixture.TenantId, request.RedactionId);
 
         // Assert
-        Assert.Equal(first.Value, renamed.Value);
-        Assert.False(other.IsSuccess);
-        Assert.Equal(2, new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents.Count);
+        Assert.True(renamed.IsSuccess, renamed.Error?.Message);
+        Assert.Equal(first.Value.Approvals, renamed.Value.Approvals);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error!.Kind);
+        Assert.Equal(2, history.Facts.Count);
     }
 
     [Fact]
-    public void ShouldDenySelfApprovalWithoutAppendGivenPreparerAsLead()
+    public async Task ShouldDenySelfApprovalWithoutAppendGivenPreparerAsLead()
     {
         // Arrange
-        var redaction = new EvidenceRedaction(Tenant, Uuid.CreateVersion4());
-        var preparationId = Uuid.CreateVersion4();
-        Assert.True(redaction.Prepare(preparationId, 0, Identity('a'), Identity('b'), "Manual", "Private fields", Contributor, Now).IsSuccess);
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        var derived = await SeedDerivedAsync(fixture);
+        var lead = await SeedMemberAsync(fixture, BuiltInRbac.PowerUsersTeamId(fixture.TenantId));
+        await GrantPairAsync(fixture, lead, derived);
+        var request = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
+            fixture.ArtifactId, derived, "Manual", "Private fields");
+        Assert.True((await DispatchAsync(fixture, lead, request)).IsSuccess);
 
         // Act
-        var result = redaction.Approve(Uuid.CreateVersion4(), 1, preparationId, 1, 2, Contributor, Now.AddMinutes(1), Now);
+        var result = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
+            request.RedactionId, 1, request.CommandId, 1));
+        var history = await ReadHistoryAsync(fixture.Provider, fixture.TenantId, request.RedactionId);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(RequestErrorKind.Forbidden, result.Error!.Kind);
-        Assert.Single(new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents);
+        Assert.Single(history.Facts);
     }
 
     [Fact]
-    public void ShouldPreserveBoundedHistoryAndAllowExactRetryGivenHistoryCapacity()
+    public async Task ShouldPreserveBoundedHistoryAndAllowExactRetryGivenHistoryCapacity()
     {
-        // Arrange
-        var redaction = new EvidenceRedaction(Tenant, Uuid.CreateVersion4());
-        var firstRequest = Uuid.CreateVersion4();
-        var original = Identity('a');
-        var derived = Identity('b');
-        Assert.True(redaction.Prepare(firstRequest, 0, original, derived, "Manual", "Initial", Contributor, Now).IsSuccess);
+        // Arrange: the old100-denial assertion is superseded; current native admission has no history-count cap.
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        var derived = await SeedDerivedAsync(fixture);
+        await GrantPairAsync(fixture, fixture.UserId, derived);
+        var firstRequest = new PrepareEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, Uuid.CreateVersion4(), 0,
+            fixture.ArtifactId, derived, "Manual", "Initial");
+        var first = await DispatchAsync(fixture, fixture.UserId, firstRequest);
+        Assert.True(first.IsSuccess, first.Error?.Message);
         for (var revision = 1; revision < 100; revision++)
-            Assert.True(redaction.Prepare(Uuid.CreateVersion4(), revision, original, derived, "Manual", "Revision", Contributor, Now.AddSeconds(revision)).IsSuccess);
+            Assert.True((await DispatchAsync(fixture, fixture.UserId, firstRequest with
+            {
+                CommandId = Uuid.CreateVersion4(),
+                ExpectedRevision = revision,
+                Reason = "Revision"
+            })).IsSuccess);
 
         // Act
-        var retry = redaction.Prepare(firstRequest, 0, original, derived, "Manual", "Initial", Contributor, Now.AddDays(1));
-        var extra = redaction.Prepare(Uuid.CreateVersion4(), 100, original, derived, "Manual", "Extra", Contributor, Now.AddDays(1));
-        var replay = new AggregateScenario<EvidenceRedaction>(new EvidenceRedaction(Tenant, redaction.Id))
-            .Given(new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents.ToArray()).Aggregate;
+        var retry = await DispatchAsync(fixture, fixture.UserId, firstRequest);
+        var extra = await DispatchAsync(fixture, fixture.UserId, firstRequest with
+        {
+            CommandId = Uuid.CreateVersion4(),
+            ExpectedRevision = 100,
+            Reason = "Extra"
+        });
+        var replay = await ReadHistoryAsync(fixture.Provider, fixture.TenantId, firstRequest.RedactionId);
+        var owner = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new EvidenceRedaction(fixture.TenantId, firstRequest.RedactionId));
 
         // Assert
-        Assert.True(retry.IsSuccess);
-        Assert.False(extra.IsSuccess);
-        Assert.Equal(100, redaction.Revision);
-        Assert.Equal(100, replay.Preparations.Count);
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(first.Value.Preparations, retry.Value.Preparations);
+        Assert.True(extra.IsSuccess, extra.Error?.Message);
+        Assert.Equal(101, owner.Revision);
+        Assert.Equal(101, replay.Preparations.Count);
         Assert.Equal("Initial", replay.Preparations[0].Reason);
-        Assert.Equal(100, new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents.Count);
+        Assert.Equal(101, replay.Facts.Count);
     }
 
     [Fact]
@@ -278,7 +332,7 @@ public sealed class EvidenceRedactionTests
         var redaction = new EvidenceRedaction(Tenant, Uuid.CreateVersion4());
 
         // Act
-        var result = redaction.Prepare(Uuid.CreateVersion4(), 0, Identity('a'), Identity('b'),
+        var result = redaction.DecidePrepare(Uuid.CreateVersion4(), 0, Identity('a'), Identity('b'),
             new string('\uffff', 4000), new string('\uffff', 4000), Contributor, Now);
 
         // Assert
@@ -286,6 +340,8 @@ public sealed class EvidenceRedactionTests
         Assert.Empty(new AggregateScenario<EvidenceRedaction>(redaction).PendingEvents);
     }
 
+    static EvidenceRedactionPrepared Legacy(Uuid id, long expected, EvidenceRedactionPreparationFact value) =>
+        DomainEventSeed.Attach(new EvidenceRedactionPrepared(Tenant, id, expected, value), id, (ulong)value.Revision, occurredOn: Now);
     static EvidenceRedactionSourceCapsule Identity(char hash)
     {
         var digest = new string(hash, 64);

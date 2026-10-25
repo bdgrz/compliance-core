@@ -1,0 +1,158 @@
+{
+  "refreshed": 3,
+  "signalsAtOrAbove065": 0,
+  "currentAggregateHandlerReactorFiles": 940,
+  "exactCurrentSourceAndProvidedDependencyHashes": "verified",
+  "records": [
+    {
+      "path": "src/Compliance.Core/Features/Evidence/GetEvidenceRedactionHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "c4e93a68e15a505da592695ddb8a841ebb7e48534a44582006ee2dad29bfc391",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Evidence/GetEvidenceRedaction.cs",
+          "sha256": "bc1f658e7ee31beacec0d0b7d35b3f294899efe54f5e4d745888ac46ff635229"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Evidence/EvidenceRedactionView.cs",
+          "sha256": "84b12a61fa783510ebb7953ecd163c3fdcf1f0ee27b34df843d5b68563c019ca"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/EvidenceRedactionRead.cs",
+          "sha256": "0f67539360a9156e4dd150cb179742d1d231339c5e020244215b4ead3fd5a0a9"
+        }
+      ],
+      "review_key": "616491bb7fb07364fc11ca1e57c8df3a69b39ea5b8fa9def1a94eabf2b4b86bb",
+      "reviewed_at": "2026-10-25T10:36:14.958Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.08
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.23
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.07
+        }
+      },
+      "usage": {
+        "input_tokens": 2692,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/GetWorkItemHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "f61b020ef8db716c5fd287bbedf56bb0ae6c1371f162ce6bb4ec5320d8cd972b",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Work/GetWorkItem.cs",
+          "sha256": "65e9e1f23c81e55f081b6d3f0b525197539fcc2e2230f805541ea9c65df4bf87"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Work/WorkCommands.cs",
+          "sha256": "75ee84c382b3474610a0f92fe24669caad72cb9fc274bce198e0a2f54d65afc0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Work/WorkItemDetailView.cs",
+          "sha256": "725aa75f4dc9966513e50aec60ff53a26105bf65df01540bccf04204f2c517f8"
+        }
+      ],
+      "review_key": "3a3d768295e9353bb8cb71efe3e30d9f55c55b8fe73a7c0d83836698ffc09c5b",
+      "reviewed_at": "2026-10-25T10:36:15.045Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.09
+        }
+      },
+      "usage": {
+        "input_tokens": 1771,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/LegacyWorkAssignmentLedger.cs",
+      "kinds": [
+        "aggregate"
+      ],
+      "sha256": "65b6eb1464d313903c212f0f7da5155ca21c3597fd3b5cab003d10639da562df",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Work/WorkAssignmentEntryView.cs",
+          "sha256": "92ae391fa31dd7d640ea804e0277ce3748ddc55fd4d042dc68fa208a66df0408"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Work/WorkItemAssigned.cs",
+          "sha256": "d83ca2c03651c15c76e0048c29bc01c484850efaa6ab7fa96b6252b3cb8f6dd1"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Work/WorkItemEscalated.cs",
+          "sha256": "4c49cb295251c7c76b39126e8330909f1409a0debc53c5f297c8f0b4ec7a1323"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Work/WorkAssignmentState.cs",
+          "sha256": "99a9cb5354bf24f2a6832718832fbdee5502de4ff686e373561efe26926bdf91"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Work/WorkItemAssignment.cs",
+          "sha256": "7a2d66a97661fe13d4c1043786ca6dd1d9cfa75ab28c4224b81ae841fc3db352"
+        }
+      ],
+      "review_key": "967b65e5efa10b352490686c57676e4c32af4cc505b5ab5eafaacc655f6220b9",
+      "reviewed_at": "2026-10-25T10:36:15.278Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.48
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.5
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.57
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.36
+        }
+      },
+      "usage": {
+        "input_tokens": 3923,
+        "output_tokens": 78
+      }
+    }
+  ],
+  "qualification": "Current source review coverage; not a claim every historical selected protocol is implemented. Existing finite-owner candidates and selected authority blockers continue locally; no new GitHubissues."
+}

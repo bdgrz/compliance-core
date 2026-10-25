@@ -215,7 +215,7 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
         var consistency = new WorkQueueReadConsistency(events, [projected]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<WorkAssignmentReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             campaigns: new UnexpectedCampaignDirectory(), accountableWorkItems: [projected],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),

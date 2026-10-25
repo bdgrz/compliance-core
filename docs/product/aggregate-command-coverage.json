@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "54202884eabcacc1eee26789a3fe3894d2f104d7",
+  "sourceCommit": "5887b54da690b373153a796e009ad7b297dc2f21",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 510,
-    "factsWithReducer": 486,
-    "factsWithAggregateEmitter": 402,
+    "domainEventContracts": 515,
+    "factsWithReducer": 490,
+    "factsWithAggregateEmitter": 399,
     "auditFactsWithoutReducer": 2,
-    "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 84,
+    "factsWithoutReducerOrEmitter": 23,
+    "legacyReducerOnlyFacts": 91,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 105,
+    "aggregateTypesWithCommandPath": 104,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -3773,15 +3773,29 @@
           "source": "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs"
       ],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
+    },
+    {
+      "fact": "EvidenceRedactionApprovedV2",
+      "contract": "src/Compliance.Common/Features/Evidence/EvidenceRedactionApprovedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "EvidenceRedaction",
+          "source": "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs"
+        }
+      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRedactionTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "EvidenceRedactionPrepared",
@@ -3792,15 +3806,30 @@
           "source": "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRedactionTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
+    },
+    {
+      "fact": "EvidenceRedactionPreparedV2",
+      "contract": "src/Compliance.Common/Features/Evidence/EvidenceRedactionPreparedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "EvidenceRedaction",
+          "source": "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs"
+        }
+      ],
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionNativeProofTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionTests.cs"
+      ],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "EvidenceRequestActionCompletionUseAuthorized",
@@ -8971,6 +9000,22 @@
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
+      "fact": "WorkAssignmentLegacyHistoryImported",
+      "contract": "src/Compliance.Common/Features/Work/WorkAssignmentLegacyHistoryImported.cs",
+      "reducers": [
+        {
+          "aggregate": "WorkItemAssignment",
+          "source": "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
+        }
+      ],
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs"
+      ],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
+    },
+    {
       "fact": "WorkDigestDispatchAttemptStarted",
       "contract": "src/Compliance.Common/Features/Work/WorkDigestDispatchAttemptStarted.cs",
       "reducers": [
@@ -9064,24 +9109,20 @@
         {
           "aggregate": "LegacyWorkAssignmentLedger",
           "source": "src/Compliance.Core/Features/Work/LegacyWorkAssignmentLedger.cs"
-        },
-        {
-          "aggregate": "WorkItemAssignment",
-          "source": "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentSourceReplayTests.cs",
         "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
-      "fact": "WorkItemAssignmentHistoryImported",
-      "contract": "src/Compliance.Common/Features/Work/WorkItemAssignmentHistoryImported.cs",
+      "fact": "WorkItemAssignmentEscalated",
+      "contract": "src/Compliance.Common/Features/Work/WorkItemAssignmentEscalated.cs",
       "reducers": [
         {
           "aggregate": "WorkItemAssignment",
@@ -9092,6 +9133,34 @@
         "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
       ],
       "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "WorkItemAssignmentHistoryImported",
+      "contract": "src/Compliance.Common/Features/Work/WorkItemAssignmentHistoryImported.cs",
+      "reducers": [],
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "confirmed_gap",
+      "note": "Confirmed source gap: no current aggregate reducer or emitter. Keep unresolved in the local delivery ledger; no implemented path is claimed."
+    },
+    {
+      "fact": "WorkItemAssignmentRecorded",
+      "contract": "src/Compliance.Common/Features/Work/WorkItemAssignmentRecorded.cs",
+      "reducers": [
+        {
+          "aggregate": "WorkItemAssignment",
+          "source": "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Work/WorkAssignmentNativePrefixTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -9102,18 +9171,12 @@
         {
           "aggregate": "LegacyWorkAssignmentLedger",
           "source": "src/Compliance.Core/Features/Work/LegacyWorkAssignmentLedger.cs"
-        },
-        {
-          "aggregate": "WorkItemAssignment",
-          "source": "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "WorkRelationshipRecorded",
@@ -10476,18 +10539,22 @@
       "source": "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs",
       "appliedFacts": [
         "EvidenceRedactionApproved",
-        "EvidenceRedactionPrepared"
+        "EvidenceRedactionApprovedV2",
+        "EvidenceRedactionPrepared",
+        "EvidenceRedactionPreparedV2"
       ],
-      "commandRequests": [
-        "ApproveEvidenceRedaction",
-        "PrepareEvidenceRedaction"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionLifetimeTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionNativeProofTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionTestHistory.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRedactionTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "EvidenceRequest",
@@ -12304,12 +12371,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/IdentityLinkE2ETests.cs",
         "test/Compliance.Tests/E2E/IdentityRecoveryE2ETests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionNativeHttpTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzPlatformUserDirectoryTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzUserIdentityDirectoryTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityOwnerHistoryTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryAdmissionPreparationTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12385,9 +12452,9 @@
       "aggregate": "WorkItemAssignment",
       "source": "src/Compliance.Core/Features/Work/WorkItemAssignment.cs",
       "appliedFacts": [
-        "WorkItemAssigned",
-        "WorkItemAssignmentHistoryImported",
-        "WorkItemEscalated"
+        "WorkAssignmentLegacyHistoryImported",
+        "WorkItemAssignmentEscalated",
+        "WorkItemAssignmentRecorded"
       ],
       "commandRequests": [
         "AssignWorkItem",
@@ -12398,6 +12465,11 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentNativeHttpTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentNativePrefixTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentNativeTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentSourceReplayTests.cs",
         "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -14059,7 +14131,7 @@
     {
       "request": "ApproveEvidenceRedaction",
       "contract": "src/Compliance.Common/Features/Evidence/ApproveEvidenceRedaction.cs",
-      "interfaces": "IRequest<EvidenceRedactionView>, IEvidenceRedactionMutationRequest, ICallable",
+      "interfaces": "IRequest<EvidenceRedactionView>, IEvidenceRedactionMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -14069,19 +14141,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "EvidenceRedaction",
-        "SeparationOfDutiesWaiver"
-      ],
-      "aggregateTargets": [
-        "EvidenceRedaction"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [
-        "EvidenceRedactionRead",
+        "EvidenceRedactionOperations",
         "EvidenceRedactionWaiverRead"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs"
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionLifetimeTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionNativeProofTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionTests.cs"
       ],
       "note": ""
     },
@@ -14233,7 +14303,8 @@
         "test/Compliance.Tests/Features/AccessControl/PersonalWaiverApprovalTransportTests.cs",
         "test/Compliance.Tests/Features/AccessControl/SeparationOfDutiesWaiverAuthorizerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/WaiverManagementIndependenceTests.cs",
-        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs"
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionNativeProofTests.cs"
       ],
       "note": ""
     },
@@ -14577,7 +14648,7 @@
     {
       "request": "AssignWorkItem",
       "contract": "src/Compliance.Common/Features/Work/AssignWorkItem.cs",
-      "interfaces": "IRequest<WorkItemDetailView>, IControlOperationRequest, ICallable",
+      "interfaces": "IRequest<WorkItemDetailView>, IControlOperationRequest, ICallable, IIdentifiedRequest, IWorkAssignmentCommand",
       "classification": "command",
       "handlers": [
         {
@@ -14592,8 +14663,7 @@
         "WorkItemAssignment"
       ],
       "helperServices": [
-        "WorkCommands",
-        "WorkQueueReader"
+        "WorkAssignmentOperations"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
@@ -15568,7 +15638,7 @@
     {
       "request": "ClaimWorkItem",
       "contract": "src/Compliance.Common/Features/Work/ClaimWorkItem.cs",
-      "interfaces": "IRequest<WorkItemDetailView>, IControlOperationRequest, ICallable",
+      "interfaces": "IRequest<WorkItemDetailView>, IControlOperationRequest, ICallable, IIdentifiedRequest, IWorkAssignmentCommand",
       "classification": "command",
       "handlers": [
         {
@@ -15583,12 +15653,12 @@
         "WorkItemAssignment"
       ],
       "helperServices": [
-        "WorkCommands",
-        "WorkQueueReader"
+        "WorkAssignmentOperations"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentNativeTests.cs",
         "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
         "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
       ],
@@ -17448,7 +17518,7 @@
     {
       "request": "DelegateWorkItem",
       "contract": "src/Compliance.Common/Features/Work/DelegateWorkItem.cs",
-      "interfaces": "IRequest<WorkItemDetailView>, IControlOperationRequest, ICallable",
+      "interfaces": "IRequest<WorkItemDetailView>, IControlOperationRequest, ICallable, IIdentifiedRequest, IWorkAssignmentCommand",
       "classification": "command",
       "handlers": [
         {
@@ -17463,12 +17533,13 @@
         "WorkItemAssignment"
       ],
       "helperServices": [
-        "WorkCommands",
-        "WorkQueueReader"
+        "WorkAssignmentOperations"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentNativeTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentSourceReplayTests.cs",
         "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
         "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
       ],
@@ -17795,7 +17866,7 @@
     {
       "request": "EscalateWorkItem",
       "contract": "src/Compliance.Common/Features/Work/EscalateWorkItem.cs",
-      "interfaces": "IRequest<WorkItemDetailView>, IControlOperationRequest, ICallable",
+      "interfaces": "IRequest<WorkItemDetailView>, IControlOperationRequest, ICallable, IIdentifiedRequest, IWorkAssignmentCommand",
       "classification": "command",
       "handlers": [
         {
@@ -17810,10 +17881,10 @@
         "WorkItemAssignment"
       ],
       "helperServices": [
-        "WorkCommands",
-        "WorkQueueReader"
+        "WorkAssignmentOperations"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Work/WorkAssignmentNativeTests.cs",
         "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
         "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
       ],
@@ -19644,11 +19715,11 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [
-        "EvidenceRedactionRead"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs"
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionLifetimeTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionNativeProofTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -20955,9 +21026,7 @@
         "WorkDigestPreference"
       ],
       "aggregateTargets": [],
-      "helperServices": [
-        "WorkQueueReader"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
         "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
@@ -21025,10 +21094,7 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [
-        "WorkCommands",
-        "WorkQueueReader"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Work/AccessReviewWorkQueueVisibilityTests.cs",
@@ -21037,7 +21103,7 @@
         "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
         "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkCompositionTests.cs",
         "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs"
+        "test/Compliance.Tests/Features/Work/WorkAssignmentNativeBoundaryTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -23956,9 +24022,7 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [
-        "WorkQueueReader"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskActionWorkIdentityTests.cs",
@@ -24007,9 +24071,7 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [
-        "WorkQueueReader"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
         "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
@@ -24705,7 +24767,7 @@
     {
       "request": "PrepareEvidenceRedaction",
       "contract": "src/Compliance.Common/Features/Evidence/PrepareEvidenceRedaction.cs",
-      "interfaces": "IRequest<EvidenceRedactionView>, IEvidenceRedactionMutationRequest, ICallable",
+      "interfaces": "IRequest<EvidenceRedactionView>, IEvidenceRedactionMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -24715,15 +24777,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "EvidenceRedaction"
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "EvidenceRedactionOperations"
       ],
-      "aggregateTargets": [
-        "EvidenceRedaction"
-      ],
-      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs"
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionLifetimeTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionNativeProofTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionTests.cs"
       ],
       "note": ""
     },
@@ -27207,7 +27270,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/SeparationOfDutiesWaiverAuthorizerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/WaiverManagementIndependenceTests.cs",
-        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs"
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionNativeProofTests.cs"
       ],
       "note": ""
     },

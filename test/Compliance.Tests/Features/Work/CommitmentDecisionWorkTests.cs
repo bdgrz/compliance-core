@@ -270,7 +270,7 @@ public sealed class CommitmentDecisionWorkTests
         var authority = services.GetRequiredService<OperatingAuthority>();
         var consistency = new CommitmentDraftListReadConsistency(fixture.Commitments,
             new InMemoryEventStore());
-        var queue = new WorkQueueReader(reader, services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(), authority, TimeProvider.System,
+        var queue = new WorkQueueReader(reader, services.GetRequiredService<WorkAssignmentReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(), authority, TimeProvider.System,
             services.GetRequiredService<WorkQueueReadConsistency>(),
             commitmentSources: services.GetRequiredService<CommitmentReader>(),
             commitments: fixture.Commitments, commitmentConsistency: consistency,
@@ -312,7 +312,7 @@ public sealed class CommitmentDecisionWorkTests
             CancellationToken.None);
         var projection = new CommitmentDecisionWorkProjectionReader(
             await ReadCommitmentCheckpointAsync(events, fixture.TenantId), live.Value);
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<WorkAssignmentReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
             new WorkQueueReadConsistency(events, [projection]),
             commitmentSources: services.GetRequiredService<CommitmentReader>(),
