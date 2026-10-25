@@ -1,0 +1,833 @@
+{
+  "createdUtc": "2026-10-25T11:25:30.160987+00:00",
+  "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+  "artifactBranch": "codex/checkpoint-artifacts-20261025T112220Z",
+  "applicationImplementationHalted": true,
+  "qualification": "Preservation only; archived WIP and frozen packets are not all integrated or runtime-qualified. Existing prior recovery bundles and qualified-RED evidence remain in priorRecoveryRoot.",
+  "priorRecoveryRoot": "/Users/jrepanich/.codex/recovery/compliance-core-20261024T141258Z",
+  "archives": [
+    {
+      "sourceDirectory": "/tmp/compliance-access-expectation-prepared",
+      "archive": "compliance-access-expectation-prepared.tar.gz",
+      "archiveSha256": "e85d7b1c1e87fe774043359c01868396e4f2650f62864f9912673e604eb17232",
+      "bytes": 127758,
+      "files": 104,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-access-native-prepared",
+      "archive": "compliance-access-native-prepared.tar.gz",
+      "archiveSha256": "3c6cea05611a36fd6a1cdde4515e706a5b3980c327e906a6073065137b23339a",
+      "bytes": 18492,
+      "files": 20,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-access-receiver-preparation-prepared",
+      "archive": "compliance-access-receiver-preparation-prepared.tar.gz",
+      "archiveSha256": "74504eeabc0f5eaa3718545a762e7f9d663f6dedd6180493c73789c476b1b3a1",
+      "bytes": 602818,
+      "files": 720,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-access-review-history-prepared",
+      "archive": "compliance-access-review-history-prepared.tar.gz",
+      "archiveSha256": "778432b42d99066703710fb6eb0751db5c6d7964bb5632ef159e9215b34eb090",
+      "bytes": 1089137,
+      "files": 859,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-access-source-use-preparation-prepared",
+      "archive": "compliance-access-source-use-preparation-prepared.tar.gz",
+      "archiveSha256": "c284c6b0abdd963f06e8e3120afaf00d1ceabf5d11671e3f6fc24a703d5cc1b4",
+      "bytes": 583909,
+      "files": 733,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-advisor-history-prepared",
+      "archive": "compliance-advisor-history-prepared.tar.gz",
+      "archiveSha256": "fe21201195c90776e6f78f99d22121431fd55d0a9e82687ef42ea4237111b990",
+      "bytes": 538049,
+      "files": 287,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-advisor-unit-prepare-prepared",
+      "archive": "compliance-advisor-unit-prepare-prepared.tar.gz",
+      "archiveSha256": "0b8e3a6bb515e4cbd35c70fe5997c33c58c582bea7680def67dc33d354b4168a",
+      "bytes": 14099,
+      "files": 20,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-all-source-receipts-prepared",
+      "archive": "compliance-all-source-receipts-prepared.tar.gz",
+      "archiveSha256": "ebb5815e9d3dd179c15f97ce0a7e437ca054bee45f20d1cc9c4ec642aa1e5d49",
+      "bytes": 912385,
+      "files": 279,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-audit-package-history-prepared",
+      "archive": "compliance-audit-package-history-prepared.tar.gz",
+      "archiveSha256": "046651990132d1c24d2f3ab21b1078edb4df4eb81130f827b16de97690f0fc71",
+      "bytes": 246987,
+      "files": 155,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-audit-population-followup-prepared",
+      "archive": "compliance-audit-population-followup-prepared.tar.gz",
+      "archiveSha256": "def2cf08bcdfc6747596139539cb3068e836b9a4db02d031365d03309cf9ab78",
+      "bytes": 326071,
+      "files": 291,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-audit-population-native-prepared",
+      "archive": "compliance-audit-population-native-prepared.tar.gz",
+      "archiveSha256": "996aed48ac522db7a42219a2d7e696ab0553bf4c3d0d2a24b77337e03b77f781",
+      "bytes": 1079922,
+      "files": 707,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-auditor-request-cut-prepared",
+      "archive": "compliance-auditor-request-cut-prepared.tar.gz",
+      "archiveSha256": "9298cb0327e4816efc45abecefe19384644146b1ce7ee4d744f6ea7040998510",
+      "bytes": 93928,
+      "files": 80,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-auditor-request-prefix-prepared",
+      "archive": "compliance-auditor-request-prefix-prepared.tar.gz",
+      "archiveSha256": "5865fcbc94963474c55f26ae73c2e3eb0017f238eb9aaebaa561503b4ae8df9a",
+      "bytes": 36601,
+      "files": 29,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-auditor-request-prepared",
+      "archive": "compliance-auditor-request-prepared.tar.gz",
+      "archiveSha256": "d356ad3bab20df05b3ea3713b088ce3f5074e0db1690db186dc21e97da79a10f",
+      "bytes": 435892,
+      "files": 425,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-auditor-request-reads-prepared",
+      "archive": "compliance-auditor-request-reads-prepared.tar.gz",
+      "archiveSha256": "1f42515a825d1e938aac7ca637dec4c269b86780dc1dd42036d7529fb78373d7",
+      "bytes": 370599,
+      "files": 104,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-auditor-response-prepared",
+      "archive": "compliance-auditor-response-prepared.tar.gz",
+      "archiveSha256": "25f0797df28aaca3b53410b5b6ecdc9d5126ee9f29cc0dda10ce219d90a08137",
+      "bytes": 99905,
+      "files": 63,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-baseline-identity-prepared",
+      "archive": "compliance-baseline-identity-prepared.tar.gz",
+      "archiveSha256": "aca9f81fba883b9cdcb9f42c147a17238167274d01145a95e4bac1858a6bb620",
+      "bytes": 111210,
+      "files": 70,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-boundary-consumers-prepared",
+      "archive": "compliance-boundary-consumers-prepared.tar.gz",
+      "archiveSha256": "d16efc852f680b72e829ed55f0f94be1fc081bd76bce0cf7b13a244f458a2515",
+      "bytes": 7117313,
+      "files": 1666,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-calendar-history-validation-prepared",
+      "archive": "compliance-calendar-history-validation-prepared.tar.gz",
+      "archiveSha256": "a9055b8fd0feca0f426a2d1b8406caada278c91bbe139c97440475f783300763",
+      "bytes": 26271,
+      "files": 30,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-calendar-prepared",
+      "archive": "compliance-calendar-prepared.tar.gz",
+      "archiveSha256": "c57668d764726449fef3dbf8800cd97ff2f9e027e5b2180e00f7e0d1a465c9e2",
+      "bytes": 178474,
+      "files": 65,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-campaign-launch-prepare-prepared",
+      "archive": "compliance-campaign-launch-prepare-prepared.tar.gz",
+      "archiveSha256": "c1894d4fa414e32da6f5d2fcfcf5547b750ef3a1029f71963fe96a17fb11bc9f",
+      "bytes": 8697,
+      "files": 11,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-campaign-member-binding-prepared",
+      "archive": "compliance-campaign-member-binding-prepared.tar.gz",
+      "archiveSha256": "60547616bec46df1a92a5c489681009f567301dca621651c5767b36b600536a0",
+      "bytes": 8676,
+      "files": 10,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-client-service-native-prepared",
+      "archive": "compliance-client-service-native-prepared.tar.gz",
+      "archiveSha256": "d69d5fa4e1d08a3d07a6c2e2d896646e2d8a1a4c437d835152e6971785c2da8f",
+      "bytes": 249710,
+      "files": 132,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-commitment-consumers-prepared",
+      "archive": "compliance-commitment-consumers-prepared.tar.gz",
+      "archiveSha256": "1d1af5041c1e6bf3392c1f1c440f28ca0c1f5707c04c40a61a1683b5e0de7ead",
+      "bytes": 815932,
+      "files": 317,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-control-consumers-prepared",
+      "archive": "compliance-control-consumers-prepared.tar.gz",
+      "archiveSha256": "dc60b4e114533fd0ad06c9d163cfb9008201bf50db6630625fca27410045d9bd",
+      "bytes": 828685,
+      "files": 425,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-control-identifier-prepared",
+      "archive": "compliance-control-identifier-prepared.tar.gz",
+      "archiveSha256": "abb6be2f071f4d25da868e12682fe1408b2b3f4357163ed6ca031fcbf3c50800",
+      "bytes": 32018,
+      "files": 11,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-control-owners-prepared",
+      "archive": "compliance-control-owners-prepared.tar.gz",
+      "archiveSha256": "2020e993c7eb09892553f4d38493de4a35a21c028fe28f620316c0503a75aa7d",
+      "bytes": 1453826,
+      "files": 1166,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-corrective-action-prepared",
+      "archive": "compliance-corrective-action-prepared.tar.gz",
+      "archiveSha256": "73143c9ff869a75b2340a1aa430e4e048a7aef356ca9a61213574d2809865304",
+      "bytes": 66838,
+      "files": 41,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-engagement-external-prepared",
+      "archive": "compliance-engagement-external-prepared.tar.gz",
+      "archiveSha256": "5784ef4a490e6155329915f7cef2cd55c0815678ed8ee91c34706dca12076585",
+      "bytes": 23646,
+      "files": 18,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-engagement-native-prepared",
+      "archive": "compliance-engagement-native-prepared.tar.gz",
+      "archiveSha256": "bf4c81826d1a4869e4a53beaef7641b0fa35d70e4481208d9ee10f6f972d9eab",
+      "bytes": 3803535,
+      "files": 5573,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-evaluation-scope-prepared",
+      "archive": "compliance-evaluation-scope-prepared.tar.gz",
+      "archiveSha256": "a31b35be378ae76ab905d8cc7e7448df7139faf4937ef188571c349081cde3bc",
+      "bytes": 208434,
+      "files": 129,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-evidence-redaction-native-prepared",
+      "archive": "compliance-evidence-redaction-native-prepared.tar.gz",
+      "archiveSha256": "2903b4fbae5d9b2a604e83199070d7ac8ca80fd5b37659e5150430456f1a2f81",
+      "bytes": 689857,
+      "files": 277,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-evidence-request-prepared",
+      "archive": "compliance-evidence-request-prepared.tar.gz",
+      "archiveSha256": "96474416e5a319245afae96930255a54689eb2697c370526d817c38cf7d305c1",
+      "bytes": 49366,
+      "files": 45,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-examination-engagement-prepared",
+      "archive": "compliance-examination-engagement-prepared.tar.gz",
+      "archiveSha256": "bb139bdcb05619d7646d27d67df5e1ad1b8d470263af0a29058445bc7e13a8ba",
+      "bytes": 742329,
+      "files": 436,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-finding-native-prepared",
+      "archive": "compliance-finding-native-prepared.tar.gz",
+      "archiveSha256": "379e758ae15fadce3f5885690bef11773ee7bfda30d8f1099785d91c4a2133e5",
+      "bytes": 388281,
+      "files": 253,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-firm-staff-native-prepared",
+      "archive": "compliance-firm-staff-native-prepared.tar.gz",
+      "archiveSha256": "19d7b9af4bafd04977f924e0eacea369c928b6e5c5b632ad8a4d024580e1b183",
+      "bytes": 302968,
+      "files": 274,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-foundation-replay-prepared",
+      "archive": "compliance-foundation-replay-prepared.tar.gz",
+      "archiveSha256": "2cc1bc97079c7fd8995b752bf56783f1e281bb2ec0682756220aec0b4d9aa182",
+      "bytes": 263868,
+      "files": 197,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-identity-recovery-native-prepared",
+      "archive": "compliance-identity-recovery-native-prepared.tar.gz",
+      "archiveSha256": "1215f30e0242514beb38a319bf6aa0ef52371743b3d2680157787d40c71e25d5",
+      "bytes": 1710969,
+      "files": 1239,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-import-batch-prepared",
+      "archive": "compliance-import-batch-prepared.tar.gz",
+      "archiveSha256": "a89a14f732249cf004a20dba2e1da5d404151effab8a97b927612dfb18c2ba41",
+      "bytes": 647166,
+      "files": 602,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-import-receiver-preparation-prepared",
+      "archive": "compliance-import-receiver-preparation-prepared.tar.gz",
+      "archiveSha256": "a803e8d793a4f700bde43a1d960eaced79cfb842471a9fb5280e06ddb2150ed4",
+      "bytes": 767660,
+      "files": 888,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-import-source-prepared",
+      "archive": "compliance-import-source-prepared.tar.gz",
+      "archiveSha256": "3576cdf285f99820a68c454c475ab632756da9c0b2a0c9a5f9f17800dbda4b4f",
+      "bytes": 535261,
+      "files": 468,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-incident-native-prepared",
+      "archive": "compliance-incident-native-prepared.tar.gz",
+      "archiveSha256": "8e6b6d927881180e44da71db24dacab268ce8f48c1039a125ae1fba415f1481e",
+      "bytes": 712927,
+      "files": 374,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-mapping-member-binding-prepared",
+      "archive": "compliance-mapping-member-binding-prepared.tar.gz",
+      "archiveSha256": "9a845ecff689d927df85ca064a887f5d9a3e906702aa7e99cce5a6afe6bcc843",
+      "bytes": 9906,
+      "files": 18,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-mapping-native-prepared",
+      "archive": "compliance-mapping-native-prepared.tar.gz",
+      "archiveSha256": "58371c84bcb8cb6cfe02853203ccfc07606c4ea8575f79a332d2d626b17a680a",
+      "bytes": 558999,
+      "files": 249,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-native-http-prepared",
+      "archive": "compliance-native-http-prepared.tar.gz",
+      "archiveSha256": "7fc31d98fd792a24cbb1141e196ec7ece5a79b4da9a267d4524c3bf48920aeac",
+      "bytes": 121252,
+      "files": 56,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-native-prepare-race-prepared",
+      "archive": "compliance-native-prepare-race-prepared.tar.gz",
+      "archiveSha256": "399e5e6b5902633d135e59b99f95e212200d363968b0840b0690cc7e63d18531",
+      "bytes": 30392,
+      "files": 22,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-native-receipts-prepared",
+      "archive": "compliance-native-receipts-prepared.tar.gz",
+      "archiveSha256": "9cc55ddc174eef88f1c1f0e98c74d544a221231dfa0d9411fd3c30b62082c8ac",
+      "bytes": 268514,
+      "files": 133,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-native-replay-commitment-prepared",
+      "archive": "compliance-native-replay-commitment-prepared.tar.gz",
+      "archiveSha256": "e06ce85bc74f624a51db49a10aa6e932f22c0733c342a84b70ed0fb882d84894",
+      "bytes": 1826,
+      "files": 1,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-native-roster-prepared",
+      "archive": "compliance-native-roster-prepared.tar.gz",
+      "archiveSha256": "8a1d53864b5d14ff477aa40c5cdca76492580cab8e2c1be1f6c30ecaaef04e5b",
+      "bytes": 187784,
+      "files": 70,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-operating-history-prepared",
+      "archive": "compliance-operating-history-prepared.tar.gz",
+      "archiveSha256": "5e169bbb964535bf6b08f156afa956b0b2e7d3bf9eb417ce8f0aed7115efd6ff",
+      "bytes": 303372,
+      "files": 169,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-person-native-prepared",
+      "archive": "compliance-person-native-prepared.tar.gz",
+      "archiveSha256": "3d29b00283a18df183de0c2820ea31ed8f0b9b1ea20029bb8680bb35b28f1fed",
+      "bytes": 443515,
+      "files": 152,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-policy-campaign-compile-followup-prepared",
+      "archive": "compliance-policy-campaign-compile-followup-prepared.tar.gz",
+      "archiveSha256": "240c285904460e5caf41bccfa46e6641b89e91b92282aa8fecdbdfb2a69885a8",
+      "bytes": 4435,
+      "files": 4,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-policy-campaign-native-prepared",
+      "archive": "compliance-policy-campaign-native-prepared.tar.gz",
+      "archiveSha256": "1214c4877eaa656d501d2fbfa91a6c89275ddfd3aef74a21a5530719704280b5",
+      "bytes": 1068600,
+      "files": 623,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-policy-consumers-prepared",
+      "archive": "compliance-policy-consumers-prepared.tar.gz",
+      "archiveSha256": "3bdd1063809061b697deaac75f8841d985558e4a673f2622ea59fb07870005be",
+      "bytes": 1378542,
+      "files": 523,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-practice-native-prepared",
+      "archive": "compliance-practice-native-prepared.tar.gz",
+      "archiveSha256": "b6b8bf6a506f8afc645e56a2f7430b901f197230187c180ab6d1563e88f4ec9c",
+      "bytes": 208501,
+      "files": 118,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-product-client-service-native-prepared",
+      "archive": "compliance-product-client-service-native-prepared.tar.gz",
+      "archiveSha256": "c8d5a3c2c1eac436264bea1a8403e42c9168383101a3b58d491cdd7798cf914c",
+      "bytes": 1116235,
+      "files": 495,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-product-client-service-prepared-cut-prepared",
+      "archive": "compliance-product-client-service-prepared-cut-prepared.tar.gz",
+      "archiveSha256": "fec81dbaff21956ced32dfe5e21d90de23536d19ffcc81a65b2e0a27dd403e23",
+      "bytes": 8628,
+      "files": 17,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-professional-duty-native-prepared",
+      "archive": "compliance-professional-duty-native-prepared.tar.gz",
+      "archiveSha256": "759e44e89b23e892987866932df25f380eb09adaa49c26bb1df28ea5ce4d8ff0",
+      "bytes": 434930,
+      "files": 292,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-program-external-fixtures-prepared",
+      "archive": "compliance-program-external-fixtures-prepared.tar.gz",
+      "archiveSha256": "18fe1586b5003d626e438e4f02d9963e7fe1715061eee8f2a4b4902185a3602e",
+      "bytes": 60246,
+      "files": 43,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-program-native-prepared",
+      "archive": "compliance-program-native-prepared.tar.gz",
+      "archiveSha256": "9c7c5e30de9f19783938cf2c96e5db2ee92185871188899e0500ec804b436ebf",
+      "bytes": 2852222,
+      "files": 1085,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-projection-identity-prepared",
+      "archive": "compliance-projection-identity-prepared.tar.gz",
+      "archiveSha256": "fddcc38a17fe775ea48cec47f4cef11669ffd1b5af02ecbb04687dfb926b1b6c",
+      "bytes": 294300,
+      "files": 170,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-protected-download-prepared",
+      "archive": "compliance-protected-download-prepared.tar.gz",
+      "archiveSha256": "e46ffe3e9831f4e4bd74f005d679dac85c09ba43a9d1ea26d455b8e8311e13b5",
+      "bytes": 179227,
+      "files": 108,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-provider-assurance-gap-native-prepared",
+      "archive": "compliance-provider-assurance-gap-native-prepared.tar.gz",
+      "archiveSha256": "6f289b8eb1cf13fdc1f7510e5126f5062cf180e9824c43f4ff5e5a3a50b49b76",
+      "bytes": 653457,
+      "files": 491,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-ratification-native-prepared",
+      "archive": "compliance-ratification-native-prepared.tar.gz",
+      "archiveSha256": "fc1bc155c65c81c859d6e27df9f25c6613c618c9e4280094c1c8e2eb5e33bea1",
+      "bytes": 273990,
+      "files": 107,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-readiness-native-prepared",
+      "archive": "compliance-readiness-native-prepared.tar.gz",
+      "archiveSha256": "b5c6c0624fac20585a993c341f4719eca394753e985abf311537a94ab6101c71",
+      "bytes": 616522,
+      "files": 411,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-remediation-recovery-prepared",
+      "archive": "compliance-remediation-recovery-prepared.tar.gz",
+      "archiveSha256": "d391b200ae01e17d338065ab3fa95397c5ed87da2adaf6384e089bdc3001c9ba",
+      "bytes": 2332,
+      "files": 2,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-risk-action-prepared",
+      "archive": "compliance-risk-action-prepared.tar.gz",
+      "archiveSha256": "d266d4a446f87809c6e846fdfe4dfb008891e5f34fd0d09bfea3c97aa6796415",
+      "bytes": 348428,
+      "files": 154,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-risk-assertion-prepared",
+      "archive": "compliance-risk-assertion-prepared.tar.gz",
+      "archiveSha256": "bee32c0a900aa6c71a3668299d5b12d03ce13fbe204a62f489c7a752f885f3f0",
+      "bytes": 198455,
+      "files": 106,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-risk-governance-prepared",
+      "archive": "compliance-risk-governance-prepared.tar.gz",
+      "archiveSha256": "d563bdca1c52aba99a3fef2aa3781480530c520be3419fdd5fdb34f70696d01c",
+      "bytes": 158571,
+      "files": 81,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-risk-method-prepared",
+      "archive": "compliance-risk-method-prepared.tar.gz",
+      "archiveSha256": "bd54e3ef28b648a6627cd7f192dcf5747e3eb71bcd772cae94d01dcd060e47f5",
+      "bytes": 554771,
+      "files": 195,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-risk-native-prepared",
+      "archive": "compliance-risk-native-prepared.tar.gz",
+      "archiveSha256": "6d8010012c43728ca25a5b272b84cab48c634af1d06855b7d908c0fd59f8d238",
+      "bytes": 4765754,
+      "files": 1155,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-risk-source-bytes-prepared",
+      "archive": "compliance-risk-source-bytes-prepared.tar.gz",
+      "archiveSha256": "b093e6856b1d00f8d1aaa492a0aa74e9f4159fc15b059f93b98bfb95c6581dcd",
+      "bytes": 80744,
+      "files": 35,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-risk-work-identity-prepared",
+      "archive": "compliance-risk-work-identity-prepared.tar.gz",
+      "archiveSha256": "f516f1d259a1fc2998dcdac7af46fb179855960475af60f9c50a93a23197e1da",
+      "bytes": 67295,
+      "files": 36,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-s29-prepared",
+      "archive": "compliance-s29-prepared.tar.gz",
+      "archiveSha256": "41768e6e1a157c8fb5a0922b345e2a5c697d2ddfaf5d4219abae83214174d3ee",
+      "bytes": 333047,
+      "files": 302,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-s29-publisher-prepared",
+      "archive": "compliance-s29-publisher-prepared.tar.gz",
+      "archiveSha256": "da1ff1c3bdd31fe4481aa661667e3e7906cc1e822d083b8b88da970bb7c54fd9",
+      "bytes": 422053,
+      "files": 185,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-s29-read-prepared",
+      "archive": "compliance-s29-read-prepared.tar.gz",
+      "archiveSha256": "ae122349a3c0a578b1cf6952c3c3f61de78f1d709a370af5324e809f6742b66c",
+      "bytes": 91663,
+      "files": 23,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-s31-prepared",
+      "archive": "compliance-s31-prepared.tar.gz",
+      "archiveSha256": "d47c7c225d04cf5fa27bb3661ef79b2291bdcafeaab6a32554c66050c2854613",
+      "bytes": 113802,
+      "files": 59,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-s32-boundary-prepared",
+      "archive": "compliance-s32-boundary-prepared.tar.gz",
+      "archiveSha256": "96c3f3463531071a2eddae3ae9173e4cee053af25b00bd2a50fcb93c7afdef4e",
+      "bytes": 197622,
+      "files": 121,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-s32-commitment-prepared",
+      "archive": "compliance-s32-commitment-prepared.tar.gz",
+      "archiveSha256": "ec9571f5f056514399e7792f20d1ba683d51245f0d43c214360af2221ba3b941",
+      "bytes": 196985,
+      "files": 104,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-s32-policy-prepared",
+      "archive": "compliance-s32-policy-prepared.tar.gz",
+      "archiveSha256": "59b9e6b770220f764a09126c246c178a99e378c4a5fa2da1b4469ec866d521d4",
+      "bytes": 174804,
+      "files": 110,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-significant-change-prepared",
+      "archive": "compliance-significant-change-prepared.tar.gz",
+      "archiveSha256": "24642998cb53fa4c020e1759611b87342a2a7de2bffc5ab5067800b6bd199c13",
+      "bytes": 643008,
+      "files": 413,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-small-history-compactions-prepared",
+      "archive": "compliance-small-history-compactions-prepared.tar.gz",
+      "archiveSha256": "d128bfee56962fe9fc7bfa2f8b23784244081461f61aa35062b950b700a9fe7c",
+      "bytes": 174835,
+      "files": 120,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-source-byte-closure-prepared",
+      "archive": "compliance-source-byte-closure-prepared.tar.gz",
+      "archiveSha256": "94a38426676caef2ad32edd70dc0770612f7d90593e42bd910b8d966c95d004d",
+      "bytes": 76866,
+      "files": 44,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-source-use-reservations-prepared",
+      "archive": "compliance-source-use-reservations-prepared.tar.gz",
+      "archiveSha256": "1774260e9428fab4d92a12084a58c543f116b2fbd10b772234eb9c3d46987350",
+      "bytes": 8083429,
+      "files": 11413,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-system-description-prepared",
+      "archive": "compliance-system-description-prepared.tar.gz",
+      "archiveSha256": "c787c8aee01f53c704583750e58432b64986413772051ea73c47a00d1a5ad4b9",
+      "bytes": 607928,
+      "files": 373,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-system-description-version-prepared",
+      "archive": "compliance-system-description-version-prepared.tar.gz",
+      "archiveSha256": "99230a135c8986865ba6c5e20b4b5d917f4858786f4db3e32faee3c16a24f8cf",
+      "bytes": 22692,
+      "files": 59,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-template-application-actor-prepared",
+      "archive": "compliance-template-application-actor-prepared.tar.gz",
+      "archiveSha256": "17e2928fdee507532693cd174dc143e24011be1d1d2a592956595bb6e92cd5db",
+      "bytes": 23964,
+      "files": 12,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-template-application-prepared",
+      "archive": "compliance-template-application-prepared.tar.gz",
+      "archiveSha256": "b417bd8863033afe2410c3a360c82676f5d70c56d7171d2e495cd7c6fa973923",
+      "bytes": 253625,
+      "files": 105,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-tenant-manager-native-prepared",
+      "archive": "compliance-tenant-manager-native-prepared.tar.gz",
+      "archiveSha256": "d7214e7c227c24b8d44eaf86baaaa1029af99ce11f0b8970627ab38b753087e7",
+      "bytes": 4349807,
+      "files": 6550,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-typeii-close-prepared",
+      "archive": "compliance-typeii-close-prepared.tar.gz",
+      "archiveSha256": "7c63dbb2db0c0dbf043bfc3f0b485759e48edb11c3daa68f9a9fb531fbdebc29",
+      "bytes": 282342,
+      "files": 101,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-typeii-period-prepared",
+      "archive": "compliance-typeii-period-prepared.tar.gz",
+      "archiveSha256": "54fccdd1504237bbda20a0a77bb0fccb0dd42723ad4b0d931dd9da0a0b6d34e6",
+      "bytes": 1362953,
+      "files": 688,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-versioned-owners-prepared",
+      "archive": "compliance-versioned-owners-prepared.tar.gz",
+      "archiveSha256": "e7b7152d100e79a12e50d2bd7ebe5568f79aa325aba487c2e5db6e5665f79ee1",
+      "bytes": 426820,
+      "files": 343,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-versioned-replay-prepared",
+      "archive": "compliance-versioned-replay-prepared.tar.gz",
+      "archiveSha256": "8b0cb333893d934b25d816a64c5790f9dadb3a95196079002c219c51e2183c9c",
+      "bytes": 7216903,
+      "files": 10741,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-weekly-digest-native-prepared",
+      "archive": "compliance-weekly-digest-native-prepared.tar.gz",
+      "archiveSha256": "82df82209dcce506175c62cb93ceab2f6e74c940fd6d9c7474e5ee17b69ca2d9",
+      "bytes": 609273,
+      "files": 527,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-weekly-schedule-native-prepared",
+      "archive": "compliance-weekly-schedule-native-prepared.tar.gz",
+      "archiveSha256": "de72e0918f3c7ed41b125b1545ecd3ee685bb6d46de5c597cf1daef1ece96a83",
+      "bytes": 3556,
+      "files": 5,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-work-assignment-native-prepared",
+      "archive": "compliance-work-assignment-native-prepared.tar.gz",
+      "archiveSha256": "962097ee1f205c161f77af3303f56c3fed833151a5ad7aa00182d4d5b4b06107",
+      "bytes": 1974410,
+      "files": 1675,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-work-digest-native-prepared",
+      "archive": "compliance-work-digest-native-prepared.tar.gz",
+      "archiveSha256": "878d88e74510f8c083eaf538e475d231f86283fc873b5abd72369039d7ae7b5f",
+      "bytes": 254709,
+      "files": 108,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-work-digest-prepared",
+      "archive": "compliance-work-digest-prepared.tar.gz",
+      "archiveSha256": "62101032bd1954a6e793b156aa31ed9a9894424d3b1fd3c29ea095133600ccf4",
+      "bytes": 592748,
+      "files": 492,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-work-preference-native-prepared",
+      "archive": "compliance-work-preference-native-prepared.tar.gz",
+      "archiveSha256": "702ac5290cca9dd809f5ad53bbe85151dcf76db49c99e6301a9e50bbefc00f78",
+      "bytes": 100971,
+      "files": 27,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-program-guard-preference-ready",
+      "archive": "compliance-program-guard-preference-ready.tar.gz",
+      "archiveSha256": "3b4aa33999e8b1ee4c1623bb1e554ab8a2f80ba5ed68ab7ce929a5275f82d39e",
+      "bytes": 759991,
+      "files": 302,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "/tmp/compliance-typeii-calendar-current-audit",
+      "archive": "compliance-typeii-calendar-current-audit.tar.gz",
+      "archiveSha256": "8e7153d5aa57cd76bf900abd00e724de374b663f73090474aa58051e4ba1278d",
+      "bytes": 3809,
+      "files": 2,
+      "verified": true
+    },
+    {
+      "sourceDirectory": "explicit /tmp root/person preparation scripts",
+      "archive": "root-and-person-preparation-controls.tar.gz",
+      "archiveSha256": "8adfadad37164bff63e6a08af4211cee8914a3e1ba3a08db56b6d5e120ca9f12",
+      "bytes": 41603,
+      "files": 28,
+      "verified": true
+    }
+  ],
+  "exclusions": [],
+  "excludedReproducibleDirectories": [
+    ".git",
+    "bin",
+    "node_modules",
+    "obj"
+  ]
+}
