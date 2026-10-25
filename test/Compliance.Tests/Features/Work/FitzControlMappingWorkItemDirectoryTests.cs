@@ -149,8 +149,8 @@ public sealed class FitzControlMappingWorkItemDirectoryTests
             first.Responsible);
         Assert.Contains(proposerId, first.Excluded);
         Assert.Equal(proposedAt, first.CreatedAt);
-        Assert.Equal(WorkCandidate.IdFor(Uuid.CreateVersion5(mappingId,
-            "control-criterion-mapping-review\n1"), WorkSource.ControlCriterionMappingReview),
+        Assert.Equal(WorkSource.ControlCriterionMappingReviewWorkItemId(ControlCriterionMapping.IdentityOf(tenantId, programId,
+            controlId, editionId, "AC-2.4"), mappingId, 1),
             first.WorkItemId);
 
         Assert.True(secondProposal.IsSuccess);

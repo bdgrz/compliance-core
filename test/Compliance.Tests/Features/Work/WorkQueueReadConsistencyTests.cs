@@ -498,12 +498,13 @@ public sealed class WorkQueueReadConsistencyTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var (mappingId, proposedAt) = await SeedControlMappingProposalAsync(fixture);
+        var (mappingId, proposedAt, editionId) = await SeedControlMappingProposalAsync(fixture);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var checkpoint = await ReadCheckpointAsync(events, fixture.TenantId,
             "control-criterion-mappings");
         var candidate = WorkSource.ControlCriterionMappingReviewCandidate(fixture.TenantId,
-            fixture.ProgramId, fixture.ControlId, mappingId, "AC-2.4", fixture.OwnerMemberId, 1,
+            fixture.ProgramId, ControlCriterionMapping.IdentityOf(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+                editionId, "AC-2.4"), fixture.ControlId, mappingId, "AC-2.4", fixture.OwnerMemberId, 1,
             proposedAt);
         var mappingWork = new ProjectedWorkItems(checkpoint, [candidate],
             "control-criterion-mappings", WorkSource.ControlCriterionMappingReview,
@@ -699,7 +700,7 @@ public sealed class WorkQueueReadConsistencyTests
         return (decisionId, proposedAt);
     }
 
-    static async Task<(Uuid MappingId, DateTimeOffset ProposedAt)>
+    static async Task<(Uuid MappingId, DateTimeOffset ProposedAt, Uuid EditionId)>
         SeedControlMappingProposalAsync(OperationsFixture fixture)
     {
         var editionId = Uuid.CreateVersion4();
@@ -707,7 +708,7 @@ public sealed class WorkQueueReadConsistencyTests
         var mappingId = await MappingSeeds.ProposeMappingAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId,
             fixture.ControlId, fixture.ControlVersionId, editionId, "AC-2.4", 0, "The control addresses this criterion.",
             "The control covers the in-scope environment.", fixture.OwnerMemberId, "Owner", proposedAt, "security");
-        return (mappingId, proposedAt);
+        return (mappingId, proposedAt, editionId);
     }
 
     static async Task SeedEvidenceRequestAsync(OperationsFixture fixture)

@@ -49,7 +49,8 @@ public sealed class FitzAdvisorFeedbackWorkItemDirectoryTests
         // Assert
         var candidate = Assert.Single(recorded.Value);
         Assert.Equal(WorkSource.AdvisorFeedback, candidate.Kind);
-        Assert.Equal(WorkCandidate.IdFor(feedbackId, WorkSource.AdvisorFeedback), candidate.WorkItemId);
+        Assert.Equal(WorkCandidate.IdFor(AdvisorFeedbackThread.IdentityOf(tenantId, programId, handoffId, feedbackId),
+            WorkSource.AdvisorFeedback), candidate.WorkItemId);
         Assert.Equal(feedbackId, candidate.SourceId);
         Assert.Equal("Assigned Advisor: Clarify ownership.", candidate.Reason);
         Assert.Equal(new OperatingHolder(OperatingAuthority.ProgramManagerHolder, programId), candidate.Responsible);

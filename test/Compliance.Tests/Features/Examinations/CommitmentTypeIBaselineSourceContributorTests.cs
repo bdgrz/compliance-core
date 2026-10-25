@@ -473,7 +473,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
             Uuid id, int limit, string? cursor, CancellationToken ct = default) =>
             ValueTask.FromResult(new Page<CommitmentDecisionView>([], null));
         public ValueTask<CommitmentDecisionView?> GetDecisionAsync(Uuid tenantId,
-            Uuid decisionId, CancellationToken ct = default) =>
+            Uuid draftId, Uuid decisionId, CancellationToken ct = default) =>
             ValueTask.FromResult<CommitmentDecisionView?>(null);
     }
 

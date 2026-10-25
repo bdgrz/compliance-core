@@ -1942,7 +1942,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<CriterionApplicabilityWorkItemProjector>(
                 FitzCriterionApplicabilityWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ResponsibilitySetProjector>("ResponsibilitySetsV1", WorkloadScope.PerTenant)
-            .AddProjector<MemberResponsibilityProjector>("MemberResponsibilitiesV1", WorkloadScope.PerTenant)
+            .AddProjector<MemberResponsibilityProjector>(FitzMemberResponsibilityIndex.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AccessGrantProjector>("AccessGrantsV1", WorkloadScope.PerTenant)
             .AddProjector<SnapshotDirectoryProjector>("SnapshotDirectory", WorkloadScope.PerTenant)
             .AddProjector<PopulationSnapshotDirectoryProjector>("PopulationSnapshotDirectoryV2",

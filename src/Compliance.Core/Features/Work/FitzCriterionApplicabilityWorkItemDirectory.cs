@@ -7,10 +7,10 @@ namespace Bdgrz.Compliance.Features.Work;
 
 sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
     : FitzKvProjectionStore(client,
-        "kv://bdgrz/accountable-work-items/criterion-applicability-v1", ProjectorName),
+        "kv://bdgrz/accountable-work-items/criterion-applicability-v2", ProjectorName),
       IAccountableWorkItemDirectoryReader, ICriterionApplicabilityWorkItemProjection
 {
-    public const string ProjectorName = "AccountableWorkItemCriterionApplicabilityV1";
+    public const string ProjectorName = "AccountableWorkItemCriterionApplicabilityV2";
     const string RevisionKey = ProjectorName;
     const string Pending = "pending";
     const string NotApplicable = "not_applicable";
@@ -92,7 +92,10 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
                 CriterionApplicabilityWorkItemDirectorySchema.StatesByProgram.Query()
                     .WithPrefix(programId.ToString()).Take(200).After(stateCursor), ct).ConfigureAwait(false);
             foreach (var state in states.Items.Where(static state => state.State == Pending))
-                pending[state.DecisionId] = state;
+            {
+                if (!pending.TryAdd(WorkItemIdFor(state.LineId, state.DecisionId, state.VersionNumber), state))
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
+            }
             stateCursor = states.NextCursor;
         } while (stateCursor is not null);
 
@@ -105,7 +108,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
                 .ConfigureAwait(false);
             foreach (var item in page.Items)
             {
-                pending.TryGetValue(item.SourceId, out var state);
+                pending.TryGetValue(item.WorkItemId, out var state);
                 if (item.TenantId != tenantId || item.ProgramId != programId ||
                     item.Kind != WorkSource.CriterionApplicabilityReview ||
                     item.ControlId is not null || item.FindingId is not null || item.RiskId is not null ||
@@ -113,7 +116,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
                     state.DecisionId != item.SourceId || state.State != Pending ||
                     !item.Excluded.Contains(state.ProposerMemberId) ||
                     state.ProposedAt != item.CreatedAt ||
-                    item.WorkItemId != WorkItemIdFor(state.DecisionId, state.VersionNumber))
+                    item.WorkItemId != WorkItemIdFor(state.LineId, state.DecisionId, state.VersionNumber))
                     return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
                 candidates.Add(item.ToCandidate());
             }
@@ -151,7 +154,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
         }
 
         var candidate = WorkSource.CriterionApplicabilityReviewCandidate(proposed.TenantId,
-            proposed.ProgramId, proposed.DecisionId, proposed.CriterionIdentifier,
+            proposed.ProgramId, scope.LineId, proposed.DecisionId, proposed.CriterionIdentifier,
             proposed.ProposerMemberId, proposed.VersionNumber, proposed.ProposedAt);
         await AddWorkItemAsync(proposed.TenantId, proposed.ProgramId, candidate, ct)
             .ConfigureAwait(false);
@@ -175,7 +178,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
             throw new InvalidOperationException(
                 "A criterion applicability review must resolve its current proposed version.");
         await RemoveWorkItemAsync(reviewed.TenantId, reviewed.ProgramId,
-            reviewed.DecisionId, reviewed.VersionNumber, required: true, ct).ConfigureAwait(false);
+            scope.LineId, reviewed.DecisionId, reviewed.VersionNumber, required: true, ct).ConfigureAwait(false);
         return current with
         {
             Revision = reviewed.Revision,
@@ -197,7 +200,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
             throw new InvalidOperationException(
                 "Only the currently accepted criterion applicability decision can be withdrawn.");
         await RemoveWorkItemAsync(withdrawn.TenantId, withdrawn.ProgramId,
-            withdrawn.DecisionId, withdrawn.VersionNumber, required: false, ct).ConfigureAwait(false);
+            scope.LineId, withdrawn.DecisionId, withdrawn.VersionNumber, required: false, ct).ConfigureAwait(false);
         return current with { Revision = withdrawn.Revision, State = Withdrawn };
     }
 
@@ -219,10 +222,10 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
                 existing, workItem, ct).ConfigureAwait(false);
     }
 
-    async ValueTask RemoveWorkItemAsync(Uuid tenantId, Uuid programId, Uuid decisionId,
+    async ValueTask RemoveWorkItemAsync(Uuid tenantId, Uuid programId, Uuid lineId, Uuid decisionId,
         int versionNumber, bool required, CancellationToken ct)
     {
-        var workItemId = WorkItemIdFor(decisionId, versionNumber);
+        var workItemId = WorkItemIdFor(lineId, decisionId, versionNumber);
         var existing = await CriterionApplicabilityWorkItemDirectorySchema.WorkItems.GetAsync(
             Transaction, workItemId, ct).ConfigureAwait(false);
         if (existing is null)
@@ -265,8 +268,8 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
                 "A criterion applicability event must advance its existing source revision and scope.");
     }
 
-    static Uuid WorkItemIdFor(Uuid decisionId, int versionNumber) =>
-        WorkSource.CriterionApplicabilityReviewWorkItemId(decisionId, versionNumber);
+    static Uuid WorkItemIdFor(Uuid lineId, Uuid decisionId, int versionNumber) =>
+        WorkSource.CriterionApplicabilityReviewWorkItemId(lineId, decisionId, versionNumber);
 
     static DecisionScope ScopeFor(DomainEvent domainEvent) => domainEvent switch
     {

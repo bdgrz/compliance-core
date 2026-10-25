@@ -19,11 +19,14 @@ static class ControlOperatingPlanWorkItemDirectorySchema
         new("by_program", 1, static work =>
             [work.ProgramId.ToString(), work.PlanVersionId.ToString()]);
 
-    public static readonly KvDirectory<ControlOperatingPlanApprovalWorkState, Uuid> Plans = new(
+    public static readonly KvDirectory<ControlOperatingPlanApprovalWorkState, string> Plans = new(
         "pending_approvals",
         ComplianceCoreJsonContext.Default.ControlOperatingPlanApprovalWorkState,
-        static work => work.PlanVersionId,
-        static planVersionId => [planVersionId.ToString()], [ByProgram]);
+        static work => PlanKey(work.ProgramId, work.ControlId, work.PlanVersionId),
+        static key => [key], [ByProgram]);
+
+    public static string PlanKey(Uuid programId, Uuid controlId, Uuid planVersionId) =>
+        $"{programId}\n{controlId}\n{planVersionId}";
 
     public static string LineKey(Uuid programId, Uuid controlId) =>
         $"{programId}\n{controlId}";

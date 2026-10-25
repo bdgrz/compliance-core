@@ -6,10 +6,10 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Commitments;
 
 sealed class FitzCommitmentDraftDirectory(IKvClient client, CommitmentReader commitments)
-    : FitzKvProjectionStore(client, "kv://bdgrz/commitment-draft-directory-v2/projection", ProjectorName),
+    : FitzKvProjectionStore(client, "kv://bdgrz/commitment-draft-directory-v3/projection", ProjectorName),
         ICommitmentDraftDirectoryReader, ICommitmentDraftDirectoryProjection
 {
-    public const string ProjectorName = "CommitmentDraftDirectoryV2";
+    public const string ProjectorName = "CommitmentDraftDirectoryV3";
     Uuid? _batchTenantId;
     public new ValueTask<IProjectionBatch> BeginAsync(ProjectionBatchContext context, CancellationToken ct = default) =>
         BeginCommitmentBatchAsync(context, ct);
@@ -70,7 +70,8 @@ sealed class FitzCommitmentDraftDirectory(IKvClient client, CommitmentReader com
         }
         else if (value is CommitmentApproved approved)
         {
-            var review = await CommitmentDraftDirectorySchema.Decisions.GetAsync(Transaction, approved.AcceptedReviewDecisionId, ct).ConfigureAwait(false);
+            var review = await CommitmentDraftDirectorySchema.Decisions.GetAsync(Transaction,
+                CommitmentDraftDirectorySchema.DecisionKey(header.DraftId, approved.AcceptedReviewDecisionId), ct).ConfigureAwait(false);
             if (review is null || review.Header.DraftId != header.DraftId || review.Header.Revision != header.Revision ||
                 review.Header.ProgramId != header.ProgramId || review.Header.TenantId != header.TenantId)
                 throw new InvalidOperationException("A commitment approval must follow its exact accepted review.");
@@ -125,12 +126,13 @@ sealed class FitzCommitmentDraftDirectory(IKvClient client, CommitmentReader com
         return row is null ? null : (await SourceAsync(tenantId, draftId, row, ct).ConfigureAwait(false)).FindVersion(version)
             ?? throw new ImmutableContentUnavailableException("The projected commitment version is not visible at its native source.");
     }
-    public async ValueTask<CommitmentDecisionView?> GetDecisionAsync(Uuid tenantId, Uuid decisionId, CancellationToken ct = default)
+    public async ValueTask<CommitmentDecisionView?> GetDecisionAsync(Uuid tenantId, Uuid draftId, Uuid decisionId, CancellationToken ct = default)
     {
         CommitmentDirectoryIdentity? row;
         await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
-            row = await CommitmentDraftDirectorySchema.Decisions.GetAsync(tx, decisionId, ct).ConfigureAwait(false);
-        return row is null ? null : (await SourceAsync(tenantId, row.Header.DraftId, row, ct).ConfigureAwait(false)).FindDecision(decisionId)
+            row = await CommitmentDraftDirectorySchema.Decisions.GetAsync(tx,
+                CommitmentDraftDirectorySchema.DecisionKey(draftId, decisionId), ct).ConfigureAwait(false);
+        return row is null ? null : (await SourceAsync(tenantId, draftId, row, ct).ConfigureAwait(false)).FindDecision(decisionId)
             ?? throw new ImmutableContentUnavailableException("The projected commitment decision is not visible at its native source.");
     }
     public async ValueTask<Page<CommitmentVersionView>> ListVersionsAsync(Uuid tenantId, Uuid draftId, int limit,
