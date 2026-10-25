@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -113,6 +114,7 @@ sealed class AccessReviewFixture : IAsyncDisposable
                 var store = new InMemoryEventStore();
                 services.AddSingleton<IEventStore>(store);
                 services.AddSingleton<IDomainEventReader>(store);
+                services.AddScoped<ISourceFactResolver, EventStoreSourceFactResolver>();
                 services.AddScoped<PopulationSnapshotFreezer>();
                 services.AddScoped<AccessExpectationsReader>();
                 services.AddSingleton<AccessReviewManifests>();
@@ -382,13 +384,32 @@ sealed class AccessReviewFixture : IAsyncDisposable
         ProcessKeys.FindAsync(Provider, AccessReviewEffects.CompletionProcessName, TenantId.ToString(), commandId);
 
     /// <summary>The item facts of one materialized item.</summary>
-    public async Task<AccessReviewItem> ItemAsync(Uuid campaignId, Uuid itemId, Uuid? selectedLogicalId = null) =>
+    public async Task<AccessReviewItem> ItemAsync(Uuid campaignId, Uuid itemId, Uuid? selectedLogicalId = null,
+        Uuid selectedBatchId = default, Uuid selectedContentEventId = default) =>
         await ProgramManagementServices.HydrateAsync(Provider, new AccessReviewItem(TenantId, campaignId, itemId,
-            selectedLogicalId ?? Uuid.Empty));
+            selectedLogicalId ?? Uuid.Empty, selectedBatchId, selectedContentEventId));
 
-    public async Task<AccessReviewCampaign> CampaignAggregateAsync(Uuid campaignId, Uuid? selectedLogicalId = null) =>
+    public async Task<AccessReviewCampaign> CampaignAggregateAsync(Uuid campaignId, Uuid? selectedLogicalId = null, Uuid selectedRootId = default) =>
         await ProgramManagementServices.HydrateAsync(Provider, new AccessReviewCampaign(TenantId, campaignId,
-            selectedLogicalId ?? Uuid.Empty));
+            selectedLogicalId ?? Uuid.Empty, selectedRootId));
+
+    public async Task<TReactor> BindReactorAsync<TReactor>(TReactor reactor) where TReactor : Reactor
+    {
+        await new ReactorScenario(new TenantId(TenantId.ToString())).RunAsync(reactor);
+        return reactor;
+    }
+
+    public Task<AccessReviewCampaignHistorySnapshot> CampaignHistoryAsync(AccessReviewCampaign owner) =>
+        AccessReviewCampaignHistory.ReadAsync(Provider.GetRequiredService<IDomainEventReader>(), owner);
+
+    public async Task<AccessReviewCampaignHistorySnapshot> CampaignHistoryAsync(Uuid campaignId) =>
+        await CampaignHistoryAsync(await CampaignAggregateAsync(campaignId));
+
+    public Task<AccessReviewItemHistorySnapshot> ItemHistoryAsync(AccessReviewItem owner) =>
+        AccessReviewItemHistory.ReadAsync(Provider.GetRequiredService<IDomainEventReader>(), owner);
+
+    public async Task<AccessReviewItemHistorySnapshot> ItemHistoryAsync(Uuid campaignId, Uuid itemId) =>
+        await ItemHistoryAsync(await ItemAsync(campaignId, itemId));
 
     /// <summary>The revision an item command expects: the item's own logical revision.</summary>
     public async Task<long> ItemRevisionAsync(Uuid campaignId, Uuid itemId) =>
@@ -421,7 +442,7 @@ sealed class AccessReviewFixture : IAsyncDisposable
         await using var scope = Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var campaign = await services.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new AccessReviewCampaign(TenantId, campaignId));
+            .HydrateAsync(new AccessReviewCampaign(TenantId, campaignId, selectedRootId: commandId));
         var accepted = campaign.AcceptedFor(commandId) ?? throw new InvalidOperationException("Not admitted.");
         var intent = await services.GetRequiredService<IImmutableContentStore>()
             .ReadJsonAsync<ClosureIntent>(TenantId.ToString(), accepted.Intent);
@@ -501,7 +522,7 @@ sealed class AccessReviewFixture : IAsyncDisposable
         await using var scope = Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var campaign = await services.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new AccessReviewCampaign(TenantId, campaignId));
+            .HydrateAsync(new AccessReviewCampaign(TenantId, campaignId, selectedRootId: decisionBatchId));
         var admitted = campaign.AdmittedFor(decisionBatchId) ?? throw new InvalidOperationException("Not admitted.");
         var intent = await services.GetRequiredService<IImmutableContentStore>()
             .ReadJsonAsync<BulkAccessDecisionIntent>(TenantId.ToString(), admitted.Intent);

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
@@ -14,6 +15,20 @@ public sealed class GetAccessReviewCampaignHandler(AccessReviewReader reader,
     : IRequestHandler<GetAccessReviewCampaign, AccessReviewCampaignView>
 {
     public async ValueTask<Result<AccessReviewCampaignView>> HandleAsync(
+        IRequestContext<GetAccessReviewCampaign> context, CancellationToken ct)
+    {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<AccessReviewCampaignView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact campaign source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<AccessReviewCampaignView>> HandleCoreAsync(
         IRequestContext<GetAccessReviewCampaign> context, CancellationToken ct)
     {
         var request = context.Request;

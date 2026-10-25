@@ -97,7 +97,7 @@ static class AccessReviewCompletionProcess
             case nameof(AbortAccessReviewCampaignCompletion):
                 {
                     var campaign = await services.GetRequiredService<IAggregateReader>()
-                        .HydrateAsync(new AccessReviewCampaign(tenant, campaignId), ct).ConfigureAwait(false);
+                        .HydrateAsync(new AccessReviewCampaign(tenant, campaignId, selectedRootId: root), ct).ConfigureAwait(false);
                     if (campaign.AcceptedFor(root) is not { } accepted)
                         throw new SourceFactVerificationException("The accepted completion is not visible yet.");
                     var proof = await content.WriteJsonAsync(realm, Uuid.CreateVersion5(step.CommandId, "failure-proof"),

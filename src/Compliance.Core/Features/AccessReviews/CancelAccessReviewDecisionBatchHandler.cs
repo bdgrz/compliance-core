@@ -53,7 +53,7 @@ sealed class CancelAccessReviewDecisionBatchHandler(IAggregateReader reader, IAg
         if (intent.Header.RootOperationId != command.DecisionBatchId || intent.CampaignId != command.CampaignId ||
             command.ExpectedRevision != accepted.Revision)
             return SourceUseReceiverSupport.Permanent("The cancel differs from the materialized batch.");
-        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, command.CampaignId), ct)
+        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, command.CampaignId, selectedRootId: command.DecisionBatchId), ct)
             .ConfigureAwait(false);
         if (campaign.AdmittedFor(command.DecisionBatchId) is not { } admitted)
             return SourceUseReceiverSupport.Transient("The admitted bulk decision is not visible yet.");

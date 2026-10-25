@@ -54,7 +54,8 @@ sealed class CompleteAccessReviewDecisionBatchCancellationHandler(IAggregateRead
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Transient($"The frozen bulk decision cannot be verified yet: {exception.Message}");
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen bulk decision cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         for (var attempt = 1; ; attempt++)
@@ -90,12 +91,14 @@ sealed class CompleteAccessReviewDecisionBatchCancellationHandler(IAggregateRead
         var items = await manifests.BulkItemsAsync(command.Target.Realm, intent.Items, ct).ConfigureAwait(false);
         if (proofs.Count != items.Count)
             return SourceUseReceiverSupport.Permanent("The fence set is not the complete selection.");
+        if (proofs.Select(static proof => proof.ItemId).Distinct().Count() != proofs.Count)
+            return SourceUseReceiverSupport.Permanent("The fence set repeats an item.");
         var byItem = proofs.ToDictionary(static proof => proof.ItemId);
         foreach (var selected in items.Values)
         {
             if (!byItem.TryGetValue(selected.ItemId, out var proof))
                 return SourceUseReceiverSupport.Permanent("The fence set omits a selected item.");
-            var item = await reader.HydrateAsync(new AccessReviewItem(tenant, campaignId, selected.ItemId), ct)
+            var item = await reader.HydrateAsync(new AccessReviewItem(tenant, campaignId, selected.ItemId, selectedBatchId: intent.DecisionBatchId), ct)
                 .ConfigureAwait(false);
             if (item.FenceFor(command.DecisionBatchId) is not { } fence)
                 return SourceUseReceiverSupport.Transient($"The fence of item {selected.ItemId} is not visible yet.");

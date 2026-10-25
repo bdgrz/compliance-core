@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Applications;
 
@@ -8,6 +9,20 @@ public sealed class PreviewBulkAccessDecisionHandler(AccessReviewReader reader,
     : IRequestHandler<PreviewBulkAccessDecision, BulkAccessDecisionPreview>
 {
     public async ValueTask<Result<BulkAccessDecisionPreview>> HandleAsync(
+        IRequestContext<PreviewBulkAccessDecision> context, CancellationToken ct)
+    {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<BulkAccessDecisionPreview>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact campaign source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<BulkAccessDecisionPreview>> HandleCoreAsync(
         IRequestContext<PreviewBulkAccessDecision> context, CancellationToken ct)
     {
         var request = context.Request;

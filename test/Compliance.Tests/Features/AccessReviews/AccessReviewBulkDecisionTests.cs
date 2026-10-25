@@ -30,7 +30,7 @@ public sealed class AccessReviewBulkDecisionTests
         // Act
         var (request, acknowledgment) = await fixture.AdmitBulkAsync(fixture.ReviewerUserId, campaignId, selected);
         var campaign = await fixture.CampaignAggregateAsync(campaignId);
-        var admitted = Assert.IsType<AccessReviewDecisionBatchAdmitted>(campaign.Facts[^1]);
+        var admitted = Assert.IsType<AccessReviewDecisionBatchAdmitted>((await fixture.CampaignHistoryAsync(campaign)).Facts[^1]);
         var intent = await fixture.Provider.GetRequiredService<IImmutableContentStore>()
             .ReadJsonAsync<BulkAccessDecisionIntent>(fixture.TenantId.ToString(), admitted.Intent);
         var items = await fixture.Provider.GetRequiredService<AccessReviewManifests>()
@@ -66,7 +66,7 @@ public sealed class AccessReviewBulkDecisionTests
         var process = await fixture.RunBulkAsync(campaignId, request.DecisionBatchId);
         var batch = await fixture.BatchAsync(campaignId, request.DecisionBatchId);
         var campaign = await fixture.CampaignAggregateAsync(campaignId);
-        var admitted = campaign.AdmittedFor(request.DecisionBatchId)!;
+        var admitted = (await fixture.CampaignHistoryAsync(campaign)).AdmittedFor(request.DecisionBatchId)!;
         var proofs = await fixture.Provider.GetRequiredService<IImmutableContentStore>()
             .ReadJsonAsync<IReadOnlyList<BulkItemDecisionProof>>(fixture.TenantId.ToString(), batch.Published!.SourceProofs!);
         var view = await fixture.CampaignAsync(campaignId);
@@ -90,7 +90,7 @@ public sealed class AccessReviewBulkDecisionTests
             Assert.Equal("No longer needed.", item.Decision.Rationale);
             Assert.Equal(request.PreviewToken, item.Decision.BulkPreviewToken);
             Assert.Equal(fixture.ReviewerMemberId, item.Decision.ReviewerMemberId);
-            Assert.True(owner.IsPublished(request.DecisionBatchId));
+            Assert.True((await fixture.ItemHistoryAsync(owner)).IsPublished(request.DecisionBatchId));
             Assert.False(owner.Uses.HasActiveUse);
             Assert.Contains(proofs, proof => proof.ItemId == itemId);
         }
@@ -135,7 +135,7 @@ public sealed class AccessReviewBulkDecisionTests
 
         // Assert
         Assert.All(partial.Items, item => Assert.Equal("unresolved", item.Status));
-        Assert.NotNull(firstItem.ProvisionalFor(batchId));
+        Assert.NotNull((await fixture.ItemHistoryAsync(firstItem)).ProvisionalFor(batchId));
         Assert.Contains("not visible yet", notYet.Message, StringComparison.Ordinal);
         Assert.All(beforePublication.Items, item => Assert.Equal("unresolved", item.Status));
         Assert.All(published.Items, item => Assert.Equal("unresolved", item.Status));
@@ -170,7 +170,7 @@ public sealed class AccessReviewBulkDecisionTests
         Assert.Contains("different", rationale.Message, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(revision);
         Assert.NotNull(items);
-        Assert.Equal(before.Facts.Count, after.Facts.Count);
+        Assert.Equal((await fixture.CampaignHistoryAsync(before)).Facts.Count, (await fixture.CampaignHistoryAsync(after)).Facts.Count);
         Assert.Equal(1, (await fixture.BatchAsync(campaignId, request.DecisionBatchId)).Revision);
     }
 
@@ -197,7 +197,7 @@ public sealed class AccessReviewBulkDecisionTests
 
         // Assert
         Assert.Equal(first, replay);
-        Assert.Equal(before.Facts.Count, (await fixture.CampaignAggregateAsync(campaignId)).Facts.Count);
+        Assert.Equal((await fixture.CampaignHistoryAsync(before)).Facts.Count, (await fixture.CampaignHistoryAsync(campaignId)).Facts.Count);
     }
 
     [Fact]
@@ -273,7 +273,7 @@ public sealed class AccessReviewBulkDecisionTests
         Assert.Contains("revision", stale.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("rationale", unbounded.Message, StringComparison.Ordinal);
         Assert.NotNull(outsider);
-        Assert.Single(campaign.Facts);
+        Assert.Single((await fixture.CampaignHistoryAsync(campaign)).Facts);
     }
 
     [Fact]
@@ -306,9 +306,9 @@ public sealed class AccessReviewBulkDecisionTests
             var item = await fixture.ItemAsync(campaignId, itemId);
             var settled = (await UseFactsAsync(fixture, campaignId, itemId)).OfType<AccessReviewItemDecisionSettled>()
                 .ToArray();
-            Assert.True(item.IsFenced(request.DecisionBatchId));
+            Assert.True((await fixture.ItemHistoryAsync(item)).IsFenced(request.DecisionBatchId));
             Assert.False(item.Uses.HasActiveUse);
-            Assert.Null(item.ProvisionalFor(request.DecisionBatchId));
+            Assert.Null((await fixture.ItemHistoryAsync(item)).ProvisionalFor(request.DecisionBatchId));
             Assert.All(settled, fact => Assert.Equal(SourceUseSettlementDisposition.Canceled, fact.Disposition));
             Assert.Single(settled);
         }
@@ -348,7 +348,7 @@ public sealed class AccessReviewBulkDecisionTests
         Assert.IsType<ReceiverOutcome.Superseded>(delayedApply.Value);
         Assert.Empty(uses.OfType<AccessReviewItemDecisionAuthorized>());
         Assert.Single(uses.OfType<AccessReviewItemDecisionSettled>());
-        Assert.Null((await fixture.ItemAsync(campaignId, ItemOf(target))).ProvisionalFor(request.DecisionBatchId));
+        Assert.Null((await fixture.ItemHistoryAsync(campaignId, ItemOf(target))).ProvisionalFor(request.DecisionBatchId));
     }
 
     [Fact]
@@ -511,7 +511,7 @@ public sealed class AccessReviewBulkDecisionTests
         Assert.Single(batch.Facts.OfType<AccessReviewDecisionBatchAccepted>());
         Assert.NotNull(batch.Published);
         foreach (var itemId in selected)
-            Assert.Single((await fixture.ItemAsync(campaignId, itemId)).Facts.OfType<AccessDecisionsRecorded>());
+            Assert.Single((await fixture.ItemHistoryAsync(campaignId, itemId)).BusinessFacts.OfType<AccessDecisionsRecorded>());
     }
 
     [Fact]
@@ -527,7 +527,9 @@ public sealed class AccessReviewBulkDecisionTests
         var reactor = new AccessReviewBulkAdmissionReactor(new InMemoryProjectionCheckpointStore(),
             scope.ServiceProvider.GetRequiredService<ProcessRootReaction>(),
             scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(),
-            scope.ServiceProvider.GetRequiredService<AccessReviewManifests>());
+            scope.ServiceProvider.GetRequiredService<AccessReviewManifests>(),
+            scope.ServiceProvider.GetRequiredService<ISourceFactResolver>());
+        await fixture.BindReactorAsync(reactor);
 
         // Act
         await reactor.HandleAsync(AdministratorTransitionHost
@@ -658,7 +660,7 @@ public sealed class AccessReviewBulkDecisionTests
         Uuid batchId, Uuid itemId)
     {
         var campaign = await fixture.CampaignAggregateAsync(campaignId);
-        var admitted = campaign.AdmittedFor(batchId)!;
+        var admitted = (await fixture.CampaignHistoryAsync(campaign)).AdmittedFor(batchId)!;
         var target = AccessReviewCompletionTarget.Of(fixture.TenantId, campaignId, itemId).ToString();
         return new FenceAccessReviewItemDecision(BulkAccessDecisionProcess.ReceiverCommandId(admitted.Metadata!.EventId,
                 nameof(FenceAccessReviewItemDecision), target, "initial"), NativeFactReference.Of(campaign.Stream, admitted),
@@ -673,16 +675,18 @@ public sealed class AccessReviewBulkDecisionTests
         var accepted = await ReadAsync<AccessReviewDecisionBatchCancellationAccepted>(fixture, batch.Stream);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        await new AccessReviewBulkCancellationReactor(new InMemoryProjectionCheckpointStore(),
+        await (await fixture.BindReactorAsync(new AccessReviewBulkCancellationReactor(new InMemoryProjectionCheckpointStore(),
             services.GetRequiredService<IRequestBus>(), services.GetRequiredService<IImmutableContentStore>(),
-            services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<AccessReviewManifests>())
+            services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<AccessReviewManifests>(),
+            services.GetRequiredService<ISourceFactResolver>())))
             .HandleAsync(AdministratorTransitionHost
                 .ReactionOf<AccessReviewDecisionBatchCancellationAccepted>(accepted), CancellationToken.None);
         await RunCompletionReactorAsync(fixture, campaignId, batchId);
         var canceled = await ReadAsync<AccessReviewDecisionBatchCanceled>(fixture, batch.Stream);
-        await new AccessReviewBulkSettlementReactor(new InMemoryProjectionCheckpointStore(),
+        await (await fixture.BindReactorAsync(new AccessReviewBulkSettlementReactor(new InMemoryProjectionCheckpointStore(),
             services.GetRequiredService<IRequestBus>(), services.GetRequiredService<IImmutableContentStore>(),
-            services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<AccessReviewManifests>())
+            services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<AccessReviewManifests>(),
+            services.GetRequiredService<ISourceFactResolver>())))
             .HandleAsync(AdministratorTransitionHost
                 .ReactionOf<AccessReviewDecisionBatchCanceled>(canceled), CancellationToken.None);
     }
@@ -693,9 +697,10 @@ public sealed class AccessReviewBulkDecisionTests
         var accepted = await ReadAsync<AccessReviewDecisionBatchCancellationAccepted>(fixture, batch.Stream);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        await new AccessReviewBulkCancellationCompletionReactor(new InMemoryProjectionCheckpointStore(),
+        await (await fixture.BindReactorAsync(new AccessReviewBulkCancellationCompletionReactor(new InMemoryProjectionCheckpointStore(),
             services.GetRequiredService<IRequestBus>(), services.GetRequiredService<IImmutableContentStore>(),
-            services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<AccessReviewManifests>())
+            services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<AccessReviewManifests>(),
+            services.GetRequiredService<ISourceFactResolver>())))
             .HandleAsync(AdministratorTransitionHost
                 .ReactionOf<AccessReviewDecisionBatchCancellationAccepted>(accepted), CancellationToken.None);
     }

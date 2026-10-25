@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "f0591384bbcf774faa608cc587f40f62ca883989",
+  "sourceCommit": "55dc8c235a4f930f9b1db7d4da035f9da388974e",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -49,6 +49,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewHistoryProofTests.cs",
         "test/Compliance.Tests/Features/Examinations/AccessReviewCampaignsTypeIBaselineSourceContributorTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -402,7 +403,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTraceTests.cs"
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTraceTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewHistoryProofTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9296,12 +9298,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignFacts.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewHistoryProofTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/FitzAccessReviewCampaignDirectoryTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/FitzAccessReviewCampaignImpactDirectoryTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationReviewCampaignImpactTests.cs",
-        "test/Compliance.Tests/Features/Examinations/AccessReviewCampaignsTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9361,7 +9363,9 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignFacts.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewHistoryProofTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewLaunchFanOutTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -12417,6 +12421,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionFailureBindingTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
       ],
       "note": "System-only completion receiver; cancels the exact pending completion and fences every delayed finalization of its generation. A closed completion recovers forward. No HTTP/MCP route."
@@ -14571,6 +14576,7 @@
         "AccessReviewCompletionVerifier"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionFailureBindingTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs",
         "test/Compliance.Tests/Features/Content/SourceUseReceiverContractTests.cs"
       ],
@@ -15817,6 +15823,7 @@
         "AccessReviewCampaign"
       ],
       "helperServices": [
+        "AccessReviewReader",
         "PopulationSnapshotFreezer"
       ],
       "testSymbolReferences": [
@@ -17828,7 +17835,9 @@
       "aggregateTargets": [
         "AccessReviewItem"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AccessReviewReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs"
@@ -18261,12 +18270,14 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
-        "AccessReviewQueueEligibility"
+        "AccessReviewQueueEligibility",
+        "AccessReviewReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewInfrastructureTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewReadFailureTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AttestAccessReviewWriteWallTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs"
       ],
@@ -21204,6 +21215,7 @@
       ],
       "helperServices": [
         "AccessReviewQueueEligibility",
+        "AccessReviewReader",
         "PopulationSnapshotFreezer"
       ],
       "testSymbolReferences": [
@@ -21502,7 +21514,9 @@
         "AccessReviewCampaign"
       ],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "AccessReviewReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs"
       ],
@@ -24735,7 +24749,8 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
-        "AccessReviewQueueEligibility"
+        "AccessReviewQueueEligibility",
+        "AccessReviewReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
@@ -25753,7 +25768,8 @@
         "AccessReviewItem"
       ],
       "helperServices": [
-        "AccessReviewQueueEligibility"
+        "AccessReviewQueueEligibility",
+        "AccessReviewReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
@@ -25862,11 +25878,13 @@
         "AccessReviewItem"
       ],
       "helperServices": [
-        "AccessReviewQueueEligibility"
+        "AccessReviewQueueEligibility",
+        "AccessReviewReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewPreparationReplayTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs",
         "test/Compliance.Tests/Features/Examinations/AccessReviewCampaignsTypeIBaselineSourceContributorTests.cs",
@@ -25922,7 +25940,8 @@
         "AccessReviewItem"
       ],
       "helperServices": [
-        "AccessReviewQueueEligibility"
+        "AccessReviewQueueEligibility",
+        "AccessReviewReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
@@ -26265,7 +26284,8 @@
         "AccessReviewCampaign"
       ],
       "helperServices": [
-        "AccessReviewQueueEligibility"
+        "AccessReviewQueueEligibility",
+        "AccessReviewReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
@@ -31362,7 +31382,9 @@
       "aggregateTargets": [
         "AccessReviewItem"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AccessReviewReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs"
       ],

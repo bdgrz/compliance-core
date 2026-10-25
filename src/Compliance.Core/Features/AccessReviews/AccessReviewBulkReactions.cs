@@ -27,10 +27,10 @@ static class AccessReviewBulkReactions
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen bulk decision cannot be verified yet: {exception.Message}", true));
+                $"The frozen bulk decision cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
-        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, intent.CampaignId), ct)
+        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, intent.CampaignId, selectedRootId: intent.DecisionBatchId), ct)
             .ConfigureAwait(false);
         if (campaign.AdmittedFor(intent.DecisionBatchId) is not { } admitted)
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
@@ -50,7 +50,7 @@ static class AccessReviewBulkReactions
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen bulk decision cannot be verified yet: {exception.Message}", true));
+                $"The frozen bulk decision cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
     }
 }

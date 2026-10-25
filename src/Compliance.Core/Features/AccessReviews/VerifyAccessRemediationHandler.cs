@@ -22,14 +22,28 @@ public sealed class VerifyAccessRemediationHandler(NativeOperationExecutor opera
     public async ValueTask<Result<AccessRemediationVerificationView>> HandleAsync(
         IRequestContext<VerifyAccessRemediation> context, CancellationToken ct)
     {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<AccessRemediationVerificationView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact access item source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<AccessRemediationVerificationView>> HandleCoreAsync(
+        IRequestContext<VerifyAccessRemediation> context, CancellationToken ct)
+    {
         var request = context.Request;
         if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
             return Failure(RequestErrorKind.Validation,
                 "A verification requires a command id and a non-negative expected revision.");
         var actor = AccessReviewActor.From(context);
-        var read = await campaigns.ReadItemAsync(request.TenantId, request.CampaignId, request.ItemId,
+        var read = await campaigns.ReadItemIdentityAsync(request.TenantId, request.CampaignId, request.ItemId,
             request.CommandId, ct).ConfigureAwait(false);
-        if (read.State is not { } state || read.Frozen is not { } item)
+        if (read.Frozen is not { } item)
             return Failure(RequestErrorKind.NotFound, "The review item was not found.");
         if (!await visibility.CanReadSystemInstanceAsync(request.TenantId, actor.UserId, item.SystemInstanceId, ct)
                 .ConfigureAwait(false) ||
@@ -42,52 +56,60 @@ public sealed class VerifyAccessRemediationHandler(NativeOperationExecutor opera
             request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
         FirstResponseDescriptor? response = null;
+        AccessReviewPreparedCut? preparedCut = null;
         ImmutableContentRef? verification = null;
         ImmutableContentRef? result = null;
-        if (read.Item.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            if (read.Item.PrepareChange(request.ExpectedRevision) is { IsSuccess: false } blocked)
-                return Result<AccessRemediationVerificationView>.Failure(blocked.Error!);
-            if (state.CurrentDecision is not { } decision || !AccessReviewVocabulary.RequiresRemediation(decision.Decision))
-                return Failure(RequestErrorKind.Conflict, "Only an item decided modify or revoke requires remediation.");
-            var loaded = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId, request.PopulationId, ct)
-                .ConfigureAwait(false);
-            if (!loaded.IsSuccess)
-                return Result<AccessRemediationVerificationView>.Failure(loaded.Error);
-            var later = loaded.Value;
-            if (later.Header.SystemInstanceId != item.SystemInstanceId || later.Population.Id == item.PopulationId)
-                return Failure(RequestErrorKind.Validation,
-                    "Verification requires a later accepted population of the same system instance.");
-            if (later.Header.ObservedAt <= decision.DecidedAt)
-                return Failure(RequestErrorKind.Conflict,
-                    "Verification requires a population observed after the decision.");
-            var row = later.EffectiveAccess.FirstOrDefault(access =>
-                access.ProviderSubjectId == item.ProviderSubjectId &&
-                access.ProviderEntitlementId == item.ProviderEntitlementId);
-            string outcome;
-            if (row is null)
-                outcome = "removed";
-            else if (decision.Decision == AccessReviewVocabulary.Modify && !SameAccess(row, item))
-                outcome = "changed";
-            else
-                return Failure(RequestErrorKind.Conflict, "The later population still shows the access unchanged.");
-            var view = new AccessRemediationVerificationView(later.Population.Id, later.Snapshot.Id,
-                later.CalculationId, later.Header.ObservedAt, outcome, actor.Reference, now);
-            if (AccessReviewRules.CheckVerification(state, view) is { } failure)
-                return Result<AccessRemediationVerificationView>.Failure(failure);
-            verification = await AccessReviewContent.WriteAsync(content, request.TenantId,
-                AccessReviewContent.VerificationSchema, view, ct).ConfigureAwait(false);
-            (response, result) = await AccessReviewContent.FreezeOkAsync(content, request.TenantId,
-                AccessReviewContent.VerificationViewSchema, view, ct).ConfigureAwait(false);
-        }
-
-        var observed = state.Revision;
         var accepted = await operations.ExecuteAsync(new NativeOperation<AccessReviewItem>(binding,
             () => new AccessReviewItem(request.TenantId, request.CampaignId, request.ItemId, request.CommandId),
             owner => owner.Acceptance,
-            owner => AccessReviewItemWrites.Prepare(owner, request.ExpectedRevision, observed, response),
-            (AccessReviewItem owner, ImmutableContentRef frozenResponse) => owner.Verify(provenance,
-                verification!, frozenResponse, result!)), context, ct).ConfigureAwait(false);
+            async (owner, prepareCt) =>
+            {
+                var prepared = owner.PrepareChange(request.ExpectedRevision);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                var state = await campaigns.ReadStateAsync(request.TenantId, owner, item,
+                    read.Campaign.Launched?.RemediationOwnerMemberId, prepareCt).ConfigureAwait(false);
+                if (state.CurrentDecision is not { } decision || !AccessReviewVocabulary.RequiresRemediation(decision.Decision))
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict, "Only an item decided modify or revoke requires remediation.");
+                var loaded = await AcceptedAccessPopulation.LoadAsync(reader, content, request.TenantId, request.PopulationId, prepareCt)
+                    .ConfigureAwait(false);
+                if (!loaded.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(loaded.Error);
+                var later = loaded.Value;
+                if (later.Header.SystemInstanceId != item.SystemInstanceId || later.Population.Id == item.PopulationId)
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Validation,
+                        "Verification requires a later accepted population of the same system instance.");
+                if (later.Header.ObservedAt <= decision.DecidedAt)
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
+                        "Verification requires a population observed after the decision.");
+                var row = later.EffectiveAccess.FirstOrDefault(access =>
+                    access.ProviderSubjectId == item.ProviderSubjectId &&
+                    access.ProviderEntitlementId == item.ProviderEntitlementId);
+                string outcome;
+                if (row is null)
+                    outcome = "removed";
+                else if (decision.Decision == AccessReviewVocabulary.Modify && !SameAccess(row, item))
+                    outcome = "changed";
+                else
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict, "The later population still shows the access unchanged.");
+                var view = new AccessRemediationVerificationView(later.Population.Id, later.Snapshot.Id,
+                    later.CalculationId, later.Header.ObservedAt, outcome, actor.Reference, now);
+                if (AccessReviewRules.CheckVerification(state, view) is { } failure)
+                    return Result<FirstResponseDescriptor>.Failure(failure);
+                verification = await AccessReviewContent.WriteAsync(content, request.TenantId,
+                    AccessReviewContent.VerificationSchema, view, prepareCt).ConfigureAwait(false);
+                (response, result) = await AccessReviewContent.FreezeOkAsync(content, request.TenantId,
+                    AccessReviewContent.VerificationViewSchema, view, prepareCt).ConfigureAwait(false);
+                preparedCut = AccessReviewPreparedCut.Capture(owner);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (AccessReviewItem owner, ImmutableContentRef frozenResponse) =>
+            {
+                if (preparedCut?.Matches(owner) != true)
+                    return AccessReviewPreparedCut.Changed();
+                return owner.Verify(provenance,
+                verification!, frozenResponse, result!);
+            }), context, ct).ConfigureAwait(false);
         return await AccessReviewContent.ResponseAsync<AccessRemediationVerificationView>(content, request.TenantId,
             accepted, ct).ConfigureAwait(false);
     }

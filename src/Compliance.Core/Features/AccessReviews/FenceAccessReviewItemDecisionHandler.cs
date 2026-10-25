@@ -76,7 +76,7 @@ sealed class FenceAccessReviewItemDecisionHandler(IAggregateReader reader, IAggr
     }
 
     static AccessReviewItem Open(Uuid tenant, FenceAccessReviewItemDecision command) =>
-        new(tenant, command.CampaignId, command.ItemId, command.CommandId);
+        new(tenant, command.CampaignId, command.ItemId, command.CommandId, command.DecisionBatchId);
 
     static Result<ReceiverOutcome>? Decide(AccessReviewItem item, AcceptedOperationBinding binding, Uuid batchId)
     {

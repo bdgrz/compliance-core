@@ -118,7 +118,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributorTests
         var campaign = await fixture.CampaignAggregateAsync(campaignId);
         var batch = await fixture.BatchAsync(campaignId, request.DecisionBatchId);
         var publication = batch.Published!;
-        var admitted = campaign.AdmittedFor(request.DecisionBatchId)!;
+        var admitted = (await fixture.CampaignHistoryAsync(campaign)).AdmittedFor(request.DecisionBatchId)!;
         var proofs = await content.ReadJsonAsync<IReadOnlyList<BulkItemDecisionProof>>(fixture.TenantId.ToString(), publication.SourceProofs!);
         var sibling = proofs.Single(proof => proof.ItemId == selected[1]);
         var records = new List<DomainEventRecord>();
@@ -342,8 +342,8 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributorTests
         DomainEvent stableLaunch = launchedFact;
         stableLaunch.AttachMetadata(new DomainEventMetadata(LaunchEventId, CampaignId, 1, LaunchAt));
         var opened = new AccessReviewItemOpened(TenantId, CampaignId, ItemId, itemStream, 1, 1, creationIntent, null,
-            new OperationProvenance(Uuid.CreateVersion4(), CampaignId, null, nameof(MaterializeAccessReviewItem),
-                CampaignOwner, itemStream, "initial", null, new string('d', 64), launchedAt, itemStream, itemStream),
+            new OperationProvenance(Uuid.CreateVersion4(), CampaignId, LaunchEventId, nameof(MaterializeAccessReviewItem),
+                CampaignOwner, itemStream, "initial", null, new string('d', 64), launchedAt, itemStream, itemStream, campaignStream),
             null, null);
         DomainEvent openedFact = opened;
         openedFact.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), itemStreamId, 1, LaunchAt));
@@ -409,7 +409,15 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributorTests
             DomainEvent closed = stableCompletion with
             {
                 Intent = closureIntent,
-                Operation = stableCompletion.Operation with { RootOperationId = operationId },
+                Operation = stableCompletion.Operation with
+                {
+                    RootOperationId = operationId,
+                    CausationEventId = accepted.Metadata.EventId,
+                    OriginalExpectedRevision = 1,
+                    AuthoredIntentSha256 = new string('f', 64),
+                    AcceptedAt = completedAt,
+                    FirstOwner = campaignStream,
+                },
             };
             closed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), CampaignId, 3, completedAt));
             await events.AppendAsync(campaignStream, 1, [accepted, closed]);

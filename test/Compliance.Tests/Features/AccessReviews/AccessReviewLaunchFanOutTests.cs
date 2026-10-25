@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -60,7 +61,9 @@ public sealed class AccessReviewLaunchFanOutTests
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reactor = new AccessReviewLaunchFanOutReactor(new InMemoryProjectionCheckpointStore(),
             scope.ServiceProvider.GetRequiredService<ProcessRootReaction>(),
-            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(),
+            scope.ServiceProvider.GetRequiredService<ISourceFactResolver>());
+        await fixture.BindReactorAsync(reactor);
 
         // Act
         await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<AccessReviewCampaignLaunched>(record),
@@ -291,7 +294,7 @@ public sealed class AccessReviewLaunchFanOutTests
             .ReadJsonAsync<AccessReviewItemIntentManifest>(fixture.TenantId.ToString(), launched.ItemIntentManifest);
         var opened = new List<AccessReviewItemOpened>();
         foreach (var selection in manifest.Selections)
-            opened.AddRange((await fixture.ItemAsync(campaignId, selection.ItemId)).Facts
+            opened.AddRange((await fixture.ItemHistoryAsync(campaignId, selection.ItemId)).BusinessFacts
                 .OfType<AccessReviewItemOpened>());
         return opened;
     }

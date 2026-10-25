@@ -656,14 +656,27 @@
     },
     {
       "id": "control-evaluation-native",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "control-evaluation-qualification.json",
       "fileReviews": 11,
       "genuineOldApiRedFailed": 2,
       "proofGuardAbsenceRedFailed": 1,
       "focusedPassed": 111,
       "httpPassed": 39,
-      "unitPassed": 6331
+      "unitPassed": 6331,
+      "pr": 1127,
+      "mergeCommit": "55dc8c235a4f930f9b1db7d4da035f9da388974e"
+    },
+    {
+      "id": "access-campaign-item-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "access-campaign-qualification.json",
+      "fileReviews": 52,
+      "signalsTriaged": 5,
+      "genuineOldApiRedFailed": 4,
+      "unitPassed": 6346,
+      "httpPassed": 59,
+      "receiverPreparationRecovery": "separate explicit follow-on after shared native receiver helper qualification"
     }
   ],
   "resolved": [

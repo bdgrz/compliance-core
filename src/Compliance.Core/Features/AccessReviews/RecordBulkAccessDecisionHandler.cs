@@ -27,6 +27,20 @@ public sealed class RecordBulkAccessDecisionHandler(NativeOperationExecutor oper
     public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
         IRequestContext<RecordBulkAccessDecision> context, CancellationToken ct)
     {
+        try
+        {
+            return await HandleCoreAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact campaign source cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<OperationAcceptedResponse>> HandleCoreAsync(
+        IRequestContext<RecordBulkAccessDecision> context, CancellationToken ct)
+    {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
             return Failure(RequestErrorKind.Forbidden, "Access review sign-off requires personal HTTP submission.");
@@ -36,7 +50,7 @@ public sealed class RecordBulkAccessDecisionHandler(NativeOperationExecutor oper
                 "A bulk decision requires a batch id and a non-negative expected campaign revision.");
         var itemIds = request.ItemIds ?? [];
         var actor = AccessReviewActor.From(context);
-        var campaign = await campaigns.ReadCampaignAsync(request.TenantId, request.CampaignId, request.DecisionBatchId,
+        var campaign = await campaigns.ReadCampaignIdentityAsync(request.TenantId, request.CampaignId, request.DecisionBatchId,
             ct).ConfigureAwait(false);
         if (!await RestrictedAccessReviewVisibility.CanReadCampaignItemsAsync(visibility, request.TenantId,
                 actor.UserId, campaign, itemIds, ct).ConfigureAwait(false))
@@ -49,57 +63,56 @@ public sealed class RecordBulkAccessDecisionHandler(NativeOperationExecutor oper
         var binding = AcceptedOperationBinding.Of(provenance);
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? intent = null;
-        if (campaign.Campaign.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            foreach (var itemId in itemIds.Distinct())
-            {
-                if (campaign.FindItem(itemId) is not { } item || campaign.CurrentReviewerMemberId(itemId) != actor.MemberId ||
-                    campaign.Launched?.ProgramId is { } programId &&
-                    !await eligibility.CanReviewAsync(request.TenantId, programId, actor.MemberId, item.SystemInstanceId, ct)
-                        .ConfigureAwait(false))
-                    return Failure(RequestErrorKind.NotFound,
-                        "The review items were not found among the reviewer's current queue access.");
-            }
-            if (campaign.Campaign.PrepareBulkAdmission(request.ExpectedCampaignRevision) is { IsSuccess: false } blocked)
-                return Result<OperationAcceptedResponse>.Failure(blocked.Error!);
-            if (!AccessReviewVocabulary.IsBoundedText(request.Rationale, 4000))
-                return Failure(RequestErrorKind.Validation,
-                    "A decision is keep, modify, revoke, or unable_to_determine with a rationale of at most 4000 characters.");
-            var preview = BulkAccessDecisions.Preview(campaign, itemIds, request.Decision, actor.MemberId, actor.UserId);
-            if (!preview.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(preview.Error!);
-            if (preview.Value!.Rejected.Count > 0 || preview.Value.Eligible.Count != itemIds.Count ||
-                !string.Equals(preview.Value.PreviewToken, request.PreviewToken, StringComparison.Ordinal))
-                return Failure(RequestErrorKind.Conflict,
-                    "The bulk decision no longer matches its preview; preview it again.");
-            if (preview.Value.Eligible.Any(item => campaign.State(item.ItemId) is not { Materialized: true }))
-                return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "A selected review item has not been materialized yet; retry shortly.", true));
-            intent = await FreezeIntentAsync(request, campaign, provenance, [.. preview.Value.Eligible.Select(
-                static item => item.ItemId)], now, ct).ConfigureAwait(false);
-            response = await AccessReviewContent.AcceptedResponseAsync(content, request.TenantId,
-                request.DecisionBatchId, now, ct).ConfigureAwait(false);
-        }
+        AccessReviewPreparedCut? preparedCut = null;
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AccessReviewCampaign>(binding,
             () => new AccessReviewCampaign(request.TenantId, request.CampaignId, request.DecisionBatchId),
-            owner => owner.Acceptance, owner => Prepare(owner, request.ExpectedCampaignRevision, response),
-            (AccessReviewCampaign owner, ImmutableContentRef acknowledgment) => owner.AdmitBulkDecision(provenance,
-                intent!, acknowledgment)), context, ct).ConfigureAwait(false);
+            owner => owner.Acceptance,
+            async (owner, prepareCt) =>
+            {
+                var prepared = owner.PrepareBulkAdmission(request.ExpectedCampaignRevision);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                var preparedCampaign = await campaigns.ReadCampaignAsync(request.TenantId, owner, prepareCt)
+                    .ConfigureAwait(false);
+                foreach (var itemId in itemIds.Distinct())
+                {
+                    if (preparedCampaign.FindItem(itemId) is not { } item || preparedCampaign.CurrentReviewerMemberId(itemId) != actor.MemberId ||
+                        preparedCampaign.Launched?.ProgramId is { } programId &&
+                        !await eligibility.CanReviewAsync(request.TenantId, programId, actor.MemberId, item.SystemInstanceId, prepareCt)
+                            .ConfigureAwait(false))
+                        return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.NotFound,
+                            "The review items were not found among the reviewer's current queue access.");
+                }
+                if (!AccessReviewVocabulary.IsBoundedText(request.Rationale, 4000))
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Validation,
+                        "A decision is keep, modify, revoke, or unable_to_determine with a rationale of at most 4000 characters.");
+                var preview = BulkAccessDecisions.Preview(preparedCampaign, itemIds, request.Decision, actor.MemberId, actor.UserId);
+                if (!preview.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(preview.Error!);
+                if (preview.Value!.Rejected.Count > 0 || preview.Value.Eligible.Count != itemIds.Count ||
+                    !string.Equals(preview.Value.PreviewToken, request.PreviewToken, StringComparison.Ordinal))
+                    return AccessReviewOutcome.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
+                        "The bulk decision no longer matches its preview; preview it again.");
+                if (preview.Value.Eligible.Any(item => preparedCampaign.State(item.ItemId) is not { Materialized: true }))
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "A selected review item has not been materialized yet; retry shortly.", true));
+                intent = await FreezeIntentAsync(request, preparedCampaign, provenance, [.. preview.Value.Eligible.Select(
+                static item => item.ItemId)], now, prepareCt).ConfigureAwait(false);
+                response = await AccessReviewContent.AcceptedResponseAsync(content, request.TenantId,
+                    request.DecisionBatchId, now, prepareCt).ConfigureAwait(false);
+
+                preparedCut = AccessReviewPreparedCut.Capture(owner);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (AccessReviewCampaign owner, ImmutableContentRef acknowledgment) =>
+            {
+                if (preparedCut?.Matches(owner) != true)
+                    return AccessReviewPreparedCut.Changed();
+                return owner.AdmitBulkDecision(provenance, intent!, acknowledgment);
+            }), context, ct).ConfigureAwait(false);
         return await AccessReviewContent.AcknowledgmentAsync(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(AccessReviewCampaign owner, long expectedRevision,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareBulkAdmission(expectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The campaign changed while the bulk decision was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     async Task<ImmutableContentRef> FreezeIntentAsync(RecordBulkAccessDecision request,

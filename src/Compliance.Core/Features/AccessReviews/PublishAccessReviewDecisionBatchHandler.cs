@@ -65,7 +65,8 @@ sealed class PublishAccessReviewDecisionBatchHandler(IAggregateReader reader, IA
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Transient($"The frozen bulk decision cannot be verified yet: {exception.Message}");
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen bulk decision cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         for (var attempt = 1; ; attempt++)
@@ -101,13 +102,15 @@ sealed class PublishAccessReviewDecisionBatchHandler(IAggregateReader reader, IA
         var items = await manifests.BulkItemsAsync(command.Target.Realm, intent.Items, ct).ConfigureAwait(false);
         if (proofs.Count != items.Count || intent.Items.Count != items.Count)
             return Verified.Fail(SourceUseReceiverSupport.Permanent("The proof set is not the complete selection."));
+        if (proofs.Select(static proof => proof.ItemId).Distinct().Count() != proofs.Count)
+            return Verified.Fail(SourceUseReceiverSupport.Permanent("The proof set repeats an item."));
         var byItem = proofs.ToDictionary(static proof => proof.ItemId);
         var decisions = new List<AccessDecisionView>(items.Count);
         foreach (var (resource, selected) in items.OrderBy(static pair => pair.Key, Kernel.StreamKeyOrder.Instance))
         {
             if (!byItem.TryGetValue(selected.ItemId, out var proof))
                 return Verified.Fail(SourceUseReceiverSupport.Permanent("The proof set omits a selected item."));
-            var item = await reader.HydrateAsync(new AccessReviewItem(tenant, campaignId, selected.ItemId).ForSourceUse(candidate => candidate.BulkKey(command.DecisionBatchId)), ct)
+            var item = await reader.HydrateAsync(new AccessReviewItem(tenant, campaignId, selected.ItemId, selectedBatchId: command.DecisionBatchId).ForSourceUse(candidate => candidate.BulkKey(command.DecisionBatchId)), ct)
                 .ConfigureAwait(false);
             if (item.ItemId != selected.ItemId || item.Stream.Resource != resource)
                 return Verified.Fail(SourceUseReceiverSupport.Permanent("The proof set names another item."));

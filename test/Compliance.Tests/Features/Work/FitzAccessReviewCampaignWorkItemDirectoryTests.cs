@@ -299,7 +299,8 @@ public sealed class FitzAccessReviewCampaignWorkItemDirectoryTests
 
     static FitzAccessReviewCampaignWorkItemDirectory CreateDirectory(IServiceProvider services) =>
         new(new InMemoryKvClient(), services.GetRequiredService<IAggregateReader>(),
-            services.GetRequiredService<Bdgrz.Compliance.Features.Content.IImmutableContentStore>());
+            services.GetRequiredService<Bdgrz.Compliance.Features.Content.IImmutableContentStore>(),
+            services.GetRequiredService<IDomainEventReader>());
 
     static Uuid ItemId(AccessReviewCampaignView campaign, string subject, string entitlement) =>
         Assert.Single(campaign.Items, item => item.Item.ProviderSubjectId == subject &&

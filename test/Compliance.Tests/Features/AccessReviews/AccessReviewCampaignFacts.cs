@@ -19,7 +19,8 @@ static class AccessReviewCampaignFacts
     public static OperationProvenance Provenance(Uuid tenantId, Uuid campaignId, Uuid logicalId, string kind,
         ActorReference actor, DateTimeOffset at) => new(logicalId, logicalId, null, kind, actor,
         AccessReviewEffects.CampaignStream(tenantId, campaignId), "initial", null, new string('d', 64), at,
-        AccessReviewEffects.CampaignStream(tenantId, campaignId), AccessReviewEffects.CampaignStream(tenantId, campaignId));
+        AccessReviewEffects.CampaignStream(tenantId, campaignId), AccessReviewEffects.CampaignStream(tenantId, campaignId),
+        AccessReviewEffects.CampaignStream(tenantId, campaignId));
 
     public static async Task<AccessReviewCampaignLaunched> LaunchedAsync(IImmutableContentStore content, Uuid tenantId,
         Uuid campaignId, string name, DateTimeOffset deadline, Uuid snapshotId, string contentSha256,
@@ -51,9 +52,11 @@ static class AccessReviewCampaignFacts
         var proofs = await content.WriteJsonAsync<IReadOnlyList<AccessReviewItemCompletionProof>>(realm,
             Uuid.CreateVersion4(), AccessReviewContent.ItemProofsSchema, []);
         var intent = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), ClosureIntent.Schema, new UnitResult());
+        var result = await AccessReviewContent.WriteResultAsync(content, tenantId,
+            AccessReviewContent.CompletionViewSchema, completionRef, CancellationToken.None);
         return new AccessReviewCampaignCompleted(tenantId, campaignId, revision, completionRef,
             Provenance(tenantId, campaignId, Uuid.CreateVersion4(), "CompleteAccessReviewCampaignClosure", actor,
-                completion.CompletedAt), 1, proofs, intent, null, null);
+                completion.CompletedAt), 1, proofs, intent, null, result);
     }
 
     /// <summary>
@@ -101,12 +104,14 @@ static class AccessReviewCampaignFacts
                 first, result));
         if (!materialize)
             return;
+        var launch = (await ProgramManagementServices.HydrateAsync(provider,
+            new AccessReviewCampaign(tenantId, campaignId))).Launched!;
         foreach (var selection in selections)
         {
             var itemStream = AccessReviewEffects.ItemStream(tenantId, campaignId, selection.ItemId);
-            var opened = new OperationProvenance(Uuid.CreateVersion4(), campaignId, null,
+            var opened = new OperationProvenance(Uuid.CreateVersion4(), campaignId, launch.Metadata.EventId,
                 nameof(MaterializeAccessReviewItem), actor, itemStream, "initial", null, provenance.AuthoredIntentSha256,
-                now, itemStream, itemStream);
+                now, itemStream, itemStream, stream);
             await ProgramManagementServices.SeedAsync(provider,
                 new AccessReviewItem(tenantId, campaignId, selection.ItemId),
                 item => item.Materialize(opened, selection.Intent));

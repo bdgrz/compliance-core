@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
@@ -11,7 +12,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     unverified launch.
 /// </summary>
 sealed partial class AccessReviewLaunchFanOutReactor(IProjectionCheckpointStore checkpoints,
-    ProcessRootReaction process, IImmutableContentStore content)
+    ProcessRootReaction process, IImmutableContentStore content, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(AccessReviewCampaign.Area), WorkloadName),
         IReactorHandler<AccessReviewCampaignLaunched>
 {
@@ -19,6 +20,8 @@ sealed partial class AccessReviewLaunchFanOutReactor(IProjectionCheckpointStore 
 
     public async ValueTask HandleAsync(IReactorContext<AccessReviewCampaignLaunched> context, CancellationToken ct)
     {
+        await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
+            .ConfigureAwait(false);
         var launched = context.Trigger;
         AccessReviewItemIntentManifest manifest;
         try
@@ -29,7 +32,7 @@ sealed partial class AccessReviewLaunchFanOutReactor(IProjectionCheckpointStore 
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The launch manifest cannot be verified yet: {exception.Message}", true));
+                $"The launch manifest cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         _ = await process.StartAsync(AccessReviewEffects.LaunchFanOutName, context, launched.ItemIntentManifest,

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -13,7 +14,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     be applied yet is a transient failure, never a release.
 /// </summary>
 sealed partial class AccessReviewBulkCancellationReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus,
-    IImmutableContentStore content, IAggregateReader reader, AccessReviewManifests manifests)
+    IImmutableContentStore content, IAggregateReader reader, AccessReviewManifests manifests, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(AccessReviewDecisionBatch.Area), WorkloadName),
         IReactorHandler<AccessReviewDecisionBatchCancellationAccepted>
 {
@@ -22,6 +23,8 @@ sealed partial class AccessReviewBulkCancellationReactor(IProjectionCheckpointSt
     public async ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchCancellationAccepted> context,
         CancellationToken ct)
     {
+        await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
+            .ConfigureAwait(false);
         var (tenant, intent, source) = await AccessReviewBulkReactions.ResolveAsync(context.Source.Stream.Realm,
             context.Trigger.Intent, content, reader, ct).ConfigureAwait(false);
         var items = await AccessReviewBulkReactions.ItemsAsync(manifests, context.Source.Stream.Realm, intent, ct)
