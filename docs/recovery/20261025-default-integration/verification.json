@@ -1,0 +1,11 @@
+{
+  "mergedMainPr": 1138,
+  "mergedMainCommit": "af77fb75fe3728c20e490067c394ac0e4cb2dd86",
+  "preparedSourceHashesVerified": 184,
+  "archivesSha256Verified": 102,
+  "jevProductionFilesReviewed": 152,
+  "jevApiErrors": 0,
+  "jevModelSignalsAtOrAboveHalf": 58,
+  "jevEvidenceArchiveSha256": "2cd36a86ac6cac2492b38ce7bb114e8eea1b1cce656ca2b70a89bc4a907f9303",
+  "finalBuildTestsAndCiQualification": "Not run; explicitly waived for unfinished integration"
+}
