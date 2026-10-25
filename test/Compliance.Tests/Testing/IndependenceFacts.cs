@@ -16,7 +16,7 @@ static class IndependenceFacts
         await using var scope = provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var owner = await services.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ClientServiceIndependence(tenantId));
+            .HydrateAsync(new ClientServiceIndependence(tenantId, evaluationId, evaluationId));
         var admitted = owner.AdmissionOf(evaluationId) ?? throw new InvalidOperationException("Admit first.");
         var key = ProcessKey.ForRoot(ClientIndependencePreviewEffects.ProcessName, evaluationId,
             NativeFactReference.Of(owner.Stream, admitted));

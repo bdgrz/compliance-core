@@ -575,6 +575,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<WorkQueueReader>();
         services.AddScoped<FindingReader>();
         services.AddScoped<WeeklyWorkDigestRecipientResolver>();
+        services.AddScoped<WeeklyDigestOperations>();
         services.AddScoped<IProgramResourceScopeResolver, ProgramResourceScopeResolver>();
         services.AddScoped<BoundaryResponsibilityScopeValidator>();
         services.AddScoped<ControlResponsibilityScopeValidator>();

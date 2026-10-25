@@ -1,22 +1,34 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-/// <summary>Reads the complete service history of a client service owner from its retained immutable content.</summary>
+/// <summary>Reads complete original service bodies from the exact captured native prefix.</summary>
 static class ClientServiceHistory
 {
-    /// <summary>Every recorded service of the owner, in record order, as the complete original views.</summary>
-    public static async Task<IReadOnlyList<NonattestServiceView>> ReadAsync(IImmutableContentStore content,
-        ClientServiceIndependence owner, CancellationToken ct)
+    public static async Task<IReadOnlyList<NonattestServiceView>> ReadAsync(IDomainEventReader events,
+        IImmutableContentStore content, ClientServiceIndependence owner, CancellationToken ct)
     {
-        ArgumentNullException.ThrowIfNull(content);
-        ArgumentNullException.ThrowIfNull(owner);
-        var realm = IndependenceContent.Realm(owner.TenantId);
-        var services = new List<NonattestServiceView>(owner.Services.Count);
-        foreach (var recorded in owner.Services)
-            services.Add(await content.ReadJsonAsync<NonattestServiceView>(realm, recorded.ServiceContent, ct)
-                .ConfigureAwait(false));
+        var history = await ClientServiceNativeHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
+        var services = new List<NonattestServiceView>(history.Services.Count);
+        foreach (var fact in history.Services)
+        {
+            if (fact.ServiceContent.Schema != IndependenceContent.ServiceSchema)
+                throw new ImmutableContentIntegrityException("The service body has another selected schema.");
+            var view = await content.ReadJsonAsync<NonattestServiceView>(owner.Stream.Realm, fact.ServiceContent, ct).ConfigureAwait(false);
+            if (view.ClientTenantId != owner.TenantId || view.ServiceRecordId != fact.OperationId ||
+                view.Actor != fact.Operation.Actor || view.RecordedAt != fact.Operation.AcceptedAt ||
+                !IndependenceRecordValidation.ValidService(view.Content) ||
+                AuthoredIntentDigest.Compute(new RecordNonattestService(owner.TenantId, fact.OperationId,
+                    (long)fact.Operation.OriginalExpectedRevision!.Value, view.Content)) != fact.Operation.AuthoredIntentSha256)
+                throw new ImmutableContentIntegrityException("The service body differs from its exact original native request and attribution.");
+            var result = await content.ReadJsonAsync<MutationResultContent>(owner.Stream.Realm, fact.OperationResult!, ct).ConfigureAwait(false);
+            if (result.Schema != IndependenceContent.ServiceSchema || result.Value is not StandardResponseBody body || body.Content != fact.ServiceContent)
+                throw new ImmutableContentIntegrityException("The service result does not freeze its exact original typed body.");
+            services.Add(view);
+        }
         return Array.AsReadOnly(services.ToArray());
     }
 }

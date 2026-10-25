@@ -1,10 +1,12 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 
 namespace Bdgrz.Compliance.Features.Work;
 
 /// <summary>Records why a scheduled digest was suppressed before an email attempt began.</summary>
-[Discriminator("bdgrz.work.weekly-digest.delivery-suppressed", 1)]
+[Discriminator("bdgrz.work.weekly-digest.delivery-suppressed", 2)]
 public sealed record WeeklyWorkDigestDeliverySuppressed(
     Uuid TenantId,
     Uuid DigestId,
@@ -12,4 +14,15 @@ public sealed record WeeklyWorkDigestDeliverySuppressed(
     long Revision,
     string Reason,
     ActorReference SuppressedBy,
-    DateTimeOffset SuppressedAt) : DomainEvent;
+    DateTimeOffset SuppressedAt) : DomainEvent, IWeeklyWorkDigestOperationFact
+{
+    public OperationProvenance Operation { get; init; } = null!;
+    public DeliverWeeklyWorkDigest Authored { get; init; } = null!;
+    public ActorAttribution OriginalActor { get; init; } = null!;
+    public SourceFactProof<WeeklyWorkDigestScheduled> SourceProof { get; init; } = null!;
+    public bool NoChange { get; init; }
+    public ImmutableContentRef Change { get; init; } = null!;
+    public ImmutableContentRef ResponseContent { get; init; } = null!;
+    public ImmutableContentRef? FirstResponse { get; init; }
+    public ImmutableContentRef? OperationResult { get; init; }
+}

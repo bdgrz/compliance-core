@@ -1,0 +1,59 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 363,
+    "productionHttpPassed": 29,
+    "backendUnit": {
+      "passed": 6670,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "format": "pass",
+    "exactSourceAndDependencyHashes": "42 verified; all940 owner/handler/reactor reviews also refreshed"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 42,
+    "signalsAtOrAbove065": 2,
+    "triage": "client-weekly-import-file-triage.json",
+    "initialIntegration": "refine .50 vs merge .48 while final validation pending; original evidence retained in recovery",
+    "finalIntegration": {
+      "decision": {
+        "type": "choice",
+        "choice": "merge_scoped_repair",
+        "confidence": 0.67,
+        "probabilities": {
+          "merge_scoped_repair": 0.78,
+          "refine_before_merge": 0.21,
+          "blocked_by_missing_authority": 0.01
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.2
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.23
+      }
+    },
+    "adopted": "Squash merge locally validated scoped repair without CI wait per explicit user direction; continue all remaining layers."
+  },
+  "scope": "Selected DeliverWeeklyWorkDigest and RecordWorkDigestDelivery native identities, exact immutable causal source proofs, original Unit receipts and verified NoChange behavior.",
+  "genuineOldApiRedFailed": 2,
+  "qualification": [
+    "Both required CommandId DTOs occupiedv2->v3; three incompatible requested/recorded/suppressed facts occupiedv1->v2; Scheduled remains unchangedv1. No legacy receipt conversion.",
+    "Actual source proofs bind scoped physical ResourceOffset and independent native/global/realm positions, event kind/id/payload/fullmetadata and required-facts manifest. Mandatory resolver installed in actual reader/wrappers/fixtures.",
+    "Exact native replay occurs before mutable recipient, current time and source preparation. Distinct IDs/current revision may record a fully verified native NoChange acknowledgement of an existing effect, advancing only resource revision. Such request receipts are rejected as delivery admission proof.",
+    "No new transport/sender/callback/public route or receipt-as-business-effect. Complete transient attempt history and selected/latest owner state remain uncapped."
+  ],
+  "remainingWork": [
+    "ScheduleWeeklyWorkDigest is unchanged. The exact firstowner/empty page/partial page original-result mismatch has an explicit technical journal ownership decision, implementation pending. See weekly-schedule-placement-decision.json."
+  ]
+}

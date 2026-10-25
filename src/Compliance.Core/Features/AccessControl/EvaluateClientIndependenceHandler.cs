@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.SourceFacts;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
@@ -12,8 +13,8 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     then acknowledges with a fixed 202. The preview is computed later from that snapshot only, so an exact retry
 ///     returns the original acknowledgment even after services or rules change.
 /// </summary>
-public sealed class EvaluateClientIndependenceHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content, TimeProvider clock, IndependenceRuleCatalogReader ruleSources)
+public sealed class EvaluateClientIndependenceHandler(NativeOperationExecutor operations, IImmutableContentStore content, TimeProvider clock,
+    IndependenceRuleCatalogReader ruleSources, IDomainEventReader events, ISourceFactResolver sources)
     : IRequestHandler<EvaluateClientIndependence, OperationAcceptedResponse>
 {
     const string CommandKind = "EvaluateClientIndependence";
@@ -40,28 +41,31 @@ public sealed class EvaluateClientIndependenceHandler(NativeOperationExecutor op
         var stream = new ClientServiceIndependence(request.TenantId).Stream;
         var provenance = new OperationProvenance(request.EvaluationId, request.EvaluationId, null, CommandKind, actor,
             stream, InitialEpisode, (ulong)request.ExpectedServiceEpoch, AuthoredIntentDigest.Compute(request), now,
-            stream, stream);
+            stream, stream, stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        // A logical id that was already accepted resolves from the owner's facts before any guard is evaluated.
-        var snapshot = await reader.HydrateAsync(
-            new ClientServiceIndependence(request.TenantId, request.EvaluationId), ct).ConfigureAwait(false);
         ImmutableContentRef? intent = null;
-        FirstResponseDescriptor? response = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        ulong intentEpoch = 0;
+        (ulong Version, ulong Position, string Digest)? preparedCut = null;
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(ClientServiceIndependence owner, CancellationToken token)
         {
-            var frozen = await FreezeAsync(request, snapshot, provenance, now, ct).ConfigureAwait(false);
+            var frozen = await FreezeAsync(request, owner, provenance, now, token).ConfigureAwait(false);
             if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response) = frozen.Value;
+                return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+            intent = frozen.Value.Intent;
+            intentEpoch = owner.Epoch;
+            preparedCut = (owner.Version, owner.CommittedStreamPosition, owner.ReplayCut.Digest);
+            return Result<FirstResponseDescriptor>.Success(frozen.Value.Response);
         }
 
-        var intentEpoch = snapshot.Epoch;
         var outcome = await operations.ExecuteAsync(new NativeOperation<ClientServiceIndependence>(binding,
             () => new ClientServiceIndependence(request.TenantId, request.EvaluationId), owner => owner.Acceptance,
-            owner => Prepare(owner, request, intentEpoch, response),
+            PrepareAsync,
             (ClientServiceIndependence owner, ImmutableContentRef acknowledgment) =>
-                owner.AdmitEvaluation(provenance, intent!, intentEpoch, acknowledgment)), context, ct)
+                preparedCut == (owner.Version, owner.CommittedStreamPosition, owner.ReplayCut.Digest)
+                    ? owner.AdmitEvaluation(provenance, intent!, intentEpoch, acknowledgment)
+                    : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The prepared client preview prefix changed before admission.", true))), context, ct)
             .ConfigureAwait(false);
         return await IndependenceContent.ReadAcknowledgmentAsync(content, realm, outcome, ct).ConfigureAwait(false);
     }
@@ -92,17 +96,14 @@ public sealed class EvaluateClientIndependenceHandler(NativeOperationExecutor op
         version = IndependenceRecordValidation.Freeze(version);
 
         var realm = IndependenceContent.Realm(request.TenantId);
-        var services = new List<NonattestServiceView>(snapshot.Services.Count);
+        IReadOnlyList<NonattestServiceView> services;
         try
         {
-            foreach (var recorded in snapshot.Services)
-                services.Add(await content.ReadJsonAsync<NonattestServiceView>(realm, recorded.ServiceContent, ct)
-                    .ConfigureAwait(false));
+            services = await ClientServiceHistory.ReadAsync(events, content, snapshot, ct).ConfigureAwait(false);
         }
-        catch (ImmutableContentIntegrityException exception)
+        catch (ImmutableContentIntegrityException error)
         {
-            return IndependenceContent.Failure<(ImmutableContentRef, FirstResponseDescriptor)>(
-                RequestErrorKind.Conflict, $"The service history cannot be verified: {exception.Message}", true);
+            return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(IndependenceCatalogContent.Failure(error));
         }
 
         // The preview is a pure function of the frozen inputs, so an unevaluable snapshot is refused here, before
@@ -114,8 +115,8 @@ public sealed class EvaluateClientIndependenceHandler(NativeOperationExecutor op
 
         var cuts = new[]
         {
-            Cut(snapshot.Stream, snapshot.CommittedStreamPosition, now),
-            Cut(catalog.Owner.Stream, catalog.Owner.CommittedStreamPosition, now),
+            await IndependenceSourceCut.CaptureAsync(events, sources, snapshot, clock, ct).ConfigureAwait(false),
+            await IndependenceSourceCut.CaptureAsync(events, sources, catalog.Owner, clock, ct).ConfigureAwait(false),
         };
         var header = new DurableIntentHeader(request.EvaluationId, snapshot.Stream, snapshot.Stream, snapshot.Stream,
             provenance.Actor, InitialEpisode, provenance.OriginalExpectedRevision, provenance.AuthoredIntentSha256, now);
@@ -143,18 +144,4 @@ public sealed class EvaluateClientIndependenceHandler(NativeOperationExecutor op
                 "operation-accepted-response.v1", new StandardResponseBody(acknowledgment))));
     }
 
-    static AuthoritativeReadCut Cut(EventStreamAddress stream, ulong committedPosition, DateTimeOffset capturedAt) =>
-        new($"{stream.Realm}/{stream.Area}/{stream.Resource}", committedPosition, capturedAt);
-
-    static Result<FirstResponseDescriptor> Prepare(ClientServiceIndependence owner, EvaluateClientIndependence request,
-        ulong intentEpoch, FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareEvaluation(request.EvaluationId, request.ExpectedServiceEpoch);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null || owner.Epoch != intentEpoch
-            ? IndependenceContent.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
-                "A service was recorded while the evaluation was prepared; reload and retry.", true)
-            : Result<FirstResponseDescriptor>.Success(response);
-    }
 }

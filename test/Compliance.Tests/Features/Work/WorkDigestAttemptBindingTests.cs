@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Tests.Testing;
@@ -56,7 +57,7 @@ public sealed class WorkDigestAttemptBindingTests
         });
 
         var processor = new WorkDigestDispatchProcessor(reader, executor, new ReadyContent(), delivery, settings, clock,
-            new WorkDigestHistoryReader(reader, events));
+            new WorkDigestHistoryReader(reader, events, scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()));
 
         // Act
         await processor.ProcessMemberAsync(tenant, user, tenantActive: true, memberActive: true, CancellationToken.None);
@@ -108,7 +109,7 @@ public sealed class WorkDigestAttemptBindingTests
         var delivery = new DelayedDelivery(() => Task.CompletedTask);
 
         var processor = new WorkDigestDispatchProcessor(reader, lostResponse, new ReadyContent(), delivery, settings, clock,
-            new WorkDigestHistoryReader(reader, events));
+            new WorkDigestHistoryReader(reader, events, scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()));
 
         // Act
         await processor.ProcessMemberAsync(tenant, user, true, true, CancellationToken.None);
@@ -162,7 +163,7 @@ public sealed class WorkDigestAttemptBindingTests
 
         var processor = new WorkDigestDispatchProcessor(reader,
             scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), new ReadyContent(), delivery, settings, clock,
-            new WorkDigestHistoryReader(reader, events));
+            new WorkDigestHistoryReader(reader, events, scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()));
 
         // Act
         var failure = await Record.ExceptionAsync(async () => await processor.ProcessMemberAsync(tenant, user, true, true,

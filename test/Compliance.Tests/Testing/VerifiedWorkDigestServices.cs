@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Hosting.Persistence;
@@ -19,6 +20,7 @@ static class VerifiedWorkDigestServices
         services.TryAddSingleton(new WorkDigestDeliverySettings("https://app.example",
             "/tenants/{tenant_id}/{tenant_slug}/programs/{program_id}/work/{work_item_id}",
             10, TimeSpan.FromMinutes(5), TimeSpan.FromDays(6), TimeSpan.FromMinutes(3), TimeSpan.FromMinutes(1)));
+        services.TryAddScoped<ISourceFactResolver, EventStoreSourceFactResolver>();
         services.TryAddScoped<NativeOperationExecutor>();
         services.TryAddScoped<WorkDigestRetryOperations>();
         var originalReader = services.Last(descriptor => !descriptor.IsKeyedService &&
@@ -35,6 +37,6 @@ static class VerifiedWorkDigestServices
                 originalReader.ImplementationType!, originalReader.Lifetime));
         services.Add(ServiceDescriptor.Describe(typeof(IAggregateReader), provider =>
             new WorkDigestAggregateReader(provider.GetRequiredKeyedService<IAggregateReader>(readerKey),
-                provider.GetRequiredService<IDomainEventReader>()), originalReader.Lifetime));
+                provider.GetRequiredService<IDomainEventReader>(), provider.GetRequiredService<ISourceFactResolver>()), originalReader.Lifetime));
     }
 }

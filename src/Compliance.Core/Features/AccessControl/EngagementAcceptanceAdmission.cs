@@ -18,7 +18,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 sealed class EngagementAcceptanceAdmission(NativeOperationExecutor operations, IAggregateReader reader,
     IImmutableContentStore content, IServiceEngagementAcceptanceEvidenceReader evidenceReader, FirmStaffViews staffViews,
     ProfessionalDutyAuthorityReader duties, PracticeIndependenceWall wall, EngagementSourcePins pins,
-    IPlatformUserDirectoryReader platformUsers, TimeProvider clock)
+    IPlatformUserDirectoryReader platformUsers, TimeProvider clock, IDomainEventReader events)
 {
     const string InitialEpisode = "initial";
 
@@ -107,7 +107,7 @@ sealed class EngagementAcceptanceAdmission(NativeOperationExecutor operations, I
         {
             view = await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content, realm,
                 owner.LatestResult!, ct).ConfigureAwait(false);
-            services = await ClientServiceHistory.ReadAsync(content, clientService, ct).ConfigureAwait(false);
+            services = await ClientServiceHistory.ReadAsync(events, content, clientService, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {

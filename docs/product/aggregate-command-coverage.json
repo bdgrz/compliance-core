@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "8ece7f2ea4a1ceedaac214a744045eb05a0bcc73",
+  "sourceCommit": "5e784ab0cf81b9432b14356f08b345c86c5782c2",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -879,6 +879,7 @@
         "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitSourceBindingTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportVisibilityReadConsistencyTests.cs"
       ],
@@ -934,6 +935,8 @@
         "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionPreparationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -1018,6 +1021,7 @@
         "src/Compliance.Core/Features/Applications/ApplicationImportSource.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -5080,7 +5084,8 @@
         "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceNativeHistoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8888,8 +8893,10 @@
       ],
       "emitters": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestNativeReceiverTests.cs",
         "test/Compliance.Tests/Features/Work/WeeklyWorkDigestTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkDigestNativeHistoryTests.cs"
+        "test/Compliance.Tests/Features/Work/WorkDigestNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/WeeklyDigestFacts.cs"
       ],
       "disposition": "legacy_replay",
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
@@ -8905,7 +8912,12 @@
       ],
       "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandIdentityTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestNativeReceiverTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestReceiverRecoveryTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/WeeklyDigestFacts.cs"
       ],
       "disposition": "legacy_replay",
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
@@ -8920,7 +8932,9 @@
         }
       ],
       "emitters": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/WeeklyDigestFacts.cs"
+      ],
       "disposition": "legacy_replay",
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
@@ -8935,7 +8949,11 @@
       ],
       "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandIdentityTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestNativeReceiverTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestReceiverRecoveryTests.cs",
+        "test/Compliance.Tests/Testing/WeeklyDigestFacts.cs"
       ],
       "disposition": "legacy_replay",
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
@@ -9491,8 +9509,8 @@
         "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportTransportTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9929,6 +9947,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/PracticeIndependenceCommitmentTests.cs",
@@ -12296,8 +12315,12 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandIdentityTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestNativeReceiverTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestReceiverRecoveryTests.cs",
         "test/Compliance.Tests/Features/Work/WorkDigestHistoryBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/WorkDigestNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/WeeklyDigestFacts.cs",
         "test/Compliance.Tests/Testing/WorkDigestFacts.cs"
       ],
       "commandRouteDisposition": "pending_command_route",
@@ -12341,6 +12364,7 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestNativeReceiverTests.cs",
         "test/Compliance.Tests/Features/Work/WorkDigestDispatchProcessorTests.cs",
         "test/Compliance.Tests/Features/Work/WorkDigestPreferenceTimeZoneTests.cs"
       ],
@@ -13451,9 +13475,12 @@
         "ApplicationImportReceivers"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProjectionTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportTargetPreparationTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs",
         "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
       ],
@@ -15399,13 +15426,13 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationImportBatchTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionPreparationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProjectionTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceHistoryProofTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs",
-        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceHistoryProofTests.cs"
       ],
       "note": "System-only application import process receiver; claims the canonical source for the sealed batch. No HTTP/MCP route."
     },
@@ -15797,7 +15824,11 @@
         "ApplicationImportReceivers"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitSourceBindingTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportTargetPreparationTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs"
       ],
       "note": "System-only application import process receiver; publishes every target together from the complete target proof manifest. No HTTP/MCP route."
@@ -16014,7 +16045,10 @@
       "helperServices": [
         "ApplicationImportReceivers"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportTargetPreparationTests.cs"
+      ],
       "note": "System-only application import process receiver; completes an accepted cancellation once every target is fenced. No HTTP/MCP route."
     },
     {
@@ -17540,7 +17574,7 @@
     {
       "request": "DeliverWeeklyWorkDigest",
       "contract": "src/Compliance.Common/Features/Work/DeliverWeeklyWorkDigest.cs",
-      "interfaces": "IRequest",
+      "interfaces": "IRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -17550,15 +17584,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "WeeklyWorkDigest"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
         "WeeklyWorkDigestRecipientResolver"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandIdentityTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestNativeReceiverTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestReceiverRecoveryTests.cs",
+        "test/Compliance.Tests/Testing/WeeklyDigestFacts.cs"
       ],
       "note": ""
     },
@@ -17814,7 +17850,10 @@
       "helperServices": [
         "ApplicationImportVerifier"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionPreparationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs"
+      ],
       "note": "System-only authorization of a sealed, source-claimed batch; its deterministic id is a source-event effect. No HTTP/MCP route."
     },
     {
@@ -17992,7 +18031,10 @@
       "helperServices": [
         "ApplicationImportReceivers"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportTargetPreparationTests.cs"
+      ],
       "note": "System-only application import process receiver; records the batch fence on a target even when its hold was never acquired. No HTTP/MCP route."
     },
     {
@@ -24242,7 +24284,8 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "ClientIndependenceDecision",
-        "ClientServiceIndependence"
+        "ClientServiceIndependence",
+        "IndependenceRuleCatalog"
       ],
       "aggregateTargets": [
         "ClientIndependenceDecision"
@@ -26870,12 +26913,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs"
       ],
       "note": ""
     },
@@ -27410,7 +27453,7 @@
     {
       "request": "RecordWorkDigestDelivery",
       "contract": "src/Compliance.Common/Features/Work/RecordWorkDigestDelivery.cs",
-      "interfaces": "IRequest",
+      "interfaces": "IRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -27420,13 +27463,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "WeeklyWorkDigest"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandIdentityTests.cs",
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestNativeReceiverTests.cs",
+        "test/Compliance.Tests/Testing/WeeklyDigestFacts.cs"
       ],
       "note": ""
     },
@@ -27946,7 +27990,10 @@
       "helperServices": [
         "ApplicationImportReceivers"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReceiverPreparationTests.cs"
+      ],
       "note": "System-only application import process receiver; releases the source claim from the exact terminal batch fact. No HTTP/MCP route."
     },
     {
@@ -27969,7 +28016,10 @@
       "helperServices": [
         "ApplicationImportReceivers"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReceiverPreparationTests.cs"
+      ],
       "note": "System-only application import process receiver; settles a target hold from the exact terminal batch fact. No HTTP/MCP route."
     },
     {
@@ -28486,9 +28536,12 @@
         "ApplicationImportReceivers"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPreparationSafetyTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportProjectionTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportTargetPreparationTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs",
         "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
       ],

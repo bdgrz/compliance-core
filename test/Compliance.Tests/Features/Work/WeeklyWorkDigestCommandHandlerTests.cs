@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Security.Cryptography;
 using System.Text;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -37,7 +40,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             fixture.TenantId, WeekStarting, "schedule-2026-10-12", Limit: 2)), CancellationToken.None);
         var digestId = WeeklyWorkDigest.IdFor(fixture.TenantId,
             RbacIds.Member(fixture.TenantId, subscribedUser), WeekStarting);
-        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events, fixture.Sources).ReadWeeklyAsync(fixture.TenantId, digestId);
         var retry = await handler.HandleAsync(Fixture.ScheduleContext(new ScheduleWeeklyWorkDigest(
             fixture.TenantId, WeekStarting, "schedule-2026-10-12", Limit: 2)), CancellationToken.None);
 
@@ -45,7 +48,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Equal(new WorkDigestSchedulePageView(2, 1, 1, "page-2"), result.Value);
         Assert.Equal("scheduled", digest.View.Status);
-        Assert.Equal("scheduled", (await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId)).View.Status);
+        Assert.Equal("scheduled", (await new WorkDigestHistoryReader(fixture.Reader, fixture.Events, fixture.Sources).ReadWeeklyAsync(fixture.TenantId, digestId)).View.Status);
         Assert.True(retry.IsSuccess, retry.Error?.Message);
         Assert.Equal(0, retry.Value.DigestsScheduled);
     }
@@ -83,7 +86,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         var scheduleEventId = await fixture.FindEventIdAsync<WeeklyWorkDigestScheduled>(digestId);
         var deliveryHandler = fixture.DeliveryHandler();
         var deliveryKey = WeeklyWorkDigest.DeliveryKeyFor(digestId, 1);
-        var deliveryCommand = new DeliverWeeklyWorkDigest(fixture.TenantId, memberId, digestId,
+        var deliveryCommand = new DeliverWeeklyWorkDigest(Uuid.CreateVersion4(), fixture.TenantId, memberId, digestId,
             scheduleEventId, 1, 1, deliveryKey);
 
         // Act
@@ -93,7 +96,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             scheduleEventId), CancellationToken.None);
         var requestEventId = await fixture.FindEventIdAsync<WeeklyWorkDigestDeliveryRequested>(digestId);
         var recordHandler = fixture.RecordHandler();
-        var recordCommand = new RecordWorkDigestDelivery(fixture.TenantId, digestId,
+        var recordCommand = new RecordWorkDigestDelivery(Uuid.CreateVersion4(), fixture.TenantId, digestId,
             requestEventId, 2, 1, deliveryKey,
             "delivered", fixture.Clock.GetUtcNow().AddMinutes(1), null);
         fixture.Clock.Set(recordCommand.AttemptedAt.AddMinutes(1));
@@ -103,7 +106,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             requestEventId), CancellationToken.None);
         var retry = await recordHandler.HandleAsync(Fixture.RecordContext(recordCommand,
             requestEventId), CancellationToken.None);
-        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events, fixture.Sources).ReadWeeklyAsync(fixture.TenantId, digestId);
 
         // Assert
         Assert.True(requested.IsSuccess, requested.Error?.Message);
@@ -130,20 +133,20 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         var scheduleEventId = await fixture.FindEventIdAsync<WeeklyWorkDigestScheduled>(digestId);
         var firstKey = WeeklyWorkDigest.DeliveryKeyFor(digestId, 1);
         var deliveryHandler = fixture.DeliveryHandler();
-        var firstDelivery = new DeliverWeeklyWorkDigest(fixture.TenantId, memberId, digestId,
+        var firstDelivery = new DeliverWeeklyWorkDigest(Uuid.CreateVersion4(), fixture.TenantId, memberId, digestId,
             scheduleEventId, 1, 1, firstKey);
         Assert.True((await deliveryHandler.HandleAsync(Fixture.DeliveryContext(firstDelivery,
             scheduleEventId), CancellationToken.None)).IsSuccess);
         var firstRequestEventId = await fixture.FindEventIdAsync<WeeklyWorkDigestDeliveryRequested>(digestId);
         var recordHandler = fixture.RecordHandler();
-        var failedCallback = new RecordWorkDigestDelivery(fixture.TenantId, digestId,
+        var failedCallback = new RecordWorkDigestDelivery(Uuid.CreateVersion4(), fixture.TenantId, digestId,
             firstRequestEventId, 2, 1, firstKey, "failed", fixture.Clock.GetUtcNow().AddMinutes(1),
             "provider_unavailable");
         fixture.Clock.Set(failedCallback.AttemptedAt.AddMinutes(1));
         Assert.True((await recordHandler.HandleAsync(Fixture.RecordContext(failedCallback,
             firstRequestEventId), CancellationToken.None)).IsSuccess);
 
-        var secondDelivery = new DeliverWeeklyWorkDigest(fixture.TenantId, memberId, digestId,
+        var secondDelivery = new DeliverWeeklyWorkDigest(Uuid.CreateVersion4(), fixture.TenantId, memberId, digestId,
             scheduleEventId, 3, 2, WeeklyWorkDigest.DeliveryKeyFor(digestId, 2));
         Assert.True((await deliveryHandler.HandleAsync(Fixture.DeliveryContext(secondDelivery,
             scheduleEventId), CancellationToken.None)).IsSuccess);
@@ -151,7 +154,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         // Act
         var replay = await recordHandler.HandleAsync(Fixture.RecordContext(failedCallback,
             firstRequestEventId), CancellationToken.None);
-        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events, fixture.Sources).ReadWeeklyAsync(fixture.TenantId, digestId);
 
         // Assert
         Assert.True(replay.IsSuccess, replay.Error?.Message);
@@ -174,13 +177,13 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         fixture.Clock.Set(fixture.Clock.GetUtcNow().AddMinutes(1));
         preference.Set(false, ActorReference.ForMember(memberId, "Member"), fixture.Clock.GetUtcNow());
         await fixture.Writer.SaveAsync(preference, new RequestDispatchContext(RequestActor.System));
-        var command = new DeliverWeeklyWorkDigest(fixture.TenantId, memberId, digestId,
+        var command = new DeliverWeeklyWorkDigest(Uuid.CreateVersion4(), fixture.TenantId, memberId, digestId,
             scheduleEventId, 1, 1, WeeklyWorkDigest.DeliveryKeyFor(digestId, 1));
 
         // Act
         var result = await fixture.DeliveryHandler().HandleAsync(
             Fixture.DeliveryContext(command, scheduleEventId), CancellationToken.None);
-        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events, fixture.Sources).ReadWeeklyAsync(fixture.TenantId, digestId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -198,13 +201,13 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         var memberId = RbacIds.Member(fixture.TenantId, userId);
         var digestId = await fixture.SeedScheduledDigestAsync(userId, "guest");
         var scheduleEventId = await fixture.FindEventIdAsync<WeeklyWorkDigestScheduled>(digestId);
-        var command = new DeliverWeeklyWorkDigest(fixture.TenantId, memberId, digestId,
+        var command = new DeliverWeeklyWorkDigest(Uuid.CreateVersion4(), fixture.TenantId, memberId, digestId,
             scheduleEventId, 1, 1, WeeklyWorkDigest.DeliveryKeyFor(digestId, 1));
 
         // Act
         var result = await fixture.DeliveryHandler().HandleAsync(
             Fixture.DeliveryContext(command, scheduleEventId), CancellationToken.None);
-        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events, fixture.Sources).ReadWeeklyAsync(fixture.TenantId, digestId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -227,7 +230,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         // Act
         var result = await handler.HandleAsync(Fixture.ScheduleContext(new ScheduleWeeklyWorkDigest(
             fixture.TenantId, WeekStarting, "schedule-2026-10-12")), CancellationToken.None);
-        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, WeeklyWorkDigest.IdFor(fixture.TenantId, memberId, WeekStarting));
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events, fixture.Sources).ReadWeeklyAsync(fixture.TenantId, WeeklyWorkDigest.IdFor(fixture.TenantId, memberId, WeekStarting));
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -244,7 +247,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         var memberId = RbacIds.Member(fixture.TenantId, userId);
         var digestId = await fixture.ScheduleOneAsync(userId);
         var scheduleEventId = await fixture.FindEventIdAsync<WeeklyWorkDigestScheduled>(digestId);
-        var command = new DeliverWeeklyWorkDigest(fixture.TenantId, memberId, digestId,
+        var command = new DeliverWeeklyWorkDigest(Uuid.CreateVersion4(), fixture.TenantId, memberId, digestId,
             scheduleEventId, 1, 1, WeeklyWorkDigest.DeliveryKeyFor(digestId, 1));
         var handler = fixture.DeliveryHandler();
         var requested = await handler.HandleAsync(Fixture.DeliveryContext(command, scheduleEventId),
@@ -257,7 +260,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         // Act
         var duplicate = await handler.HandleAsync(Fixture.DeliveryContext(command, scheduleEventId),
             CancellationToken.None);
-        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId);
+        var digest = await new WorkDigestHistoryReader(fixture.Reader, fixture.Events, fixture.Sources).ReadWeeklyAsync(fixture.TenantId, digestId);
 
         // Assert
         Assert.True(requested.IsSuccess, requested.Error?.Message);
@@ -272,7 +275,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         var digestId = await fixture.ScheduleOneAsync(Uuid.CreateVersion4());
-        var command = new RecordWorkDigestDelivery(fixture.TenantId, digestId,
+        var command = new RecordWorkDigestDelivery(Uuid.CreateVersion4(), fixture.TenantId, digestId,
             Uuid.CreateVersion4(), 2, 1, WeeklyWorkDigest.DeliveryKeyFor(digestId, 1),
             "delivered", Now.AddMinutes(2), null);
 
@@ -282,10 +285,10 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Equal("scheduled", (await new WorkDigestHistoryReader(fixture.Reader, fixture.Events).ReadWeeklyAsync(fixture.TenantId, digestId)).View.Status);
+        Assert.Equal("scheduled", (await new WorkDigestHistoryReader(fixture.Reader, fixture.Events, fixture.Sources).ReadWeeklyAsync(fixture.TenantId, digestId)).View.Status);
     }
 
-    sealed class Fixture : IAsyncDisposable
+    internal sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
         readonly AsyncServiceScope _scope;
@@ -294,6 +297,9 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
 
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public IAggregateReader Reader { get; }
+        public IAggregateExecutor Executor => _executor;
+        public ISourceFactResolver Sources => _scope.ServiceProvider.GetRequiredService<ISourceFactResolver>();
+        public IImmutableContentStore Content => _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
         public IAggregateWriter Writer { get; }
         public InMemoryEventStore Events => _store;
         public MutableTimeProvider Clock { get; } = new(Now.AddMinutes(30));
@@ -321,10 +327,10 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         public ScheduleWeeklyWorkDigestHandler ScheduleHandler(ITenantMembershipDirectoryReader memberships) =>
             new(_executor, memberships, RecipientResolver(), Clock);
 
-        public DeliverWeeklyWorkDigestHandler DeliveryHandler() =>
-            new(Reader, _executor, Events, RecipientResolver(), Clock);
-
-        public RecordWorkDigestDeliveryHandler RecordHandler() => new(_executor, Events, Clock);
+        WeeklyDigestOperations ReceiverOperations() => new(new NativeOperationExecutor(Reader, _executor, Content),
+            Events, Sources, Content, RecipientResolver(), Clock);
+        public DeliverWeeklyWorkDigestHandler DeliveryHandler() => new(ReceiverOperations());
+        public RecordWorkDigestDeliveryHandler RecordHandler() => new(ReceiverOperations());
 
         WeeklyWorkDigestRecipientResolver RecipientResolver() => new(Reader, _emails);
 
@@ -382,7 +388,8 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             Assert.True(digest.Schedule(memberId, WeekStarting, "schedule-2026-10-12",
                 ActorReference.ForSystemProcess(WeeklyWorkDigest.SchedulerProcessId,
                     "Weekly work digest scheduler"), Now).IsSuccess);
-            await Writer.SaveAsync(digest, new RequestDispatchContext(RequestActor.System));
+            await Writer.SaveAsync(digest, new RequestDispatchContext(RequestActor.CreateSystem(
+                WeeklyWorkDigest.SchedulerProcessId, "bdgrz.system")));
             return digestId;
         }
 
@@ -464,7 +471,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             _addresses.Where(address => address.UserId == userId).Take(limit ?? 50).ToArray(), null));
     }
 
-    sealed class MutableTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    internal sealed class MutableTimeProvider(DateTimeOffset utcNow) : TimeProvider
     {
         DateTimeOffset _utcNow = utcNow;
 

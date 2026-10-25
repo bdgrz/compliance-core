@@ -1,5 +1,8 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
@@ -14,16 +17,19 @@ public sealed class WeeklyWorkDigest : Aggregate
     readonly int _selectedAttempt;
     WorkDigestDeliveryAttemptView? _latest;
     WorkDigestDeliveryAttemptView? _selected;
-    public WeeklyWorkDigest(Uuid tenantId, Uuid digestId, int selectedAttempt = 0)
+    public WeeklyWorkDigest(Uuid tenantId, Uuid digestId, int selectedAttempt = 0,
+        Uuid selectedCommandId = default, string? selectedCommandKind = null)
         : base(digestId, new EventStreamAddress(tenantId.ToString(), Area, digestId.ToString()))
     {
         (_tenant, _selectedAttempt) = (tenantId, selectedAttempt);
+        Acceptance = new NativeAcceptance(selectedCommandId, selectedCommandKind);
         On<WeeklyWorkDigestScheduled>(ApplyFact);
         On<WeeklyWorkDigestDeliveryRequested>(ApplyFact);
         On<WeeklyWorkDigestDeliveryRecorded>(ApplyFact);
         On<WeeklyWorkDigestDeliverySuppressed>(ApplyFact);
     }
     public Uuid TenantId => _tenant;
+    public NativeAcceptance Acceptance { get; }
     public WeeklyWorkDigestHeader? Header { get; private set; }
     public long Revision => Header?.Revision ?? 0;
     public string Status => Header?.Status ?? "missing";
@@ -39,7 +45,7 @@ public sealed class WeeklyWorkDigest : Aggregate
     public static string DeliveryKeyFor(Uuid digestId, int attemptNumber) =>
         WeeklyWorkDigestRules.DeliveryKeyFor(digestId, attemptNumber);
 
-    WeeklyWorkDigestRules Rules()
+    internal WeeklyWorkDigestRules Rules()
     {
         var rules = new WeeklyWorkDigestRules(_tenant, Id);
         if (Header is { } header)
@@ -59,17 +65,58 @@ public sealed class WeeklyWorkDigest : Aggregate
     }
     public Result Schedule(Uuid memberId, DateOnly weekStarting, string key, ActorReference by, DateTimeOffset at) =>
         Change(rules => rules.Schedule(memberId, weekStarting, key, by, at));
-    public Result RequestDelivery(long expected, int attempt, string key, ActorReference by, DateTimeOffset at) =>
-        Change(rules => rules.RequestDelivery(expected, attempt, key, by, at));
-    public Result SuppressDelivery(long expected, string reason, ActorReference by, DateTimeOffset at) =>
-        Change(rules => rules.SuppressDelivery(expected, reason, by, at));
-    public Result RecordDeliveryResult(long expected, int attempt, string key, string outcome, string? code,
-        ActorReference by, DateTimeOffset at) => Change(rules => rules.RecordDeliveryResult(expected, attempt, key, outcome, code, by, at));
+    internal Result<WeeklyDigestPreparation> Prepare(WeeklyDigestMutationContent change)
+    {
+        if (!ReplayCut.Allows(this))
+            return Result<WeeklyDigestPreparation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact weekly source cut is not finalized; retry.", true));
+        if (Header is null || change.Before != Header || change.SelectedBefore != SelectedAttempt ||
+            change.LatestBefore != LatestAttempt || WeeklyDigestNative.Attempt(change) != SelectedAttemptNumber)
+            return Result<WeeklyDigestPreparation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The weekly mutation differs from its exact current/selected authority."));
+        var rules = Rules();
+        var evaluated = WeeklyDigestNative.Evaluate(rules, change);
+        if (!evaluated.IsSuccess)
+            return Result<WeeklyDigestPreparation>.Failure(evaluated.Error!);
+        var prepared = change with { NoChange = rules.PendingEvents.Count == 0 };
+        return Result<WeeklyDigestPreparation>.Success(new WeeklyDigestPreparation(Version, CommittedStreamPosition, prepared));
+    }
+    internal Result Append(WeeklyDigestPreparation prepared, OperationProvenance operation,
+        ImmutableContentRef change, ImmutableContentRef body, ImmutableContentRef first, ImmutableContentRef result)
+    {
+        if (!ReplayCut.Allows(this) || Version != prepared.NativeRevision || CommittedStreamPosition != prepared.PhysicalPosition)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The weekly source changed while its receiver was prepared.", true));
+        var checkedPreparation = Prepare(prepared.Change);
+        if (!checkedPreparation.IsSuccess)
+            return Result.Failure(checkedPreparation.Error!);
+        if (checkedPreparation.Value != prepared || Acceptance.SelectedLogicalId != operation.LogicalId)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The weekly receipt differs from its selected command and exact preparation."));
+        var fact = WeeklyDigestNative.Fact(prepared.Change, operation, change, body, first, result);
+        WeeklyDigestNative.Structural(this, fact, Revision);
+        WeeklyDigestNative.VerifyPrepared(fact, prepared.Change);
+        if (DomainEventPayload.Size(fact) > DomainEventPayload.MaximumBytes)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The weekly native receipt exceeds the business frame limit."));
+        RaiseEvent(fact);
+        return Result.Success;
+    }
     void ApplyFact(DomainEvent fact)
     {
         var rules = Rules();
         try
-        { rules.Replay(fact); }
+        {
+            if (fact is IWeeklyWorkDigestOperationFact native)
+            {
+                WeeklyDigestNative.Structural(this, fact, Revision);
+                Acceptance.Observe(fact);
+                if (native.NoChange)
+                    rules.AdvanceReceiptRevision(native.Revision);
+                else
+                    rules.Replay(fact);
+            }
+            else
+                rules.Replay(fact);
+        }
         catch (Exception exception) when (exception is InvalidOperationException or ArgumentException)
         {
             throw new ImmutableContentIntegrityException("The weekly digest native transition is invalid: " + exception.Message);

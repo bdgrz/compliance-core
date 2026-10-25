@@ -9,6 +9,196 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 
 public sealed class ClientServiceIndependenceTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldReplayOriginalPreviewReceiptGivenFrozenIntentUnavailableOrCorrupt(bool corrupt)
+    {
+        // Arrange
+        PreviewReadStore faults = null!;
+        await using var host = new IndependenceHost(configureContent: inner => faults = new PreviewReadStore(inner));
+        await host.SeedDraftRulesAsync();
+        var evaluation = Uuid.CreateVersion4();
+        Assert.True((await host.SendAsync(new EvaluateClientIndependence(host.Tenant, evaluation, 1,
+            new DateOnly(2026, 10, 7), 0))).IsSuccess);
+        await IndependenceFacts.RunPreviewProcessAsync(host.Provider, host.Tenant, evaluation);
+        var source = await host.HydrateAsync(new ClientServiceIndependence(host.Tenant, evaluation));
+        var admitted = source.AdmissionOf(evaluation)!;
+        var decision = await host.HydrateAsync(new ClientIndependenceDecision(host.Tenant, evaluation));
+        var original = decision.Evaluated!;
+        var command = new MaterializeClientIndependencePreview(original.Operation.LogicalId,
+            NativeFactReference.Of(source.Stream, admitted), decision.Stream, evaluation, 1, null, admitted.Intent, evaluation);
+        faults.Blocked = admitted.Intent;
+        faults.Corrupt = corrupt;
+
+        // Act
+        var replayed = await host.Bus.DispatchAsync(command, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+
+        // Assert
+        Assert.True(replayed.IsSuccess, replayed.Error?.Message);
+        Assert.Equal(NativeFactReference.Of(decision.Stream, original), Assert.IsType<ReceiverOutcome.Replayed>(replayed.Value).Fact);
+        Assert.Single(await host.EventsAsync<ClientIndependenceEvaluated>(decision.Stream));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldClassifyFrozenPreviewFailureGivenNoMaterializedReceipt(bool corrupt)
+    {
+        // Arrange
+        PreviewReadStore faults = null!;
+        await using var host = new IndependenceHost(configureContent: inner => faults = new PreviewReadStore(inner));
+        await host.SeedDraftRulesAsync();
+        var evaluation = Uuid.CreateVersion4();
+        Assert.True((await host.SendAsync(new EvaluateClientIndependence(host.Tenant, evaluation, 1,
+            new DateOnly(2026, 10, 7), 0))).IsSuccess);
+        var source = await host.HydrateAsync(new ClientServiceIndependence(host.Tenant, evaluation));
+        var admitted = source.AdmissionOf(evaluation)!;
+        var target = new ClientIndependenceDecision(host.Tenant, evaluation).Stream;
+        var command = new MaterializeClientIndependencePreview(Uuid.CreateVersion4(), NativeFactReference.Of(source.Stream, admitted),
+            target, evaluation, 1, null, admitted.Intent, evaluation);
+        faults.Blocked = admitted.Intent;
+        faults.Corrupt = corrupt;
+
+        // Act
+        var refused = await host.Bus.DispatchAsync(command, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+
+        // Assert
+        Assert.False(refused.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, refused.Error?.Kind);
+        Assert.Equal(!corrupt, refused.Error!.IsTransient);
+        Assert.Empty(await host.EventsAsync<ClientIndependenceEvaluated>(target));
+    }
+
+    sealed class PreviewReadStore(Bdgrz.Compliance.Features.Content.IImmutableContentStore inner)
+        : Bdgrz.Compliance.Features.Content.IImmutableContentStore
+    {
+        public Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? Blocked { get; set; }
+        public bool Corrupt { get; set; }
+        public Task<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id,
+            string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
+            inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference,
+            CancellationToken ct = default)
+        {
+            if (reference == Blocked)
+                throw (Corrupt ? new Bdgrz.Compliance.Features.Content.ImmutableContentIntegrityException("The frozen preview is corrupt.")
+                    : new Bdgrz.Compliance.Features.Content.ImmutableContentUnavailableException("The frozen preview is not yet available."));
+            return inner.ReadVerifiedAsync(realm, reference, ct);
+        }
+    }
+
+    [Fact]
+    public async Task ShouldSealBrokerGlobalFrontiersGivenDifferentPhysicalAndGlobalPositions()
+    {
+        // Arrange
+        await using var host = new IndependenceHost();
+        await host.SeedDraftRulesAsync();
+        Assert.True((await host.SendAsync(new RecordNonattestService(host.Tenant, Uuid.CreateVersion4(), 0,
+            IndependenceHost.Service()))).IsSuccess);
+        var evaluation = Uuid.CreateVersion4();
+        Assert.True((await host.SendAsync(new EvaluateClientIndependence(host.Tenant, evaluation, 1,
+            new DateOnly(2026, 10, 7), 1))).IsSuccess);
+        var owner = await host.HydrateAsync(new ClientServiceIndependence(host.Tenant, evaluation));
+        var intent = await Bdgrz.Compliance.Features.Content.ImmutableContentStoreExtensions.ReadJsonAsync<ClientIndependencePreviewIntent>(
+            host.Content, host.Tenant.ToString(), owner.AdmissionOf(evaluation)!.Intent);
+
+        // Act
+        var cuts = await Bdgrz.Compliance.Features.Content.ImmutableSelectionManifests.ReadSelectionAsync<Bdgrz.Compliance.Features.Proofs.AuthoritativeReadCut>(
+            host.Content, host.Tenant.ToString(), intent.SourceCuts);
+
+        // Assert
+        Assert.Equal(2, cuts.Count);
+        Assert.Equal(2, cuts.Select(cut => cut.AnchorSelector).Distinct(StringComparer.Ordinal).Count());
+        Assert.All(cuts, cut => Assert.Equal(EventStoreSourceFactResolver.GlobalBase + 1, cut.GlobalWatermarkExclusive));
+        Assert.All(cuts, cut => Assert.NotEqual(1UL, cut.GlobalWatermarkExclusive));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldReplayClientAdmissionGivenEqualWinnerBeforeLosingContentWriteUnavailable(bool preview)
+    {
+        // Arrange
+        LosingClientStore content = null!;
+        await using var host = new IndependenceHost(configureContent: inner => content = new LosingClientStore(inner,
+            preview ? ClientIndependencePreviewIntent.Schema : IndependenceContent.ServiceSchema));
+        await host.SeedDraftRulesAsync();
+        var id = Uuid.CreateVersion4();
+        var authoredService = IndependenceHost.Service();
+        async Task<string> SendAsync()
+        {
+            if (preview)
+            {
+                var result = await host.SendAsync(new EvaluateClientIndependence(host.Tenant, id, 1, new DateOnly(2026, 10, 7), 0));
+                Assert.True(result.IsSuccess, result.Error?.Message);
+                return WireJson.Of(result.Value);
+            }
+            var service = await host.SendAsync(new RecordNonattestService(host.Tenant, id, 0, authoredService));
+            Assert.True(service.IsSuccess, service.Error?.Message);
+            return WireJson.Of(service.Value);
+        }
+        string? winner = null;
+        content.Arm(async () => winner = await SendAsync());
+        string? actual = null;
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => actual = await SendAsync());
+
+        // Assert
+        Assert.True(content.Failed);
+        Assert.NotNull(winner);
+        Assert.Null(failure);
+        Assert.Equal(winner, actual);
+        Assert.Single(await host.EventsAsync<DomainEvent>(new ClientServiceIndependence(host.Tenant).Stream));
+    }
+
+    sealed class LosingClientStore(Bdgrz.Compliance.Features.Content.IImmutableContentStore inner, string losingSchema)
+        : Bdgrz.Compliance.Features.Content.IImmutableContentStore
+    {
+        Func<Task>? _admit;
+        public bool Failed { get; private set; }
+        public void Arm(Func<Task> admit) => _admit = admit;
+        public async Task<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id,
+            string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
+        {
+            if (!Failed && _admit is { } admit && schema == losingSchema)
+            {
+                Failed = true;
+                await admit();
+                throw new Bdgrz.Compliance.Features.Content.ImmutableContentUnavailableException("The losing client candidate publication is unavailable.");
+            }
+            return await inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
+        }
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference,
+            CancellationToken ct = default) => inner.ReadVerifiedAsync(realm, reference, ct);
+    }
+
+    [Fact]
+    public async Task ShouldKeepBoundedClientAuthorityGivenManyServicesAndEvaluationAdmissions()
+    {
+        // Arrange
+        await using var host = new IndependenceHost();
+        await host.SeedDraftRulesAsync();
+        for (var index = 0; index < 32; index++)
+        {
+            Assert.True((await host.SendAsync(new RecordNonattestService(host.Tenant, Uuid.CreateVersion4(), index,
+                IndependenceHost.Service()))).IsSuccess);
+            Assert.True((await host.SendAsync(new EvaluateClientIndependence(host.Tenant, Uuid.CreateVersion4(), 1,
+                new DateOnly(2026, 10, 7), index + 1))).IsSuccess);
+        }
+
+        // Act
+        var owner = await host.HydrateAsync(new ClientServiceIndependence(host.Tenant));
+        var growing = typeof(ClientServiceIndependence).GetFields(global::System.Reflection.BindingFlags.Instance |
+            global::System.Reflection.BindingFlags.NonPublic).Where(field => field.GetValue(owner) is
+                global::System.Collections.ICollection { Count: > 1 }).ToArray();
+
+        // Assert
+        Assert.Empty(growing);
+        Assert.Equal(32UL, owner.Epoch);
+    }
+
     [Fact]
     public async Task ShouldRetainCompleteHistoryGivenMoreServicesThanFormerCap()
     {
@@ -34,7 +224,7 @@ public sealed class ClientServiceIndependenceTests
         Assert.Equal((ulong)count, owner.Epoch);
         Assert.Equal(Enumerable.Range(0, count).Select(index => new DateOnly(2020, 1, 1).AddDays(index)),
             history.Value.Services.Select(service => service.Content.StartedOn));
-        Assert.Equal(Enumerable.Range(1, count).Select(index => (ulong)index), owner.Services.Select(item => item.Revision));
+        Assert.Equal(Enumerable.Range(1, count).Select(index => (ulong)index), (await ClientServiceNativeHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).Services.Select(item => item.Revision));
     }
 
     [Fact]
@@ -63,8 +253,9 @@ public sealed class ClientServiceIndependenceTests
 
         // Assert
         Assert.Equal(1UL, owner.Epoch);
-        Assert.Equal(105, owner.Admissions.Count);
-        Assert.All(owner.Admissions, admission => Assert.Equal(1, admission.Revision));
+        var admissions = (await ClientServiceNativeHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).Admissions;
+        Assert.Equal(105, admissions.Count);
+        Assert.All(admissions, admission => Assert.Equal(1, admission.Revision));
         Assert.True(next.IsSuccess, next.Error?.Message);
     }
 

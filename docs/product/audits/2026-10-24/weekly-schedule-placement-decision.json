@@ -1,0 +1,67 @@
+{
+  "status": "internal_design_correction_selected_implementation_pending",
+  "newGitHubIssuesPermitted": false,
+  "command": "ScheduleWeeklyWorkDigest",
+  "selectedCatalog": "2026-10-23/remaining-command-identities.json",
+  "actualMismatch": {
+    "classification": "internal selected first-owner/result-placement mismatch, not external authority blocker",
+    "command": "ScheduleWeeklyWorkDigest",
+    "selected": {
+      "source": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+      "logicalIdentity": "ScheduleKey",
+      "identityRule": "existing stable schedule tuple and complete source cut; technical pagination does not create another business schedule",
+      "firstOwner": "WeeklyWorkDigest",
+      "responseType": "WorkDigestSchedulePageView",
+      "mode": "immediate_original_result",
+      "signatureChanges": []
+    },
+    "actual": {
+      "handler": "src/Compliance.Core/Features/Work/ScheduleWeeklyWorkDigestHandler.cs",
+      "behavior": "Pages current membership projection, resolves current recipients, appends each eligible digest independently, sums mutable page counters",
+      "emptyPage": "No eligible WeeklyWorkDigest owner necessarily exists to hold original page result",
+      "partialFailure": "Earlier per-digest appends can precede a later conflict; there is no atomic page admission",
+      "sourcePort": "ITenantMembershipDirectoryReader List/Get has no direct consistent snapshot method",
+      "projection": "TenantMembershipProjector tenant rbac-members; current recipient Member/Preference/Email must be bound too"
+    },
+    "candidate": "Internal durable schedule capture/process by tenant+week+ScheduleKey with immutable complete source manifest, resumable per-digest admissions and frozen technical page results",
+    "qualification": "Technical result ownership for zero-effect/partial pages must be declared honestly; cannot silently replace selected WeeklyWorkDigest business first owner or claim an absent digest accepted a page",
+    "owner": "/root decides actual catalog/direct-Jev correction",
+    "noNew": [
+      "public route",
+      "trusted callback",
+      "business cap",
+      "authoritative business root",
+      "GitHub issue"
+    ],
+    "next": "Finish independent Deliver/Record native slice, then UserIdentity/EmailAddress; root adjudicates schedule placement"
+  },
+  "decision": "A durable internal technical schedule journal by tenant/week/ScheduleKey captures complete membership and resolved recipient source manifest before effects, resumes exact deterministic existing WeeklyWorkDigest schedules, and freezes the original technical page response. Existing WeeklyWorkDigest continues to own each business schedule. The journal is explicitly the original command/result admission owner, with a recorded selected catalog correction separating that technical receipt ownership from business fact ownership. Pagination uses one captured manifest and stable cuts; no new business schedule per page. Empty page has a durable zero-effect original receipt.",
+  "review": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "next_action": {
+        "type": "choice",
+        "choice": "explicit_technical_receipt_owner_correction",
+        "confidence": 0.8,
+        "probabilities": {
+          "explicit_technical_receipt_owner_correction": 0.87,
+          "preserve_selected_owner_find_alternative": 0,
+          "qualify_mismatch_continue_other_work": 0.13
+        }
+      },
+      "proposal_invents_business_authority": {
+        "type": "noul",
+        "noul": 0.08
+      },
+      "literal_selected_owner_possible": {
+        "type": "noul",
+        "noul": 0.07
+      }
+    },
+    "usage": {
+      "input_tokens": 5839,
+      "output_tokens": 114
+    }
+  },
+  "limitations": "The current Schedule handler is unchanged and is not native/original-page-result-qualified by the separately implemented Deliver/Record receiver slice. Implement technical journal capture/progress/results next, with exact source-cut and zero/partial page regressions before claiming completion."
+}

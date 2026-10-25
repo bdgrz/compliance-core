@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
@@ -156,7 +157,10 @@ public sealed class FirmOperationsCompositionTests
             ["Fitz:ApplicationName"] = "compliance",
         }).Build();
         services.AddCompliance(configuration, developerAuthentication: true);
-        services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        var events = new InMemoryEventStore();
+        services.AddSingleton<IEventStore>(events);
+        services.AddSingleton<IDomainEventReader>(events);
+        services.AddSingleton<ISourceFactResolver, EventStoreSourceFactResolver>();
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<IPermissionAuthorizer>(new RecordingPermissionAuthorizer(permitted));
         services.AddSingleton<ITenantActivity>(new ActiveTenant());

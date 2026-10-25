@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Tests.Features.Operations;
@@ -28,14 +29,14 @@ public sealed class WorkDigestDispatchProcessorTests
             fixture.Member(fixture.OwnerUserId));
         var processor = new WorkDigestDispatchProcessor(reader,
             scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content, delivery,
-            settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()));
+            settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()));
 
         // Act
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
             tenantActive: true, memberActive: true, CancellationToken.None);
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
             tenantActive: true, memberActive: true, CancellationToken.None);
-        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadDispatchAsync(fixture.TenantId, fixture.Member(fixture.OwnerUserId));
+        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()).ReadDispatchAsync(fixture.TenantId, fixture.Member(fixture.OwnerUserId));
         var status = persisted.Read(weekOf);
 
         // Assert
@@ -75,12 +76,12 @@ public sealed class WorkDigestDispatchProcessorTests
         var delivery = new InspectingDelivery(reader, fixture.TenantId, memberId);
         var processor = new WorkDigestDispatchProcessor(reader,
             scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content, delivery,
-            settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()));
+            settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()));
 
         // Act
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
             tenantActive: true, memberActive: true, CancellationToken.None);
-        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadDispatchAsync(fixture.TenantId, memberId);
+        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()).ReadDispatchAsync(fixture.TenantId, memberId);
         var status = persisted.Read(weekOf);
 
         // Assert
@@ -125,7 +126,7 @@ public sealed class WorkDigestDispatchProcessorTests
         var delivery = new CountingDelivery();
         var processor = new WorkDigestDispatchProcessor(reader,
             scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
-            new ReadyDigestContentReader(), delivery, settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()));
+            new ReadyDigestContentReader(), delivery, settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()));
 
         // Act
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
@@ -138,7 +139,7 @@ public sealed class WorkDigestDispatchProcessorTests
             });
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
             tenantActive: true, memberActive: true, CancellationToken.None);
-        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadDispatchAsync(fixture.TenantId, memberId);
+        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()).ReadDispatchAsync(fixture.TenantId, memberId);
 
         // Assert
         Assert.Equal(WorkDigestDispatch.Sent, persisted.Read(currentWindow.WeekOf).Status);
@@ -181,12 +182,12 @@ public sealed class WorkDigestDispatchProcessorTests
         var delivery = new CountingDelivery();
         var processor = new WorkDigestDispatchProcessor(reader,
             scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content, delivery,
-            settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()));
+            settings, clock, new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()));
 
         // Act
         await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId,
             tenantActive: true, memberActive: false, CancellationToken.None);
-        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>()).ReadDispatchAsync(fixture.TenantId, memberId);
+        var persisted = await new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), scope.ServiceProvider.GetRequiredService<ISourceFactResolver>()).ReadDispatchAsync(fixture.TenantId, memberId);
         var status = persisted.Read(weekOf);
 
         // Assert

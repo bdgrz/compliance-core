@@ -23,18 +23,19 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
     public const long Generation = 1;
 
     readonly Uuid _tenantId;
-    readonly List<NonattestServiceRecorded> _services = [];
-    readonly Dictionary<Uuid, int> _serviceIndex = [];
-    readonly List<ClientIndependenceEvaluationAdmitted> _admissions = [];
-    readonly Dictionary<Uuid, ClientIndependenceEvaluationAdmitted> _admissionIndex = [];
+    NonattestServiceRecorded? _latest;
+    ClientIndependenceEvaluationAdmitted? _selectedAdmission;
+    Uuid _lastAdmissionId;
+    ulong _epoch;
 
     /// <summary>Opens the service owner of one client tenant, selecting the logical operation to resolve.</summary>
-    public ClientServiceIndependence(Uuid tenantId, Uuid selectedLogicalId = default)
+    public ClientServiceIndependence(Uuid tenantId, Uuid selectedLogicalId = default, Uuid selectedEvaluationId = default)
         : base(AggregateIdentity.Create(nameof(ClientServiceIndependence), tenantId),
             new EventStreamAddress(tenantId.ToString(), Area, tenantId.ToString()))
     {
         _tenantId = tenantId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
+        SelectedEvaluationId = selectedEvaluationId == Uuid.Empty ? selectedLogicalId : selectedEvaluationId;
         Uses = new SourceUseReservations(Stream);
         On<NonattestServiceRecorded>(recorded =>
         {
@@ -42,28 +43,31 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
             if (recorded.TenantId != _tenantId || recorded.Operation.Owner != Stream ||
                 recorded.OperationId != recorded.Operation.LogicalId || recorded.OperationId == Uuid.Empty ||
                 recorded.Operation.LogicalId != recorded.Operation.RootOperationId ||
-                recorded.Revision != (ulong)_services.Count + 1 || recorded.FirstResponse is null ||
-                recorded.OperationResult is null || !_serviceIndex.TryAdd(recorded.OperationId, _services.Count))
+                recorded.Revision != _epoch + 1 || recorded.FirstResponse is null ||
+                recorded.OperationResult is null || recorded.OperationId == _latest?.OperationId || recorded.OperationId == _lastAdmissionId)
                 throw new InvalidOperationException(
                     "A service is appended once, to its own client, at the next service epoch.");
-            _services.Add(recorded);
+            _latest = recorded;
+            _epoch++;
         });
         On<ClientIndependenceEvaluationAdmitted>(admitted =>
         {
             Acceptance.Observe(admitted);
             if (admitted.Owner != Stream || admitted.Operation.Owner != Stream ||
                 admitted.Operation.LogicalId != admitted.Operation.RootOperationId ||
-                admitted.Revision != _services.Count || admitted.Generation != Generation ||
-                admitted.FirstResponse is null ||
-                !_admissionIndex.TryAdd(admitted.Operation.LogicalId, admitted))
+                admitted.Revision != (long)_epoch || admitted.Generation != Generation ||
+                admitted.FirstResponse is null || admitted.Operation.LogicalId == _lastAdmissionId ||
+                admitted.Operation.LogicalId == _latest?.OperationId)
                 throw new InvalidOperationException(
                     "An evaluation is admitted once, at the current service epoch of its own client.");
-            _admissions.Add(admitted);
+            _lastAdmissionId = admitted.Operation.LogicalId;
+            if (admitted.Operation.LogicalId == SelectedEvaluationId)
+                _selectedAdmission = admitted;
         });
         On<ClientServicePersonalDecisionUseAuthorized>(granted =>
         {
             Acceptance.Observe(granted);
-            if (granted.Revision != _services.Count)
+            if (granted.Revision != (long)_epoch)
                 throw new InvalidOperationException("A service epoch is held exactly at its current epoch.");
             Uses.ApplyGranted(SourceUsePurpose.EngagementPersonalDecision, granted);
         });
@@ -75,7 +79,7 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
         On<EngagementServiceEpochAuthorized>(granted =>
         {
             Acceptance.Observe(granted);
-            if (granted.Revision != _services.Count)
+            if (granted.Revision != (long)_epoch)
                 throw new InvalidOperationException("A service epoch is held exactly at its current epoch.");
             Uses.ApplyGranted(SourceUsePurpose.EngagementAcceptance, granted);
         });
@@ -96,25 +100,25 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
     public NativeAcceptance Acceptance { get; }
 
     /// <summary>The latest recorded service, whose event pins the complete history; null at epoch zero.</summary>
-    public NonattestServiceRecorded? LatestService => _services.LastOrDefault();
+    public NonattestServiceRecorded? LatestService => _latest;
 
     /// <summary>The service epoch: the number of services ever recorded for this client.</summary>
-    public ulong Epoch => (ulong)_services.Count;
+    public ulong Epoch => _epoch;
 
-    /// <summary>Every recorded service fact, in record order.</summary>
-    public IReadOnlyList<NonattestServiceRecorded> Services => _services;
+    /// <summary>The one evaluation deliberately selected for this hydration.</summary>
+    public Uuid SelectedEvaluationId { get; }
 
-    /// <summary>Every admitted evaluation root fact, in admission order.</summary>
-    public IReadOnlyList<ClientIndependenceEvaluationAdmitted> Admissions => _admissions;
-
-    /// <summary>Finds the admission of one evaluation.</summary>
+    /// <summary>The explicitly selected original evaluation admission.</summary>
     public ClientIndependenceEvaluationAdmitted? AdmissionOf(Uuid evaluationId) =>
-        _admissionIndex.GetValueOrDefault(evaluationId);
+        evaluationId == SelectedEvaluationId ? _selectedAdmission : null;
+
+    internal FirmIndependenceReplayCut ReplayCut { get; } = new();
+    internal Uuid LastAdmissionId => _lastAdmissionId;
 
     /// <summary>Checks the service guards without raising anything.</summary>
     public Result PrepareService(Uuid serviceRecordId, long expectedEpoch)
     {
-        if (_serviceIndex.ContainsKey(serviceRecordId) || _admissionIndex.ContainsKey(serviceRecordId))
+        if (Acceptance.SelectedLogicalId == serviceRecordId && Acceptance.SelectedFact is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Service identities are immutable and cannot be reused."));
         if (Uses.HasActiveUse)
@@ -141,6 +145,9 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
         var prepared = PrepareService(operation.LogicalId, (long)expected);
         if (!prepared.IsSuccess)
             return prepared;
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new NonattestServiceRecorded(_tenantId, operation.LogicalId, serviceContent, operation, Epoch + 1,
             firstResponse, operationResult));
         return Result.Success;
@@ -149,7 +156,7 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
     /// <summary>Checks the evaluation admission guards without raising anything.</summary>
     public Result PrepareEvaluation(Uuid evaluationId, long expectedEpoch)
     {
-        if (_admissionIndex.ContainsKey(evaluationId) || _serviceIndex.ContainsKey(evaluationId))
+        if (Acceptance.SelectedLogicalId == evaluationId && Acceptance.SelectedFact is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Evaluation identities are immutable and cannot be reused."));
         return expectedEpoch == (long)Epoch
@@ -178,6 +185,9 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
         if (intentEpoch != Epoch)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "A service was recorded while the evaluation was prepared; reload and retry.", true));
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new ClientIndependenceEvaluationAdmitted(Stream, (long)Epoch, Generation, intent, null, operation,
             firstResponse, null));
         return Result.Success;
@@ -193,6 +203,9 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A service history is held on its own client stream."));
         Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new ClientServicePersonalDecisionUseAuthorized(Stream, (long)Epoch, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -207,6 +220,9 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held client stream."));
         Uses.RequireForAppend(SourceUsePurpose.EngagementPersonalDecision, operation, generation, Version, CommittedStreamPosition);
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new ClientServicePersonalDecisionUseSettled(Stream, (long)Epoch, generation, intent, null,
             operation, null, null));
         return Result.Success;
@@ -221,6 +237,9 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A service history is held on its own client stream."));
         Uses.RequireForAppend(SourceUsePurpose.EngagementAcceptance, operation, generation, Version, CommittedStreamPosition);
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new EngagementServiceEpochAuthorized(Stream, (long)Epoch, generation, intent, null, operation,
             null, null));
         return Result.Success;
@@ -235,12 +254,17 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A settlement is recorded on the held client stream."));
         Uses.RequireForAppend(SourceUsePurpose.EngagementAcceptance, operation, generation, Version, CommittedStreamPosition);
+        var cut = ReplayCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
         RaiseEvent(new EngagementServiceEpochSettled(Stream, (long)Epoch, generation, intent, null, operation, null,
             null));
         return Result.Success;
     }
     protected override void Apply(DomainEvent ev)
     {
+        if (!ev.Metadata.IsAudit)
+            ReplayCut.Observe(ev);
         base.Apply(ev);
         Uses.ObserveOwnerFact(ev);
     }

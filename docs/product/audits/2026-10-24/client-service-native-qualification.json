@@ -1,0 +1,65 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 363,
+    "productionHttpPassed": 29,
+    "backendUnit": {
+      "passed": 6670,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "format": "pass",
+    "exactSourceAndDependencyHashes": "42 verified; all940 owner/handler/reactor reviews also refreshed"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 42,
+    "signalsAtOrAbove065": 2,
+    "triage": "client-weekly-import-file-triage.json",
+    "initialIntegration": "refine .50 vs merge .48 while final validation pending; original evidence retained in recovery",
+    "finalIntegration": {
+      "decision": {
+        "type": "choice",
+        "choice": "merge_scoped_repair",
+        "confidence": 0.67,
+        "probabilities": {
+          "merge_scoped_repair": 0.78,
+          "refine_before_merge": 0.21,
+          "blocked_by_missing_authority": 0.01
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.2
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.23
+      }
+    },
+    "adopted": "Squash merge locally validated scoped repair without CI wait per explicit user direction; continue all remaining layers."
+  },
+  "scope": "ClientServiceIndependence compact latest/service-epoch/selected evaluation authority with complete verified transient service/admission history; native root async preparation/cut and historical preview materializer recovery.",
+  "genuineOldApiRedFailed": 7,
+  "qualification": [
+    "All current producer/history/evidence/advisory consumers use complete selected physical/native prefix history. No lifetime service/evaluation operation collection or truncation/cap.",
+    "Fresh independently anchored global-exclusive cuts verify the exact physical tail, native tuple, concrete payload, full metadata and broker global position+1; empty zero only. Two anchors do not claim a common atomic global snapshot.",
+    "Original historical previews have local CommittedStreamPosition stored in a global field and remain unqualified historical metadata. Original advisory results/replay remain; ProfessionalAccessGranted=false and previews never grant acceptance. No migration invented.",
+    "Materializer binds actual source/root/DTO before native receipt decision, then reads required frozen selection/rules/cuts and freezes result. Exact receipt survives missing/corrupt original intent; fresh missing pending/corrupt permanent. Reactor verifies actual source tuple before effects.",
+    "Reader lifetimes/wrappers retained. Current SDK0.9.1 keeps audits in separate streams. Audit-tail unit directly exercises a retained legacy physical cut; it does not claim SDK mixed audit-stream hydration or live replay qualification."
+  ],
+  "rootRefinements": [
+    "Qualified both SourceFactProof JSON registrations; analyzer var correction in Weekly helper.",
+    "New audit-tail test fixture captures only state-changing owner then explicitly sets legacy physical cut, because normal SDK replay correctly rejects audit state changes.",
+    "Production-composed unit host now pairs its in-memory event store with matching EventStoreSourceFactResolver instead of disconnected Fitz resolver; original workflow assertions retained."
+  ],
+  "remainingWork": [
+    "ServiceEngagement compact/async preparation/child proof binding is an independent next layer. No global operation binding, deployment, reset, retained cutover or broker qualification."
+  ]
+}

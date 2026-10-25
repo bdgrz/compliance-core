@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Runtime.CompilerServices;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
@@ -27,14 +28,14 @@ public sealed class WorkDigestNativeHistoryTests
         }
         await WorkDigestFacts.WeeklyAsync(fixture.Provider, fixture.Tenant, rules.Id, rules);
         var owner = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.Tenant, rules.Id, selectedAttempt: 1));
-        var key1 = WeeklyWorkDigest.DeliveryKeyFor(rules.Id, 1);
+        var original = await fixture.Histories.ReadWeeklyAsync(fixture.Tenant, rules.Id);
+        var request = original.Facts.OfType<WeeklyWorkDigestDeliveryRequested>().Single(fact => fact.AttemptNumber == 1).Authored;
+        var result = original.Facts.OfType<WeeklyWorkDigestDeliveryRecorded>().Single(fact => fact.AttemptNumber == 1).Authored;
 
         // Act
-        var requested = owner.RequestDelivery(1, 1, key1, fixture.Worker, fixture.At.AddDays(1));
-        var recorded = owner.RecordDeliveryResult(2, 1, key1, "failed", "provider_busy", fixture.Worker,
-            fixture.At.AddMinutes(3));
-        var changed = owner.RecordDeliveryResult(2, 1, key1, "failed", "another_failure", fixture.Worker,
-            fixture.At.AddMinutes(3));
+        var requested = await WeeklyDigestFacts.ReplayAsync(fixture.Services, request);
+        var recorded = await WeeklyDigestFacts.ReplayAsync(fixture.Services, result);
+        var changed = await WeeklyDigestFacts.ReplayAsync(fixture.Services, result with { FailureCode = "another_failure" });
         var history = await fixture.Histories.ReadWeeklyAsync(fixture.Tenant, rules.Id);
 
         // Assert
@@ -164,7 +165,7 @@ public sealed class WorkDigestNativeHistoryTests
         var failure = await Record.ExceptionAsync(async () =>
         {
             if (owner is WeeklyWorkDigest digest)
-                _ = await WeeklyWorkDigestHistory.ReadAsync(raw, digest);
+                _ = await WeeklyWorkDigestHistory.ReadAsync(raw, fixture.Sources, digest);
             else
                 _ = await WorkDigestDispatchHistory.ReadAsync(raw, (WorkDigestDispatch)owner);
         });
@@ -197,8 +198,10 @@ public sealed class WorkDigestNativeHistoryTests
         public DateOnly Week { get; } = new(2026, 10, 12);
         public DateTimeOffset At { get; } = new(2026, 10, 12, 9, 0, 0, TimeSpan.Zero);
         public ActorReference Worker { get; } = ActorReference.ForSystemProcess(WeeklyWorkDigest.DeliveryProcessId, "Worker");
+        public IServiceProvider Services => _scope.ServiceProvider;
         public IAggregateReader Reader => _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        public WorkDigestHistoryReader Histories => new(Reader, Events);
+        public ISourceFactResolver Sources => _scope.ServiceProvider.GetRequiredService<ISourceFactResolver>();
+        public WorkDigestHistoryReader Histories => new(Reader, Events, Sources);
         public Fixture()
         {
             var services = new ServiceCollection();

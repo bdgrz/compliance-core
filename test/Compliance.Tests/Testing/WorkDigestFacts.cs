@@ -27,7 +27,7 @@ static class WorkDigestFacts
         await AppendAsync(provider, new WorkDigestDispatch(rules.TenantId, rules.Id), rules.PendingEvents);
     }
     public static Task WeeklyAsync(IServiceProvider provider, Uuid tenant, Uuid digest, WeeklyWorkDigestRules rules) =>
-        AppendAsync(provider, new WeeklyWorkDigest(tenant, digest), rules.PendingEvents);
+        WeeklyDigestFacts.WriteAsync(provider, tenant, digest, rules);
     public static async Task AppendAsync<TAggregate>(IServiceProvider provider, TAggregate owner,
         IReadOnlyList<DomainEvent> facts) where TAggregate : Aggregate
     {

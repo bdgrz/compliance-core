@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
@@ -28,23 +30,48 @@ sealed class ExecuteApplicationImportHandler(IAggregateReader reader, IAggregate
         if (!await tenants.IsActiveAsync(request.TenantId, ct).ConfigureAwait(false))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The tenant is not active; retry after reactivation.", isTransient: true));
-        var loaded = await verifier.LoadAsync(request.TenantId.ToString(), request.BatchId, ct).ConfigureAwait(false);
-        if (!loaded.IsSuccess)
-            return Result.Failure(loaded.Error!);
-        var (batch, plan) = (loaded.Value!.Batch, loaded.Value.Plan);
+        var native = await verifier.LoadNativeAsync(request.TenantId.ToString(), request.BatchId, request.CommandId, ct)
+            .ConfigureAwait(false);
+        if (!native.IsSuccess)
+            return Result.Failure(native.Error!);
+        var batch = native.Value!.Batch;
+        var plan = batch.Plan!;
         if (batch.IsCancelRequested || batch.IsEnded)
             return Result.Success;
         var source = await reader.HydrateAsync(new ApplicationImportSource(request.TenantId, plan.SourceKey,
             plan.SourceNamespace, selectedBatchId: batch.Id), ct).ConfigureAwait(false);
+        ct.ThrowIfCancellationRequested();
         if (source.Find(batch.Id) is not { IsActive: true, Admitted: { } admitted } ||
-            admitted.Intent != loaded.Value.PlanRef || admitted.Operation.CausationEventId != batch.Plan!.Metadata.EventId ||
-            admitted.Operation.RootOperationId != plan.Header.RootOperationId)
+            admitted.Intent != plan.FrozenPlan || admitted.Operation.CausationEventId != plan.Metadata.EventId ||
+            admitted.Operation.RootOperationId != plan.Operation.RootOperationId)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The source claim of this batch is not visible yet.", isTransient: true));
-
-        var provenance = ApplicationImportEffects.Child(request.CommandId, CommandKind, batch.Plan!.Metadata!.EventId,
-            plan, batch.Stream, clock.GetUtcNow());
+        var provenance = ApplicationImportEffects.Child(request.CommandId, CommandKind, plan.Metadata.EventId,
+            ApplicationImportIntentBindings.HeaderOf(plan.Operation), batch.Stream, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
+        Result<ReceiverOutcome>? Decide(ApplicationImportBatch owner)
+        {
+            switch (owner.Acceptance.Decide(binding))
+            {
+                case NativeAcceptanceDecision.Replayed:
+                    return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, owner.Acceptance.SelectedFact!));
+                case NativeAcceptanceDecision.Conflict:
+                    return Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
+            }
+            return owner.Authorization is not null || owner.IsCancelRequested || owner.IsEnded
+                ? SourceUseReceiverSupport.Superseded("The batch already authorized execution or ended.",
+                    owner.Authorization is { } authorized ? NativeFactReference.Of(owner.Stream, authorized)
+                        : ApplicationImportVerifier.Evidence(owner))
+                : null;
+        }
+        var preparation = await NativeReceiverPreparation.PrepareAsync<ApplicationImportBatch, ApplicationImportContext>(reader,
+            () => new ApplicationImportBatch(request.TenantId, batch.Id, request.CommandId), Decide,
+            (owner, token) => verifier.PrepareAsync(new ApplicationImportNativeContext(request.TenantId, owner), token), ct)
+            .ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known.IsSuccess ? Result.Success : Result.Failure(known.Error!);
         for (var attempt = 1; ; attempt++)
         {
             try
@@ -62,7 +89,7 @@ sealed class ExecuteApplicationImportHandler(IAggregateReader reader, IAggregate
 
                         if (fresh.Authorization is not null || fresh.IsCancelRequested || fresh.IsEnded)
                             return AggregateOutcome.Discard(Result.Success);
-                        var raised = fresh.AuthorizeExecution(provenance, loaded.Value.PlanRef);
+                        var raised = fresh.AuthorizeExecution(provenance, plan.FrozenPlan);
                         return raised.IsSuccess ? AggregateOutcome.Commit(raised) : AggregateOutcome.Discard(raised);
                     }, context, ct).ConfigureAwait(false);
             }
