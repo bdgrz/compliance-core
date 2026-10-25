@@ -1,0 +1,97 @@
+{
+  "totalFiles": 940,
+  "kindCounts": {
+    "aggregate": 131,
+    "handler": 746,
+    "reactor": 67
+  },
+  "exactCurrentSourceAndDependencyReviews": 940,
+  "refreshedFiles": 174,
+  "refreshSignalsAtOrAbove065": 7,
+  "qualification": "Semantic review coverage is current at the Client/Weekly/Import integration. It does not represent completed implementation or deployment. Existing current-source file coverage will be refreshed when later layers change files/dependencies.",
+  "reviewIndexRecoveryArtifact": "current-940-review-index.json",
+  "triage": {
+    "reviewed": 174,
+    "signalsAtOrAbove065": 7,
+    "triage": [
+      {
+        "path": "src/Compliance.Core/Features/AuditPackages/StartAuditPackageBuildHandler.cs",
+        "sha256": "3eb57ba052c56c510bce918897b6359d3df50e5a079a8ce5e51270c6de0bba79",
+        "signals": {
+          "authority_gap": 0.58,
+          "invariant_gap": 0.55,
+          "recovery_gap": 0.72,
+          "incomplete_path": 0.3
+        },
+        "disposition": "Follow-on candidate: existing durable output lookup occurs after admitted manifest/body verification. Need focused unavailable-body/changed-tail recovery proof before altering. Current batch does not change this file. Local queue, no new issue."
+      },
+      {
+        "path": "src/Compliance.Core/Features/Controls/GetCurrentControlVersionHandler.cs",
+        "sha256": "76def4dfbb084799655fffc7aeed3bff8ba48376aa31d04ec0ba967661ca7f62",
+        "signals": {
+          "authority_gap": 0.5,
+          "invariant_gap": 0.29,
+          "recovery_gap": 0.32,
+          "incomplete_path": 0.71
+        },
+        "disposition": "Read-only handler delegates exact activation source loading and returns approved view or typed error. No throwing stub or synthetic result in actual source; activation gate/source scope remains enforced."
+      },
+      {
+        "path": "src/Compliance.Core/Features/Evidence/AuthorizeEvidenceRequestActionCompletionUseHandler.cs",
+        "sha256": "6d0b11243bd52ddefcffb57901b5ef80a140fdeb8eebe1a2c08f7614a3f32e9e",
+        "signals": {
+          "authority_gap": 0.48,
+          "invariant_gap": 0.39,
+          "recovery_gap": 0.44,
+          "incomplete_path": 0.66
+        },
+        "disposition": "Generic source-use pair has actual fulfilled-request proof checks, frozen cited evidence, terminal review handling and explicit fence abort. Missing helpers in excerpt are installed. No unfinished stub demonstrated."
+      },
+      {
+        "path": "src/Compliance.Core/Features/Risks/AssignRiskOwnerHandler.cs",
+        "sha256": "045f7fef63ac9262758161f91d6baaca873bf4a00bfb6c79021947271a4542f5",
+        "signals": {
+          "authority_gap": 0.49,
+          "invariant_gap": 0.65,
+          "recovery_gap": 0.64,
+          "incomplete_path": 0.25
+        },
+        "disposition": "Current owner revision and existence/person selection run within native async Prepare; exact native acceptance precedes those mutable reads. Native owner append and immutable assigned-person snapshot own result; no cross-owner atomic write claimed."
+      },
+      {
+        "path": "src/Compliance.Core/Features/Risks/SubmitRiskTreatmentActionCompletionHandler.cs",
+        "sha256": "ab60ae8ced6804f595cbb56b1e4ccbc085dc704b447bb8cb4566391dfc17889a",
+        "signals": {
+          "authority_gap": 0.61,
+          "invariant_gap": 0.62,
+          "recovery_gap": 0.65,
+          "incomplete_path": 0.26
+        },
+        "disposition": "Submission freezes evidence identities and original result, does not approve completion. Later independent review owns exact pinned fulfilled evidence and source-use fences. No atomic foreign evidence approval is inferred from submission live validation."
+      },
+      {
+        "path": "src/Compliance.Core/Features/UserIdentities/CompleteIdentityRecoveryHandler.cs",
+        "sha256": "6851254e00992584cdecb11ac24b2190b64bbb947474cc10ed3d642029d86589",
+        "signals": {
+          "authority_gap": 0.72,
+          "invariant_gap": 0.65,
+          "recovery_gap": 0.71,
+          "incomplete_path": 0.34
+        },
+        "disposition": "Connected identity recovery refinement active: move preparation inside native async boundary, preserve frozen identity candidate and exact email cut. Qualified recovery regressions precede implementation."
+      },
+      {
+        "path": "src/Compliance.Core/Features/UserIdentities/MaterializeIdentityRecoveryPreparationHandler.cs",
+        "sha256": "ed3ef98f1e34eae7237d961fede7461e61a30a9e6631837553c0447c1f63c49e",
+        "signals": {
+          "authority_gap": 0.66,
+          "invariant_gap": 0.52,
+          "recovery_gap": 0.49,
+          "incomplete_path": 0.19
+        },
+        "disposition": "Connected identity recovery refinement active: real claim provenance/root binding, all DTO fields/header/candidate verified and native receipt-first equal-winner preparation recovery."
+      }
+    ],
+    "qualification": "Model signals are advisory; no new finding is claimed absent source/behavioral qualification. Existing separately queued Audit/Identity work does not block independent current Client/Weekly/Import fixes."
+  }
+}

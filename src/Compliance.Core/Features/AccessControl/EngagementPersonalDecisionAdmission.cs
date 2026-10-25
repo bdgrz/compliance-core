@@ -17,7 +17,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 /// </summary>
 sealed class EngagementPersonalDecisionAdmission(NativeOperationExecutor operations, IAggregateReader reader,
     IImmutableContentStore content, ProfessionalDutyAuthorityReader duties,
-    CurrentRatifiedIndependenceRulesReader ratifiedRules, EngagementSourcePins pins, TimeProvider clock)
+    CurrentRatifiedIndependenceRulesReader ratifiedRules, EngagementSourcePins pins, TimeProvider clock, IDomainEventReader events)
 {
     const string InitialEpisode = "initial";
 
@@ -113,20 +113,18 @@ sealed class EngagementPersonalDecisionAdmission(NativeOperationExecutor operati
                 "Reload the service epoch of this client before deciding on its engagement.");
 
         ServiceEngagementView view;
-        var services = new List<NonattestServiceView>(clientService.Services.Count);
+        IReadOnlyList<NonattestServiceView> services;
         try
         {
             view = await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content, realm,
                 engagement.LatestResult!, ct).ConfigureAwait(false);
-            foreach (var recorded in clientService.Services)
-                services.Add(await content.ReadJsonAsync<NonattestServiceView>(realm, recorded.ServiceContent, ct)
-                    .ConfigureAwait(false));
+            services = await ClientServiceHistory.ReadAsync(events, content, clientService, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {
             return IndependenceContent.Failure<(ImmutableContentRef, FirstResponseDescriptor)>(
                 RequestErrorKind.Conflict, $"The engagement or service history cannot be verified: {exception.Message}",
-                true);
+                exception is ImmutableContentUnavailableException);
         }
 
         var completeServices = await content.WriteSelectionAsync(realm, Uuid.CreateVersion4(),

@@ -81,6 +81,14 @@ public sealed class WeeklyWorkDigestRules
             _attempts.Add(latest);
     }
 
+    /// <summary>Only a fully verified native NoChange receipt advances this resource counter without a business effect.</summary>
+    internal void AdvanceReceiptRevision(long revision)
+    {
+        if (revision != Revision + 1)
+            throw new InvalidOperationException("A native receipt must advance exactly one owning revision.");
+        Revision = revision;
+    }
+
     public static Uuid IdFor(Uuid tenantId, Uuid memberId, DateOnly weekStarting)
     {
         if (tenantId == Uuid.Empty || memberId == Uuid.Empty || !IsMonday(weekStarting))

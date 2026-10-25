@@ -10,8 +10,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     Appends one service to the complete history of a client at the expected service epoch. The complete service
 ///     view is frozen as the first response, so an exact retry returns the original view even after later services.
 /// </summary>
-public sealed class RecordNonattestServiceHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content, TimeProvider clock)
+public sealed class RecordNonattestServiceHandler(NativeOperationExecutor operations, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<RecordNonattestService, NonattestServiceView>
 {
     const string CommandKind = "RecordNonattestService";
@@ -35,46 +34,38 @@ public sealed class RecordNonattestServiceHandler(NativeOperationExecutor operat
         var stream = new ClientServiceIndependence(request.TenantId).Stream;
         var provenance = new OperationProvenance(request.ServiceRecordId, request.ServiceRecordId, null, CommandKind,
             actor, stream, InitialEpisode, (ulong)request.ExpectedServiceEpoch,
-            AuthoredIntentDigest.Compute(request), now, stream, stream);
+            AuthoredIntentDigest.Compute(request), now, stream, stream, stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        // The view is derived from the authored service only, so it is built before the append; the owner guard
-        // re-checks the epoch on every attempt.
-        var current = await reader.HydrateAsync(
-            new ClientServiceIndependence(request.TenantId, request.ServiceRecordId), ct).ConfigureAwait(false);
-        FirstResponseDescriptor? response = null;
         ImmutableContentRef? serviceContent = null;
         ImmutableContentRef? result = null;
-        if (current.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        (ulong Version, ulong Position, string Digest)? preparedCut = null;
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(ClientServiceIndependence owner, CancellationToken token)
         {
+            var ready = owner.PrepareService(request.ServiceRecordId, request.ExpectedServiceEpoch);
+            if (!ready.IsSuccess)
+                return Result<FirstResponseDescriptor>.Failure(ready.Error!);
             var view = IndependenceRecordValidation.Freeze(new NonattestServiceView(request.TenantId,
                 request.ServiceRecordId, request.Content, actor, now));
-            serviceContent = await IndependenceContent.WriteAsync(content, realm, IndependenceContent.ServiceSchema,
-                view, ct).ConfigureAwait(false);
+            serviceContent = await IndependenceContent.WriteAsync(content, realm, IndependenceContent.ServiceSchema, view, token)
+                .ConfigureAwait(false);
             result = await IndependenceContent.WriteResultAsync(content, realm, IndependenceContent.ServiceSchema,
-                serviceContent, ct).ConfigureAwait(false);
-            response = IndependenceContent.Ok(IndependenceContent.ServiceSchema, serviceContent);
+                serviceContent, token).ConfigureAwait(false);
+            preparedCut = (owner.Version, owner.CommittedStreamPosition, owner.ReplayCut.Digest);
+            return Result<FirstResponseDescriptor>.Success(IndependenceContent.Ok(IndependenceContent.ServiceSchema, serviceContent));
         }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<ClientServiceIndependence>(binding,
             () => new ClientServiceIndependence(request.TenantId, request.ServiceRecordId), owner => owner.Acceptance,
-            owner => Prepare(owner, request, response),
+            PrepareAsync,
             (ClientServiceIndependence owner, ImmutableContentRef frozen) =>
-                owner.RecordService(provenance, serviceContent!, frozen, result!)), context, ct)
+                preparedCut == (owner.Version, owner.CommittedStreamPosition, owner.ReplayCut.Digest)
+                    ? owner.RecordService(provenance, serviceContent!, frozen, result!)
+                    : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The prepared client service prefix changed before append.", true))), context, ct)
             .ConfigureAwait(false);
         return await IndependenceContent.ReadOutcomeAsync<NonattestServiceView>(content, realm, outcome, ct)
             .ConfigureAwait(false);
     }
 
-    static Result<FirstResponseDescriptor> Prepare(ClientServiceIndependence owner, RecordNonattestService request,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PrepareService(request.ServiceRecordId, request.ExpectedServiceEpoch);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? IndependenceContent.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
-                "The service history changed while the service was prepared; reload and retry.", true)
-            : Result<FirstResponseDescriptor>.Success(response);
-    }
 }

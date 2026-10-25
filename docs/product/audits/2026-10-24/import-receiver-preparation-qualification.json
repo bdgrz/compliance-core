@@ -1,0 +1,59 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "validation": {
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 363,
+    "productionHttpPassed": 29,
+    "backendUnit": {
+      "passed": 6670,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "format": "pass",
+    "exactSourceAndDependencyHashes": "42 verified; all940 owner/handler/reactor reviews also refreshed"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "combinedProductionFiles": 42,
+    "signalsAtOrAbove065": 2,
+    "triage": "client-weekly-import-file-triage.json",
+    "initialIntegration": "refine .50 vs merge .48 while final validation pending; original evidence retained in recovery",
+    "finalIntegration": {
+      "decision": {
+        "type": "choice",
+        "choice": "merge_scoped_repair",
+        "confidence": 0.67,
+        "probabilities": {
+          "merge_scoped_repair": 0.78,
+          "refine_before_merge": 0.21,
+          "blocked_by_missing_authority": 0.01
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.2
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.23
+      }
+    },
+    "adopted": "Squash merge locally validated scoped repair without CI wait per explicit user direction; continue all remaining layers."
+  },
+  "scope": "Nine existing custom import receiver paths share receipt-first expected-failure preparation/recheck; exact Commit source tuple bound before receipt.",
+  "genuineOldApiRedFailed": 29,
+  "qualification": [
+    "All8custom receivers plus Unit Execute compose finalized native binding/context before shared preparation; native expected target cut/current actor/tenant/retirement/OCC gates remain.",
+    "Required group row bodies and cancellation fence manifests still read before body-free replay because those extra caller terms are absent from the native scalar admission. Claim business revision retains documented admission.Revision-1 distinction.",
+    "Irreversible accepted publication/complete-cancellation retains original proof/result semantics; no new hint contract. Forged source authorization event/version on exact Commit retry now rejects. New holds/folds/required target proofs and immutable terminal Unit results remain intact.",
+    "No DTO/discriminator/DI/route/shared helper change; no synthetic Failed/automatic abort producer. Saved static binding audit and42additional safety/write-race test rows supplement the29oldAPI red cases."
+  ],
+  "remainingWork": [
+    "Automatic process abort still lacks selected trusted producer/actor/source contract; existing personal Cancel\u2192fence\u2192complete\u2192settle remains. No new issue, callback or guessed actor."
+  ]
+}

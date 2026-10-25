@@ -17,26 +17,50 @@ sealed class ApplicationImportVerifier(IAggregateReader reader, IImmutableConten
 {
     public async ValueTask<Result<ApplicationImportContext>> LoadAsync(string realm, Uuid batchId, CancellationToken ct)
     {
+        var native = await LoadNativeAsync(realm, batchId, Uuid.Empty, ct).ConfigureAwait(false);
+        return !native.IsSuccess ? Result<ApplicationImportContext>.Failure(native.Error!)
+            : await PrepareAsync(native.Value!, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Reads the exact authoritative batch before immutable preparation or selected receiver decisions.</summary>
+    public async ValueTask<Result<ApplicationImportNativeContext>> LoadNativeAsync(string realm, Uuid batchId,
+        Uuid selectedLogicalId, CancellationToken ct)
+    {
         var tenant = Uuid.Parse(realm, CultureInfo.InvariantCulture);
-        var batch = await reader.HydrateAsync(new ApplicationImportBatch(tenant, batchId), ct).ConfigureAwait(false);
-        if (!batch.IsCreated || batch.Plan is null || batch.Plan.Metadata is null)
-            return Result<ApplicationImportContext>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The sealed import plan is not visible yet.", true));
+        var batch = await reader.HydrateAsync(new ApplicationImportBatch(tenant, batchId, selectedLogicalId), ct)
+            .ConfigureAwait(false);
+        ct.ThrowIfCancellationRequested();
+        return !batch.IsCreated || batch.Plan is null
+            ? Result<ApplicationImportNativeContext>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The sealed import plan is not visible yet.", true))
+            : Result<ApplicationImportNativeContext>.Success(new ApplicationImportNativeContext(tenant, batch));
+    }
+
+    /// <summary>Binds and validates the complete frozen plan for a new receiver candidate.</summary>
+    public async ValueTask<Result<ApplicationImportContext>> PrepareAsync(ApplicationImportNativeContext native,
+        CancellationToken ct)
+    {
+        var (tenant, batch) = (native.TenantId, native.Batch);
+        var batchId = batch.Id;
+        var accepted = batch.Plan!;
         ImportFrozenPlanIntent plan;
         try
         {
             plan = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, tenant,
-                batch.Plan.FrozenPlan, ct).ConfigureAwait(false);
-            ApplicationImportIntentBindings.Require(plan.Header, batch.Plan.Operation);
+                accepted.FrozenPlan, ct).ConfigureAwait(false);
+            if (plan.Header is null)
+                throw new ImmutableContentIntegrityException("The frozen plan has no root header.");
+            ApplicationImportIntentBindings.Require(plan.Header, accepted.Operation);
             if (plan.Rows.ItemSchema != "import-planned-row.v1" || plan.Rows.Order != SelectionOrder.Authored ||
                 plan.TargetGroups.ItemSchema != ImportTargetGroupIntent.Schema || plan.TargetGroups.Order != SelectionOrder.CanonicalKey ||
                 plan.SourceClaims.ItemSchema != ApplicationImportSourceClaimRecord.ItemSchema || plan.SourceClaims.Order != SelectionOrder.CanonicalKey ||
-                plan.Rows.Count != batch.Plan.RowCount || plan.TargetGroups.Count != batch.Plan.TargetGroupCount ||
-                batch.Plan.PlanSha256 != batch.Plan.FrozenPlan.Sha256)
+                plan.Rows.Count != accepted.RowCount || plan.TargetGroups.Count != accepted.TargetGroupCount ||
+                accepted.PlanSha256 != accepted.FrozenPlan.Sha256)
                 throw new ImmutableContentIntegrityException("The complete plan counts/digest differ from native admission.");
         }
         catch (ImmutableContentIntegrityException exception)
         {
+            ct.ThrowIfCancellationRequested();
             return Result<ApplicationImportContext>.Failure(new RequestError(RequestErrorKind.Conflict,
                 $"The frozen import plan cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
@@ -59,6 +83,7 @@ sealed class ApplicationImportVerifier(IAggregateReader reader, IImmutableConten
         }
         catch (ImmutableContentIntegrityException exception)
         {
+            ct.ThrowIfCancellationRequested();
             return Result<IReadOnlyList<ImportTargetGroupIntent>>.Failure(new RequestError(RequestErrorKind.Conflict,
                 $"The frozen target groups cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
@@ -76,6 +101,7 @@ sealed class ApplicationImportVerifier(IAggregateReader reader, IImmutableConten
         }
         catch (ImmutableContentIntegrityException exception)
         {
+            ct.ThrowIfCancellationRequested();
             return Result<IReadOnlyList<ApplicationImportPlannedRow>>.Failure(new RequestError(
                 RequestErrorKind.Conflict, $"The frozen import rows cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }

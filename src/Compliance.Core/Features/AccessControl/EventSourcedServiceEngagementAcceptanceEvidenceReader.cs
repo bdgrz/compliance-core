@@ -13,7 +13,7 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
     FirmStaffViews staffViews, ProfessionalDutyAuthorityReader duties, CurrentRatifiedIndependenceRulesReader rulesReader,
     IBoundaryDirectoryReader boundaries, BoundaryHistoryReadConsistency boundaryConsistency,
     EngagementPersonalDecisionViews personalDecisions, ServiceEngagementViews engagements,
-    IImmutableContentStore content, TimeProvider clock) : IServiceEngagementAcceptanceEvidenceReader
+    IImmutableContentStore content, TimeProvider clock, IDomainEventReader events) : IServiceEngagementAcceptanceEvidenceReader
 {
     public async ValueTask<Result<ServiceEngagementAcceptanceEvidence>> ReadCurrentAsync(Uuid tenantId,
         Uuid engagementId, Uuid actorUserId, CancellationToken ct)
@@ -53,7 +53,7 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
             engagement = await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content,
                 IndependenceContent.Realm(tenantId), latestDraft, ct).ConfigureAwait(false);
             history = await engagements.HistoryAsync(tenantId, engagementId, ct).ConfigureAwait(false) ?? [];
-            serviceHistory = await ClientServiceHistory.ReadAsync(content, client, ct).ConfigureAwait(false);
+            serviceHistory = await ClientServiceHistory.ReadAsync(events, content, client, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {

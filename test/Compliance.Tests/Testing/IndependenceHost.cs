@@ -21,7 +21,8 @@ sealed class IndependenceHost : IAsyncDisposable
 {
     public static readonly DateTimeOffset At = new(2026, 10, 7, 12, 0, 0, TimeSpan.Zero);
 
-    public IndependenceHost(bool permitted = true)
+    public IndependenceHost(bool permitted = true,
+        Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
     {
         var services = new ServiceCollection();
         var settings = new Dictionary<string, string?>
@@ -37,6 +38,9 @@ sealed class IndependenceHost : IAsyncDisposable
         services.AddSingleton<IDomainEventReader>(events);
         services.AddSingleton<ISourceFactResolver, EventStoreSourceFactResolver>();
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
+        if (configureContent is not null)
+            services.AddSingleton<IImmutableContentStore>(provider => configureContent(
+                new FitzKvImmutableContentStore(provider.GetRequiredService<IKvClient>())));
         services.AddSingleton<IPermissionAuthorizer>(new RecordingPermissionAuthorizer(permitted));
         services.AddSingleton<IPlatformUserDirectoryReader>(new AnyPlatformUserDirectory());
         services.AddSingleton<ITenantActivity>(new ActiveTenant());

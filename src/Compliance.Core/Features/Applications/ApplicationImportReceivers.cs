@@ -27,40 +27,68 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
     {
         if (Malformed(command.CommandId, command.OperationId, command.Generation))
             return SourceUseReceiverSupport.Permanent("The claim names another generation or operation.");
-        var loaded = await verifier.LoadAsync(command.Target.Realm, command.BatchId, ct).ConfigureAwait(false);
-        if (!loaded.IsSuccess)
-            return Result<ReceiverOutcome>.Failure(loaded.Error!);
-        var (tenant, batch, plan) = (loaded.Value!.TenantId, loaded.Value.Batch, loaded.Value.Plan);
+        var native = await verifier.LoadNativeAsync(command.Target.Realm, command.BatchId, Uuid.Empty, ct)
+            .ConfigureAwait(false);
+        if (!native.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(native.Error!);
+        var (tenant, batch) = (native.Value!.TenantId, native.Value.Batch);
+        var plan = batch.Plan!;
         var stream = new ApplicationImportSource(tenant, plan.SourceKey, plan.SourceNamespace).Stream;
-        if (!ApplicationImportVerifier.IsFact(command.Source, batch, batch.Plan) || command.Intent != loaded.Value.PlanRef ||
-            command.OperationId != plan.Header.RootOperationId || command.Target != stream ||
-            command.SourceKey != plan.SourceKey || command.SourceNamespace != plan.SourceNamespace ||
-            command.ExpectedRevision != plan.SourceRevision)
+        if (!ApplicationImportVerifier.IsFact(command.Source, batch, plan) || command.Intent != plan.FrozenPlan ||
+            command.OperationId != plan.Operation.RootOperationId || command.Target != stream ||
+            command.SourceKey != plan.SourceKey || command.SourceNamespace != plan.SourceNamespace)
             return SourceUseReceiverSupport.Permanent("The claim differs from the frozen import plan.");
-        if (batch.IsCancelRequested || batch.IsEnded)
-            return ApplicationImportVerifier.Ended(batch, "The batch ended before its source was claimed.");
-
         var provenance = ApplicationImportEffects.Child(command.CommandId, nameof(ClaimApplicationImportSource),
-            command.Source.EventId, plan, stream, clock.GetUtcNow());
+            command.Source.EventId, ApplicationImportIntentBindings.HeaderOf(plan.Operation), stream, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        Result<ReceiverOutcome>? Early(ApplicationImportSource source)
+        Result<ReceiverOutcome>? Early(ApplicationImportSource source, bool prepared)
         {
+            var slot = source.Find(batch.Id);
+            if (slot?.Admitted is { } admitted)
+            {
+                if (command.ExpectedRevision != admitted.Revision - 1 || admitted.Intent != command.Intent ||
+                    admitted.Operation.RootOperationId != command.OperationId ||
+                    admitted.Operation.CausationEventId != command.Source.EventId || admitted.Operation.FirstOwner != batch.Stream ||
+                    AcceptedOperationBinding.Of(admitted.Operation with { LogicalId = command.CommandId }) != binding)
+                    return SourceUseReceiverSupport.Permanent("The claim differs from its exact native source admission.");
+            }
+            else if (!prepared)
+                return null;
+            if (batch.IsCancelRequested || batch.IsEnded)
+                return ApplicationImportVerifier.Ended(batch, "The batch ended before its source was claimed.");
             if (Decide(source.Acceptance, binding, source.Stream) is { } decided)
                 return decided;
-            if (source.Find(batch.Id) is { } slot)
+            if (slot is not null)
                 return slot.Settled is not null
                     ? SourceUseReceiverSupport.Superseded("The source claim of this batch was settled before it was granted.",
                         NativeFactReference.Of(source.Stream, slot.Settled))
                     : SourceUseReceiverSupport.Replayed(NativeFactReference.Of(source.Stream, slot.Admitted!));
             if (source.ActiveBatchId is not null)
                 return SourceUseReceiverSupport.Transient("Another batch holds this source. Retry after it settles.");
-            return source.Revision != plan.SourceRevision
+            return source.Revision != command.ExpectedRevision
                 ? SourceUseReceiverSupport.Permanent("The source changed after this plan was frozen.")
                 : null;
         }
 
+        var preparation = await NativeReceiverPreparation.PrepareAsync<ApplicationImportSource, ApplicationImportContext>(reader,
+            () => new ApplicationImportSource(tenant, plan.SourceKey, plan.SourceNamespace, command.CommandId, batch.Id),
+            source => Early(source, false), async (_, token) =>
+            {
+                var loaded = await verifier.PrepareAsync(native.Value, token).ConfigureAwait(false);
+                if (!loaded.IsSuccess)
+                    return Result<ApplicationImportContext>.Failure(loaded.Error!);
+                return command.ExpectedRevision != loaded.Value!.Plan.SourceRevision
+                    ? Result<ApplicationImportContext>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The claim differs from the frozen import plan.", false))
+                    : loaded;
+            }, ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
         return await AppendAsync(context, () => new ApplicationImportSource(tenant, plan.SourceKey,
-            plan.SourceNamespace, command.CommandId, batch.Id), source => source.Acceptance, Early,
+                plan.SourceNamespace, command.CommandId, batch.Id), source => source.Acceptance,
+            source => Early(source, true),
             (ApplicationImportSource source) => source.Claim(provenance, command.Intent, batch.Id), ct).ConfigureAwait(false);
     }
 
@@ -69,39 +97,56 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
     {
         if (Malformed(command.CommandId, command.OperationId, command.Generation))
             return SourceUseReceiverSupport.Permanent("The reservation names another generation or operation.");
-        var verified = await VerifyTargetAsync(command.Target, command.Source, command.BatchId, command.ApplicationId,
-            command.OperationId, command.Intent, ct).ConfigureAwait(false);
-        if (verified.Failure is not null)
-            return verified.Failure.Value;
-        var (loaded, group) = (verified.Context!, verified.Group!);
-        if (command.GroupedRows != group.Rows.Content)
-            return SourceUseReceiverSupport.Permanent("The reservation differs from its frozen target group.");
-        var batch = loaded.Batch;
-        if (batch.IsCancelRequested || batch.IsEnded)
-            return ApplicationImportVerifier.Ended(batch, "The batch ended before its target was reserved.");
-
+        var native = await ReadTargetNativeAsync(command.Target, command.Source, command.BatchId, command.ApplicationId,
+            command.OperationId, ct).ConfigureAwait(false);
+        if (native.Failure is { } refused)
+            return refused;
+        var bound = await BindTargetRowsAsync(native.Context!, command.ApplicationId, command.Intent, command.GroupedRows, ct)
+            .ConfigureAwait(false);
+        if (!bound.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(bound.Error!);
+        var (tenant, batch, group) = (native.Context!.TenantId, native.Context.Batch, bound.Value!);
         var provenance = ApplicationImportEffects.Child(command.CommandId, nameof(ReserveApplicationImportTarget),
-            command.Source.EventId, loaded.Plan, command.Target, clock.GetUtcNow());
+            command.Source.EventId, ApplicationImportIntentBindings.HeaderOf(batch.Plan!.Operation), command.Target, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        Result<ReceiverOutcome>? Early(DeclaredApplication application)
+        Result<ReceiverOutcome>? Early(DeclaredApplication application, bool prepared)
         {
+            var hold = application.FindImportHold(batch.Id);
+            if (hold?.Reserved is { } reserved &&
+                (reserved.Intent != command.Intent || reserved.InitialApplicationRevision != group.InitialApplicationRevision ||
+                    reserved.CandidateContentRevision != group.CandidateContentRevision ||
+                    reserved.Operation.RootOperationId != command.OperationId || reserved.Operation.CausationEventId != command.Source.EventId ||
+                    reserved.Operation.FirstOwner != batch.Stream ||
+                    AcceptedOperationBinding.Of(reserved.Operation with { LogicalId = command.CommandId }) != binding))
+                return SourceUseReceiverSupport.Permanent("The target reservation has another exact native group binding.");
             if (Decide(application.Acceptance, binding, application.Stream) is { } decided)
                 return decided;
-            if (application.FindImportHold(batch.Id) is { } hold)
-            {
-                if (hold.Settled is not null || hold.Fence is not null)
-                    return SourceUseReceiverSupport.Superseded("The target was fenced or settled before it was reserved.",
-                        NativeFactReference.Of(application.Stream, (DomainEvent?)hold.Settled ?? hold.Fence!));
-                return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(application.Stream, hold.Reserved!));
-            }
-
-            return application.CheckReserve(batch.Id, group.InitialApplicationRevision) is { } refused
-                ? Result<ReceiverOutcome>.Failure(refused)
-                : null;
+            if (hold?.Reserved is not null)
+                return hold.Settled is not null || hold.Fence is not null
+                    ? SourceUseReceiverSupport.Superseded("The target was fenced or settled before it was reserved.",
+                        NativeFactReference.Of(application.Stream, (DomainEvent?)hold.Settled ?? hold.Fence!))
+                    : SourceUseReceiverSupport.Replayed(NativeFactReference.Of(application.Stream, hold.Reserved));
+            if (!prepared)
+                return null;
+            if (hold is not null)
+                return SourceUseReceiverSupport.Superseded("The target was fenced or settled before it was reserved.",
+                    NativeFactReference.Of(application.Stream, (DomainEvent?)hold.Settled ?? hold.Fence!));
+            return application.CheckReserve(batch.Id, group.InitialApplicationRevision) is { } error
+                ? Result<ReceiverOutcome>.Failure(error) : null;
         }
-
-        return await AppendAsync(context, () => new DeclaredApplication(loaded.TenantId, command.ApplicationId,
-                command.CommandId), application => application.Acceptance, Early,
+        var preparation = await NativeReceiverPreparation.PrepareAsync<DeclaredApplication, PreparedTarget>(reader,
+            () => new DeclaredApplication(tenant, command.ApplicationId, command.CommandId),
+            application => Early(application, false),
+            (_, token) => PrepareTargetAsync(command.Target, command.Source, command.BatchId, command.ApplicationId,
+                command.OperationId, command.Intent, command.GroupedRows, token), ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
+        if (preparation.Value.Value!.Outcome is { } terminal)
+            return terminal;
+        return await AppendAsync(context, () => new DeclaredApplication(tenant, command.ApplicationId, command.CommandId),
+            application => application.Acceptance, application => Early(application, true),
             (DeclaredApplication application) => application.Reserve(provenance, command.Intent, batch.Id, command.ApplicationId,
                 group.InitialApplicationRevision, group.CandidateContentRevision), ct).ConfigureAwait(false);
     }
@@ -111,75 +156,68 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
     {
         if (Malformed(command.CommandId, command.OperationId, command.Generation))
             return SourceUseReceiverSupport.Permanent("The apply names another generation or operation.");
-        var verified = await VerifyTargetAsync(command.Target, command.Source, command.BatchId, command.ApplicationId,
-            command.OperationId, command.Intent, ct).ConfigureAwait(false);
-        if (verified.Failure is not null)
-            return verified.Failure.Value;
-        var (loaded, group) = (verified.Context!, verified.Group!);
-        if (command.RowGroup != group.Rows.Content)
-            return SourceUseReceiverSupport.Permanent("The apply differs from its frozen target group.");
-        var batch = loaded.Batch;
-        if (batch.IsCancelRequested || batch.IsEnded)
-            return ApplicationImportVerifier.Ended(batch, "The batch ended before its target was applied.");
-        if (!await tenants.IsActiveAsync(loaded.TenantId, ct).ConfigureAwait(false))
+        var native = await ReadTargetNativeAsync(command.Target, command.Source, command.BatchId, command.ApplicationId,
+            command.OperationId, ct).ConfigureAwait(false);
+        if (native.Failure is { } refused)
+            return refused;
+        var bound = await BindTargetRowsAsync(native.Context!, command.ApplicationId, command.Intent, command.RowGroup, ct)
+            .ConfigureAwait(false);
+        if (!bound.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(bound.Error!);
+        var (tenant, batch, group) = (native.Context!.TenantId, native.Context.Batch, bound.Value!);
+        var active = await tenants.IsActiveAsync(tenant, ct).ConfigureAwait(false);
+        ct.ThrowIfCancellationRequested();
+        if (!active)
             return SourceUseReceiverSupport.Transient("The tenant is not active; retry after reactivation.");
-
-        IReadOnlyList<ApplicationImportPlannedRow> rows;
-        try
-        {
-            rows = await ApplicationImportContent.ReadSelectionAsync<ApplicationImportPlannedRow>(content,
-                loaded.TenantId, group.Rows, ct).ConfigureAwait(false);
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    $"The frozen group rows cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
-        }
-
-        if (rows.Count == 0 || rows.Any(row => row.ApplicationId != command.ApplicationId))
-            return SourceUseReceiverSupport.Permanent("The frozen group rows name another application.");
-        var retirements = await VerifyRetirementsAsync(loaded, rows, ct).ConfigureAwait(false);
-        if (retirements is not null)
-            return retirements.Value;
-
+        var accepted = batch.Plan!;
         var provenance = ApplicationImportEffects.Child(command.CommandId, nameof(ApplyApplicationImportEffect),
-            command.Source.EventId, loaded.Plan, command.Target, clock.GetUtcNow());
+            command.Source.EventId, ApplicationImportIntentBindings.HeaderOf(accepted.Operation), command.Target, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var inputs = new List<ApplicationImportEffectInput>(rows.Count);
-        var planned = ApplicationImportGroupFold.Fold(group.InitialApplicationRevision != 0,
-            false, (long)group.InitialApplicationRevision, rows);
-        if (!planned.IsSuccess || (ulong)planned.Value![^1] != group.CandidateContentRevision)
-            return SourceUseReceiverSupport.Permanent("The frozen group differs from its candidate revision.");
-        var now = clock.GetUtcNow();
-        for (var index = 0; index < rows.Count; index++)
-            inputs.Add(new ApplicationImportEffectInput(provenance with
-            {
-                LogicalId = ApplicationImportEffects.EffectLogicalId(command.CommandId, index, rows[index].RowId),
-            }, rows[index], planned.Value[index]));
-
-        Result<ReceiverOutcome>? Early(DeclaredApplication application)
+        Result<ReceiverOutcome>? Early(DeclaredApplication application, bool prepared)
         {
+            var hold = application.FindImportHold(batch.Id);
+            if (hold is { IsApplied: true })
+            {
+                var effect = hold.Effects[0];
+                if (effect.Intent != command.Intent || effect.FrozenPlan != accepted.FrozenPlan ||
+                    effect.PlanRevision != accepted.Revision || effect.PlanSha256 != accepted.PlanSha256 ||
+                    effect.Operation.RootOperationId != command.OperationId || effect.Operation.CausationEventId != command.Source.EventId ||
+                    effect.Operation.FirstOwner != batch.Stream ||
+                    AcceptedOperationBinding.Of(effect.Operation with { LogicalId = command.CommandId }) != binding)
+                    return SourceUseReceiverSupport.Permanent("The target effect has another exact native group binding.");
+            }
             if (Decide(application.Acceptance, binding, application.Stream) is { } decided)
                 return decided;
-            var hold = application.FindImportHold(batch.Id);
+            if (hold is { IsApplied: true, Fence: null, Settled: null })
+                return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(application.Stream, hold.Effects[0]));
+            if (!prepared)
+                return null;
             if (hold is null)
                 return SourceUseReceiverSupport.Transient("The target reservation is not visible yet.");
             if (hold.Fence is not null || hold.Settled is not null)
-                return SourceUseReceiverSupport.Superseded(
-                    "The target was fenced or settled; the delayed apply does nothing.",
+                return SourceUseReceiverSupport.Superseded("The target was fenced or settled; the delayed apply does nothing.",
                     NativeFactReference.Of(application.Stream, (DomainEvent?)hold.Settled ?? hold.Fence!));
-            if (hold.IsApplied)
-                return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(application.Stream, hold.Effects[0]));
             if (hold.Reserved is null || hold.Reserved.InitialApplicationRevision != group.InitialApplicationRevision ||
                 hold.Reserved.CandidateContentRevision != group.CandidateContentRevision)
                 return SourceUseReceiverSupport.Permanent("The target hold differs from the frozen group.");
             return null;
         }
-
-        return await AppendAsync(context, () => new DeclaredApplication(loaded.TenantId, command.ApplicationId,
-                command.CommandId), application => application.Acceptance, Early,
-            (DeclaredApplication application) => application.ApplyImportGroup(batch.Id, batch.Plan!.Revision, batch.Plan.PlanSha256,
-                loaded.PlanRef, command.Intent, inputs, now), ct).ConfigureAwait(false);
+        var preparation = await NativeReceiverPreparation.PrepareAsync<DeclaredApplication, PreparedApply>(reader,
+            () => new DeclaredApplication(tenant, command.ApplicationId, command.CommandId),
+            application => Early(application, false),
+            (_, token) => PrepareApplyAsync(command, provenance, token), ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
+        var prepared = preparation.Value.Value!;
+        if (prepared.Outcome is { } terminal)
+            return terminal;
+        var frozen = prepared.Context!.Batch.Plan!;
+        return await AppendAsync(context, () => new DeclaredApplication(tenant, command.ApplicationId, command.CommandId),
+            application => application.Acceptance, application => Early(application, true),
+            (DeclaredApplication application) => application.ApplyImportGroup(batch.Id, frozen.Revision, frozen.PlanSha256,
+                frozen.FrozenPlan, command.Intent, prepared.Inputs!, prepared.RecordedAt), ct).ConfigureAwait(false);
     }
 
     public async ValueTask<Result<ReceiverOutcome>> CommitAsync(IExecutionContext context,
@@ -187,59 +225,49 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
     {
         if (Malformed(command.CommandId, command.OperationId, command.Generation))
             return SourceUseReceiverSupport.Permanent("The commit names another generation or operation.");
-        var loaded = await verifier.LoadAsync(command.Target.Realm, command.BatchId, ct).ConfigureAwait(false);
-        if (!loaded.IsSuccess)
-            return Result<ReceiverOutcome>.Failure(loaded.Error!);
-        var (tenant, batch, plan) = (loaded.Value!.TenantId, loaded.Value.Batch, loaded.Value.Plan);
-        if (command.Target != batch.Stream || command.Intent != loaded.Value.PlanRef ||
-            command.OperationId != plan.Header.RootOperationId)
+        var native = await verifier.LoadNativeAsync(command.Target.Realm, command.BatchId, command.CommandId, ct)
+            .ConfigureAwait(false);
+        if (!native.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(native.Error!);
+        var (tenant, batch) = (native.Value!.TenantId, native.Value.Batch);
+        var plan = batch.Plan!;
+        if (command.Target != batch.Stream || command.Intent != plan.FrozenPlan || command.OperationId != plan.Operation.RootOperationId)
             return SourceUseReceiverSupport.Permanent("The commit differs from the frozen import plan.");
-        var provenance = ApplicationImportEffects.Child(command.CommandId, nameof(CommitApplicationImportBatch),
-            command.Source.EventId, plan, batch.Stream, clock.GetUtcNow());
-        var binding = AcceptedOperationBinding.Of(provenance);
-        if (batch.Acceptance.SelectedLogicalId != command.CommandId)
-            batch = await reader.HydrateAsync(new ApplicationImportBatch(tenant, batch.Id, command.CommandId), ct)
-                .ConfigureAwait(false);
-        if (Decide(batch.Acceptance, binding, batch.Stream) is { } early)
-            return early;
-        if (batch.IsCancelRequested || batch.IsEnded)
+        if ((batch.IsCancelRequested || batch.IsEnded) && batch.Committed is null)
             return ApplicationImportVerifier.Ended(batch, "The batch ended before it published.");
         if (!ApplicationImportVerifier.IsFact(command.Source, batch, batch.Authorization))
             return SourceUseReceiverSupport.Transient("The execution authorization is not visible yet.");
-
-        var rows = await verifier.RowsAsync(loaded.Value, ct).ConfigureAwait(false);
-        if (!rows.IsSuccess)
-            return Result<ReceiverOutcome>.Failure(rows.Error!);
-        IReadOnlyList<ApplicationImportEffectProof> proofs;
-        try
+        var provenance = ApplicationImportEffects.Child(command.CommandId, nameof(CommitApplicationImportBatch),
+            command.Source.EventId, ApplicationImportIntentBindings.HeaderOf(plan.Operation), batch.Stream, clock.GetUtcNow());
+        var binding = AcceptedOperationBinding.Of(provenance);
+        Result<ReceiverOutcome>? Early(ApplicationImportBatch owner)
         {
-            proofs = await ApplicationImportContent.ReadAsync<IReadOnlyList<ApplicationImportEffectProof>>(content,
-                tenant, command.TargetProofManifest, ct).ConfigureAwait(false);
+            if (owner.Committed is { } committed &&
+                (committed.Intent != command.Intent || committed.Operation.RootOperationId != command.OperationId ||
+                    committed.Operation.CausationEventId != command.Source.EventId || committed.Operation.FirstOwner != batch.Stream ||
+                    AcceptedOperationBinding.Of(committed.Operation with { LogicalId = command.CommandId }) != binding))
+                return SourceUseReceiverSupport.Permanent("The publication has another exact native execution binding.");
+            if (Decide(owner.Acceptance, binding, owner.Stream) is { } decided)
+                return decided;
+            if (owner.Committed is { } existing)
+                return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, existing));
+            return owner.IsCancelRequested || owner.IsEnded
+                ? ApplicationImportVerifier.Ended(owner, "The batch ended before it published.") : null;
         }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    $"The target proof manifest cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
-        }
-
-        var proven = await VerifyProofsAsync(loaded.Value, rows.Value!, proofs, ct).ConfigureAwait(false);
-        if (proven is not null)
-            return proven.Value;
-        if (!await tenants.IsActiveAsync(tenant, ct).ConfigureAwait(false))
-            return SourceUseReceiverSupport.Transient("The tenant is not active; retry after reactivation.");
-        var retirements = await VerifyRetirementsAsync(loaded.Value, rows.Value!, ct).ConfigureAwait(false);
-        if (retirements is not null)
-            return retirements.Value;
-
-        var now = clock.GetUtcNow();
-        var operationResult = await ApplicationImportContent.UnitResultAsync(content, tenant, provenance.RootOperationId, ct)
+        var preparation = await NativeReceiverPreparation.PrepareAsync<ApplicationImportBatch, PreparedCommit>(reader,
+            () => new ApplicationImportBatch(tenant, batch.Id, command.CommandId), Early,
+            (owner, token) => PrepareCommitAsync(command, native.Value with { Batch = owner }, token), ct)
             .ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
+        var prepared = preparation.Value.Value!;
+        var frozen = prepared.Context.Plan;
         return await AppendAsync(context, () => new ApplicationImportBatch(tenant, batch.Id, command.CommandId),
-            fresh => fresh.Acceptance, fresh => fresh.IsCancelRequested || fresh.IsEnded
-                ? ApplicationImportVerifier.Ended(fresh, "The batch ended before it published.")
-                : null,
-            (ApplicationImportBatch fresh) => fresh.Commit(provenance, command.Intent, command.TargetProofManifest, plan.Rows.Content,
-                plan.SourceRevision, now, operationResult), ct).ConfigureAwait(false);
+            fresh => fresh.Acceptance, Early,
+            (ApplicationImportBatch fresh) => fresh.Commit(provenance, command.Intent, command.TargetProofManifest,
+                frozen.Rows.Content, frozen.SourceRevision, prepared.RecordedAt, prepared.Result), ct).ConfigureAwait(false);
     }
 
     public async ValueTask<Result<ReceiverOutcome>> FenceAsync(IExecutionContext context,
@@ -247,35 +275,45 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
     {
         if (Malformed(command.CommandId, command.OperationId, command.Generation))
             return SourceUseReceiverSupport.Permanent("The fence names another generation or operation.");
-        var verified = await VerifyCancellationTargetAsync(command.Target, command.Source, command.BatchId,
-            command.ApplicationId, command.Intent, ct).ConfigureAwait(false);
-        if (verified.Failure is not null)
-            return verified.Failure.Value;
-        var (loaded, cancellation) = (verified.Context!, verified.Cancellation!);
-        if (command.OperationId != cancellation.Header.RootOperationId)
-            return SourceUseReceiverSupport.Permanent("The fence names another cancellation.");
-        var batch = loaded.Batch;
+        var native = await ReadCancellationNativeAsync(command.Target.Realm, command.Source, command.BatchId,
+            command.OperationId, Uuid.Empty, ct).ConfigureAwait(false);
+        if (native.Failure is { } refused)
+            return refused;
+        var (tenant, batch) = (native.TenantId, native.Batch!);
+        if (command.Target != new DeclaredApplication(tenant, command.ApplicationId).Stream || batch.Plan is null)
+            return SourceUseReceiverSupport.Permanent("The fence names another target or an unsealed batch with no targets.");
         var provenance = ApplicationImportEffects.Child(command.CommandId, nameof(FenceApplicationImportTarget),
-            command.Source.EventId, cancellation, command.Target, clock.GetUtcNow());
+            command.Source.EventId, ApplicationImportIntentBindings.HeaderOf(batch.CancellationAccepted!.Operation),
+            command.Target, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        Result<ReceiverOutcome>? Early(DeclaredApplication application)
+        Result<ReceiverOutcome>? Early(DeclaredApplication application, bool prepared)
         {
+            var hold = application.FindImportHold(batch.Id);
+            if (hold?.Fence is { } fence &&
+                (fence.Intent != command.Intent || fence.Operation.RootOperationId != command.OperationId ||
+                    fence.Operation.CausationEventId != command.Source.EventId || fence.Operation.FirstOwner != batch.Stream ||
+                    AcceptedOperationBinding.Of(fence.Operation with { LogicalId = command.CommandId }) != binding))
+                return SourceUseReceiverSupport.Permanent("The target fence has another exact native cancellation binding.");
             if (Decide(application.Acceptance, binding, application.Stream) is { } decided)
                 return decided;
-            if (application.FindImportHold(batch.Id) is { } hold)
-            {
-                if (hold.Fence is not null)
-                    return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(application.Stream, hold.Fence));
-                if (hold.Settled is not null)
-                    return SourceUseReceiverSupport.Superseded("The target was already settled.",
-                        NativeFactReference.Of(application.Stream, hold.Settled));
-            }
-
-            return null;
+            if (hold?.Fence is { } existing)
+                return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(application.Stream, existing));
+            return prepared && hold?.Settled is { } settled
+                ? SourceUseReceiverSupport.Superseded("The target was already settled.", NativeFactReference.Of(application.Stream, settled))
+                : null;
         }
-
-        return await AppendAsync(context, () => new DeclaredApplication(loaded.TenantId, command.ApplicationId,
-                command.CommandId), application => application.Acceptance, Early,
+        var preparation = await NativeReceiverPreparation.PrepareAsync<DeclaredApplication, PreparedFence>(reader,
+            () => new DeclaredApplication(tenant, command.ApplicationId, command.CommandId),
+            application => Early(application, false), (_, token) => PrepareFenceAsync(command, batch, token), ct)
+            .ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
+        if (preparation.Value.Value!.Outcome is { } terminal)
+            return terminal;
+        return await AppendAsync(context, () => new DeclaredApplication(tenant, command.ApplicationId, command.CommandId),
+            application => application.Acceptance, application => Early(application, true),
             (DeclaredApplication application) => application.Fence(provenance, command.Intent, batch.Id, command.ApplicationId), ct)
             .ConfigureAwait(false);
     }
@@ -285,94 +323,58 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
     {
         if (Malformed(command.CommandId, command.OperationId, command.Generation))
             return SourceUseReceiverSupport.Permanent("The completion names another generation or operation.");
-        var tenant = Uuid.Parse(command.Target.Realm, CultureInfo.InvariantCulture);
-        var batch = await reader.HydrateAsync(new ApplicationImportBatch(tenant, command.BatchId, command.CommandId), ct)
-            .ConfigureAwait(false);
-        if (!batch.IsCreated || batch.CancellationAccepted is not { } accepted ||
-            !ApplicationImportVerifier.IsFact(command.Source, batch, accepted))
-            return SourceUseReceiverSupport.Transient("The accepted cancellation is not visible yet.");
-        ImportFrozenPlanIntent cancellation;
+        var native = await ReadCancellationNativeAsync(command.Target.Realm, command.Source, command.BatchId,
+            command.OperationId, command.CommandId, ct).ConfigureAwait(false);
+        if (native.Failure is { } refused)
+            return refused;
+        var (tenant, batch) = (native.TenantId, native.Batch!);
+        var accepted = batch.CancellationAccepted!;
+        if (command.Target != batch.Stream || command.Intent != accepted.Intent)
+            return SourceUseReceiverSupport.Permanent("The completion differs from the accepted cancellation.");
+        // The native canceled fact does not bind this extra manifest. Preserve its original required typed read.
         IReadOnlyList<ApplicationImportFenceProof> fences;
         try
         {
-            cancellation = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, tenant,
-                command.Intent, ct).ConfigureAwait(false);
             fences = await ApplicationImportContent.ReadAsync<IReadOnlyList<ApplicationImportFenceProof>>(content,
                 tenant, command.TargetFenceManifest, ct).ConfigureAwait(false);
         }
-        catch (ImmutableContentIntegrityException exception)
+        catch (ImmutableContentIntegrityException error)
         {
+            ct.ThrowIfCancellationRequested();
             return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    $"The cancellation cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
+                $"The cancellation cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
         }
-
-        if (command.Target != batch.Stream || command.Intent != accepted.Intent || command.BatchId != cancellation.BatchId ||
-            command.OperationId != cancellation.Header.RootOperationId)
-            return SourceUseReceiverSupport.Permanent("The completion differs from the accepted cancellation.");
         var provenance = ApplicationImportEffects.Child(command.CommandId, nameof(CompleteApplicationImportCancellation),
-            command.Source.EventId, cancellation, batch.Stream, clock.GetUtcNow());
+            command.Source.EventId, ApplicationImportIntentBindings.HeaderOf(accepted.Operation),
+            batch.Stream, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        if (Decide(batch.Acceptance, binding, batch.Stream) is { } early)
-            return early;
-        if (batch.Committed is { } committed)
-            return SourceUseReceiverSupport.Superseded(
-                "The batch already published; the cancellation recovers forward.",
-                NativeFactReference.Of(batch.Stream, committed));
-        if (batch.Canceled is { } canceled)
-            return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(batch.Stream, canceled));
-
-        var expected = new List<Uuid>();
-        if (batch.Plan is not null)
+        Result<ReceiverOutcome>? Early(ApplicationImportBatch owner)
         {
-            var sealedPlan = await verifier.LoadAsync(command.Target.Realm, command.BatchId, ct).ConfigureAwait(false);
-            if (!sealedPlan.IsSuccess)
-                return Result<ReceiverOutcome>.Failure(sealedPlan.Error!);
-            var groups = await verifier.GroupsAsync(sealedPlan.Value!, ct).ConfigureAwait(false);
-            if (!groups.IsSuccess)
-                return Result<ReceiverOutcome>.Failure(groups.Error!);
-            expected.AddRange(groups.Value!.Select(group => group.ApplicationId));
+            if (owner.Canceled is { } canceled &&
+                (canceled.Intent != command.Intent || canceled.Operation.RootOperationId != command.OperationId ||
+                    canceled.Operation.CausationEventId != command.Source.EventId || canceled.Operation.FirstOwner != batch.Stream ||
+                    AcceptedOperationBinding.Of(canceled.Operation with { LogicalId = command.CommandId }) != binding))
+                return SourceUseReceiverSupport.Permanent("The completed cancellation has another exact native root binding.");
+            if (Decide(owner.Acceptance, binding, owner.Stream) is { } decided)
+                return decided;
+            if (owner.Committed is { } committed)
+                return SourceUseReceiverSupport.Superseded("The batch already published; the cancellation recovers forward.",
+                    NativeFactReference.Of(owner.Stream, committed));
+            return owner.Canceled is { } existing
+                ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, existing)) : null;
         }
-
-        if (fences.Count != expected.Count || fences.Select(fence => fence.ApplicationId).Order()
-                .SequenceEqual(expected.Order()) is false)
-            return SourceUseReceiverSupport.Permanent("The fence manifest does not cover exactly the frozen targets.");
-        foreach (var fence in fences)
-        {
-            var target = await reader.HydrateAsync(new DeclaredApplication(tenant, fence.ApplicationId), ct)
-                .ConfigureAwait(false);
-            if (target.FindImportHold(batch.Id)?.Fence is not { Metadata: { } metadata } held ||
-                metadata.EventId != fence.EventId || metadata.AggregateVersion != fence.EventVersion)
-                return SourceUseReceiverSupport.Transient("A target fence is not durable yet.");
-            try
-            {
-                var actual = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, target, ct).ConfigureAwait(false);
-                var stored = actual.SingleOrDefault(fact => fact.Metadata.EventId == fence.EventId);
-                if (stored is null)
-                    return SourceUseReceiverSupport.Transient("The exact target fence is not visible in its captured physical source prefix.");
-                if (stored.GetType() != held.GetType() || stored.Metadata != held.Metadata ||
-                    Kernel.ContentDigest.Sha256(stored, stored.GetType()) != Kernel.ContentDigest.Sha256(held, held.GetType()))
-                    return SourceUseReceiverSupport.Permanent("The cancellation fence differs from its exact committed source payload and metadata.");
-            }
-            catch (ImmutableContentIntegrityException error)
-            {
-                return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    $"The exact target fence cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
-            }
-        }
-
-        var reason = cancellation.CancellationReason ?? string.Empty;
-        var actor = cancellation.Header.OriginalActor;
-        var actorMember = Uuid.TryParse(actor.Id, CultureInfo.InvariantCulture, out var memberId) ? memberId : Uuid.Empty;
-        var now = clock.GetUtcNow();
-        var operationResult = await ApplicationImportContent.UnitResultAsync(content, tenant, provenance.RootOperationId, ct)
-            .ConfigureAwait(false);
+        var preparation = await NativeReceiverPreparation.PrepareAsync<ApplicationImportBatch, PreparedCancellation>(reader,
+            () => new ApplicationImportBatch(tenant, batch.Id, command.CommandId), Early,
+            (_, token) => PrepareCancellationAsync(command, batch, fences, token), ct).ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
+        var prepared = preparation.Value.Value!;
         return await AppendAsync(context, () => new ApplicationImportBatch(tenant, batch.Id, command.CommandId),
-            fresh => fresh.Acceptance, fresh => fresh.Committed is not null
-                ? SourceUseReceiverSupport.Superseded("The batch already published; the cancellation recovers forward.",
-                    NativeFactReference.Of(fresh.Stream, fresh.Committed))
-                : null,
-            (ApplicationImportBatch fresh) => fresh.CompleteCancellation(provenance, command.Intent, reason, actorMember, actor.Display, now, operationResult), ct)
-            .ConfigureAwait(false);
+            fresh => fresh.Acceptance, Early,
+            (ApplicationImportBatch fresh) => fresh.CompleteCancellation(provenance, command.Intent, prepared.Reason,
+                prepared.ActorMemberId, prepared.ActorDisplay, prepared.RecordedAt, prepared.Result), ct).ConfigureAwait(false);
     }
 
     public async ValueTask<Result<ReceiverOutcome>> ReleaseSourceAsync(IExecutionContext context,
@@ -380,7 +382,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
     {
         if (Malformed(command.CommandId, command.OperationId, command.Generation))
             return SourceUseReceiverSupport.Permanent("The release names another generation or operation.");
-        var verified = await VerifyTerminalAsync(command.Target.Realm, command.BatchId, command.Source, command.Intent,
+        var verified = await VerifyTerminalNativeAsync(command.Target.Realm, command.BatchId, command.Source, command.Intent,
             command.OperationId, ct).ConfigureAwait(false);
         if (verified.Failure is not null)
             return verified.Failure.Value;
@@ -394,13 +396,27 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         var binding = AcceptedOperationBinding.Of(provenance);
         Result<ReceiverOutcome>? Early(ApplicationImportSource source)
         {
+            if (source.Find(batch.Id)?.Settled is { } settled &&
+                (settled.Intent != command.Intent || settled.Disposition != disposition ||
+                    settled.Operation.RootOperationId != command.OperationId || settled.Operation.CausationEventId != command.Source.EventId ||
+                    settled.Operation.FirstOwner != batch.Stream ||
+                    AcceptedOperationBinding.Of(settled.Operation with { LogicalId = command.CommandId }) != binding))
+                return SourceUseReceiverSupport.Permanent("The source settlement has another exact native terminal binding.");
             if (Decide(source.Acceptance, binding, source.Stream) is { } decided)
                 return decided;
-            return source.Find(batch.Id) is { Settled: { } settled }
-                ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(source.Stream, settled))
+            return source.Find(batch.Id) is { Settled: { } existing }
+                ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(source.Stream, existing))
                 : null;
         }
 
+        var preparation = await NativeReceiverPreparation.PrepareAsync<ApplicationImportSource, ImportFrozenPlanIntent>(reader,
+            () => new ApplicationImportSource(tenant, batch.SourceKey!, batch.SourceNamespace!, command.CommandId, batch.Id),
+            Early, (_, token) => PrepareTerminalAsync(tenant, batch, command.Intent, command.OperationId, token), ct)
+            .ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
         return await AppendAsync(context, () => new ApplicationImportSource(tenant, batch.SourceKey!,
                 batch.SourceNamespace!, command.CommandId, batch.Id), source => source.Acceptance, Early,
             (ApplicationImportSource source) => source.Settle(provenance, command.Intent, batch.Id, disposition), ct).ConfigureAwait(false);
@@ -411,7 +427,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
     {
         if (Malformed(command.CommandId, command.OperationId, command.Generation))
             return SourceUseReceiverSupport.Permanent("The release names another generation or operation.");
-        var verified = await VerifyTerminalAsync(command.Target.Realm, command.BatchId, command.Source, command.Intent,
+        var verified = await VerifyTerminalNativeAsync(command.Target.Realm, command.BatchId, command.Source, command.Intent,
             command.OperationId, ct).ConfigureAwait(false);
         if (verified.Failure is not null)
             return verified.Failure.Value;
@@ -423,17 +439,25 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         var provenance = ApplicationImportEffects.Child(command.CommandId, nameof(ReleaseApplicationImportTarget),
             command.Source.EventId, header, stream, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        Result<ReceiverOutcome>? Early(DeclaredApplication application)
+        Result<ReceiverOutcome>? Early(DeclaredApplication application, bool prepared)
         {
+            if (application.FindImportHold(batch.Id)?.Settled is { } settled &&
+                (settled.Intent != command.Intent || settled.Disposition != disposition ||
+                    settled.Operation.RootOperationId != command.OperationId || settled.Operation.CausationEventId != command.Source.EventId ||
+                    settled.Operation.FirstOwner != batch.Stream ||
+                    AcceptedOperationBinding.Of(settled.Operation with { LogicalId = command.CommandId }) != binding))
+                return SourceUseReceiverSupport.Permanent("The target settlement has another exact native terminal binding.");
             if (Decide(application.Acceptance, binding, application.Stream) is { } decided)
                 return decided;
             var hold = application.FindImportHold(batch.Id);
+            if (hold?.Settled is { } existing)
+                return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(application.Stream, existing));
+            if (!prepared)
+                return null;
             if (hold is null)
                 return disposition == ApplicationImportDisposition.Published
                     ? SourceUseReceiverSupport.Permanent("A published batch has no hold on this target.")
                     : SourceUseReceiverSupport.Transient("The target fence is not visible yet.");
-            if (hold.Settled is not null)
-                return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(application.Stream, hold.Settled));
             if (disposition == ApplicationImportDisposition.Published && !hold.IsApplied)
                 return SourceUseReceiverSupport.Transient("The published target effects are not visible yet.");
             return disposition != ApplicationImportDisposition.Published && hold.Fence is null
@@ -441,10 +465,252 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
                 : null;
         }
 
+        var preparation = await NativeReceiverPreparation.PrepareAsync<DeclaredApplication, ImportFrozenPlanIntent>(reader,
+            () => new DeclaredApplication(tenant, command.ApplicationId, command.CommandId),
+            application => Early(application, false),
+            (_, token) => PrepareTerminalAsync(tenant, batch, command.Intent, command.OperationId, token), ct)
+            .ConfigureAwait(false);
+        if (!preparation.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(preparation.Error!);
+        if (preparation.Value!.Outcome is { } known)
+            return known;
         return await AppendAsync(context, () => new DeclaredApplication(tenant, command.ApplicationId,
-                command.CommandId), application => application.Acceptance, Early,
+                command.CommandId), application => application.Acceptance, application => Early(application, true),
             (DeclaredApplication application) => application.Settle(provenance, command.Intent, batch.Id, command.ApplicationId, disposition),
             ct).ConfigureAwait(false);
+    }
+
+    async ValueTask<Result<PreparedCommit>> PrepareCommitAsync(CommitApplicationImportBatch command,
+        ApplicationImportNativeContext native, CancellationToken ct)
+    {
+        var loaded = await verifier.PrepareAsync(native, ct).ConfigureAwait(false);
+        if (!loaded.IsSuccess)
+            return Result<PreparedCommit>.Failure(loaded.Error!);
+        try
+        {
+            var rows = await verifier.RowsAsync(loaded.Value!, ct).ConfigureAwait(false);
+            if (!rows.IsSuccess)
+                return Result<PreparedCommit>.Failure(rows.Error!);
+            var proofs = await ApplicationImportContent.ReadAsync<IReadOnlyList<ApplicationImportEffectProof>>(content,
+                native.TenantId, command.TargetProofManifest, ct).ConfigureAwait(false);
+            if (await VerifyProofsAsync(loaded.Value!, rows.Value!, proofs, ct).ConfigureAwait(false) is { } proven)
+                return Result<PreparedCommit>.Failure(proven.Error!);
+            if (!await tenants.IsActiveAsync(native.TenantId, ct).ConfigureAwait(false))
+                return Result<PreparedCommit>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The tenant is not active; retry after reactivation.", true));
+            if (await VerifyRetirementsAsync(loaded.Value!, rows.Value!, ct).ConfigureAwait(false) is { } retirement)
+                return Result<PreparedCommit>.Failure(retirement.Error!);
+            var now = clock.GetUtcNow();
+            var result = await ApplicationImportContent.UnitResultAsync(content, native.TenantId, command.OperationId, ct)
+                .ConfigureAwait(false);
+            return Result<PreparedCommit>.Success(new PreparedCommit(loaded.Value!, now, result));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<PreparedCommit>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The import publication cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<CancellationNativeVerification> ReadCancellationNativeAsync(string realm, NativeFactReference source,
+        Uuid batchId, Uuid operationId, Uuid selectedLogicalId, CancellationToken ct)
+    {
+        var tenant = Uuid.Parse(realm, CultureInfo.InvariantCulture);
+        var batch = await reader.HydrateAsync(new ApplicationImportBatch(tenant, batchId, selectedLogicalId), ct)
+            .ConfigureAwait(false);
+        ct.ThrowIfCancellationRequested();
+        if (!batch.IsCreated || batch.CancellationAccepted is not { } accepted ||
+            !ApplicationImportVerifier.IsFact(source, batch, accepted))
+            return new CancellationNativeVerification(tenant, null,
+                SourceUseReceiverSupport.Transient("The accepted cancellation is not visible yet."));
+        return operationId != accepted.Operation.RootOperationId
+            ? new CancellationNativeVerification(tenant, null,
+                SourceUseReceiverSupport.Permanent("The command differs from the actual native cancellation root."))
+            : new CancellationNativeVerification(tenant, batch, null);
+    }
+
+    async ValueTask<Result<PreparedFence>> PrepareFenceAsync(FenceApplicationImportTarget command,
+        ApplicationImportBatch batch, CancellationToken ct)
+    {
+        try
+        {
+            var verified = await VerifyCancellationTargetAsync(command.Target, command.Source, command.BatchId,
+                command.ApplicationId, command.Intent, ct).ConfigureAwait(false);
+            if (verified.Failure is { } failure)
+                return failure.IsSuccess ? Result<PreparedFence>.Success(new PreparedFence(failure))
+                    : Result<PreparedFence>.Failure(failure.Error!);
+            ApplicationImportIntentBindings.Require(verified.Cancellation!.Header, batch.CancellationAccepted!.Operation);
+            return command.OperationId != verified.Cancellation.Header.RootOperationId
+                ? Result<PreparedFence>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The fence names another cancellation.", false))
+                : Result<PreparedFence>.Success(new PreparedFence(null));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<PreparedFence>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The cancellation target cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<PreparedCancellation>> PrepareCancellationAsync(CompleteApplicationImportCancellation command,
+        ApplicationImportBatch batch, IReadOnlyList<ApplicationImportFenceProof> fences, CancellationToken ct)
+    {
+        var tenant = Uuid.Parse(command.Target.Realm, CultureInfo.InvariantCulture);
+        try
+        {
+            var cancellation = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, tenant,
+                command.Intent, ct).ConfigureAwait(false);
+            if (cancellation.BatchId != command.BatchId || cancellation.Header is null ||
+                cancellation.Header.RootOperationId != command.OperationId)
+                return Result<PreparedCancellation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The completion differs from the accepted cancellation.", false));
+            ApplicationImportIntentBindings.Require(cancellation.Header, batch.CancellationAccepted!.Operation);
+            var expected = new List<Uuid>();
+            if (batch.Plan is not null)
+            {
+                var sealedPlan = await verifier.LoadAsync(command.Target.Realm, command.BatchId, ct).ConfigureAwait(false);
+                if (!sealedPlan.IsSuccess)
+                    return Result<PreparedCancellation>.Failure(sealedPlan.Error!);
+                var groups = await verifier.GroupsAsync(sealedPlan.Value!, ct).ConfigureAwait(false);
+                if (!groups.IsSuccess)
+                    return Result<PreparedCancellation>.Failure(groups.Error!);
+                expected.AddRange(groups.Value!.Select(group => group.ApplicationId));
+            }
+            if (fences.Count != expected.Count || fences.Select(fence => fence.ApplicationId).Order().SequenceEqual(expected.Order()) is false)
+                return Result<PreparedCancellation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The fence manifest does not cover exactly the frozen targets.", false));
+            foreach (var fence in fences)
+            {
+                var target = await reader.HydrateAsync(new DeclaredApplication(tenant, fence.ApplicationId), ct).ConfigureAwait(false);
+                if (target.FindImportHold(batch.Id)?.Fence is not { Metadata: { } metadata } held ||
+                    metadata.EventId != fence.EventId || metadata.AggregateVersion != fence.EventVersion)
+                    return Result<PreparedCancellation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "A target fence is not durable yet.", true));
+                var actual = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, target, ct).ConfigureAwait(false);
+                var stored = actual.SingleOrDefault(fact => fact.Metadata.EventId == fence.EventId);
+                if (stored is null)
+                    return Result<PreparedCancellation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The exact target fence is not visible in its captured physical source prefix.", true));
+                if (stored.GetType() != held.GetType() || stored.Metadata != held.Metadata ||
+                    Kernel.ContentDigest.Sha256(stored, stored.GetType()) != Kernel.ContentDigest.Sha256(held, held.GetType()))
+                    return Result<PreparedCancellation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The cancellation fence differs from its exact committed source payload and metadata.", false));
+            }
+            var actor = cancellation.Header.OriginalActor;
+            var actorMember = Uuid.TryParse(actor.Id, CultureInfo.InvariantCulture, out var memberId) ? memberId : Uuid.Empty;
+            var now = clock.GetUtcNow();
+            var result = await ApplicationImportContent.UnitResultAsync(content, tenant, command.OperationId, ct).ConfigureAwait(false);
+            return Result<PreparedCancellation>.Success(new PreparedCancellation(cancellation.CancellationReason ?? string.Empty,
+                actorMember, actor.Display, now, result));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<PreparedCancellation>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The cancellation cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<NativeTargetVerification> ReadTargetNativeAsync(EventStreamAddress target, NativeFactReference source,
+        Uuid batchId, Uuid applicationId, Uuid operationId, CancellationToken ct)
+    {
+        var native = await verifier.LoadNativeAsync(target.Realm, batchId, Uuid.Empty, ct).ConfigureAwait(false);
+        if (!native.IsSuccess)
+            return new NativeTargetVerification(null, Result<ReceiverOutcome>.Failure(native.Error!));
+        var batch = native.Value!.Batch;
+        if (batch.IsCancelRequested || batch.IsEnded)
+            return new NativeTargetVerification(null, ApplicationImportVerifier.Ended(batch, "The batch ended before this target step."));
+        if (!ApplicationImportVerifier.IsFact(source, batch, batch.Authorization))
+            return new NativeTargetVerification(null, SourceUseReceiverSupport.Transient("The execution authorization is not visible yet."));
+        return operationId != batch.Plan!.Operation.RootOperationId || target != new DeclaredApplication(native.Value.TenantId, applicationId).Stream
+            ? new NativeTargetVerification(null, SourceUseReceiverSupport.Permanent("The target differs from its exact native execution authorization."))
+            : new NativeTargetVerification(native.Value, null);
+    }
+
+    async ValueTask<Result<ImportTargetGroupIntent>> BindTargetRowsAsync(ApplicationImportNativeContext native,
+        Uuid applicationId, ImmutableContentRef intent, ImmutableContentRef rows, CancellationToken ct)
+    {
+        try
+        {
+            var group = await ApplicationImportContent.ReadAsync<ImportTargetGroupIntent>(content, native.TenantId, intent, ct)
+                .ConfigureAwait(false);
+            return group.BatchId != native.Batch.Id || group.ApplicationId != applicationId || group.Rows is null || group.Rows.Content != rows
+                ? Result<ImportTargetGroupIntent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The target rows differ from the frozen group intent.", false))
+                : Result<ImportTargetGroupIntent>.Success(group);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<ImportTargetGroupIntent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The required target-row binding cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<PreparedTarget>> PrepareTargetAsync(EventStreamAddress target, NativeFactReference source,
+        Uuid batchId, Uuid applicationId, Uuid operationId, ImmutableContentRef intent, ImmutableContentRef rows,
+        CancellationToken ct)
+    {
+        try
+        {
+            var verified = await VerifyTargetAsync(target, source, batchId, applicationId, operationId, intent, ct)
+                .ConfigureAwait(false);
+            if (verified.Failure is { } failure)
+                return failure.IsSuccess ? Result<PreparedTarget>.Success(new PreparedTarget(null, null, failure))
+                    : Result<PreparedTarget>.Failure(failure.Error!);
+            return rows != verified.Group!.Rows.Content
+                ? Result<PreparedTarget>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The target differs from its frozen row group.", false))
+                : Result<PreparedTarget>.Success(new PreparedTarget(verified.Context!, verified.Group, null));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<PreparedTarget>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen target cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<PreparedApply>> PrepareApplyAsync(ApplyApplicationImportEffect command,
+        OperationProvenance provenance, CancellationToken ct)
+    {
+        var verified = await PrepareTargetAsync(command.Target, command.Source, command.BatchId, command.ApplicationId,
+            command.OperationId, command.Intent, command.RowGroup, ct).ConfigureAwait(false);
+        if (!verified.IsSuccess)
+            return Result<PreparedApply>.Failure(verified.Error!);
+        if (verified.Value!.Outcome is { } terminal)
+            return Result<PreparedApply>.Success(new PreparedApply(null, null, default, terminal));
+        var (loaded, group) = (verified.Value.Context!, verified.Value.Group!);
+        try
+        {
+            var rows = await ApplicationImportContent.ReadSelectionAsync<ApplicationImportPlannedRow>(content,
+                loaded.TenantId, group.Rows, ct).ConfigureAwait(false);
+            if (rows.Count == 0 || rows.Any(row => row.ApplicationId != command.ApplicationId))
+                return Result<PreparedApply>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The frozen group rows name another application.", false));
+            if (await VerifyRetirementsAsync(loaded, rows, ct).ConfigureAwait(false) is { } retirement)
+                return Result<PreparedApply>.Failure(retirement.Error!);
+            var planned = ApplicationImportGroupFold.Fold(group.InitialApplicationRevision != 0,
+                false, (long)group.InitialApplicationRevision, rows);
+            if (!planned.IsSuccess || (ulong)planned.Value![^1] != group.CandidateContentRevision)
+                return Result<PreparedApply>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The frozen group differs from its candidate revision.", false));
+            var inputs = new List<ApplicationImportEffectInput>(rows.Count);
+            for (var index = 0; index < rows.Count; index++)
+                inputs.Add(new ApplicationImportEffectInput(provenance with
+                {
+                    LogicalId = ApplicationImportEffects.EffectLogicalId(command.CommandId, index, rows[index].RowId),
+                }, rows[index], planned.Value[index]));
+            return Result<PreparedApply>.Success(new PreparedApply(loaded, inputs, clock.GetUtcNow(), null));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<PreparedApply>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The frozen group rows cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
     }
 
     async ValueTask<TargetVerification> VerifyTargetAsync(EventStreamAddress target, NativeFactReference source,
@@ -526,6 +792,49 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
             : new CancellationVerification(loaded.Value, cancellation, null);
     }
 
+    async ValueTask<TerminalVerification> VerifyTerminalNativeAsync(string realm, Uuid batchId, NativeFactReference source,
+        ImmutableContentRef intent, Uuid operationId, CancellationToken ct)
+    {
+        var tenant = Uuid.Parse(realm, CultureInfo.InvariantCulture);
+        var batch = await reader.HydrateAsync(new ApplicationImportBatch(tenant, batchId), ct).ConfigureAwait(false);
+        ct.ThrowIfCancellationRequested();
+        if (!batch.IsCreated || ApplicationImportVerifier.Terminal(batch) is not { } terminal ||
+            !ApplicationImportVerifier.IsFact(source, batch, terminal.Fact))
+            return new TerminalVerification(null, null, default,
+                SourceUseReceiverSupport.Transient("The terminal batch fact is not visible yet."));
+        var expectedIntent = batch.Canceled?.Intent ?? batch.Plan?.FrozenPlan;
+        var root = batch.Canceled is not null ? batch.CancellationAccepted?.Operation : batch.Plan?.Operation;
+        if (expectedIntent is null || intent != expectedIntent || root is null || operationId != root.RootOperationId)
+            return new TerminalVerification(null, null, default,
+                SourceUseReceiverSupport.Permanent("The release differs from the exact native terminal batch intent or root."));
+        // Failed has no selected current producer. Preserve its original immutable binding; do not invent one.
+        if (terminal.Disposition == ApplicationImportDisposition.Failed)
+            return await VerifyTerminalAsync(realm, batchId, source, intent, operationId, ct).ConfigureAwait(false);
+        return new TerminalVerification(batch, ApplicationImportIntentBindings.HeaderOf(root), terminal.Disposition, null);
+    }
+
+    async ValueTask<Result<ImportFrozenPlanIntent>> PrepareTerminalAsync(Uuid tenant, ApplicationImportBatch batch,
+        ImmutableContentRef intent, Uuid operationId, CancellationToken ct)
+    {
+        try
+        {
+            var plan = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, tenant, intent, ct)
+                .ConfigureAwait(false);
+            var root = batch.Canceled is not null ? batch.CancellationAccepted!.Operation : batch.Plan!.Operation;
+            ApplicationImportIntentBindings.Require(plan.Header, root);
+            return plan.Header.RootOperationId != operationId
+                ? Result<ImportFrozenPlanIntent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The release names another operation than the terminal batch.", false))
+                : Result<ImportFrozenPlanIntent>.Success(plan);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<ImportFrozenPlanIntent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The terminal intent cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+    }
+
     async ValueTask<TerminalVerification> VerifyTerminalAsync(string realm, Uuid batchId, NativeFactReference source,
         ImmutableContentRef intent, Uuid operationId, CancellationToken ct)
     {
@@ -550,6 +859,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
         }
         catch (ImmutableContentIntegrityException exception)
         {
+            ct.ThrowIfCancellationRequested();
             return new TerminalVerification(null, null, default,
                 Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
                     $"The terminal intent cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException)));
@@ -671,6 +981,23 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
     abstract record Step;
 
     sealed record Decided(Result<ReceiverOutcome> Outcome) : Step;
+
+    sealed record PreparedCommit(ApplicationImportContext Context, DateTimeOffset RecordedAt, ImmutableContentRef Result);
+
+    sealed record CancellationNativeVerification(Uuid TenantId, ApplicationImportBatch? Batch, Result<ReceiverOutcome>? Failure);
+
+    sealed record PreparedFence(Result<ReceiverOutcome>? Outcome);
+
+    sealed record PreparedCancellation(string Reason, Uuid ActorMemberId, string ActorDisplay, DateTimeOffset RecordedAt,
+        ImmutableContentRef Result);
+
+    sealed record NativeTargetVerification(ApplicationImportNativeContext? Context, Result<ReceiverOutcome>? Failure);
+
+    sealed record PreparedTarget(ApplicationImportContext? Context, ImportTargetGroupIntent? Group,
+        Result<ReceiverOutcome>? Outcome);
+
+    sealed record PreparedApply(ApplicationImportContext? Context, IReadOnlyList<ApplicationImportEffectInput>? Inputs,
+        DateTimeOffset RecordedAt, Result<ReceiverOutcome>? Outcome);
 
     sealed record TargetVerification(ApplicationImportContext? Context, ImportTargetGroupIntent? Group,
         Result<ReceiverOutcome>? Failure);

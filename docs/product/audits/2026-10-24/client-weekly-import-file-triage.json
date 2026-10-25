@@ -1,0 +1,15 @@
+{
+  "signals": [
+    {
+      "path": "EngagementAcceptanceAdmission.cs",
+      "invariant": 0.65,
+      "disposition": "Client delta only verified complete service reader migration. Existing manual preflight admission path remains owned by next connected Engagement asyncPrepare/cut layer; not a newly claimed fix."
+    },
+    {
+      "path": "WeeklyWorkDigestRules.cs",
+      "recovery": 0.73,
+      "disposition": "Transient complete history model plus selected/latest restored command model. Exact native bindings/replay precede preparation in WeeklyDigestOperations; distinct fresh current-revision NoChange receipts intentionally acknowledge same business effect, never authorize delivery. History validates source proofs/change bytes/fullcapturedcut; explicit 3 tests exercise NoChange/currentrevision/proof rejection. No concrete new defect in excerpt."
+    }
+  ],
+  "historicalClientCuts": "Original nonempty preview metadata stored local CommittedStreamPosition in GlobalWatermarkExclusive. Original advisory result replay/read preserved; historical metadata unqualified. Fresh producers require authenticated exact broker global tail witnesses, independently per anchor. Preview grants no acceptance."
+}

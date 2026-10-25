@@ -787,24 +787,55 @@
     },
     {
       "id": "practice-full-key-native-history",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "practice-native-qualification.json",
       "genuineOldApiRedFailed": 2,
       "combinedProductionFileReviews": 23,
       "focusedPassed": 1236,
       "httpPassed": 128,
-      "unitPassed": 6565
+      "unitPassed": 6565,
+      "pr": 1134,
+      "mergeCommit": "5e784ab0cf81b9432b14356f08b345c86c5782c2"
     },
     {
       "id": "access-manual-receiver-preparation",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "access-receiver-preparation-qualification.json",
       "genuineOldApiRedFailed": 29,
       "combinedProductionFileReviews": 23,
       "focusedPassed": 1236,
       "httpPassed": 128,
       "unitPassed": 6565,
-      "remaining": "Generic Access SourceUse pairs unchanged/queued."
+      "remaining": "Generic Access SourceUse pairs unchanged/queued.",
+      "pr": 1134,
+      "mergeCommit": "5e784ab0cf81b9432b14356f08b345c86c5782c2"
+    },
+    {
+      "id": "client-service-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "client-service-native-qualification.json",
+      "combinedProductionFileReviews": 42,
+      "focusedPassed": 363,
+      "httpPassed": 29,
+      "unitPassed": 6670
+    },
+    {
+      "id": "weekly-native-receivers",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "weekly-native-receivers-qualification.json",
+      "combinedProductionFileReviews": 42,
+      "focusedPassed": 363,
+      "httpPassed": 29,
+      "unitPassed": 6670
+    },
+    {
+      "id": "import-receiver-preparation",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "import-receiver-preparation-qualification.json",
+      "combinedProductionFileReviews": 42,
+      "focusedPassed": 363,
+      "httpPassed": 29,
+      "unitPassed": 6670
     }
   ],
   "resolved": [
@@ -851,10 +882,11 @@
     }
   ],
   "continuingPreparation": [
-    "Practice19 frozen; Client and ServiceEngagement independence active",
-    "Weekly identified delivery/result receivers; precise ScheduleKey empty-page/first-owner/result capture placement adjudication",
-    "UserIdentity/EmailAddress recovery lifetime history next",
-    "Access item/batch/campaign receiver preparation and full term binding; then Import receivers",
-    "WorkAssignment selected native roots/full history, ComplianceProgram as-of history, TenantManagerGuard and remaining evidence/finite owner inventory"
+    "ServiceEngagement compact lifetime/full history/current decision and selected root preparation; exact child settlement binding.",
+    "UserIdentity/EmailAddress compact recovery authorities/full history/actual physical proofs/native owning and receiver preparation.",
+    "Generic Access SourceUse pairs; then ComplianceProgram selected native3 and full as-of history.",
+    "Weekly Schedule technical capture/result journal after explicit selected owner placement correction; exact ScheduleKey source cut and original zero/partial page results.",
+    "WorkAssignment selected native4/full history; TenantManagerGuard current contributors/fences and remaining evidence/finite owner inventory.",
+    "AuditPackage successful output replay candidate from refreshed Jev signal requires actual frozen-body recovery regression before change."
   ]
 }

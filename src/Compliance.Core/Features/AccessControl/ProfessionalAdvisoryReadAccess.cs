@@ -12,7 +12,7 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, BoundaryRea
     FirmStaffViews staffViews, ServiceEngagementViews engagements, ITenantActivity tenants,
     IProgramResourceScopeResolver programScopes, TimeProvider clock,
     ITenantMembershipDirectoryReader memberships,
-    IAccessGrantPermissionAuthorizer scopedPermissions)
+    IAccessGrantPermissionAuthorizer scopedPermissions, IDomainEventReader events)
     : IAdvisorSharedSourceAuthorization, IAdvisorHandoffListAccess
 {
     public async ValueTask<bool> CanReadAsync(Uuid tenantId, Uuid programId, Uuid userId,
@@ -29,7 +29,8 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, BoundaryRea
 
         var effectiveAt = clock.GetUtcNow();
         var services = await reader.HydrateAsync(new ClientServiceIndependence(tenantId), ct).ConfigureAwait(false);
-        var currentServices = services.Services.Select(service => service.OperationId).ToArray();
+        var history = await ClientServiceNativeHistory.ReadAsync(events, services, ct).ConfigureAwait(false);
+        var currentServices = history.Services.Select(service => service.OperationId).ToArray();
         foreach (var accepted in await engagements.AcceptedAsync(tenantId, ct).ConfigureAwait(false))
         {
             var (engagement, acceptance) = (accepted.Engagement, accepted.Acceptance);
