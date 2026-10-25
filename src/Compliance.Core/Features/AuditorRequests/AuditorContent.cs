@@ -24,7 +24,7 @@ static class AuditorContent
     public const string AdmittedChildSchema = "admitted-request-child.v1";
     public const string ResponseFactsSchema = "AuditorResponse.ResolutionFacts.v1";
     public const string ProofsSchema = "AuditorRequestResolved.ResponseDispositionProofs.v1";
-    public const string FailureSchema = "AuditorRequestResolutionCanceled.FailureProof.v1";
+    public const string FailureSchema = "AuditorRequestResolutionCanceled.FailureProof.v2";
     public const string PopulationVersionSchema = "AuditPopulationVersionView.v1";
     public const string PopulationRowSchema = "population-row-id.v1";
     public const string AcknowledgmentSchema = "operation-accepted-response.v1";
@@ -116,7 +116,8 @@ static class AuditorContent
     public static OperationProvenance Provenance(Uuid logicalId, string commandKind, EventStreamAddress owner,
         AccessControl.ActorReference actor, ulong? expectedRevision, string intentDigest, DateTimeOffset acceptedAt) =>
         new(logicalId, logicalId, null, commandKind, actor, owner, "initial", expectedRevision, intentDigest,
-            acceptedAt, owner, owner);
+            acceptedAt, owner, owner)
+        { FirstOwner = owner };
 
     public static DurableIntentHeader Header(OperationProvenance root, DateTimeOffset acceptedAt) => new(
         root.RootOperationId, root.Owner, root.AffectedOwner, root.ExpectedRevisionOwner, root.Actor, root.Episode,

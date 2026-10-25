@@ -11,6 +11,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     member when the request is first recorded.
 /// </summary>
 public sealed class RecordAuditorRequestHandler(NativeOperationExecutor operations, IAggregateReader reader,
+    IDomainEventReader events,
     IImmutableContentStore content, TimeProvider clock) : IRequestHandler<RecordAuditorRequest>
 {
     const string CommandKind = "RecordAuditorRequest";
@@ -24,34 +25,34 @@ public sealed class RecordAuditorRequestHandler(NativeOperationExecutor operatio
         if (request.RequestId == Uuid.Empty || request.ProgramId == Uuid.Empty)
             return AuditorCommands.Validation("An auditor request requires its own identity and program.");
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new AuditorRequest(request.TenantId, request.ProgramId,
-            request.RequestId, request.RequestId), ct).ConfigureAwait(false);
-        var provenance = AuditorContent.Provenance(request.RequestId, CommandKind, snapshot.Stream,
+        var address = new AuditorRequest(request.TenantId, request.ProgramId, request.RequestId, request.RequestId);
+        var provenance = AuditorContent.Provenance(request.RequestId, CommandKind, address.Stream,
             AuditorCommands.Actor(actorMemberId, actorDisplay), null, AuditorCommands.Digest(request), now);
         var binding = AcceptedOperationBinding.Of(provenance);
 
         ImmutableContentRef? terms = null;
         FirstResponseDescriptor? response = null;
         ImmutableContentRef? result = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var prepared = snapshot.PrepareRecord();
-            if (!prepared.IsSuccess)
-                return prepared;
-            var normalized = AuditorRequestRules.RecordTerms(request, actorMemberId, actorDisplay, now);
-            if (!normalized.IsSuccess)
-                return Result.Failure(normalized.Error!);
-            if (!await AuditorRequestOwner.IsActiveClientMemberAsync(reader, request.TenantId, request.OwnerMemberId, ct)
-                    .ConfigureAwait(false))
-                return Result.Failure(AuditorRequestOwner.InvalidOwner());
-            terms = await AuditorContent.WriteAsync(content, request.TenantId, AuditorContent.TermsSchema, normalized.Value!, ct).ConfigureAwait(false);
-            (response, result) = await AuditorContent.UnitAsync(content, request.TenantId, ct).ConfigureAwait(false);
-        }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorRequest>(binding,
             () => new AuditorRequest(request.TenantId, request.ProgramId, request.RequestId, request.RequestId),
             auditorRequest => auditorRequest.Acceptance,
-            auditorRequest => AuditorContent.Prepared(auditorRequest.PrepareRecord(), response),
+            async (snapshot, prepareCt) =>
+            {
+                _ = await AuditorRequestHistory.ReadAsync(events, snapshot, prepareCt).ConfigureAwait(false);
+                var prepared = snapshot.PrepareRecord();
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                var normalized = AuditorRequestRules.RecordTerms(request, actorMemberId, actorDisplay, now);
+                if (!normalized.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(normalized.Error!);
+                if (!await AuditorRequestOwner.IsActiveClientMemberAsync(reader, request.TenantId, request.OwnerMemberId, prepareCt)
+                    .ConfigureAwait(false))
+                    return Result<FirstResponseDescriptor>.Failure(AuditorRequestOwner.InvalidOwner());
+                terms = await AuditorContent.WriteAsync(content, request.TenantId, AuditorContent.TermsSchema, normalized.Value!, prepareCt).ConfigureAwait(false);
+                (response, result) = await AuditorContent.UnitAsync(content, request.TenantId, prepareCt).ConfigureAwait(false);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
             (AuditorRequest auditorRequest, ImmutableContentRef frozen) =>
                 auditorRequest.Record(provenance, terms!, actorMemberId, now, frozen, result!)), context, ct)
             .ConfigureAwait(false);

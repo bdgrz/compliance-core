@@ -15,6 +15,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     request is appended before any use is settled.
 /// </summary>
 sealed class CompleteAuditorRequestResolutionHandler(IAggregateReader reader, IAggregateExecutor executor,
+    IDomainEventReader events,
     IImmutableContentStore content, AuditorRequestResolutionVerifier verifier, TimeProvider clock)
     : IRequestHandler<CompleteAuditorRequestResolution, ReceiverOutcome>
 {
@@ -26,6 +27,17 @@ sealed class CompleteAuditorRequestResolutionHandler(IAggregateReader reader, IA
         var command = context.Request;
         if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty)
             return SourceUseReceiverSupport.Permanent("The completion names another operation.");
+        try
+        {
+            if (await AuditorResolutionReplay.ResolveAsync(events, command, ct).ConfigureAwait(false) is { } replay)
+                return replay;
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact resolution receiver replay cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+
         var resolution = await verifier.VerifyAcceptedAsync(command.Source, command.Intent, command.OperationId,
             command.CommandId, ct).ConfigureAwait(false);
         if (resolution.Error is not null)
@@ -77,7 +89,7 @@ sealed class CompleteAuditorRequestResolutionHandler(IAggregateReader reader, IA
             try
             {
                 var step = await executor.ExecuteAsync(new AuditorRequest(tenant, decision.ProgramId,
-                    auditorRequest.RequestId, command.CommandId), fresh =>
+                    auditorRequest.RequestId, command.CommandId, command.OperationId), fresh =>
                     {
                         if (Decide(fresh, binding, command.OperationId) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));

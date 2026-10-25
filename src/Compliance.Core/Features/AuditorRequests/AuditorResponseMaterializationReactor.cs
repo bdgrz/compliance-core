@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Remediation;
 using Cntryl.Portia;
 
@@ -10,13 +12,17 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     materialized exactly once even when the reactor, the receiver or the process worker crashes in between.
 /// </summary>
 sealed partial class AuditorResponseMaterializationReactor(IProjectionCheckpointStore checkpoints,
-    ProcessRootReaction process)
+    ProcessRootReaction process, IImmutableContentStore content, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(AuditorRequest.Area), WorkloadName),
         IReactorHandler<AuditorResponseAdmitted>
 {
     public const string WorkloadName = "AuditorResponseMaterializationV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AuditorResponseAdmitted> context, CancellationToken ct) =>
+    public async ValueTask HandleAsync(IReactorContext<AuditorResponseAdmitted> context, CancellationToken ct)
+    {
+        await AuditorRequestReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Owner, ct)
+            .ConfigureAwait(false);
         _ = await process.StartAsync(FindingClosureEffects.MaterializationProcessName, context, context.Trigger.Intent,
             [context.Trigger.Operation.LogicalId.ToString()], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+    }
 }

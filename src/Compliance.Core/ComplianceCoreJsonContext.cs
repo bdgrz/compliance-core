@@ -164,6 +164,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.AuditorRequests.AdmittedRequestChild>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.AuditorRequests.ResponseDispositionProof>))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AuditorSampleSelectionView))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AuditorSampleSelectionLocator))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.GetAuditorRequest))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.GetSampleSelection))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.ListAuditorRequests))]

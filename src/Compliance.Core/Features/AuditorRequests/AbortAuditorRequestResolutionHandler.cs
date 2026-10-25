@@ -13,6 +13,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     is a terminal no-op and the resolution recovers forward. A resolution that is not visible yet is a transient wait.
 /// </summary>
 sealed class AbortAuditorRequestResolutionHandler(IAggregateReader reader, IAggregateExecutor executor,
+    IDomainEventReader events,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<AbortAuditorRequestResolution, ReceiverOutcome>
 {
@@ -25,6 +26,19 @@ sealed class AbortAuditorRequestResolutionHandler(IAggregateReader reader, IAggr
         if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty || command.Generation < 1 ||
             !Uuid.TryParse(command.Target.Realm, CultureInfo.InvariantCulture, out var tenant))
             return SourceUseReceiverSupport.Permanent("The abort names another operation, generation or realm.");
+        try
+        {
+            if (await AuditorResolutionReplay.ResolveAsync(events, command, ct).ConfigureAwait(false) is { } replay)
+                return replay;
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact resolution receiver replay cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+
+        if (command.FailureProof.Schema != AuditorContent.FailureSchema)
+            return SourceUseReceiverSupport.Permanent("A new cancellation needs the fully bound failure proof schema.");
         AuditorRequestFailureProof proof;
         try
         {
@@ -40,6 +54,10 @@ sealed class AbortAuditorRequestResolutionHandler(IAggregateReader reader, IAggr
             return SourceUseReceiverSupport.Permanent($"The failure proof cannot be verified: {exception.Message}");
         }
 
+        if (proof.ProgramId == Uuid.Empty || proof.RequestId == Uuid.Empty || proof.Admission is null ||
+            proof.Intent is null || proof.RootOperationId != command.OperationId || proof.Generation != command.Generation ||
+            proof.Admission.Stream != command.Target || string.IsNullOrWhiteSpace(proof.Reason))
+            return SourceUseReceiverSupport.Permanent("The failure proof is not bound to this exact resolution admission.");
         var stream = new AuditorRequest(tenant, proof.ProgramId, proof.RequestId).Stream;
         if (stream != command.Target)
             return SourceUseReceiverSupport.Permanent("The failure proof names another request.");
@@ -48,7 +66,7 @@ sealed class AbortAuditorRequestResolutionHandler(IAggregateReader reader, IAggr
             try
             {
                 var request = await reader.HydrateAsync(new AuditorRequest(tenant, proof.ProgramId, proof.RequestId,
-                    command.CommandId), ct).ConfigureAwait(false);
+                    command.CommandId, command.OperationId), ct).ConfigureAwait(false);
                 if (request.AcceptedResolution(command.OperationId) is not { } accepted)
                     return SourceUseReceiverSupport.Transient("The accepted resolution is not visible yet.");
                 ClosureIntent intent;
@@ -68,7 +86,16 @@ sealed class AbortAuditorRequestResolutionHandler(IAggregateReader reader, IAggr
                         $"The frozen resolution cannot be verified: {exception.Message}");
                 }
 
-                if (accepted.Generation != command.Generation || intent.Header.RootOperationId != command.OperationId)
+                var history = await AuditorRequestHistory.ReadAsync(events, request, ct).ConfigureAwait(false);
+                var scoped = await AuditorCommands.TermsAsync(content, tenant, request, ct).ConfigureAwait(false);
+                if (!scoped.IsSuccess)
+                    return Result<ReceiverOutcome>.Failure(scoped.Error!);
+                var children = await AuditorRequestResolutionProofs.ChildrenAsync(content, tenant, intent, ct).ConfigureAwait(false);
+                if (proof.Admission != NativeFactReference.Of(request.Stream, accepted) || proof.Intent != accepted.Intent ||
+                    proof.ResponseId is { } responseId && children.All(child => child.Kind != AdmittedRequestChildKind.Response ||
+                        child.ChildId != responseId) || history.AcceptedResolution(command.OperationId) is null ||
+                    intent.Header.FirstOwner != request.Stream || intent.ParentId != request.Id ||
+                    accepted.Generation != command.Generation || intent.Header.RootOperationId != command.OperationId)
                     return SourceUseReceiverSupport.Permanent("The abort differs from the accepted resolution.");
                 var provenance = AuditorRequestResolutionEffects.Child(command.CommandId,
                     nameof(AbortAuditorRequestResolution), accepted.Metadata.EventId, intent.Header, request.Stream,
@@ -77,7 +104,7 @@ sealed class AbortAuditorRequestResolutionHandler(IAggregateReader reader, IAggr
                 if (Decide(request, binding, command.OperationId) is { } early)
                     return early;
                 var step = await executor.ExecuteAsync(new AuditorRequest(tenant, proof.ProgramId, proof.RequestId,
-                    command.CommandId), fresh =>
+                    command.CommandId, command.OperationId), fresh =>
                     {
                         if (Decide(fresh, binding, command.OperationId) is { } decided)
                             return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));
@@ -89,6 +116,12 @@ sealed class AbortAuditorRequestResolutionHandler(IAggregateReader reader, IAggr
                             : AggregateOutcome.Discard(Result<Decided>.Failure(raised.Error!));
                     }, context, ct).ConfigureAwait(false);
                 return step.IsSuccess ? step.Value!.Outcome : Result<ReceiverOutcome>.Failure(step.Error!);
+            }
+            catch (ImmutableContentIntegrityException error)
+            {
+                return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    $"The exact resolution cancellation proof cannot be verified: {error.Message}",
+                    error is ImmutableContentUnavailableException));
             }
             catch (EventStreamConcurrencyException) when (attempt < MaximumAttempts)
             {

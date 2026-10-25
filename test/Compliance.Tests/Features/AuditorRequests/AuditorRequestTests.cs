@@ -28,7 +28,7 @@ public sealed class AuditorRequestTests
         Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
         Assert.True(request.IsOpen);
         Assert.Equal(1, request.Revision);
-        Assert.Single(request.Facts);
+        Assert.Single((await fixture.RequestHistoryAsync(command.RequestId)).Facts);
         Assert.Equal(command.Wording, (await fixture.TermsAsync(command.RequestId)).Wording);
     }
 
@@ -122,7 +122,7 @@ public sealed class AuditorRequestTests
         Assert.Equal(RequestErrorKind.Validation, invalid.Error?.Kind);
         Assert.Equal(populationId, selection.PopulationId);
         Assert.Equal(digest, (await fixture.ReadAsync<AuditPopulationVersionView>(selection.PopulationContent)).ContentSha256);
-        Assert.Single((await fixture.RequestAsync(requestId)).Selections);
+        Assert.Single((await fixture.RequestHistoryAsync(requestId)).Selections);
     }
 
     [Fact]
@@ -196,9 +196,9 @@ public sealed class AuditorRequestTests
         Assert.True(reopened.IsSuccess, reopened.Error?.Message);
         Assert.True(saved.IsOpen);
         Assert.Equal(2, saved.Generation);
-        Assert.Single(saved.ResolutionHistory);
-        Assert.Single(saved.Comments);
-        Assert.Single(saved.Responses);
+        Assert.Single((await fixture.RequestHistoryAsync(requestId)).ResolutionHistory);
+        Assert.Single((await fixture.RequestHistoryAsync(requestId)).Comments);
+        Assert.Single((await fixture.RequestHistoryAsync(requestId)).Responses);
         Assert.Null(saved.Resolved);
         Assert.Equal("accepted", (await fixture.ResponseAsync(requestId, responseId)).Disposition!.Outcome);
     }
@@ -210,7 +210,7 @@ public sealed class AuditorRequestTests
         await using var fixture = new AuditorRequestFixture();
         var requestId = await fixture.SeedRequestAsync();
         var terms = await fixture.TermsAsync(requestId);
-        var reader = new AuditorRequestWorkStatusReader(fixture.Reader, fixture.Content);
+        var reader = new AuditorRequestWorkStatusReader(fixture.Requests);
 
         // Act
         var overdue = await reader.ReadAsync(fixture.TenantId, fixture.ProgramId, requestId, terms.DueOn.AddDays(1));

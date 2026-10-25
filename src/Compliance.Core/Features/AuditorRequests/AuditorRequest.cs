@@ -19,13 +19,11 @@ public sealed class AuditorRequest : Aggregate
 
     readonly Uuid _tenantId;
     readonly Uuid _programId;
-    readonly List<AuditorResponseAdmitted> _responses = [];
-    readonly List<AuditorCommentAdmitted> _comments = [];
-    readonly List<AuditorSampleSelectionAdmitted> _selections = [];
-    readonly Dictionary<Uuid, AuditorRequestResolutionAccepted> _accepted = [];
-    readonly Dictionary<Uuid, DomainEvent> _terminal = [];
-    readonly List<AuditorRequestResolved> _resolutions = [];
-    readonly List<DomainEvent> _facts = [];
+    readonly Uuid _selectedResolutionId;
+    AuditorRequestResolutionAccepted? _selectedResolution;
+    DomainEvent? _selectedTerminal;
+    DomainEvent? _latest;
+    long _responseCount;
     AuditorRequestRecorded? _recorded;
     ImmutableContentRef? _terms;
     AuditorRequestResolutionAccepted? _pending;
@@ -34,13 +32,15 @@ public sealed class AuditorRequest : Aggregate
     long _generation;
 
     /// <summary>Opens one request, selecting the logical operation to resolve.</summary>
-    public AuditorRequest(Uuid tenantId, Uuid programId, Uuid requestId, Uuid selectedLogicalId = default)
+    public AuditorRequest(Uuid tenantId, Uuid programId, Uuid requestId, Uuid selectedLogicalId = default,
+        Uuid selectedResolutionId = default)
         : base(requestId, new EventStreamAddress(tenantId.ToString(), Area, requestId.ToString()))
     {
         if (tenantId == Uuid.Empty || programId == Uuid.Empty || requestId == Uuid.Empty)
             throw new ArgumentException("An auditor request stream needs tenant, program, and request IDs.");
         (_tenantId, _programId) = (tenantId, programId);
         Acceptance = new NativeAcceptance(selectedLogicalId);
+        _selectedResolutionId = selectedResolutionId;
         On<AuditorRequestRecorded>(Apply);
         On<AuditorRequestRevised>(Apply);
         On<AuditorRequestAssigned>(Apply);
@@ -77,14 +77,14 @@ public sealed class AuditorRequest : Aggregate
     /// <summary>The verified content of the current terms (recording, last revision or last assignment).</summary>
     public ImmutableContentRef? Terms => _terms;
 
-    /// <summary>The responses admitted so far, in admission order, across every generation.</summary>
-    public IReadOnlyList<AuditorResponseAdmitted> Responses => _responses;
+    /// <summary>The latest content fact, independent of the selected operation.</summary>
+    public DomainEvent? Latest => _latest;
 
-    /// <summary>The comments admitted so far, in admission order, across every generation.</summary>
-    public IReadOnlyList<AuditorCommentAdmitted> Comments => _comments;
+    /// <summary>The tenant realm of this owner.</summary>
+    public Uuid TenantId => _tenantId;
 
-    /// <summary>The sample selections admitted so far, in admission order, across every generation.</summary>
-    public IReadOnlyList<AuditorSampleSelectionAdmitted> Selections => _selections;
+    /// <summary>The number of admitted responses; complete membership lives in verified read composition.</summary>
+    public long ResponseCount => _responseCount;
 
     /// <summary>The resolution accepted and not yet resolved or canceled, which seals admission.</summary>
     public AuditorRequestResolutionAccepted? PendingResolution => _pending;
@@ -92,28 +92,18 @@ public sealed class AuditorRequest : Aggregate
     /// <summary>The resolution fact of the current generation; null while open or after a reopen.</summary>
     public AuditorRequestResolved? Resolved => _resolved;
 
-    /// <summary>Every resolution the request ever recorded, across reopened generations.</summary>
-    public IReadOnlyList<AuditorRequestResolved> ResolutionHistory => _resolutions;
-
-    /// <summary>Every fact in order.</summary>
-    public IReadOnlyList<DomainEvent> Facts => _facts;
-
-    /// <summary>True while the request admits work: recorded, not resolved and no resolution pending.</summary>
+    /// <summary>True while the request admits work.</summary>
     public bool IsOpen => _recorded is not null && _resolved is null && _pending is null;
 
-    /// <summary>The resolution accepted for a root operation, or null.</summary>
+    /// <summary>The explicitly selected historical resolution, or the current pending resolution.</summary>
     public AuditorRequestResolutionAccepted? AcceptedResolution(Uuid rootOperationId) =>
-        _accepted.GetValueOrDefault(rootOperationId);
+        _selectedResolution?.Operation.RootOperationId == rootOperationId ? _selectedResolution :
+        _pending?.Operation.RootOperationId == rootOperationId ? _pending : null;
 
-    /// <summary>The resolved or canceled fact that ended a root operation, or null while it is pending.</summary>
-    public DomainEvent? TerminalResolution(Uuid rootOperationId) => _terminal.GetValueOrDefault(rootOperationId);
-
-    /// <summary>The fact with this event id.</summary>
-    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
-
-    /// <summary>The admitted selection with this id, or null.</summary>
-    public AuditorSampleSelectionAdmitted? Selection(Uuid selectionId) =>
-        _selections.FirstOrDefault(fact => fact.Operation.LogicalId == selectionId);
+    /// <summary>The terminal fact explicitly selected before hydration, or the current resolved fact.</summary>
+    public DomainEvent? TerminalResolution(Uuid rootOperationId) =>
+        _selectedTerminal is INativeOperationFact selected && selected.Operation.RootOperationId == rootOperationId
+            ? _selectedTerminal : _resolved?.Operation.RootOperationId == rootOperationId ? _resolved : null;
 
     /// <summary>Checks that the request does not exist yet.</summary>
     public Result PrepareRecord() => IsRecorded
@@ -137,17 +127,14 @@ public sealed class AuditorRequest : Aggregate
     }
 
     /// <summary>Checks that a resolution of exactly the admitted responses can be accepted at the expected revision.</summary>
-    public Result PrepareResolution(long expectedRevision, IReadOnlyCollection<Uuid> responseIds)
+    public Result PrepareResolution(long expectedRevision, IReadOnlyCollection<Uuid> responseIds,
+        AuditorRequestHistorySnapshot history)
     {
         ArgumentNullException.ThrowIfNull(responseIds);
         var prepared = PrepareWrite(expectedRevision, "The auditor request is already resolved.");
         if (!prepared.IsSuccess)
             return prepared;
-        var admitted = _responses.Select(static fact => fact.Operation.LogicalId).ToHashSet();
-        return admitted.Count == 0 || responseIds.Count != admitted.Count || !admitted.SetEquals(responseIds)
-            ? Fail(CommandFailure.StateConflict(
-                "A resolution must name exactly every admitted response, and at least one response must exist."))
-            : Result.Success;
+        return history.ValidateResponses(this, responseIds);
     }
 
     /// <summary>Checks that a resolved request can be reopened at the expected revision.</summary>
@@ -167,21 +154,12 @@ public sealed class AuditorRequest : Aggregate
     ///     prior admitted selection of the same population with a strictly later population version.
     /// </summary>
     public Result PrepareSelection(long expectedRevision, Uuid selectionId, Uuid? supersedesSelectionId,
-        Uuid populationId, int populationVersion)
+        Uuid populationId, int populationVersion, AuditorRequestHistorySnapshot history)
     {
-        if (_selections.Any(fact => fact.Operation.LogicalId == selectionId))
-            return Fail(CommandFailure.StateConflict("A sample selection identity cannot be reused."));
         var prepared = PrepareWrite(expectedRevision, "A sample selection can only be recorded for an open request.");
         if (!prepared.IsSuccess)
             return prepared;
-        if (supersedesSelectionId is null)
-            return Result.Success;
-        if (supersedesSelectionId == Uuid.Empty || Selection(supersedesSelectionId.Value) is not { } prior)
-            return Fail(CommandFailure.MissingRecord("The sample selection to amend was not found."));
-        return prior.PopulationId != populationId || populationVersion <= prior.PopulationVersion
-            ? Fail(CommandFailure.StateConflict(
-                "An amended selection must bind a later version of the same audit population."))
-            : Result.Success;
+        return history.ValidateSelection(this, selectionId, supersedesSelectionId, populationId, populationVersion);
     }
 
     /// <summary>Records the request as the root native fact of its operation.</summary>
@@ -232,8 +210,6 @@ public sealed class AuditorRequest : Aggregate
         var prepared = PrepareOwnWrite(operation, "A response can only be drafted for an open request.");
         if (!prepared.IsSuccess)
             return prepared;
-        if (_responses.Any(fact => fact.Operation.LogicalId == operation.LogicalId))
-            return Fail(CommandFailure.StateConflict("An auditor response identity cannot be reused."));
         RaiseEvent(new AuditorResponseAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
             firstResponse, null));
         return Result.Success;
@@ -246,8 +222,6 @@ public sealed class AuditorRequest : Aggregate
         var prepared = PrepareOwnWrite(operation, "Discussion can only be added to an open request.");
         if (!prepared.IsSuccess)
             return prepared;
-        if (_comments.Any(fact => fact.Operation.LogicalId == operation.LogicalId))
-            return Fail(CommandFailure.StateConflict("An auditor comment identity cannot be reused."));
         RaiseEvent(new AuditorCommentAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
             firstResponse, null));
         return Result.Success;
@@ -255,7 +229,8 @@ public sealed class AuditorRequest : Aggregate
 
     /// <summary>Admits one sample selection for the current generation as the root native fact of its operation.</summary>
     public Result AdmitSelection(OperationProvenance operation, ImmutableContentRef intent, Uuid populationId,
-        int populationVersion, Uuid? supersedesSelectionId, ImmutableContentRef firstResponse)
+        int populationVersion, Uuid? supersedesSelectionId, ImmutableContentRef firstResponse,
+        AuditorRequestHistorySnapshot history)
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
@@ -263,7 +238,7 @@ public sealed class AuditorRequest : Aggregate
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A request write is a root operation of its own request with an expected revision."));
         var prepared = PrepareSelection((long)expected, operation.LogicalId, supersedesSelectionId, populationId,
-            populationVersion);
+            populationVersion, history);
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new AuditorSampleSelectionAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
@@ -273,14 +248,14 @@ public sealed class AuditorRequest : Aggregate
 
     /// <summary>Accepts a resolution as the root native fact of its operation; it seals admission for the generation.</summary>
     public Result AcceptResolution(OperationProvenance operation, ImmutableContentRef intent,
-        IReadOnlyCollection<Uuid> responseIds, ImmutableContentRef firstResponse)
+        IReadOnlyCollection<Uuid> responseIds, ImmutableContentRef firstResponse, AuditorRequestHistorySnapshot history)
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
         if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A resolution is a root operation of its own request with an expected revision."));
-        var prepared = PrepareResolution((long)expected, responseIds);
+        var prepared = PrepareResolution((long)expected, responseIds, history);
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new AuditorRequestResolutionAccepted(Stream, _revision + 1, _generation, intent, null, operation,
@@ -341,7 +316,7 @@ public sealed class AuditorRequest : Aggregate
         _terms = ev.Change;
         _revision = 1;
         _generation = 1;
-        _facts.Add(ev);
+        _latest = ev;
     }
 
     void Apply(AuditorRequestRevised ev)
@@ -364,9 +339,7 @@ public sealed class AuditorRequest : Aggregate
     {
         Acceptance.Observe(ev);
         EnsureAdmission(ev.Owner, ev.Revision, ev.Generation, ev.Operation);
-        if (_responses.Any(fact => fact.Operation.LogicalId == ev.Operation.LogicalId))
-            throw new InvalidOperationException("A response is admitted once.");
-        _responses.Add(ev);
+        _responseCount++;
         Advance(ev);
     }
 
@@ -374,9 +347,6 @@ public sealed class AuditorRequest : Aggregate
     {
         Acceptance.Observe(ev);
         EnsureAdmission(ev.Owner, ev.Revision, ev.Generation, ev.Operation);
-        if (_comments.Any(fact => fact.Operation.LogicalId == ev.Operation.LogicalId))
-            throw new InvalidOperationException("A comment is admitted once.");
-        _comments.Add(ev);
         Advance(ev);
     }
 
@@ -384,25 +354,21 @@ public sealed class AuditorRequest : Aggregate
     {
         Acceptance.Observe(ev);
         EnsureAdmission(ev.Owner, ev.Revision, ev.Generation, ev.Operation);
-        if (_selections.Any(fact => fact.Operation.LogicalId == ev.Operation.LogicalId) ||
-            ev.PopulationId == Uuid.Empty || ev.PopulationVersion <= 0)
-            throw new InvalidOperationException("A selection is admitted once, for one population version.");
-        if (ev.SupersedesSelectionId is { } prior && (Selection(prior) is not { } earlier ||
-                earlier.PopulationId != ev.PopulationId || ev.PopulationVersion <= earlier.PopulationVersion))
-            throw new InvalidOperationException("An amendment supersedes an earlier version of the same population.");
-        _selections.Add(ev);
+        if (ev.PopulationId == Uuid.Empty || ev.PopulationVersion <= 0)
+            throw new InvalidOperationException("A selection names one population version.");
         Advance(ev);
     }
 
     void Apply(AuditorRequestResolutionAccepted ev)
     {
         Acceptance.Observe(ev);
-        if (_recorded is null || _pending is not null || _resolved is not null || _responses.Count == 0 ||
+        if (_recorded is null || _pending is not null || _resolved is not null || _responseCount == 0 ||
             ev.Owner != Stream || ev.Revision != _revision + 1 || ev.Generation != _generation ||
-            ev.Operation.Owner != Stream || ev.Operation.RootOperationId != ev.Operation.LogicalId ||
-            !_accepted.TryAdd(ev.Operation.RootOperationId, ev))
+            ev.Operation.Owner != Stream || ev.Operation.RootOperationId != ev.Operation.LogicalId)
             throw new InvalidOperationException(
                 "A resolution is accepted once, with admitted responses, for the current open generation.");
+        if (ev.Operation.RootOperationId == _selectedResolutionId)
+            _selectedResolution = ev;
         _pending = ev;
         Advance(ev);
     }
@@ -414,9 +380,9 @@ public sealed class AuditorRequest : Aggregate
             ev.RequestGeneration != _generation || ev.Change != _pending.Intent ||
             ev.Operation.RootOperationId != _pending.Operation.RootOperationId || ev.Operation.Owner != Stream)
             throw new InvalidOperationException("Only the exact pending resolution of the current generation resolves the request.");
-        _terminal[ev.Operation.RootOperationId] = ev;
+        if (ev.Operation.RootOperationId == _selectedResolutionId)
+            _selectedTerminal = ev;
         _resolved = ev;
-        _resolutions.Add(ev);
         _pending = null;
         Advance(ev);
     }
@@ -428,7 +394,8 @@ public sealed class AuditorRequest : Aggregate
             ev.Intent != _pending.Intent || ev.Operation.RootOperationId != _pending.Operation.RootOperationId ||
             ev.Operation.Owner != Stream)
             throw new InvalidOperationException("Only the exact pending resolution of the current generation is canceled.");
-        _terminal[ev.Operation.RootOperationId] = ev;
+        if (ev.Operation.RootOperationId == _selectedResolutionId)
+            _selectedTerminal = ev;
         _pending = null;
         Advance(ev);
     }
@@ -462,7 +429,7 @@ public sealed class AuditorRequest : Aggregate
     void Advance(DomainEvent fact)
     {
         _revision++;
-        _facts.Add(fact);
+        _latest = fact;
     }
 
     Result PrepareOwnWrite(OperationProvenance operation, string resolvedMessage)

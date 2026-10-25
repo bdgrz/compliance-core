@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     the authored decision. Exactly one of <paramref name="Error" /> and the verified parts is set.
 /// </summary>
 public sealed record AuditorRequestResolution(RequestError? Error, AuditorRequest? Request, ClosureIntent? Intent,
-    AuditorResolutionDecision? Decision, Uuid TenantId)
+    AuditorResolutionDecision? Decision, Uuid TenantId, AuditorRequestHistorySnapshot? History = null)
 {
     /// <summary>A failed verification.</summary>
     public static AuditorRequestResolution Failed(RequestError error) => new(error, null, null, null, Uuid.Empty);

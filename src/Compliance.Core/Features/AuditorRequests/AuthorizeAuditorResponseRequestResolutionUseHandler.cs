@@ -62,7 +62,7 @@ sealed class AuthorizeAuditorResponseRequestResolutionUseHandler(IAggregateReade
             return Fail("The auditor response is not materialized yet.", true);
         if (response.CurrentContentFactById(request.SourceContentEventId) is not { } pinned)
             return Fail("The pinned auditor response fact does not exist.", false);
-        if (auditorRequest.Responses.All(fact => fact.Operation.LogicalId != request.SourceOwnerId))
+        if (resolution.History!.Responses.All(fact => fact.Operation.LogicalId != request.SourceOwnerId))
             return Fail("The response was not admitted by this request.", false);
 
         var disposition = response.Disposition;

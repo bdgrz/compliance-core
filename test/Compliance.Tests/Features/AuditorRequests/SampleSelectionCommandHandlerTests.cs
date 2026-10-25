@@ -55,7 +55,7 @@ public sealed class SampleSelectionCommandHandlerTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
-        Assert.Empty(request.Selections);
+        Assert.Empty((await fixture.RequestHistoryAsync(requestId)).Selections);
         Assert.Equal(1, request.Revision);
     }
 
@@ -74,7 +74,7 @@ public sealed class SampleSelectionCommandHandlerTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Empty(request.Selections);
+        Assert.Empty((await fixture.RequestHistoryAsync(requestId)).Selections);
         Assert.Equal(1, request.Revision);
     }
 
@@ -93,7 +93,7 @@ public sealed class SampleSelectionCommandHandlerTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
-        Assert.Empty((await fixture.RequestAsync(requestId)).Selections);
+        Assert.Empty((await fixture.RequestHistoryAsync(requestId)).Selections);
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public sealed class SampleSelectionCommandHandlerTests
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Equal(ProcessState.Completed, materialized.State);
-        Assert.Equal(2, (await fixture.RequestAsync(requestId)).Selections.Count);
+        Assert.Equal(2, (await fixture.RequestHistoryAsync(requestId)).Selections.Count);
         Assert.Equal(1, original.PopulationVersion);
         Assert.Equal(firstDigest, (await fixture.ReadAsync<AuditPopulationVersionView>(original.PopulationContent)).ContentSha256);
         Assert.Null(original.SupersedesSelectionId);

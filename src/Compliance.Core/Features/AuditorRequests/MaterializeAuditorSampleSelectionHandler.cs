@@ -13,7 +13,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     request: the complete nonempty duplicate-free row manifest and the population version content are verified, and
 ///     neither the live request nor the latest population is read. An exact replay returns the original fact.
 /// </summary>
-sealed class MaterializeAuditorSampleSelectionHandler(IAggregateReader reader, IAggregateExecutor executor,
+sealed class MaterializeAuditorSampleSelectionHandler(IAggregateReader reader, IAggregateExecutor executor, IDomainEventReader events,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<MaterializeAuditorSampleSelection, ReceiverOutcome>
 {
@@ -28,15 +28,29 @@ sealed class MaterializeAuditorSampleSelectionHandler(IAggregateReader reader, I
             !Uuid.TryParse(command.Target.Realm, CultureInfo.InvariantCulture, out var tenant))
             return SourceUseReceiverSupport.Permanent("The materialization names another operation, selection or realm.");
 
+        try
+        {
+            if (await AuditorChildMaterializationReplay.ResolveAsync(events, command.Source, command.Target, tenant,
+                command.RequestId, command.SelectionId, command.CommandId, command.OperationId, command.Generation,
+                command.Intent, AdmittedRequestChildKind.SampleSelection, ct).ConfigureAwait(false) is { } replay)
+                return replay;
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact child materialization cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+
         AuditorSampleSelectionIntent intent;
         IReadOnlyList<Uuid> rows;
+        AuditPopulations.AuditPopulationVersionView population;
         try
         {
             intent = await AuditorContent.ReadAsync<AuditorSampleSelectionIntent>(content, tenant, command.Intent, ct)
                 .ConfigureAwait(false);
             rows = await ImmutableSelectionManifests.ReadAsync<Uuid>(content, command.Target.Realm,
                 intent.PopulationRowIds, ct).ConfigureAwait(false);
-            _ = await AuditorContent.ReadAsync<AuditPopulations.AuditPopulationVersionView>(content, tenant,
+            population = await AuditorContent.ReadAsync<AuditPopulations.AuditPopulationVersionView>(content, tenant,
                 intent.PopulationContent, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentUnavailableException exception)
@@ -48,7 +62,10 @@ sealed class MaterializeAuditorSampleSelectionHandler(IAggregateReader reader, I
             return SourceUseReceiverSupport.Permanent($"The frozen admission cannot be verified: {exception.Message}");
         }
 
-        if (rows.Count == 0 || rows.Distinct().Count() != rows.Count || rows.Any(static row => row == Uuid.Empty) ||
+        var included = population.Rows.Where(static row => row.Classification == "included")
+            .Select(static row => row.RowId).ToHashSet();
+        if (population.Version != intent.PopulationVersion || !population.SampleEligible ||
+            intent.RecordedAt != intent.Header.AcceptedAt || rows.Any(row => !included.Contains(row)) || rows.Count == 0 || rows.Distinct().Count() != rows.Count || rows.Any(static row => row == Uuid.Empty) ||
             intent.PopulationVersion <= 0)
             return SourceUseReceiverSupport.Permanent("The frozen selection is empty, duplicated or unversioned.");
         var programId = intent.ProgramId;
@@ -59,11 +76,14 @@ sealed class MaterializeAuditorSampleSelectionHandler(IAggregateReader reader, I
             command.Source.Stream != parent || command.Generation != (long)intent.RequestGeneration)
             return SourceUseReceiverSupport.Permanent("The materialization differs from the frozen admission.");
 
-        var admitted = await AdmittedChildVerifier.VerifyAsync<AuditorSampleSelectionAdmitted>(reader, tenant, programId,
+        var admitted = await AdmittedChildVerifier.VerifyAsync<AuditorSampleSelectionAdmitted>(reader, events, content, tenant, programId,
             command.RequestId, command.Source, command.Intent, command.OperationId, command.SelectionId,
             fact => fact.Intent, ct).ConfigureAwait(false);
         if (!admitted.IsSuccess)
             return Result<ReceiverOutcome>.Failure(admitted.Error!);
+        if (!AdmittedChildVerifier.HeaderMatches(admitted.Value!.Operation, intent.Header) ||
+            admitted.Value.Generation != (long)intent.RequestGeneration || (ulong)admitted.Value.Revision != intent.ParentAdmissionRevision)
+            return SourceUseReceiverSupport.Permanent("The frozen header differs from the exact native admission.");
         if (admitted.Value!.PopulationId != intent.PopulationId || admitted.Value.PopulationVersion != intent.PopulationVersion ||
             admitted.Value.SupersedesSelectionId != intent.SupersedesSelectionId)
             return SourceUseReceiverSupport.Permanent("The admitted population, version or lineage differs from the intent.");
