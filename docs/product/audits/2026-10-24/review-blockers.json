@@ -645,12 +645,25 @@
     },
     {
       "id": "access-expectation-native-stage1",
-      "status": "locally_verified_ready_for_merge",
+      "status": "merged",
       "qualificationArtifact": "access-expectation-qualification.json",
       "fileReviews": 13,
       "genuineRedFailed": 5,
       "unitPassed": 6322,
-      "httpPassed": 80
+      "httpPassed": 80,
+      "pr": 1126,
+      "mergeCommit": "f0591384bbcf774faa608cc587f40f62ca883989"
+    },
+    {
+      "id": "control-evaluation-native",
+      "status": "locally_verified_ready_for_merge",
+      "qualificationArtifact": "control-evaluation-qualification.json",
+      "fileReviews": 11,
+      "genuineOldApiRedFailed": 2,
+      "proofGuardAbsenceRedFailed": 1,
+      "focusedPassed": 111,
+      "httpPassed": 39,
+      "unitPassed": 6331
     }
   ],
   "resolved": [

@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
@@ -11,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Evaluations;
 ///     resubmission never duplicate one.
 /// </summary>
 public sealed partial class ControlEvaluationDeviationFindingReactor(
-    IProjectionCheckpointStore checkpoints, IRequestBus bus, IImmutableContentStore content)
+    IProjectionCheckpointStore checkpoints, IRequestBus bus, IImmutableContentStore content, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(ControlEvaluation.Area), WorkloadName),
       IReactorHandler<ControlEvaluationSubmitted>
 {
@@ -21,6 +23,8 @@ public sealed partial class ControlEvaluationDeviationFindingReactor(
         CancellationToken ct)
     {
         var ev = context.Trigger;
+        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
+            new ControlEvaluation(ev.TenantId, ev.EvaluationId).Stream, ct).ConfigureAwait(false);
         EvaluationSubmissionView submission;
         try
         {
@@ -30,7 +34,7 @@ public sealed partial class ControlEvaluationDeviationFindingReactor(
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The evaluation submission cannot be verified yet: {exception.Message}", true));
+                $"The evaluation submission cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         foreach (var deviation in submission.Deviations.Where(static deviation =>

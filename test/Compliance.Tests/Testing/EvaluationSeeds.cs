@@ -23,7 +23,8 @@ static class EvaluationSeeds
             retestDeviations ?? []);
         await ProgramManagementServices.SeedAsync(provider, new ControlEvaluation(tenantId, evaluationId, evaluationId),
             owner => owner.Start(NativeFacts.Root(owner, evaluationId, "StartControlEvaluation", null, evaluatorMemberId,
-                    at), programId, controlId, controlVersionId, planVersionId, planVersion, manifest, evaluatorMemberId,
+                    at) with
+            { Actor = ActorReference.ForMember(evaluatorMemberId, display) }, programId, controlId, controlVersionId, planVersionId, planVersion, manifest, evaluatorMemberId,
                 ActorReference.ForMember(evaluatorMemberId, display), at, retestOfEvaluationId, retestPredecessor,
                 retested, NativeFacts.Ref(), NativeFacts.Ref()));
     }

@@ -1,0 +1,56 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "ControlEvaluation compact current authority, full verified native history, all5 owning command preparations and exact committed typed deviation reactor source proof.",
+  "validation": {
+    "genuineOldApiRedFailed": 2,
+    "proofGuardAbsenceRedFailed": 1,
+    "proofGuardAbsencePositivePassed": 3,
+    "strictBuildWarnings": 0,
+    "strictBuildErrors": 0,
+    "focusedPassed": 111,
+    "productionHttpPassed": 39,
+    "backendUnit": {
+      "passed": 6331,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "coverageExport": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass",
+    "exactFileAndDependencyHashes": "verified"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 11,
+    "signalsTriaged": 0,
+    "integration": "merge scoped repair recommended",
+    "mergeProbability": 0.68,
+    "introducedRegressionProbability": 0.27,
+    "scopeMisrepresentationProbability": 0.14,
+    "adopted": "merge after final local validation, continue remaining owner families; no CI wait per user direction"
+  },
+  "qualification": [
+    "Command authority retains only start/latest/accepting review/revision/lifecycle/native acceptance and bounded replay commitment; complete content-rich history belongs to transient explicit reader composition.",
+    "The installed opaque-key reader decorator verifies full native ordered payload+immutable identity commitment, selected complete metadata, unique logical operations, scope, root provenance, revision and lifecycle before explicit or executor-internal hydration returns. Save attribution remains separately checked on selected complete facts.",
+    "Start and shared four existing-evaluation producers perform mutable source/rules/body writes and first-response freezing inside NativeOperationExecutor asynchronous Prepare. Accepted retry resolves before unrelated later result bodies; equal competing winner recovers after expected immutable preparation failure. Current personal HTTP and existing program visibility/manager authorizers remain active.",
+    "Every append requires selected finalized native owner cut; all5 command preparations additionally compare exact native version/physical tail/ordered commitment between preparation and executor hydration. Intermediate payload/event-ID substitution and coherent alternate same-version/tail/latest preparation are rejected. Captured earlier cut survives legitimate later appends.",
+    "Deviation reactor proves actual typed stored source payload/full metadata/tenant/owner/physical offset before reading submission or sending reaction. Actual SourceFactProofs resolver supplies resource position; no version-minus-one assumption added.",
+    "Existing event versions/payloads, DTOs/routes, immutable body schemas, response receipts, retest lineage, as-of/receipt cutoff and SoD behavior preserved. Existing Control current-held contract gap remains separately recorded; no new source-use purpose/permit invented. No retained conversion, SDK snapshot/O(1) claim, deployment, live reset or live broker qualification."
+  ],
+  "fixtureRefinements": [
+    "Historical TypeI source fixtures now persist each native operation, rehydrate selected owner and finalize history before next append; original business/receipt times preserved by detached committed event clones. Existing acceptance names/assertions kept.",
+    "EvaluationSeeds now preserves exact StartedBy actor display in original native provenance, avoiding an inconsistent Tester versus Owner fixture binding.",
+    "Initial reactor synthetic default scenario tenant was corrected to exact actual tenant. One corrected real-tenant guard-absence RED and3 positive tests were requalified. Initial wrong-tenant and fixture metadata-double-attach failures excluded.",
+    "Restoring final reactor with preserved file timestamp briefly caused an incremental build to reuse the temporary guard-absence binary. Restored source explicitly retimestamped and strict build rerun; only subsequent green results qualify.",
+    "A prematurely started full suite was canceled while coverage export was still completing; that canceled run is not evidence. Final full suite restarted after coverage completion."
+  ],
+  "remainingWork": [
+    "AccessReviewCampaign/Item full protocol",
+    "PolicyDistributionCampaign/Participant full protocol",
+    "ExaminationEngagement full history",
+    "ApplicationImportSource, ProviderAssuranceGap, WorkDigestDispatch/WeeklyWorkDigest queued",
+    "FirmStaffRecord root next; independence and remaining source inventory continue"
+  ]
+}

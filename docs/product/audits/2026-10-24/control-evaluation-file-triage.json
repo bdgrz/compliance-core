@@ -1,0 +1,8 @@
+{
+  "model": "jev-1.14.0",
+  "files": 11,
+  "threshold": 0.65,
+  "signals": [],
+  "exactSourceAndDependencyHashes": "verified",
+  "adopted": "continue scoped local validation; no threshold-level file signals; probabilities are advisory and not a proof of correctness"
+}
