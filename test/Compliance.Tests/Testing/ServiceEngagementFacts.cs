@@ -49,8 +49,6 @@ static class ServiceEngagementFacts
         var realm = IndependenceContent.Realm(tenantId);
         var stream = new ServiceEngagementIndependence(tenantId, engagementId).Stream;
         var operationId = Uuid.CreateVersion4();
-        OperationProvenance Provenance(Uuid logicalId, string kind, ulong? expected) => new(logicalId, operationId, null,
-            kind, actor, stream, "initial", expected, new string('a', 64), at, stream, stream);
         var view = await IndependenceContent.WriteAsync(store, realm, EngagementAcceptanceEffects.AcceptanceSchema,
             acceptance, CancellationToken.None);
         var result = await IndependenceContent.WriteResultAsync(store, realm, EngagementAcceptanceEffects.ResultSchema,
@@ -58,18 +56,30 @@ static class ServiceEngagementFacts
         var context = new RequestDispatchContext(RequestActor.System);
         var current = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId));
+        var rootRevision = current.Revision;
+        Uuid? cause = null;
+        OperationProvenance Provenance(Uuid logicalId, string kind, ulong? expected) => new(logicalId, operationId, cause,
+            kind, actor, stream, "initial", expected ?? rootRevision, new string('a', 64), at, stream, stream, FirstOwner: stream);
         var admitted = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId, operationId),
             owner => AggregateOutcome.Commit(owner.AdmitOperation(Provenance(operationId,
                 ServiceEngagementIndependence.AcceptKind, current.Revision), Placeholder, current.Revision, Placeholder,
                 EngagementIndependenceOperationKind.Acceptance)), context, CancellationToken.None);
         Assert.True(admitted.IsSuccess, admitted.Error?.Message);
-        var authorized = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId),
-            owner => AggregateOutcome.Commit(owner.AuthorizeOperation(Provenance(Uuid.CreateVersion4(),
+        var admittedOwner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId, selectedRootId: operationId));
+        cause = admittedOwner.OperationOf(operationId)!.Requested.Metadata.EventId;
+        var authorizationId = Uuid.CreateVersion4();
+        var authorized = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId, authorizationId, operationId),
+            owner => AggregateOutcome.Commit(owner.AuthorizeOperation(Provenance(authorizationId,
                 nameof(AuthorizeEngagementPracticeCommitments), null), at, Placeholder)), context,
             CancellationToken.None);
         Assert.True(authorized.IsSuccess, authorized.Error?.Message);
-        var recorded = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId),
-            owner => AggregateOutcome.Commit(owner.RecordAcceptance(Provenance(Uuid.CreateVersion4(),
+        var authorizedOwner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId, selectedRootId: operationId));
+        cause = authorizedOwner.OperationOf(operationId)!.Authorized!.Metadata.EventId;
+        var completionId = Uuid.CreateVersion4();
+        var recorded = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId, completionId, operationId),
+            owner => AggregateOutcome.Commit(owner.RecordAcceptance(Provenance(completionId,
                 nameof(CompleteServiceEngagementAcceptance), null), view, result)), context, CancellationToken.None);
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
         return operationId;
@@ -91,8 +101,6 @@ static class ServiceEngagementFacts
         var stream = new ServiceEngagementIndependence(tenantId, engagementId).Stream;
         var operationId = Uuid.CreateVersion4();
         var effectiveFrom = DateOnly.FromDateTime(at.UtcDateTime);
-        OperationProvenance Provenance(Uuid logicalId, string kind, ulong? expected) => new(logicalId, operationId, null,
-            kind, actor, stream, "initial", expected, new string('a', 64), at, stream, stream);
         var revised = EngagementAcceptanceViews.Assigned(current, staff, effectiveFrom, actor, at);
         var staffReference = await FirmStaffContent.WriteStaffAsync(store, Uuid.CreateVersion4(), staff,
             CancellationToken.None);
@@ -103,18 +111,30 @@ static class ServiceEngagementFacts
         var context = new RequestDispatchContext(RequestActor.System);
         var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId));
+        var rootRevision = owner.Revision;
+        Uuid? cause = null;
+        OperationProvenance Provenance(Uuid logicalId, string kind, ulong? expected) => new(logicalId, operationId, cause,
+            kind, actor, stream, "initial", expected ?? rootRevision, new string('a', 64), at, stream, stream, FirstOwner: stream);
         var admitted = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId, operationId),
             item => AggregateOutcome.Commit(item.AdmitOperation(Provenance(operationId,
                 ServiceEngagementIndependence.AssignKind, owner.Revision), Placeholder, owner.Revision, Placeholder,
                 EngagementIndependenceOperationKind.StaffAssignment)), context, CancellationToken.None);
         Assert.True(admitted.IsSuccess, admitted.Error?.Message);
-        var authorized = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId),
-            item => AggregateOutcome.Commit(item.AuthorizeOperation(Provenance(Uuid.CreateVersion4(),
+        var admittedOwner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId, selectedRootId: operationId));
+        cause = admittedOwner.OperationOf(operationId)!.Requested.Metadata.EventId;
+        var authorizationId = Uuid.CreateVersion4();
+        var authorized = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId, authorizationId, operationId),
+            item => AggregateOutcome.Commit(item.AuthorizeOperation(Provenance(authorizationId,
                 nameof(AuthorizeEngagementPracticeCommitments), null), at, Placeholder)), context,
             CancellationToken.None);
         Assert.True(authorized.IsSuccess, authorized.Error?.Message);
-        var recorded = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId),
-            item => AggregateOutcome.Commit(item.RecordStaffAssignment(Provenance(Uuid.CreateVersion4(),
+        var authorizedOwner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId, selectedRootId: operationId));
+        cause = authorizedOwner.OperationOf(operationId)!.Authorized!.Metadata.EventId;
+        var completionId = Uuid.CreateVersion4();
+        var recorded = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId, completionId, operationId),
+            item => AggregateOutcome.Commit(item.RecordStaffAssignment(Provenance(completionId,
                 nameof(CompleteServiceEngagementStaffAssignment), null), staffReference, effectiveFrom, Placeholder,
                 Placeholder, 1, actor, at, result)), context, CancellationToken.None);
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
@@ -141,7 +161,7 @@ static class ServiceEngagementFacts
         var current = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId));
         var provenance = new OperationProvenance(commandId, commandId, null, "RevokeServiceEngagementActualStaff", actor,
-            stream, "initial", current.Revision, new string('a', 64), at, stream, stream);
+            stream, "initial", current.Revision, new string('a', 64), at, stream, stream, FirstOwner: stream);
         var closed = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId, commandId),
             owner => AggregateOutcome.Commit(owner.Revoke(provenance, null, reason, actor, at, Placeholder, result)),
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
@@ -169,7 +189,7 @@ static class ServiceEngagementFacts
             viewRef, CancellationToken.None);
         var stream = new ServiceEngagementIndependence(tenantId, engagementId).Stream;
         var provenance = new OperationProvenance(commandId, commandId, null, kind, actor, stream, "initial",
-            expectedRevision ?? 0, new string('a', 64), at, stream, stream);
+            expectedRevision ?? 0, new string('a', 64), at, stream, stream, FirstOwner: stream);
         var applied = await executor.ExecuteAsync(new ServiceEngagementIndependence(tenantId, engagementId, commandId),
             owner => AggregateOutcome.Commit(owner.Change(kind, provenance, change, Placeholder, result)),
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);

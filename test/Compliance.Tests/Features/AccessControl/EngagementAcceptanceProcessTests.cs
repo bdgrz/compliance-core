@@ -238,8 +238,8 @@ public sealed class EngagementAcceptanceProcessTests
             receiver => Assert.Equal(nameof(CommitPracticeIndependence), receiver));
         var owner = await host.HydrateAsync(new ServiceEngagementIndependence(host.Tenant, engagement));
         Assert.Equal("accepted", owner.Status);
-        Assert.NotNull(owner.OperationOf(fresh.CommandId)!.Completed);
-        Assert.NotNull(owner.OperationOf(rejected.CommandId)!.Rejected);
+        Assert.NotNull((await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).OperationOf(fresh.CommandId)!.Completed);
+        Assert.NotNull((await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).OperationOf(rejected.CommandId)!.Rejected);
     }
 
     [Fact]

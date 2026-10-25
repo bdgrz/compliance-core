@@ -11,11 +11,14 @@ namespace Bdgrz.Compliance.Features.UserIdentities;
 /// <summary>Owns the one-user reservation for a normalized email address.</summary>
 public sealed class EmailAddress : Aggregate
 {
+    bool _emitting;
     static readonly Uuid AddressNamespaceId =
         Uuid.Parse("2c581f32-1b42-5928-8bc1-e604d4a9cd58", CultureInfo.InvariantCulture);
 
-    readonly Dictionary<Uuid, RecoveryClaim> _claims = [];
-    readonly HashSet<Uuid> _completedRecoveries = [];
+    readonly Uuid _selectedChallengeId;
+    RecoveryClaim? _selectedClaim;
+    bool _selectedCompleted;
+    RecoveryClaim? _currentClaim;
     string? _address;
     Uuid? _owner;
     bool _isVerified;
@@ -39,21 +42,24 @@ public sealed class EmailAddress : Aggregate
     ///     Hydrates the address for one logical operation: <paramref name="selectedLogicalId" /> and
     ///     <paramref name="selectedCommandKind" /> select the accepted fact that retry resolution compares against.
     /// </summary>
-    public EmailAddress(string address, Uuid selectedLogicalId, string? selectedCommandKind)
-        : this(CreateId(address), Normalize(address), selectedLogicalId, selectedCommandKind)
+    public EmailAddress(string address, Uuid selectedLogicalId, string? selectedCommandKind,
+        Uuid selectedChallengeId = default)
+        : this(CreateId(address), Normalize(address), selectedLogicalId, selectedCommandKind, selectedChallengeId)
     {
     }
 
     /// <summary>Hydrates an address by its stable id; the normalized address is learned from its first fact.</summary>
-    public EmailAddress(Uuid addressId, Uuid selectedLogicalId, string? selectedCommandKind)
-        : this(addressId, null, selectedLogicalId, selectedCommandKind)
+    public EmailAddress(Uuid addressId, Uuid selectedLogicalId, string? selectedCommandKind,
+        Uuid selectedChallengeId = default)
+        : this(addressId, null, selectedLogicalId, selectedCommandKind, selectedChallengeId)
     {
     }
 
-    EmailAddress(Uuid addressId, string? address, Uuid selectedLogicalId, string? selectedCommandKind)
+    EmailAddress(Uuid addressId, string? address, Uuid selectedLogicalId, string? selectedCommandKind, Uuid selectedChallengeId)
         : base(addressId, new EventStreamAddress("bdgrz", "email-addresses", addressId.ToString()))
     {
         _address = address;
+        _selectedChallengeId = selectedChallengeId;
         Acceptance = new NativeAcceptance(selectedLogicalId, selectedCommandKind);
         On<EmailAddressReserved>(Apply);
         On<EmailChallengeIssued>(Apply);
@@ -69,6 +75,9 @@ public sealed class EmailAddress : Aggregate
 
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
+
+    internal Uuid SelectedChallengeId => _selectedChallengeId;
+    internal IdentityOwnerReplayCut ReplayCut { get; } = new();
 
     /// <summary>The normalized address, once known.</summary>
     public string? Address => _address;
@@ -90,15 +99,33 @@ public sealed class EmailAddress : Aggregate
     public Uuid? RecoveryReplacementIdentityId => CurrentClaim?.ReplacementIdentityId;
     public bool IsRecoveryCompleted => _recoveryCompleted;
 
-    RecoveryClaim? CurrentClaim => _recoveryChallengeId is { } current ? _claims.GetValueOrDefault(current) : null;
+    RecoveryClaim? CurrentClaim => _currentClaim;
 
     string Known => _address ?? throw new InvalidOperationException("The email address is not known yet.");
 
     /// <summary>The claim recorded for a recovery challenge of this address, if it was claimed.</summary>
-    public RecoveryClaim? ClaimOf(Uuid challengeId) => _claims.GetValueOrDefault(challengeId);
+    public RecoveryClaim? ClaimOf(Uuid challengeId)
+    {
+        if (challengeId == _recoveryChallengeId)
+            return _currentClaim;
+        if (challengeId == _selectedChallengeId && challengeId != Uuid.Empty)
+            return _selectedClaim;
+        if (CommittedStreamPosition == 0 && _selectedClaim is null)
+            return null;
+        throw new InvalidOperationException("Historical recovery claims require their explicitly selected challenge.");
+    }
 
     /// <summary>True when the original email challenge of the recovery was completed.</summary>
-    public bool IsRecoveryChallengeCompleted(Uuid challengeId) => _completedRecoveries.Contains(challengeId);
+    public bool IsRecoveryChallengeCompleted(Uuid challengeId)
+    {
+        if (challengeId == _recoveryChallengeId)
+            return _recoveryCompleted;
+        if (challengeId == _selectedChallengeId && challengeId != Uuid.Empty)
+            return _selectedCompleted;
+        if (CommittedStreamPosition == 0 && !_selectedCompleted)
+            return false;
+        throw new InvalidOperationException("Historical recovery completions require their explicitly selected challenge.");
+    }
 
     /// <summary>
     ///     True while an unexpired recovery challenge is outstanding and may not be issued again. A challenge whose
@@ -122,6 +149,9 @@ public sealed class EmailAddress : Aggregate
     public Result PrepareIssueChallenge(Uuid userId, Uuid challengeId, string tokenHash, DateTimeOffset expiresAt,
         DateTimeOffset now, string tokenKeyId)
     {
+        var cut = ReplayCut.Require(this);
+        if (!cut.IsSuccess)
+            return cut;
         if (_owner != userId)
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "The email address is not owned by this user."));
         if (_isVerified)
@@ -129,7 +159,7 @@ public sealed class EmailAddress : Aggregate
         if (challengeId == Uuid.Empty || tokenHash.Length != 64 || expiresAt <= now ||
             string.IsNullOrWhiteSpace(tokenKeyId))
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "A valid future challenge is required."));
-        return challengeId == _challengeId || challengeId == _recoveryChallengeId || _claims.ContainsKey(challengeId)
+        return challengeId == _challengeId || challengeId == _recoveryChallengeId || ClaimOf(challengeId) is not null
             ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The challenge identity is already used on this address."))
             : Result.Success;
@@ -140,10 +170,13 @@ public sealed class EmailAddress : Aggregate
         Uuid challengeId, string tokenHash, DateTimeOffset expiresAt, DateTimeOffset now, string tokenKeyId)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        var selected = RequireOperation(operation, challengeId);
+        if (!selected.IsSuccess)
+            return selected;
         var prepared = PrepareIssueChallenge(userId, challengeId, tokenHash, expiresAt, now, tokenKeyId);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new EmailChallengeIssued(userId, Known, challengeId, tokenHash, expiresAt, tokenKeyId, operation,
+        Emit(new EmailChallengeIssued(userId, Known, challengeId, tokenHash, expiresAt, tokenKeyId, operation,
             firstResponse, null));
         return Result.Success;
     }
@@ -152,6 +185,9 @@ public sealed class EmailAddress : Aggregate
     public Result PrepareIssueRecoveryChallenge(Uuid userId, Uuid challengeId, string tokenHash,
         DateTimeOffset expiresAt, DateTimeOffset now, string tokenKeyId, bool outstandingDeliveryFailed = false)
     {
+        var cut = ReplayCut.Require(this);
+        if (!cut.IsSuccess)
+            return cut;
         if (_owner != userId || !_isVerified)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Identity recovery requires an email address verified for this user."));
@@ -159,7 +195,7 @@ public sealed class EmailAddress : Aggregate
             string.IsNullOrWhiteSpace(tokenKeyId))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A valid future recovery challenge is required."));
-        if (challengeId == _challengeId || _claims.ContainsKey(challengeId))
+        if (challengeId == _challengeId || ClaimOf(challengeId) is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The challenge identity is already used on this address."));
         return HasOutstandingRecoveryChallenge(now, outstandingDeliveryFailed)
@@ -173,11 +209,14 @@ public sealed class EmailAddress : Aggregate
         string tokenKeyId, bool outstandingDeliveryFailed = false)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        var selected = RequireOperation(operation, challengeId);
+        if (!selected.IsSuccess)
+            return selected;
         var prepared = PrepareIssueRecoveryChallenge(userId, challengeId, tokenHash, expiresAt, now, tokenKeyId,
             outstandingDeliveryFailed);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new IdentityRecoveryChallengeIssued(userId, Known, challengeId, tokenHash, expiresAt, tokenKeyId,
+        Emit(new IdentityRecoveryChallengeIssued(userId, Known, challengeId, tokenHash, expiresAt, tokenKeyId,
             operation, firstResponse, null));
         return Result.Success;
     }
@@ -189,6 +228,9 @@ public sealed class EmailAddress : Aggregate
     public Result PrepareClaimIdentityRecovery(Uuid userId, Uuid challengeId, string token, Uuid oldIdentityId,
         Uuid replacementIdentityId, DateTimeOffset now)
     {
+        var cut = ReplayCut.Require(this);
+        if (!cut.IsSuccess)
+            return cut;
         if (oldIdentityId == Uuid.Empty || replacementIdentityId == Uuid.Empty ||
             oldIdentityId == replacementIdentityId)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
@@ -196,7 +238,7 @@ public sealed class EmailAddress : Aggregate
         if (_owner != userId || !_isVerified || _recoveryChallengeId != challengeId)
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "No identity recovery challenge is available."));
-        if (_claims.ContainsKey(challengeId))
+        if (ClaimOf(challengeId) is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The recovery challenge is already bound to another identity replacement."));
         var proof = ValidateIdentityRecoveryChallenge(userId, challengeId, token, now);
@@ -210,10 +252,13 @@ public sealed class EmailAddress : Aggregate
         Uuid oldIdentityId, Uuid replacementIdentityId, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        var selected = RequireOperation(operation, challengeId);
+        if (!selected.IsSuccess)
+            return selected;
         var prepared = PrepareClaimIdentityRecovery(userId, challengeId, token, oldIdentityId, replacementIdentityId, now);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new IdentityRecoveryChallengeClaimed(userId, Known, challengeId, oldIdentityId,
+        Emit(new IdentityRecoveryChallengeClaimed(userId, Known, challengeId, oldIdentityId,
             replacementIdentityId, operation, originalActor, emailProof, replacementProof, acceptedAt, intent,
             firstResponse, null));
         return Result.Success;
@@ -249,11 +294,14 @@ public sealed class EmailAddress : Aggregate
     public Result PrepareCompleteIdentityRecovery(Uuid userId, Uuid challengeId, Uuid oldIdentityId,
         Uuid replacementIdentityId)
     {
-        if (_owner != userId || !_claims.TryGetValue(challengeId, out var claim) ||
+        var cut = ReplayCut.Require(this);
+        if (!cut.IsSuccess)
+            return cut;
+        if (_owner != userId || ClaimOf(challengeId) is not { } claim ||
             claim.OldIdentityId != oldIdentityId || claim.ReplacementIdentityId != replacementIdentityId)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The identity recovery challenge is not claimed for this replacement.", false));
-        return _completedRecoveries.Contains(challengeId)
+        return IsRecoveryChallengeCompleted(challengeId)
             ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The identity recovery challenge is already completed.", false))
             : Result.Success;
@@ -267,10 +315,13 @@ public sealed class EmailAddress : Aggregate
         Uuid challengeId, Uuid oldIdentityId, Uuid replacementIdentityId, DateTimeOffset completedAt)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        var selected = RequireOperation(operation, challengeId);
+        if (!selected.IsSuccess)
+            return selected;
         var prepared = PrepareCompleteIdentityRecovery(userId, challengeId, oldIdentityId, replacementIdentityId);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new IdentityRecoveryChallengeCompleted(userId, Known, challengeId, oldIdentityId,
+        Emit(new IdentityRecoveryChallengeCompleted(userId, Known, challengeId, oldIdentityId,
             replacementIdentityId, completedAt, operation, intent, null, null));
         return Result.Success;
     }
@@ -281,6 +332,9 @@ public sealed class EmailAddress : Aggregate
     /// </summary>
     public Result PrepareCompleteChallenge(Uuid userId, Uuid challengeId, string token, DateTimeOffset now)
     {
+        var cut = ReplayCut.Require(this);
+        if (!cut.IsSuccess)
+            return cut;
         if (string.IsNullOrWhiteSpace(token))
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "A verification challenge is required."));
         if (_owner != userId || _challengeId is null || _challengeId != challengeId || _tokenHash is null)
@@ -311,10 +365,13 @@ public sealed class EmailAddress : Aggregate
         Uuid challengeId, string token, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        var selected = RequireOperation(operation, challengeId);
+        if (!selected.IsSuccess)
+            return selected;
         var prepared = PrepareCompleteChallenge(userId, challengeId, token, now);
         if (!prepared.IsSuccess)
             return prepared;
-        RaiseEvent(new EmailAddressVerified(userId, Known, challengeId, operation, firstResponse, null));
+        Emit(new EmailAddressVerified(userId, Known, challengeId, operation, firstResponse, null));
         return Result.Success;
     }
 
@@ -326,6 +383,9 @@ public sealed class EmailAddress : Aggregate
     /// </summary>
     public Result PrepareReserve(Uuid userId, long expectedRevision = -1)
     {
+        var cut = ReplayCut.Require(this);
+        if (!cut.IsSuccess)
+            return cut;
         if (userId == Uuid.Empty)
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "An email owner is required."));
         if (expectedRevision >= 0 && (ulong)expectedRevision != Version)
@@ -344,11 +404,14 @@ public sealed class EmailAddress : Aggregate
         long expectedRevision = -1)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        var selected = RequireOperation(operation, null);
+        if (!selected.IsSuccess)
+            return selected;
         var prepared = PrepareReserve(userId, expectedRevision);
         if (!prepared.IsSuccess)
             return prepared;
         if (_owner is null)
-            RaiseEvent(new EmailAddressReserved(userId, Known, operation, firstResponse, null));
+            Emit(new EmailAddressReserved(userId, Known, operation, firstResponse, null));
         return Result.Success;
     }
 
@@ -416,6 +479,7 @@ public sealed class EmailAddress : Aggregate
         _recoveryIssued = issued;
         _recoveryExpiresAt = issued.ExpiresAt;
         _recoveryCompleted = false;
+        _currentClaim = null;
     }
 
     void Apply(IdentityRecoveryChallengeClaimed claimed)
@@ -423,27 +487,67 @@ public sealed class EmailAddress : Aggregate
         Acceptance.Observe(claimed);
         Learn(claimed.EmailAddress);
         if (_owner != claimed.UserId || !_isVerified || _recoveryChallengeId != claimed.ChallengeId ||
-            _claims.ContainsKey(claimed.ChallengeId) ||
+            _currentClaim is not null ||
             claimed.OldIdentityId == Uuid.Empty || claimed.ReplacementIdentityId == Uuid.Empty ||
             claimed.OldIdentityId == claimed.ReplacementIdentityId)
             throw new InvalidOperationException("The identity recovery claim does not match its challenge.");
 
-        _claims[claimed.ChallengeId] = new RecoveryClaim(claimed.OldIdentityId, claimed.ReplacementIdentityId, claimed);
+        _currentClaim = new RecoveryClaim(claimed.OldIdentityId, claimed.ReplacementIdentityId, claimed);
+        if (claimed.ChallengeId == _selectedChallengeId)
+            _selectedClaim = _currentClaim;
     }
 
     void Apply(IdentityRecoveryChallengeCompleted completed)
     {
         Acceptance.Observe(completed);
         Learn(completed.EmailAddress);
-        if (_owner != completed.UserId || !_claims.TryGetValue(completed.ChallengeId, out var claim) ||
-            claim.OldIdentityId != completed.OldIdentityId ||
-            claim.ReplacementIdentityId != completed.ReplacementIdentityId ||
-            !_completedRecoveries.Add(completed.ChallengeId))
+        var claim = completed.ChallengeId == _recoveryChallengeId ? _currentClaim
+            : completed.ChallengeId == _selectedChallengeId ? _selectedClaim : null;
+        if (_owner != completed.UserId ||
+            (completed.ChallengeId == _recoveryChallengeId || completed.ChallengeId == _selectedChallengeId) &&
+            (claim is null || claim.OldIdentityId != completed.OldIdentityId ||
+                claim.ReplacementIdentityId != completed.ReplacementIdentityId ||
+                (completed.ChallengeId == _recoveryChallengeId ? _recoveryCompleted : _selectedCompleted)))
             throw new InvalidOperationException("The identity recovery completion does not match its claim.");
+
+        if (completed.ChallengeId == _selectedChallengeId)
+            _selectedCompleted = true;
 
         // Only the completed challenge is marked; a newer challenge slot is left exactly as it is.
         if (_recoveryChallengeId == completed.ChallengeId)
             _recoveryCompleted = true;
+    }
+
+    Result RequireOperation(OperationProvenance operation, Uuid? challengeId)
+    {
+        var cut = ReplayCut.Require(this);
+        if (!cut.IsSuccess || CommittedStreamPosition == 0)
+            return cut;
+        return (challengeId is null || _selectedChallengeId == challengeId) &&
+               Acceptance.SelectedLogicalId == operation.LogicalId && Acceptance.SelectedCommandKind == operation.CommandKind &&
+               Acceptance.SelectedFact is null
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The email append requires its exact selected challenge and native command cut.", true));
+    }
+
+    void Emit(DomainEvent fact)
+    {
+        _emitting = true;
+        try
+        {
+            RaiseEvent(fact);
+        }
+        finally
+        {
+            _emitting = false;
+        }
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        ReplayCut.Observe(ev, _emitting);
     }
 
     static Uuid CreateId(string address) => Uuid.CreateVersion5(AddressNamespaceId, Normalize(address));

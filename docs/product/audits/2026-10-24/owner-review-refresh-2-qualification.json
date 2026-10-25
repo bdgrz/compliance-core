@@ -1,0 +1,12 @@
+{
+  "reviewed": 29,
+  "signalsAtOrAbove065": 1,
+  "triage": [
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/FirmStaffStatusReevaluationReactor.cs",
+      "recoverySignal": 0.65,
+      "disposition": "Existing actual SDK ITenantDirectory contract returns complete current active snapshot (not the app tenant projection). Production installs EventSourcedTenantDirectory<TenantRegistered,TenantRegistered> over actual lifecycle events; each call replays its cursor to current tail. Reactor verifies exact typed source/fullmetadata, retained staff history and canonical tenant IDs before per-tenant discovery. Discovery keeps exact locator/source coverage checks; receiver independently rebinds all actual acceptance/directory tuples before denial-only receipt. Current active staff remains separately required for positive access. No new shared atomic global snapshot or retained replay qualification."
+    }
+  ],
+  "qualification": "No new in-scope defect established by this advisory signal; SDK implementation read as supporting contract context, no live broker health/deploy claim."
+}

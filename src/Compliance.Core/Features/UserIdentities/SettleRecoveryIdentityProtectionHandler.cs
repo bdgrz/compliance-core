@@ -40,7 +40,7 @@ public sealed class SettleRecoveryIdentityProtectionHandler(IdentityRecoveryRece
         var provenance = IdentityRecoveryReceiverSupport.Provenance(request,
             nameof(SettleRecoveryIdentityProtection), stream, frozen, source.Value);
         return await support.ApplyAsync(
-            () => new UserIdentity(request.IdentityId, request.CommandId, nameof(SettleRecoveryIdentityProtection)),
+            () => new UserIdentity(request.IdentityId, request.CommandId, nameof(SettleRecoveryIdentityProtection), request.ChallengeId),
             identity => identity.Acceptance, AcceptedOperationBinding.Of(provenance),
             identity => identity.IsSettledFor(request.ChallengeId)
                 ? IdentityRecoveryReceiverSupport.Superseded("The slot protection was already settled.")

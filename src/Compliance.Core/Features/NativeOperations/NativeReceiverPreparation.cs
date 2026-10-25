@@ -11,7 +11,7 @@ public static class NativeReceiverPreparation
     /// Resolves native receipt knowledge before preparation and rechecks it after a failed result or expected immutable
     /// failure. The caller owns receipt semantics and classification. Requested cancellation and programmer faults pass through.
     /// </summary>
-    public static async ValueTask<Result<Prepared<TPrepared>>> PrepareAsync<TOwner, TPrepared>(IAggregateReader reader,
+    public static ValueTask<Result<Prepared<TPrepared>>> PrepareAsync<TOwner, TPrepared>(IAggregateReader reader,
         Func<TOwner> open, Func<TOwner, Result<ReceiverOutcome>?> decide,
         Func<TOwner, CancellationToken, ValueTask<Result<TPrepared>>> prepare, CancellationToken ct)
         where TOwner : Aggregate where TPrepared : class
@@ -20,10 +20,23 @@ public static class NativeReceiverPreparation
         ArgumentNullException.ThrowIfNull(open);
         ArgumentNullException.ThrowIfNull(decide);
         ArgumentNullException.ThrowIfNull(prepare);
+        return PrepareAsync(reader, open, (owner, _) => ValueTask.FromResult(decide(owner)), prepare, ct);
+    }
+
+    /// <summary>The same recovery boundary when receipt terms require a verified asynchronous selected-body bind.</summary>
+    public static async ValueTask<Result<Prepared<TPrepared>>> PrepareAsync<TOwner, TPrepared>(IAggregateReader reader,
+        Func<TOwner> open, Func<TOwner, CancellationToken, ValueTask<Result<ReceiverOutcome>?>> decide,
+        Func<TOwner, CancellationToken, ValueTask<Result<TPrepared>>> prepare, CancellationToken ct)
+        where TOwner : Aggregate where TPrepared : class
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        ArgumentNullException.ThrowIfNull(open);
+        ArgumentNullException.ThrowIfNull(decide);
+        ArgumentNullException.ThrowIfNull(prepare);
         ct.ThrowIfCancellationRequested();
-        var owner = await reader.HydrateAsync(open(), ct).ConfigureAwait(false);
+        var owner = await ReadAsync(reader, open, ct).ConfigureAwait(false);
         ct.ThrowIfCancellationRequested();
-        var known = decide(owner);
+        var known = await DecideAsync(owner, decide, ct).ConfigureAwait(false);
         ct.ThrowIfCancellationRequested();
         if (known is not null)
             return Result<Prepared<TPrepared>>.Success(new Prepared<TPrepared>(null, known));
@@ -53,13 +66,41 @@ public static class NativeReceiverPreparation
     }
 
     static async ValueTask<Result<ReceiverOutcome>?> RecheckAsync<TOwner>(IAggregateReader reader, Func<TOwner> open,
-        Func<TOwner, Result<ReceiverOutcome>?> decide, CancellationToken ct) where TOwner : Aggregate
+        Func<TOwner, CancellationToken, ValueTask<Result<ReceiverOutcome>?>> decide, CancellationToken ct) where TOwner : Aggregate
     {
-        var owner = await reader.HydrateAsync(open(), ct).ConfigureAwait(false);
+        var owner = await ReadAsync(reader, open, ct).ConfigureAwait(false);
         ct.ThrowIfCancellationRequested();
-        var outcome = decide(owner);
+        var outcome = await DecideAsync(owner, decide, ct).ConfigureAwait(false);
         ct.ThrowIfCancellationRequested();
         return outcome;
+    }
+
+    static async ValueTask<TOwner> ReadAsync<TOwner>(IAggregateReader reader, Func<TOwner> open, CancellationToken ct)
+        where TOwner : Aggregate
+    {
+        try
+        {
+            return await reader.HydrateAsync(open(), ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException)
+        {
+            ct.ThrowIfCancellationRequested();
+            throw;
+        }
+    }
+
+    static async ValueTask<Result<ReceiverOutcome>?> DecideAsync<TOwner>(TOwner owner,
+        Func<TOwner, CancellationToken, ValueTask<Result<ReceiverOutcome>?>> decide, CancellationToken ct)
+    {
+        try
+        {
+            return await decide(owner, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException)
+        {
+            ct.ThrowIfCancellationRequested();
+            throw;
+        }
     }
 
     /// <summary>Exactly one prepared candidate or already decided native receipt outcome.</summary>

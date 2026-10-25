@@ -10,8 +10,11 @@ namespace Bdgrz.Compliance.Features.UserIdentities;
 /// <summary>An external identity provider association for a platform user.</summary>
 public sealed class UserIdentity : Aggregate
 {
-    readonly Dictionary<Uuid, RecoveryProtection> _protections = [];
-    readonly HashSet<Uuid> _settled = [];
+    bool _emitting;
+    readonly Uuid _selectedChallengeId;
+    bool _selectedSettled;
+    Uuid? _protectionChallengeId;
+    RecoveryProtection? _protection;
     string? _provider;
     string? _identifier;
     bool _isRegistered;
@@ -24,34 +27,42 @@ public sealed class UserIdentity : Aggregate
     UserIdentityRevoked? _revocation;
 
     public UserIdentity(string provider, string identifier)
-        : this(CreateIdentityId(provider, identifier), provider, identifier, Uuid.Empty, null)
+        : this(CreateIdentityId(provider, identifier), provider, identifier, Uuid.Empty, null, Uuid.Empty)
     {
     }
 
     /// <summary>Hydrates an identity from its stable identity ID, for session revocation checks.</summary>
     public UserIdentity(Uuid identityId)
-        : this(identityId, null, null, Uuid.Empty, null)
+        : this(identityId, null, null, Uuid.Empty, null, Uuid.Empty)
+    {
+    }
+
+    /// <summary>Selects a historical challenge on the exact provider and subject slot.</summary>
+    public UserIdentity(string provider, string identifier, Uuid selectedChallengeId)
+        : this(CreateIdentityId(provider, identifier), provider, identifier, Uuid.Empty, null, selectedChallengeId)
     {
     }
 
     /// <summary>Hydrates an identity by id for one logical recovery operation selected by command id and kind.</summary>
-    public UserIdentity(Uuid identityId, Uuid selectedCommandId, string selectedCommandKind)
-        : this(identityId, null, null, selectedCommandId, selectedCommandKind)
+    public UserIdentity(Uuid identityId, Uuid selectedCommandId, string? selectedCommandKind, Uuid selectedChallengeId)
+        : this(identityId, null, null, selectedCommandId, selectedCommandKind, selectedChallengeId)
     {
     }
 
     /// <summary>Hydrates an identity by provider and subject for one logical recovery operation.</summary>
-    public UserIdentity(string provider, string identifier, Uuid selectedCommandId, string selectedCommandKind)
-        : this(CreateIdentityId(provider, identifier), provider, identifier, selectedCommandId, selectedCommandKind)
+    public UserIdentity(string provider, string identifier, Uuid selectedCommandId, string? selectedCommandKind,
+        Uuid selectedChallengeId)
+        : this(CreateIdentityId(provider, identifier), provider, identifier, selectedCommandId, selectedCommandKind, selectedChallengeId)
     {
     }
 
     UserIdentity(Uuid identityId, string? provider, string? identifier, Uuid selectedCommandId,
-        string? selectedCommandKind)
+        string? selectedCommandKind, Uuid selectedChallengeId)
         : base(identityId, new EventStreamAddress("bdgrz", "user-identities", identityId.ToString()))
     {
         _provider = provider;
         _identifier = identifier;
+        _selectedChallengeId = selectedChallengeId;
         Acceptance = new NativeAcceptance(selectedCommandId, selectedCommandKind);
         On<UserIdentityRegistered>(Apply);
         On<UserIdentityRevoked>(Apply);
@@ -68,6 +79,17 @@ public sealed class UserIdentity : Aggregate
 
     /// <summary>Acceptance of the recovery operation this hydration was selected for.</summary>
     internal NativeAcceptance Acceptance { get; }
+
+    internal Uuid SelectedChallengeId => _selectedChallengeId;
+    internal IdentityOwnerReplayCut ReplayCut { get; } = new();
+    internal Uuid? ProtectionChallengeId => _protectionChallengeId;
+    internal RecoveryProtection? Protection => _protection;
+
+    /// <summary>Selects a historical challenge explicitly; no command hash is reversed into a challenge.</summary>
+    public UserIdentity(Uuid identityId, Uuid selectedChallengeId)
+        : this(identityId, null, null, Uuid.Empty, null, selectedChallengeId)
+    {
+    }
 
     static Uuid CreateIdentityId(string provider, string identifier) =>
         Uuid.CreateVersion5(IdentityNamespaceId, $"{provider}\n{identifier}");
@@ -101,10 +123,17 @@ public sealed class UserIdentity : Aggregate
     internal UserIdentityRevoked? RevocationFact => _revocation;
 
     /// <summary>True while the slot is protected for the recovery challenge.</summary>
-    public bool IsProtectedFor(Uuid challengeId) => _protections.ContainsKey(challengeId);
+    public bool IsProtectedFor(Uuid challengeId) => _protectionChallengeId == challengeId;
 
     /// <summary>True once the protection of the challenge was settled, which fences any later protection for it.</summary>
-    public bool IsSettledFor(Uuid challengeId) => _settled.Contains(challengeId);
+    public bool IsSettledFor(Uuid challengeId)
+    {
+        if (challengeId == _selectedChallengeId && challengeId != Uuid.Empty)
+            return _selectedSettled;
+        if (CommittedStreamPosition == 0 && !_selectedSettled)
+            return false;
+        throw new InvalidOperationException("Historical settlement authority requires its explicitly selected challenge.");
+    }
 
     public Result<AuthenticatedUserIdentity> Register(
         Uuid? userId,
@@ -134,11 +163,11 @@ public sealed class UserIdentity : Aggregate
         }
 
         // A slot protected for a recovery can only be associated with that recovery's account.
-        if (_protections.Values.Any(protection => userId != protection.AccountId))
+        if (_protection is { } protection && userId != protection.AccountId)
             return Result<AuthenticatedUserIdentity>.Failure(ProtectedForRecovery);
 
         var registeredUserId = userId ?? Uuid.CreateVersion4();
-        RaiseEvent(new UserIdentityRegistered(
+        Emit(new UserIdentityRegistered(
             registeredUserId,
             _provider,
             _identifier,
@@ -173,10 +202,10 @@ public sealed class UserIdentity : Aggregate
         if (!prepared.IsSuccess || _isRevoked)
             return prepared;
         // A slot held by a recovery can only be revoked by that recovery's own receiver.
-        if (_protections.Count > 0)
+        if (_protection is not null)
             return Result.Failure(ProtectedForRecovery);
 
-        RaiseEvent(new UserIdentityRevoked(Id, _userId, replacementIdentityId, revokedAt));
+        Emit(new UserIdentityRevoked(Id, _userId, replacementIdentityId, revokedAt));
         return Result.Success;
     }
 
@@ -210,7 +239,7 @@ public sealed class UserIdentity : Aggregate
     public ProtectionDecision DecideProtection(Uuid challengeId, Uuid accountId, RecoveryIdentityRole role,
         Uuid replacementIdentityId)
     {
-        if (_settled.Contains(challengeId))
+        if (IsSettledFor(challengeId))
             return new ProtectionDecision(ProtectionOutcome.Fenced, "The recovery protection was already settled.");
         if (role == RecoveryIdentityRole.Old)
         {
@@ -231,15 +260,11 @@ public sealed class UserIdentity : Aggregate
                 "The replacement identity is associated with another account.");
         }
 
-        foreach (var (otherChallenge, other) in _protections)
-        {
-            if (otherChallenge == challengeId)
-                continue;
+        if (_protection is { } other && _protectionChallengeId != challengeId)
             return other.AccountId == accountId
                 ? new ProtectionDecision(ProtectionOutcome.Wait, "Another recovery of this account holds the slot.")
                 : new ProtectionDecision(ProtectionOutcome.Conflict,
                     "Another account's recovery holds the slot.");
-        }
 
         return new ProtectionDecision(ProtectionOutcome.Proceed, string.Empty);
     }
@@ -248,11 +273,14 @@ public sealed class UserIdentity : Aggregate
     public Result Protect(OperationProvenance operation, ImmutableContentRef intent, ImmutableContentRef? sourceProofs,
         Uuid challengeId, Uuid accountId, RecoveryIdentityRole role, Uuid replacementIdentityId, long generation)
     {
+        var cut = RequireOperation(operation, challengeId);
+        if (!cut.IsSuccess)
+            return Result.Failure(cut.Error!);
         ArgumentNullException.ThrowIfNull(operation);
         var decision = DecideProtection(challengeId, accountId, role, replacementIdentityId);
         if (decision.Outcome != ProtectionOutcome.Proceed)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, decision.Reason, false));
-        RaiseEvent(new RecoveryIdentityProtected(Stream, (long)Version, generation, intent, sourceProofs, operation,
+        Emit(new RecoveryIdentityProtected(Stream, (long)Version, generation, intent, sourceProofs, operation,
             null, null, challengeId, accountId, role));
         return Result.Success;
     }
@@ -261,8 +289,11 @@ public sealed class UserIdentity : Aggregate
     public Result Settle(OperationProvenance operation, ImmutableContentRef intent, ImmutableContentRef? sourceProofs,
         Uuid challengeId, long generation)
     {
+        var cut = RequireOperation(operation, challengeId);
+        if (!cut.IsSuccess)
+            return Result.Failure(cut.Error!);
         ArgumentNullException.ThrowIfNull(operation);
-        RaiseEvent(new RecoveryIdentityProtectionSettled(Stream, (long)Version, generation, intent, sourceProofs,
+        Emit(new RecoveryIdentityProtectionSettled(Stream, (long)Version, generation, intent, sourceProofs,
             operation, null, null, challengeId));
         return Result.Success;
     }
@@ -274,6 +305,9 @@ public sealed class UserIdentity : Aggregate
     public Result RegisterRecovered(OperationProvenance operation, ImmutableContentRef intent, Uuid challengeId,
         Uuid accountId, string? emailAddress)
     {
+        var cut = RequireOperation(operation, challengeId);
+        if (!cut.IsSuccess)
+            return Result.Failure(cut.Error!);
         ArgumentNullException.ThrowIfNull(operation);
         if (_provider is null || _identifier is null)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
@@ -281,11 +315,11 @@ public sealed class UserIdentity : Aggregate
         if (_isRegistered)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The provider identity is already registered.", false));
-        if (!_protections.TryGetValue(challengeId, out var protection) || protection.AccountId != accountId ||
+        if (_protectionChallengeId != challengeId || _protection is not { } protection || protection.AccountId != accountId ||
             protection.Role != RecoveryIdentityRole.Replacement)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The replacement slot is not protected for this recovery.", false));
-        RaiseEvent(new UserIdentityRegistered(accountId, _provider, _identifier, emailAddress, operation, challengeId,
+        Emit(new UserIdentityRegistered(accountId, _provider, _identifier, emailAddress, operation, challengeId,
             intent));
         return Result.Success;
     }
@@ -323,6 +357,9 @@ public sealed class UserIdentity : Aggregate
     public Result RevokeRecovered(OperationProvenance operation, ImmutableContentRef intent, Uuid challengeId,
         Uuid replacementIdentityId, DateTimeOffset revokedAt)
     {
+        var cut = RequireOperation(operation, challengeId);
+        if (!cut.IsSuccess)
+            return Result.Failure(cut.Error!);
         ArgumentNullException.ThrowIfNull(operation);
         var prepared = PrepareRevoke(replacementIdentityId);
         if (!prepared.IsSuccess)
@@ -330,11 +367,11 @@ public sealed class UserIdentity : Aggregate
         if (_isRevoked)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The provider identity was already revoked by another operation.", false));
-        if (!_protections.TryGetValue(challengeId, out var protection) || protection.AccountId != _userId ||
+        if (_protectionChallengeId != challengeId || _protection is not { } protection || protection.AccountId != _userId ||
             protection.Role != RecoveryIdentityRole.Old)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The old slot is not protected for this recovery.", false));
-        RaiseEvent(new UserIdentityRevoked(Id, _userId, replacementIdentityId, revokedAt, operation, challengeId,
+        Emit(new UserIdentityRevoked(Id, _userId, replacementIdentityId, revokedAt, operation, challengeId,
             intent));
         return Result.Success;
     }
@@ -357,10 +394,11 @@ public sealed class UserIdentity : Aggregate
         _userId = registered.UserId;
         _emailAddress = registered.EmailAddress;
         _registration = registered;
-        _registrationProof = new IdentityRegistrationProof(Id, registered.Metadata.EventId,
-            registered.Metadata.AggregateVersion, registered.Metadata.AggregateVersion - 1,
-            Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(registered,
-                ComplianceCoreJsonContext.Default.UserIdentityRegistered))));
+        // A hydrated proof is bound by the full reader to its actual physical record. A fresh first
+        // registration has no predecessor records; it is the only unsaved case used by aggregate scenarios.
+        _registrationProof = Version == 0 && CommittedStreamPosition == 0
+            ? RegistrationProof(registered, 0)
+            : null;
     }
 
     void Apply(UserIdentityRevoked revoked)
@@ -381,24 +419,74 @@ public sealed class UserIdentity : Aggregate
     void Apply(RecoveryIdentityProtected protectedFact)
     {
         Acceptance.Observe(protectedFact);
-        if (protectedFact.Owner != Stream || _settled.Contains(protectedFact.ChallengeId) ||
-            !_protections.TryAdd(protectedFact.ChallengeId,
-                new RecoveryProtection(protectedFact.AccountId, protectedFact.Role)))
+        if (protectedFact.Owner != Stream || protectedFact.ChallengeId == Uuid.Empty ||
+            protectedFact.AccountId == Uuid.Empty || _protection is not null ||
+            protectedFact.ChallengeId == _selectedChallengeId && _selectedSettled)
             throw new InvalidOperationException("The recovery protection does not match its identity slot.");
+        (_protectionChallengeId, _protection) = (protectedFact.ChallengeId,
+            new RecoveryProtection(protectedFact.AccountId, protectedFact.Role));
     }
 
     void Apply(RecoveryIdentityProtectionSettled settled)
     {
         Acceptance.Observe(settled);
-        if (settled.Owner != Stream || !_settled.Add(settled.ChallengeId))
+        if (settled.Owner != Stream || settled.ChallengeId == Uuid.Empty ||
+            settled.ChallengeId == _selectedChallengeId && _selectedSettled)
             throw new InvalidOperationException("The recovery protection settlement does not match its identity slot.");
-        _protections.Remove(settled.ChallengeId);
+        if (settled.ChallengeId == _selectedChallengeId)
+            _selectedSettled = true;
+        if (_protectionChallengeId == settled.ChallengeId)
+            (_protectionChallengeId, _protection) = (null, null);
     }
+
+    Result RequireOperation(OperationProvenance operation, Uuid challengeId)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        var cut = ReplayCut.Require(this);
+        if (!cut.IsSuccess || CommittedStreamPosition == 0)
+            return cut;
+        return _selectedChallengeId == challengeId && Acceptance.SelectedLogicalId == operation.LogicalId &&
+               Acceptance.SelectedCommandKind == operation.CommandKind && Acceptance.SelectedFact is null
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The recovery append requires its exact selected challenge and native command cut.", true));
+    }
+
+    void Emit(DomainEvent fact)
+    {
+        _emitting = true;
+        try
+        {
+            RaiseEvent(fact);
+        }
+        finally
+        {
+            _emitting = false;
+        }
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        ReplayCut.Observe(ev, _emitting);
+    }
+
+    internal void BindRegistrationProof(UserIdentityRegistered registered, ulong physicalPosition)
+    {
+        if (_registration != registered || _registration.Metadata != registered.Metadata)
+            throw new InvalidOperationException("The registration proof does not match the compact identity authority.");
+        _registrationProof = RegistrationProof(registered, physicalPosition);
+    }
+
+    static IdentityRegistrationProof RegistrationProof(UserIdentityRegistered registered, ulong position) =>
+        new(registered.Metadata.AggregateId, registered.Metadata.EventId, registered.Metadata.AggregateVersion, position,
+            Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(registered,
+                ComplianceCoreJsonContext.Default.UserIdentityRegistered))));
 
     Result<AuthenticatedUserIdentity> Registered() =>
         Result<AuthenticatedUserIdentity>.Success(new AuthenticatedUserIdentity(Id, _userId, _emailAddress));
 
-    sealed record RecoveryProtection(Uuid AccountId, RecoveryIdentityRole Role);
+    internal sealed record RecoveryProtection(Uuid AccountId, RecoveryIdentityRole Role);
 
     /// <summary>The outcomes of deciding whether a slot can be protected for a recovery.</summary>
     public enum ProtectionOutcome

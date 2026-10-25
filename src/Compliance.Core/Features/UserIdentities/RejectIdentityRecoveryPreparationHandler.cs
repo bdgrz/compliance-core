@@ -40,29 +40,30 @@ public sealed class RejectIdentityRecoveryPreparationHandler(IdentityRecoveryRec
         var slot = conflict.Role == RecoveryIdentityRole.Old ? intent.OldIdentityId : intent.ReplacementIdentityId;
         if (conflict.IdentityId != slot)
             return IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>("The conflict does not name a slot of this recovery.");
-        var identity = await support.Reader.HydrateAsync(new UserIdentity(conflict.IdentityId), ct).ConfigureAwait(false);
-        var decision = identity.DecideProtection(request.ChallengeId, intent.AccountId, conflict.Role,
-            intent.ReplacementIdentityId);
         var target = recovery.Stream;
         var provenance = new OperationProvenance(request.CommandId, request.ChallengeId, null,
             nameof(RejectIdentityRecoveryPreparation), intent.Header.OriginalActor, target,
             intent.ChallengeId.ToString(), null, intent.Header.AuthoredIntentSha256, intent.Header.AcceptedAt, target,
             target);
-        return await support.ApplyAsync(
+        return await support.ApplyAsync<IdentityRecovery, UserIdentity>(
             () => IdentityRecoveryReceiverSupport.RecoveryOf(request.ChallengeId, request.CommandId),
             current => current.Acceptance, AcceptedOperationBinding.Of(provenance),
-            current =>
+            async (_, cancel) => Result<UserIdentity>.Success(await support.Reader.HydrateAsync(
+                new UserIdentity(conflict.IdentityId, request.ChallengeId), cancel).ConfigureAwait(false)),
+            (current, identity) =>
             {
                 if (current.State is IdentityRecovery.Stage.Accepted or IdentityRecovery.Stage.Completed)
                     return IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>(
                         "An accepted swap cannot be rejected; it completes forward.");
                 // A replay was already decided above; a new rejection needs the conflict proven right now.
+                var decision = identity.DecideProtection(request.ChallengeId, intent.AccountId, conflict.Role,
+                    intent.ReplacementIdentityId);
                 return decision.Outcome == UserIdentity.ProtectionOutcome.Conflict
                     ? null
                     : IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>(
                         "The named association conflict cannot be proven against the authoritative identity.");
             },
-            (IdentityRecovery current) => current.Reject(provenance, recovery.Intent!, request.ConflictProof), context, ct)
+            (current, _) => current.Reject(provenance, recovery.Intent!, request.ConflictProof), context, ct)
             .ConfigureAwait(false);
     }
 }

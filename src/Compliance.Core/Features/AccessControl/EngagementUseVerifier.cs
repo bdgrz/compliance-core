@@ -48,7 +48,7 @@ sealed class EngagementUseVerifier(IAggregateReader reader, EngagementPersonalDe
             !Uuid.TryParse(source.Stream.Resource, CultureInfo.InvariantCulture, out var streamEngagement))
             return false;
         var owner = await reader.HydrateAsync(new ServiceEngagementIndependence(tenantId,
-            engagementId == Uuid.Empty ? streamEngagement : engagementId), ct).ConfigureAwait(false);
+            engagementId == Uuid.Empty ? streamEngagement : engagementId, selectedRootId: operationId), ct).ConfigureAwait(false);
         return owner.OperationOf(operationId) is not null;
     }
 }

@@ -34,7 +34,7 @@ public sealed class StartIdentityRecoveryHandler(
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "Enter a valid email address."));
 
         var now = clock.GetUtcNow();
-        var current = await reader.HydrateAsync(new EmailAddress(normalized, request.ChallengeId, CommandKind), ct)
+        var current = await reader.HydrateAsync(new EmailAddress(normalized, request.ChallengeId, CommandKind, request.ChallengeId), ct)
             .ConfigureAwait(false);
         var provenance = Provenance(request, normalized, current.Stream, now);
         var binding = AcceptedOperationBinding.Of(provenance);
@@ -57,20 +57,17 @@ public sealed class StartIdentityRecoveryHandler(
             hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
         }
 
-        var unit = await content.WriteJsonAsync(IdentityRecoveryReceiverSupport.Realm, Uuid.CreateVersion4(),
-            UnitResult.Schema, new UnitResult(), ct).ConfigureAwait(false);
-        var response = new FirstResponseDescriptor(200, ImmutableContentStoreExtensions.JsonMediaType,
-            UnitResult.Schema, new StandardResponseBody(unit));
+        var preparation = new IdentityOwnerPreparation(current);
         var accepted = await operations.ExecuteAsync(new NativeOperation<EmailAddress>(binding,
-            () => new EmailAddress(normalized, request.ChallengeId, CommandKind),
+            () => new EmailAddress(normalized, request.ChallengeId, CommandKind, request.ChallengeId),
             address => address.Acceptance,
-            address => address.PrepareIssueRecoveryChallenge(address.Owner ?? Uuid.Empty, request.ChallengeId, hash,
-                expiresAt, now, tokenKeys.ActiveKeyId, deliveryFailed) is { IsSuccess: false } failed
-                ? Result<FirstResponseDescriptor>.Failure(failed.Error!)
-                : Result<FirstResponseDescriptor>.Success(response),
-            (EmailAddress address, ImmutableContentRef frozen) => address.IssueRecoveryChallenge(provenance, frozen,
-                address.Owner ?? Uuid.Empty, request.ChallengeId, hash, expiresAt, now, tokenKeys.ActiveKeyId,
-                deliveryFailed)),
+            (address, cancel) => preparation.PrepareAsync(address,
+                address.PrepareIssueRecoveryChallenge(address.Owner ?? Uuid.Empty, request.ChallengeId, hash,
+                    expiresAt, now, tokenKeys.ActiveKeyId, deliveryFailed),
+                bodyCancel => EmailAddressOperations.UnitResponseAsync(content, bodyCancel), cancel),
+            (EmailAddress address, ImmutableContentRef frozen) => preparation.Apply(address,
+                () => address.IssueRecoveryChallenge(provenance, frozen, address.Owner ?? Uuid.Empty, request.ChallengeId,
+                    hash, expiresAt, now, tokenKeys.ActiveKeyId, deliveryFailed))),
             context, ct).ConfigureAwait(false);
         if (!accepted.IsSuccess)
             return accepted.Error == EmailAddress.OutstandingRecoveryChallenge

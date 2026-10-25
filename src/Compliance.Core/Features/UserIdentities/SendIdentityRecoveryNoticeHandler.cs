@@ -26,7 +26,7 @@ public sealed class SendIdentityRecoveryNoticeHandler(IdentityRecoveryReceiverSu
             return IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>(
                 "The command does not name this recovery's notice and a valid recipient.");
 
-        var address = await support.Reader.HydrateAsync(new EmailAddress(recipient), ct).ConfigureAwait(false);
+        var address = await support.Reader.HydrateAsync(new EmailAddress(recipient, Uuid.Empty, null, request.ChallengeId), ct).ConfigureAwait(false);
         if (address.ClaimOf(request.ChallengeId) is not { } claim || claim.Fact.UserId != intent.Value!.AccountId)
             return IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>(
                 "The recipient is not the address that claimed this recovery.");

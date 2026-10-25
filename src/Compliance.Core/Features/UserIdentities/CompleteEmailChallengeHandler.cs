@@ -42,17 +42,16 @@ public sealed class CompleteEmailChallengeHandler(
                 return proof;
         }
 
-        var response = await EmailAddressOperations.UnitResponseAsync(content, ct).ConfigureAwait(false);
+        var preparation = new IdentityOwnerPreparation(current);
         return EmailAddressOperations.Of(await operations.ExecuteAsync(new NativeOperation<EmailAddress>(
             AcceptedOperationBinding.Of(provenance), () => Hydrate(normalized, request), address => address.Acceptance,
-            address => address.PrepareCompleteChallenge(request.UserId, request.ChallengeId, request.Token, now)
-                is { IsSuccess: false } failed
-                ? Result<FirstResponseDescriptor>.Failure(failed.Error!)
-                : Result<FirstResponseDescriptor>.Success(response),
-            (EmailAddress address, ImmutableContentRef frozen) => address.CompleteChallenge(provenance, frozen,
-                request.UserId, request.ChallengeId, request.Token, now)), context, ct).ConfigureAwait(false));
+            (address, cancel) => preparation.PrepareAsync(address,
+                address.PrepareCompleteChallenge(request.UserId, request.ChallengeId, request.Token, now),
+                bodyCancel => EmailAddressOperations.UnitResponseAsync(content, bodyCancel), cancel),
+            (EmailAddress address, ImmutableContentRef frozen) => preparation.Apply(address,
+                () => address.CompleteChallenge(provenance, frozen, request.UserId, request.ChallengeId, request.Token, now))), context, ct).ConfigureAwait(false));
     }
 
     static EmailAddress Hydrate(string normalized, CompleteEmailChallenge request) =>
-        new(normalized, request.ChallengeId, CommandKind);
+        new(normalized, request.ChallengeId, CommandKind, request.ChallengeId);
 }

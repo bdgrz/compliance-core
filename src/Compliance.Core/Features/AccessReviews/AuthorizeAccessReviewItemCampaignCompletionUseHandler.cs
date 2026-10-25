@@ -26,6 +26,41 @@ sealed class AuthorizeAccessReviewItemCampaignCompletionUseHandler(IAggregateRea
     protected override AccessReviewItem Open(AuthorizeAccessReviewItemCampaignCompletionUse request,
         Uuid selectedCommandId) => new(Tenant(request.Target), request.CampaignId, request.SourceOwnerId, selectedCommandId, selectedContentEventId: request.SourceContentEventId);
 
+    protected override ReservationKey ReceiptSelection(AuthorizeAccessReviewItemCampaignCompletionUse request) =>
+        new(request.OperationId, AccessReviewEffects.CampaignStream(Tenant(request.Target), request.CampaignId), (ulong)AccessReviewEffects.Generation, request.Target, SourceUseReservations.PurposeName(SourceUsePurpose.CampaignCompletion));
+
+    protected override async ValueTask<Result<SourceUseSource>?> VerifyReceiptSourceAsync(AuthorizeAccessReviewItemCampaignCompletionUse request,
+        AccessReviewItem owner, CancellationToken ct)
+    {
+        var tenant = Tenant(request.Target);
+        if (request.Generation != AccessReviewEffects.Generation || request.SourceOwnerId != owner.ItemId)
+            return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The request differs from its selected Access source-use owner or generation.", false));
+        var native = await verifier.ReadNativeAsync(tenant, request.CampaignId, request.Source, request.Intent,
+            request.OperationId, Uuid.Empty, ct).ConfigureAwait(false);
+        if (native.Error is not null)
+            return Result<SourceUseSource>.Failure(native.Error);
+        var campaign = native.Campaign!;
+        var parent = native.Accepted!.Operation;
+        var key = ReceiptSelection(request)!;
+        var recorded = await AccessReviewSourceUseReceipts.ReadAsync(Content, owner, key, parent, request.Source,
+            request.Intent, SourceUsePurpose.CampaignCompletion, false, true, ct).ConfigureAwait(false);
+        if (recorded is null)
+            return null;
+        var result = recorded.Value;
+        if (!result.IsSuccess)
+            return Result<SourceUseSource>.Failure(result.Error!);
+        var intent = result.Value!;
+        if (intent.Requirement.ContentEvent.EventId != request.SourceContentEventId ||
+            intent.Requirement.ResourceRevision != request.ExpectedContentRevision)
+            return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The authorization differs from its exact recorded source use requirement.", false));
+        var superseded = campaign.CanceledFor(request.OperationId) is not null ? "The completion was canceled."
+            : campaign.ClosedFor(request.OperationId) is not null ? "The completion already closed the campaign." : null;
+        return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, intent.ParentIntent, key,
+            intent.Requirement, nameof(AuthorizeAccessReviewItemCampaignCompletionUse), null, superseded));
+    }
+
     protected override async ValueTask<Result<SourceUseSource>> VerifyAsync(
         AuthorizeAccessReviewItemCampaignCompletionUse request, CancellationToken ct)
     {

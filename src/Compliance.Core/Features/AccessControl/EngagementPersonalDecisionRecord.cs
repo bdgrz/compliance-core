@@ -4,13 +4,13 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     The facts of one personal decision on its engagement owner, in the order they were appended. The ordinal is the
 ///     admission order on the owner; it decides which materialized decision stands for its kind.
 /// </summary>
-public sealed class EngagementPersonalDecisionRecord(EngagementPersonalDecisionAdmitted admitted, int ordinal)
+public sealed class EngagementPersonalDecisionRecord(EngagementPersonalDecisionAdmitted admitted, long ordinal)
 {
     /// <summary>The root admission, which freezes the decision intent and pins the engagement content.</summary>
     public EngagementPersonalDecisionAdmitted Admitted { get; } = admitted;
 
     /// <summary>The admission order of this decision on the engagement owner.</summary>
-    public int Ordinal { get; } = ordinal;
+    public long Ordinal { get; } = ordinal;
 
     /// <summary>The irreversible authorization, once appended.</summary>
     public EngagementPersonalDecisionAuthorized? Authorized { get; internal set; }

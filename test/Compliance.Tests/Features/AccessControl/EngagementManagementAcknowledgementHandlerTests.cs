@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
@@ -32,7 +33,7 @@ public sealed class EngagementManagementAcknowledgementHandlerTests
         // Assert
         Assert.False(result.IsSuccess);
         var owner = await host.HydrateAsync(new ServiceEngagementIndependence(host.Tenant, engagement));
-        Assert.Empty(owner.Decisions);
+        Assert.Empty((await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).Decisions);
         Assert.Equal(1UL, owner.Revision);
     }
 

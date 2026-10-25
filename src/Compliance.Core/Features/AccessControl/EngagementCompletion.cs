@@ -85,7 +85,7 @@ sealed class EngagementCompletion(IAggregateReader reader, IAggregateExecutor ex
             try
             {
                 var step = await executor.ExecuteAsync(new ServiceEngagementIndependence(owner.TenantId,
-                    owner.EngagementId, commandId), fresh =>
+                    owner.EngagementId, commandId, operationId), fresh =>
                     {
                         switch (fresh.Acceptance.Decide(binding))
                         {
@@ -95,6 +95,10 @@ sealed class EngagementCompletion(IAggregateReader reader, IAggregateExecutor ex
                             case NativeAcceptanceDecision.Conflict:
                                 return AggregateOutcome.Discard(Result<Step>.Failure(AcceptedAppendResult.ConflictError));
                         }
+
+                        if (fresh.ReplayCut.Digest != owner.ReplayCut.Digest)
+                            return AggregateOutcome.Discard(Result<Step>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                "The engagement native prefix changed during receiver preparation; retry from its exact current cut.", true)));
 
                         if (fresh.OperationOf(operationId) is { Completed: { } existing })
                             return AggregateOutcome.Discard(Result<Step>.Success(
@@ -131,16 +135,16 @@ sealed class EngagementCompletion(IAggregateReader reader, IAggregateExecutor ex
             IndependenceContent.Realm(EngagementIndependenceIntent.TenantOf(intent.Header)), intent.Evidence, ct);
 
     /// <summary>Writes a deterministic content item so a retried completion writes the identical bytes.</summary>
-    public Task<ImmutableContentRef> WriteAsync<T>(Uuid tenantId, Uuid operationId, string schema, T value,
+    public Task<ImmutableContentRef> WriteAsync<T>(Uuid tenantId, EventStreamAddress firstOwner, Uuid operationId, string schema, T value,
         CancellationToken ct) where T : notnull =>
-        content.WriteJsonAsync(IndependenceContent.Realm(tenantId), Uuid.CreateVersion5(operationId, schema), schema,
+        content.WriteJsonAsync(IndependenceContent.Realm(tenantId), EngagementAcceptanceEffects.ContentId(firstOwner, operationId, schema), schema,
             value, ct);
 
     /// <summary>Writes the terminal result wrapper around a view content item.</summary>
-    public Task<ImmutableContentRef> WriteResultAsync(Uuid tenantId, Uuid operationId, ImmutableContentRef view,
+    public Task<ImmutableContentRef> WriteResultAsync(Uuid tenantId, EventStreamAddress firstOwner, Uuid operationId, ImmutableContentRef view,
         CancellationToken ct) =>
         content.WriteJsonAsync(IndependenceContent.Realm(tenantId),
-            Uuid.CreateVersion5(operationId, IndependenceContent.ResultSchema + ":" + EngagementAcceptanceEffects.ResultSchema),
+            EngagementAcceptanceEffects.ContentId(firstOwner, operationId, IndependenceContent.ResultSchema + ":" + EngagementAcceptanceEffects.ResultSchema),
             IndependenceContent.ResultSchema,
             new MutationResultContent(EngagementAcceptanceEffects.ResultSchema, new StandardResponseBody(view)), ct);
 

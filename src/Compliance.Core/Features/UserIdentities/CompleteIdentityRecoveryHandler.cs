@@ -37,7 +37,7 @@ public sealed class CompleteIdentityRecoveryHandler(
 
         var now = clock.GetUtcNow();
         var replacementId = UserIdentity.GetIdentityId(provider, subject);
-        var address = await reader.HydrateAsync(new EmailAddress(normalized, request.ChallengeId, CommandKind), ct)
+        var address = await reader.HydrateAsync(new EmailAddress(normalized, request.ChallengeId, CommandKind, request.ChallengeId), ct)
             .ConfigureAwait(false);
         if (!address.IsVerified || address.Owner is not { } userId)
             return Fail(RequestErrorKind.Forbidden, "No verified recovery address is available.");
@@ -54,72 +54,81 @@ public sealed class CompleteIdentityRecoveryHandler(
             // An exact retry replays the original acknowledgment before any proof or current state is consulted;
             // a changed intent under the same challenge conflicts.
             var replay = await operations.ExecuteAsync(new NativeOperation<EmailAddress>(binding,
-                () => new EmailAddress(normalized, request.ChallengeId, CommandKind),
+                () => new EmailAddress(normalized, request.ChallengeId, CommandKind, request.ChallengeId),
                 current => current.Acceptance,
                 _ => Result<FirstResponseDescriptor>.Failure(AcceptedAppendResult.ConflictError),
                 (_, _) => Result.Failure(AcceptedAppendResult.ConflictError)), context, ct).ConfigureAwait(false);
             return await ReadAsync(replay, ct).ConfigureAwait(false);
         }
 
-        var checks = await CheckAsync(request, userId, provider, subject, replacementId, ct).ConfigureAwait(false);
-        if (!checks.IsSuccess)
-            return Result<OperationAcceptedResponse>.Failure(checks.Error!);
-        var proof = address.PrepareClaimIdentityRecovery(userId, request.ChallengeId, request.Token,
-            request.OldIdentityId, replacementId, now);
-        if (!proof.IsSuccess)
-            return Result<OperationAcceptedResponse>.Failure(proof.Error!);
-
-        // The frozen content is written before the append: the candidate intent, the two non-bearer proof
-        // provenances and the fixed acknowledgment. None of it contains the token.
-        var emailProof = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(), IdentityRecoveryProofProvenance.Schema,
-            new IdentityRecoveryProofProvenance("email_challenge", request.ChallengeId, normalized,
-                address.RecoveryTokenKeyId, null, now), ct).ConfigureAwait(false);
-        var replacementProof = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(),
-            IdentityRecoveryProofProvenance.Schema,
-            new IdentityRecoveryProofProvenance("oidc_provider_identity", request.ChallengeId, replacementId.ToString(),
-                null, assertedEmail, now), ct).ConfigureAwait(false);
-        var oldIdentity = await reader.HydrateAsync(new UserIdentity(request.OldIdentityId), ct).ConfigureAwait(false);
-        var header = new DurableIntentHeader(request.ChallengeId, address.Stream, address.Stream, address.Stream, actor,
-            request.ChallengeId.ToString(), null, digest, now);
-        var intent = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(), IdentityRecoveryIntent.Schema,
-            new IdentityRecoveryIntent(header, request.ChallengeId, userId, request.OldIdentityId, replacementId,
-                oldIdentity.Provider ?? string.Empty, oldIdentity.Identifier ?? string.Empty, provider, subject,
-                emailProof, replacementProof), ct).ConfigureAwait(false);
-        var acknowledgment = new OperationAcceptedResponse(request.ChallengeId,
-            $"/api/v1/platform/operations/{request.ChallengeId}", now);
-        var body = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(), "operation-accepted-response.v1",
-            acknowledgment, ct).ConfigureAwait(false);
-        var response = new FirstResponseDescriptor(202, ImmutableContentStoreExtensions.JsonMediaType,
-            "operation-accepted-response.v1", new StandardResponseBody(body));
-
+        var preparation = new IdentityOwnerPreparation(address);
+        RecoveryAdmission? admission = null;
         var accepted = await operations.ExecuteAsync(new NativeOperation<EmailAddress>(binding,
-            () => new EmailAddress(normalized, request.ChallengeId, CommandKind),
+            () => new EmailAddress(normalized, request.ChallengeId, CommandKind, request.ChallengeId),
             current => current.Acceptance,
-            current => current.PrepareClaimIdentityRecovery(userId, request.ChallengeId, request.Token,
-                request.OldIdentityId, replacementId, now) is { IsSuccess: false } failed
-                ? Result<FirstResponseDescriptor>.Failure(failed.Error!)
-                : Result<FirstResponseDescriptor>.Success(response),
-            (EmailAddress current, ImmutableContentRef frozen) => current.ClaimIdentityRecovery(provenance, intent,
-                frozen, actor, emailProof, replacementProof, now, userId, request.ChallengeId, request.Token,
-                request.OldIdentityId, replacementId, now)), context, ct).ConfigureAwait(false);
+            async (current, cancel) =>
+            {
+                // Receipt knowledge precedes mutable identity reads and every immutable candidate write.
+                var same = preparation.Check(current);
+                if (!same.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(same.Error!);
+                var proof = current.PrepareClaimIdentityRecovery(userId, request.ChallengeId, request.Token,
+                    request.OldIdentityId, replacementId, now);
+                if (!proof.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(proof.Error!);
+                var checkedIdentity = await CheckAsync(request, userId, provider, subject, replacementId, cancel)
+                    .ConfigureAwait(false);
+                if (!checkedIdentity.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(checkedIdentity.Error!);
+                var oldIdentity = checkedIdentity.Value!;
+                var emailProof = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(), IdentityRecoveryProofProvenance.Schema,
+                    new IdentityRecoveryProofProvenance("email_challenge", request.ChallengeId, normalized,
+                        current.RecoveryTokenKeyId, null, now), cancel).ConfigureAwait(false);
+                var replacementProof = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(), IdentityRecoveryProofProvenance.Schema,
+                    new IdentityRecoveryProofProvenance("oidc_provider_identity", request.ChallengeId, replacementId.ToString(),
+                        null, assertedEmail, now), cancel).ConfigureAwait(false);
+                var header = new DurableIntentHeader(request.ChallengeId, current.Stream, current.Stream, current.Stream, actor,
+                    request.ChallengeId.ToString(), null, digest, now);
+                var intent = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(), IdentityRecoveryIntent.Schema,
+                    new IdentityRecoveryIntent(header, request.ChallengeId, userId, request.OldIdentityId, replacementId,
+                        oldIdentity.Provider ?? string.Empty, oldIdentity.Identifier ?? string.Empty, provider, subject,
+                        emailProof, replacementProof), cancel).ConfigureAwait(false);
+                var acknowledgment = new OperationAcceptedResponse(request.ChallengeId,
+                    $"/api/v1/platform/operations/{request.ChallengeId}", now);
+                var body = await content.WriteJsonAsync(Realm, Uuid.CreateVersion4(), "operation-accepted-response.v1",
+                    acknowledgment, cancel).ConfigureAwait(false);
+                admission = new RecoveryAdmission(intent, emailProof, replacementProof);
+                return preparation.Prepare(current, Result.Success,
+                    new FirstResponseDescriptor(202, ImmutableContentStoreExtensions.JsonMediaType,
+                        "operation-accepted-response.v1", new StandardResponseBody(body)));
+            },
+            (EmailAddress current, ImmutableContentRef frozen) =>
+            {
+                var candidate = admission ?? throw new InvalidOperationException("Recovery admission has no prepared proofs.");
+                return preparation.Apply(current, () => current.ClaimIdentityRecovery(provenance, candidate.Intent, frozen,
+                    actor, candidate.EmailProof, candidate.ReplacementProof, now, userId, request.ChallengeId,
+                    request.Token, request.OldIdentityId, replacementId, now));
+            }), context, ct).ConfigureAwait(false);
         return await ReadAsync(accepted, ct).ConfigureAwait(false);
     }
 
-    /// <summary>The old identity must belong to the verified account; the replacement may be new or the same account's.</summary>
-    async Task<Result> CheckAsync(CompleteIdentityRecovery request, Uuid userId, string provider, string subject,
+    /// <summary>The old identity belongs to the verified account; the replacement may be new or the same account's.</summary>
+    async Task<Result<UserIdentity>> CheckAsync(CompleteIdentityRecovery request, Uuid userId, string provider, string subject,
         Uuid replacementId, CancellationToken ct)
     {
         if (request.OldIdentityId == replacementId)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A different old identity is required."));
+            return Result<UserIdentity>.Failure(new RequestError(RequestErrorKind.Validation, "A different old identity is required."));
         var replacement = await reader.HydrateAsync(new UserIdentity(provider, subject), ct).ConfigureAwait(false);
         if (replacement.IsRegistered && (replacement.UserId != userId || replacement.IsRevoked))
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+            return Result<UserIdentity>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The replacement identity is already registered or revoked."));
         var retired = await reader.HydrateAsync(new UserIdentity(request.OldIdentityId), ct).ConfigureAwait(false);
         return !retired.IsRegistered || retired.UserId != userId
-            ? Result.Failure(new RequestError(RequestErrorKind.Forbidden, "The old identity is not linked to this user."))
-            : Result.Success;
+            ? Result<UserIdentity>.Failure(new RequestError(RequestErrorKind.Forbidden, "The old identity is not linked to this user."))
+            : Result<UserIdentity>.Success(retired);
     }
+
+    sealed record RecoveryAdmission(ImmutableContentRef Intent, ImmutableContentRef EmailProof, ImmutableContentRef ReplacementProof);
 
     async Task<Result<OperationAcceptedResponse>> ReadAsync(Result<AcceptedAppendResult> accepted, CancellationToken ct)
     {

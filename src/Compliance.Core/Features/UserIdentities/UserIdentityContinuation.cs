@@ -14,11 +14,13 @@ public sealed class UserIdentityContinuation(IAggregateExecutor executor, TimePr
         bool observeProfile = false,
         string? displayName = null)
     {
+        // Freeze a new account candidate once for this continuation, before aggregate preparation.
+        var registrationUserId = existingUserId ?? Uuid.CreateVersion4();
         var authenticated = await executor.ExecuteAsync(
             new UserIdentity(provider, identifier),
             identity => AggregateOutcome.CommitOnSuccess(identity.IsRegistered
                 ? identity.Authenticate()
-                : identity.Register(existingUserId, emailAddress)),
+                : identity.Register(registrationUserId, emailAddress)),
             context, ct).ConfigureAwait(false);
         if (!authenticated.IsSuccess || !observeProfile)
             return authenticated;

@@ -71,30 +71,24 @@ sealed class EngagementPersonalDecisionAdmission(NativeOperationExecutor operati
         var realm = IndependenceContent.Realm(spec.TenantId);
         var stream = new ServiceEngagementIndependence(spec.TenantId, spec.EngagementId).Stream;
         var provenance = new OperationProvenance(spec.DecisionId, spec.DecisionId, null, spec.CommandKind, spec.Actor,
-            stream, InitialEpisode, (ulong)spec.ExpectedRevision, spec.AuthoredDigest, now, stream, stream);
+            stream, InitialEpisode, (ulong)spec.ExpectedRevision, spec.AuthoredDigest, now, stream, stream, FirstOwner: stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        // A logical id that was already accepted resolves from the owner's facts before any guard is evaluated.
-        var snapshot = await reader.HydrateAsync(
-            new ServiceEngagementIndependence(spec.TenantId, spec.EngagementId, spec.DecisionId), ct)
-            .ConfigureAwait(false);
         ImmutableContentRef? intent = null;
-        FirstResponseDescriptor? response = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(spec, snapshot, provenance, now, realm, ct).ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response) = frozen.Value;
-        }
-
-        var intentRevision = snapshot.Revision;
+        ulong intentRevision = 0;
         var outcome = await operations.ExecuteAsync(new NativeOperation<ServiceEngagementIndependence>(binding,
             () => new ServiceEngagementIndependence(spec.TenantId, spec.EngagementId, spec.DecisionId),
-            owner => owner.Acceptance, owner => Prepare(owner, spec, intentRevision, response),
+            owner => owner.Acceptance, async (owner, token) =>
+            {
+                var frozen = await FreezeAsync(spec, owner, provenance, now, realm, token).ConfigureAwait(false);
+                if (!frozen.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                intent = frozen.Value.Intent;
+                intentRevision = owner.Revision;
+                return Result<FirstResponseDescriptor>.Success(frozen.Value.Response);
+            },
             (ServiceEngagementIndependence owner, ImmutableContentRef acknowledgment) =>
-                owner.AdmitPersonalDecision(provenance, intent!, intentRevision, acknowledgment)), context, ct)
-            .ConfigureAwait(false);
+                owner.AdmitPersonalDecision(provenance, intent!, intentRevision, acknowledgment)), context, ct).ConfigureAwait(false);
         return await IndependenceContent.ReadAcknowledgmentAsync(content, realm, outcome, ct).ConfigureAwait(false);
     }
 
@@ -235,18 +229,6 @@ sealed class EngagementPersonalDecisionAdmission(NativeOperationExecutor operati
         return Result<(EngagementPersonalDecisionContent, IReadOnlyList<SourceUseRequirement>)>.Success((
             new PartnerEvaluationContent(request.RuleVersion, request.ExpectedRuleContentDigest,
                 request.ExpectedServiceHistoryDigest, request.Rationale), uses));
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(ServiceEngagementIndependence owner, Spec spec, ulong intentRevision,
-        FirstResponseDescriptor? response)
-    {
-        var prepared = owner.PreparePersonalDecision(spec.DecisionId, spec.ExpectedRevision);
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null || owner.Revision != intentRevision
-            ? IndependenceContent.Failure<FirstResponseDescriptor>(RequestErrorKind.Conflict,
-                "The engagement changed while the decision was prepared; reload and retry.", true)
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static bool ValidDigest(string value) => value is { Length: 64 } &&

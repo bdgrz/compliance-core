@@ -47,7 +47,7 @@ static class AcceptanceFacts
     {
         await using var scope = provider.CreateAsyncScope();
         return (await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ServiceEngagementIndependence(tenant, engagement)))
+            .HydrateAsync(new ServiceEngagementIndependence(tenant, engagement, selectedRootId: operation)))
             .OperationOf(operation) ?? throw new InvalidOperationException("Admit first.");
     }
 

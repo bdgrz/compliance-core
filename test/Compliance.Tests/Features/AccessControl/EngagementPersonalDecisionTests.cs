@@ -137,7 +137,7 @@ public sealed class EngagementPersonalDecisionTests
         Assert.True(later.IsSuccess, later.Error?.Message);
         Assert.Equal(ProcessState.Aborted, rejected.State);
         var owner = await host.HydrateAsync(new ServiceEngagementIndependence(host.Tenant, engagement));
-        var first = owner.DecisionOf(d.EvaluationId)!;
+        var first = (await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).DecisionOf(d.EvaluationId)!;
         Assert.NotNull(first.Canceled);
         Assert.Null(first.Authorized);
         Assert.Null(first.Materialized);
@@ -153,7 +153,7 @@ public sealed class EngagementPersonalDecisionTests
         Assert.True(admitted2.IsSuccess, admitted2.Error?.Message);
         Assert.Equal(ProcessState.Completed, completed.State);
         owner = await host.HydrateAsync(new ServiceEngagementIndependence(host.Tenant, engagement));
-        var second = owner.DecisionOf(d2.EvaluationId)!;
+        var second = (await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).DecisionOf(d2.EvaluationId)!;
         Assert.NotNull(second.Authorized);
         Assert.NotNull(second.Materialized);
         var child = (await host.HydrateAsync(new PartnerIndependenceDecision(host.Tenant, d2.EvaluationId))).Recorded!;
@@ -165,7 +165,7 @@ public sealed class EngagementPersonalDecisionTests
         Assert.Equal(ProcessState.Completed, newer.State);
         Assert.Equal(ProcessState.Completed, older.State);
         owner = await host.HydrateAsync(new ServiceEngagementIndependence(host.Tenant, engagement));
-        Assert.NotNull(owner.DecisionOf(d3.EvaluationId)!.Materialized);
+        Assert.NotNull((await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).DecisionOf(d3.EvaluationId)!.Materialized);
         Assert.NotNull(await HydrateRecordedAsync(host, d3.EvaluationId));
         Assert.Equal(d4.EvaluationId, owner.CurrentDecision(EngagementPersonalDecisionKind.PartnerEvaluation)!
             .Admitted.Operation.LogicalId);
@@ -194,7 +194,7 @@ public sealed class EngagementPersonalDecisionTests
             nameof(EngagementPersonalDecisionAuthorized), nameof(EngagementPersonalDecisionMaterialized)],
             (await host.EventsAsync<DomainEvent>(engagementStream)).Select(item => item.GetType().Name));
         var owner = await host.HydrateAsync(new ServiceEngagementIndependence(host.Tenant, engagement));
-        var decision = owner.DecisionOf(command.AcknowledgementId)!;
+        var decision = (await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).DecisionOf(command.AcknowledgementId)!;
         var acknowledged = (await host.HydrateAsync(new EngagementManagementAcknowledgement(host.Tenant,
             command.AcknowledgementId))).Acknowledged!;
         var view = await host.Content.ReadJsonAsync<EngagementManagementAcknowledgementView>(host.Tenant.ToString(),
@@ -233,7 +233,7 @@ public sealed class EngagementPersonalDecisionTests
         Assert.True(admitted.IsSuccess, admitted.Error?.Message);
         Assert.Equal(ProcessState.Completed, record.State);
         var owner = await host.HydrateAsync(new ServiceEngagementIndependence(host.Tenant, engagement));
-        var decision = owner.DecisionOf(command.EvaluationId)!;
+        var decision = (await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).DecisionOf(command.EvaluationId)!;
         var proofs = await host.Content.ReadJsonAsync<NativeFactReference[]>(host.Tenant.ToString(),
             decision.Authorized!.AuthorizationProofs);
         var entries = await UseEntriesAsync(host, partner, engagement, command.EvaluationId);
@@ -293,7 +293,7 @@ public sealed class EngagementPersonalDecisionTests
         Assert.False(withoutProofs.IsSuccess);
         Assert.False(withPartialProofs.IsSuccess);
         var owner = await host.HydrateAsync(new ServiceEngagementIndependence(host.Tenant, engagement));
-        Assert.Null(owner.DecisionOf(command.EvaluationId)!.Authorized);
+        Assert.Null((await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).DecisionOf(command.EvaluationId)!.Authorized);
         Assert.Empty(await host.EventsAsync<EngagementPersonalDecisionAuthorized>(stream));
     }
 
@@ -678,7 +678,7 @@ public sealed class EngagementPersonalDecisionTests
         IndependenceHost host, Uuid engagement, Uuid decision)
     {
         var owner = await host.HydrateAsync(new ServiceEngagementIndependence(host.Tenant, engagement));
-        var admitted = owner.DecisionOf(decision)!.Admitted;
+        var admitted = (await ServiceEngagementHistory.ReadAsync(host.Scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), owner)).DecisionOf(decision)!.Admitted;
         var intent = await host.Content.ReadJsonAsync<EngagementPersonalDecisionIntent>(host.Tenant.ToString(),
             admitted.Intent);
         return (intent, await host.Content.ReadSelectionAsync<SourceUseRequirement>(host.Tenant.ToString(),

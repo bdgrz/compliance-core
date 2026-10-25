@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
@@ -9,13 +11,18 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     reactor stops.
 /// </summary>
 sealed partial class EngagementPersonalDecisionReactor(IProjectionCheckpointStore checkpoints,
-    ProcessRootReaction process)
+    ProcessRootReaction process, ISourceFactResolver sources, IImmutableContentStore content)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(ServiceEngagementIndependence.Area), WorkloadName),
         IReactorHandler<EngagementPersonalDecisionAdmitted>
 {
     public const string WorkloadName = "EngagementPersonalDecisionV1";
 
     public async ValueTask HandleAsync(IReactorContext<EngagementPersonalDecisionAdmitted> context,
-        CancellationToken ct) => _ = await process.StartAsync(EngagementPersonalDecisionEffects.ProcessName, context,
-        context.Trigger.Intent, [], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        CancellationToken ct)
+    {
+        await EngagementNativeSource.VerifyAsync(sources, content, context.Source.Stream,
+            context.Source.ResourceOffset, context.Trigger, ct).ConfigureAwait(false);
+        _ = await process.StartAsync(EngagementPersonalDecisionEffects.ProcessName, context,
+            context.Trigger.Intent, [], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+    }
 }

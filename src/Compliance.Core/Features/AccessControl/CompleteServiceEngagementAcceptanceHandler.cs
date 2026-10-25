@@ -25,9 +25,9 @@ sealed class CompleteServiceEngagementAcceptanceHandler(EngagementCompletion com
         var evidence = await completion.ReadEvidenceAsync(intent, ct).ConfigureAwait(false);
         var view = EngagementAcceptanceViews.Accepted(evidence, intent.Header.OriginalActor,
             operation.Authorized!.DecisionAt);
-        var viewReference = await completion.WriteAsync(owner.TenantId, command.OperationId,
+        var viewReference = await completion.WriteAsync(owner.TenantId, owner.Stream, command.OperationId,
             EngagementAcceptanceEffects.AcceptanceSchema, view, ct).ConfigureAwait(false);
-        var result = await completion.WriteResultAsync(owner.TenantId, command.OperationId, viewReference, ct)
+        var result = await completion.WriteResultAsync(owner.TenantId, owner.Stream, command.OperationId, viewReference, ct)
             .ConfigureAwait(false);
         return await completion.AppendAsync(loaded, command.CommandId, nameof(CompleteServiceEngagementAcceptance),
             command.Source, context, (fresh, provenance) => fresh.RecordAcceptance(provenance, viewReference, result),

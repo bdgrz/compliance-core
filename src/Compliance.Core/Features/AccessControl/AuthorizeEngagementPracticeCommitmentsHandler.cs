@@ -84,7 +84,7 @@ sealed class AuthorizeEngagementPracticeCommitmentsHandler(IAggregateReader read
             try
             {
                 var step = await executor.ExecuteAsync(new ServiceEngagementIndependence(owner.TenantId,
-                    owner.EngagementId, command.CommandId), fresh =>
+                    owner.EngagementId, command.CommandId, command.OperationId), fresh =>
                     {
                         switch (fresh.Acceptance.Decide(binding))
                         {
@@ -95,6 +95,10 @@ sealed class AuthorizeEngagementPracticeCommitmentsHandler(IAggregateReader read
                             case NativeAcceptanceDecision.Conflict:
                                 return AggregateOutcome.Discard(Result<Step>.Failure(AcceptedAppendResult.ConflictError));
                         }
+
+                        if (fresh.ReplayCut.Digest != owner.ReplayCut.Digest)
+                            return AggregateOutcome.Discard(Result<Step>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                "The engagement native prefix changed during receiver preparation; retry from its exact current cut.", true)));
 
                         if (fresh.OperationOf(command.OperationId) is { Rejected: { } rejected })
                             return AggregateOutcome.Discard(Result<Step>.Success(new Step(

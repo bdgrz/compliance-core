@@ -50,6 +50,6 @@ public static class IdentityRecoveryProcess
         var intent = await content.ReadJsonAsync<IdentityRecoveryIntent>(step.Record.Key.Realm, step.Record.Intent, ct)
             .ConfigureAwait(false);
         return await IdentityRecoveryEffects.CreateAsync(step, intent, services.GetRequiredService<ISourceFactResolver>(),
-            content, services.GetRequiredService<IAggregateReader>(), ct).ConfigureAwait(false);
+            content, services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<IDomainEventReader>(), ct).ConfigureAwait(false);
     }
 }

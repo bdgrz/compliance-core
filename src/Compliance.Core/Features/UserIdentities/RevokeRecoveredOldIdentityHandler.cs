@@ -40,7 +40,7 @@ public sealed class RevokeRecoveredOldIdentityHandler(IdentityRecoveryReceiverSu
         var provenance = IdentityRecoveryReceiverSupport.Provenance(request, nameof(RevokeRecoveredOldIdentity), stream,
             frozen, verified.Value!.EventId);
         return await support.ApplyAsync(
-            () => new UserIdentity(frozen.OldIdentityId, request.CommandId, nameof(RevokeRecoveredOldIdentity)),
+            () => new UserIdentity(frozen.OldIdentityId, request.CommandId, nameof(RevokeRecoveredOldIdentity), request.ChallengeId),
             identity => identity.Acceptance, AcceptedOperationBinding.Of(provenance),
             identity =>
             {

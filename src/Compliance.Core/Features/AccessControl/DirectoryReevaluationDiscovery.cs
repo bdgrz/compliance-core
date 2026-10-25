@@ -149,8 +149,9 @@ sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregat
             return false;
         var owner = await reader.HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId), ct)
             .ConfigureAwait(false);
+        var snapshot = await ServiceEngagementHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);
         return owner.Stream == source.Record.Stream &&
-            owner.OperationOf(source.OperationId) is { Completed: { } completed } &&
+            snapshot.OperationOf(source.OperationId) is { Completed: { } completed } &&
             completed.Metadata.EventId == source.Record.Event.Metadata.EventId;
     }
 

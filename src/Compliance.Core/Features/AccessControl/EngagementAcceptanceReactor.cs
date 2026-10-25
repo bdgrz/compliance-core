@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
@@ -12,7 +13,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     source checkpoint advances; the sweep resumes it if this reactor stops.
 /// </summary>
 sealed partial class EngagementAcceptanceReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process,
-    IImmutableContentStore content)
+    IImmutableContentStore content, ISourceFactResolver sources)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(ServiceEngagementIndependence.Area), WorkloadName),
         IReactorHandler<ServiceEngagementAcceptanceRequested>,
         IReactorHandler<ServiceEngagementStaffAssignmentRequested>
@@ -20,10 +21,18 @@ sealed partial class EngagementAcceptanceReactor(IProjectionCheckpointStore chec
     public const string WorkloadName = "EngagementAcceptanceV1";
 
     public ValueTask HandleAsync(IReactorContext<ServiceEngagementAcceptanceRequested> context, CancellationToken ct) =>
-        StartAsync(context, context.Trigger.Intent, ct);
+        VerifyAndStartAsync(context, context.Trigger, context.Trigger.Intent, ct);
 
     public ValueTask HandleAsync(IReactorContext<ServiceEngagementStaffAssignmentRequested> context,
         CancellationToken ct) => StartAsync(context, context.Trigger.Intent, ct);
+
+    async ValueTask VerifyAndStartAsync<T>(IReactorContext context, T trigger, ImmutableContentRef intent, CancellationToken ct)
+        where T : DomainEvent, Bdgrz.Compliance.Features.NativeOperations.INativeOperationFact
+    {
+        await EngagementNativeSource.VerifyAsync(sources, content, context.Source.Stream,
+            context.Source.ResourceOffset, trigger, ct).ConfigureAwait(false);
+        await StartAsync(context, intent, ct).ConfigureAwait(false);
+    }
 
     async ValueTask StartAsync(IReactorContext context, ImmutableContentRef intentReference, CancellationToken ct)
     {
@@ -42,7 +51,7 @@ sealed partial class EngagementAcceptanceReactor(IProjectionCheckpointStore chec
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen acceptance cannot be read yet: {exception.Message}", true));
+                $"The frozen acceptance cannot be read yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
         _ = await process.StartAsync(EngagementAcceptanceEffects.ProcessName, context, intentReference, targets,

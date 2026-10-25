@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
@@ -40,18 +41,18 @@ public sealed class CompleteAcceptedIdentityRecoveryHandler(IdentityRecoveryRece
             return IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>(
                 "The proofs are not the replacement registration and the old revocation of this recovery.");
 
-        var proofs = await support.Content.WriteJsonAsync(IdentityRecoveryReceiverSupport.Realm,
-            Uuid.CreateVersion5(request.CommandId, IdentityRecoveryCompletionProofs.Schema),
-            IdentityRecoveryCompletionProofs.Schema,
-            new IdentityRecoveryCompletionProofs(request.ReplacementRegistrationProof, request.OldRevocationProof), ct)
-            .ConfigureAwait(false);
         var provenance = IdentityRecoveryReceiverSupport.Provenance(request,
             nameof(CompleteAcceptedIdentityRecovery), target, frozen, verified.Value!.EventId);
-        return await support.ApplyAsync(
+        return await support.ApplyAsync<IdentityRecovery, ImmutableContentRef>(
             () => IdentityRecoveryReceiverSupport.RecoveryOf(request.ChallengeId, request.CommandId),
             current => current.Acceptance, AcceptedOperationBinding.Of(provenance),
-            _ => null,
-            (IdentityRecovery current) => current.Complete(provenance, request.Intent, proofs), context, ct)
+            async (_, cancel) => Result<ImmutableContentRef>.Success(await support.Content.WriteJsonAsync(
+                IdentityRecoveryReceiverSupport.Realm, Uuid.CreateVersion5(request.CommandId, IdentityRecoveryCompletionProofs.Schema),
+                IdentityRecoveryCompletionProofs.Schema,
+                new IdentityRecoveryCompletionProofs(request.ReplacementRegistrationProof, request.OldRevocationProof), cancel)
+                .ConfigureAwait(false)),
+            (_, _) => null,
+            (current, proofs) => current.Complete(provenance, request.Intent, proofs), context, ct)
             .ConfigureAwait(false);
     }
 }

@@ -54,6 +54,7 @@ sealed class EmailChallengeDeliveryHost : IAsyncDisposable
             .AddRequestHandler<RecordEmailChallengeDeliverySentHandler>()
             .AddRequestHandler<RecordEmailChallengeDeliveryFailedHandler>()
             .AddRequestAuthorizer<EmailChallengeDeliveryOutcomeAuthorizer>();
+        services.AddVerifiedIdentityOwnerReader();
         Provider = services.BuildServiceProvider();
         Events = events;
         Content = Provider.GetRequiredService<IImmutableContentStore>();

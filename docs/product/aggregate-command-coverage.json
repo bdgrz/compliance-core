@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "5e784ab0cf81b9432b14356f08b345c86c5782c2",
+  "sourceCommit": "54202884eabcacc1eee26789a3fe3894d2f104d7",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 742,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 47,
+    "unwiredAggregateProducerOperations": 52,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 2,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 44
+      "no_registered_request_route": 49
     },
     "factReplayGuardRows": 0
   },
@@ -3511,6 +3511,7 @@
         "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailAcknowledgmentPreparationTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailChallengeTransportTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs",
@@ -4355,7 +4356,10 @@
         "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityOwnerHistoryTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryAdmissionPreparationTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryTransportTests.cs",
         "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
       ],
@@ -4375,6 +4379,7 @@
         "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -4450,6 +4455,7 @@
         "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -6511,7 +6517,10 @@
       "emitters": [
         "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityOwnerHistoryTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -7158,7 +7167,9 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementListAuthorityTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementNativeHistoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8876,6 +8887,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/UserIdentities/FitzUserIdentityDirectoryTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/UserIdentityObservationTests.cs"
       ],
@@ -9413,6 +9425,7 @@
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewHistoryProofTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewLaunchFanOutTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUseReceiptBindingTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -10403,6 +10416,7 @@
         "MaterializeEngagementManagementAcknowledgement"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementForeignChildSettlementTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
@@ -10693,14 +10707,13 @@
       ],
       "commandRequests": [],
       "internalReactionRequests": [
-        "AcceptProtectedIdentityRecovery",
-        "CompleteAcceptedIdentityRecovery",
-        "MaterializeIdentityRecoveryPreparation",
-        "RejectIdentityRecoveryPreparation"
+        "MaterializeIdentityRecoveryPreparation"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryReceiverPreparationTests.cs",
         "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -11334,8 +11347,8 @@
         "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs",
         "test/Compliance.Tests/Features/AccessControl/DeprovisionMemberHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/DirectoryIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/EngagementForeignChildSettlementTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11746,10 +11759,10 @@
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementAcceptanceSourceAvailabilityTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementForeignChildSettlementTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12285,8 +12298,6 @@
         "LinkOidcProviderIdentity"
       ],
       "internalReactionRequests": [
-        "ProtectRecoveryIdentity",
-        "RegisterRecoveredIdentity",
         "RevokeRecoveredOldIdentity",
         "SettleRecoveryIdentityProtection"
       ],
@@ -12295,10 +12306,10 @@
         "test/Compliance.Tests/E2E/IdentityRecoveryE2ETests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzPlatformUserDirectoryTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzUserIdentityDirectoryTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityOwnerHistoryTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryAdmissionPreparationTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryTransportTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12724,12 +12735,11 @@
       "directAggregateReferences": [
         "UserIdentity"
       ],
-      "aggregateTargets": [
-        "IdentityRecovery"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryReceiverPreparationTests.cs"
       ],
       "note": "Process receiver: accepts the swap only after both slots carry exact protection proofs. System principal only; no HTTP/MCP route."
     },
@@ -13240,7 +13250,10 @@
         "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementListAuthorityTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementNativeAuthorityTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementNativeHistoryTests.cs"
       ],
       "note": ""
     },
@@ -14645,6 +14658,8 @@
         "test/Compliance.Tests/Features/AccessReviews/AccessCompletionReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionFailureBindingTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUsePreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUseReceiptBindingTests.cs",
         "test/Compliance.Tests/Features/Content/SourceUseReceiverContractTests.cs"
       ],
       "note": "System-only completion receiver; holds the exact item head the completion pinned at admission, or cancels and fences the completion. No HTTP/MCP route."
@@ -15876,11 +15891,11 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "IdentityRecovery"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryReceiverPreparationTests.cs"
+      ],
       "note": "Process receiver: completes the accepted swap once the registration and the revocation are proven. System principal only; no HTTP/MCP route."
     },
     {
@@ -15943,7 +15958,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessCompletionReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReceiverPreparationSafetyTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUsePreparationTests.cs"
       ],
       "note": "System-only completion receiver; verifies every held item and its decision, remediation and exception proof, freezes the final snapshot and appends the completion. No HTTP/MCP route."
     },
@@ -16125,6 +16141,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailAcknowledgmentPreparationTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs"
       ],
       "note": ""
@@ -16150,6 +16168,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
       ],
       "note": "Process receiver: completes the original email challenge without clearing a newer challenge slot. System principal only; no HTTP/MCP route."
@@ -16228,6 +16247,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryAdmissionPreparationTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
         "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
       ],
@@ -17111,12 +17131,13 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementForeignChildSettlementTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs",
-        "test/Compliance.Tests/Testing/AcceptanceFacts.cs",
-        "test/Compliance.Tests/Testing/PersonalDecisionFacts.cs"
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementListAuthorityTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementNativeAuthorityTests.cs"
       ],
       "note": ""
     },
@@ -20587,7 +20608,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementNativeAuthorityTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -21279,6 +21301,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailAcknowledgmentPreparationTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs"
       ],
       "note": ""
@@ -24131,7 +24155,8 @@
         "test/Compliance.Tests/Features/AccessReviews/AccessBatchReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessBulkReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTraceTests.cs"
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTraceTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUsePreparationTests.cs"
       ],
       "note": ""
     },
@@ -24399,7 +24424,9 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/UserIdentityRecoveryProtectionTests.cs"
       ],
       "note": "Process receiver: freezes the exact both-proof-verified candidate of the claimed challenge as an immutable preparation. System principal only; no HTTP/MCP route."
     },
@@ -25612,12 +25639,13 @@
       "directAggregateReferences": [
         "UserIdentity"
       ],
-      "aggregateTargets": [
-        "UserIdentity"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryReceiverPreparationTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/UserIdentityRecoveryProtectionTests.cs"
       ],
       "note": "Process receiver: protects one identity slot of a prepared recovery; a definite competing association rejects the preparation. System principal only; no HTTP/MCP route."
     },
@@ -25674,7 +25702,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessBulkReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReceiverPreparationSafetyTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs"
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUsePreparationTests.cs"
       ],
       "note": ""
     },
@@ -27651,12 +27680,11 @@
       "directAggregateReferences": [
         "UserIdentity"
       ],
-      "aggregateTargets": [
-        "UserIdentity"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryReceiverPreparationTests.cs"
       ],
       "note": "Process receiver: registers the replacement for the account or returns the existing same-account registration proof. System principal only; no HTTP/MCP route."
     },
@@ -27782,9 +27810,7 @@
       "directAggregateReferences": [
         "UserIdentity"
       ],
-      "aggregateTargets": [
-        "IdentityRecovery"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
@@ -28511,7 +28537,9 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessBulkReceiverPreparationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTraceTests.cs"
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTraceTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUsePreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUseReceiptBindingTests.cs"
       ],
       "note": ""
     },
@@ -28566,6 +28594,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailAcknowledgmentPreparationTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailReservationReactorTests.cs"
       ],
@@ -30544,6 +30573,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryLifetimeTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
       ],
       "note": "Process receiver: sends the independent completion notice under the at-least-once policy; it mutates no aggregate. System principal only; no HTTP/MCP route."
@@ -30673,6 +30703,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUsePreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUseReceiptBindingTests.cs",
         "test/Compliance.Tests/Features/Content/SourceUseReceiverContractTests.cs"
       ],
       "note": "System-only completion receiver; settles one item use with the disposition of the terminal campaign fact (closure fence or canceled-parent clearing), including a use that was never acquired. No HTTP/MCP route."
@@ -30701,7 +30733,9 @@
         "AccessReviewItem"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs"
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUsePreparationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessSourceUseReceiptBindingTests.cs"
       ],
       "note": ""
     },
@@ -30798,7 +30832,9 @@
       "helperServices": [
         "EngagementPersonalDecisionVerifier"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementForeignChildSettlementTests.cs"
+      ],
       "note": "System-only personal decision process receiver; releases the engagement content pin of a materialized decision and records the decision pointer. No HTTP/MCP route."
     },
     {
@@ -31240,6 +31276,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailAcknowledgmentPreparationTests.cs",
         "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
       ],
       "note": ""
@@ -31880,6 +31917,39 @@
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {
+      "fact": "IdentityRecoveryAccepted",
+      "aggregate": "IdentityRecovery",
+      "method": "Accept",
+      "methodArgumentCount": 3,
+      "source": "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "IdentityRecoveryCompleted",
+      "aggregate": "IdentityRecovery",
+      "method": "Complete",
+      "methodArgumentCount": 3,
+      "source": "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "IdentityRecoveryPreparationRejected",
+      "aggregate": "IdentityRecovery",
+      "method": "Reject",
+      "methodArgumentCount": 3,
+      "source": "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
       "fact": "ManagementAssertionRevised",
       "aggregate": "ManagementAssertion",
       "method": "Revise",
@@ -32166,6 +32236,28 @@
       "ownerIssue": 303,
       "callerSources": [],
       "methodArgumentCount": 6,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "RecoveryIdentityProtected",
+      "aggregate": "UserIdentity",
+      "method": "Protect",
+      "methodArgumentCount": 8,
+      "source": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "UserIdentityRegistered",
+      "aggregate": "UserIdentity",
+      "method": "RegisterRecovered",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

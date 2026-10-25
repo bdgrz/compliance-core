@@ -80,8 +80,8 @@ public sealed class IdentityRecoveryProcessTests
         var recovery = await host.FactsAsync(new IdentityRecovery(challenge).Stream);
         Assert.Equal(["IdentityRecoveryPrepared", "IdentityRecoveryAccepted", "IdentityRecoveryCompleted"],
             recovery.Select(fact => fact.GetType().Name));
-        var old = await host.IdentityAsync(account.OldIdentityId);
-        var replacement = await host.IdentityAsync(NewIdentity);
+        var old = await host.IdentityAsync(account.OldIdentityId, challenge);
+        var replacement = await host.IdentityAsync(NewIdentity, challenge);
         Assert.True(old.IsRevoked);
         Assert.Equal(NewIdentity, old.ReplacementIdentityId);
         Assert.True(replacement.IsRegistered);
@@ -92,7 +92,7 @@ public sealed class IdentityRecoveryProcessTests
         Assert.False(replacement.IsProtectedFor(challenge));
         Assert.True(old.IsSettledFor(challenge));
         Assert.True(replacement.IsSettledFor(challenge));
-        var address = await host.AddressAsync();
+        var address = await host.AddressAsync(selectedChallengeId: challenge);
         Assert.True(address.IsRecoveryChallengeCompleted(challenge));
         Assert.True(address.IsRecoveryCompleted);
         var notice = Assert.Single(host.Delivery.Notices);
@@ -143,8 +143,8 @@ public sealed class IdentityRecoveryProcessTests
         Assert.Equal(["IdentityRecoveryPrepared", "IdentityRecoveryPreparationRejected"],
             recovery.Select(fact => fact.GetType().Name));
         Assert.DoesNotContain(recovery, fact => fact is IdentityRecoveryAccepted);
-        var old = await host.IdentityAsync(account.OldIdentityId);
-        var replacement = await host.IdentityAsync(NewIdentity);
+        var old = await host.IdentityAsync(account.OldIdentityId, challenge);
+        var replacement = await host.IdentityAsync(NewIdentity, challenge);
         Assert.False(old.IsRevoked);
         Assert.Equal(competitor, replacement.UserId);
         Assert.True(old.IsSettledFor(challenge));
@@ -181,7 +181,7 @@ public sealed class IdentityRecoveryProcessTests
         Assert.Equal(IdentityRecovery.Stage.Rejected, recovery.State);
         Assert.IsType<ReceiverOutcome.Superseded>(delayedProtect.Value);
         Assert.True(delayedOldProtect.Value is ReceiverOutcome.Replayed or ReceiverOutcome.Superseded);
-        Assert.False((await host.IdentityAsync(NewIdentity)).IsProtectedFor(challenge));
+        Assert.False((await host.IdentityAsync(NewIdentity, challenge)).IsProtectedFor(challenge));
         Assert.DoesNotContain(await host.FactsAsync(recovery.Stream), fact => fact is IdentityRecoveryAccepted);
     }
 
@@ -258,7 +258,7 @@ public sealed class IdentityRecoveryProcessTests
         var registration = driven.Facts[ProcessRecord.FactKey(IdentityRecoveryReceivers.RegisterRecoveredIdentity, null)];
         Assert.Equal(replacementFacts[0].Metadata.EventId, registration.EventId);
         Assert.Equal(IdentityRecovery.Stage.Completed, (await host.RecoveryAsync(challenge)).State);
-        Assert.True((await host.IdentityAsync(account.OldIdentityId)).IsRevoked);
+        Assert.True((await host.IdentityAsync(account.OldIdentityId, challenge)).IsRevoked);
         Assert.Equal(record.Key, driven.Key);
     }
 
@@ -301,7 +301,7 @@ public sealed class IdentityRecoveryProcessTests
             identity => identity.Revoke(Uuid.CreateVersion4(), DateTimeOffset.UtcNow));
 
         // Act
-        var heldBeforeSettlement = (await host.IdentityAsync(NewIdentity)).IsProtectedFor(challenge);
+        var heldBeforeSettlement = (await host.IdentityAsync(NewIdentity, challenge)).IsProtectedFor(challenge);
         var driven = await host.DriveAsync(account);
         var releasedRegistration = await TryRegisterAsync(host, other);
 
@@ -310,9 +310,9 @@ public sealed class IdentityRecoveryProcessTests
         Assert.Equal(RequestErrorKind.Conflict, heldRegistration.Error.Kind);
         Assert.True(heldBeforeSettlement);
         Assert.Equal(ProcessState.Aborted, driven.State);
-        Assert.False((await host.IdentityAsync(NewIdentity)).IsProtectedFor(challenge));
+        Assert.False((await host.IdentityAsync(NewIdentity, challenge)).IsProtectedFor(challenge));
         Assert.True(releasedRegistration.IsSuccess);
-        Assert.Equal(other, (await host.IdentityAsync(NewIdentity)).UserId);
+        Assert.Equal(other, (await host.IdentityAsync(NewIdentity, challenge)).UserId);
     }
 
     [Fact]
@@ -333,7 +333,7 @@ public sealed class IdentityRecoveryProcessTests
         Assert.False(heldRegistration.IsSuccess);
         Assert.Equal(UserIdentity.ProtectedForRecovery, heldRegistration.Error);
         Assert.Equal(ProcessState.Completed, driven.State);
-        Assert.Equal(account.UserId, (await host.IdentityAsync(NewIdentity)).UserId);
+        Assert.Equal(account.UserId, (await host.IdentityAsync(NewIdentity, challenge)).UserId);
     }
 
     [Fact]
@@ -358,8 +358,8 @@ public sealed class IdentityRecoveryProcessTests
         Assert.Equal(ProcessState.Pending, driven.State);
         Assert.Contains("holds the slot", driven.Note, StringComparison.Ordinal);
         Assert.Equal(IdentityRecovery.Stage.Prepared, (await host.RecoveryAsync(second)).State);
-        Assert.False((await host.IdentityAsync(account.OldIdentityId)).IsProtectedFor(second));
-        Assert.True((await host.IdentityAsync(account.OldIdentityId)).IsProtectedFor(first));
+        Assert.False((await host.IdentityAsync(account.OldIdentityId, second)).IsProtectedFor(second));
+        Assert.True((await host.IdentityAsync(account.OldIdentityId, first)).IsProtectedFor(first));
     }
 
     [Fact]
@@ -383,7 +383,7 @@ public sealed class IdentityRecoveryProcessTests
         Assert.Equal(ProcessState.Pending, stillFailing.State);
         Assert.Equal(IdentityRecovery.Stage.Completed, (await host.RecoveryAsync(challenge)).State);
         Assert.True((await host.AddressAsync()).IsRecoveryChallengeCompleted(challenge));
-        Assert.True((await host.IdentityAsync(account.OldIdentityId)).IsRevoked);
+        Assert.True((await host.IdentityAsync(account.OldIdentityId, challenge)).IsRevoked);
         Assert.Equal(ProcessState.Completed, resumed.State);
         Assert.Single(host.Delivery.Notices);
     }
@@ -399,7 +399,7 @@ public sealed class IdentityRecoveryProcessTests
 
         // Act
         var started = await host.StartAsync(second, account.Email);
-        var address = await host.AddressAsync();
+        var address = await host.AddressAsync(selectedChallengeId: first);
 
         // Assert
         Assert.True(started.IsSuccess);
@@ -422,7 +422,7 @@ public sealed class IdentityRecoveryProcessTests
         // Act
         var replayedOldEmailCompletion = await host.SendAsync(await host.CommandAsync(firstRecord,
             IdentityRecoveryReceivers.CompleteEmailRecoveryChallenge, firstRecord.Targets[0]));
-        var address = await host.AddressAsync();
+        var address = await host.AddressAsync(selectedChallengeId: first);
 
         // Assert
         Assert.Equal(ProcessState.Completed, driven.State);
@@ -453,7 +453,7 @@ public sealed class IdentityRecoveryProcessTests
         Assert.Equal(fact, Assert.IsType<ReceiverOutcome.Replayed>(replayed.Value).Fact);
         Assert.Equal(ProcessState.Completed, driven.State);
         Assert.Single((await host.FactsAsync(new IdentityRecovery(challenge).Stream)).OfType<IdentityRecoveryPrepared>());
-        Assert.Equal(account.UserId, (await host.IdentityAsync(NewIdentity)).UserId);
+        Assert.Equal(account.UserId, (await host.IdentityAsync(NewIdentity, challenge)).UserId);
     }
 
     [Fact]
@@ -610,9 +610,9 @@ public sealed class IdentityRecoveryProcessTests
             "IdentityRecoveryPrepared", "IdentityRecoveryPreparationRejected");
         Assert.DoesNotContain(await host.FactsAsync(new IdentityRecovery(challenge).Stream),
             fact => fact is IdentityRecoveryAccepted);
-        Assert.True((await host.IdentityAsync(account.OldIdentityId)).IsSettledFor(challenge));
-        Assert.True((await host.IdentityAsync(NewIdentity)).IsSettledFor(challenge));
-        Assert.False((await host.IdentityAsync(account.OldIdentityId)).IsRevoked);
+        Assert.True((await host.IdentityAsync(account.OldIdentityId, challenge)).IsSettledFor(challenge));
+        Assert.True((await host.IdentityAsync(NewIdentity, challenge)).IsSettledFor(challenge));
+        Assert.False((await host.IdentityAsync(account.OldIdentityId, challenge)).IsRevoked);
         Assert.Empty(host.Delivery.Notices);
     }
 

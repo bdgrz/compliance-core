@@ -33,17 +33,28 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
         if (request.CommandId == Uuid.Empty || request.OperationId == Uuid.Empty || request.Generation < 0 ||
             request.Target != Open(request, request.CommandId).Stream)
             return SourceUseReceiverSupport.Permanent("The settlement names another target stream, operation or generation.");
-        var verified = await VerifyAsync(request, ct).ConfigureAwait(false);
-        if (!verified.IsSuccess)
-            return Result<ReceiverOutcome>.Failure(verified.Error!);
-        var source = verified.Value!;
-        if (source.Key.Target != request.Target || source.Key.RootOperationId != request.OperationId ||
-            source.Disposition is not { } required)
-            return SourceUseReceiverSupport.Permanent("The settlement differs from the frozen source use requirement.");
-        if (request.Disposition != required)
-            return SourceUseReceiverSupport.Permanent(
-                "The disposition does not match the verified terminal source event kind.");
-
+        var selection = ReceiptSelection(request);
+        SourceUseSource source;
+        if (selection is not null)
+        {
+            var preparation = await NativeReceiverPreparation.PrepareAsync<TOwner, SourceUseSource>(reader,
+                () => Open(request, request.CommandId).ForSourceUses(selection),
+                (owner, token) => DecideReceiptAsync(request, owner, selection, token),
+                (_, token) => PrepareAsync(request, true, token), ct).ConfigureAwait(false);
+            if (!preparation.IsSuccess)
+                return Result<ReceiverOutcome>.Failure(preparation.Error!);
+            if (preparation.Value!.Outcome is { } known)
+                return known;
+            source = preparation.Value.Value!;
+        }
+        else
+        {
+            var preparation = await PrepareAsync(request, false, ct).ConfigureAwait(false);
+            if (!preparation.IsSuccess)
+                return Result<ReceiverOutcome>.Failure(preparation.Error!);
+            source = preparation.Value!;
+        }
+        var required = source.Disposition!.Value;
         var provenance = SourceUseReceiverSupport.Child(request.CommandId, source.CommandKind,
             request.Source.EventId, source.Header, request.Target, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
@@ -52,14 +63,31 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
         {
             try
             {
-                var owner = await reader.HydrateAsync(Open(request, request.CommandId).ForSourceUses(source.Key), ct).ConfigureAwait(false);
-                if (Decide(owner, binding, source.Key) is { } early)
-                    return early;
-                var held = owner.Uses.GrantOf(source.Key);
-                var intent = await Content.WriteJsonAsync(request.Target.Realm,
-                    Uuid.CreateVersion5(request.CommandId, $"source-use-settlement-intent:{held?.ReservationGeneration ?? 0}"),
-                    SourceUseAuthorizationIntent.Schema, new SourceUseAuthorizationIntent(source.Header,
-                        source.ParentIntent, source.Key, source.Requirement, held, required), ct).ConfigureAwait(false);
+                var preparation = await NativeReceiverPreparation.PrepareAsync<TOwner, SettlementPrepared>(reader,
+                    () => Open(request, request.CommandId).ForSourceUses(source.Key),
+                    owner => Decide(owner, binding, source.Key), async (owner, token) =>
+                    {
+                        try
+                        {
+                            var currentGrant = owner.Uses.GrantOf(source.Key);
+                            var frozenIntent = await Content.WriteJsonAsync(request.Target.Realm,
+                                Uuid.CreateVersion5(request.CommandId, $"source-use-settlement-intent:{currentGrant?.ReservationGeneration ?? 0}"),
+                                SourceUseAuthorizationIntent.Schema, new SourceUseAuthorizationIntent(source.Header,
+                                    source.ParentIntent, source.Key, source.Requirement, currentGrant, required), token).ConfigureAwait(false);
+                            return Result<SettlementPrepared>.Success(new SettlementPrepared(frozenIntent, currentGrant));
+                        }
+                        catch (ImmutableContentIntegrityException error) when (selection is not null)
+                        {
+                            token.ThrowIfCancellationRequested();
+                            return Result<SettlementPrepared>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                error.Message, error is ImmutableContentUnavailableException));
+                        }
+                    }, ct).ConfigureAwait(false);
+                if (!preparation.IsSuccess)
+                    return Result<ReceiverOutcome>.Failure(preparation.Error!);
+                if (preparation.Value!.Outcome is { } known)
+                    return known;
+                var (intent, held) = (preparation.Value.Value!.Intent, preparation.Value.Value.Grant);
                 var step = await executor.ExecuteAsync(Open(request, request.CommandId).ForSourceUses(source.Key), fresh =>
                 {
                     if (Decide(fresh, binding, source.Key) is { } decided)
@@ -84,6 +112,58 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
 
             if (attempt >= MaximumAttempts)
                 return SourceUseReceiverSupport.Transient("The source owner kept changing while the use was settled.");
+        }
+    }
+
+    /// <summary>An optional exact historical key selected only as a locator before native receipt verification.</summary>
+    protected virtual ReservationKey? ReceiptSelection(TRequest request) => null;
+
+    /// <summary>Optionally binds an actual selected settlement and its stored terms to its native terminal source.</summary>
+    protected virtual ValueTask<Result<SourceUseSource>?> VerifyReceiptSourceAsync(TRequest request, TOwner owner,
+        CancellationToken ct) => ValueTask.FromResult<Result<SourceUseSource>?>(null);
+
+    async ValueTask<Result<ReceiverOutcome>?> DecideReceiptAsync(TRequest request, TOwner owner, ReservationKey selection,
+        CancellationToken ct)
+    {
+        var receipt = await VerifyReceiptSourceAsync(request, owner, ct).ConfigureAwait(false);
+        if (receipt is null)
+            return null;
+        var result = receipt.Value;
+        if (!result.IsSuccess)
+            return Result<ReceiverOutcome>.Failure(result.Error!);
+        var source = result.Value!;
+        if (source.Key != selection || source.Key.Target != request.Target || source.Key.RootOperationId != request.OperationId ||
+            source.Disposition is not { } required)
+            return SourceUseReceiverSupport.Permanent("The settlement differs from the frozen source use requirement.");
+        if (request.Disposition != required)
+            return SourceUseReceiverSupport.Permanent("The disposition does not match the verified terminal source event kind.");
+        var provenance = SourceUseReceiverSupport.Child(request.CommandId, source.CommandKind,
+            request.Source.EventId, source.Header, request.Target, clock.GetUtcNow());
+        return Decide(owner, AcceptedOperationBinding.Of(provenance), source.Key);
+    }
+
+    async ValueTask<Result<SourceUseSource>> PrepareAsync(TRequest request, bool classify, CancellationToken ct)
+    {
+        try
+        {
+            var verified = await VerifyAsync(request, ct).ConfigureAwait(false);
+            if (!verified.IsSuccess)
+                return Result<SourceUseSource>.Failure(verified.Error!);
+            var source = verified.Value!;
+            if (source.Key.Target != request.Target || source.Key.RootOperationId != request.OperationId ||
+                source.Disposition is not { } required)
+                return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The settlement differs from the frozen source use requirement.", false));
+            return request.Disposition != required
+                ? Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The disposition does not match the verified terminal source event kind.", false))
+                : verified;
+        }
+        catch (ImmutableContentIntegrityException error) when (classify)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result<SourceUseSource>.Failure(new RequestError(RequestErrorKind.Conflict,
+                error.Message, error is ImmutableContentUnavailableException));
         }
     }
 
@@ -141,6 +221,8 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
             ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, entry.SettleFact!))
             : null;
     }
+
+    sealed record SettlementPrepared(ImmutableContentRef Intent, ReservationGrant? Grant);
 
     abstract record Step;
 

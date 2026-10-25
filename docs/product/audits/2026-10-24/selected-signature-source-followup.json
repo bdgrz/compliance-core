@@ -1,0 +1,15 @@
+{
+  "total": 70,
+  "qualification": "All70rows require actual source/test qualification; none pruned or marked implemented from model alone. Existing scopes Work/Program/Redaction continue. CreateProgram reconcile recommendation rejected by actual duplicate-owner runtime evidence.",
+  "provenDisagreements": [
+    {
+      "command": "CreateProgram",
+      "modelChoice": "reconcile_documented_native_contract",
+      "evidence": "Real old API ProgramNativeBoundaryTests dispatched selected ProgramId twice and received two different new program identities. This is genuine missing selected creation identity, not a stale-only catalog gap. Native implementation remains assigned; model recommendation rejected."
+    }
+  ],
+  "recommendationCounts": {
+    "implement_missing_native_command": 54,
+    "reconcile_documented_native_contract": 16
+  }
+}
