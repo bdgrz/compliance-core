@@ -73,9 +73,11 @@ public sealed class ProgramResourceScopeResolverTests
             "Admin", DateTimeOffset.UtcNow).IsSuccess);
         await native.PublishAsync(boundaryRules);
         var boundary = await native.Reader.HydrateAsync(new SystemBoundary(tenantId, boundaryId));
-        var service = new ClientService(tenantId, serviceId);
-        Assert.True(service.Create(programId, "Service", "Purpose", "Owner", actorId,
+        var serviceRules = new ProductClientServiceRules(tenantId, serviceId);
+        Assert.True(serviceRules.Create(programId, "Service", "Purpose", "Owner", actorId,
             "Admin", DateTimeOffset.UtcNow).IsSuccess);
+        await using var serviceNative = new ProductClientServiceFixture();
+        var service = await ProductClientServiceSeeds.OwnerAsync(serviceNative.Content, serviceRules);
         var manifest = new ProgramScopeManifest(1, tenantId, programId, 1,
             new string('a', 64), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             new string('b', 64));

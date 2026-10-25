@@ -171,12 +171,12 @@ public sealed class InventoryRetryTests
             services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
                 new PersistenceKvClient(new InMemoryKvClient())));
             services.AddPortia();
+            services.AddPersonNativeFixtures();
             var host = new Host(services.BuildServiceProvider());
-            var result = await host._provider.GetRequiredService<IAggregateExecutor>().ExecuteAsync(
-                new Person(host.TenantId, host.OwnerId), person => AggregateOutcome.CommitOnSuccess(person.Record("Owner",
-                    null, ActorReference.ForMember(Uuid.CreateVersion4(), "Seed"), Now)),
-                new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            var person = new PersonRules(host.TenantId, host.OwnerId);
+            var result = person.Record("Owner", null, ActorReference.ForMember(Uuid.CreateVersion4(), "Seed"), Now);
             Assert.True(result.IsSuccess, result.Error?.Message);
+            await PersonSeeds.AppendAsync(host._provider, person);
             return host;
         }
 

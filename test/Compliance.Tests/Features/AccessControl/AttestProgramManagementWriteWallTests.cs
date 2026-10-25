@@ -58,7 +58,7 @@ public sealed class AttestProgramManagementWriteWallTests
         {
             "program" => (await bus.DispatchAsync(new CreateProgram(Uuid.CreateVersion4(), Tenant, "New program",
                 new ProgramPlan(null, null, null, null, null, null)), context, CancellationToken.None)).Error,
-            "service" => (await bus.DispatchAsync(new CreateClientService(Tenant, Program, "Service",
+            "service" => (await bus.DispatchAsync(new CreateClientService(Uuid.CreateVersion4(), Tenant, Program, "Service",
                 "Client service purpose", "Client owner"), context, CancellationToken.None)).Error,
             "boundary" => (await bus.DispatchAsync(new CreateBoundary(Uuid.CreateVersion4(), Tenant, Program,
                 new BoundaryContent("Client boundary", "readiness", ["security"], [])), context, CancellationToken.None)).Error,
@@ -97,7 +97,7 @@ public sealed class AttestProgramManagementWriteWallTests
         var campaignId = Uuid.CreateVersion4();
         var memberId = RbacIds.Member(Tenant, User);
         var actor = ActorReference.ForMember(memberId, "Client participant");
-        await ProgramManagementServices.SeedAsync(provider, new Person(Tenant, personId), person =>
+        await ProgramManagementServices.SeedAsync(provider, new PersonRules(Tenant, personId), person =>
         {
             Assert.True(person.Record("Client participant", null, actor, Now).IsSuccess);
             Assert.Null(person.CorrelateMembership(1, User, actor, Now));

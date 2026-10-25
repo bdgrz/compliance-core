@@ -1,52 +1,64 @@
 using System.Globalization;
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Programs;
 
-sealed class FitzClientServiceDirectory(IKvClient client)
+sealed class FitzClientServiceDirectory(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client, "kv://bdgrz/client-service-directory/projection", "ClientServiceDirectory"),
         IClientServiceDirectoryReader, IClientServiceDirectoryProjection
 {
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
+        if (domainEvent is IProductClientServiceFact native)
+            ProductClientServiceHistory.ValidateHeader(native);
         switch (domainEvent)
         {
             case ClientServiceCreated created:
+                var creation = await ProductClientServiceReader.ReadContentAsync(content, created, ct).ConfigureAwait(false);
                 await ClientServiceDirectorySchema.Directory.InsertAsync(Transaction,
-                    new ClientServiceView(created.TenantId, created.ServiceId, 1, created.Name,
-                        created.Purpose, created.OwnerReference, "active", created.ActorMemberId,
+                    new ClientServiceView(created.TenantId, created.ServiceId, 1, creation.Name,
+                        creation.Purpose, creation.OwnerReference, "active", created.ActorMemberId,
                         created.ActorDisplay, created.ChangedAt,
                         created.ProgramId == Uuid.Empty ? null : created.ProgramId), ct).ConfigureAwait(false);
                 await ClientServiceDirectorySchema.Revisions.InsertAsync(Transaction,
-                        new ClientServiceRevisionView(created.ServiceId, 1, created.Name,
-                            created.Purpose, created.OwnerReference, "active", null,
+                        new ClientServiceRevisionView(created.ServiceId, 1, creation.Name,
+                            creation.Purpose, creation.OwnerReference, "active", null,
                             created.ActorMemberId, created.ActorDisplay, created.ChangedAt,
                             created.ProgramId == Uuid.Empty ? null : created.ProgramId), ct)
                     .ConfigureAwait(false);
                 break;
             case ClientServiceRevised revised:
+                var revision = await ProductClientServiceReader.ReadContentAsync(content, revised, ct).ConfigureAwait(false);
                 var current = await RequireCurrentAsync(revised.ServiceId, ct).ConfigureAwait(false);
+                if (current.ProgramId != revised.ProgramId)
+                    throw new ImmutableContentIntegrityException("The service revision differs from its actual projected predecessor.");
                 await ClientServiceDirectorySchema.Directory.ReplaceAsync(Transaction, current,
                     current with
                     {
                         Revision = revised.Revision,
-                        Name = revised.Name,
-                        Purpose = revised.Purpose,
-                        OwnerReference = revised.OwnerReference,
+                        Name = revision.Name,
+                        Purpose = revision.Purpose,
+                        OwnerReference = revision.OwnerReference,
                         LastChangedByMemberId = revised.ActorMemberId,
                         LastChangedByDisplay = revised.ActorDisplay,
                         LastChangedAt = revised.ChangedAt,
                     }, ct).ConfigureAwait(false);
                 await ClientServiceDirectorySchema.Revisions.InsertAsync(Transaction,
-                        new ClientServiceRevisionView(revised.ServiceId, revised.Revision, revised.Name,
-                            revised.Purpose, revised.OwnerReference, "active", null,
+                        new ClientServiceRevisionView(revised.ServiceId, revised.Revision, revision.Name,
+                            revision.Purpose, revision.OwnerReference, "active", null,
                             revised.ActorMemberId, revised.ActorDisplay, revised.ChangedAt,
                             current.ProgramId), ct)
                     .ConfigureAwait(false);
                 break;
             case ClientServiceRetired retired:
+                var retirement = await ProductClientServiceReader.ReadRetirementAsync(content, retired, ct).ConfigureAwait(false);
+                var retiredValue = await ProductClientServiceReader.ReadContentAsync(content, retired, ct).ConfigureAwait(false);
                 var active = await RequireCurrentAsync(retired.ServiceId, ct).ConfigureAwait(false);
+                if (active.ProgramId != retired.ProgramId || active.Name != retiredValue.Name ||
+                    active.Purpose != retiredValue.Purpose || active.OwnerReference != retiredValue.OwnerReference)
+                    throw new ImmutableContentIntegrityException("The service retirement differs from its actual projected predecessor.");
                 await ClientServiceDirectorySchema.Directory.ReplaceAsync(Transaction, active,
                     active with
                     {
@@ -58,7 +70,7 @@ sealed class FitzClientServiceDirectory(IKvClient client)
                     }, ct).ConfigureAwait(false);
                 await ClientServiceDirectorySchema.Revisions.InsertAsync(Transaction,
                         new ClientServiceRevisionView(retired.ServiceId, retired.Revision, active.Name,
-                            active.Purpose, active.OwnerReference, "retired", retired.Rationale,
+                            active.Purpose, active.OwnerReference, "retired", retirement.Rationale,
                             retired.ActorMemberId, retired.ActorDisplay, retired.ChangedAt,
                             active.ProgramId), ct)
                     .ConfigureAwait(false);

@@ -5,7 +5,8 @@ namespace Bdgrz.Compliance.Features.Workforce;
 public sealed partial class PersonDirectoryProjector(IPersonDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant("people"), "PersonDirectoryV2"),
       IProjectorHandler<PersonRecorded>, IProjectorHandler<PersonRevised>,
-      IProjectorHandler<PersonMembershipCorrelated>
+      IProjectorHandler<PersonMembershipCorrelated>, IProjectorHandler<PersonRegistrationRecorded>,
+      IProjectorHandler<PersonDetailsRevised>, IProjectorHandler<PersonMembershipCorrelationRecorded>
 {
     public ValueTask HandleAsync(PersonRecorded ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
@@ -15,4 +16,8 @@ public sealed partial class PersonDirectoryProjector(IPersonDirectoryProjection 
 
     public ValueTask HandleAsync(PersonMembershipCorrelated ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public ValueTask HandleAsync(PersonRegistrationRecorded ev, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public ValueTask HandleAsync(PersonDetailsRevised ev, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public ValueTask HandleAsync(PersonMembershipCorrelationRecorded ev, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(ev, ct);
+
 }

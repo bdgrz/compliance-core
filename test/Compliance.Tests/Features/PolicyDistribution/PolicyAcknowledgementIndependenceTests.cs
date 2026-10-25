@@ -163,7 +163,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
         var guard = scope.ServiceProvider.GetRequiredService<PolicyAcknowledgementRecorderGuard>();
         var captured = await guard.CaptureAsync(fixture.Source.TenantId, fixture.Source.MemberPersonId);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new Person(fixture.Source.TenantId, fixture.Source.MemberPersonId), person =>
+            new PersonRules(fixture.Source.TenantId, fixture.Source.MemberPersonId), person =>
             {
                 Assert.Null(person.CorrelateMembership(captured.Revision, null,
                     ActorReference.ForSystemProcess("synthetic-person-source", "Synthetic source"), DateTimeOffset.UtcNow));

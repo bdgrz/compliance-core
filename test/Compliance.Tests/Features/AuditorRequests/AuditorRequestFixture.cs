@@ -48,6 +48,7 @@ sealed class AuditorRequestFixture : IAsyncDisposable
         services.AddScoped<AuditorRequestResolutionVerifier>();
         services.AddScoped<AuditorRequestResolutionFences>();
         services.AddScoped<SampleSelectionAdmission>();
+        services.AddScoped<AuditPopulationReader>();
         services.AddSingleton<IChildMaterializationReceiver, AuditorResponseMaterializationReceiver>();
         services.AddSingleton<IChildMaterializationReceiver, AuditorCommentMaterializationReceiver>();
         services.AddSingleton<IChildMaterializationReceiver, AuditorSampleSelectionMaterializationReceiver>();
@@ -66,6 +67,7 @@ sealed class AuditorRequestFixture : IAsyncDisposable
             .AddRequestAuthorizer<AuditorRequestReceiverAuthorizer>();
         services.AddVerifiedSourceUseReader();
         services.AddVerifiedAuditorRequestReader();
+        services.AddVerifiedAuditPopulationReader();
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         _scope = _provider.CreateAsyncScope();
         Reader = Services.GetRequiredService<IAggregateReader>();
@@ -242,7 +244,7 @@ sealed class AuditorRequestFixture : IAsyncDisposable
         var includedRowId = Uuid.CreateVersion4();
         var excludedRowId = Uuid.CreateVersion4();
         var memberId = MemberId;
-        var population = new AuditPopulation(TenantId, ProgramId, populationId);
+        var population = new AuditPopulationRules(TenantId, ProgramId, populationId);
         Assert.Null(population.Define(populationId, new AuditPopulationDefinitionContent(
             "Production changes", "Changes in the examination period.",
             "Approved change register", new DateOnly(2026, 1, 1),
@@ -260,14 +262,14 @@ sealed class AuditorRequestFixture : IAsyncDisposable
             "The exact source rows and reconciliation were reviewed.", memberId,
             "Compliance lead", Now.AddMinutes(3)));
         var contentSha256 = population.Current!.Current!.ContentSha256;
-        await Writer.SaveAsync(population, new RequestDispatchContext(RequestActor.System));
+        await AuditPopulationSeeds.AppendLegacyAsync(Events, population);
         return (populationId, includedRowId, excludedRowId, contentSha256);
     }
 
     public async Task<string> AmendPopulationAsync(Uuid populationId, Uuid includedRowId)
     {
-        var population = await Reader.HydrateAsync(new AuditPopulation(TenantId,
-            ProgramId, populationId));
+        var complete = await Services.GetRequiredService<AuditPopulationReader>().ReadAsync(TenantId, ProgramId, populationId);
+        var population = complete.Rules;
         var sourceReference = "approved-change-register-v2";
         Assert.Null(population.Amend(population.Revision,
             "The auditor received the corrected approved change register.",
@@ -284,7 +286,7 @@ sealed class AuditorRequestFixture : IAsyncDisposable
             "The corrected source was reconciled and reviewed.", MemberId,
             "Compliance lead", Now.AddMinutes(6)));
         var contentSha256 = population.Current!.Current!.ContentSha256;
-        await Writer.SaveAsync(population, new RequestDispatchContext(RequestActor.System));
+        await AuditPopulationSeeds.AppendLegacyAsync(Events, population, complete.Owner.CommittedStreamPosition);
         return contentSha256;
     }
 

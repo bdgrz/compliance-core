@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Bdgrz.Compliance.Features.SourceFacts;
@@ -83,6 +84,13 @@ static class PersistenceServiceCollectionExtensions
                 provider.GetRequiredService<IImmutableContentStore>(), provider.GetRequiredService<TimeProvider>()));
         Decorate<IAggregateReader>(services, (provider, inner) =>
             new WorkPreferenceAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
+        Decorate<IAggregateReader>(services, (provider, inner) =>
+            new AuditPopulationAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>(),
+                provider.GetRequiredService<IImmutableContentStore>(), provider.GetRequiredService<ISourceFactResolver>()));
+        Decorate<IAggregateReader>(services, (provider, inner) =>
+            new ProductClientServiceAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
+        Decorate<IAggregateReader>(services, (provider, inner) =>
+            new Bdgrz.Compliance.Features.Workforce.PersonAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IRequestBus>(services, (_, inner) => new PersistenceValidationRequestBus(inner));
     }
 

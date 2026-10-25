@@ -4,7 +4,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Workforce;
 
-sealed class FitzPersonDirectory(IKvClient client)
+sealed class FitzPersonDirectory(IKvClient client, PersonReader? people = null)
     : FitzKvProjectionStore(client, "kv://bdgrz/person-directory-v2/projection",
             "PersonDirectoryV2"),
         IPersonDirectoryReader, IPersonDirectoryProjection, IPersonMemberDisplayReader
@@ -34,6 +34,28 @@ sealed class FitzPersonDirectory(IKvClient client)
     {
         switch (domainEvent)
         {
+            case IPersonNativeFact native:
+                if (people is null)
+                    throw new InvalidOperationException("Native person projection requires its verified historical source reader.");
+                var actual = await people.ReadFactAsync(domainEvent, ct).ConfigureAwait(false);
+                // The directory is bounded discovery. Authorized detail reads load private values from the verified owner body.
+                var verified = actual with { PersonalContact = null, RestrictedFieldsRedacted = true };
+                var prior = await PersonDirectorySchema.People.GetAsync(Transaction, verified.PersonId, ct).ConfigureAwait(false);
+                if (prior is null)
+                {
+                    if (domainEvent is not PersonRegistrationRecorded || verified.Revision != 1)
+                        throw new InvalidOperationException("A native person revision cannot project before its creation.");
+                    await PersonDirectorySchema.People.InsertAsync(Transaction, verified, ct).ConfigureAwait(false);
+                }
+                else
+                {
+                    if (prior.TenantId != verified.TenantId || verified.Revision != prior.Revision + (native.Changed ? 1 : 0) ||
+                        !native.Changed && (prior with { PersonalContact = null, RestrictedFieldsRedacted = true }) != verified)
+                        throw new InvalidOperationException("A native person projection requires its exact preceding revision.");
+                    if (prior != verified)
+                        await PersonDirectorySchema.People.ReplaceAsync(Transaction, prior, verified, ct).ConfigureAwait(false);
+                }
+                break;
             case PersonRecorded recorded:
                 await PersonDirectorySchema.People.InsertAsync(Transaction,
                     new PersonView(recorded.TenantId, recorded.PersonId, 1,

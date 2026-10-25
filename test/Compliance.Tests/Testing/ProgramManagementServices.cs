@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Features.Boundaries;
@@ -49,6 +50,8 @@ static class ProgramManagementServices
         collection.AddScoped<NativeOperationExecutor>();
         collection.AddScoped<ProgramReader>();
         collection.AddScoped<ProgramOperations>();
+        collection.AddScoped<ProductClientServiceReader>();
+        collection.AddScoped<ProductClientServiceOperations>();
         collection.AddScoped<IndependenceRuleCatalogReader>();
         collection.AddScoped<IndependenceRuleRatificationReader>();
         collection.AddScoped<IndependenceRuleCatalogOperations>();
@@ -83,6 +86,8 @@ static class ProgramManagementServices
         collection.AddScoped<PolicyReader>();
         collection.AddScoped<PolicyOperations>();
         collection.AddScoped<RiskMethodReader>();
+        collection.AddScoped<PersonReader>();
+        collection.AddScoped<PersonOperations>();
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         collection.AddVerifiedSourceUseReader();
@@ -96,8 +101,34 @@ static class ProgramManagementServices
         collection.AddVerifiedWorkDigestReader();
         collection.AddVerifiedWorkAssignmentReader();
         collection.AddVerifiedProgramReader();
+        collection.AddVerifiedProductClientServiceReader();
         collection.AddVerifiedWorkPreferenceReader();
+        collection.AddPersonNativeFixtures();
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+    }
+
+    public static async Task SeedAsync(IServiceProvider provider, ProductClientServiceRules selected,
+        Func<ProductClientServiceRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var rules = await services.GetRequiredService<ProductClientServiceReader>().RulesAsync(selected.TenantId, selected.Id);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await ProductClientServiceSeeds.AppendAsync(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IDomainEventReader>(), services.GetRequiredService<IImmutableContentStore>(), rules);
+    }
+
+    public static async Task SeedAsync<TOut>(IServiceProvider provider, ProductClientServiceRules selected,
+        Func<ProductClientServiceRules, Result<TOut>> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var rules = await services.GetRequiredService<ProductClientServiceReader>().RulesAsync(selected.TenantId, selected.Id);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await ProductClientServiceSeeds.AppendAsync(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IDomainEventReader>(), services.GetRequiredService<IImmutableContentStore>(), rules);
     }
 
     public static Task SeedAsync(IServiceProvider provider, ProgramRules selected,
@@ -432,6 +463,39 @@ static class ProgramManagementServices
         await MappingNativeSeeds.AppendAsync(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<IAggregateWriter>(), services.GetRequiredService<IImmutableContentStore>(), rules);
     }
+
+    public static async Task SeedAsync(IServiceProvider provider, PersonRules selected, Func<PersonRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var events = services.GetRequiredService<IDomainEventReader>();
+        var content = services.GetRequiredService<IImmutableContentStore>();
+        var rules = (await new PersonReader(reader, events, content).ReadAsync(selected.TenantId, selected.Id)).Rules;
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await PersonSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(), events, content, rules);
+    }
+
+    public static async Task SeedAsync<TOut>(IServiceProvider provider, PersonRules selected, Func<PersonRules, Result<TOut>> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var events = services.GetRequiredService<IDomainEventReader>();
+        var content = services.GetRequiredService<IImmutableContentStore>();
+        var rules = (await new PersonReader(reader, events, content).ReadAsync(selected.TenantId, selected.Id)).Rules;
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await PersonSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(), events, content, rules);
+    }
+
+    public static Task SeedAsync(IServiceProvider provider, PersonRules selected, Func<PersonRules, Bdgrz.Compliance.Features.Versioning.CommandFailure?> operation) =>
+        SeedAsync(provider, selected, person =>
+        {
+            var failure = operation(person);
+            return failure is null ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Conflict, failure.Message!));
+        });
 
     public static async Task SeedAsync<TAggregate>(IServiceProvider provider, TAggregate aggregate,
         Func<TAggregate, Result> operation) where TAggregate : Aggregate

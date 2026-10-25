@@ -1166,10 +1166,11 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
     static async Task<Guid> RecordPersonAsync(HttpClient owner, string peoplePath,
         string displayName)
     {
+        var personId = Guid.NewGuid();
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(peoplePath,
+            using var response = await owner.PutAsJsonAsync($"{peoplePath}/{personId}",
                 new { display_name = displayName });
             if (response.StatusCode == HttpStatusCode.OK)
                 return (await response.Content.ReadFromJsonAsync<PersonRegistrationDocument>())!

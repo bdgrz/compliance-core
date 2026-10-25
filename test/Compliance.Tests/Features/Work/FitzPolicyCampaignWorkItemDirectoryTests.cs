@@ -35,12 +35,11 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
             sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
             sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
-        var person = new Person(fixture.TenantId, personId);
+        var person = new PersonRules(fixture.TenantId, personId);
         var actor = ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead");
         Assert.True(person.Record("Ada Lovelace", null, actor, Now).IsSuccess);
         Assert.Null(person.CorrelateMembership(1, userId, actor, Now));
-        await writer.SaveAsync(person, new RequestDispatchContext(RequestActor.System),
-            CancellationToken.None);
+        await PersonSeeds.AppendAsync(sourceScope.ServiceProvider, person);
         var launched = await Launched(fixture, content, campaignId, 1);
         var audience = await CampaignFacts.FrozenAsync(content, fixture.TenantId, campaignId,
             new CampaignAudienceEntry(personId, "Ada Lovelace", "employee", "Engineering",

@@ -1,18 +1,9 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Programs;
 
-public sealed class RetireClientServiceHandler(IAggregateExecutor executor, TimeProvider clock)
-    : IRequestHandler<RetireClientService>
+public sealed class RetireClientServiceHandler(ProductClientServiceOperations operations) : IRequestHandler<RetireClientService>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<RetireClientService> context,
-        CancellationToken ct)
-    {
-        var (memberId, display) = ClientServiceActor.Snapshot(context);
-        return executor.ExecuteAsync(new ClientService(context.Request.TenantId,
-                context.Request.ServiceId),
-            service => CommandFailureRequestAdapter.ToOutcome(service.Retire(context.Request.ExpectedRevision,
-                context.Request.Rationale, memberId, display, clock.GetUtcNow())), context, ct);
-    }
+    public ValueTask<Result> HandleAsync(IRequestContext<RetireClientService> context, CancellationToken ct) =>
+        operations.RetireAsync(context, ct);
 }

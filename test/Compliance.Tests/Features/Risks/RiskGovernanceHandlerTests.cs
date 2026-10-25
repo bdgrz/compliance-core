@@ -638,9 +638,9 @@ public sealed class RiskGovernanceHandlerTests
         {
             var personId = Uuid.CreateVersion4();
             var admin = ActorReference.ForMember(Uuid.CreateVersion4(), "Admin");
-            await ProgramManagementServices.SeedAsync(Provider, new Person(TenantId, personId),
+            await ProgramManagementServices.SeedAsync(Provider, new PersonRules(TenantId, personId),
                 person => person.Record("Provider owner", null, admin, DateTimeOffset.UtcNow));
-            await ProgramManagementServices.SeedAsync(Provider, new Person(TenantId, personId),
+            await ProgramManagementServices.SeedAsync(Provider, new PersonRules(TenantId, personId),
                 person => Command(person.CorrelateMembership(1, correlatedUserId, admin,
                     DateTimeOffset.UtcNow)));
             return personId;

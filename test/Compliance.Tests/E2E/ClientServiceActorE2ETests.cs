@@ -79,20 +79,20 @@ public sealed class ClientServiceActorE2ETests(BrokerStackFixture broker)
                 // Act: a second developer identity changes the cookie display, while the
                 // platform user and tenant member remain the same.
                 Assert.Equal(userId, await TenantInvitationE2ETests.LoginAsync(owner, revisedEmail));
-                using var revised = await owner.PutAsJsonAsync(servicePath, new
+                using var revised = await owner.PutAsJsonAsync(servicePath + $"/revisions/{Uuid.CreateVersion4()}", new
                 {
                     expected_revision = 1,
                     name = "Payroll",
                     purpose = "Monthly payroll",
                     owner_reference = "Finance",
                 });
-                Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
+                Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
                 var revisedView = await WaitForCurrentAsync(owner, servicePath, 2);
                 AssertActor(revisedView.GetProperty("last_changed_by"), memberId, revisedEmail);
                 Assert.Equal(userId, await TenantInvitationE2ETests.LoginAsync(owner, retiredEmail));
-                using var retired = await owner.PostAsJsonAsync($"{servicePath}/retirements",
+                using var retired = await owner.PutAsJsonAsync($"{servicePath}/retirements" + $"/{Uuid.CreateVersion4()}",
                     new { expected_revision = 2, rationale = "Service ended" });
-                Assert.Equal(HttpStatusCode.NoContent, retired.StatusCode);
+                Assert.Equal(HttpStatusCode.OK, retired.StatusCode);
 
                 // Assert: the latest actor changes, but each immutable revision keeps the
                 // display captured when its event was written.
@@ -129,13 +129,13 @@ public sealed class ClientServiceActorE2ETests(BrokerStackFixture broker)
                 Assert.Collection(stored,
                     ev => Assert.Equal(ActorReference.ForMember(
                         Uuid.Parse(memberId, CultureInfo.InvariantCulture), originalEmail),
-                        Assert.IsType<ClientServiceCreated>(ev).StoredActor),
+                        Assert.IsType<ClientServiceCreated>(ev).Operation.Actor),
                     ev => Assert.Equal(ActorReference.ForMember(
                         Uuid.Parse(memberId, CultureInfo.InvariantCulture), revisedEmail),
-                        Assert.IsType<ClientServiceRevised>(ev).StoredActor),
+                        Assert.IsType<ClientServiceRevised>(ev).Operation.Actor),
                     ev => Assert.Equal(ActorReference.ForMember(
                         Uuid.Parse(memberId, CultureInfo.InvariantCulture), retiredEmail),
-                        Assert.IsType<ClientServiceRetired>(ev).StoredActor));
+                        Assert.IsType<ClientServiceRetired>(ev).Operation.Actor));
 
                 await using var mcp = await McpScenario.ConnectAsync(owner,
                     new Uri(owner.BaseAddress!, "/mcp"));
@@ -226,7 +226,7 @@ public sealed class ClientServiceActorE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, new
+            using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "Payroll",
                 purpose = "Process payroll",

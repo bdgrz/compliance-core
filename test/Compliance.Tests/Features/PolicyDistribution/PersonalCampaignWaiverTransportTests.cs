@@ -163,7 +163,7 @@ public sealed class PersonalCampaignWaiverTransportTests
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), fixture.Manager, "Client manager", fixture._at));
                 return Result.Success;
             });
-            await ProgramManagementServices.SeedAsync(fixture._provider, new Person(fixture.Tenant, fixture.PersonId), person =>
+            await ProgramManagementServices.SeedAsync(fixture._provider, new PersonRules(fixture.Tenant, fixture.PersonId), person =>
             {
                 Assert.True(person.Record("Worker", null, actor, fixture._at).IsSuccess);
                 if (refusal == "self")

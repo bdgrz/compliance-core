@@ -79,6 +79,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ArtifactRetentionRead>();
         services.AddScoped<AuditPackageSourceBuilder>();
         services.AddScoped<AuditPackageReader>();
+        services.AddScoped<AuditPopulationReader>();
+        services.AddScoped<AuditPopulationSources>();
+        services.AddScoped<AuditPopulationMutations>();
         services.AddScoped<FitzAuditPackageDirectory>();
         services.AddScoped<IAuditPackageDirectoryReader>(provider => provider.GetRequiredService<FitzAuditPackageDirectory>());
         services.AddScoped<IAuditPackageDirectoryProjection>(provider => provider.GetRequiredService<FitzAuditPackageDirectory>());
@@ -368,6 +371,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ITechnologyInventoryActivity>(provider =>
             provider.GetRequiredService<TechnologyInventoryReferences>());
         services.AddScoped<PersonReadConsistency>();
+        services.AddScoped<PersonReader>();
+        services.AddScoped<PersonOperations>();
         services.AddScoped<WorkRelationshipReadConsistency>();
         services.AddScoped<FitzWorkforceObservationDirectory>();
         services.AddScoped<IWorkforceObservationProjection>(provider =>
@@ -433,6 +438,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ICriterionApplicabilityDirectoryReader>(provider =>
             provider.GetRequiredService<FitzCriterionApplicabilityDirectoryV1>());
         services.AddScoped<CriteriaCoverageReadConsistency>();
+        services.AddScoped<ProductClientServiceReader>();
+        services.AddScoped<ProductClientServiceOperations>();
         services.AddScoped<FitzClientServiceDirectory>();
         services.AddScoped<IClientServiceDirectoryProjection>(
             provider => provider.GetRequiredService<FitzClientServiceDirectory>());

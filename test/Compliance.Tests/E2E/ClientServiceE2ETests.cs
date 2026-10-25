@@ -66,8 +66,8 @@ public sealed class ClientServiceE2ETests(BrokerStackFixture broker)
         var path = $"/api/v1/tenants/{tenant.TenantId}/client-services";
         var createPath = $"{programsPath}/{program.ProgramId}/client-services";
         ServiceRegistrationDocument? service = null;
-        using var missingProgram = await owner.PostAsJsonAsync(
-            $"{programsPath}/{Guid.NewGuid()}/client-services", new
+        using var missingProgram = await owner.PutAsJsonAsync(
+            $"{programsPath}/{Guid.NewGuid()}/client-services" + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "Unknown",
                 purpose = "Unknown",
@@ -77,7 +77,7 @@ public sealed class ClientServiceE2ETests(BrokerStackFixture broker)
         deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(createPath, new
+            using var response = await owner.PutAsJsonAsync(createPath + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "Payroll",
                 purpose = "Run payroll",
@@ -142,20 +142,20 @@ public sealed class ClientServiceE2ETests(BrokerStackFixture broker)
         using var hidden = await outsider.GetAsync($"{path}/{Guid.NewGuid()}");
         using var deniedList = await outsider.GetAsync(path);
         using var deniedProgramList = await outsider.GetAsync(createPath);
-        using var deniedCreate = await outsider.PostAsJsonAsync(createPath, new
+        using var deniedCreate = await outsider.PutAsJsonAsync(createPath + $"/{Uuid.CreateVersion4()}", new
         {
             name = "Hidden",
             purpose = "Hidden",
             owner_reference = "Outsider",
         });
-        using var deniedRevise = await outsider.PutAsJsonAsync(servicePath, new
+        using var deniedRevise = await outsider.PutAsJsonAsync(servicePath + $"/revisions/{Uuid.CreateVersion4()}", new
         {
             expected_revision = 1,
             name = "Hidden",
             purpose = "Hidden",
             owner_reference = "Outsider",
         });
-        using var deniedRetire = await outsider.PostAsJsonAsync($"{servicePath}/retirements",
+        using var deniedRetire = await outsider.PutAsJsonAsync($"{servicePath}/retirements" + $"/{Uuid.CreateVersion4()}",
             new { expected_revision = 1, rationale = "Outsider" });
         using var deniedHistory = await outsider.GetAsync($"{servicePath}/revisions");
         using var deniedExactHistory = await outsider.GetAsync(exactRevisionPath);
@@ -170,15 +170,15 @@ public sealed class ClientServiceE2ETests(BrokerStackFixture broker)
         Assert.Equal(HttpStatusCode.NotFound, deniedHistory.StatusCode);
         Assert.Equal(deniedHistory.StatusCode, deniedExactHistory.StatusCode);
 
-        using var changed = await owner.PutAsJsonAsync(servicePath, new
+        using var changed = await owner.PutAsJsonAsync(servicePath + $"/revisions/{Uuid.CreateVersion4()}", new
         {
             expected_revision = 1,
             name = "Payroll",
             purpose = "Monthly payroll",
             owner_reference = "Finance",
         });
-        Assert.Equal(HttpStatusCode.NoContent, changed.StatusCode);
-        using var stale = await owner.PutAsJsonAsync(servicePath, new
+        Assert.Equal(HttpStatusCode.OK, changed.StatusCode);
+        using var stale = await owner.PutAsJsonAsync(servicePath + $"/revisions/{Uuid.CreateVersion4()}", new
         {
             expected_revision = 1,
             name = "Payroll",
@@ -198,9 +198,9 @@ public sealed class ClientServiceE2ETests(BrokerStackFixture broker)
         Assert.Equal("Monthly payroll", projected?.Purpose);
         using var currentServiceRevision = await owner.GetAsync($"{servicePath}?minimum_revision=2");
         Assert.Equal(HttpStatusCode.OK, currentServiceRevision.StatusCode);
-        using var retired = await owner.PostAsJsonAsync($"{servicePath}/retirements",
+        using var retired = await owner.PutAsJsonAsync($"{servicePath}/retirements" + $"/{Uuid.CreateVersion4()}",
             new { expected_revision = 2, rationale = "Service ended" });
-        Assert.Equal(HttpStatusCode.NoContent, retired.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, retired.StatusCode);
         deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {

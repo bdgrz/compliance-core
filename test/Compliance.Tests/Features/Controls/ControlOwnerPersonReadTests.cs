@@ -27,7 +27,7 @@ public sealed class ControlOwnerPersonReadTests
         var actor = ActorReference.ForMember(actorId, "Recorded author");
         var designationId = Uuid.CreateVersion4();
         var personId = Uuid.CreateVersion4();
-        await ProgramManagementServices.SeedAsync(provider, new Person(tenantId, personId),
+        await ProgramManagementServices.SeedAsync(provider, new PersonRules(tenantId, personId),
             person => person.Record("Workforce owner", "owner@example.com", actor, Now));
         await ProgramManagementServices.SeedAsync(provider, new ControlRules(tenantId, controlId),
             control => control.Create(programId, Uuid.CreateVersion4(), "OWNER-01", Content(),

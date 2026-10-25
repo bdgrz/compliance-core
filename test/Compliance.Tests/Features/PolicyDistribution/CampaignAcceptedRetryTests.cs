@@ -27,7 +27,7 @@ public sealed class CampaignAcceptedRetryTests
 
         // Act
         var replay = await host.SendAsync(request, host.Learner);
-        await ProgramManagementServices.SeedAsync(host.Provider, new Person(host.Tenant, host.LearnerPerson), owner =>
+        await ProgramManagementServices.SeedAsync(host.Provider, new PersonRules(host.Tenant, host.LearnerPerson), owner =>
         {
             Assert.Null(owner.CorrelateMembership(owner.Revision, Uuid.CreateVersion4(), host.ManagerActor, host.Clock.GetUtcNow()));
             return Result.Success;

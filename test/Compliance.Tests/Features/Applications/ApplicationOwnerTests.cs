@@ -281,11 +281,10 @@ public sealed class ApplicationOwnerTests
         var invalidOwner = state == "empty" ? Uuid.Empty : Uuid.CreateVersion4();
         if (state == "foreign")
         {
-            var person = new Person(Uuid.CreateVersion4(), invalidOwner);
+            var person = new PersonRules(Uuid.CreateVersion4(), invalidOwner);
             Assert.True(person.Record("Foreign Owner", null,
                 ActorReference.ForMember(Uuid.CreateVersion4(), "Manager"), Now).IsSuccess);
-            await scenario.Writer.SaveAsync(person, new RequestDispatchContext(RequestActor.System),
-                CancellationToken.None);
+            await PersonSeeds.AppendAsync(scenario._scope.ServiceProvider, person);
         }
         var applicationId = Uuid.CreateVersion4();
         var request = new DeclareApplication(Uuid.CreateVersion4(), scenario.TenantId, "Payroll", "Run payroll",
@@ -396,11 +395,10 @@ public sealed class ApplicationOwnerTests
         await using var scenario = await Scenario.CreateAsync();
         var foreignTenantId = Uuid.CreateVersion4();
         var foreignOwnerId = Uuid.CreateVersion4();
-        var foreignOwner = new Person(foreignTenantId, foreignOwnerId);
+        var foreignOwner = new PersonRules(foreignTenantId, foreignOwnerId);
         Assert.True(foreignOwner.Record("Ada Lovelace", null,
             ActorReference.ForMember(Uuid.CreateVersion4(), "Manager"), Now).IsSuccess);
-        await scenario.Writer.SaveAsync(foreignOwner,
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        await PersonSeeds.AppendAsync(scenario._scope.ServiceProvider, foreignOwner);
         var requestId = Uuid.CreateVersion4();
         // Act
         RequestError? error;
@@ -495,7 +493,9 @@ public sealed class ApplicationOwnerTests
                     ["Compliance:Applications:GovernedDeclarationsEnabled"] =
                         governedDeclarationsEnabled?.ToString(),
                 }).Build(), developerAuthentication: true);
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var personEvents = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(personEvents);
+            services.AddSingleton<IDomainEventReader>(personEvents);
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
             services.AddSingleton<TimeProvider>(new FixedClock());
             services.AddScoped(provider => RestrictedApplicationVisibilityFixture.Create(
@@ -515,11 +515,10 @@ public sealed class ApplicationOwnerTests
         public async Task<Uuid> RecordPersonAsync(string displayName)
         {
             var personId = Uuid.CreateVersion4();
-            var person = new Person(TenantId, personId);
+            var person = new PersonRules(TenantId, personId);
             Assert.True(person.Record(displayName, null,
                 ActorReference.ForMember(Uuid.CreateVersion4(), "Manager"), Now).IsSuccess);
-            await Writer.SaveAsync(person, new RequestDispatchContext(RequestActor.System),
-                CancellationToken.None);
+            await PersonSeeds.AppendAsync(_scope.ServiceProvider, person);
             return personId;
         }
 

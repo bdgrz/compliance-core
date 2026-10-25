@@ -29,7 +29,7 @@ public sealed class WorkforceSourceHandlerTests
             registration.ObservationId)).ExpectSuccess()).Value;
         _ = await PersonalWorkforceObservationTransportTests.HttpAsync(fixture.Provider, fixture.UserId, new ReconcileWorkforceSourceObservation(fixture.TenantId,
             registration.ObservationId, 1, 1, "accepted", "HRIS checked"), RequestErrorKind.Conflict);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Person(fixture.TenantId, fixture.PersonId),
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PersonRules(fixture.TenantId, fixture.PersonId),
             person => person.Revise(1, "Ada King", "ada@example.com", fixture.Author, DateTimeOffset.UtcNow) is null
                 ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Conflict, "revise")));
         await fixture.ProjectPeopleAsync();
@@ -170,7 +170,7 @@ public sealed class WorkforceSourceHandlerTests
         _ = await PersonalWorkforceObservationTransportTests.HttpAsync(fixture.Provider, fixture.UserId, decision);
         var original = await ProgramManagementServices.HydrateAsync(fixture.Provider,
             new WorkforceSourceObservation(fixture.TenantId, registration.ObservationId));
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Person(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PersonRules(fixture.TenantId,
             fixture.PersonId), person => person.Revise(1, "Ada King", "ada@example.com", fixture.Author,
                 DateTimeOffset.UtcNow) is null ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Conflict, "revise")));
         await fixture.ProjectPeopleAsync();
@@ -405,7 +405,7 @@ public sealed class WorkforceSourceHandlerTests
                     services.AddScoped<WorkforceSourceReadConsistency>();
                     services.AddScoped<WorkforceSourceTargets>();
                 });
-            await ProgramManagementServices.SeedAsync(fixture.Provider, new Person(fixture.TenantId,
+            await ProgramManagementServices.SeedAsync(fixture.Provider, new PersonRules(fixture.TenantId,
                 fixture.PersonId), person => person.Record("Ada", "ada@example.com", fixture.Author, DateTimeOffset.UtcNow));
             await fixture.ProjectPeopleAsync();
             return fixture;

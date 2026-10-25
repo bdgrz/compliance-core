@@ -86,12 +86,10 @@ sealed class NamedRecordHost : IAsyncDisposable
 
     public async Task SeedOwnerAsync()
     {
-        var executor = Provider.GetRequiredService<IAggregateExecutor>();
-        var result = await executor.ExecuteAsync(new Person(TenantId, OwnerPersonId),
-            person => AggregateOutcome.CommitOnSuccess(person.Record("Owner", null,
-                ActorReference.ForMember(Uuid.CreateVersion4(), "Seed"), DateTimeOffset.UtcNow)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var rules = new PersonRules(TenantId, OwnerPersonId);
+        var result = rules.Record("Owner", null, ActorReference.ForMember(Uuid.CreateVersion4(), "Seed"), DateTimeOffset.UtcNow);
         Assert.True(result.IsSuccess, result.Error?.Message);
+        await PersonSeeds.AppendAsync(Provider, rules);
     }
 
     // --- admission

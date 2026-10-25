@@ -33,6 +33,16 @@ public sealed class WorkforceRosterSnapshotter(IPersonDirectoryReader people,
         if (roster is null || jobs is null)
             return Result<SnapshotRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
                 $"A roster snapshot supports at most {PopulationContentIdentity.MaximumRows} rows."));
+        var verifiedRoster = new List<PersonView>();
+        foreach (var person in roster)
+        {
+            if (person.TenantId != tenantId)
+                return Result<SnapshotRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The roster projection returned content outside the tenant."));
+            var source = await peopleConsistency.GetAsync(tenantId, person.PersonId, person.Revision, ct).ConfigureAwait(false);
+            if (!source.IsSuccess) return Result<SnapshotRegistration>.Failure(source.Error!);
+            verifiedRoster.Add(source.Value);
+        }
         // Fence: pages are read in separate transactions, so a projection that advanced after the
         // catch-up check could mix versions. Refuse rather than freeze a torn roster.
         var peopleHeld = await peopleConsistency.EnsureFenceHeldAsync(tenantId, peopleFence.Value,
@@ -49,7 +59,7 @@ public sealed class WorkforceRosterSnapshotter(IPersonDirectoryReader people,
                 "The roster projection returned content outside the tenant."));
 
         return await freezer.FreezeAsync(context, tenantId, WorkforceRosterSnapshotContent.Kind,
-            WorkforceRosterSnapshotContent.Rows(roster, jobs), amendsSnapshotId, reason,
+            WorkforceRosterSnapshotContent.Rows(verifiedRoster, jobs), amendsSnapshotId, reason,
             WorkforceActor.From(context), ct).ConfigureAwait(false);
     }
 

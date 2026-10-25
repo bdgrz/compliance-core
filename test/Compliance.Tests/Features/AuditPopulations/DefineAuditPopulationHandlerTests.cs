@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPopulations;
@@ -15,7 +17,7 @@ using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPopulations;
 
-public sealed class DefineAuditPopulationHandlerTests
+public sealed partial class DefineAuditPopulationHandlerTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 17, 18, 0, 0, TimeSpan.Zero);
     static readonly DateOnly PeriodStart = new(2026, 10, 1);
@@ -34,8 +36,7 @@ public sealed class DefineAuditPopulationHandlerTests
         // Act
         var result = await fixture.Handler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPopulationAggregate(
-            fixture.TenantId, fixture.ProgramId, fixture.PopulationId));
+        var saved = (await fixture.Populations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PopulationId)).Rules;
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -69,8 +70,7 @@ public sealed class DefineAuditPopulationHandlerTests
         // Act
         var result = await fixture.Handler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPopulationAggregate(
-            fixture.TenantId, fixture.ProgramId, fixture.PopulationId));
+        var saved = (await fixture.Populations.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PopulationId)).Rules;
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -95,11 +95,13 @@ public sealed class DefineAuditPopulationHandlerTests
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
     }
 
-    sealed class Fixture : IAsyncDisposable
+    internal sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
         readonly AsyncServiceScope _scope;
-        readonly TimeProvider _clock = new FixedTimeProvider(Now.AddMonths(12).AddHours(3));
+        readonly FixedTimeProvider _clock = new(Now.AddMonths(12).AddHours(3));
+        public TimeProvider Clock => _clock;
+        public void AdvanceClock() => _clock.Now = _clock.Now.AddMinutes(1);
         readonly ClaimsPrincipal _actor;
 
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
@@ -130,7 +132,11 @@ public sealed class DefineAuditPopulationHandlerTests
                     new Claim("email", "compliance-lead@example.test")], "BdgrzSession"));
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(PeriodEvents);
+            services.AddSingleton<IDomainEventReader>(PeriodEvents);
+            services.AddSingleton<IImmutableContentStore>(PeriodContent);
+            services.AddSingleton<ISourceFactResolver>(provider => new EventStoreSourceFactResolver(provider.GetRequiredService<IDomainEventReader>()));
             services.AddPortia();
+            services.AddVerifiedAuditPopulationReader();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             {
                 ValidateScopes = true,
@@ -141,7 +147,19 @@ public sealed class DefineAuditPopulationHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public DefineAuditPopulationHandler Handler() => new(Executor, Periods, _clock);
+        public AuditPopulationReader Populations => new(Reader, PeriodEvents, PeriodContent, new EventStoreSourceFactResolver(PeriodEvents));
+        public AuditPopulationMutations Mutations => new(new NativeOperationExecutor(Reader, Executor, PeriodContent), Reader,
+            Executor, PeriodEvents, PeriodContent, new EventStoreSourceFactResolver(PeriodEvents), Periods,
+            new AuditPopulationSources(PeriodEvents, new EventStoreSourceFactResolver(PeriodEvents), PeriodContent), Clock);
+        public AuditPopulationMutations MutationsFor(IImmutableContentStore content)
+        {
+            var resolver = new EventStoreSourceFactResolver(PeriodEvents);
+            var verified = new AuditPopulationAggregateReader(Reader, PeriodEvents, content, resolver);
+            return new(new NativeOperationExecutor(verified, Executor, content), verified, Executor, PeriodEvents,
+                content, resolver, new TypeIIPeriodReader(verified, PeriodEvents, content),
+                new AuditPopulationSources(PeriodEvents, resolver, content), Clock);
+        }
+        public DefineAuditPopulationHandler Handler() => new(Mutations, Periods, _clock);
 
         public Cntryl.Portia.RequestContext<DefineAuditPopulation> Context(
             DefineAuditPopulation request, ClaimsPrincipal? actor = null) => new(request,
@@ -212,6 +230,7 @@ public sealed class DefineAuditPopulationHandlerTests
 
     sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
     {
-        public override DateTimeOffset GetUtcNow() => utcNow;
+        public DateTimeOffset Now { get; set; } = utcNow;
+        public override DateTimeOffset GetUtcNow() => Now;
     }
 }

@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Tests.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using AuditPopulationAggregate = Bdgrz.Compliance.Features.AuditPopulations.AuditPopulation;
+using AuditPopulationAggregate = Bdgrz.Compliance.Features.AuditPopulations.AuditPopulationRules;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPopulations;
 
@@ -185,7 +189,7 @@ public sealed class AuditPopulationTests
     }
 
     [Fact]
-    public void ShouldReplayExactFrozenPopulationGivenExportIdentity()
+    public async Task ShouldReplayExactFrozenPopulationGivenExportIdentity()
     {
         // Arrange
         var population = FrozenPopulation();
@@ -195,8 +199,21 @@ public sealed class AuditPopulationTests
         // Act
         var exported = population.RecordExport(population.Revision, exportId, 1, "csv",
             "population-v1.csv", artifactId, Hash('6'), 128, RecorderId, "Compliance lead", Now.AddMinutes(4));
-        var events = new AggregateScenario<AuditPopulationAggregate>(population).PendingEvents.ToArray();
-        var replay = new AggregateScenario<AuditPopulationAggregate>(NewPopulation()).Given(events).Aggregate;
+        var events = new InMemoryEventStore();
+        var content = TypeIIPeriodSeeds.NewContentStore();
+        var services = new ServiceCollection();
+        services.AddSingleton<IEventStore>(events);
+        services.AddSingleton<IDomainEventReader>(events);
+        services.AddSingleton<IImmutableContentStore>(content);
+        services.AddSingleton<ISourceFactResolver>(new EventStoreSourceFactResolver(events));
+        services.AddPortia();
+        services.AddVerifiedAuditPopulationReader();
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        await AuditPopulationSeeds.AppendLegacyAsync(events, population);
+        var complete = await new AuditPopulationReader(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            events, content, new EventStoreSourceFactResolver(events)).ReadAsync(TenantId, ProgramId, PopulationId);
+        var replay = complete.Rules;
 
         // Assert
         Assert.Null(exported);

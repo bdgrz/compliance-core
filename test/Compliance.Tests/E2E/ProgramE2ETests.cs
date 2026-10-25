@@ -192,8 +192,8 @@ public sealed class ProgramE2ETests(BrokerStackFixture broker)
                 Assert.Equal(HttpStatusCode.Conflict, futureSetupRevision.StatusCode);
 
                 var servicesPath = $"/api/v1/tenants/{tenant.TenantId}/client-services";
-                using var serviceCreated = await owner.PostAsJsonAsync(
-                    $"{programPath}/client-services", new
+                using var serviceCreated = await owner.PutAsJsonAsync(
+                    $"{programPath}/client-services" + $"/{Uuid.CreateVersion4()}", new
                     {
                         name = "Service A",
                         purpose = "Handle customer requests",

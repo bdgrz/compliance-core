@@ -190,10 +190,10 @@ public sealed class RiskAcceptanceWorkAuthorityTests
         var personId = Uuid.CreateVersion4();
         var actor = ActorReference.ForMember(fixture.Operations.LeadMemberId, "Lead");
         await ProgramManagementServices.SeedAsync(fixture.Operations.Provider,
-            new Person(fixture.Operations.TenantId, personId), person =>
+            new PersonRules(fixture.Operations.TenantId, personId), person =>
                 person.Record("Risk owner", null, actor, DateTimeOffset.UtcNow));
         await ProgramManagementServices.SeedAsync(fixture.Operations.Provider,
-            new Person(fixture.Operations.TenantId, personId), person =>
+            new PersonRules(fixture.Operations.TenantId, personId), person =>
             {
                 Assert.Null(person.CorrelateMembership(1, fixture.GuestUserId, actor, DateTimeOffset.UtcNow));
                 return Result.Success;

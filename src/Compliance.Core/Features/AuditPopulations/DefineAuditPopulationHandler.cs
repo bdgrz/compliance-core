@@ -4,7 +4,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPopulations;
 
-public sealed class DefineAuditPopulationHandler(IAggregateExecutor executor,
+public sealed class DefineAuditPopulationHandler(AuditPopulationMutations mutations,
     TypeIIPeriodReader periods, TimeProvider clock) : IRequestHandler<DefineAuditPopulation>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<DefineAuditPopulation> context,
@@ -32,10 +32,9 @@ public sealed class DefineAuditPopulationHandler(IAggregateExecutor executor,
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Population definition must bind the exact current frozen Type II close snapshot."));
 
-        return await executor.ExecuteAsync(new AuditPopulation(request.TenantId, request.ProgramId,
-                request.DefinitionId), aggregate => CommandFailureRequestAdapter.ToOutcome(
-                aggregate.Define(request.DefinitionId, request.Definition, current,
-                    actorMemberId, actorDisplay, clock.GetUtcNow())), context, ct)
-            .ConfigureAwait(false);
+        var appended = await mutations.AppendUnqualifiedAsync(context, request.TenantId, request.ProgramId,
+            request.DefinitionId, rules => rules.Define(request.DefinitionId, request.Definition, current,
+                actorMemberId, actorDisplay, clock.GetUtcNow()), ct).ConfigureAwait(false);
+        return appended.IsSuccess ? Result.Success : Result.Failure(appended.Error!);
     }
 }

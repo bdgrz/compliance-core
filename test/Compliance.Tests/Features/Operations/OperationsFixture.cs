@@ -192,8 +192,8 @@ sealed class OperationsFixture
                      fixture.BackupUserId, fixture.ReviewerUserId, fixture.OutsiderUserId })
             await ProgramManagementServices.SeedAsync(provider,
                 new Member(fixture.TenantId, user), member => member.Register());
-        await ProgramManagementServices.SeedAsync<Person, PersonRegistration>(provider,
-            new Person(fixture.TenantId, fixture.PersonId), person => person.Record("Pat Offline",
+        await ProgramManagementServices.SeedAsync(provider,
+            new PersonRules(fixture.TenantId, fixture.PersonId), person => person.Record("Pat Offline",
                 null, ActorReference.ForMember(fixture.LeadMemberId, "Lead"),
                 DateTimeOffset.UtcNow));
         await ProgramManagementServices.SeedAsync(provider, new Team(fixture.TenantId,

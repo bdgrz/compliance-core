@@ -1,0 +1,1314 @@
+{
+  "status": "INTEGRATED_UNFINISHED_BY_EXPLICIT_USER_DIRECTION",
+  "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+  "artifactCheckpoint": "61049a8f0d796e5ab707d73b02690105d26fef8e",
+  "baseDefaultCommit": "de2e8c36b52a8080700b394d29666360303c6f30",
+  "packets": {
+    "AuditPopulationSixAndFollowupRed": 62,
+    "ProductClientServiceAndPreparedCut": 51,
+    "Person": 80,
+    "WeeklyScheduleRed": 1
+  },
+  "uniqueAdditionalPaths": 184,
+  "paths": [
+    {
+      "path": "docs/architecture/audit-population-native-decisions.md",
+      "sha256": "4192ab49261398120cea285b805ac249c28e8ee658602407a4137e455bab743d",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AmendAuditPopulation.cs",
+      "sha256": "ae87be963b640817d67f0ba1e249a71b0de21bad18e9ee36efd0727c52f30daa",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationAmendedV3.cs",
+      "sha256": "336701b28846ad67f2c316d8a5746c2dbd0a6392da58f01e9675eaeb6e10a535",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationCommandContent.cs",
+      "sha256": "e98a54eab15029ece3fa9fd41b3906dc300cae520896147a418da70d447b5c7b",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationDecisionSource.cs",
+      "sha256": "e0bfffefd244ad7a21b5b38ee4e667553fd5075b598bd285b988b85d376cef4a",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationDefinedV3.cs",
+      "sha256": "bbc91f94d156794c1ddfa6d6feb1bd882298255e6ae8a53ebe11bece513e99cb",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationDefinitionRevisedV2.cs",
+      "sha256": "4b8410a195c8123bf7230b31eae5b02cd6be2d73c7ed3bdbe91ad7a8cf599390",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationExportGeneratedV3.cs",
+      "sha256": "9167b283aca20c9705cd1a4f620a6c61f1cf86ed5661c99f10f173de2177c12b",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationFactRecordedV3.cs",
+      "sha256": "f148c98faf69ff0881c1bf10c8c7dcd03857c1770bfc08fac2bdeaad9c0433ae",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationFrozenV3.cs",
+      "sha256": "183470867094d63f8b4eaf3aa66a7cc01e59d0c034d514ab5272c2393186d9d9",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationGeneratedV3.cs",
+      "sha256": "15f43ad6047942894412319c50baa9c75833eec3b4c76857992da2994130a8a4",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationHeader.cs",
+      "sha256": "75a92f2e0efb59d28690c0faa00d6077b85d2033d7bd85f8077f1c7c0fc610bf",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationReconciledV3.cs",
+      "sha256": "a6fde4ea572248312e9a7f6328dc3df84c8a6e7f69376c563ef5068e456a9248",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/AuditPopulationRowClassifiedV3.cs",
+      "sha256": "02878db8e698ea9da3bf73082ffdef5e0650c767c651efa0eafcf22347696509",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/ClassifyAuditPopulationRow.cs",
+      "sha256": "6aba0d0ffa3f51d365af9c379938eee67d1d81252e2425893a81401e7329ae10",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/FreezeAuditPopulation.cs",
+      "sha256": "c68298c24356298bec9b3e311a708a61640ab6bc736363634f128ec58c6317f5",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/IAuditPopulationNativeFact.cs",
+      "sha256": "fcc00c646322cd148ded88dc27566a677143c3d2b9669aa52d0d45db47ee67e3",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/IAuditPopulationStateFact.cs",
+      "sha256": "82c72b5b4c6389d90dda414a322de533a71af3e736d5d7363f2f300dea0f3e2a",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/ReconcileAuditPopulation.cs",
+      "sha256": "c3c295746ba3c84674439a1ccdb170fbdf5c1d6a66e4e3953e41124f31ce0e8f",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/RecordAuditPopulationFacts.cs",
+      "sha256": "8df4cd601104545dd7c076e015f2dfb05b7aa380f403ad657bf2c3d55ed8d79e",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/ReviseAuditPopulationDefinition.cs",
+      "sha256": "27d5c3e1fae6ae424c1a3ad7a84149cdbf3a48daa3cf15ea93cb4e403291c9fc",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/ComplianceCoreJsonContext.cs",
+      "sha256": "78f213c58eb6077473b02efded108e0c981a88f2ee3348e9bc11e33b626239f6",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025",
+        "/tmp/compliance-merge-all-product-20261025",
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+      "sha256": "f7c8ff2f38ce481080581e180c1c92310e0c6a7ce0b64a0e2437d98876159ba9",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025",
+        "/tmp/compliance-merge-all-product-20261025",
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AmendAuditPopulationHandler.cs",
+      "sha256": "fd0090426a28ad40c3850dcad55b7973bcbb3ad9accacbed000fe8f3f608cb3d",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs",
+      "sha256": "662da3f229cd51c65ff014c8d39be09ea0dc63457c620e93f427c0e1da0dab13",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationAggregateReader.cs",
+      "sha256": "6439c170fc561964ed089245257070d34f439437ac214db63c8d22ba9a6d5138",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationCommandSelection.cs",
+      "sha256": "7066b4c35ec20efc4849191baec3aafc041a8f79ab11e7fb50d9e44a7be8b8bd",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationContent.cs",
+      "sha256": "225422af9c7f8a697d317ad07b5222c01d9117be6a792892a742ffd02e613645",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationHistory.cs",
+      "sha256": "6570280773091be5055a80bbb4a5be5b2bbfcc6cb62a3210dcd57fd98fd3c29e",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationMutations.cs",
+      "sha256": "3788e648b1a42e0aad16699a4e26e2ae8e1f657ded8c322215fb29c8650bf6d4",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationPreparedCut.cs",
+      "sha256": "104fb9dc8d9b3be1419292266644d5481558c3f476806094421f9302b2cc690b",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationReadSnapshot.cs",
+      "sha256": "29c8d9875d9a825529820f49868a0b5e56c9061c5350f0e3166ea520f1041607",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationReader.cs",
+      "sha256": "df428b976f9dcf0233e56d80f90f3c783ca1c1117d5aab42aaae690e83ece2d3",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationReplayCut.cs",
+      "sha256": "5ab0baad4393c03ae497976cf75909eb5fe5ce847a9f6c1b65b8b152fc6404a3",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationRules.cs",
+      "sha256": "2e4adec8c59b9b92c977efcae1be4b3d97e9cb606fcf8fefff11d05c7c6579b7",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulationSources.cs",
+      "sha256": "cafd1ae6cea01e4bf17c0335f238b5f8bead0d626a4db87c2e25041f88b52a2b",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/ClassifyAuditPopulationRowHandler.cs",
+      "sha256": "b89e6b3e6be17044c3dedfd5a875a3551014112d9e4824aa41d9ccc6a16a36e7",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/DefineAuditPopulationHandler.cs",
+      "sha256": "aac0597c16d616ff16b22d8967c41fce280daeeea5b8f4d35f00a088798ffc81",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/FreezeAuditPopulationHandler.cs",
+      "sha256": "c84720a4239f5fe07566cd72be8ca217662692398b26c9d806fbc9e42165d03b",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/GenerateAuditPopulationExportHandler.cs",
+      "sha256": "972786ddbb3de686e00dd8bdf0ed7e25fb5f70a41ce50bee79a7e86d2217aa00",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/GenerateAuditPopulationHandler.cs",
+      "sha256": "0760a95f719f403b5dd799addfead5b0351d7b8426c14598d3df83f698ece351",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/ReconcileAuditPopulationHandler.cs",
+      "sha256": "f71af7bd0daead4731ad8f3cf43c5c43573f45ec08f7b48e7deac32adb53dd69",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/RecordAuditPopulationFactsHandler.cs",
+      "sha256": "07ed4a8fea358763545cf4c8ac784e6de08b42c5d9e79b8b136c9db5719bb2b2",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/ReviseAuditPopulationDefinitionHandler.cs",
+      "sha256": "ae1312316bbe4069110721f7c0d34db62ca9f63f1b1b79d8e6a6dd79d5dbccfd",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditorRequests/SampleSelectionAdmission.cs",
+      "sha256": "0fbc7935a03722761680b1fb6c3d644dc874122bd56d23b17b0309b3d292834e",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditorRequests/SampleSelectionPopulationSourceReader.cs",
+      "sha256": "99c41d04ed5a41c2f31a9cbe39ba143c72c6f684922e18e0e07879b25a0da1c4",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseMaterialReader.cs",
+      "sha256": "a0b15f3986a63771c58fd2774651d54b1cf910b3b6aea9d9509c9df771c9485a",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Hosting/Persistence/PersistenceServiceCollectionExtensions.cs",
+      "sha256": "627dbeb168df84f9ba8232aca89e2c663882010411df4f9cbbf0fe3d664bc464",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025",
+        "/tmp/compliance-merge-all-product-20261025",
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationCapacityTests.cs",
+      "sha256": "c569af3c1cb3b7d33ce0a6efa0ba742450da915555cf0c7cb6653682566d5fe0",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationCommandHandlerTests.cs",
+      "sha256": "ddc782a919e1781e6caae0965bbfc38f2bfaf9ec7b84ff569f02618a7cb200cb",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationNativeAdmissionTests.cs",
+      "sha256": "f4e0304391fe9f5e6a3332da03af7b185a32617fb7dc5ae07160248fdf5de5a5",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationNativeSourceTests.cs",
+      "sha256": "83aadde78da8f978ba0e2d9f2efa11bfec70d734063cef8f9972ea5a5b817eef",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationTests.cs",
+      "sha256": "df558e3b2b27575ac032a77b65540603e94ce138fa5908d875aab8c7250e33c7",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AuditPopulations/DefineAuditPopulationHandlerTests.cs",
+      "sha256": "8127272c2fa0d26cf296187e6ed21f12ba4e420997a62e8931226a362cd5498c",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AuditPopulations/GenerateAuditPopulationExportHandlerTests.cs",
+      "sha256": "e1ba143d7fabfd89812517db6fd2ffab3ab7f56123593a6ddf41728aa17c9f97",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestFixture.cs",
+      "sha256": "2bd5ecd336411593dcfd92cae9088ec4660e84781e2f80f7d0b99d06dc14a0f0",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs",
+      "sha256": "790305c1656286b771501eddc8f8896cc387a3feaefd686f0b8b2a06bb9867ea",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.NativeOwners.cs",
+      "sha256": "cd6efae96cdb76442f645769280aa27b0650ec09158ba3c3cbf4c0de56bba77c",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/AuditPopulationSeeds.cs",
+      "sha256": "448b3fb7f7b64b3d4d9c03444098e25890fa95c172bb6f04af2029aabf60a307",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/VerifiedAuditPopulationServices.cs",
+      "sha256": "66dcf8b8446320d135d66696f0132a99867afce9aa859d25cacd34ad02a2140b",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationExportProcessTests.cs",
+      "sha256": "e327c21857dcba3a774f6cd562f0b78a097ee8f7df26cdf706fe3c1b169215cc",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationRootAdmissionTests.cs",
+      "sha256": "12848f14acc8500fc9ca5670425113a4bf50961425781f2d8c9c909740a681dc",
+      "packets": [
+        "/tmp/compliance-merge-all-audit-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.App/Program.cs",
+      "sha256": "e4bdcb097c0264086abbad833c2e87dad4881d86dfd2f3e0c7cd44d60d4e72bc",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025",
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Programs/ClientServiceCreated.cs",
+      "sha256": "e8c1922f9113db563e042fc7c902ffab265a2818268552414d1a2616b692a528",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Programs/ClientServiceRetired.cs",
+      "sha256": "249bd285d730793f72228ba123191805c62874c154cf5c95dcf8011a0052bed0",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Programs/ClientServiceRevised.cs",
+      "sha256": "2e53a93af030f762850ec8b185b73926a120892b22798d6404745c7e96e9309a",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Programs/CreateClientService.cs",
+      "sha256": "a9ff222ec219662ee664ea968badaf20be8e166a3f35f0c581fd338af451d732",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Programs/IProductClientServiceFact.cs",
+      "sha256": "8b320769f93c0434479bf90bc89bb148c7b8e7acedafc36765e7cedeaca0361d",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Programs/ProductClientServiceContent.cs",
+      "sha256": "997f87c06304e0c731ab1e5252b0169440e0af9eb311fdf15f3824763510457b",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Programs/ProductClientServiceRetirement.cs",
+      "sha256": "3245eb8fcccf3b453eea60603c9a7fc167600958432f53ceb5392d77f30fd857",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Programs/RetireClientService.cs",
+      "sha256": "59883a7654c7e2c6846c998d7491ba932e9bbf0f6fd71415a06e1a85f4d8ed1c",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Programs/ReviseClientService.cs",
+      "sha256": "810096df9c85327d20129ade1a14be913aa9b8a07c13f1e06000e810f3eaf71e",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ClientService.cs",
+      "sha256": "504e745060d2195aec3cb458015ba5b05a7cdc861f218be944feb7a95ff144f1",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/CreateClientServiceHandler.cs",
+      "sha256": "bc3721c0e875409d87b45a08f9b6dc4bc3e98b6d0df0cf5d9714d1a0664bd25c",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/FitzClientServiceDirectory.cs",
+      "sha256": "67b966fc12879a5a1246bd7b4218ac747f3f47238f07b060d74227ec63f845d8",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ProductClientServiceAggregateReader.cs",
+      "sha256": "af35ce97e40fd9fbde465885e02fe0f7408b92ce7e06e00458ce58f6144c736a",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ProductClientServiceChange.cs",
+      "sha256": "dc923b0d56f0e5262ef05b2bb409ad0704078ad50edd30325ddd44c2ab8487b3",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ProductClientServiceHistory.cs",
+      "sha256": "9ff76ee0d248ae181da2ce843b84905c10118bf9ce565f3957aed9351181e24c",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ProductClientServiceHistorySnapshot.cs",
+      "sha256": "f31d35c2acff129fb0255c0f333b4c020cd9e344faa297c916ee5c9e230020a2",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ProductClientServiceOperations.cs",
+      "sha256": "3faad41546aa96a3a0746d70e754f2fcab84970e8346b7bec7cec6c7e44f0053",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ProductClientServiceReadFailure.cs",
+      "sha256": "d39e0a365d47b47dd746620cec4944a32c4db500dcfea4d43e487c5e9330ca8a",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ProductClientServiceReader.cs",
+      "sha256": "cc978569d60fb8019629f4da9f9bf8bd2159d71aa568ecc5978fcb4a9ec34090",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ProductClientServiceRules.cs",
+      "sha256": "9f4a01f36aa6bfd9f4523cbfa2c6bde67658b0dd743e64cfcac91afea61b0d76",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/RetireClientServiceHandler.cs",
+      "sha256": "ef28ad2891d757537e4e47aa88af993eb9b6cab0c45856c9648d9722526eff1f",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ReviseClientServiceHandler.cs",
+      "sha256": "7b3421919d026bef51fa61f1586281c86e0c3a0a935711048313f34f4f69314b",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/ClientServiceActorE2ETests.cs",
+      "sha256": "83df9b9ec39862a47a2720fafd718c26403cf3b0d1815abd8bf989ed537f4a77",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/ClientServiceE2ETests.cs",
+      "sha256": "610dee305f7ba1b12d424e8bd6bda25927cfaa498d596a9c3a8d7468f00de1e9",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/CommitmentDraftE2ETests.cs",
+      "sha256": "1e1a5c421747f2176d5b69911de95bf68a6529340dbb06d555a1f2a6103d7ab3",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/DraftActorSnapshotE2ETests.cs",
+      "sha256": "908c850ba2c653e3d7bb72ad91b79252ffb1e5a820ff4c188ff696f65bd65171",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/DraftReadLeakMatrixE2ETests.cs",
+      "sha256": "d403bc7d7d351fdafb9fe4469f841cdea633e3de95ade06eb46db9e78db5f8fc",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/ProgramE2ETests.cs",
+      "sha256": "f2338034ebeb14ee78304a0541a7fc35959f11e80ea62a88d74731d01f008f2b",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/ProgramReadLeakMatrixE2ETests.cs",
+      "sha256": "83af8e76a23583dccb63beef9a6d9411b7da63bc9e413bb16b2728a4a991d80e",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
+      "sha256": "c9b12651a6e12bd323fae0393b722e4a1f885c2f1d3389b38ea969fcaf4b8b42",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025",
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Commitments/CommitmentDraftReplayTests.cs",
+      "sha256": "2d81043d26310e5e7ff8c74c63ef94f332307a9d6b2aebd43134f0cdaa9e2b4b",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Commitments/CommitmentHttpRoutesTests.cs",
+      "sha256": "4340b793fd6898af312dbed0459ff668322bcd29e0c64b70300aff5e7eba1df8",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Commitments/CommitmentNativeContentTests.cs",
+      "sha256": "25fbd09d28269acfdd2163953e591f78115fd2e76f2670805165935a67ad3d6f",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Programs/ClientServiceNativeBoundaryTests.cs",
+      "sha256": "4d2f8fdf39cffd78bb5aa179930b300ad9f1f1cd803ccf4e7411747bc1d3227a",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Programs/ClientServiceTests.cs",
+      "sha256": "d1699a8a18a835f02c331065eecbfcb64c168bd37a05e296ff24aca8a7ae10cf",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Programs/ProductClientServiceMetadataCommitmentTests.cs",
+      "sha256": "9c0aef76f4a78881c14ef9966f378f83286aca2aeb5923f58cd9d8be3fe0c91a",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Programs/ProductClientServiceNativeHistoryTests.cs",
+      "sha256": "f7a08d55e4df6412b060ee235c1f8c1506a48cf5230da4b62061c00154ca9f6f",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Programs/ProductClientServiceNativeHttpTests.cs",
+      "sha256": "91b0d90edcc581ced6dd4aee5490af08a25e3f0a2dbbd3c827ff58a25d4bf9fd",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Programs/ProductClientServiceNativeProjectionTests.cs",
+      "sha256": "15400836664c5f5e900bd0b23a817f0c8e139e9a720b0c471ce702445767efd4",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Programs/ProgramResourceScopeResolverTests.cs",
+      "sha256": "e5cfdd441fa74b3cf80f0b77b652c2dfa92e5e90fa2f7361bd839e5772d6f0ce",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Programs/ProjectionFreshnessTests.cs",
+      "sha256": "0899979801fd79422f508abd8a2ba7f1419b0c9adde4818f4c895eb144dde8a6",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs",
+      "sha256": "c371e6ad8e808366a6bbeff7ff886073eff0cb76c519e8d07d7a4699d73950aa",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025",
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/ProductClientServiceFixture.cs",
+      "sha256": "32570bb68896396288ecf62c80dfd147292c869a5f8b6ec0c98b0e4183b0f8ee",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/ProductClientServiceSeeds.cs",
+      "sha256": "7d1647f1c99472c0369bf2209c696cb87fe943896a84b70316f9983193873e9f",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/ProgramManagementServices.cs",
+      "sha256": "3aa4fc39158d9445a570b6cd3dda50668e7f593e52376612459e99ae1d7f20ed",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025",
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/VerifiedProductClientServiceServices.cs",
+      "sha256": "1da2fae4e921191a9ebbb99d8b431c276121769f61f2e2c463c5a5e11e3f956b",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Programs/ProductClientServicePreparedCutTests.cs",
+      "sha256": "9fe4e9fc162d2205a3370e75f6faef9e6c38e614585cb9e9ee91811a07061b5b",
+      "packets": [
+        "/tmp/compliance-merge-all-product-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.App/Features/Workforce/PersonHttp.cs",
+      "sha256": "5aeee4167518f876d35e631c9ddd754f88e95633d6a7a72a6045b6f7ced858f8",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Workforce/CorrelatePersonMembership.cs",
+      "sha256": "6ef611664f22ab1e3d5c53018da348abfee1b611b7f8f268821f277b0225b219",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Workforce/IPersonNativeFact.cs",
+      "sha256": "c75dda35465556a250f00114a9331679c14e17e2dab88227e99ff242586b8142",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Workforce/PersonDetailsRevised.cs",
+      "sha256": "d0e56d96634eff24f90eab67133879b53cd2a64ea525b43606bc84aaff468c9f",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Workforce/PersonHeader.cs",
+      "sha256": "25c1d54dabecabf26a9291844514b9d32ef768b3a55b191f86a63a3d9ac9b9a0",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Workforce/PersonMembershipCorrelationRecorded.cs",
+      "sha256": "0728f5db23ac77b0488269c1905ee7f89f79c9216011b787bc0cb947e1e8ee19",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Workforce/PersonRegistrationRecorded.cs",
+      "sha256": "ac6bbc529df06d32c40191e34c3839be5a201595d87ad4fde98befc007652b61",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Workforce/RecordPerson.cs",
+      "sha256": "459c6b5c9796ecbefb0350c1e3d49b6f9f120eb308e23c0603c24aaa24e19e15",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Workforce/RevisePerson.cs",
+      "sha256": "a5a86bd9c45631e5d89f94b3e70467fe8caccbe920ae648a08bc81e29c162b35",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/CorrelatePersonMembershipHandler.cs",
+      "sha256": "eb0606845ce946d92eb16e1489e83ccc5c4107dc432fc6351a679f44b47d4b65",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/FitzPersonDirectory.cs",
+      "sha256": "aaa281ca2cbebcafcd4bfb9cb58d28eb0e262143d202f7045879a0c0dda8ba7b",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/ListPeopleHandler.cs",
+      "sha256": "6f94d43a7f72e29c47850a3acb1a1e93fe3bdb4f19f9aa679a0c908a1f16ed85",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/Person.cs",
+      "sha256": "b904ecff7ed837866131c3c3a06c2a3c8d32c341615ee310b1067c095a989fcc",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonAggregateReader.cs",
+      "sha256": "e3b3b0d332c95f62b3079c6b6508c0c23f57bce0410ed2279a16a926f901a454",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonChangeContent.cs",
+      "sha256": "5be718cfc87a2758afc66292541871b58368e9ff34cfc9ace3f73d0e41ea4515",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonContent.cs",
+      "sha256": "8ceeae9a5753cdf5eb42c6c67138c32149d226274982003a1c024684b6f57981",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonDirectoryProjector.cs",
+      "sha256": "9a123830d1fb0075021c7dd1d50a8113cdb9531c52b8ed8b06d0f399b4e7b9d4",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonHistory.cs",
+      "sha256": "240690b07350bc9fb41e9cf857d35248fc69c8a51262593a5cae0bc811140dfe",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonOperations.cs",
+      "sha256": "3681c7de2ed9f609d6df48956501644a8de3427afdf4e9eb0bd98119b7a070f4",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonPrepared.cs",
+      "sha256": "26f8dbeba9f34e0fe5c407c3964ff470ef3b3a72d3887f6a68194817e1fc2f68",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonReadConsistency.cs",
+      "sha256": "0d83771c6d67ea3390d0b10808292147a586a879aea2a0070d577ca3741187d6",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonReadSnapshot.cs",
+      "sha256": "37be4ea6c5933fcdff477fa02b02ceddd579f58d1dd6cb8f4c0deb1ac96db7de",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonReader.cs",
+      "sha256": "a669f0fca490f49884ab819f42261eee7f5f41c9ad04f7bacd9caf5f42782faf",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonRules.cs",
+      "sha256": "ab9b5a7aa04ca9125b77434bf973e71f1b0372c46d6b8e286349e9892c4184a8",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/PersonValues.cs",
+      "sha256": "06fe8218cf65f5de1de20afc735597acb4b2414144fdb5d2a8e128546228e4d1",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/RecordPersonHandler.cs",
+      "sha256": "1473f97c977ba74d83345c031b9bcb8518d939c284f3ebff896374489b53cab8",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/RevisePersonHandler.cs",
+      "sha256": "bbf92ae6c9958bc9dcbb055f551d31e0b1ca8cbbb555dee7d7d5fb355a229958",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/WorkforceRosterSnapshotter.cs",
+      "sha256": "4401bfbbdc5f62c828dfb101d895ddf580293604d9295b9dcac6c6778be06542",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/ApplicationInventoryE2ETests.cs",
+      "sha256": "fc0f3c0c90f467f67df876062e4ace4b2c582e01f36117e168dc8e5d984371f2",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/BoundaryE2ETests.cs",
+      "sha256": "a1875b773412e4a2dfafed67ab26f7dc33f761103f8330f1a2cddd61f02a0c43",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/MemberPresentationE2ETests.cs",
+      "sha256": "fab57e099aaf3599fe99c8f8a3fa682747584b285a6473673a946ff01993c5fb",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/PersonE2ETests.cs",
+      "sha256": "22efb5bb67dcacd782e74c43f1d6a78094d61ceecde1df95267551718aab1067",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/WorkforceServiceIdentityE2ETests.cs",
+      "sha256": "d60ac65513e3b038f77f09a671dcb6f990a9d13e20ce78a7e2f36d0aaa1506d7",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/E2E/WorkforceSourceE2ETests.cs",
+      "sha256": "af89001d082c321ad0ac32409e20d2ca4cba135edb1c9c93c5b18b12a5f551e6",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
+      "sha256": "e67bd9581a81f4fb49f5706138f1fa71308e43cdf000956080b1c2689df3c110",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+      "sha256": "32c223afc9e10c97700c85c4a27dc4558f3189ed467cc8cb6498c4aa9bb80b80",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Applications/ApplicationInventoryHttpTests.cs",
+      "sha256": "e255e2cfc3215a0c40c82b86a19f6b3c758e5ec15140dd8d7c9d43e38e838b5a",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs",
+      "sha256": "46c981aeddca3ef9d15250dabebf3852be305e9fd14d8766a27f7089095514ec",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Applications/ApplicationRevisionFieldPresenceHttpTests.cs",
+      "sha256": "0c43bd9eec2cae30afb65aa3f7b5b9ad4eba81c67503dfb82b07eac1719d3247",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Applications/ApplicationRevisionGovernanceTests.cs",
+      "sha256": "f5ff18aba90fbe8aeaeafc95ab8b23d5b910f07b3bc62b5bdfdd20181c8d705d",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Applications/ApplicationRevisionPreviewContractTests.cs",
+      "sha256": "d724ab98ea5a1072638db20529d75c8eedc561414e4938a94014167fa9193c4e",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Applications/PersonalAccessReviewScopeTransportTests.cs",
+      "sha256": "e796ba9ef1a4a9b87b05dd5d3a71dc72d415c09d7a210a035448f3745b7ad1a2",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
+      "sha256": "2f8164202157c48d4eec3ba3602d26a708c8156ab0b2e2668f6bc8a30df37e7a",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs",
+      "sha256": "1897c09d4e3b80f90a52dbd9a7e017fb3354dae48a2fb8239f2584299491d712",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Controls/ControlOwnerPersonWriteTests.cs",
+      "sha256": "36c7564a03c035ebe4c1b989ca03d7ead6f9971fb1ebff198cc190a3c2b537d4",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/NamedRecords/NamedRecordTransportTests.cs",
+      "sha256": "32125b9deeb9f60dab82f964968109b51851a7148b23ebc52b53896757f89edc",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+      "sha256": "3ca0f333f35a212ce354a80f4758ea905c2cf145167be84dd90f980686bfb267",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/PolicyDistribution/CampaignAcceptedRetryTests.cs",
+      "sha256": "70760c0f5675fbc8cad0e9fd7f3fd8d01198e989a6b98e3f1abba81faffa81f1",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/PolicyDistribution/CampaignTransportTests.cs",
+      "sha256": "4c0c9a429f55e1f27237be53ca723b5a80387a9051f703ee57e41784eb6c1136",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
+      "sha256": "7b6af482b7527dbbe07ddd8213ce29bc2ba8a5eafc011bd03ec4eae619755362",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
+      "sha256": "9ef5f819b7f3394cf4e963b7b9de5ed599b98ae1fbc8eb1c5308f3e3ed94bd41",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+      "sha256": "84e8fa73430697aa2deda4fdbcc3314fc66d6ebf6d7b905df148f771d9c72dce",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
+      "sha256": "0dee4baa511c7a9272f2116c1719e6bc6cfb88259070ef0564b4dd70cee6dd2c",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/TechnologyInventory/InventoryRetryTests.cs",
+      "sha256": "d444cb1b220fc313b60e39f9de1ca7049a6285643d547c2c24b5fa2397660f2e",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs",
+      "sha256": "fc8310dda0f78d1e4e3a7050af810edad927734691c0592f2437642221abacf9",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Work/PolicyCampaignWorkTests.cs",
+      "sha256": "74ee68226a18ccf67dd131d5722a97636afb5dd19faae6cad51356887a7b96c1",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
+      "sha256": "b5a37c291859c7a1dbd19d6038d14a08c5c0e538cab77d74dd949dc04df2e65d",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs",
+      "sha256": "b8d1aeee0ca1ab36178026f95f972392a8d03ba5419384fee882a09d2b36ee22",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs",
+      "sha256": "ea8f59b9504ea0a54ac57370648ba885f786ce4452706f21435fa500d1454716",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Workforce/PersonNativeHistoryTests.cs",
+      "sha256": "567b0820af0c4efd59d9ab55f8988c138c89efec727af1faa0df0d23b58dc9c0",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Workforce/PersonNativeHttpTests.cs",
+      "sha256": "9fd78b6023d3e67dc4ca700352ec3c880761bc2f2b72379bdd2a8b1bf90fbe36",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Workforce/PersonNativeIdentityTests.cs",
+      "sha256": "dd3d28d26c17305c79c3fcd57d79c41902e4faf8cf852e38c2ea976348328952",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Workforce/PersonTests.cs",
+      "sha256": "748c6201c98b8eb6387a1d6e4417ac9d2bb941d827e92f39faf9846e314e527c",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Workforce/PersonalWorkforceObservationTransportTests.cs",
+      "sha256": "ed11b73616387e043a60958fe6ecec8e9d18aaae5560d2a06b66e7bd31ca051f",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Workforce/RecordWorkRelationshipHandlerTests.cs",
+      "sha256": "3b978092805d041894457627356b0ccd8e0cf7b980cadbb5e69d022d6dcfd8bf",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Workforce/WorkforceAuthorizerTests.cs",
+      "sha256": "f04cd90a7df70092c165f44fc58539761235f1649e3253ac46e0c4bb59b9bf4f",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Workforce/WorkforceRosterSnapshotTests.cs",
+      "sha256": "d9fb727b5ee9ffc73ac03903dff247eff76f71d618acb90ee32dccf2788681bb",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs",
+      "sha256": "bea4e9fcb9282f0d5febd056670a6623a349b3a1acc09f8894b037a3b376e6a8",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/ApplicationInventoryHost.cs",
+      "sha256": "4ff1b967351eecde448c12d63b56e13c05b711b09df2d55bf2bdf6b5f2024983",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/CampaignHost.cs",
+      "sha256": "b6ac939d9292d554c3b352f699f590134f2f4b75191ccda9a3cf590052392caa",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/NamedRecordHost.cs",
+      "sha256": "a87028c74c0a9b91d955882bd8ded11ae93c22168144681d73c083153de3d88a",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/PersonSeeds.cs",
+      "sha256": "40488a8ab5eff23018bc5ea2ed3ca3090b192784d6664f0ff29b934ae984e7ec",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Testing/VerifiedPersonServices.cs",
+      "sha256": "4e9b6056f1a93e90111de03588a70d4a3fdcf8df7d4080d32e2151e1c9c42f75",
+      "packets": [
+        "/tmp/compliance-merge-all-person-20261025"
+      ]
+    },
+    {
+      "path": "test/Compliance.Tests/Features/Work/WeeklyScheduleOriginalResultTests.cs",
+      "sha256": "4bc06defb439d8377dd93fafa9e74e5facea8cb085125223f1300aee6ff00783",
+      "packets": [
+        "WeeklySchedule RED"
+      ]
+    }
+  ],
+  "qualification": "Existing written WIP integrated as-is; no final build, tests, format or CI qualification. Includes intentionally red/unqualified tests and incomplete Define/Generate/export, WeeklySchedule and preference prepared-cut work. No deployment or live broker mutation."
+}

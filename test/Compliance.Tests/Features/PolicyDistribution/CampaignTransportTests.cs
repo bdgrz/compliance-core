@@ -166,7 +166,7 @@ public sealed class CampaignTransportTests
         var member = RbacIds.Member(tenant, user);
         var actor = ActorReference.ForMember(member, "Campaign member");
         await ControlOperationE2ETests.SeedAsync(factory, new Member(tenant, user), item => item.Register());
-        await ControlOperationE2ETests.SeedAsync(factory, new Person(tenant, person), item =>
+        await ProgramManagementServices.SeedAsync(factory.Services, new PersonRules(tenant, person), item =>
         {
             Assert.True(item.Record("Campaign member", null, actor, DateTimeOffset.UtcNow).IsSuccess);
             Assert.Null(item.CorrelateMembership(1, user, actor, DateTimeOffset.UtcNow));

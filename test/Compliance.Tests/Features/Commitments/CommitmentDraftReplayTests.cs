@@ -20,7 +20,7 @@ public sealed class CommitmentDraftReplayTests
         var id = CommitmentDraft.IdFor(tenant, program, "service_commitment", "SC-LARGE");
         await using var provider = ProgramManagementServices.Build(new RecordingPermissionAuthorizer(allowed: true),
             portia => portia.AddRequestHandler<CreateCommitmentDraftHandler>());
-        await ProgramManagementServices.SeedAsync(provider, new ClientService(tenant, serviceId),
+        await ProgramManagementServices.SeedAsync(provider, new ProductClientServiceRules(tenant, serviceId),
             service => service.Create(program, "Service", "Purpose", "Operations", user, "Author", DateTimeOffset.UtcNow));
         var request = new CreateCommitmentDraft(id, tenant, program, serviceId, "service_commitment", "SC-LARGE",
             new string('<', 16000), new string('<', 16000), "Signed MSA");
@@ -44,7 +44,7 @@ public sealed class CommitmentDraftReplayTests
         await using var provider = ProgramManagementServices.Build(
             new RecordingPermissionAuthorizer(allowed: true),
             portia => portia.AddRequestHandler<CreateCommitmentDraftHandler>());
-        await ProgramManagementServices.SeedAsync(provider, new ClientService(tenantId, serviceId),
+        await ProgramManagementServices.SeedAsync(provider, new ProductClientServiceRules(tenantId, serviceId),
             service => service.Create(programId, "Client service", "Purpose", "Operations",
                 actorId, "Author", DateTimeOffset.UtcNow));
         var original = new CreateCommitmentDraft(Bdgrz.Compliance.Features.Commitments.CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-01"), tenantId, programId, serviceId,
@@ -52,7 +52,7 @@ public sealed class CommitmentDraftReplayTests
         var registration = new CommitmentDraftRegistration(CommitmentDraft.IdFor(tenantId,
             programId, "service_commitment", "SC-01"), "service_commitment", "SC-01", 1);
         await Dispatch(provider, actor, original, requestId).ExpectSuccess(registration);
-        await ProgramManagementServices.SeedAsync(provider, new ClientService(tenantId, serviceId),
+        await ProgramManagementServices.SeedAsync(provider, new ProductClientServiceRules(tenantId, serviceId),
             service =>
             {
                 Assert.Null(service.Retire(1, "Service ended", actorId, "Author",

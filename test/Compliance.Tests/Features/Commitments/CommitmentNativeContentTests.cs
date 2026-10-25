@@ -244,10 +244,10 @@ public sealed class CommitmentNativeContentTests
         public static async Task<Scenario> CreateAsync()
         {
             var scenario = new Scenario();
-            var service = new ClientService(scenario.Tenant, scenario.Service);
+            var service = new ProductClientServiceRules(scenario.Tenant, scenario.Service);
             Assert.True(service.Create(scenario.Program, "Service", "Purpose", "Owner", scenario.Author,
                 "Author", scenario.Source.Clock.Now).IsSuccess);
-            await scenario.Source.Writer.SaveAsync(service, new RequestDispatchContext(RequestActor.System));
+            await ProductClientServiceSeeds.WriteAsync(scenario.Source.Reader, scenario.Source.Writer, scenario.Source.Events, scenario.Source.Content, service);
             return scenario;
         }
         public ValueTask<Result<CommitmentDraftRegistration>> CreateDraftAsync(string display = "author@example.test") =>

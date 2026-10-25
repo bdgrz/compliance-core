@@ -244,7 +244,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetApplicationImportRetention>(tool => tool.ReadOnly())
         .AddMcpTool<GetApplicationImportProgress>(tool => tool.ReadOnly())
         .AddMcpTool<GetApplicationImportRejectedReport>(tool => tool.ReadOnly())
-        .AddMcpTool<RecordPerson>()
+        .AddMcpTool<RecordPerson>(tool => tool.Idempotent())
         .AddMcpTool<RevisePerson>(tool => tool.Idempotent())
         .AddMcpTool<CorrelatePersonMembership>(tool => tool.Idempotent())
         .AddMcpTool<GetPerson>(tool => tool.ReadOnly())
@@ -1944,16 +1944,33 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/work-digest-preference/changes/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<SetWorkDigestPreference>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Work");
-    app.MapPortiaPost<RecordPerson, PersonRegistration>(
-            "/api/v1/tenants/{tenant_id}/people", config => config.OnNativeResult()).WithNativeFirstResponse<RecordPerson>()
+    app.MapPortiaPut<RecordPerson, PersonRegistration>(
+            "/api/v1/tenants/{tenant_id}/people/{person_id}", config => config
+                .OnBind(PersonHttp.BindRecordAsync)
+                .Accepts<PersonHttp.RecordBody>("application/json", isOptional: false)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("person_id", PortiaHttpParameterLocation.Route, required: true)
+                .OnNativeResult()).WithNativeFirstResponse<RecordPerson>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
-    app.MapPortiaPut<RevisePerson>(
-            "/api/v1/tenants/{tenant_id}/people/{person_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RevisePerson>()
+    app.MapPortiaPut<RevisePerson, UnitResult>(
+            "/api/v1/tenants/{tenant_id}/people/{person_id}/revisions/{command_id}", config => config
+                .OnBind(PersonHttp.BindReviseAsync)
+                .Accepts<PersonHttp.ReviseBody>("application/json", isOptional: false)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("person_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("command_id", PortiaHttpParameterLocation.Route, required: true)
+                .OnNativeResult()).WithNativeFirstResponse<RevisePerson>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
-    app.MapPortiaPut<CorrelatePersonMembership>(
-            "/api/v1/tenants/{tenant_id}/people/{person_id}/membership-correlation", config => config.OnNativeResult()).WithNativeFirstResponse<CorrelatePersonMembership>()
+    app.MapPortiaPut<CorrelatePersonMembership, UnitResult>(
+            "/api/v1/tenants/{tenant_id}/people/{person_id}/membership-correlations/{command_id}", config => config
+                .OnBind(PersonHttp.BindCorrelateAsync)
+                .Accepts<PersonHttp.CorrelateBody>("application/json", isOptional: false)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("person_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("command_id", PortiaHttpParameterLocation.Route, required: true)
+                .OnNativeResult()).WithNativeFirstResponse<CorrelatePersonMembership>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
     app.MapPortiaGet<GetPerson, PersonView>(
@@ -2472,8 +2489,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Application imports");
-    app.MapPortiaPost<CreateClientService, ClientServiceRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/client-services", config => config.OnNativeResult()).WithNativeFirstResponse<CreateClientService>()
+    app.MapPortiaPut<CreateClientService, ClientServiceRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/client-services/{service_id}", config => config.OnNativeResult()).WithNativeFirstResponse<CreateClientService>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Client services");
     app.MapPortiaGet<ListProgramClientServices, Page<ClientServiceView>>(
@@ -2481,11 +2498,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Client services");
     app.MapPortiaPut<ReviseClientService>(
-            "/api/v1/tenants/{tenant_id}/client-services/{service_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseClientService>()
+            "/api/v1/tenants/{tenant_id}/client-services/{service_id}/revisions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseClientService>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Client services");
-    app.MapPortiaPost<RetireClientService>(
-            "/api/v1/tenants/{tenant_id}/client-services/{service_id}/retirements", config => config.OnNativeResult()).WithNativeFirstResponse<RetireClientService>()
+    app.MapPortiaPut<RetireClientService>(
+            "/api/v1/tenants/{tenant_id}/client-services/{service_id}/retirements/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RetireClientService>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Client services");
     app.MapPortiaGet<GetClientService, ClientServiceView>(

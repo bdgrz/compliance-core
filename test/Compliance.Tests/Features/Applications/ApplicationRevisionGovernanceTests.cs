@@ -484,7 +484,9 @@ public sealed class ApplicationRevisionGovernanceTests
                     ["Fitz:ApplicationName"] = "compliance",
                     ["Compliance:Applications:GovernedRevisionsEnabled"] = enabled.ToString(),
                 }).Build(), developerAuthentication: true);
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var personEvents = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(personEvents);
+            services.AddSingleton<IDomainEventReader>(personEvents);
             services.AddSingleton<TimeProvider>(new FixedClock());
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
             services.AddSingleton<IPermissionAuthorizer>(Permissions);
@@ -521,9 +523,9 @@ public sealed class ApplicationRevisionGovernanceTests
 
         public async Task RecordPersonAsync(Uuid personId, Uuid? tenant = null)
         {
-            var person = new Person(tenant ?? Tenant, personId);
+            var person = new PersonRules(tenant ?? Tenant, personId);
             Assert.True(person.Record("Owner", null, ActorReference.ForMember(User, "Manager"), Now).IsSuccess);
-            await Writer.SaveAsync(person, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            await PersonSeeds.AppendAsync(_scope.ServiceProvider, person);
         }
 
         public ReviseApplication Request() => new(Uuid.CreateVersion4(), Tenant, Application, 1,

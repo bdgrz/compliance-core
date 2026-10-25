@@ -18,7 +18,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 /// are read from verified content; legacy State facts are inspected only at their explicit scoped reference fields.
 /// No directory absence, global identity lookup or invented material identity establishes completeness.
 /// </summary>
-public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, IImmutableContentStore content, SystemDescriptionReader descriptions, RecordedSourceReceiptCutFactory receiptCuts)
+public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, IImmutableContentStore content, SystemDescriptionReader descriptions, RecordedSourceReceiptCutFactory receiptCuts, AuditPopulationReader populations)
 {
     const int MaximumFacts = 25000;
     static readonly string[] Areas = ["audit-packages", "audit-populations", "management-assertions", "audit-outcomes",
@@ -86,6 +86,20 @@ public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, I
             }
             var subject = Uuid.Parse(record.Fact.Stream.Resource, CultureInfo.InvariantCulture);
             var body = record.Payload.TryGetProperty("state", out var state) ? state : record.Payload;
+            if (record.Fact.Stream.Area == "audit-populations" && record.Payload.TryGetProperty("current_content", out var populationReference))
+            {
+                var population = await populations.ReadAsync(period.TenantId, period.ProgramId, subject, ct).ConfigureAwait(false);
+                var actual = population.Facts.SingleOrDefault(fact => NativeFactReference.Of(population.Owner.Stream, fact) == record.Fact);
+                var reference = JsonSerializer.Deserialize(populationReference, ComplianceCoreJsonContext.Default.ImmutableContentRef)
+                    ?? throw new ImmutableContentIntegrityException("A compact population material fact has no complete body.");
+                if (actual is not IAuditPopulationStateFact current || current.CurrentContent != reference ||
+                    TypeIIPeriodCloseHistory.Capture(population.Owner.Stream, actual).PayloadSha256 != record.PayloadSha256)
+                    throw new ImmutableContentIntegrityException("The population material differs from its complete verified native source.");
+                var complete = await content.ReadJsonAsync<AuditPopulationView>(period.TenantId.ToString(), reference, ct).ConfigureAwait(false);
+                if (AuditPopulationContent.Header(complete) != current.Header)
+                    throw new ImmutableContentIntegrityException("The population material body differs from its native header.");
+                body = JsonSerializer.SerializeToElement(complete, ComplianceCoreJsonContext.Default.AuditPopulationView);
+            }
             if (ReferencesClose(body, prior))
             {
                 affected.Add(subject);

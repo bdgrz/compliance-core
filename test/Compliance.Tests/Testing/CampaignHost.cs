@@ -99,13 +99,13 @@ sealed class CampaignHost : IAsyncDisposable
                 "Client manager", Start));
             return Result.Success;
         });
-        await ProgramManagementServices.SeedAsync(_provider, new Person(Tenant, LearnerPerson), person =>
+        await ProgramManagementServices.SeedAsync(_provider, new PersonRules(Tenant, LearnerPerson), person =>
         {
             Assert.True(person.Record("Learner", null, ManagerActor, Start).IsSuccess);
             Assert.Null(person.CorrelateMembership(1, Learner, ManagerActor, Start));
             return Result.Success;
         });
-        await ProgramManagementServices.SeedAsync(_provider, new Person(Tenant, OfflinePerson), person =>
+        await ProgramManagementServices.SeedAsync(_provider, new PersonRules(Tenant, OfflinePerson), person =>
         {
             Assert.True(person.Record("Offline", null, ManagerActor, Start).IsSuccess);
             return Result.Success;

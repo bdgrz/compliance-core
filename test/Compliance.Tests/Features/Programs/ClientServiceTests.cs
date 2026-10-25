@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -11,7 +12,7 @@ namespace Bdgrz.Compliance.Tests.Features.Programs;
 public sealed class ClientServiceTests
 {
     [Fact]
-    public void ShouldPreserveActorSnapshotGivenChangedDisplayAndLegacyReplay()
+    public async Task ShouldPreserveActorSnapshotGivenChangedDisplayAndLegacyReplay()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -19,7 +20,7 @@ public sealed class ClientServiceTests
         var programId = Uuid.CreateVersion4();
         var actorId = Uuid.CreateVersion4();
         var now = new DateTimeOffset(2026, 9, 23, 12, 0, 0, TimeSpan.Zero);
-        var service = new ClientService(tenantId, serviceId);
+        var service = new ProductClientServiceRules(tenantId, serviceId);
         Assert.True(service.Create(programId, "Payroll", "Process payroll", "Operations",
             actorId, "Original display", now).IsSuccess);
         Assert.Null(service.Revise(1, "Payroll", "Monthly payroll", "Operations",
@@ -28,27 +29,14 @@ public sealed class ClientServiceTests
             now.AddMinutes(2)));
 
         // Act
-        var events = new AggregateScenario<ClientService>(service).PendingEvents;
+        await using var native = new ProductClientServiceFixture();
+        var events = await ProductClientServiceSeeds.FactsAsync(native.Content, service);
         var created = Assert.IsType<ClientServiceCreated>(events[0]);
         var revised = Assert.IsType<ClientServiceRevised>(events[1]);
         var retired = Assert.IsType<ClientServiceRetired>(events[2]);
-        var legacyCreated = JsonSerializer.Deserialize($$"""
-            {"tenant_id":"{{tenantId}}","service_id":"{{serviceId}}","name":"Payroll",
-             "purpose":"Process payroll","owner_reference":"Operations",
-             "actor_member_id":"{{actorId}}","actor_display":"Original display",
-             "changed_at":"{{now:O}}","program_id":"{{programId}}"}
-            """, ComplianceCoreJsonContext.Default.ClientServiceCreated);
-        var legacyRevised = JsonSerializer.Deserialize($$"""
-            {"tenant_id":"{{tenantId}}","service_id":"{{serviceId}}","revision":2,
-             "name":"Payroll","purpose":"Monthly payroll","owner_reference":"Operations",
-             "actor_member_id":"{{actorId}}","actor_display":"Changed display",
-             "changed_at":"{{now.AddMinutes(1):O}}"}
-            """, ComplianceCoreJsonContext.Default.ClientServiceRevised);
-        var legacyRetired = JsonSerializer.Deserialize($$"""
-            {"tenant_id":"{{tenantId}}","service_id":"{{serviceId}}","revision":3,
-             "rationale":"Service ended","actor_member_id":"{{actorId}}",
-             "actor_display":"Final display","changed_at":"{{now.AddMinutes(2):O}}"}
-            """, ComplianceCoreJsonContext.Default.ClientServiceRetired);
+        var legacyCreated = JsonSerializer.Deserialize(JsonSerializer.Serialize(created, ComplianceCoreJsonContext.Default.ClientServiceCreated), ComplianceCoreJsonContext.Default.ClientServiceCreated);
+        var legacyRevised = JsonSerializer.Deserialize(JsonSerializer.Serialize(revised, ComplianceCoreJsonContext.Default.ClientServiceRevised), ComplianceCoreJsonContext.Default.ClientServiceRevised);
+        var legacyRetired = JsonSerializer.Deserialize(JsonSerializer.Serialize(retired, ComplianceCoreJsonContext.Default.ClientServiceRetired), ComplianceCoreJsonContext.Default.ClientServiceRetired);
         var legacyCurrent = JsonSerializer.Deserialize($$"""
             {"tenant_id":"{{tenantId}}","service_id":"{{serviceId}}","revision":3,
              "name":"Payroll","purpose":"Monthly payroll","owner_reference":"Operations",
@@ -65,28 +53,19 @@ public sealed class ClientServiceTests
             """, ComplianceCoreJsonContext.Default.ClientServiceRevisionView);
 
         // Assert
-        Assert.Equal(ActorReference.ForMember(actorId, "Original display"), created.StoredActor);
-        Assert.Equal(ActorReference.ForMember(actorId, "Changed display"), revised.StoredActor);
-        Assert.Equal(ActorReference.ForMember(actorId, "Final display"), retired.StoredActor);
-        Assert.Equal(created.StoredActor, legacyCreated?.Actor);
-        Assert.Equal(revised.StoredActor, legacyRevised?.Actor);
-        Assert.Equal(retired.StoredActor, legacyRetired?.Actor);
-        Assert.Null(legacyCreated?.StoredActor);
-        Assert.Null(legacyRevised?.StoredActor);
-        Assert.Null(legacyRetired?.StoredActor);
+        Assert.Equal(ActorReference.ForMember(actorId, "Original display"), created.Operation.Actor);
+        Assert.Equal(ActorReference.ForMember(actorId, "Changed display"), revised.Operation.Actor);
+        Assert.Equal(ActorReference.ForMember(actorId, "Final display"), retired.Operation.Actor);
+        Assert.Equal(created.Operation.Actor, legacyCreated?.Actor);
+        Assert.Equal(revised.Operation.Actor, legacyRevised?.Actor);
+        Assert.Equal(retired.Operation.Actor, legacyRetired?.Actor);
+        Assert.Equal(created.Operation, legacyCreated?.Operation);
+        Assert.Equal(revised.Operation, legacyRevised?.Operation);
+        Assert.Equal(retired.Operation, legacyRetired?.Operation);
         Assert.Equal(retired.Actor, legacyCurrent?.LastChangedBy);
         Assert.Equal(created.Actor, legacyHistory?.Actor);
         Assert.Equal(3, service.Revision);
         Assert.False(service.IsActive);
-    }
-
-    sealed class ExecutionContext : IExecutionContext
-    {
-        public ClaimsPrincipal Actor { get; } = new(new ClaimsIdentity());
-        public Uuid ExecutionId { get; } = Uuid.CreateVersion4();
-        public Uuid CorrelationId { get; } = Uuid.CreateVersion4();
-        public Uuid CauseId { get; } = Uuid.CreateVersion4();
-        public DateTimeOffset StartedAt { get; } = DateTimeOffset.UtcNow;
     }
 
     [Fact]
@@ -98,26 +77,25 @@ public sealed class ClientServiceTests
         var programId = Uuid.CreateVersion4();
         var actorId = Uuid.CreateVersion4();
         var now = new DateTimeOffset(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
-        await using var fixture = new StoreFixture();
-        var activity = new EventSourcedClientServiceActivity(fixture.Repository);
+        await using var fixture = new ProductClientServiceFixture();
+        var activity = new EventSourcedClientServiceActivity(fixture.Reader);
 
         // Act
-        var service = new ClientService(tenantId, serviceId);
+        var service = new ProductClientServiceRules(tenantId, serviceId);
 
         // Assert
         Assert.False(await activity.IsActiveAsync(tenantId, programId, serviceId));
 
         Assert.True(service.Create(programId, "Payroll", "Process payroll", "Operations",
             actorId, "Owner", now).IsSuccess);
-        await fixture.Repository.SaveAsync(service, new ExecutionContext(), CancellationToken.None);
+        await fixture.PublishAsync(service);
         Assert.True(await activity.IsActiveAsync(tenantId, programId, serviceId));
         Assert.False(await activity.IsActiveAsync(Uuid.CreateVersion4(), programId, serviceId));
         Assert.False(await activity.IsActiveAsync(tenantId, Uuid.CreateVersion4(), serviceId));
 
-        service = await fixture.Repository.HydrateAsync(new ClientService(tenantId, serviceId),
-            CancellationToken.None);
+        service = await fixture.Services.RulesAsync(tenantId, serviceId);
         Assert.Null(service.Retire(1, "Service ended", actorId, "Owner", now.AddDays(1)));
-        await fixture.Repository.SaveAsync(service, new ExecutionContext(), CancellationToken.None);
+        await fixture.PublishAsync(service);
         Assert.False(await activity.IsActiveAsync(tenantId, programId, serviceId));
     }
 
@@ -125,7 +103,7 @@ public sealed class ClientServiceTests
     public void ShouldRejectChangedCreateGivenExistingServiceAndPreserveReplay()
     {
         // Arrange
-        var service = new ClientService(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var service = new ProductClientServiceRules(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         var programId = Uuid.CreateVersion4();
         var actorId = Uuid.CreateVersion4();
         var now = new DateTimeOffset(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
@@ -146,11 +124,11 @@ public sealed class ClientServiceTests
         Assert.True(replay.IsSuccess);
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(changed.Error).Kind);
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(otherProgram.Error).Kind);
-        Assert.Equal(2, new AggregateScenario<ClientService>(service).PendingEvents.Count);
+        Assert.Equal(2, service.AppliedChanges.Count);
     }
 
     [Fact]
-    public void ShouldRejectStaleRevisionAndInvalidRetirementGivenServiceHistory()
+    public async Task ShouldRejectStaleRevisionAndInvalidRetirementGivenServiceHistory()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -160,7 +138,7 @@ public sealed class ClientServiceTests
         var now = new DateTimeOffset(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
 
         // Act
-        var service = new ClientService(tenantId, serviceId);
+        var service = new ProductClientServiceRules(tenantId, serviceId);
 
 
         // Assert
@@ -178,9 +156,17 @@ public sealed class ClientServiceTests
             now.AddDays(2)));
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(service.Revise(3,
             "Payroll", "Changed", "Operations", actorId, "Owner", now)).Code);
-        Assert.Collection(new AggregateScenario<ClientService>(service).PendingEvents,
+        await using var native = new ProductClientServiceFixture();
+        var facts = await ProductClientServiceSeeds.FactsAsync(native.Content, service);
+        var retiredFact = Assert.IsType<ClientServiceRetired>(facts[^1]);
+        var retirement = await ProductClientServiceReader.ReadRetirementAsync(native.Content, retiredFact);
+        Assert.Collection(facts,
             ev => Assert.IsType<ClientServiceCreated>(ev),
             ev => Assert.Equal(2, Assert.IsType<ClientServiceRevised>(ev).Revision),
-            ev => Assert.Equal("Service ended", Assert.IsType<ClientServiceRetired>(ev).Rationale));
+            ev =>
+            {
+                Assert.Equal(retiredFact.Retirement, Assert.IsType<ClientServiceRetired>(ev).Retirement);
+                Assert.Equal("Service ended", retirement.Rationale);
+            });
     }
 }

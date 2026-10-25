@@ -1,118 +1,166 @@
-using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Programs;
 
+/// <summary>Current service authority and selected native receipt; authored values and history compose explicitly.</summary>
 public sealed class ClientService : Aggregate
 {
+    public const string Area = "client-services";
     readonly Uuid _tenantId;
     bool _created;
     bool _retired;
     long _revision;
     Uuid _programId;
-    string? _initialName;
-    string? _initialPurpose;
-    string? _initialOwnerReference;
+    ulong _sequence;
+    IProductClientServiceFact? _value;
+    ClientServiceRetired? _retirement;
 
-    public bool IsActive => _created && !_retired;
-    public bool IsCreated => _created;
-    public long Revision => _revision;
-    public Uuid? ProgramId => _programId == Uuid.Empty ? null : _programId;
-
-    public ClientService(Uuid tenantId, Uuid serviceId)
-        : base(serviceId, new EventStreamAddress(tenantId.ToString(), "client-services", serviceId.ToString()))
+    public ClientService(Uuid tenantId, Uuid serviceId, Uuid selectedLogicalId = default)
+        : base(serviceId, new EventStreamAddress(tenantId.ToString(), Area, serviceId.ToString()))
     {
         _tenantId = tenantId;
-        On<ClientServiceCreated>(ev =>
-        {
-            _created = true;
-            _revision = 1;
-            _programId = ev.ProgramId;
-            _initialName = ev.Name;
-            _initialPurpose = ev.Purpose;
-            _initialOwnerReference = ev.OwnerReference;
-        });
-        On<ClientServiceRevised>(ev => _revision = ev.Revision);
-        On<ClientServiceRetired>(ev => { _retired = true; _revision = ev.Revision; });
+        Acceptance = new NativeAcceptance(selectedLogicalId);
+        On<ClientServiceCreated>(ApplyFact);
+        On<ClientServiceRevised>(ApplyFact);
+        On<ClientServiceRetired>(ApplyFact);
     }
 
-    public Result<ClientServiceRegistration> Create(Uuid programId, string name, string purpose,
-        string ownerReference, Uuid actorMemberId, string actorDisplay, DateTimeOffset changedAt)
-    {
-        if (_created)
-            return _programId == programId &&
-                   StringComparer.Ordinal.Equals(_initialName, name?.Trim()) &&
-                   StringComparer.Ordinal.Equals(_initialPurpose, purpose?.Trim()) &&
-                   StringComparer.Ordinal.Equals(_initialOwnerReference, ownerReference?.Trim())
-                ? Result<ClientServiceRegistration>.Success(new ClientServiceRegistration(Id))
-                : Result<ClientServiceRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The service already exists with different content."));
-        if (programId == Uuid.Empty)
-            return Result<ClientServiceRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
-                "A service requires its owning program."));
-        var error = Validate(name, purpose, ownerReference);
-        if (error is not null)
-            return Result<ClientServiceRegistration>.Failure(error);
-        RaiseEvent(new ClientServiceCreated(_tenantId, Id, name.Trim(), purpose.Trim(),
-            ownerReference.Trim(), actorMemberId, actorDisplay, changedAt, programId)
-        {
-            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
-        });
-        return Result<ClientServiceRegistration>.Success(new ClientServiceRegistration(Id));
-    }
+    public Uuid TenantId => _tenantId;
+    public bool IsCreated => _created;
+    public bool IsActive => _created && !_retired;
+    public long Revision => _revision;
+    public Uuid? ProgramId => _programId == Uuid.Empty ? null : _programId;
+    public ulong NativeSequence => _sequence;
+    public ImmutableContentRef? CurrentContent => _value?.Content;
+    public IProductClientServiceFact? CurrentValueFact => _value;
+    public ClientServiceRetired? Retirement => _retirement;
+    public NativeAcceptance Acceptance { get; }
+    bool _emitting;
+    internal NativeReplayCommitment NativeCut { get; } = new();
 
-    public CommandFailure? Revise(long expectedRevision, string name, string purpose,
-        string ownerReference, Uuid actorMemberId, string actorDisplay, DateTimeOffset changedAt)
-    {
-        var error = CheckChange(expectedRevision);
-        if (error is not null)
-            return error;
-        var validationError = Validate(name, purpose, ownerReference);
-        if (validationError is not null)
-            return CommandFailure.InvalidContent(validationError.Message!);
-        RaiseEvent(new ClientServiceRevised(_tenantId, Id, _revision + 1, name.Trim(),
-            purpose.Trim(), ownerReference.Trim(), actorMemberId, actorDisplay, changedAt)
-        {
-            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
-        });
-        return null;
-    }
+    public Result PrepareCreate() => !_created ? Result.Success : Failure(RequestErrorKind.Conflict,
+        "The service already exists with different content.");
 
-    public CommandFailure? Retire(long expectedRevision, string rationale, Uuid actorMemberId,
-        string actorDisplay, DateTimeOffset changedAt)
-    {
-        var error = CheckChange(expectedRevision);
-        if (error is not null)
-            return error;
-        if (string.IsNullOrWhiteSpace(rationale))
-            return CommandFailure.InvalidContent("Retiring a service requires a rationale.");
-        RaiseEvent(new ClientServiceRetired(_tenantId, Id, _revision + 1, rationale.Trim(),
-            actorMemberId, actorDisplay, changedAt)
-        {
-            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
-        });
-        return null;
-    }
-
-    CommandFailure? CheckChange(long expectedRevision)
+    public Result PrepareChange(long expectedRevision)
     {
         if (!_created)
-            return CommandFailure.MissingRecord("The service was not found.");
+            return Failure(RequestErrorKind.NotFound, "The service was not found.");
         if (_retired)
-            return CommandFailure.StateConflict("The service is retired.");
-        return expectedRevision == _revision ? null :
-            CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("service", _revision));
+            return Failure(RequestErrorKind.Conflict, "The service is retired.");
+        return expectedRevision == Revision ? Result.Success :
+            Result.Failure(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("service", Revision)).ToRequestError());
     }
 
-    static RequestError? Validate(string name, string purpose, string ownerReference)
+    public Result Create(OperationProvenance operation, Uuid programId, ImmutableContentRef content,
+        ImmutableContentRef first, ImmutableContentRef result)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            return new RequestError(RequestErrorKind.Validation, "A service requires a name.");
-        if (string.IsNullOrWhiteSpace(purpose))
-            return new RequestError(RequestErrorKind.Validation, "A service requires a purpose.");
-        if (string.IsNullOrWhiteSpace(ownerReference))
-            return new RequestError(RequestErrorKind.Validation, "A service requires an owner reference.");
-        return null;
+        var cut = NativeCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
+        var ready = PrepareCreate();
+        if (!ready.IsSuccess)
+            return ready;
+        if (programId == Uuid.Empty)
+            return Failure(RequestErrorKind.Validation, "A service requires its owning program.");
+        Emit(new ClientServiceCreated(_tenantId, Id, programId, 1, content, operation.AcceptedAt,
+            operation, first, result, NativeSequence + 1));
+        return Result.Success;
     }
+
+    public Result Revise(OperationProvenance operation, ImmutableContentRef content,
+        ImmutableContentRef first, ImmutableContentRef result)
+    {
+        var ready = PrepareAppend(operation);
+        if (!ready.IsSuccess)
+            return ready;
+        Emit(new ClientServiceRevised(_tenantId, Id, _programId, Revision + 1, content, operation.AcceptedAt,
+            operation, first, result, NativeSequence + 1));
+        return Result.Success;
+    }
+
+    public Result Retire(OperationProvenance operation, ImmutableContentRef retirement,
+        ImmutableContentRef first, ImmutableContentRef result)
+    {
+        var ready = PrepareAppend(operation);
+        if (!ready.IsSuccess)
+            return ready;
+        Emit(new ClientServiceRetired(_tenantId, Id, _programId, Revision + 1, _value!.Content, retirement,
+            operation.AcceptedAt, operation, first, result, NativeSequence + 1));
+        return Result.Success;
+    }
+
+    Result PrepareAppend(OperationProvenance operation)
+    {
+        var cut = NativeCut.Require(this, Acceptance, operation);
+        if (!cut.IsSuccess)
+            return cut;
+        return operation.OriginalExpectedRevision is { } expected && expected <= long.MaxValue
+            ? PrepareChange((long)expected) : Failure(RequestErrorKind.Conflict, "A service change requires its original business revision.");
+    }
+
+    internal void ObserveVerified(DomainEvent ev)
+    {
+        ApplyFact((IProductClientServiceFact)ev);
+        NativeCut.Observe(ev, false);
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        if (!ev.Metadata.IsAudit)
+            NativeCut.Observe(ev, _emitting);
+    }
+
+    void Emit(DomainEvent fact)
+    {
+        _emitting = true;
+        try
+        {
+            RaiseEvent(fact);
+        }
+        finally
+        {
+            _emitting = false;
+        }
+    }
+
+    void ApplyFact(IProductClientServiceFact fact)
+    {
+        ProductClientServiceHistory.ValidateHeader(fact);
+        if (fact.TenantId != _tenantId || fact.ServiceId != Id || fact.NativeSequence != NativeSequence + 1 ||
+            fact.ChangedAt != fact.Operation.AcceptedAt)
+            throw Invalid();
+        switch (fact)
+        {
+            case ClientServiceCreated:
+                if (_created || fact.Revision != 1)
+                    throw Invalid();
+                _created = true;
+                _programId = fact.ProgramId;
+                _value = fact;
+                break;
+            case ClientServiceRevised:
+                if (!_created || _retired || fact.ProgramId != _programId ||
+                    fact.Operation.OriginalExpectedRevision != (ulong)Revision || fact.Revision != Revision + 1)
+                    throw Invalid();
+                _value = fact;
+                break;
+            case ClientServiceRetired retired:
+                if (!_created || _retired || fact.ProgramId != _programId || fact.Content != _value!.Content ||
+                    fact.Operation.OriginalExpectedRevision != (ulong)Revision || fact.Revision != Revision + 1)
+                    throw Invalid();
+                _retired = true;
+                _retirement = retired;
+                break;
+        }
+        Acceptance.Observe((DomainEvent)fact);
+        _revision = fact.Revision;
+        _sequence = fact.NativeSequence;
+    }
+
+    static Result Failure(RequestErrorKind kind, string message) => Result.Failure(new RequestError(kind, message));
+    static InvalidOperationException Invalid() => new("The client service fact differs from its exact scope, predecessor or native transition.");
 }

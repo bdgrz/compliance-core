@@ -99,9 +99,11 @@ public sealed class ProjectionFreshnessTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var serviceId = Uuid.CreateVersion4();
-        var service = new ClientService(tenantId, serviceId);
-        Assert.True(service.Create(Uuid.CreateVersion4(), "Payroll", "Run payroll", "Operations",
+        var serviceRules = new ProductClientServiceRules(tenantId, serviceId);
+        Assert.True(serviceRules.Create(Uuid.CreateVersion4(), "Payroll", "Run payroll", "Operations",
             Uuid.CreateVersion4(), "Lead", DateTimeOffset.UtcNow).IsSuccess);
+        await using var serviceNative = new ProductClientServiceFixture();
+        var service = await ProductClientServiceSeeds.OwnerAsync(serviceNative.Content, serviceRules);
         var handler = new GetClientServiceHandler(new EmptyServiceDirectory(),
             new SourceReader(service));
 
@@ -162,9 +164,11 @@ public sealed class ProjectionFreshnessTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var serviceId = Uuid.CreateVersion4();
-        var source = new ClientService(tenantId, serviceId);
-        Assert.True(source.Create(Uuid.CreateVersion4(), "Payroll", "Run payroll", "Operations",
+        var sourceRules = new ProductClientServiceRules(tenantId, serviceId);
+        Assert.True(sourceRules.Create(Uuid.CreateVersion4(), "Payroll", "Run payroll", "Operations",
             Uuid.CreateVersion4(), "Lead", DateTimeOffset.UtcNow).IsSuccess);
+        await using var serviceNative = new ProductClientServiceFixture();
+        var source = await ProductClientServiceSeeds.OwnerAsync(serviceNative.Content, sourceRules);
         var directory = new EmptyServiceDirectory();
         var consistency = new ClientServiceHistoryReadConsistency(directory, new SourceReader(source));
 

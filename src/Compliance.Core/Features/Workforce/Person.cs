@@ -1,137 +1,62 @@
 using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Workforce;
 
-/// <summary>Owns one manually recorded workforce person and its revision history.</summary>
+/// <summary>One native person: bounded current header/reference and one selected receipt; full values/history are external.</summary>
 public sealed class Person : Aggregate
 {
-    readonly Uuid _tenantId;
-    bool _created;
-    long _revision;
-    string? _initialDisplayName;
-    string? _initialWorkEmail;
-    PersonalContactDetails? _initialPersonalContact;
-    PersonalContactDetails? _personalContact;
-    Uuid? _correlatedUserId;
-
-    public bool IsCreated => _created;
-    public long Revision => _revision;
-    public Uuid? CorrelatedUserId => _correlatedUserId;
-
-    public Person(Uuid tenantId, Uuid personId)
-        : base(personId, new EventStreamAddress(tenantId.ToString(), "people",
-            personId.ToString()))
+    bool _emitting;
+    public Person(Uuid tenantId, Uuid personId, Uuid selectedLogicalId = default)
+        : base(personId, new EventStreamAddress(tenantId.ToString(), "people", personId.ToString()))
     {
-        _tenantId = tenantId;
-        On<PersonRecorded>(ev =>
-        {
-            _created = true;
-            _revision = 1;
-            _initialDisplayName = ev.DisplayName;
-            _initialWorkEmail = ev.WorkEmail;
-            _initialPersonalContact = Normalize(ev.PersonalContact);
-            _personalContact = _initialPersonalContact;
-        });
-        On<PersonRevised>(ev =>
-        {
-            _revision = ev.Revision;
-            _personalContact = ev.PersonalContact;
-        });
-        On<PersonMembershipCorrelated>(ev =>
-        {
-            _revision = ev.Revision;
-            _correlatedUserId = ev.UserId;
-        });
+        TenantId = tenantId;
+        Acceptance = new NativeAcceptance(selectedLogicalId);
+        On<PersonRecorded>(ObserveLegacy);
+        On<PersonRevised>(ObserveLegacy);
+        On<PersonMembershipCorrelated>(ObserveLegacy);
+        On<PersonRegistrationRecorded>(ObserveNative);
+        On<PersonDetailsRevised>(ObserveNative);
+        On<PersonMembershipCorrelationRecorded>(ObserveNative);
     }
-
-    public Result<PersonRegistration> Record(string displayName, string? workEmail,
-        ActorReference actor, DateTimeOffset changedAt)
-        => Record(displayName, workEmail, null, actor, changedAt);
-
-    public Result<PersonRegistration> Record(string displayName, string? workEmail,
-        PersonalContactDetails? personalContact, ActorReference actor, DateTimeOffset changedAt)
+    public Uuid TenantId { get; }
+    public NativeAcceptance Acceptance { get; }
+    public PersonHeader? Header { get; private set; }
+    public ImmutableContentRef? CurrentContent { get; private set; }
+    public bool IsCreated => Header is not null;
+    public long Revision => Header?.Revision ?? 0;
+    public Uuid? CorrelatedUserId => Header?.CorrelatedUserId;
+    internal NativeReplayCommitment ReplayCut { get; } = new();
+    public Result Append(PersonPrepared prepared, OperationProvenance operation, ImmutableContentRef frozen)
     {
-        var validation = Validate(displayName, workEmail);
-        if (validation is not null)
-            return Result<PersonRegistration>.Failure(validation);
-        var name = displayName.Trim();
-        var email = NormalizeOptional(workEmail);
-        var contact = Normalize(personalContact);
-        if (_created)
-            return _initialDisplayName == name && _initialWorkEmail == email &&
-                   _initialPersonalContact == contact
-                ? Result<PersonRegistration>.Success(new PersonRegistration(Id))
-                : Result<PersonRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The person already exists with different content."));
-        RaiseEvent(new PersonRecorded(_tenantId, Id, name, email, actor, changedAt,
-            contact));
-        return Result<PersonRegistration>.Success(new PersonRegistration(Id));
+        var ready = ReplayCut.Require(this, Acceptance, operation);
+        if (!ready.IsSuccess) return ready;
+        if (prepared.Version != Version || prepared.Position != CommittedStreamPosition || prepared.PrefixSha256 != ReplayCut.Digest || prepared.MetadataSha256 != ReplayCut.MetadataDigest ||
+            prepared.Before != Header || prepared.BeforeContent != CurrentContent || !PersonContent.Verify(prepared, operation))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The exact prepared person values or native prefix changed.", true));
+        _emitting = true;
+        try { RaiseEvent(PersonContent.Fact(prepared, operation, frozen)); }
+        finally { _emitting = false; }
+        return Result.Success;
     }
-
-    public CommandFailure? Revise(long expectedRevision, string displayName, string? workEmail,
-        ActorReference actor, DateTimeOffset changedAt)
-        => Revise(expectedRevision, displayName, workEmail, _personalContact, actor, changedAt);
-
-    public CommandFailure? Revise(long expectedRevision, string displayName, string? workEmail,
-        PersonalContactDetails? personalContact, ActorReference actor, DateTimeOffset changedAt)
+    void ObserveLegacy(DomainEvent fact)
     {
-        if (!_created)
-            return CommandFailure.MissingRecord("The person was not found.");
-        if (expectedRevision != _revision)
-            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("person", _revision));
-        var validation = Validate(displayName, workEmail);
-        if (validation is not null)
-            return CommandFailure.InvalidContent(validation.Message!);
-        RaiseEvent(new PersonRevised(_tenantId, Id, _revision + 1, displayName.Trim(),
-            NormalizeOptional(workEmail), actor, changedAt, Normalize(personalContact)));
-        return null;
+        if (CurrentContent is not null)
+            throw new ImmutableContentIntegrityException("A read-only legacy person fact cannot follow native content authority.");
+        Header = PersonHistory.NextLegacy(TenantId, Id, Header, fact);
     }
-
-    /// <summary>
-    ///     Links this person to one platform member, or clears the link. Re-stating the current link
-    ///     succeeds without a new revision. The link never grants or revokes platform access.
-    /// </summary>
-    public CommandFailure? CorrelateMembership(long expectedRevision, Uuid? userId,
-        ActorReference actor, DateTimeOffset changedAt)
+    void ObserveNative<T>(T value) where T : DomainEvent, IPersonNativeFact
     {
-        if (!_created)
-            return CommandFailure.MissingRecord("The person was not found.");
-        if (userId == Uuid.Empty)
-            return CommandFailure.InvalidContent("A correlated platform member ID cannot be empty.");
-        if (expectedRevision != _revision)
-            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("person", _revision));
-        if (userId == _correlatedUserId)
-            return null;
-        RaiseEvent(new PersonMembershipCorrelated(_tenantId, Id, _revision + 1, userId, actor,
-            changedAt));
-        return null;
+        Header = PersonHistory.NextNative(TenantId, Id, Stream, Header, value);
+        CurrentContent = value.Content;
+        Acceptance.Observe(value);
     }
-
-    static RequestError? Validate(string displayName, string? workEmail)
+    protected override void Apply(DomainEvent ev)
     {
-        if (string.IsNullOrWhiteSpace(displayName) || displayName.Trim().Length > 200)
-            return new RequestError(RequestErrorKind.Validation,
-                "A person requires a display name of at most 200 characters.");
-        var email = NormalizeOptional(workEmail);
-        if (email is not null && (email.Length > 320 || email.IndexOf('@') is < 1 ||
-                                  email.IndexOf('@') == email.Length - 1 ||
-                                  email.Any(char.IsWhiteSpace)))
-            return new RequestError(RequestErrorKind.Validation,
-                "A work email must be a single address of at most 320 characters.");
-        return null;
-    }
-
-    static string? NormalizeOptional(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    static PersonalContactDetails? Normalize(PersonalContactDetails? value)
-    {
-        if (value is null)
-            return null;
-        var email = NormalizeOptional(value.PersonalEmail);
-        var phone = NormalizeOptional(value.PersonalPhone);
-        return email is null && phone is null ? null : new PersonalContactDetails(email, phone);
+        if (!ev.Metadata.IsAudit) ReplayCut.Observe(ev, _emitting);
+        base.Apply(ev);
     }
 }

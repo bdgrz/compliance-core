@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
@@ -9,6 +10,9 @@ namespace Bdgrz.Compliance.Features.Workforce;
 ///     a member correlated with several people surfaces as a <c>duplicate</c> reconciliation
 ///     observation instead of being rejected.
 /// </summary>
-[Discriminator("bdgrz.workforce.person.correlate-membership", 1)]
-public sealed record CorrelatePersonMembership(Uuid TenantId, Uuid PersonId,
-    long ExpectedRevision, Uuid? UserId = null) : IRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable;
+[Discriminator("bdgrz.workforce.person.correlate-membership", 2)]
+public sealed record CorrelatePersonMembership(Uuid CommandId, Uuid TenantId, Uuid PersonId,
+    long ExpectedRevision, Uuid? UserId = null) : IRequest<UnitResult>, IIdentifiedRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

@@ -1,5 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
 using Bdgrz.Compliance.Tests.Testing;
@@ -142,7 +144,7 @@ public sealed class AttestWorkforceManagementWallTests
         var source = ActorReference.ForSystemProcess("synthetic-roster-source", "Synthetic authorized source");
 
         // Act
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Person(fixture.TenantId, personId), person =>
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PersonRules(fixture.TenantId, personId), person =>
             person.Record("Source worker", null, source, DateTimeOffset.UtcNow));
         await fixture.CatchUpAsync();
         var read = await fixture.BusAsync(new GetPerson(fixture.TenantId, personId));
@@ -188,7 +190,8 @@ public sealed class AttestWorkforceManagementWallTests
         ActorReference Author => ActorReference.ForMember(RbacIds.Member(TenantId, UserId), "Client author");
         static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
 
-        public static async Task<Fixture> CreateAsync(string affiliation = "client_personnel")
+        public static async Task<Fixture> CreateAsync(string affiliation = "client_personnel",
+            Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
         {
             var fixture = new Fixture();
             var services = new ServiceCollection();
@@ -201,6 +204,9 @@ public sealed class AttestWorkforceManagementWallTests
             services.AddSingleton<IEventStore>(store);
             services.AddSingleton<IDomainEventReader>(store);
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
+            if (configureContent is not null)
+                services.AddSingleton<IImmutableContentStore>(provider => configureContent(new FitzKvImmutableContentStore(
+                    new PersistenceKvClient(provider.GetRequiredService<IKvClient>()))));
             services.AddSingleton<IPermissionAuthorizer>(fixture.Permissions);
             services.AddSingleton<ITenantActivity, ActiveTenant>();
             services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships(fixture.TenantId, fixture.UserId, affiliation));
@@ -212,7 +218,8 @@ public sealed class AttestWorkforceManagementWallTests
         async Task SeedAsync()
         {
             var now = DateTimeOffset.UtcNow.AddDays(-1);
-            await ProgramManagementServices.SeedAsync(Provider, new Person(TenantId, PersonId), person =>
+            await ProgramManagementServices.SeedAsync(Provider, new Member(TenantId, UserId), member => member.Register());
+            await ProgramManagementServices.SeedAsync(Provider, new PersonRules(TenantId, PersonId), person =>
                 person.Record("Ada", "ada@example.com", Author, now));
             await ProgramManagementServices.SeedAsync(Provider, new WorkRelationship(TenantId, RelationshipId), job =>
                 job.Record(PersonId, "E-100", new WorkRelationshipTerms("employee", "active", Today.AddYears(-1),
@@ -257,9 +264,9 @@ public sealed class AttestWorkforceManagementWallTests
 
         public Task<Result> ExecuteAsync(string operation) => operation switch
         {
-            "person_record" => SendAsync(new RecordPerson(TenantId, "Grace", "grace@example.com")),
-            "person_revise" => BusAsync(new RevisePerson(TenantId, PersonId, 1, "Ada King", "ada@example.com")),
-            "person_correlate" => BusAsync(new CorrelatePersonMembership(TenantId, PersonId, 1, UserId)),
+            "person_record" => SendAsync(new RecordPerson(Uuid.CreateVersion4(), TenantId, "Grace", "grace@example.com")),
+            "person_revise" => SendAsync(new RevisePerson(Uuid.CreateVersion4(), TenantId, PersonId, 1, "Ada King", "ada@example.com")),
+            "person_correlate" => SendAsync(new CorrelatePersonMembership(Uuid.CreateVersion4(), TenantId, PersonId, 1, UserId)),
             "relationship_record" => SendAsync(new RecordWorkRelationship(TenantId, PersonId, "E-200", "employee",
                 "active", Today.AddYears(-1), Department: "Engineering")),
             "relationship_revise" => BusAsync(new ReviseWorkRelationship(TenantId, RelationshipId, 1, "employee",
@@ -284,7 +291,7 @@ public sealed class AttestWorkforceManagementWallTests
             var count = 0;
             await foreach (var record in Provider.GetRequiredService<IDomainEventReader>().ReadAsync(
                 EventStreamPattern.ForPattern(TenantId.ToString()), EventCursor.Start, CancellationToken.None))
-                if (record.Event is PersonRecorded or PersonRevised or PersonMembershipCorrelated or
+                if (record.Event is PersonRecorded or PersonRevised or PersonMembershipCorrelated or PersonRegistrationRecorded or PersonDetailsRevised or PersonMembershipCorrelationRecorded or
                     WorkRelationshipRecorded or WorkRelationshipRevised or ServiceIdentityRecorded or ServiceIdentityRevised or
                     WorkforceSourceObserved or WorkforceSourceReconciled or WorkforceObservationResolved or PopulationSnapshotFrozen)
                     count++;

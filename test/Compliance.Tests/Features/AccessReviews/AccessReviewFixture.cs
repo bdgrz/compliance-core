@@ -183,9 +183,9 @@ sealed class AccessReviewFixture : IAsyncDisposable
                      (fixture.ReviewerPersonId, "Rae", "rae@example.com"),
                  })
             await ProgramManagementServices.SeedAsync(provider,
-                new Person(fixture.TenantId, personId), person => person.Record(name, email, actor, now));
+                new PersonRules(fixture.TenantId, personId), person => person.Record(name, email, actor, now));
         await ProgramManagementServices.SeedAsync(provider,
-            new Person(fixture.TenantId, fixture.ReviewerPersonId), person =>
+            new PersonRules(fixture.TenantId, fixture.ReviewerPersonId), person =>
                 person.CorrelateMembership(1, fixture.ReviewerUserId, actor, now) is null
                     ? Result.Success
                     : Result.Failure(new RequestError(RequestErrorKind.Conflict, "correlate")));

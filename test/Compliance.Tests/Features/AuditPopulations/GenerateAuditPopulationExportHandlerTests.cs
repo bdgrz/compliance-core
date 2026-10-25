@@ -10,11 +10,15 @@ using Bdgrz.Compliance.Features.Retention;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using AuditPopulationAggregate = Bdgrz.Compliance.Features.AuditPopulations.AuditPopulation;
+using AuditPopulationAggregate = Bdgrz.Compliance.Features.AuditPopulations.AuditPopulationRules;
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPopulations;
 
-public sealed class GenerateAuditPopulationExportHandlerTests
+public sealed partial class GenerateAuditPopulationExportHandlerTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 17, 18, 0, 0, TimeSpan.Zero);
 
@@ -268,16 +272,23 @@ public sealed class GenerateAuditPopulationExportHandlerTests
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
         public Inspector Inspector => _inspector;
+        public InMemoryEventStore Events { get; } = new();
+        public AuditPopulationReader Populations => new(Reader, Events, _content, new EventStoreSourceFactResolver(Events));
+        public AuditPopulationMutations Mutations => new(new NativeOperationExecutor(Reader, Executor, _content), Reader,
+            Executor, Events, _content, new EventStoreSourceFactResolver(Events), new TypeIIPeriodReader(Reader, Events, _content),
+            new AuditPopulationSources(Events, new EventStoreSourceFactResolver(Events), _content), _clock);
 
         public Fixture(ArtifactInspectionState inspectionState)
         {
             _store = new LocalArtifactContentStore(new ArtifactContentStoreOptions(_root, new byte[32], 8 * 1024 * 1024), _clock);
             _inspector = new Inspector(inspectionState, _store);
             var services = new ServiceCollection();
-            var events = new InMemoryEventStore();
-            services.AddSingleton<IEventStore>(events);
-            services.AddSingleton<IDomainEventReader>(events);
+            services.AddSingleton<IEventStore>(Events);
+            services.AddSingleton<IDomainEventReader>(Events);
+            services.AddSingleton<IImmutableContentStore>(_content);
+            services.AddSingleton<ISourceFactResolver>(provider => new EventStoreSourceFactResolver(provider.GetRequiredService<IDomainEventReader>()));
             services.AddPortia();
+            services.AddVerifiedAuditPopulationReader();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
@@ -285,7 +296,7 @@ public sealed class GenerateAuditPopulationExportHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public GenerateAuditPopulationExportHandler Handler() => new(Executor, Reader,
+        public GenerateAuditPopulationExportHandler Handler() => new(Mutations, Populations, Reader,
             new EvidenceIntake(_store, _inspector, Reader, Writer, _clock), _clock,
             new Bdgrz.Compliance.Features.NativeOperations.NativeOperationExecutor(Reader, Executor, _content), _content, _scope.ServiceProvider.GetRequiredService<IDomainEventReader>());
 
@@ -310,14 +321,14 @@ public sealed class GenerateAuditPopulationExportHandlerTests
             if (frozen)
                 Assert.Null(population.Freeze(population.Revision,
                     "The source rows and reconciliation were reviewed.", actorId, "Compliance lead", Now.AddMinutes(3)));
-            await Writer.SaveAsync(population, new RequestDispatchContext(RequestActor.System));
+            await AuditPopulationSeeds.AppendLegacyAsync(Events, population);
             return populationId;
         }
 
         public async Task AmendPopulationAsync(Uuid populationId)
         {
-            var population = await Reader.HydrateAsync(new AuditPopulationAggregate(TenantId,
-                ProgramId, populationId));
+            var complete = await Populations.ReadAsync(TenantId, ProgramId, populationId);
+            var population = complete.Rules;
             Assert.NotNull(population.Current);
             Assert.Null(population.Amend(population.Revision, "Record a late source row.",
                 new AuditPopulationSourceSnapshotContent(Uuid.CreateVersion4(), 2,
@@ -325,11 +336,11 @@ public sealed class GenerateAuditPopulationExportHandlerTests
                     "The amendment preserves the original frozen population and adds one late row.",
                     Now.AddMinutes(4)), [Row(Uuid.CreateVersion4())], RbacIds.Member(TenantId, UserId),
                 "Compliance lead", Now.AddMinutes(4)));
-            await Writer.SaveAsync(population, new RequestDispatchContext(RequestActor.System));
+            await AuditPopulationSeeds.AppendLegacyAsync(Events, population, complete.Owner.CommittedStreamPosition);
         }
 
-        public Task<AuditPopulationAggregate> PopulationAsync(Uuid id) =>
-            Reader.HydrateAsync(new AuditPopulationAggregate(TenantId, ProgramId, id)).AsTask();
+        public async Task<AuditPopulationAggregate> PopulationAsync(Uuid id) =>
+            (await Populations.ReadAsync(TenantId, ProgramId, id)).Rules;
 
         public Task<EvidenceArtifact> ArtifactAsync(Uuid id) =>
             Reader.HydrateAsync(new EvidenceArtifact(TenantId, id)).AsTask();

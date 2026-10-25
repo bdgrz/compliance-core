@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Snapshots;
@@ -335,6 +336,7 @@ public sealed class WorkforceRosterSnapshotTests
             services.AddSingleton<IDomainEventReader>(store);
             services.AddSingleton(TimeProvider.System);
             services.AddPortia();
+            services.AddPersonNativeFixtures();
             return ValueTask.FromResult(new Harness(services.BuildServiceProvider()));
         }
 
@@ -347,7 +349,7 @@ public sealed class WorkforceRosterSnapshotTests
                 ? new AdvancingRelationshipReader(this, advance)
                 : _relationships;
             return new WorkforceRosterSnapshotter(_people,
-                new PersonReadConsistency(_people, Reader, events), relationships,
+                new PersonReadConsistency(_people, Reader, events, _provider.GetRequiredService<IImmutableContentStore>()), relationships,
                 new WorkRelationshipReadConsistency(_relationships, Reader, events),
                 new PopulationSnapshotFreezer(Reader,
                     new AggregateExecutor(Reader, _provider.GetRequiredService<IAggregateWriter>()),
@@ -357,15 +359,27 @@ public sealed class WorkforceRosterSnapshotTests
         public async Task ProjectAsync(IEnumerable<PersonView> people,
             IEnumerable<WorkRelationshipView> relationships)
         {
+            var rows = people.ToArray();
+            foreach (var person in rows)
+            {
+                var rules = new PersonRules(person.TenantId, person.PersonId);
+                Assert.True(rules.Record(person.DisplayName, person.WorkEmail, person.PersonalContact,
+                    person.LastChangedBy, person.LastChangedAt).IsSuccess);
+                await PersonSeeds.AppendAsync(_provider, rules);
+            }
             await using (var batch = await _people.BeginAsync(new ProjectionBatchContext(
                              new CheckpointIdentity("PersonDirectoryV2",
                                  EventStreamPattern.ForPattern(TenantId.ToString(), "people")),
                              ProjectionCheckpoint.Start)))
             {
-                foreach (var person in people)
+                foreach (var person in rows)
                     await _people.ApplyAsync(new PersonRecorded(person.TenantId, person.PersonId,
                         person.DisplayName, person.WorkEmail, Author, Now));
-                await batch.CommitAsync(ProjectionCheckpoint.Start);
+                var cursor = EventCursor.Start;
+                await foreach (var record in _provider.GetRequiredService<IDomainEventReader>().ReadAsync(
+                                   EventStreamPattern.ForPattern(TenantId.ToString(), "people"), EventCursor.Start, CancellationToken.None))
+                    cursor = record.NextCursor;
+                await batch.CommitAsync(new ProjectionCheckpoint(cursor));
             }
             await using (var batch = await _relationships.BeginAsync(new ProjectionBatchContext(
                              new CheckpointIdentity("WorkRelationshipDirectoryV1",

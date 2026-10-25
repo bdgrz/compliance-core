@@ -242,18 +242,21 @@ public sealed class RecordWorkRelationshipHandlerTests
         public static async Task<Scenario> CreateAsync()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var personEvents = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(personEvents);
+            services.AddSingleton<IDomainEventReader>(personEvents);
             services.AddSingleton(TimeProvider.System);
             services.AddPortia();
+            services.AddPersonNativeFixtures();
             var scenario = new Scenario(services.BuildServiceProvider(
                 new ServiceProviderOptions { ValidateScopes = true }));
             foreach (var id in new[] { scenario.PersonId, scenario.ManagerId, scenario.OtherManagerId })
             {
-                var person = new Person(scenario.TenantId, id);
+                var person = new PersonRules(scenario.TenantId, id);
                 Assert.True(person.Record("Recorded person", null,
                     ActorReference.ForMember(Uuid.CreateVersion4(), "Author"),
                     DateTimeOffset.UtcNow).IsSuccess);
-                await scenario.Writer.SaveAsync(person, new RequestDispatchContext(RequestActor.System));
+                await PersonSeeds.AppendAsync(scenario._scope.ServiceProvider, person);
             }
             return scenario;
         }

@@ -414,10 +414,10 @@ public sealed class InventoryManagementIndependenceTests
         public async Task SeedPersonAsync()
         {
             var admin = PersonalActor(_administrator);
-            var person = await Executor.ExecuteAsync(new Person(Tenant, PersonId), source =>
-                AggregateOutcome.CommitOnSuccess(source.Record("Synthetic owner", null,
-                    ActorReference.ForMember(RbacIds.Member(Tenant, _administrator), "Client administrator"), DateTimeOffset.UtcNow)),
-                new RequestDispatchContext(admin));
+            var rules = new PersonRules(Tenant, PersonId);
+            var person = rules.Record("Synthetic owner", null,
+                ActorReference.ForMember(RbacIds.Member(Tenant, _administrator), "Client administrator"), DateTimeOffset.UtcNow);
+            await PersonSeeds.AppendAsync(_scope.ServiceProvider, rules);
             Assert.True(person.IsSuccess);
         }
 

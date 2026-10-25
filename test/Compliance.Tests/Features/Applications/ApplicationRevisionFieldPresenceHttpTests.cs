@@ -631,9 +631,9 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
             var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             var actor = Uuid.CreateVersion4();
             var now = new DateTimeOffset(2026, 10, 11, 12, 0, 0, TimeSpan.Zero);
-            var owner = new Person(Tenant, Owner);
+            var owner = new PersonRules(Tenant, Owner);
             Assert.True(owner.Record("Owner", null, ActorReference.ForMember(actor, "Author"), now).IsSuccess);
-            await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            await PersonSeeds.AppendAsync(scope.ServiceProvider, owner);
             var application = new DeclaredApplication(Tenant, Application);
             Assert.True(application.Declare("Payroll", "Run payroll", "Finance", actor,
                 "Author", now, "internal", Owner, Owner, applicationKind: "service", criticality: "critical").IsSuccess);

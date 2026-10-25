@@ -535,9 +535,9 @@ public sealed class ApplicationRevisionPreviewContractTests
 
         public async Task RecordPersonAsync(Uuid id, Uuid? tenant = null)
         {
-            var person = new Person(tenant ?? Tenant, id);
+            var person = new PersonRules(tenant ?? Tenant, id);
             Assert.True(person.Record("Owner", null, ActorReference.ForMember(User, "Manager"), Now).IsSuccess);
-            await Writer.SaveAsync(person, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            await PersonSeeds.AppendAsync(_scope.ServiceProvider, person);
         }
 
         public PreviewApplicationChange Request() => new(Tenant, Application, 1, "revise", "Payroll", "Run payroll");
