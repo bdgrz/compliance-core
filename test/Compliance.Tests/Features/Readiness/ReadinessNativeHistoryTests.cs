@@ -83,7 +83,7 @@ public sealed class ReadinessNativeHistoryTests
         var runner = Uuid.CreateVersion4();
         var decider = Uuid.CreateVersion4();
         var gap = new ReadinessGapView(Uuid.CreateVersion4(), "missing_input", "risks", "risk_reviewed", "Review risks.", []);
-        await ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(tenant, programId), program =>
+        await ProgramManagementServices.SeedAsync(provider, new ProgramRules(tenant, programId), program =>
         {
             Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null), runner, "Runner", Now));
             return Result.Success;
@@ -154,7 +154,7 @@ public sealed class ReadinessNativeHistoryTests
         var runner = Uuid.CreateVersion4();
         var decider = Uuid.CreateVersion4();
         var gap = new ReadinessGapView(Uuid.CreateVersion4(), "missing_input", "risks", "risk_reviewed", "Review risks.", []);
-        await ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(tenant, programId), program =>
+        await ProgramManagementServices.SeedAsync(provider, new ProgramRules(tenant, programId), program =>
         {
             Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null), runner, "Runner", Now));
             return Result.Success;
@@ -238,7 +238,7 @@ public sealed class ReadinessNativeHistoryTests
         var tenant = Uuid.CreateVersion4();
         var program = Uuid.CreateVersion4();
         var runner = Uuid.CreateVersion4();
-        await ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(tenant, program), owner =>
+        await ProgramManagementServices.SeedAsync(provider, new ProgramRules(tenant, program), owner =>
         {
             Assert.Null(owner.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null), runner, "Runner", Now));
             return Result.Success;
@@ -285,7 +285,7 @@ public sealed class ReadinessNativeHistoryTests
         var decider = Uuid.CreateVersion4();
         var assessment = Uuid.CreateVersion4();
         var gap = new ReadinessGapView(Uuid.CreateVersion4(), "missing_input", "risks", "risk_reviewed", "Review risks.", []);
-        await ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(tenant, program), owner =>
+        await ProgramManagementServices.SeedAsync(provider, new ProgramRules(tenant, program), owner =>
         {
             Assert.Null(owner.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null), runner, "Runner", Now));
             return Result.Success;

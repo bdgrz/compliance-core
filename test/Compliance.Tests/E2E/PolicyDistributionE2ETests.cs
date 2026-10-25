@@ -243,7 +243,7 @@ public sealed class PolicyDistributionE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var program = await owner.PostAsJsonAsync($"/api/v1/tenants/{tenantId}/programs",
+            using var program = await owner.PutAsJsonAsync($"/api/v1/tenants/{tenantId}/programs" + $"/{Uuid.CreateVersion4()}",
                 new
                 {
                     name = "SOC 2",

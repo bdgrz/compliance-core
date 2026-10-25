@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
@@ -12,12 +16,28 @@ public sealed class WorkDigestPreference : Aggregate
     bool _emailDigestEnabled = true;
     DateTimeOffset? _changedAt;
     string _timeZoneId = "UTC";
+    bool _emitting;
+    internal NativeAcceptance Acceptance { get; }
+    internal WorkPreferenceReplayCut ReplayCut { get; } = new();
+    internal Uuid TenantId => _tenantId;
 
-    public WorkDigestPreference(Uuid tenantId, Uuid memberId)
+    public WorkDigestPreference(Uuid tenantId, Uuid memberId, Uuid commandId = default)
         : base(memberId, new EventStreamAddress(tenantId.ToString(), "work-digest-preferences",
             memberId.ToString()))
     {
         _tenantId = tenantId;
+        Acceptance = new NativeAcceptance(commandId);
+        On<WorkDigestPreferenceRecorded>(fact =>
+        {
+            if (fact.Operation is null || fact.Preference is null || !WorkDigestSchedule.IsValidTimeZone(fact.AuthoredTimeZoneId))
+                throw new ImmutableContentIntegrityException("The preference receipt has invalid authored values.");
+            var expected = Decide(Read(), fact.EmailDigestEnabled, fact.AuthoredTimeZoneId, fact.Operation.AcceptedAt);
+            if (fact.TenantId != _tenantId || fact.MemberId != Id || fact.Preference != expected ||
+                fact.NoChange != (expected == Read()))
+                throw new ImmutableContentIntegrityException("The preference receipt differs from its current scalar authority.");
+            Acceptance.Observe(fact);
+            (_emailDigestEnabled, _changedAt, _timeZoneId) = (expected.EmailDigestEnabled, expected.ChangedAt, expected.TimeZoneId);
+        });
         On<WorkDigestPreferenceChanged>(ev =>
         {
             _emailDigestEnabled = ev.EmailDigestEnabled;
@@ -30,6 +50,38 @@ public sealed class WorkDigestPreference : Aggregate
     {
         TimeZoneId = _timeZoneId,
     };
+
+    internal static WorkDigestPreferenceView Decide(WorkDigestPreferenceView before, bool enabled, string? zone, DateTimeOffset at)
+    {
+        var normalized = zone is null ? before.TimeZoneId : WorkDigestSchedule.NormalizeTimeZoneId(zone);
+        return before.EmailDigestEnabled == enabled && before.TimeZoneId == normalized ? before
+            : new WorkDigestPreferenceView(enabled, at) { TimeZoneId = normalized };
+    }
+
+    internal Result Record(WorkDigestPreferenceRecorded fact, ulong preparedVersion, ulong preparedPosition)
+    {
+        var verified = ReplayCut.Require(this);
+        if (!verified.IsSuccess)
+            return verified;
+        if (Version != preparedVersion || CommittedStreamPosition != preparedPosition ||
+            Acceptance.SelectedLogicalId != fact.Operation.LogicalId || Acceptance.SelectedFact is not null ||
+            !NativeOwnerHistory.IsOwnRoot(this, fact.Operation, nameof(SetWorkDigestPreference), null) ||
+            fact.FirstResponse is null || fact.OperationResult is null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "Reload the exact current preference cut.", true));
+        if (DomainEventPayload.Size(fact) > DomainEventPayload.MaximumBytes)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The complete preference receipt exceeds the native fact payload budget."));
+        _emitting = true;
+        try
+        { RaiseEvent(fact); }
+        finally { _emitting = false; }
+        return Result.Success;
+    }
+
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        ReplayCut.Observe(ev, _emitting);
+    }
 
     /// <summary>Records a change; setting the current value again records nothing.</summary>
     public void Set(bool emailDigestEnabled, ActorReference actor, DateTimeOffset at)

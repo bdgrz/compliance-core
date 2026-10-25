@@ -1,0 +1,2359 @@
+{
+  "counts": {
+    "processAbortBindings": 22,
+    "existingHandlers": 21,
+    "proposedArtifactAbort": 1
+  },
+  "edges": [
+    {
+      "id": "A000",
+      "process": "ProfessionalDutyChangeProcess",
+      "logicalRootEvents": [
+        "ProfessionalDutyChangeAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "RejectProfessionalDutyChange",
+      "targetOwner": "FirmProfessionalDutyDesignation",
+      "emittedBusinessEvents": [
+        "ProfessionalDutyChangeRejected"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "RejectProfessionalDutyChange",
+        "handler": "RejectProfessionalDutyChangeHandler",
+        "owner": "FirmProfessionalDutyDesignation",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "ProfessionalDutyChangeRejected"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Exact pending assertion intent with authoritative conflicting assertion or invalid predecessor proof; leave previous current duty authority unchanged and never recycle a used signed assertion identity.",
+        "sourceContract": null,
+        "tests": [
+          "exact failure and original result replay",
+          "reject races delayed apply",
+          "no unrelated prior authority removed",
+          "unknown append recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "FirmProfessionalDutyDesignation",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RejectProfessionalDutyChangeHandler.cs",
+          "sha256": "68f11b55d2094ba2fdca5e264b94878151017775247a6a3260e2ff5697c33d6e"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A001",
+      "process": "FirmStaffRegistrationProcess",
+      "logicalRootEvents": [
+        "FirmStaffRegistrationAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "RejectFirmStaffRegistration",
+      "targetOwner": "FirmStaffRecord",
+      "emittedBusinessEvents": [
+        "FirmStaffRegistrationRejected"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "RejectFirmStaffRegistration",
+        "handler": "RejectFirmStaffRegistrationHandler",
+        "owner": "FirmStaffRecord",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "FirmStaffRegistrationRejected"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only exact pending registration with permanent canonical-user claim owned by a different staff/practice. No valid acquired permanent claim is released; if own claim exists recover registration forward.",
+        "sourceContract": null,
+        "tests": [
+          "exact failure and original result replay",
+          "reject races delayed apply",
+          "no unrelated prior authority removed",
+          "unknown append recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "FirmStaffRecord",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RejectFirmStaffRegistrationHandler.cs",
+          "sha256": "4f6f013c7d8148ca4986bd0a353e42daeb5a1f27beddcd1e01259170fed38343"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A002",
+      "process": "EngagementAcceptanceProcess",
+      "logicalRootEvents": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "RejectServiceEngagementAcceptance",
+      "targetOwner": "ServiceEngagementIndependence",
+      "emittedBusinessEvents": [
+        "ServiceEngagementAcceptanceRejected"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "RejectServiceEngagementAcceptance",
+        "handler": "RejectServiceEngagementAcceptanceHandler",
+        "owner": "ServiceEngagementIndependence",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "ServiceEngagementAcceptanceRejected"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only before EngagementPracticeCommitmentsAuthorized. Atomically fence pending acceptance/positive assignment on this source generation, then settle all temporary service/practice/source-use authorizations, including not-yet-acquired keys. No permanent practice commitment may have been made before this irreversible authorization.",
+        "sourceContract": null,
+        "tests": [
+          "exact failure and original result replay",
+          "reject races delayed apply",
+          "no unrelated prior authority removed",
+          "unknown append recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "ServiceEngagementIndependence",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RejectServiceEngagementAcceptanceHandler.cs",
+          "sha256": "2a5ef9dbccd120b1573b7f5dbe8eea940efdba7c45ee42f385a199cf8db3816d"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A003",
+      "process": "EngagementAcceptanceProcess",
+      "logicalRootEvents": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "RejectServiceEngagementStaffAssignment",
+      "targetOwner": "ServiceEngagementIndependence",
+      "emittedBusinessEvents": [
+        "ServiceEngagementStaffAssignmentRejected"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "RejectServiceEngagementStaffAssignment",
+        "handler": "RejectServiceEngagementStaffAssignmentHandler",
+        "owner": "ServiceEngagementIndependence",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "ServiceEngagementStaffAssignmentRejected"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only before EngagementPracticeCommitmentsAuthorized for this assignment. Fence pending positive assignment and settle exact temporary reservations; retain existing engagement and prior permanent walls. After irreversible authorization recover forward.",
+        "sourceContract": null,
+        "tests": [
+          "exact failure and original result replay",
+          "reject races delayed apply",
+          "no unrelated prior authority removed",
+          "unknown append recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "ServiceEngagementIndependence",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RejectServiceEngagementStaffAssignmentHandler.cs",
+          "sha256": "961bd55f411749cbe53e3aab5145c57e73062da6548260d55ff47486cb64f3b9"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A004",
+      "process": "EngagementPersonalDecisionProcess",
+      "logicalRootEvents": [
+        "EngagementPersonalDecisionAdmitted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "CancelEngagementPersonalDecision",
+      "targetOwner": "ServiceEngagementIndependence",
+      "emittedBusinessEvents": [
+        "EngagementPersonalDecisionCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "CancelEngagementPersonalDecision",
+        "handler": "CancelEngagementPersonalDecisionHandler",
+        "owner": "ServiceEngagementIndependence",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RootOperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "EngagementId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "EngagementPersonalDecisionCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only before EngagementPersonalDecisionAuthorized. Atomically fence authorization and clear exact local content pin before source use settlement. Authorized decisions finish historical child materialization forward; no child can materialize from mere admission.",
+        "sourceContract": null,
+        "tests": [
+          "service epoch changes before use grant",
+          "cancellation races personal authorization",
+          "late child command lacks authorization proof",
+          "older materialization cannot replace newer personal decision pointer"
+        ],
+        "expectedRevisionScope": {
+          "field": null,
+          "owner": "ServiceEngagementIndependence",
+          "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/CancelEngagementPersonalDecisionHandler.cs",
+          "sha256": "ca10550cdd033f5ed0bfb9eff59ff10d1308bc5080a55be610533a48632c7280"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A005",
+      "process": "BulkAccessDecisionProcess",
+      "logicalRootEvents": [
+        "AccessReviewDecisionBatchAdmitted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "CancelAccessReviewDecisionBatch",
+      "targetOwner": "AccessReviewDecisionBatch",
+      "emittedBusinessEvents": [
+        "AccessReviewDecisionBatchCancellationAccepted"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "CancelAccessReviewDecisionBatch",
+        "handler": "CancelAccessReviewDecisionBatchHandler",
+        "owner": "AccessReviewDecisionBatch",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DecisionBatchId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "AccessReviewDecisionBatchCancellationAccepted"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Trusted process only; exact permanent preview/eligibility failure or explicit authorized cancellation, no published/executable irreversible batch. Every item receives fence before settlement.",
+        "sourceContract": null,
+        "tests": [
+          "exact retry after later lifecycle",
+          "changed actor/intent/original revision conflicts",
+          "receiver fence versus delayed apply",
+          "unknown append and source authorization recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "AccessReviewDecisionBatch",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/AccessReviews/CancelAccessReviewDecisionBatchHandler.cs",
+          "sha256": "c57ef115a71ccc4cc3c0d89bfe82aaab24cf8a9386195893f744fdbff8dbf5e5"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A006",
+      "process": "AccessReviewCampaignCompletionProcess",
+      "logicalRootEvents": [
+        "AccessReviewCampaignCompletionAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "AbortAccessReviewCampaignCompletion",
+      "targetOwner": "AccessReviewCampaign",
+      "emittedBusinessEvents": [
+        "AccessReviewCampaignCompletionCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "AbortAccessReviewCampaignCompletion",
+        "handler": "AbortAccessReviewCampaignCompletionHandler",
+        "owner": "AccessReviewCampaign",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "AccessReviewCampaignCompletionCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+        "sourceContract": null,
+        "tests": [
+          "source changes before use grant",
+          "abort races finalization",
+          "source settlement before delayed acquisition",
+          "held sources released only after parent fence"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "AccessReviewCampaign",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/AccessReviews/AbortAccessReviewCampaignCompletionHandler.cs",
+          "sha256": "424048b2854255c77c736bf62fb9f0d0e8e35719a37f9150ea42fb102ff5fe33"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A007",
+      "process": "AuditorRequestResolutionProcess",
+      "logicalRootEvents": [
+        "AuditorRequestResolutionAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "AbortAuditorRequestResolution",
+      "targetOwner": "AuditorRequest",
+      "emittedBusinessEvents": [
+        "AuditorRequestResolutionCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "AbortAuditorRequestResolution",
+        "handler": "AbortAuditorRequestResolutionHandler",
+        "owner": "AuditorRequest",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "AuditorRequestResolutionCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+        "sourceContract": null,
+        "tests": [
+          "source changes before use grant",
+          "abort races finalization",
+          "source settlement before delayed acquisition",
+          "held sources released only after parent fence"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "AuditorRequest",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/AuditorRequests/AbortAuditorRequestResolutionHandler.cs",
+          "sha256": "26561d0250cc48c50de3b6d1e91881640a55651ebe5ac4649ad2897f35ad9dcb"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A008",
+      "process": "FindingClosureProcess",
+      "logicalRootEvents": [
+        "FindingClosureAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "AbortFindingClosure",
+      "targetOwner": "FindingAggregate",
+      "emittedBusinessEvents": [
+        "FindingClosureCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "AbortFindingClosure",
+        "handler": "AbortFindingClosureHandler",
+        "owner": "FindingAggregate",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "FindingClosureCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+        "sourceContract": null,
+        "tests": [
+          "source changes before use grant",
+          "abort races finalization",
+          "source settlement before delayed acquisition",
+          "held sources released only after parent fence"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "FindingAggregate",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/Remediation/AbortFindingClosureHandler.cs",
+          "sha256": "658dadfe710d1fb3fc70fca508a070e134f0cc6af361ebebd974d1cc66531f5a"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A009",
+      "process": "ReadinessDecisionProcess",
+      "logicalRootEvents": [
+        "ReadinessDecisionAccepted",
+        "TypeIEntryDecisionAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "AbortReadinessDecision",
+      "targetOwner": "ProgramReadiness",
+      "emittedBusinessEvents": [
+        "ReadinessDecisionCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "AbortReadinessDecision",
+        "handler": "AbortReadinessDecisionHandler",
+        "owner": "ProgramReadiness",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "ReadinessDecisionCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+        "sourceContract": null,
+        "tests": [
+          "source changes before use grant",
+          "abort races finalization",
+          "source settlement before delayed acquisition",
+          "held sources released only after parent fence"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "ProgramReadiness",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/Readiness/AbortReadinessDecisionHandler.cs",
+          "sha256": "ca3bbb55e9b73f3d682b0dd0cb1620086939dc449f71c9dcbee59748828e7a7f"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A010",
+      "process": "PolicyCampaignClosureProcess",
+      "logicalRootEvents": [
+        "PolicyCampaignClosureAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "AbortPolicyCampaignClosure",
+      "targetOwner": "PolicyDistributionCampaign",
+      "emittedBusinessEvents": [
+        "PolicyCampaignClosureCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "AbortPolicyCampaignClosure",
+        "handler": "AbortPolicyCampaignClosureHandler",
+        "owner": "PolicyDistributionCampaign",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "PolicyCampaignClosureCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+        "sourceContract": null,
+        "tests": [
+          "source changes before use grant",
+          "abort races finalization",
+          "source settlement before delayed acquisition",
+          "held sources released only after parent fence"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "PolicyDistributionCampaign",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/AbortPolicyCampaignClosureHandler.cs",
+          "sha256": "3feee93cb25949b4302f48a7275d729e43055eed4a774e3271e2fcb811f73bc2"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A011",
+      "process": "ProviderReviewProcess",
+      "logicalRootEvents": [
+        "ProviderReviewRequested"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "AbortProviderReview",
+      "targetOwner": "ProviderAssuranceReview",
+      "emittedBusinessEvents": [
+        "ProviderReviewCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "AbortProviderReview",
+        "handler": "AbortProviderReviewHandler",
+        "owner": "ProviderAssuranceReview",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "ProviderReviewCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+        "sourceContract": null,
+        "tests": [
+          "source changes before use grant",
+          "abort races finalization",
+          "source settlement before delayed acquisition",
+          "held sources released only after parent fence"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "ProviderAssuranceReview",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/Providers/AbortProviderReviewHandler.cs",
+          "sha256": "059124a131417df3ddec69318ff387ccb38522de093c3a7d93331202c2d66221"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A012",
+      "process": "RiskActionCompletionReviewProcess",
+      "logicalRootEvents": [
+        "RiskTreatmentActionCompletionReviewAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "AbortRiskTreatmentActionReview",
+      "targetOwner": "RiskTreatmentAction",
+      "emittedBusinessEvents": [
+        "RiskTreatmentActionCompletionReviewCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "AbortRiskTreatmentActionReview",
+        "handler": "AbortRiskTreatmentActionReviewHandler",
+        "owner": "RiskTreatmentAction",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "RiskTreatmentActionCompletionReviewCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+        "sourceContract": null,
+        "tests": [
+          "source changes before use grant",
+          "abort races finalization",
+          "source settlement before delayed acquisition",
+          "held sources released only after parent fence"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "RiskTreatmentAction",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/Risks/AbortRiskTreatmentActionReviewHandler.cs",
+          "sha256": "7ee8fdfdbb25230bc78092f3c314d2fe1c6bed2a042cf16fc3259e208fe608fd"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A013",
+      "process": "ApplicationImportExecutionProcess",
+      "logicalRootEvents": [
+        "ApplicationImportPlanSealed"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "CancelApplicationImport",
+      "targetOwner": "ApplicationImportBatch",
+      "emittedBusinessEvents": [
+        "ApplicationImportCancellationAccepted"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "factory returns null; actual CancelApplicationImport producer/cancellation reactor fences and completes every target",
+      "selectedAdmissionContract": {
+        "command": "CancelApplicationImport",
+        "status": "target_contract",
+        "sourceContract": "src/Compliance.Common/Features/Applications/CancelApplicationImport.cs",
+        "sourceHandlers": [
+          {
+            "name": "CancelApplicationImportHandler",
+            "source": "src/Compliance.Core/Features/Applications/CancelApplicationImportHandler.cs",
+            "registered": true
+          }
+        ],
+        "handler": "CancelApplicationImportHandler",
+        "sourceRoots": [
+          "ApplicationImportLedger"
+        ],
+        "owner": "ApplicationImportBatch",
+        "logicalIdentity": {
+          "field": "CommandId",
+          "type": "Uuid",
+          "required": true,
+          "origin": "client",
+          "rule": "one immutable authored operation"
+        },
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "BatchId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "http": [
+          {
+            "method": "PUT",
+            "path": "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations/{command_id}",
+            "policy": "ComplianceAuthorizationPolicies.ApiUser"
+          }
+        ],
+        "mcp": false,
+        "entryPoint": "personal_http",
+        "authorizerSources": [
+          "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+          "src/Compliance.Core/Features/Applications/ApplicationInventoryAuthorizer.cs"
+        ],
+        "events": [
+          "ApplicationImportCancellationAccepted"
+        ],
+        "protocols": [
+          "Complete batch application and publication"
+        ],
+        "guardOrder": [
+          "bind_required_ids",
+          "authenticate_authorize",
+          "canonicalize_authored_intent",
+          "resolve_native_operation_facts",
+          "compare_owner_episode_actor_kind_intent_original_revision",
+          "validate_new_owner_revision_and_source_permits",
+          "append_complete_concrete_attributed_batch"
+        ],
+        "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+        "contractChanges": [
+          "Add required CommandId.",
+          "Rename ExpectedBatchRevision to ExpectedRevision and compare the new target owner revision."
+        ],
+        "existingTests": [
+          "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
+          "test/Compliance.Tests/Features/Applications/ApplicationImportLifecycleHandlerTests.cs",
+          "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs",
+          "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
+        ],
+        "requiredTests": [
+          "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+          "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+          "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+          "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+          "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+        ],
+        "responseContract": {
+          "mode": "async_fixed_ack",
+          "responseType": "OperationAcceptedResponse",
+          "firstHttpStatus": 202,
+          "terminalResultType": "Unit"
+        },
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "ApplicationImportBatch",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/CancelApplicationImportHandler.cs",
+          "sha256": "3acb0ed240c5d321861c30b21e06af95c5f8c67f0ef2a46a6214187d825e5604"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A014",
+      "process": "ProviderNameChangeProcess",
+      "logicalRootEvents": [
+        "ProviderChangeAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "CancelProviderChange",
+      "targetOwner": "Provider",
+      "emittedBusinessEvents": [
+        "ProviderChangeCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "CancelProviderChange",
+        "handler": "CancelProviderChangeHandler",
+        "owner": "Provider",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RecordId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ChangeOperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "DefiniteFailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "ProviderChangeCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Trusted process only; atomically cancel exact pending change and fence its local delayed apply. Already applied change recovers forward. Name release uses only this durable fence.",
+        "sourceContract": null,
+        "tests": [
+          "exact retry after later lifecycle",
+          "changed actor/intent/original revision conflicts",
+          "receiver fence versus delayed apply",
+          "unknown append and source authorization recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "Provider",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/Providers/CancelProviderChangeHandler.cs",
+          "sha256": "2a0939694ccc1518213e728f0100b44479aa76ff97b00db357a1814dabc2f602"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A015",
+      "process": "LocationNameChangeProcess",
+      "logicalRootEvents": [
+        "LocationChangeAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "CancelLocationChange",
+      "targetOwner": "Location",
+      "emittedBusinessEvents": [
+        "LocationChangeCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "CancelLocationChange",
+        "handler": "CancelLocationChangeHandler",
+        "owner": "Location",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RecordId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ChangeOperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "DefiniteFailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "LocationChangeCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Trusted process only; atomically cancel exact pending change and fence its local delayed apply. Already applied change recovers forward. Name release uses only this durable fence.",
+        "sourceContract": null,
+        "tests": [
+          "exact retry after later lifecycle",
+          "changed actor/intent/original revision conflicts",
+          "receiver fence versus delayed apply",
+          "unknown append and source authorization recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "Location",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/TechnologyInventory/CancelLocationChangeHandler.cs",
+          "sha256": "33a1a9fb4e1e9debb2aab1c85686aaab093613e39c2bd674e76298e74c928dfe"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A016",
+      "process": "OperationalProcessNameChangeProcess",
+      "logicalRootEvents": [
+        "OperationalProcessChangeAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "CancelOperationalProcessChange",
+      "targetOwner": "OperationalProcess",
+      "emittedBusinessEvents": [
+        "OperationalProcessChangeCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "CancelOperationalProcessChange",
+        "handler": "CancelOperationalProcessChangeHandler",
+        "owner": "OperationalProcess",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RecordId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ChangeOperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "DefiniteFailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "OperationalProcessChangeCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Trusted process only; atomically cancel exact pending change and fence its local delayed apply. Already applied change recovers forward. Name release uses only this durable fence.",
+        "sourceContract": null,
+        "tests": [
+          "exact retry after later lifecycle",
+          "changed actor/intent/original revision conflicts",
+          "receiver fence versus delayed apply",
+          "unknown append and source authorization recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "OperationalProcess",
+          "counter": "named process record revision",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/TechnologyInventory/CancelOperationalProcessChangeHandler.cs",
+          "sha256": "eabc9f9a097410966514b82414ff1e46cb032b85d2632adeda9aa38549daeda7"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A017",
+      "process": "IdentityRecoveryProcess",
+      "logicalRootEvents": [
+        "IdentityRecoveryChallengeClaimed"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "RejectIdentityRecoveryPreparation",
+      "targetOwner": "IdentityRecovery",
+      "emittedBusinessEvents": [
+        "IdentityRecoveryPreparationRejected"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "RejectIdentityRecoveryPreparation",
+        "handler": "RejectIdentityRecoveryPreparationHandler",
+        "owner": "IdentityRecovery",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ChallengeId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ConflictProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "IdentityRecoveryPreparationRejected"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only before IdentityRecoveryAccepted. Prove conflicting source association/revocation, atomically fence acceptance/finalization and settle every prepared receiving key. No old identity is revoked. Accepted swap rejects this command and recovers forward.",
+        "sourceContract": null,
+        "tests": [
+          "competing registration between verified preparation and protection",
+          "no accepted swap before both protections",
+          "rejection after acceptance refused",
+          "late protection after source rejection cannot reactivate"
+        ],
+        "expectedRevisionScope": {
+          "field": null,
+          "owner": "IdentityRecovery",
+          "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/RejectIdentityRecoveryPreparationHandler.cs",
+          "sha256": "d404462dd41757f8231888f4cb84c990547942eabe68fd861fa6ad68d93ad0c5"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A018",
+      "process": "TypeIIRangeProcess",
+      "logicalRootEvents": [
+        "TypeIIPeriodOpeningAccepted",
+        "TypeIIPeriodAmendmentAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "RejectTypeIIPeriodOpening",
+      "targetOwner": "TypeIIPeriod",
+      "emittedBusinessEvents": [
+        "TypeIIPeriodOpeningRejected"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "factory returns null; the proving acquisition/apply failure receiver or authorized caller issues the actual rejection/cancellation",
+      "selectedAdmissionContract": {
+        "command": "RejectTypeIIPeriodOpening",
+        "handler": "RejectTypeIIPeriodOpeningHandler",
+        "owner": "TypeIIPeriod",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "TypeIIPeriodOpeningRejected"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only exact pending opening before application, proven authoritative calendar conflict. Atomically fence delayed application, then settle prospective calendar authorization. Same PeriodId retry returns original rejection; changed new intent needs a new period identity.",
+        "sourceContract": null,
+        "tests": [
+          "exact failure and original result replay",
+          "reject races delayed apply",
+          "no unrelated prior authority removed",
+          "unknown append recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "TypeIIPeriod",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/RejectTypeIIPeriodOpeningHandler.cs",
+          "sha256": "4c0159292958e33031b607ee10c23aaac071fb85db5555991a2ead963c21e85b"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A019",
+      "process": "TypeIIRangeProcess",
+      "logicalRootEvents": [
+        "TypeIIPeriodOpeningAccepted",
+        "TypeIIPeriodAmendmentAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "RejectTypeIIPeriodAmendment",
+      "targetOwner": "TypeIIPeriod",
+      "emittedBusinessEvents": [
+        "TypeIIPeriodAmendmentCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "factory returns null; the proving acquisition/apply failure receiver or authorized caller issues the actual rejection/cancellation",
+      "selectedAdmissionContract": {
+        "command": "RejectTypeIIPeriodAmendment",
+        "handler": "RejectTypeIIPeriodAmendmentHandler",
+        "owner": "TypeIIPeriod",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "OperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Target",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "TypeIIPeriodAmendmentCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only exact pending amendment before application, proven authoritative calendar conflict. Atomically fence delayed apply, then settle exact pending range; preserve current applied range.",
+        "sourceContract": null,
+        "tests": [
+          "exact failure and original result replay",
+          "reject races delayed apply",
+          "no unrelated prior authority removed",
+          "unknown append recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "TypeIIPeriod",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/RejectTypeIIPeriodAmendmentHandler.cs",
+          "sha256": "ca760697ffbf7aa041b89f9665cbc357aef4330259b9e635736c916ae40a01cc"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A020",
+      "process": "TypeIIRangeProcess",
+      "logicalRootEvents": [
+        "TypeIIPeriodOpeningAccepted",
+        "TypeIIPeriodAmendmentAccepted"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "CancelTypeIIPeriodAmendment",
+      "targetOwner": "TypeIIPeriod",
+      "emittedBusinessEvents": [
+        "TypeIIPeriodAmendmentCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "factory returns null; the proving acquisition/apply failure receiver or authorized caller issues the actual rejection/cancellation",
+      "selectedAdmissionContract": {
+        "command": "CancelTypeIIPeriodAmendment",
+        "handler": "CancelTypeIIPeriodAmendmentHandler",
+        "owner": "TypeIIPeriod",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PeriodId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "AmendmentId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "events": [
+          "TypeIIPeriodAmendmentCanceled"
+        ],
+        "http": {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{amendment_id}/cancellations/{command_id}"
+        },
+        "mcp": false,
+        "entry": "authorized_existing_scope_http",
+        "guards": "Only a pending revocable amendment; atomically persist source cancellation and local receiver fence in period owner before calendar release. Applied/irreversible amendment returns Conflict and recovers forward. Delayed ApplyTypeIIPeriodRange checks this same fence.",
+        "sourceContract": null,
+        "tests": [
+          "exact retry after later lifecycle",
+          "changed actor/intent/original revision conflicts",
+          "receiver fence versus delayed apply",
+          "unknown append and source authorization recovery"
+        ],
+        "expectedRevisionScope": {
+          "field": "ExpectedRevision",
+          "owner": "TypeIIPeriod",
+          "counter": "logical ResourceRevision of this owner",
+          "nullableInternalRule": null
+        }
+      },
+      "currentHandlerSources": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/CancelTypeIIPeriodAmendmentHandler.cs",
+          "sha256": "9d66ef23a18ec87d37ccdb2c2a4b94cbde0c2e6c564e8ccca87f7eded76a1e57"
+        }
+      ],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      }
+    },
+    {
+      "id": "A021",
+      "process": "ArtifactDownloadProcess",
+      "logicalRootEvents": [
+        "EvidenceArtifactDownloadRequested"
+      ],
+      "abortTrigger": "Explicit driver abort or definite receiver Rejected outcome; each actual source-admission guard/proof must still authorize the abort. Never infer cancellation from missing state.",
+      "receiverCommand": "CancelProtectedArtifactDownloadGrant",
+      "targetOwner": "ArtifactDownloadGrant",
+      "emittedBusinessEvents": [
+        "ArtifactDownloadGrantCanceled"
+      ],
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "dispatch": "type-specific driver abort receiver factory",
+      "selectedAdmissionContract": {
+        "command": "CancelProtectedArtifactDownloadGrant",
+        "handler": "CancelProtectedArtifactDownloadGrantHandler",
+        "owner": "ArtifactDownloadGrant",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "GrantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RootOperationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FailureProof",
+            "type": "ImmutableContentRef",
+            "required": true
+          }
+        ],
+        "events": [
+          "ArtifactDownloadGrantCanceled"
+        ],
+        "http": null,
+        "mcp": false,
+        "entry": "trusted_internal",
+        "guards": "Only before EvidenceArtifactDownloadIssued; prove expired/revoked/conflicting required source or invalid/unavailable ticket outcome. Atomically fence grant issuance before source use settlement, including not-yet-acquired uses. Already issued grant cannot renew or change result; release uses from its exact issued fact.",
+        "sourceContract": null,
+        "tests": [
+          "failure before source use grant",
+          "ticket encrypted before native append crash",
+          "cancellation races native issue",
+          "late issue after cancellation rejected"
+        ],
+        "expectedRevisionScope": {
+          "field": null,
+          "owner": "ArtifactDownloadGrant",
+          "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+        }
+      },
+      "currentHandlerSources": [],
+      "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+      "decisionBasis": {
+        "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+        "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+        "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+        "decisionIds": [
+          "ARTIFACT_DOWNLOAD",
+          "PROOF_CARRIERS",
+          "EFFECT_IDENTITIES"
+        ],
+        "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+      },
+      "implementationConformance": "UNIMPLEMENTED_REQUIRED_TARGET",
+      "requiredAuthorityVerification": {
+        "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+        "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+        "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+        "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+        "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+      },
+      "effectIdentityPolicy": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
+      },
+      "selectedAbortAuthority": "Actual provable pre-issue expiry/revocation/conflict/terminal failure bound to accepted root and complete held/not-yet-held key set; no cancellation from unavailable body alone. Atomically fence receiving issue before any settlement. Already issued recovers forward."
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "decisionBasis": {
+    "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+    "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+    "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+    "decisionIds": [
+      "ARTIFACT_DOWNLOAD",
+      "PROOF_CARRIERS",
+      "EFFECT_IDENTITIES"
+    ],
+    "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+  }
+}

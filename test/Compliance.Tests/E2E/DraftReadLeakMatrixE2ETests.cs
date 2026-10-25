@@ -1,3 +1,4 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Tests.Testing;
 using System.Net;
 using System.Net.Http.Json;
@@ -414,7 +415,7 @@ public sealed class DraftReadLeakMatrixE2ETests(BrokerStackFixture broker)
             .GetProperty("tenant_id").GetString()!);
         var programId = await CreateProgramAsync(owner, tenantId);
         var servicePath = $"/api/v1/tenants/{tenantId}/programs/{programId}/client-services";
-        using var serviceResponse = await owner.PostAsJsonAsync(servicePath, new
+        using var serviceResponse = await owner.PutAsJsonAsync(servicePath + $"/{Uuid.CreateVersion4()}", new
         {
             name = $"Client service {label}",
             purpose = "Provide the contracted service",
@@ -868,7 +869,7 @@ public sealed class DraftReadLeakMatrixE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, new
+            using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "SOC 2",
                 plan = new

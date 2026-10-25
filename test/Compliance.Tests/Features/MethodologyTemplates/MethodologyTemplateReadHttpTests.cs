@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -133,11 +134,13 @@ public sealed class MethodologyTemplateReadHttpTests
         public async Task SeedProgramAsync(Uuid programId)
         {
             await using var scope = _factory.Services.CreateAsyncScope();
-            var program = new ComplianceProgram(Tenant, programId);
+            var program = new ProgramRules(Tenant, programId);
             Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
                 Member, "Program lead", Now));
-            await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(program,
-                new RequestDispatchContext(RequestActor.System));
+            await ProgramSeeds.WriteAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
+                scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+                scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), program);
         }
 
         public Task<HttpResponseMessage> ListAsync(Uuid? program = null) =>

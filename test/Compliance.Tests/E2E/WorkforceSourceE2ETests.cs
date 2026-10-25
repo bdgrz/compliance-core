@@ -195,10 +195,11 @@ public sealed class WorkforceSourceE2ETests(BrokerStackFixture broker) : IClassF
 
     static async Task<string> RecordPersonAsync(HttpClient client, string root)
     {
+        var requestedPersonId = Guid.NewGuid();
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var created = await client.PostAsJsonAsync($"{root}/people",
+            using var created = await client.PutAsJsonAsync($"{root}/people/{requestedPersonId}",
                 new { display_name = "Ada", work_email = "ada@example.com" });
             if (created.StatusCode == HttpStatusCode.OK)
             {

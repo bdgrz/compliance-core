@@ -1,0 +1,129 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "OWNER_ApplicationSourceClaim": {
+      "type": "choice",
+      "choice": "absorb_in_source_authority",
+      "confidence": 1,
+      "probabilities": {
+        "independent_record_claim_owner": 0,
+        "absorb_in_source_authority": 1,
+        "require_business_policy": 0
+      }
+    },
+    "OWNER_PlatformOperatorGrant": {
+      "type": "choice",
+      "choice": "one_roster_authority",
+      "confidence": 1,
+      "probabilities": {
+        "per_user_grant_and_roster_gate": 0,
+        "one_roster_authority": 1,
+        "require_business_policy": 0
+      }
+    },
+    "OWNER_AuditPopulationRowDecision": {
+      "type": "choice",
+      "choice": "parent_owns_current_reconciliation",
+      "confidence": 1,
+      "probabilities": {
+        "independent_row_decisions_with_freeze_holds": 0,
+        "parent_owns_current_reconciliation": 1,
+        "require_business_policy": 0
+      }
+    },
+    "OWNER_AccessExpectationScopeGuard": {
+      "type": "choice",
+      "choice": "line_authority_explicit_scope_override",
+      "confidence": 0.98,
+      "probabilities": {
+        "independent_scope_governor": 0,
+        "line_authority_explicit_scope_override": 0.99,
+        "require_business_policy": 0.01
+      }
+    },
+    "EV_D01": {
+      "type": "choice",
+      "choice": "adopt_recommended",
+      "confidence": 1,
+      "probabilities": {
+        "adopt_recommended": 1,
+        "retain_separate_event": 0,
+        "require_business_policy": 0
+      }
+    },
+    "EV_D02": {
+      "type": "choice",
+      "choice": "adopt_recommended",
+      "confidence": 1,
+      "probabilities": {
+        "adopt_recommended": 1,
+        "retain_separate_event": 0,
+        "require_business_policy": 0
+      }
+    },
+    "EV_D03": {
+      "type": "choice",
+      "choice": "adopt_recommended",
+      "confidence": 1,
+      "probabilities": {
+        "adopt_recommended": 1,
+        "retain_separate_event": 0,
+        "require_business_policy": 0
+      }
+    },
+    "EV_D04": {
+      "type": "choice",
+      "choice": "adopt_recommended",
+      "confidence": 1,
+      "probabilities": {
+        "adopt_recommended": 1,
+        "retain_separate_event": 0,
+        "require_business_policy": 0
+      }
+    },
+    "EV_D05": {
+      "type": "choice",
+      "choice": "adopt_recommended",
+      "confidence": 1,
+      "probabilities": {
+        "adopt_recommended": 1,
+        "retain_separate_event": 0,
+        "require_business_policy": 0
+      }
+    },
+    "ARTIFACT_DOWNLOAD": {
+      "type": "choice",
+      "choice": "artifact_first_202_qualified_grant_v2",
+      "confidence": 0.97,
+      "probabilities": {
+        "artifact_first_202_qualified_grant_v2": 0.98,
+        "immediate_200": 0,
+        "require_protocol_choice": 0.02
+      }
+    },
+    "PROOF_CARRIERS": {
+      "type": "choice",
+      "choice": "admission_reference_and_verified_stage_proofs",
+      "confidence": 0.89,
+      "probabilities": {
+        "admission_reference_and_verified_stage_proofs": 0.9299999999999999,
+        "literal_intermediate_typed_source": 0.03,
+        "require_protocol_choice": 0.04
+      }
+    },
+    "EFFECT_IDENTITIES": {
+      "type": "choice",
+      "choice": "retain_occupied_v1_version_new_algorithm",
+      "confidence": 0.8,
+      "probabilities": {
+        "retain_occupied_v1_version_new_algorithm": 0.87,
+        "migrate_all_to_length_prefixed": 0.01,
+        "require_identity_policy": 0.12
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 100717,
+    "output_tokens": 725
+  }
+}

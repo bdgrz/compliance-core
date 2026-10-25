@@ -163,7 +163,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
         var guard = scope.ServiceProvider.GetRequiredService<PolicyAcknowledgementRecorderGuard>();
         var captured = await guard.CaptureAsync(fixture.Source.TenantId, fixture.Source.MemberPersonId);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new Person(fixture.Source.TenantId, fixture.Source.MemberPersonId), person =>
+            new PersonRules(fixture.Source.TenantId, fixture.Source.MemberPersonId), person =>
             {
                 Assert.Null(person.CorrelateMembership(captured.Revision, null,
                     ActorReference.ForSystemProcess("synthetic-person-source", "Synthetic source"), DateTimeOffset.UtcNow));
@@ -375,7 +375,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
             services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships(source.TenantId,
                 source.ManagerUserId, source.MemberUserId, affiliation, membership));
             var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
-            await ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(source.TenantId, source.ProgramId), program =>
+            await ProgramManagementServices.SeedAsync(provider, new ProgramRules(source.TenantId, source.ProgramId), program =>
             {
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null),
                     RbacIds.Member(source.TenantId, source.ManagerUserId), "Client manager", DateTimeOffset.UtcNow));

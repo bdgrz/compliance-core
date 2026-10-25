@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
@@ -101,10 +102,10 @@ sealed class ApplicationInventoryHost : IAsyncDisposable
     public async Task<Uuid> RecordPersonAsync(string displayName)
     {
         var personId = Uuid.CreateVersion4();
-        var person = new Person(Tenant, personId);
+        var person = new PersonRules(Tenant, personId);
         Assert.True(person.Record(displayName, null, ActorReference.ForMember(Uuid.CreateVersion4(), "Manager"), Now)
             .IsSuccess);
-        await Writer.SaveAsync(person, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        await PersonSeeds.AppendAsync(_scope.ServiceProvider, person);
         return personId;
     }
 

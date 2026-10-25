@@ -121,7 +121,7 @@ public sealed class SourceUseCancellationRecoveryTests
             new ReadinessGapView(Uuid.CreateVersion4(), "missing_input", "evidence", "evidence_reviewed", "Collect evidence.", []),
         };
         var now = DateTimeOffset.UtcNow;
-        await ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(tenant, programId), owner =>
+        await ProgramManagementServices.SeedAsync(provider, new ProgramRules(tenant, programId), owner =>
         {
             Assert.Null(owner.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null), runner, "Runner", now));
             return Result.Success;

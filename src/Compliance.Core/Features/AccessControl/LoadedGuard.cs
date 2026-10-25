@@ -3,16 +3,10 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-/// <summary>
-///     A tenant's guard hydrated with the contribution set its first fact pinned, and the means to create further
-///     instances with that same set for an executor that rehydrates on a lost append race.
-/// </summary>
+/// <summary>One exact baseline and episode/root selection for executor rehydration; no history is retained in command authority.</summary>
 public sealed record LoadedGuard(Uuid TenantId, Uuid SelectedCommandId, GuardBaseline Baseline,
-    ImmutableContentRef BaselineRef)
+    ImmutableContentRef? BaselineRef, Uuid SelectedEpisode = default, Uuid SelectedRoot = default)
 {
-    /// <summary>The hydrated guard.</summary>
-    public TenantManagerGuard Guard { get; } = new(TenantId, SelectedCommandId, Baseline);
-
-    /// <summary>A fresh, unhydrated guard seeded with the same contribution set.</summary>
-    public TenantManagerGuard Create() => new(TenantId, SelectedCommandId, Baseline);
+    public TenantManagerGuard Guard { get; internal set; } = new(TenantId, SelectedCommandId, Baseline, SelectedEpisode, SelectedRoot);
+    public TenantManagerGuard Create() => new(TenantId, SelectedCommandId, Baseline, SelectedEpisode, SelectedRoot);
 }

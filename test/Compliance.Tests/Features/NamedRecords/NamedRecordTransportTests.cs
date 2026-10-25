@@ -207,10 +207,9 @@ public sealed class NamedRecordTransportTests
     {
         var owner = Uuid.CreateVersion4();
         await using var scope = factory.Services.CreateAsyncScope();
-        var result = await scope.ServiceProvider.GetRequiredService<IAggregateExecutor>().ExecuteAsync(
-            new Person(tenant, owner), person => AggregateOutcome.CommitOnSuccess(person.Record("Owner", null,
-                ActorReference.ForMember(Uuid.CreateVersion4(), "Seed"), DateTimeOffset.UtcNow)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var rules = new PersonRules(tenant, owner);
+        var result = rules.Record("Owner", null, ActorReference.ForMember(Uuid.CreateVersion4(), "Seed"), DateTimeOffset.UtcNow);
+        await PersonSeeds.AppendAsync(scope.ServiceProvider, rules);
         Assert.True(result.IsSuccess, result.Error?.Message);
         return owner;
     }

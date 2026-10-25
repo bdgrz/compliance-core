@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "5887b54da690b373153a796e009ad7b297dc2f21",
+  "sourceCommit": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 515,
-    "factsWithReducer": 490,
-    "factsWithAggregateEmitter": 399,
+    "domainEventContracts": 516,
+    "factsWithReducer": 491,
+    "factsWithAggregateEmitter": 393,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 23,
-    "legacyReducerOnlyFacts": 91,
+    "legacyReducerOnlyFacts": 98,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 104,
+    "aggregateTypesWithCommandPath": 101,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 742,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 52,
+    "unwiredAggregateProducerOperations": 56,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 2,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 49
+      "no_registered_request_route": 53
     },
     "factReplayGuardRows": 0
   },
@@ -5929,11 +5929,11 @@
         "test/Compliance.Tests/E2E/ProgramAuthorizationMcpE2ETests.cs",
         "test/Compliance.Tests/E2E/ProgramE2ETests.cs",
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FitzPermissionAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationReadinessImpactTests.cs",
         "test/Compliance.Tests/Features/Criteria/CriteriaCatalogTests.cs",
         "test/Compliance.Tests/Features/Criteria/ProgramCriteriaProjectionTests.cs",
-        "test/Compliance.Tests/Features/Programs/ComplianceProgramTests.cs"
+        "test/Compliance.Tests/Features/Programs/ComplianceProgramTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProgramNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProgramNativeProjectionTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -5956,6 +5956,8 @@
         "test/Compliance.Tests/Features/Criteria/CriteriaCatalogTests.cs",
         "test/Compliance.Tests/Features/Criteria/ProgramCriteriaProjectionTests.cs",
         "test/Compliance.Tests/Features/Examinations/CriteriaTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProgramNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProgramNativeHttpTests.cs",
         "test/Compliance.Tests/Features/Programs/ProgramStageProjectionTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -5994,7 +5996,9 @@
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
         "test/Compliance.Tests/Features/Criteria/ProgramCriteriaProjectionTests.cs",
         "test/Compliance.Tests/Features/Programs/ComplianceProgramTests.cs",
-        "test/Compliance.Tests/Features/Programs/ProgramStageProjectionTests.cs"
+        "test/Compliance.Tests/Features/Programs/ProgramNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProgramStageProjectionTests.cs",
+        "test/Compliance.Tests/Testing/ProgramSeeds.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -7996,16 +8000,14 @@
           "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
         "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
         "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TenantManagerRestorationCompleted",
@@ -8016,14 +8018,12 @@
           "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TenantManagerRestored",
@@ -8034,14 +8034,12 @@
           "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TenantManagerSourceMutationAdmitted",
@@ -8052,17 +8050,15 @@
           "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/MemberTransitionTransportTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
         "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
         "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TenantManagerWithdrawalAccepted",
@@ -8073,17 +8069,16 @@
           "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerPrepareRecoveryTests.cs",
         "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
         "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TenantManagerWithdrawalCompleted",
@@ -8094,15 +8089,14 @@
           "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerNativeHistoryTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TenantMemberInvited",
@@ -9078,6 +9072,20 @@
       ],
       "disposition": "aggregate_fact",
       "note": ""
+    },
+    {
+      "fact": "WorkDigestPreferenceRecorded",
+      "contract": "src/Compliance.Common/Features/Work/WorkDigestPreferenceRecorded.cs",
+      "reducers": [
+        {
+          "aggregate": "WorkDigestPreference",
+          "source": "src/Compliance.Core/Features/Work/WorkDigestPreference.cs"
+        }
+      ],
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "WorkDigestUnknownRetryAuthorized",
@@ -10095,11 +10103,7 @@
         "ProgramCriteriaEditionSelected",
         "ProgramRevised"
       ],
-      "commandRequests": [
-        "CreateProgram",
-        "ReviseProgram",
-        "SelectProgramCriteriaEdition"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/CriteriaCatalogE2ETests.cs",
@@ -10107,11 +10111,13 @@
         "test/Compliance.Tests/E2E/ProgramConcurrencyE2ETests.cs",
         "test/Compliance.Tests/E2E/ProgramE2ETests.cs",
         "test/Compliance.Tests/Features/AccessControl/AccessGrantProposalValidatorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs"
+        "test/Compliance.Tests/Features/Criteria/CriteriaCatalogTests.cs",
+        "test/Compliance.Tests/Features/Examinations/CriteriaTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Programs/ComplianceProgramTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "ControlCriterionMapping",
@@ -12203,24 +12209,19 @@
         "TenantManagerWithdrawalAccepted",
         "TenantManagerWithdrawalCompleted"
       ],
-      "commandRequests": [
-        "AssignTeamMember",
-        "DeprovisionMember",
-        "ReinstateMember",
-        "RemoveTeamMember",
-        "SuspendMember"
-      ],
-      "internalReactionRequests": [
-        "CompleteAdministratorRestoration",
-        "CompleteAdministratorWithdrawal"
-      ],
+      "commandRequests": [],
+      "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/MemberTransitionTransportTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
         "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "TenantSlug",
@@ -12434,19 +12435,22 @@
       "aggregate": "WorkDigestPreference",
       "source": "src/Compliance.Core/Features/Work/WorkDigestPreference.cs",
       "appliedFacts": [
-        "WorkDigestPreferenceChanged"
+        "WorkDigestPreferenceChanged",
+        "WorkDigestPreferenceRecorded"
       ],
-      "commandRequests": [
-        "SetWorkDigestPreference"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Work/WeeklyWorkDigestNativeReceiverTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentNativeHttpTests.cs",
         "test/Compliance.Tests/Features/Work/WorkDigestDispatchProcessorTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestPreferenceNativeTests.cs",
         "test/Compliance.Tests/Features/Work/WorkDigestPreferenceTimeZoneTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "WorkItemAssignment",
@@ -13501,8 +13505,7 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "TeamMember",
-        "TenantManagerGuard"
+        "TeamMember"
       ],
       "aggregateTargets": [
         "TeamMember"
@@ -13605,9 +13608,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "TenantManagerGuard"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
         "Member"
       ],
@@ -14603,8 +14604,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [
         "AccessGrant",
-        "TeamMember",
-        "TenantManagerGuard"
+        "TeamMember"
       ],
       "helperServices": [
         "AdministratorTransitionAdmission",
@@ -16078,9 +16078,7 @@
       "directAggregateReferences": [
         "TeamMember"
       ],
-      "aggregateTargets": [
-        "TenantManagerGuard"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
@@ -16102,9 +16100,7 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "TenantManagerGuard"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs"
@@ -17124,7 +17120,7 @@
     {
       "request": "CreateProgram",
       "contract": "src/Compliance.Common/Features/Programs/CreateProgram.cs",
-      "interfaces": "IRequest<ProgramRegistration>, IProgramManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ProgramRegistration>, IProgramManagementRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -17134,12 +17130,8 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ComplianceProgram"
-      ],
-      "aggregateTargets": [
-        "ComplianceProgram"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
@@ -17148,7 +17140,8 @@
         "test/Compliance.Tests/Features/Criteria/ProgramCriteriaProjectionTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Programs/ComplianceProgramTests.cs",
-        "test/Compliance.Tests/Features/Programs/ProgramStageProjectionTests.cs"
+        "test/Compliance.Tests/Features/Programs/ProgramNativeBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProgramNativeHistoryTests.cs"
       ],
       "note": ""
     },
@@ -17706,9 +17699,7 @@
       "directAggregateReferences": [
         "Member"
       ],
-      "aggregateTargets": [
-        "TenantManagerGuard"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
         "AdministratorTransitionAdmission"
       ],
@@ -21075,6 +21066,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Work/WorkDigestPreferenceNativeTests.cs",
         "test/Compliance.Tests/Features/Work/WorkReminderTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -27824,9 +27816,7 @@
       "directAggregateReferences": [
         "Member"
       ],
-      "aggregateTargets": [
-        "TenantManagerGuard"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
         "AdministratorTransitionAdmission"
       ],
@@ -28372,8 +28362,7 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [
-        "TeamMember",
-        "TenantManagerGuard"
+        "TeamMember"
       ],
       "helperServices": [
         "AdministratorTransitionAdmission"
@@ -30002,7 +29991,7 @@
     {
       "request": "ReviseProgram",
       "contract": "src/Compliance.Common/Features/Programs/ReviseProgram.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -30012,15 +30001,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ComplianceProgram"
-      ],
-      "aggregateTargets": [
-        "ComplianceProgram"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Criteria/ProgramCriteriaProjectionTests.cs"
+        "test/Compliance.Tests/Features/Criteria/ProgramCriteriaProjectionTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProgramNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/ProgramSeeds.cs"
       ],
       "note": ""
     },
@@ -30524,7 +30511,6 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ComplianceProgram",
         "ProgramReadiness"
       ],
       "aggregateTargets": [
@@ -30595,7 +30581,7 @@
     {
       "request": "SelectProgramCriteriaEdition",
       "contract": "src/Compliance.Common/Features/Programs/SelectProgramCriteriaEdition.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -30605,16 +30591,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ComplianceProgram"
-      ],
-      "aggregateTargets": [
-        "ComplianceProgram"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Criteria/CriteriaCatalogTests.cs",
-        "test/Compliance.Tests/Features/Criteria/ProgramCriteriaProjectionTests.cs"
+        "test/Compliance.Tests/Features/Criteria/ProgramCriteriaProjectionTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProgramNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/ProgramSeeds.cs"
       ],
       "note": ""
     },
@@ -30723,7 +30707,7 @@
     {
       "request": "SetWorkDigestPreference",
       "contract": "src/Compliance.Common/Features/Work/SetWorkDigestPreference.cs",
-      "interfaces": "IRequest<WorkDigestPreferenceView>, ITenantAccessRequest, ICallable",
+      "interfaces": "IRequest<WorkDigestPreferenceView>, ITenantAccessRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -30734,13 +30718,13 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
+        "Member",
         "WorkDigestPreference"
       ],
-      "aggregateTargets": [
-        "WorkDigestPreference"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Work/WorkDigestPreferenceNativeTests.cs",
         "test/Compliance.Tests/Features/Work/WorkReminderTests.cs"
       ],
       "note": ""
@@ -31503,9 +31487,7 @@
       "directAggregateReferences": [
         "Member"
       ],
-      "aggregateTargets": [
-        "TenantManagerGuard"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
         "AdministratorTransitionAdmission"
       ],
@@ -31901,6 +31883,39 @@
       "ownerIssue": 545,
       "callerSources": [],
       "methodArgumentCount": 4,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ProgramCreated",
+      "aggregate": "ComplianceProgram",
+      "method": "Create",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/Programs/ComplianceProgram.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ProgramRevised",
+      "aggregate": "ComplianceProgram",
+      "method": "Revise",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/Programs/ComplianceProgram.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "ProgramCriteriaEditionSelected",
+      "aggregate": "ComplianceProgram",
+      "method": "SelectCriteriaEdition",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/Programs/ComplianceProgram.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {
@@ -32343,6 +32358,17 @@
       "method": "AppendRetry",
       "methodArgumentCount": 9,
       "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "WorkDigestPreferenceChanged",
+      "aggregate": "WorkDigestPreference",
+      "method": "Set",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/Work/WorkDigestPreference.cs",
       "callerSources": [],
       "classification": "no_registered_request_route",
       "ownerIssue": 1022,

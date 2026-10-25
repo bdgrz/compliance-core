@@ -72,7 +72,7 @@ public sealed class CriteriaReadLeakMatrixE2ETests(BrokerStackFixture broker)
                 var editionId = Assert.Single(editions.EnumerateArray())
                     .GetProperty("edition_id").GetString()!;
                 using (var selected = await owner.PutAsJsonAsync(
-                           $"{TenantPath(tenantA)}/programs/{programA}/criteria-edition",
+                           $"{TenantPath(tenantA)}/programs/{programA}/criteria-edition" + $"/selections/{Uuid.CreateVersion4()}",
                            new { expected_revision = 1, edition_id = editionId }))
                     Assert.Equal(HttpStatusCode.NoContent, selected.StatusCode);
                 var firstPage = await ReadJsonAsync(await owner.GetAsync(
@@ -101,7 +101,7 @@ public sealed class CriteriaReadLeakMatrixE2ETests(BrokerStackFixture broker)
                 foreach (var (tool, input) in CatalogProbes(tenantA, editionId))
                     _ = await outsiderMcp.When(tool, input).ExpectFailure("NotFound");
                 using (var outsiderSelect = await outsider.PutAsJsonAsync(
-                           $"{tenantAPath}/programs/{programA}/criteria-edition",
+                           $"{tenantAPath}/programs/{programA}/criteria-edition" + $"/selections/{Uuid.CreateVersion4()}",
                            new { expected_revision = 2, edition_id = editionId }))
                     Assert.Equal(HttpStatusCode.NotFound, outsiderSelect.StatusCode);
                 _ = await outsiderMcp.When("bdgrz.program.criteria.select",
@@ -110,7 +110,7 @@ public sealed class CriteriaReadLeakMatrixE2ETests(BrokerStackFixture broker)
                 // A member of both tenants cannot select through a swapped tenant or program.
                 var tenantBPath = TenantPath(tenantB);
                 using (var swapped = await owner.PutAsJsonAsync(
-                           $"{tenantBPath}/programs/{programA}/criteria-edition",
+                           $"{tenantBPath}/programs/{programA}/criteria-edition" + $"/selections/{Uuid.CreateVersion4()}",
                            new { expected_revision = 1, edition_id = editionId }))
                     Assert.Equal(HttpStatusCode.NotFound, swapped.StatusCode);
                 _ = await ownerMcp.When("bdgrz.program.criteria.select",
@@ -179,6 +179,7 @@ public sealed class CriteriaReadLeakMatrixE2ETests(BrokerStackFixture broker)
     static Dictionary<string, object?> SelectInput(Uuid tenantId, string programId,
         string editionId) => new()
         {
+            ["command_id"] = Uuid.CreateVersion4().ToString(),
             ["tenant_id"] = tenantId.ToString(),
             ["program_id"] = programId,
             ["expected_revision"] = 1,
@@ -191,7 +192,7 @@ public sealed class CriteriaReadLeakMatrixE2ETests(BrokerStackFixture broker)
         await foreach (var record in store.ReadAsync(new ComplianceProgram(tenantId,
                            Uuid.Parse(programId, CultureInfo.InvariantCulture)).Stream, 0,
                            CancellationToken.None))
-            if (record.Event is ProgramCriteriaEditionSelected)
+            if (record.Event is ProgramCriteriaEditionSelected { ChangeCount: 1 })
                 count++;
         return count;
     }
@@ -214,7 +215,7 @@ public sealed class CriteriaReadLeakMatrixE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, new
+            using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "Criteria matrix program",
                 plan = new

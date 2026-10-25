@@ -11,7 +11,8 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPopulations;
 
-public sealed class GenerateAuditPopulationExportHandler(IAggregateExecutor executor,
+public sealed class GenerateAuditPopulationExportHandler(AuditPopulationMutations mutations,
+    AuditPopulationReader populations,
     IAggregateReader reader, EvidenceIntake evidenceIntake, TimeProvider clock,
     NativeOperationExecutor operations, IImmutableContentStore content, IDomainEventReader events)
     : IRequestHandler<GenerateAuditPopulationExport, AuditPopulationExportReceipt>
@@ -34,9 +35,9 @@ public sealed class GenerateAuditPopulationExportHandler(IAggregateExecutor exec
             return Failure(RequestErrorKind.Validation,
                 "An export requires a supported format, bounded stable key, and positive population version.");
 
-        var population = await reader.HydrateAsync(new AuditPopulation(request.TenantId,
-            request.ProgramId, request.PopulationId), ct).ConfigureAwait(false);
-        if (population.Current is not { } current)
+        var population = await populations.ReadAsync(request.TenantId,
+            request.ProgramId, request.PopulationId, ct).ConfigureAwait(false);
+        if (population.View is not { } current)
             return Failure(RequestErrorKind.NotFound, "The audit population was not found.");
 
         var exportId = Uuid.CreateVersion5(request.PopulationId, "audit-population-export:" + exportKey);
@@ -90,32 +91,23 @@ public sealed class GenerateAuditPopulationExportHandler(IAggregateExecutor exec
             return Result<AuditPopulationExportReceipt>.Failure(retained.Error);
 
         var exportAt = clock.GetUtcNow();
-        var export = new AuditPopulationExportView(exportId, version.Version, format, fileName,
-            version.ContentSha256, version.CloseSnapshotId, exportAt, actorMemberId, actorDisplay,
-            artifact.Id, outputSha, bytes.LongLength);
-        var receipt = new AuditPopulationExportReceipt(export, artifact.State!, artifact.StateReason);
-        return await executor.ExecuteAsync(new AuditPopulation(request.TenantId, request.ProgramId,
-            request.PopulationId), aggregate =>
-        {
-            if (aggregate.Current is not { } latest)
-                return AggregateOutcome.Discard(Result<AuditPopulationExportReceipt>.Failure(
-                    new RequestError(RequestErrorKind.NotFound, "The audit population was not found.")));
-            if (latest.Exports.FirstOrDefault(item => item.ExportId == exportId) is { } raced)
+        var appended = await mutations.AppendUnqualifiedAsync(context, request.TenantId, request.ProgramId,
+            request.PopulationId, rules =>
             {
-                if (raced.PopulationVersion == version.Version && raced.Format == format &&
-                    raced.PopulationContentSha256 == version.ContentSha256 &&
-                    raced.ArtifactId == artifact.Id && raced.OutputContentSha256 == outputSha &&
-                    raced.OutputContentLength == bytes.LongLength)
-                    return AggregateOutcome.Discard(Result<AuditPopulationExportReceipt>.Success(
-                        new AuditPopulationExportReceipt(raced, artifact.State!, artifact.StateReason)));
-                return AggregateOutcome.Discard(Result<AuditPopulationExportReceipt>.Failure(
-                    new RequestError(RequestErrorKind.Conflict,
-                        "An export key cannot be reused for different population content.")));
-            }
-            var failure = aggregate.RecordExport(aggregate.Revision, exportId, version.Version, format,
-                fileName, artifact.Id, outputSha, bytes.LongLength, actorMemberId, actorDisplay, exportAt);
-            return CommandFailureRequestAdapter.ToOutcome(failure, receipt);
-        }, context, ct).ConfigureAwait(false);
+                if (rules.Current is not { } latest)
+                    return CommandFailure.MissingRecord("The audit population was not found.");
+                if (latest.Exports.FirstOrDefault(item => item.ExportId == exportId) is { } raced)
+                    return raced.PopulationVersion == version.Version && raced.Format == format &&
+                        raced.PopulationContentSha256 == version.ContentSha256 && raced.ArtifactId == artifact.Id &&
+                        raced.OutputContentSha256 == outputSha && raced.OutputContentLength == bytes.LongLength
+                        ? null : CommandFailure.StateConflict("An export key cannot be reused for different population content.");
+                return rules.RecordExport(rules.Revision, exportId, version.Version, format, fileName, artifact.Id,
+                    outputSha, bytes.LongLength, actorMemberId, actorDisplay, exportAt);
+            }, ct).ConfigureAwait(false);
+        if (!appended.IsSuccess)
+            return Result<AuditPopulationExportReceipt>.Failure(appended.Error!);
+        var recorded = appended.Value.Exports.Single(item => item.ExportId == exportId);
+        return Result<AuditPopulationExportReceipt>.Success(new(recorded, artifact.State!, artifact.StateReason));
     }
 
     async ValueTask<Result<AuditPopulationExportReceipt>> ExistingReceiptAsync(Uuid tenantId,

@@ -29,7 +29,7 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
     readonly TenantManagerGuardLoader _guards;
     readonly TimeProvider _clock = TimeProvider.System;
 
-    public AdministratorTransitionHost()
+    public AdministratorTransitionHost(Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
     {
         var services = new ServiceCollection();
         var events = new InMemoryEventStore();
@@ -38,7 +38,8 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
         services.AddSingleton<IProjectionCheckpointStore, InMemoryProjectionCheckpointStore>();
         services.AddSingleton(TimeProvider.System);
         var kv = new InMemoryKvClient();
-        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(new PersistenceKvClient(kv)));
+        IImmutableContentStore immutable = new FitzKvImmutableContentStore(new PersistenceKvClient(kv));
+        services.AddSingleton<IImmutableContentStore>(configureContent?.Invoke(immutable) ?? immutable);
         services.AddSingleton<IProcessRecordStore>(new FitzKvProcessRecordStore(new PersistenceKvClient(kv)));
         services.AddSingleton(AdministratorTransitionProcess.Definition);
         services.AddSingleton<ProcessCatalog>(provider => new ProcessCatalog(provider.GetServices<ProcessDefinition>()));
@@ -60,6 +61,7 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
             .AddRequestHandler<CompleteAdministratorWithdrawalHandler>()
             .AddRequestHandler<CompleteAdministratorRestorationHandler>()
             .AddRequestAuthorizer<AdministratorTransitionReceiverAuthorizer>();
+        services.AddVerifiedTenantManagerReader();
         Provider = services.BuildServiceProvider();
         Events = events;
         Content = Provider.GetRequiredService<IImmutableContentStore>();
@@ -116,11 +118,11 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
         await Reader.HydrateAsync(new TeamMember(TenantId, teamId ?? AdministratorsTeamId, person.MemberId));
 
     /// <summary>The guard as the next admission would see it: the pinned contribution set plus every fact since.</summary>
-    public async Task<TenantManagerGuard> GuardAsync() =>
+    public async Task<TenantManagerGuard> GuardAsync(Uuid episode = default, Uuid root = default) =>
         (await new TenantManagerGuardLoader(Reader, Content, new TenantManagerGuardBootstrap(Events, Reader, _clock))
-            .LoadAsync(TenantId, default, CancellationToken.None)).Guard;
+            .LoadAsync(TenantId, default, episode, root, CancellationToken.None)).Guard;
 
-    public async Task<bool> IsAvailableAsync(Person person) => (await GuardAsync()).IsAvailable(person.EpisodeId);
+    public async Task<bool> IsAvailableAsync(Person person) => (await GuardAsync(person.EpisodeId)).IsAvailable(person.EpisodeId);
 
     public async Task<List<DomainEvent>> GuardFactsAsync() => await FactsAsync(new TenantManagerGuard(TenantId).Stream);
 

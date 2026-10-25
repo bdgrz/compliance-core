@@ -629,7 +629,7 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await administrator.PostAsJsonAsync($"/api/v1/tenants/{tenantId}/programs", new
+            using var response = await administrator.PutAsJsonAsync($"/api/v1/tenants/{tenantId}/programs" + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "SOC 2",
                 plan = new

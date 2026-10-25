@@ -1,0 +1,2165 @@
+{
+  "schemaVersion": 1,
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "architectureAuthority": {
+    "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+    "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+    "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+    "model": "jev-1.14.0",
+    "implementationHalted": true
+  },
+  "businessOwnerCount": 129,
+  "businessOwnerNames": [
+    "AccessExpectation",
+    "AccessGrant",
+    "AccessPopulation",
+    "AccessPopulationException",
+    "AccessPrincipalClassification",
+    "AccessReviewCampaign",
+    "AccessReviewDecisionBatch",
+    "AccessReviewItem",
+    "AdvisorFeedbackThread",
+    "AdvisorHandoff",
+    "ApplicationImportBatch",
+    "ApplicationImportSource",
+    "ApplicationRelationship",
+    "ArtifactDisclosure",
+    "ArtifactDisposition",
+    "ArtifactDownloadGrant",
+    "ArtifactEngagementHold",
+    "ArtifactLegalHold",
+    "ArtifactRetentionBasis",
+    "AuditObservation",
+    "AuditOutcome",
+    "AuditPackageDelivery",
+    "AuditPackageManifest",
+    "AuditPopulation",
+    "AuditorFeedbackThread",
+    "AuditorRequest",
+    "AuditorResponse",
+    "AuditorSampleSelection",
+    "ClientExport",
+    "ClientIndependenceDecision",
+    "ClientService",
+    "ClientServiceIndependence",
+    "CommitmentDraft",
+    "ComplianceIncident",
+    "ComplianceProgram",
+    "ControlCriterionMapping",
+    "ControlDraft",
+    "ControlEvaluation",
+    "ControlEvaluationPlan",
+    "ControlOccurrence",
+    "ControlOperatingPlan",
+    "CorrectiveAction",
+    "CriteriaTextOverlay",
+    "CriterionApplicability",
+    "DataFlow",
+    "DeclaredApplication",
+    "DeclaredSystemInstance",
+    "EmailAddress",
+    "EngagementManagementAcknowledgement",
+    "EvidenceArtifact",
+    "EvidenceHandlingPolicy",
+    "EvidenceRedaction",
+    "EvidenceRequest",
+    "EvidenceSupport",
+    "ExaminationEngagement",
+    "ExaminationSignOff",
+    "FindingAggregate",
+    "FirmProfessionalDutyDesignation",
+    "FirmStaffIdentityClaim",
+    "FirmStaffRecord",
+    "IdentityRecovery",
+    "ImmutableSnapshot",
+    "IndependenceRuleCatalog",
+    "IndependenceRuleRatificationCatalog",
+    "InformationAsset",
+    "Location",
+    "LocationNameClaim",
+    "ManagementAssertion",
+    "ManagementRepresentationLetter",
+    "Member",
+    "MethodologyTemplate",
+    "MethodologyTemplateContribution",
+    "OperationalProcess",
+    "OperationalProcessNameClaim",
+    "PartnerIndependenceDecision",
+    "Person",
+    "PlatformOperatorRoster",
+    "Policy",
+    "PolicyCampaignParticipant",
+    "PolicyDistributionCampaign",
+    "PopulationSnapshot",
+    "PracticeIndependenceCommitment",
+    "ProfessionalAssertionIdentityClaim",
+    "ProgramReadiness",
+    "ProgramRollover",
+    "Provider",
+    "ProviderAssuranceGap",
+    "ProviderAssuranceReport",
+    "ProviderAssuranceReview",
+    "ProviderNameClaim",
+    "ProviderRiskAcceptance",
+    "ReadinessAssessment",
+    "ReadinessGapPlan",
+    "RiskDraft",
+    "RiskEvaluation",
+    "RiskGovernance",
+    "RiskMethod",
+    "RiskTreatmentAction",
+    "RiskTreatmentAssertion",
+    "Role",
+    "RolePermission",
+    "SeparationOfDutiesWaiver",
+    "ServiceEngagementIndependence",
+    "ServiceIdentity",
+    "SignificantChange",
+    "SystemBoundary",
+    "SystemDescription",
+    "SystemInstanceAccessReviewScope",
+    "Team",
+    "TeamMember",
+    "TeamRole",
+    "TechnologyComponent",
+    "TemplateApplication",
+    "Tenant",
+    "TenantIdentityProvider",
+    "TenantInvitation",
+    "TenantInvitationMailboxClaim",
+    "TenantManagerGuard",
+    "TenantSlug",
+    "TrainingRequirement",
+    "TypeIIObservationCalendar",
+    "TypeIIPeriod",
+    "TypeIIPlan",
+    "UserIdentity",
+    "WorkDigestPreference",
+    "WorkItemAssignment",
+    "WorkRelationship",
+    "WorkforceObservationResolution",
+    "WorkforceSourceObservation"
+  ],
+  "businessOwners": [
+    {
+      "owner": "AccessExpectation",
+      "classification": "business_aggregate",
+      "identity": "Tenant realm and immutable system-instance binding plus root expectation-line identity. The first proposal roots the line; every successor shares the exact approved predecessor line conflict key. Existing physical identity is preserved.",
+      "invariant": "One exact system-instance expectation lineage owns predecessor/successor competition, independent approval and same-line exceptions. Different lines may coexist, including different policies on one system. No cross-line exclusion governor or ban is implied; a future ban requires a separately reviewed precise predicate."
+    },
+    {
+      "owner": "AccessGrant",
+      "classification": "business_aggregate",
+      "identity": "Tenant + GrantId; immutable grant identity and exact issuance episode. Mutations use the selected CommandId with the original grant and episode binding.",
+      "invariant": "One stable grant identity has one immutable set of scope/principal/effective terms and, once revoked, can never be reissued."
+    },
+    {
+      "owner": "AccessPopulation",
+      "classification": "business_aggregate",
+      "identity": "populationId",
+      "invariant": "Immutable accepted population definition, exact system instance and source revision."
+    },
+    {
+      "owner": "AccessPopulationException",
+      "classification": "business_aggregate",
+      "identity": "(systemInstanceId, exceptionId)",
+      "invariant": "One expiring exception or missing-population exception decision."
+    },
+    {
+      "owner": "AccessPrincipalClassification",
+      "classification": "business_aggregate",
+      "identity": "tenant / (populationId, providerSubjectId)",
+      "invariant": "Independent classification decision history for one accepted principal."
+    },
+    {
+      "owner": "AccessReviewCampaign",
+      "classification": "business_governor",
+      "identity": "campaignId",
+      "invariant": "Frozen campaign snapshot, generation, and compact completion gate."
+    },
+    {
+      "owner": "AccessReviewDecisionBatch",
+      "classification": "business_aggregate",
+      "identity": "tenant / (campaignId, decisionBatchId)",
+      "invariant": "One immutable exact preview/item selection and shared-rationale bulk decision, item reservations and one all-item publication decision. Partial item application stays unpublished."
+    },
+    {
+      "owner": "AccessReviewItem",
+      "classification": "business_aggregate",
+      "identity": "(campaignId, itemId)",
+      "invariant": "One reviewer decision, reassignment, remediation verification, exception and history for one frozen item."
+    },
+    {
+      "owner": "AdvisorFeedbackThread",
+      "classification": "business_aggregate",
+      "identity": "(handoffId, feedbackId)",
+      "invariant": "Immutable contribution with its correction/response lifecycle."
+    },
+    {
+      "owner": "AdvisorHandoff",
+      "classification": "business_aggregate",
+      "identity": "handoffId",
+      "invariant": "Small selection, readiness, revocation/closure and admission-generation authority."
+    },
+    {
+      "owner": "ApplicationImportBatch",
+      "classification": "business_aggregate",
+      "identity": "Tenant + exact validated SourceKey/namespace + BatchId under unchanged ApplicationImportBatch.BatchIdFor and selected SubmissionId/BatchKey bindings. No case folding or source-key normalization is introduced.",
+      "invariant": "Frozen source rows, row outcomes, per-batch execution and terminal disposition."
+    },
+    {
+      "owner": "ApplicationImportSource",
+      "classification": "business_governor",
+      "identity": "Tenant + EXACT validated SourceKey + EXACT validated namespace under unchanged length-prefixed ApplicationImportSource.IdFor. Validation rejects surrounding whitespace/oversize values; there is no case folding, Unicode normalization or source-key normalization. Existing SourceRecordId ordinal equality and mapping publication identity remain exact.",
+      "invariant": "One exact tenant/source-key/namespace authority serializes batch admission and durable source-record mapping publication. Complete verified published-batch order and frozen SourceClaims define mutable replace/remove mappings; source revision/generation fences stale plans and omissions. There is no independent ApplicationSourceClaim root."
+    },
+    {
+      "owner": "ApplicationRelationship",
+      "classification": "business_aggregate",
+      "identity": "Tenant + exact directed source application / relationship kind / target application tuple under its unchanged existing UUIDv5 IdFor. Supplied RelationshipId must equal this tuple identity; it is not an arbitrary caller UUID. Source and target direction is significant; accepted EV-D03/EV-D04 remove any separate tuple claim/release owner.",
+      "invariant": "One exact directed source/kind/target relationship lifecycle with unchanged deterministic UUIDv5 tuple identity; active endpoint/source-visibility and exact source/target revision guards remain. No independent tuple claim/release authority is introduced."
+    },
+    {
+      "owner": "ArtifactDisclosure",
+      "classification": "business_aggregate",
+      "identity": "Tenant / artifact-disclosures / DisclosureId, with exact artifact content, handling-policy revision and recipient/purpose binding. Selected mutations use CommandId.",
+      "invariant": "One disclosure binds immutable artifact content, handling-policy revision, recipient and purpose; delivery requires that approved identity and revocation is final."
+    },
+    {
+      "owner": "ArtifactDisposition",
+      "classification": "business_aggregate",
+      "identity": "Tenant / artifact-dispositions / DispositionId, with exact approved content and execution attempt identity. Selected mutations use CommandId.",
+      "invariant": "Only an approved exact source with elapsed retention/no active holds or reliance may start execution; one outstanding attempt; disposed result is terminal and yields tombstone."
+    },
+    {
+      "owner": "ArtifactDownloadGrant",
+      "classification": "business_aggregate",
+      "identity": "UUIDv5 namespace ArtifactId, UTF8 artifact-download-grant:v1:{canonical TenantId}:{canonical CommandId}. Receiving root additionally verifies exact artifact/command/original-actor tuple. No generic operation lookup.",
+      "invariant": "One exact receiving grant owns the authenticated encrypted original artifact ticket/result after EvidenceArtifact first admitted and pinned availability with frozen202. Complete required held source uses and exact issue DecisionAt precede native issued-v2; cancellation fences delayed issuance and terminal proofs settle all uses. Original expiry never renews under the same root identity. Existing artifact-issued v1 decoder remains read-only compatibility."
+    },
+    {
+      "owner": "ArtifactEngagementHold",
+      "classification": "business_aggregate",
+      "identity": "Tenant / artifact-engagement-holds / HoldId, bound to exact artifact, engagement and report issuance. Selected mutations use CommandId.",
+      "invariant": "One preservation hold cannot release before one year after its exact report issuance; report identity and release decision are immutable."
+    },
+    {
+      "owner": "ArtifactLegalHold",
+      "classification": "business_aggregate",
+      "identity": "holdId",
+      "invariant": "One legal hold lifecycle and one exact release after placement."
+    },
+    {
+      "owner": "ArtifactRetentionBasis",
+      "classification": "business_aggregate",
+      "identity": "artifactContentId",
+      "invariant": "One supported retention basis for exact content identity."
+    },
+    {
+      "owner": "AuditObservation",
+      "classification": "business_aggregate",
+      "identity": "Tenant / audit-observations / ObservationId, with immutable ProgramId and examination/source lineage; the exact selected command selector addresses a mutation.",
+      "invariant": "Received auditor source corrections preserve examination/snapshot and exact source lineage; response/link commands must name current source version, and each selected command identity has immutable intent."
+    },
+    {
+      "owner": "AuditOutcome",
+      "classification": "business_aggregate",
+      "identity": "Tenant / audit-outcomes / OutcomeId, with immutable ProgramId, delivered package and snapshot provenance. OutcomeId is the selected immutable creation identity.",
+      "invariant": "One auditor-supplied report conclusion is immutable for its outcome identity and exact delivered package/snapshot provenance."
+    },
+    {
+      "owner": "AuditPackageDelivery",
+      "classification": "business_aggregate",
+      "identity": "tenant / (packageId, manifestVersion, deliveryId)",
+      "invariant": "One delivery authorization and terminal delivery for exact recipient/version."
+    },
+    {
+      "owner": "AuditPackageManifest",
+      "classification": "business_aggregate",
+      "identity": "packageId",
+      "invariant": "Manifest identity, selected immutable content version and delivery gate."
+    },
+    {
+      "owner": "AuditPopulation",
+      "classification": "business_aggregate",
+      "identity": "Tenant / audit-populations / PopulationId. Selected definition creation is identified by DefinitionId; later selected commands use their exact CommandId or GenerationKey and population/source scope from the signature.",
+      "invariant": "One population owns complete current definition/source/row classification, reconciliation invalidation, completeness proof and freeze seal. Immutable row/version bodies are values outside retained command state; no independent AuditPopulationRowDecision root or projected-count freeze authority."
+    },
+    {
+      "owner": "AuditorFeedbackThread",
+      "classification": "business_aggregate",
+      "identity": "(requestId, threadId)",
+      "invariant": "Independent comments and responses with stable command identity."
+    },
+    {
+      "owner": "AuditorRequest",
+      "classification": "business_aggregate",
+      "identity": "requestId",
+      "invariant": "Admission seal, response-completeness and final resolution decision."
+    },
+    {
+      "owner": "AuditorResponse",
+      "classification": "business_aggregate",
+      "identity": "(requestId, responseId)",
+      "invariant": "One response draft, independent disclosure review, delivery and exact disposition lifecycle. Response admission and disposition remain linked to the parent request through immutable proofs."
+    },
+    {
+      "owner": "AuditorSampleSelection",
+      "classification": "business_aggregate",
+      "identity": "(requestId, selectionId)",
+      "invariant": "Independent exact sample selection lifecycle."
+    },
+    {
+      "owner": "ClientExport",
+      "classification": "business_aggregate",
+      "identity": "Tenant / client-exports / ExportId, with exact approved frozen inventory, attempt identity and attest-package proofs. ExportId creates the export; selected mutations use their declared CommandId/PackageId.",
+      "invariant": "Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package."
+    },
+    {
+      "owner": "ClientIndependenceDecision",
+      "classification": "immutable_business_artifact_or_decision",
+      "identity": "tenant / evaluationId",
+      "invariant": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance."
+    },
+    {
+      "owner": "ClientService",
+      "classification": "business_aggregate",
+      "identity": "Tenant + caller ServiceId; creation uses that identity and mutations use caller CommandId.",
+      "invariant": "Once retired a service cannot be revised, and its program identity cannot be rebound; create identity is immutable."
+    },
+    {
+      "owner": "ClientServiceIndependence",
+      "classification": "business_governor",
+      "identity": "tenant / client-service-epoch",
+      "invariant": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads."
+    },
+    {
+      "owner": "CommitmentDraft",
+      "classification": "business_aggregate",
+      "identity": "Tenant + ProgramId + normalized kind/identifier retain the existing deterministic UUIDv5 owner algorithm. Supplied DraftId must equal that existing identity; later selected commands use CommandId and the exact draft/version/review bindings.",
+      "invariant": "One tenant/program/kind/identifier has immutable identity/source creation, revisioned authored content, exact verified-source accepted review and independent approval that publishes strictly later effective versions; retired commitment remains terminal."
+    },
+    {
+      "owner": "ComplianceIncident",
+      "classification": "business_aggregate",
+      "identity": "Tenant / compliance-incidents / IncidentId, with immutable ProgramId. IncidentId is the selected immutable creation identity; later selected commands use CommandId and the exact incident/version/proof bindings.",
+      "invariant": "One incident version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement; incident resolution requires every admitted follow-up work item completed."
+    },
+    {
+      "owner": "ComplianceProgram",
+      "classification": "business_aggregate",
+      "identity": "Tenant + caller ProgramId; creation uses that identity and later mutations use caller CommandId.",
+      "invariant": "Program target dates must form a coherent chronological plan; one program identity has immutable creation intent. Criteria selection separately chooses current edition."
+    },
+    {
+      "owner": "ControlCriterionMapping",
+      "classification": "business_aggregate",
+      "identity": "(programId, controlId, editionId, criterionId)",
+      "invariant": "One mapping tuple proposal and immutable approved successor line."
+    },
+    {
+      "owner": "ControlDraft",
+      "classification": "business_aggregate",
+      "identity": "Tenant / controls / ControlId; supplied ControlId must equal the existing tenant/program/normalized-identifier UUIDv5. Later selected commands use CommandId and the exact control/version/review bindings.",
+      "invariant": "Only the exact current draft or retirement can be independently reviewed then activated, and accepted successor/retirement changes one control version line without overlapping effective intervals. Responsibilities cannot create unwaived conflicts with decisions already made on the exact revision."
+    },
+    {
+      "owner": "ControlEvaluation",
+      "classification": "business_aggregate",
+      "identity": "tenant / evaluationId",
+      "invariant": "One evaluation including steps, conclusions, review and deviation dispositions. A retest is a new evaluationId using this same type and an immutable predecessor evaluation/version proof."
+    },
+    {
+      "owner": "ControlEvaluationPlan",
+      "classification": "business_aggregate",
+      "identity": "Tenant / control-evaluation-plans / ControlId, with immutable ProgramId. PlanVersionId identifies the selected immutable definition operation and its complete procedure/author/source intent.",
+      "invariant": "A plan version has a stable identity and immutable procedure; only a successor to the current plan version can be appended and exact duplicate identity must have the same content."
+    },
+    {
+      "owner": "ControlOccurrence",
+      "classification": "business_aggregate",
+      "identity": "(tenantId, programId, controlId, businessWindow)",
+      "invariant": "One planned/attested/corrected/reviewed occurrence for a control performance window."
+    },
+    {
+      "owner": "ControlOperatingPlan",
+      "classification": "business_aggregate",
+      "identity": "(tenantId, programId, controlId)",
+      "invariant": "One independently approved, non-overlapping plan version line for a control."
+    },
+    {
+      "owner": "CorrectiveAction",
+      "classification": "business_aggregate",
+      "identity": "(findingId, actionId)",
+      "invariant": "Independent corrective-action lifecycle, evidence and completion proof."
+    },
+    {
+      "owner": "CriteriaTextOverlay",
+      "classification": "business_aggregate",
+      "identity": "(editionId, normalizedCriterionId)",
+      "invariant": "One licensed text overlay and sequential revision line."
+    },
+    {
+      "owner": "CriterionApplicability",
+      "classification": "business_aggregate",
+      "identity": "(programId, editionId, criterionId)",
+      "invariant": "One applicability decision lineage."
+    },
+    {
+      "owner": "DataFlow",
+      "classification": "business_aggregate",
+      "identity": "Tenant + caller DataFlowId under the preserved shared technology-inventory address/sentinel scheme.",
+      "invariant": "One tenant inventory identity has one record kind; flow endpoint/asset scope and encryption or approved-exception terms must match highest admitted carried classification, and effective date never moves backward."
+    },
+    {
+      "owner": "DeclaredApplication",
+      "classification": "business_aggregate",
+      "identity": "applicationId",
+      "invariant": "Application creation, metadata revision, retirement and import admission generation."
+    },
+    {
+      "owner": "DeclaredSystemInstance",
+      "classification": "business_aggregate",
+      "identity": "Tenant + caller SystemInstanceId with immutable owning application/program scope.",
+      "invariant": "One system instance has one immutable application parent and registered identity; metadata revisions and terminal retirement follow its own expected revision."
+    },
+    {
+      "owner": "EmailAddress",
+      "classification": "business_aggregate",
+      "identity": "Existing UUIDv5 of the normalized email address. ChallengeId and selected CommandId are distinct stable operation identities bound to this exact address, owner and recovery episode.",
+      "invariant": "A normalized address reserves exactly one platform user; verification requires its current challenge; a claimed recovery binds one old/replacement pair."
+    },
+    {
+      "owner": "EngagementManagementAcknowledgement",
+      "classification": "immutable_business_artifact_or_decision",
+      "identity": "tenant / acknowledgementId",
+      "invariant": "One personal management acknowledgement bound to exact engagement revision and complete service history."
+    },
+    {
+      "owner": "EvidenceArtifact",
+      "classification": "business_aggregate",
+      "identity": "Tenant / existing EvidenceStreams artifact key / ArtifactId, with immutable source identity and verified content binding. ArtifactId identifies registration; selected mutations use CommandId. Download grants use the separately adopted artifact-qualified receiving identity.",
+      "invariant": "Immutable content remains unavailable until clean inspection; malware alone can be released with attributed clean rescan; secret/invalid rejection is final."
+    },
+    {
+      "owner": "EvidenceHandlingPolicy",
+      "classification": "business_aggregate",
+      "identity": "Existing UUIDv5 of TenantId + ArtifactId; selected CommandId is bound to the exact artifact/content and policy assignment scope.",
+      "invariant": "One exact artifact identity has one current reviewed classification, changed only at expected revision with attributed rationale."
+    },
+    {
+      "owner": "EvidenceRedaction",
+      "classification": "business_aggregate",
+      "identity": "Tenant / evidence-redactions / RedactionId, with exact source artifact/content/version. Selected preparations, approvals and other mutations use CommandId.",
+      "invariant": "A redaction approval must target current exact original/derived preparation and be independent of its preparer unless exact scoped waiver proof authorizes self-approval."
+    },
+    {
+      "owner": "EvidenceRequest",
+      "classification": "business_aggregate",
+      "identity": "requestId",
+      "invariant": "One open-to-fulfilled/cancelled lifecycle."
+    },
+    {
+      "owner": "EvidenceSupport",
+      "classification": "business_aggregate",
+      "identity": "Existing deterministic UUIDv5 of tenant + program/artifact/type/target/revision/period. Selected CommandId binds the exact immutable relationship and actor; the tuple algorithm is unchanged.",
+      "invariant": "One relationship identity immutably binds exact artifact content/revision, target revision and covered period with attributed sufficiency rationale."
+    },
+    {
+      "owner": "ExaminationEngagement",
+      "classification": "business_aggregate",
+      "identity": "Tenant / examinations / ExaminationId, with immutable ProgramId and exact baseline/amendment identities. ExaminationId identifies creation; selected mutations use CommandId and exact source-version bindings.",
+      "invariant": "Freeze locks Type I setup to exact approved boundary and complete source coverage; amendments preserve prior baseline and enumerate changed sources."
+    },
+    {
+      "owner": "ExaminationSignOff",
+      "classification": "business_aggregate",
+      "identity": "Tenant / examination-signoffs / SignOffId, with exact examination, package/snapshot, signer and role binding. SignOffId is the selected immutable creation identity.",
+      "invariant": "One final personal management decision binds exact package/assertion/letter/outcome and acknowledges exactly every unresolved material item."
+    },
+    {
+      "owner": "FindingAggregate",
+      "classification": "business_aggregate",
+      "identity": "(tenantId, programId, findingId)",
+      "invariant": "Finding description, status and closure admission generation."
+    },
+    {
+      "owner": "FirmProfessionalDutyDesignation",
+      "classification": "business_aggregate",
+      "identity": "platform / (canonicalUserId, duty, nullable tenantScope)",
+      "invariant": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID."
+    },
+    {
+      "owner": "FirmStaffIdentityClaim",
+      "classification": "business_identity_or_uniqueness_authority",
+      "identity": "platform / canonicalUserId",
+      "invariant": "Permanent canonical user to staffMemberId/practice mapping; disable/status changes never release this mapping."
+    },
+    {
+      "owner": "FirmStaffRecord",
+      "classification": "business_aggregate",
+      "identity": "platform / staffMemberId",
+      "invariant": "Immutable canonical user, practice and registration source, plus one staff record active/status revision."
+    },
+    {
+      "owner": "IdentityRecovery",
+      "classification": "business_aggregate",
+      "identity": "platform / challengeId",
+      "invariant": "Immutable both-proof-verified candidate and preparation; complete protection proofs precede accepted exact swap. Preparation can reject/fence; accepted swap completes forward. Exact account, old/replacement identities and actor/proof provenance retained without bearer tokens."
+    },
+    {
+      "owner": "ImmutableSnapshot",
+      "classification": "immutable_business_artifact_or_decision",
+      "identity": "Tenant + selected SnapshotId, immutable canonical manifest and exact amendment lineage; no generated creation fallback.",
+      "invariant": "One snapshot identity can freeze exactly one canonical manifest/hash with immutable, attributed amendment lineage."
+    },
+    {
+      "owner": "IndependenceRuleCatalog",
+      "classification": "business_governor",
+      "identity": "Existing fixed CatalogId in its existing platform scope; selected CommandId binds exact rule version and expected catalog sequence.",
+      "invariant": "Authored independence rules advance consecutively and cannot falsely claim professional ratification."
+    },
+    {
+      "owner": "IndependenceRuleRatificationCatalog",
+      "classification": "business_governor",
+      "identity": "Existing fixed CatalogId in its existing platform scope; selected CommandId binds exact ratification identity, rule version and expected catalog sequence.",
+      "invariant": "Only valid professional proof can ratify an exact immutable rule digest, and active ratified rule version advances monotonically."
+    },
+    {
+      "owner": "InformationAsset",
+      "classification": "business_aggregate",
+      "identity": "Tenant + caller InformationAssetId under the preserved shared technology-inventory address/sentinel scheme.",
+      "invariant": "One tenant inventory identity has one record kind and one revisioned information classification/retention/owner/lifecycle record."
+    },
+    {
+      "owner": "Location",
+      "classification": "business_aggregate",
+      "identity": "locationId",
+      "invariant": "Independent location record lifecycle."
+    },
+    {
+      "owner": "LocationNameClaim",
+      "classification": "business_identity_or_uniqueness_authority",
+      "identity": "(tenantId, locationKind, normalizedName)",
+      "invariant": "Authoritative active-name uniqueness claim."
+    },
+    {
+      "owner": "ManagementAssertion",
+      "classification": "business_aggregate",
+      "identity": "Tenant / management-assertions / AssertionId, with immutable ProgramId/examination scope. AssertionId identifies creation; selected mutations use CommandId and exact asserted version/source proofs.",
+      "invariant": "One exact current authored assertion version receives at most one immutable independent named CEO/CISO decision; revision creates changed wording/input bindings."
+    },
+    {
+      "owner": "ManagementRepresentationLetter",
+      "classification": "business_aggregate",
+      "identity": "Tenant / management-representation-letters / LetterId, with exact examination and document content. LetterId identifies creation; selected signature mutations use CommandId with the exact signer and version.",
+      "invariant": "Letter becomes signed exactly when every fixed named required signer has one immutable distinct signed artifact; no unlisted signer may sign."
+    },
+    {
+      "owner": "Member",
+      "classification": "business_aggregate",
+      "identity": "Existing UUIDv5 of TenantId + UserId; membership episodes remain distinct and exact. Selected CommandId binds the original member/episode and intended transition.",
+      "invariant": "One tenant-user membership has one affiliation/expiry episode; deprovision closes authority and a fresh episode cannot start until authority cleanup completes."
+    },
+    {
+      "owner": "MethodologyTemplate",
+      "classification": "business_aggregate",
+      "identity": "Platform bdgrz + caller TemplateId; mutation CommandId is distinct from server-frozen version values.",
+      "invariant": "Publish current authored template only after independent review and distinct third-party approver; published content immutable; retirement stops further template revisions. Contributed records require exact accepted deidentified provenance."
+    },
+    {
+      "owner": "MethodologyTemplateContribution",
+      "classification": "business_aggregate",
+      "identity": "Tenant / methodology-template-contributions / ContributionId, with exact immutable proposal/source/template lineage. ContributionId identifies creation; selected review/acceptance mutations use CommandId.",
+      "invariant": "Only immutable proposed deidentified record that receives independent approved review then acceptance by a third platform operator becomes shareable; tenant/source lineage stays in tenant-owned stream."
+    },
+    {
+      "owner": "OperationalProcess",
+      "classification": "business_aggregate",
+      "identity": "processId",
+      "invariant": "Independent governed operational process lifecycle."
+    },
+    {
+      "owner": "OperationalProcessNameClaim",
+      "classification": "business_identity_or_uniqueness_authority",
+      "identity": "(tenantId, normalizedName)",
+      "invariant": "Authoritative active normalized-name uniqueness."
+    },
+    {
+      "owner": "PartnerIndependenceDecision",
+      "classification": "immutable_business_artifact_or_decision",
+      "identity": "tenant / evaluationId",
+      "invariant": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest."
+    },
+    {
+      "owner": "Person",
+      "classification": "business_aggregate",
+      "identity": "Tenant + caller PersonId; PersonId is exact immutable creation logical identity. Revise/correlation use caller CommandId and person revision.",
+      "invariant": "One recorded workforce person has immutable creation identity, revisioned contact content and at most one current platform membership correlation."
+    },
+    {
+      "owner": "PlatformOperatorRoster",
+      "classification": "business_governor",
+      "identity": "Existing fixed platform roster ID bc279ad5-e9ae-5033-a174-4d1350ce2b07. The complete current UserId/AssignmentId episode set is one authority; selected RosterId must match the fixed roster and mutations use CommandId.",
+      "invariant": "One atomic platform roster decision binds every exact active operator identity and assignment episode, current acting-operator eligibility, and the last-operator prohibition. Keep all current identities in verified immutable authority with native OCC; no count-only substitute, membership cap, or separate PlatformOperatorGrant root."
+    },
+    {
+      "owner": "Policy",
+      "classification": "business_aggregate",
+      "identity": "Tenant / policies / PolicyId; supplied PolicyId must equal the unchanged tenant/program/normalized-identifier UUIDv5. Selected mutations use CommandId and exact policy/content/version/review bindings.",
+      "invariant": "A policy has one pending revision/retirement; immutable approved version intervals form one successor line, activation needs the latest accepted independent review and independent approval, and retired/approved content cannot be edited."
+    },
+    {
+      "owner": "PolicyCampaignParticipant",
+      "classification": "business_aggregate",
+      "identity": "(campaignId, personId)",
+      "invariant": "Independent acknowledgement, completion, exception and delivery status."
+    },
+    {
+      "owner": "PolicyDistributionCampaign",
+      "classification": "business_aggregate",
+      "identity": "campaignId",
+      "invariant": "Immutable policy/material version and frozen audience plus closure generation."
+    },
+    {
+      "owner": "PopulationSnapshot",
+      "classification": "immutable_business_artifact_or_decision",
+      "identity": "Tenant / population-snapshots / SnapshotId, with exact immutable root/amendment lineage and canonical population identity. Storage chunk identities remain deterministic storage values, separate from the business snapshot.",
+      "invariant": "Freeze exactly one canonical immutable population identity, optionally a manifest over ordered immutable chunk identities; amendments have separate roots."
+    },
+    {
+      "owner": "PracticeIndependenceCommitment",
+      "classification": "business_identity_or_uniqueness_authority",
+      "identity": "tenant / (subjectKind, subjectId)",
+      "invariant": "Permanent practice binding for subjectKind=staff or canonical_user; acquire both user and staff subjects in canonical stream-key order. No release/revoke command exists."
+    },
+    {
+      "owner": "ProfessionalAssertionIdentityClaim",
+      "classification": "business_identity_or_uniqueness_authority",
+      "identity": "platform / assertionId",
+      "invariant": "Permanent binding of signed assertion identity to digest, designation, canonical user and duty scope; claim identity cannot be recycled."
+    },
+    {
+      "owner": "ProgramReadiness",
+      "classification": "business_governor",
+      "identity": "tenant / programId",
+      "invariant": "Compact latest-assessment pointer, decision admission/seal generation, latest management decision and permanent approved Type I entry pointer. Serialize latest-assessment adoption with decision append; keep full assessment/decision content in immutable manifests. Run admission precedes child computation and reserves exactly one pending latest-adoption generation."
+    },
+    {
+      "owner": "ProgramRollover",
+      "classification": "business_aggregate",
+      "identity": "Tenant / program-rollovers / RolloverId, with exact source program/version and successor proof. RolloverId identifies creation; selected mutations use CommandId.",
+      "invariant": "One exact carry-forward proposal version needs independent approved decision before recording exact successor period/plan identities; completed source provenance remains immutable."
+    },
+    {
+      "owner": "Provider",
+      "classification": "business_aggregate",
+      "identity": "providerId",
+      "invariant": "One provider content, version and retirement lifecycle."
+    },
+    {
+      "owner": "ProviderAssuranceGap",
+      "classification": "business_aggregate",
+      "identity": "(tenantId, providerId, gapId)",
+      "invariant": "One current assurance gap with exact source-version and closure lineage."
+    },
+    {
+      "owner": "ProviderAssuranceReport",
+      "classification": "business_aggregate",
+      "identity": "(tenantId, providerId, reportId)",
+      "invariant": "Evidence report for one provider and exact provider revision."
+    },
+    {
+      "owner": "ProviderAssuranceReview",
+      "classification": "business_aggregate",
+      "identity": "tenant / reviewId",
+      "invariant": "One immutable personal same-provider due-diligence review bound to exact report revision, evidence kind, validity window and cadence."
+    },
+    {
+      "owner": "ProviderNameClaim",
+      "classification": "business_identity_or_uniqueness_authority",
+      "identity": "(tenantId, normalizedGovernedName)",
+      "invariant": "Authoritative unique active name reservation."
+    },
+    {
+      "owner": "ProviderRiskAcceptance",
+      "classification": "business_aggregate",
+      "identity": "tenant / linkId (equal to the admitting CommandId)",
+      "invariant": "One immutable accepted-risk linkage admitted on an open provider gap; source gap serializes duplicate tuple and closure. Never owns gap closure."
+    },
+    {
+      "owner": "ReadinessAssessment",
+      "classification": "business_aggregate",
+      "identity": "assessmentId",
+      "invariant": "One immutable assessment source/rule revision and findings."
+    },
+    {
+      "owner": "ReadinessGapPlan",
+      "classification": "business_aggregate",
+      "identity": "tenant / (programId, gapId)",
+      "invariant": "One stable gap action/owner/date plan and independent annotations; admission/seal generation fences changes during a readiness decision."
+    },
+    {
+      "owner": "RiskDraft",
+      "classification": "business_aggregate",
+      "identity": "Tenant / risks / RiskId; supplied RiskId must equal the unchanged tenant/program/normalized-identifier UUIDv5. Selected mutations use CommandId and exact authored-content revision.",
+      "invariant": "Normalized identifier has one creation identity/content within tenant/program and narrative updates require current revision. No additional risk-governance decision is made by this class."
+    },
+    {
+      "owner": "RiskEvaluation",
+      "classification": "business_aggregate",
+      "identity": "Tenant / risk-evaluations / RiskId, with immutable ProgramId and exact method/risk version. Selected CommandId binds assessment/acceptance intent and expected evaluation revision.",
+      "invariant": "Assessment phases follow inherent/current method; residual requires treatment and mitigate admission proof; acceptance must name current residual and accept treatment, satisfy score/appetite/authority/expiry, and be independent from assessor/owner unless exactly waived."
+    },
+    {
+      "owner": "RiskGovernance",
+      "classification": "business_aggregate",
+      "identity": "riskId",
+      "invariant": "One risk\u2019s governance and reassessment obligations."
+    },
+    {
+      "owner": "RiskMethod",
+      "classification": "business_aggregate",
+      "identity": "Existing tenant-scoped risk-method identity derived from ProgramId by the unchanged UUIDv5 algorithm. Selected CommandId identifies publication of one exact method/version intent.",
+      "invariant": "The program method advances sequentially by expected published version and each immutable definition has complete valid 5x5 scales and permitted appetite."
+    },
+    {
+      "owner": "RiskTreatmentAction",
+      "classification": "business_aggregate",
+      "identity": "actionId",
+      "invariant": "One accountable action, completion and independent review lifecycle."
+    },
+    {
+      "owner": "RiskTreatmentAssertion",
+      "classification": "business_aggregate",
+      "identity": "(riskId, controlId)",
+      "invariant": "One pending/accepted assertion line per risk/control."
+    },
+    {
+      "owner": "Role",
+      "classification": "business_aggregate",
+      "identity": "Tenant + RoleId; built-in identities remain fixed. RoleId identifies immutable creation; selected mutations use CommandId with current authorized role scope.",
+      "invariant": "One role has one active/deleted lifecycle, normalized display name and built-in protection."
+    },
+    {
+      "owner": "RolePermission",
+      "classification": "business_aggregate",
+      "identity": "Existing UUIDv5 of tenant + role + normalized permission. Selected CommandId and assignment episode bind the exact assignment/removal intent.",
+      "invariant": "One normalized role-permission tuple has a single active relationship at a time."
+    },
+    {
+      "owner": "SeparationOfDutiesWaiver",
+      "classification": "business_aggregate",
+      "identity": "Tenant + caller WaiverId; original approval scope/subject/revision remains immutable.",
+      "invariant": "Exact record/version/action/beneficiary exception can be approved once only by a different administrator who is neither requester nor beneficiary, during its validity window."
+    },
+    {
+      "owner": "ServiceEngagementIndependence",
+      "classification": "business_aggregate",
+      "identity": "tenant / engagementId",
+      "invariant": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently."
+    },
+    {
+      "owner": "ServiceIdentity",
+      "classification": "business_aggregate",
+      "identity": "Tenant + caller ServiceIdentityId; creation uses that identity and revisions use caller CommandId.",
+      "invariant": "One governed nonhuman identity has exactly one accountable person/team owner, approved purpose, valid lifecycle/expiry and review date within one year."
+    },
+    {
+      "owner": "SignificantChange",
+      "classification": "business_aggregate",
+      "identity": "Tenant / significant-changes / ChangeId, with immutable ProgramId. ChangeId is the selected immutable creation identity; later selected commands use CommandId and exact changed-version/source bindings.",
+      "invariant": "One change version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement."
+    },
+    {
+      "owner": "SystemBoundary",
+      "classification": "business_aggregate",
+      "identity": "Tenant + caller BoundaryId with exact immutable program scope and selected stable draft identities.",
+      "invariant": "A boundary has one current draft; approval requires latest accepted review of exact draft revision, an independent/waived actor and strictly increasing approved effective date; exact-scope responsibility changes cannot create retroactive unwaived decision conflict."
+    },
+    {
+      "owner": "SystemDescription",
+      "classification": "business_aggregate",
+      "identity": "(tenantId, programId, descriptionId)",
+      "invariant": "Immutable narrative versions, completeness and approval against exact source snapshot."
+    },
+    {
+      "owner": "SystemInstanceAccessReviewScope",
+      "classification": "business_aggregate",
+      "identity": "Tenant + SystemInstanceId in its existing access-review-scope address, with exact current instance version. Selected CommandId binds the decision and its exact scope/version/effective terms.",
+      "invariant": "Scope decisions for one instance advance a monotonic effective date and expected decision sequence with independent approver or exact-scope waiver."
+    },
+    {
+      "owner": "Team",
+      "classification": "business_aggregate",
+      "identity": "Tenant + TeamId; TeamId is immutable creation identity. Selected mutations use CommandId and the exact team binding.",
+      "invariant": "One team definition has an active/deleted lifecycle and built-in team cannot be deleted."
+    },
+    {
+      "owner": "TeamMember",
+      "classification": "business_aggregate",
+      "identity": "Existing UUIDv5 of tenant + team + member. Each assignment episode remains exact; selected native operation/receiver identity is bound to that member/team episode.",
+      "invariant": "One tenant/team/member relationship is active only for one current membership episode."
+    },
+    {
+      "owner": "TeamRole",
+      "classification": "business_aggregate",
+      "identity": "Existing UUIDv5 of tenant + team + role. Selected CommandId binds the exact assignment episode and removal intent.",
+      "invariant": "One tenant/team/role relationship has a single active assignment."
+    },
+    {
+      "owner": "TechnologyComponent",
+      "classification": "business_aggregate",
+      "identity": "Tenant + caller ComponentId using preserved TechnologyInventoryStreams identity; cloud-account identity remains bound to its selected system instance.",
+      "invariant": "One tenant inventory identity has exactly one record kind; a component keeps immutable category/system-instance binding, cloud account keyed to its unique instance, and category-specific valid content/lifecycle."
+    },
+    {
+      "owner": "TemplateApplication",
+      "classification": "business_aggregate",
+      "identity": "Tenant / template-applications / existing UUIDv5 of ProgramId and TemplateId + trimmed ApplicationKey. ApplicationKey is the selected logical creation key; per-entry UUIDv5(applicationId, entryKey) and selected mutation CommandIds remain exact.",
+      "invariant": "One application pins exact published template provenance, fixed planned tenant draft identities and completion state; one pending later-version adoption proposal receives one immutable disposition before next successor."
+    },
+    {
+      "owner": "Tenant",
+      "classification": "business_aggregate",
+      "identity": "Caller TenantId is immutable tenant creation identity; lifecycle operations use caller CommandId.",
+      "invariant": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time."
+    },
+    {
+      "owner": "TenantIdentityProvider",
+      "classification": "business_aggregate",
+      "identity": "Tenant + ProviderConnectionId with immutable tenant binding. Selected CommandId and TestKey bind exact configuration, test, key and rotation episodes.",
+      "invariant": "Connection enables only with successful test of current credential epoch; rotation invalidates pending/old result; disabled connection stays terminal."
+    },
+    {
+      "owner": "TenantInvitation",
+      "classification": "business_aggregate",
+      "identity": "invitationId",
+      "invariant": "One immutable offer, token acceptance and terminal lifecycle; each invitation has exact recipient, purpose, scopes and expiry."
+    },
+    {
+      "owner": "TenantInvitationMailboxClaim",
+      "classification": "business_identity_or_uniqueness_authority",
+      "identity": "tenant / normalizedEmail",
+      "invariant": "At most one pending invitation per mailbox. InvitationId and generation live in state and every release compares both; generation is never part of the stream key."
+    },
+    {
+      "owner": "TenantManagerGuard",
+      "classification": "business_governor",
+      "identity": "Tenant singleton manager guard in its existing address. Selected CommandId binds exact contributor/member episode, generation and withdrawal/restoration transition; current complete eligible contributors remain authoritative.",
+      "invariant": "Removal from effective administrator set must leave another active tenant administrator."
+    },
+    {
+      "owner": "TenantSlug",
+      "classification": "business_identity_or_uniqueness_authority",
+      "identity": "Existing UUIDv5 of normalized slug. Selected CommandId binds exact claimant tenant and reservation episode; the existing normalization and UUID algorithm remain unchanged.",
+      "invariant": "One normalized global slug can belong to one tenant and once surrendered is permanently retired."
+    },
+    {
+      "owner": "TrainingRequirement",
+      "classification": "business_aggregate",
+      "identity": "(tenantId, programId, normalizedRequirementId)",
+      "invariant": "One normalized training requirement creation and version line."
+    },
+    {
+      "owner": "TypeIIObservationCalendar",
+      "classification": "business_governor",
+      "identity": "Tenant / type-ii-observation-calendars / ProgramId. Every active reservation remains bound to exact PeriodId/opening intent; release/cancel/close operations retain exact selected period, generation and terminal source proof.",
+      "invariant": "Active program Type II date ranges, including both current and reserved amendment ranges, must never overlap; a pending amendment must finish or cancel before date range release."
+    },
+    {
+      "owner": "TypeIIPeriod",
+      "classification": "business_aggregate",
+      "identity": "Tenant / type-ii-periods / PeriodId, with immutable ProgramId and exact accepted plan/opening. PeriodId identifies creation; selected CommandId/GenerationKey identify exact freeze/reconciliation/amendment operations and their immutable closing identities.",
+      "invariant": "One period binds exact approved opening plan/population; close must reconcile the approved expected population, independently acknowledge all unresolved material items, and freeze the same approved sources. Close amendments preserve original expected population/acknowledgements and chain exact changed sources."
+    },
+    {
+      "owner": "TypeIIPlan",
+      "classification": "business_aggregate",
+      "identity": "Tenant / type-ii-plans / PlanId, with immutable ProgramId. PlanId identifies creation; selected mutations use CommandId with exact plan version/source/decision bindings.",
+      "invariant": "Only current proposed content with exact carried-gap acknowledgements receives an independent review; executive approval requires review and three distinct roles, after which plan is immutable."
+    },
+    {
+      "owner": "UserIdentity",
+      "classification": "business_aggregate",
+      "identity": "Existing UUIDv5 of identity provider + subject. Exact registration/user binding and revoke/replacement episode remain immutable; native operation terms retain that full binding.",
+      "invariant": "External provider+subject associates to exactly one platform user; revoked identity cannot authenticate and has one exact replacement."
+    },
+    {
+      "owner": "WorkDigestPreference",
+      "classification": "business_aggregate",
+      "identity": "Tenant / work-digest-preferences / MemberId. Selected CommandId binds the exact preference update; unchanged values still have an original recorded result under the adopted preference decision.",
+      "invariant": "One member stores current notification consent and valid scheduling time zone; identical current setting is no-op. This is chiefly a settings state holder, with no multi-part business invariant identified."
+    },
+    {
+      "owner": "WorkItemAssignment",
+      "classification": "business_aggregate",
+      "identity": "Tenant / work-item-assignments / existing UUIDv5 of ProgramId and WorkItemId. Selected CommandId binds original actor, exact source work identity and assignment episode; imported ledger history is read-only provenance.",
+      "invariant": "One source-derived work item has current assignee/escalation revision; escalation is accepted at most once, assignment commands require expected revision. Source eligibility and completion belong to producing workflow."
+    },
+    {
+      "owner": "WorkRelationship",
+      "classification": "business_aggregate",
+      "identity": "Existing tenant-scoped UUIDv5 of normalized SourceWorkerId. Supplied RelationshipId must equal that unchanged algorithm; selected revisions use CommandId with exact person/membership/source-worker binding.",
+      "invariant": "One stable source worker ID belongs permanently to one person; end date/status and sponsor/self-manager constraints must form valid governed relationship at each revision."
+    },
+    {
+      "owner": "WorkforceObservationResolution",
+      "classification": "business_aggregate",
+      "identity": "Tenant + ObservationId, with immutable source observation identity. Selected CommandId binds the exact normalized resolution/note and authorized actor.",
+      "invariant": "One observation may receive one final attributed resolved/dismissed decision; changed resolution intent conflicts."
+    },
+    {
+      "owner": "WorkforceSourceObservation",
+      "classification": "business_aggregate",
+      "identity": "Existing UUIDv5 of tenant + length-prefixed source kind/system/record/revision tuple. Supplied ObservationId must equal the unchanged IdFor result; selected mutations use CommandId with the exact source tuple.",
+      "invariant": "One immutable external source revision has one target/fact correlation and at most one final attributed reconciliation decision tied to exact canonical revision."
+    }
+  ],
+  "declaredTechnicalOwnerCount": 13,
+  "technicalOwnerNames": [
+    "AuditPackageBuildProcess",
+    "AuditPopulationExportProcess",
+    "EmailChallengeDeliveryLedger",
+    "FindingMigrationAggregate",
+    "IdentityRecoveryNoticeProcess",
+    "PopulationSnapshotChunk",
+    "ProgramScopeSnapshotProcess",
+    "RemediationMigrationFenceAggregate",
+    "SystemDescriptionExportProcess",
+    "TenantInvitationDeliveryProcess",
+    "WeeklyWorkDigest",
+    "WorkDigestDispatch",
+    "WorkforceRosterSnapshotProcess"
+  ],
+  "additionalLogicalTechnicalResponsibilities": [
+    {
+      "role": "WeeklyScheduling",
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "classification": "logical_technical_capture_and_page_result_journal",
+      "businessAggregate": false,
+      "countsAsNewBusinessOwner": false,
+      "identity": "Tenant/week/ScheduleKey complete captured source/recipient manifest and stable technical pagination; exact existing effect identities are preserved.",
+      "owns": "Durable capture before effects, original zero/partial-page response, resumable deterministic per-recipient WeeklyWorkDigest admissions and complete source-cut provenance.",
+      "physicalPlacement": "Separate logical capture/page-result responsibility. Exact physical native-journal or versioned-CAS placement is not selected here; no forced KV rewrite. Per-recipient delivery/unknown-outcome journals remain independently identified.",
+      "source": {
+        "path": "docs/product/audits/2026-10-24/weekly-schedule-placement-decision.json",
+        "jsonPointer": "/decision"
+      },
+      "authority": "Root-directed existing schedule placement correction; technical command/result ownership only.",
+      "logicalIdentity": {
+        "captureKey": [
+          "TenantId",
+          "Week",
+          "ScheduleKey"
+        ],
+        "pageIdentity": [
+          "CaptureIdentity",
+          "Cursor",
+          "Limit"
+        ],
+        "rule": "Pages address one captured complete source/recipient manifest; no new business owner per page."
+      }
+    }
+  ],
+  "joinRules": [
+    "Use exact selected event ownership before an earlier split-parent label.",
+    "canonicalOwner=null is deliberate: typed union, split allocation, transient rules or logical technical process; never pick the first child.",
+    "Technical native-journal/emitter placement and business authority are separate; do not force a KV rewrite.",
+    "Projection/legacy aliasing is semantic classification, not authorization to re-emit/convert stored facts or reuse old identities."
+  ],
+  "aliases": {
+    "AccessCampaignParticipant": {
+      "canonicalOwner": "AccessReviewItem",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AccessExpectation": {
+      "canonicalOwner": "AccessExpectation",
+      "disposition": "selected_business_authority"
+    },
+    "AccessExpectationException": {
+      "canonicalOwner": "AccessExpectation",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "AccessExpectationScopeGuard": {
+      "canonicalOwner": "AccessExpectation",
+      "disposition": "selected_explicit_override_absorbed",
+      "decisionId": "OWNER_AccessExpectationScopeGuard"
+    },
+    "AccessGrant": {
+      "canonicalOwner": "AccessGrant",
+      "disposition": "selected_business_authority"
+    },
+    "AccessPopulation": {
+      "canonicalOwner": "AccessPopulation",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "AccessPopulation",
+        "AccessPrincipalClassification"
+      ]
+    },
+    "AccessPopulationException": {
+      "canonicalOwner": "AccessPopulationException",
+      "disposition": "selected_business_authority"
+    },
+    "AccessPrincipalClassification": {
+      "canonicalOwner": "AccessPrincipalClassification",
+      "disposition": "selected_business_authority"
+    },
+    "AccessReviewCampaign": {
+      "canonicalOwner": "AccessReviewCampaign",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "AccessReviewCampaign",
+        "AccessReviewItem",
+        "AccessReviewDecisionBatch"
+      ]
+    },
+    "AccessReviewDecision": {
+      "canonicalOwner": "AccessReviewItem",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AccessReviewDecisionBatch": {
+      "canonicalOwner": "AccessReviewDecisionBatch",
+      "disposition": "selected_business_authority"
+    },
+    "AccessReviewItem": {
+      "canonicalOwner": "AccessReviewItem",
+      "disposition": "selected_business_authority"
+    },
+    "AccessReviewSystemLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "AccessExpectation",
+        "AccessPopulationException"
+      ]
+    },
+    "AdvisorFeedback": {
+      "canonicalOwner": "AdvisorFeedbackThread",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AdvisorFeedbackThread": {
+      "canonicalOwner": "AdvisorFeedbackThread",
+      "disposition": "selected_business_authority"
+    },
+    "AdvisorHandoff": {
+      "canonicalOwner": "AdvisorHandoff",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "AdvisorHandoff",
+        "AdvisorFeedbackThread"
+      ]
+    },
+    "ApplicationImportBatch": {
+      "canonicalOwner": "ApplicationImportBatch",
+      "disposition": "selected_business_authority"
+    },
+    "ApplicationImportCoordinator": {
+      "canonicalOwner": "ApplicationImportSource",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ApplicationImportExecution": {
+      "canonicalOwner": "ApplicationImportBatch",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ApplicationImportLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "ApplicationImportSource",
+        "ApplicationImportBatch"
+      ]
+    },
+    "ApplicationImportPlan": {
+      "canonicalOwner": "ApplicationImportBatch",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ApplicationImportSource": {
+      "canonicalOwner": "ApplicationImportSource",
+      "disposition": "selected_business_authority"
+    },
+    "ApplicationImportSourceGuard": {
+      "canonicalOwner": "ApplicationImportSource",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ApplicationRelationship": {
+      "canonicalOwner": "ApplicationRelationship",
+      "disposition": "selected_business_authority"
+    },
+    "ApplicationSourceClaim": {
+      "canonicalOwner": "ApplicationImportSource",
+      "disposition": "selected_explicit_override_absorbed",
+      "decisionId": "OWNER_ApplicationSourceClaim"
+    },
+    "ArtifactDisclosure": {
+      "canonicalOwner": "ArtifactDisclosure",
+      "disposition": "selected_business_authority"
+    },
+    "ArtifactDisposition": {
+      "canonicalOwner": "ArtifactDisposition",
+      "disposition": "selected_business_authority"
+    },
+    "ArtifactDownloadGrant": {
+      "canonicalOwner": "ArtifactDownloadGrant",
+      "disposition": "selected_business_authority"
+    },
+    "ArtifactEngagementHold": {
+      "canonicalOwner": "ArtifactEngagementHold",
+      "disposition": "selected_business_authority"
+    },
+    "ArtifactLegalHold": {
+      "canonicalOwner": "ArtifactLegalHold",
+      "disposition": "selected_business_authority"
+    },
+    "ArtifactRetention": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "ArtifactRetentionBasis",
+        "ArtifactLegalHold"
+      ]
+    },
+    "ArtifactRetentionBasis": {
+      "canonicalOwner": "ArtifactRetentionBasis",
+      "disposition": "selected_business_authority"
+    },
+    "AssuranceReport": {
+      "canonicalOwner": "ProviderAssuranceReport",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AuditObservation": {
+      "canonicalOwner": "AuditObservation",
+      "disposition": "selected_business_authority"
+    },
+    "AuditOutcome": {
+      "canonicalOwner": "AuditOutcome",
+      "disposition": "selected_business_authority"
+    },
+    "AuditPackage": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "AuditPackageManifest",
+        "AuditPackageBuildProcess",
+        "AuditPackageDelivery"
+      ]
+    },
+    "AuditPackageBuild": {
+      "canonicalOwner": "AuditPackageBuildProcess",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AuditPackageBuildProcess": {
+      "canonicalOwner": "AuditPackageBuildProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "AuditPackageDelivery": {
+      "canonicalOwner": "AuditPackageDelivery",
+      "disposition": "selected_business_authority"
+    },
+    "AuditPackageManifest": {
+      "canonicalOwner": "AuditPackageManifest",
+      "disposition": "selected_business_authority"
+    },
+    "AuditPackageRecipient": {
+      "canonicalOwner": "AuditPackageDelivery",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AuditPackageVersion": {
+      "canonicalOwner": "AuditPackageManifest",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "AuditPopulation": {
+      "canonicalOwner": "AuditPopulation",
+      "disposition": "selected_business_authority"
+    },
+    "AuditPopulationExportProcess": {
+      "canonicalOwner": "AuditPopulationExportProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "AuditPopulationRowDecision": {
+      "canonicalOwner": "AuditPopulation",
+      "disposition": "selected_explicit_override_absorbed",
+      "decisionId": "OWNER_AuditPopulationRowDecision"
+    },
+    "AuditPopulationVersion": {
+      "canonicalOwner": "AuditPopulation",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "AuditTestException": {
+      "canonicalOwner": "AuditObservation",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "AuditorFeedbackThread": {
+      "canonicalOwner": "AuditorFeedbackThread",
+      "disposition": "selected_business_authority"
+    },
+    "AuditorRequest": {
+      "canonicalOwner": "AuditorRequest",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "AuditorRequest",
+        "AuditorFeedbackThread",
+        "AuditorSampleSelection",
+        "AuditorResponse"
+      ]
+    },
+    "AuditorResponse": {
+      "canonicalOwner": "AuditorResponse",
+      "disposition": "selected_business_authority"
+    },
+    "AuditorSampleSelection": {
+      "canonicalOwner": "AuditorSampleSelection",
+      "disposition": "selected_business_authority"
+    },
+    "CampaignParticipant": {
+      "canonicalOwner": "PolicyCampaignParticipant",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "CampaignReconciliation": {
+      "canonicalOwner": "PolicyDistributionCampaign",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "ClientExport": {
+      "canonicalOwner": "ClientExport",
+      "disposition": "selected_business_authority"
+    },
+    "ClientIndependenceDecision": {
+      "canonicalOwner": "ClientIndependenceDecision",
+      "disposition": "selected_business_authority"
+    },
+    "ClientService": {
+      "canonicalOwner": "ClientService",
+      "disposition": "selected_business_authority"
+    },
+    "ClientServiceIndependence": {
+      "canonicalOwner": "ClientServiceIndependence",
+      "disposition": "selected_business_authority"
+    },
+    "CommitmentDraft": {
+      "canonicalOwner": "CommitmentDraft",
+      "disposition": "selected_business_authority"
+    },
+    "CommitmentVersion": {
+      "canonicalOwner": "CommitmentDraft",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "ComplianceIncident": {
+      "canonicalOwner": "ComplianceIncident",
+      "disposition": "selected_business_authority"
+    },
+    "ComplianceIncidentVersion": {
+      "canonicalOwner": "ComplianceIncident",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "ComplianceProgram": {
+      "canonicalOwner": "ComplianceProgram",
+      "disposition": "selected_business_authority"
+    },
+    "ControlCriterionMapping": {
+      "canonicalOwner": "ControlCriterionMapping",
+      "disposition": "selected_business_authority"
+    },
+    "ControlCriterionMappingLedger": {
+      "canonicalOwner": "ControlCriterionMapping",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "ControlDraft": {
+      "canonicalOwner": "ControlDraft",
+      "disposition": "selected_business_authority"
+    },
+    "ControlDueWorkItem": {
+      "canonicalOwner": "ControlOccurrence",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ControlEvaluation": {
+      "canonicalOwner": "ControlEvaluation",
+      "disposition": "selected_business_authority"
+    },
+    "ControlEvaluationLedger": {
+      "canonicalOwner": "ControlEvaluation",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "ControlEvaluationPlan": {
+      "canonicalOwner": "ControlEvaluationPlan",
+      "disposition": "selected_business_authority"
+    },
+    "ControlEvaluationPlanVersion": {
+      "canonicalOwner": "ControlEvaluationPlan",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "ControlOccurrence": {
+      "canonicalOwner": "ControlOccurrence",
+      "disposition": "selected_business_authority"
+    },
+    "ControlOperatingPlan": {
+      "canonicalOwner": "ControlOperatingPlan",
+      "disposition": "selected_business_authority"
+    },
+    "ControlOperationsLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "ControlOperatingPlan",
+        "ControlOccurrence"
+      ]
+    },
+    "ControlPerformanceOccurrence": {
+      "canonicalOwner": "ControlOccurrence",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ControlPlanReassignment": {
+      "canonicalOwner": null,
+      "disposition": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "ControlOperatingPlan",
+        "ControlOccurrence"
+      ]
+    },
+    "ControlVersion": {
+      "canonicalOwner": "ControlDraft",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "CorrectiveAction": {
+      "canonicalOwner": "CorrectiveAction",
+      "disposition": "selected_business_authority"
+    },
+    "CriteriaTextOverlay": {
+      "canonicalOwner": "CriteriaTextOverlay",
+      "disposition": "selected_business_authority"
+    },
+    "CriteriaTextOverlayEntry": {
+      "canonicalOwner": "CriteriaTextOverlay",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "CriteriaTextOverlayLedger": {
+      "canonicalOwner": "CriteriaTextOverlay",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "CriterionApplicability": {
+      "canonicalOwner": "CriterionApplicability",
+      "disposition": "selected_business_authority"
+    },
+    "CriterionApplicabilityLedger": {
+      "canonicalOwner": "CriterionApplicability",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "DataFlow": {
+      "canonicalOwner": "DataFlow",
+      "disposition": "selected_business_authority"
+    },
+    "DeclaredApplication": {
+      "canonicalOwner": "DeclaredApplication",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "DeclaredApplication",
+        "ApplicationRelationship"
+      ]
+    },
+    "DeclaredSystemInstance": {
+      "canonicalOwner": "DeclaredSystemInstance",
+      "disposition": "selected_business_authority"
+    },
+    "DueControlWorkItem": {
+      "canonicalOwner": "ControlOccurrence",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "EmailAddress": {
+      "canonicalOwner": "EmailAddress",
+      "disposition": "selected_business_authority"
+    },
+    "EmailChallengeDeliveryLedger": {
+      "canonicalOwner": "EmailChallengeDeliveryLedger",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "EngagementManagementAcknowledgement": {
+      "canonicalOwner": "EngagementManagementAcknowledgement",
+      "disposition": "selected_business_authority"
+    },
+    "EngagementManagementAcknowledgement|PartnerIndependenceDecision": {
+      "canonicalOwner": null,
+      "disposition": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "EngagementManagementAcknowledgement",
+        "PartnerIndependenceDecision"
+      ]
+    },
+    "EvidenceArtifact": {
+      "canonicalOwner": "EvidenceArtifact",
+      "disposition": "selected_business_authority"
+    },
+    "EvidenceHandlingPolicy": {
+      "canonicalOwner": "EvidenceHandlingPolicy",
+      "disposition": "selected_business_authority"
+    },
+    "EvidenceRedaction": {
+      "canonicalOwner": "EvidenceRedaction",
+      "disposition": "selected_business_authority"
+    },
+    "EvidenceRequest": {
+      "canonicalOwner": "EvidenceRequest",
+      "disposition": "selected_business_authority"
+    },
+    "EvidenceRequestLedger": {
+      "canonicalOwner": "EvidenceRequest",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "EvidenceSupport": {
+      "canonicalOwner": "EvidenceSupport",
+      "disposition": "selected_business_authority"
+    },
+    "ExaminationBaseline": {
+      "canonicalOwner": "ExaminationEngagement",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "ExaminationEngagement": {
+      "canonicalOwner": "ExaminationEngagement",
+      "disposition": "selected_business_authority"
+    },
+    "ExaminationSignOff": {
+      "canonicalOwner": "ExaminationSignOff",
+      "disposition": "selected_business_authority"
+    },
+    "FindingAggregate": {
+      "canonicalOwner": "FindingAggregate",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "FindingAggregate",
+        "CorrectiveAction"
+      ]
+    },
+    "FindingMigrationAggregate": {
+      "canonicalOwner": "FindingMigrationAggregate",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "FirmProfessionalDutyCatalog": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "FirmProfessionalDutyDesignation",
+        "ProfessionalAssertionIdentityClaim"
+      ]
+    },
+    "FirmProfessionalDutyDesignation": {
+      "canonicalOwner": "FirmProfessionalDutyDesignation",
+      "disposition": "selected_business_authority"
+    },
+    "FirmProfessionalDutyScopeGuard": {
+      "canonicalOwner": "FirmProfessionalDutyDesignation",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "FirmStaffDirectory": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "FirmStaffRecord",
+        "FirmStaffIdentityClaim"
+      ]
+    },
+    "FirmStaffIdentityClaim": {
+      "canonicalOwner": "FirmStaffIdentityClaim",
+      "disposition": "selected_business_authority"
+    },
+    "FirmStaffMember": {
+      "canonicalOwner": "FirmStaffRecord",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "FirmStaffRecord": {
+      "canonicalOwner": "FirmStaffRecord",
+      "disposition": "selected_business_authority"
+    },
+    "FirmStaffUserReservation": {
+      "canonicalOwner": "FirmStaffIdentityClaim",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "HandoffFeedback": {
+      "canonicalOwner": "AdvisorFeedbackThread",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "IdentityRecovery": {
+      "canonicalOwner": "IdentityRecovery",
+      "disposition": "selected_business_authority"
+    },
+    "IdentityRecoveryNoticeProcess": {
+      "canonicalOwner": "IdentityRecoveryNoticeProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "ImmutableSnapshot": {
+      "canonicalOwner": "ImmutableSnapshot",
+      "disposition": "selected_business_authority"
+    },
+    "ImportExecution": {
+      "canonicalOwner": "ApplicationImportBatch",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "IndependenceCommitment": {
+      "canonicalOwner": "PracticeIndependenceCommitment",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "IndependenceEvaluation": {
+      "canonicalOwner": null,
+      "disposition": "folded_or_superseded_responsibility",
+      "canonicalOwners": [
+        "ClientIndependenceDecision",
+        "PartnerIndependenceDecision"
+      ]
+    },
+    "IndependenceLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "PracticeIndependenceCommitment",
+        "ServiceEngagementIndependence",
+        "ClientServiceIndependence",
+        "ClientIndependenceDecision",
+        "PartnerIndependenceDecision",
+        "EngagementManagementAcknowledgement"
+      ]
+    },
+    "IndependenceRuleCatalog": {
+      "canonicalOwner": "IndependenceRuleCatalog",
+      "disposition": "selected_business_authority"
+    },
+    "IndependenceRuleRatification": {
+      "canonicalOwner": "IndependenceRuleRatificationCatalog",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "IndependenceRuleRatificationCatalog": {
+      "canonicalOwner": "IndependenceRuleRatificationCatalog",
+      "disposition": "selected_business_authority"
+    },
+    "IndependenceRuleVersion": {
+      "canonicalOwner": "IndependenceRuleCatalog",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "InformationAsset": {
+      "canonicalOwner": "InformationAsset",
+      "disposition": "selected_business_authority"
+    },
+    "Kind switch: AccessGrant or TeamMember (exact old episode only)": {
+      "canonicalOwner": null,
+      "disposition": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "AccessGrant",
+        "TeamMember"
+      ]
+    },
+    "Location": {
+      "canonicalOwner": "Location",
+      "disposition": "selected_business_authority"
+    },
+    "LocationNameClaim": {
+      "canonicalOwner": "LocationNameClaim",
+      "disposition": "selected_business_authority"
+    },
+    "LocationNameReservation": {
+      "canonicalOwner": "LocationNameClaim",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "LocationRegister": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "Location",
+        "LocationNameClaim"
+      ]
+    },
+    "ManagementAssertion": {
+      "canonicalOwner": "ManagementAssertion",
+      "disposition": "selected_business_authority"
+    },
+    "ManagementAssertionVersion": {
+      "canonicalOwner": "ManagementAssertion",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "ManagementRepresentationLetter": {
+      "canonicalOwner": "ManagementRepresentationLetter",
+      "disposition": "selected_business_authority"
+    },
+    "Member": {
+      "canonicalOwner": "Member",
+      "disposition": "selected_business_authority"
+    },
+    "Member|TeamMember": {
+      "canonicalOwner": null,
+      "disposition": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "Member",
+        "TeamMember"
+      ]
+    },
+    "MethodologyTemplate": {
+      "canonicalOwner": "MethodologyTemplate",
+      "disposition": "selected_business_authority"
+    },
+    "MethodologyTemplateContribution": {
+      "canonicalOwner": "MethodologyTemplateContribution",
+      "disposition": "selected_business_authority"
+    },
+    "MethodologyTemplateVersion": {
+      "canonicalOwner": "MethodologyTemplate",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "OperationalProcess": {
+      "canonicalOwner": "OperationalProcess",
+      "disposition": "selected_business_authority"
+    },
+    "OperationalProcessNameClaim": {
+      "canonicalOwner": "OperationalProcessNameClaim",
+      "disposition": "selected_business_authority"
+    },
+    "OperationalProcessNameReservation": {
+      "canonicalOwner": "OperationalProcessNameClaim",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "OperationalProcessRegister": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "OperationalProcess",
+        "OperationalProcessNameClaim"
+      ]
+    },
+    "PackageBuildAttempt": {
+      "canonicalOwner": "AuditPackageBuildProcess",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "PackageDeliveryAuthorization": {
+      "canonicalOwner": "AuditPackageDelivery",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "PartnerIndependenceDecision": {
+      "canonicalOwner": "PartnerIndependenceDecision",
+      "disposition": "selected_business_authority"
+    },
+    "Person": {
+      "canonicalOwner": "Person",
+      "disposition": "selected_business_authority"
+    },
+    "PlatformOperatorGrant": {
+      "canonicalOwner": "PlatformOperatorRoster",
+      "disposition": "selected_explicit_override_absorbed",
+      "decisionId": "OWNER_PlatformOperatorGrant"
+    },
+    "PlatformOperatorRoster": {
+      "canonicalOwner": "PlatformOperatorRoster",
+      "disposition": "selected_business_authority"
+    },
+    "Policy": {
+      "canonicalOwner": "Policy",
+      "disposition": "selected_business_authority"
+    },
+    "PolicyCampaignParticipant": {
+      "canonicalOwner": "PolicyCampaignParticipant",
+      "disposition": "selected_business_authority"
+    },
+    "PolicyDistributionCampaign": {
+      "canonicalOwner": "PolicyDistributionCampaign",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "PolicyDistributionCampaign",
+        "PolicyCampaignParticipant"
+      ]
+    },
+    "PolicyVersion": {
+      "canonicalOwner": "Policy",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "PopulationSnapshot": {
+      "canonicalOwner": "PopulationSnapshot",
+      "disposition": "selected_business_authority"
+    },
+    "PopulationSnapshotChunk": {
+      "canonicalOwner": "PopulationSnapshotChunk",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "PracticeIndependenceCommitment": {
+      "canonicalOwner": "PracticeIndependenceCommitment",
+      "disposition": "selected_business_authority"
+    },
+    "ProfessionalAssertionIdentityClaim": {
+      "canonicalOwner": "ProfessionalAssertionIdentityClaim",
+      "disposition": "selected_business_authority"
+    },
+    "ProgramReadiness": {
+      "canonicalOwner": "ProgramReadiness",
+      "disposition": "selected_business_authority"
+    },
+    "ProgramRollover": {
+      "canonicalOwner": "ProgramRollover",
+      "disposition": "selected_business_authority"
+    },
+    "ProgramScopeSnapshotProcess": {
+      "canonicalOwner": "ProgramScopeSnapshotProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "Provider": {
+      "canonicalOwner": "Provider",
+      "disposition": "selected_business_authority"
+    },
+    "ProviderAssuranceGap": {
+      "canonicalOwner": "ProviderAssuranceGap",
+      "disposition": "selected_business_authority"
+    },
+    "ProviderAssuranceRegister": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "ProviderAssuranceReport",
+        "ProviderAssuranceReview",
+        "ProviderAssuranceGap",
+        "ProviderRiskAcceptance"
+      ]
+    },
+    "ProviderAssuranceReport": {
+      "canonicalOwner": "ProviderAssuranceReport",
+      "disposition": "selected_business_authority"
+    },
+    "ProviderAssuranceReview": {
+      "canonicalOwner": "ProviderAssuranceReview",
+      "disposition": "selected_business_authority"
+    },
+    "ProviderCoverageGap": {
+      "canonicalOwner": "ProviderAssuranceGap",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ProviderDueDiligenceReview": {
+      "canonicalOwner": "ProviderAssuranceReview",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ProviderNameClaim": {
+      "canonicalOwner": "ProviderNameClaim",
+      "disposition": "selected_business_authority"
+    },
+    "ProviderNameRegistry": {
+      "canonicalOwner": "ProviderNameClaim",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ProviderNameReservation": {
+      "canonicalOwner": "ProviderNameClaim",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ProviderRegister": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "Provider",
+        "ProviderNameClaim"
+      ]
+    },
+    "ProviderRiskAcceptance": {
+      "canonicalOwner": "ProviderRiskAcceptance",
+      "disposition": "selected_business_authority"
+    },
+    "ReadinessAssessment": {
+      "canonicalOwner": "ReadinessAssessment",
+      "disposition": "selected_business_authority"
+    },
+    "ReadinessEntryGate": {
+      "canonicalOwner": "ProgramReadiness",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ReadinessGap": {
+      "canonicalOwner": "ReadinessGapPlan",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ReadinessGapPlan": {
+      "canonicalOwner": "ReadinessGapPlan",
+      "disposition": "selected_business_authority"
+    },
+    "ReadinessLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "ReadinessAssessment",
+        "ReadinessGapPlan",
+        "ProgramReadiness"
+      ]
+    },
+    "ReadinessResponsePlan": {
+      "canonicalOwner": "ReadinessGapPlan",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "RecordType switch: ControlDraft, CommitmentDraft, SystemBoundary (same owner atomic scope)": {
+      "canonicalOwner": null,
+      "disposition": "non_owner_selector_or_removal",
+      "canonicalOwners": [
+        "ControlDraft",
+        "CommitmentDraft",
+        "SystemBoundary"
+      ]
+    },
+    "RemediationMigrationFenceAggregate": {
+      "canonicalOwner": "RemediationMigrationFenceAggregate",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "RiskAcceptance": {
+      "canonicalOwner": "RiskEvaluation",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "RiskAssessment": {
+      "canonicalOwner": "RiskEvaluation",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "RiskDraft": {
+      "canonicalOwner": "RiskDraft",
+      "disposition": "selected_business_authority"
+    },
+    "RiskEvaluation": {
+      "canonicalOwner": "RiskEvaluation",
+      "disposition": "selected_business_authority"
+    },
+    "RiskGovernance": {
+      "canonicalOwner": "RiskGovernance",
+      "disposition": "selected_business_authority"
+    },
+    "RiskGovernanceLedger": {
+      "canonicalOwner": null,
+      "disposition": "split_predecessor_requires_selected_event_owner",
+      "canonicalOwners": [
+        "RiskGovernance",
+        "RiskTreatmentAssertion",
+        "RiskTreatmentAction"
+      ]
+    },
+    "RiskMethod": {
+      "canonicalOwner": "RiskMethod",
+      "disposition": "selected_business_authority"
+    },
+    "RiskMethodVersion": {
+      "canonicalOwner": "RiskMethod",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "RiskReassessmentTrigger": {
+      "canonicalOwner": "RiskGovernance",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "RiskTreatmentAction": {
+      "canonicalOwner": "RiskTreatmentAction",
+      "disposition": "selected_business_authority"
+    },
+    "RiskTreatmentAssertion": {
+      "canonicalOwner": "RiskTreatmentAssertion",
+      "disposition": "selected_business_authority"
+    },
+    "Role": {
+      "canonicalOwner": "Role",
+      "disposition": "selected_business_authority"
+    },
+    "RolePermission": {
+      "canonicalOwner": "RolePermission",
+      "disposition": "selected_business_authority"
+    },
+    "SeparationOfDutiesWaiver": {
+      "canonicalOwner": "SeparationOfDutiesWaiver",
+      "disposition": "selected_business_authority"
+    },
+    "ServiceAssignment": {
+      "canonicalOwner": "ServiceEngagementIndependence",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "ServiceEngagement": {
+      "canonicalOwner": "ServiceEngagementIndependence",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "ServiceEngagementAcceptance": {
+      "canonicalOwner": "ServiceEngagementIndependence",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "ServiceEngagementIndependence": {
+      "canonicalOwner": "ServiceEngagementIndependence",
+      "disposition": "selected_business_authority"
+    },
+    "ServiceIdentity": {
+      "canonicalOwner": "ServiceIdentity",
+      "disposition": "selected_business_authority"
+    },
+    "SignificantChange": {
+      "canonicalOwner": "SignificantChange",
+      "disposition": "selected_business_authority"
+    },
+    "SignificantChangeVersion": {
+      "canonicalOwner": "SignificantChange",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "StaffIndependenceWall": {
+      "canonicalOwner": "PracticeIndependenceCommitment",
+      "disposition": "canonical_rename_or_nonselected_candidate"
+    },
+    "SystemBoundary": {
+      "canonicalOwner": "SystemBoundary",
+      "disposition": "selected_business_authority"
+    },
+    "SystemBoundaryVersion": {
+      "canonicalOwner": "SystemBoundary",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "SystemDescription": {
+      "canonicalOwner": "SystemDescription",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "SystemDescription",
+        "SystemDescriptionExportProcess"
+      ]
+    },
+    "SystemDescriptionExportProcess": {
+      "canonicalOwner": "SystemDescriptionExportProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "SystemDescriptionVersion": {
+      "canonicalOwner": "SystemDescription",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "SystemInstanceAccessReviewScope": {
+      "canonicalOwner": "SystemInstanceAccessReviewScope",
+      "disposition": "selected_business_authority"
+    },
+    "Team": {
+      "canonicalOwner": "Team",
+      "disposition": "selected_business_authority"
+    },
+    "TeamMember": {
+      "canonicalOwner": "TeamMember",
+      "disposition": "selected_business_authority"
+    },
+    "TeamRole": {
+      "canonicalOwner": "TeamRole",
+      "disposition": "selected_business_authority"
+    },
+    "TechnologyComponent": {
+      "canonicalOwner": "TechnologyComponent",
+      "disposition": "selected_business_authority"
+    },
+    "TemplateApplication": {
+      "canonicalOwner": "TemplateApplication",
+      "disposition": "selected_business_authority"
+    },
+    "TemplateApplicationDraftReceipt": {
+      "canonicalOwner": "TemplateApplication",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "TemplateApplicationSuccessorDecision": {
+      "canonicalOwner": "TemplateApplication",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "Tenant": {
+      "canonicalOwner": "Tenant",
+      "disposition": "selected_business_authority"
+    },
+    "TenantIdentityProvider": {
+      "canonicalOwner": "TenantIdentityProvider",
+      "disposition": "selected_business_authority"
+    },
+    "TenantInvitation": {
+      "canonicalOwner": "TenantInvitation",
+      "disposition": "selected_business_authority",
+      "requiresSelectedEventAllocation": true,
+      "splitTargets": [
+        "TenantInvitation",
+        "TenantInvitationMailboxClaim",
+        "TenantInvitationDeliveryProcess"
+      ]
+    },
+    "TenantInvitationDeliveryProcess": {
+      "canonicalOwner": "TenantInvitationDeliveryProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "TenantInvitationMailboxClaim": {
+      "canonicalOwner": "TenantInvitationMailboxClaim",
+      "disposition": "selected_business_authority"
+    },
+    "TenantManagerGuard": {
+      "canonicalOwner": "TenantManagerGuard",
+      "disposition": "selected_business_authority"
+    },
+    "TenantSlug": {
+      "canonicalOwner": "TenantSlug",
+      "disposition": "selected_business_authority"
+    },
+    "TrainingCatalog": {
+      "canonicalOwner": "TrainingRequirement",
+      "disposition": "selected_current_root_split_replacement"
+    },
+    "TrainingRequirement": {
+      "canonicalOwner": "TrainingRequirement",
+      "disposition": "selected_business_authority"
+    },
+    "TypeIIObservationCalendar": {
+      "canonicalOwner": "TypeIIObservationCalendar",
+      "disposition": "selected_business_authority"
+    },
+    "TypeIIPeriod": {
+      "canonicalOwner": "TypeIIPeriod",
+      "disposition": "selected_business_authority"
+    },
+    "TypeIIPeriodReservation": {
+      "canonicalOwner": "TypeIIObservationCalendar",
+      "disposition": "folded_or_superseded_responsibility"
+    },
+    "TypeIIPlan": {
+      "canonicalOwner": "TypeIIPlan",
+      "disposition": "selected_business_authority"
+    },
+    "TypeIIPlanVersion": {
+      "canonicalOwner": "TypeIIPlan",
+      "disposition": "immutable_value_or_verified_history_not_separate_root"
+    },
+    "UserIdentity": {
+      "canonicalOwner": "UserIdentity",
+      "disposition": "selected_business_authority"
+    },
+    "WeeklyScheduling": {
+      "canonicalOwner": null,
+      "disposition": "logical_technical_capture_page_result_journal",
+      "physicalOwnerNotForced": true
+    },
+    "WeeklyWorkDigest": {
+      "canonicalOwner": "WeeklyWorkDigest",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "WorkDigestDispatch": {
+      "canonicalOwner": "WorkDigestDispatch",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "WorkDigestPreference": {
+      "canonicalOwner": "WorkDigestPreference",
+      "disposition": "selected_business_authority"
+    },
+    "WorkDigestScheduleCursor": {
+      "canonicalOwner": null,
+      "disposition": "technical_schedule_cursor_role_not_business_owner",
+      "relatedTechnicalRoles": [
+        "WeeklyScheduling",
+        "WeeklyWorkDigest",
+        "WorkDigestDispatch"
+      ]
+    },
+    "WorkItemAssignment": {
+      "canonicalOwner": "WorkItemAssignment",
+      "disposition": "selected_business_authority"
+    },
+    "WorkRelationship": {
+      "canonicalOwner": "WorkRelationship",
+      "disposition": "selected_business_authority"
+    },
+    "WorkforceObservationResolution": {
+      "canonicalOwner": "WorkforceObservationResolution",
+      "disposition": "selected_business_authority"
+    },
+    "WorkforceRosterSnapshotProcess": {
+      "canonicalOwner": "WorkforceRosterSnapshotProcess",
+      "disposition": "technical_process_storage_or_native_journal_not_business"
+    },
+    "WorkforceSourceObservation": {
+      "canonicalOwner": "WorkforceSourceObservation",
+      "disposition": "selected_business_authority"
+    }
+  },
+  "excludedFromCanonicalAliasJoin": {
+    "abstractTransientOrWriterPruned": [
+      "AccessClassificationRules",
+      "AccessExpectationRules",
+      "AccessReviewCampaignCompletionProcess",
+      "AccessReviewLaunchFanOut",
+      "AccessReviewRules",
+      "AdministratorTransitionProcess",
+      "AdvisorHandoffRules",
+      "ApplicationImportExecutionProcess",
+      "ApplicationImportRowRules",
+      "ArtifactDownloadProcess",
+      "ArtifactRetentionRules",
+      "AssuranceRules",
+      "AuditPackageDeliveryRecordingProcess",
+      "AuditPackageRules",
+      "AuditorRequestResolutionProcess",
+      "AuditorRequestRules",
+      "BoundaryRules",
+      "BulkAccessDecisionProcess",
+      "CampaignRules",
+      "ClientIndependencePreviewProcess",
+      "CommitmentRules",
+      "ComplianceIncidentRules",
+      "ControlCriterionMappingRules",
+      "ControlEvaluationPlanRules",
+      "ControlEvaluationRules",
+      "ControlOccurrenceFanOut",
+      "ControlOperationRules",
+      "ControlRules",
+      "CriteriaTextOverlayRules",
+      "CriterionApplicabilityRules",
+      "EmailChallengeDeliveryProcess",
+      "EngagementAcceptanceProcess",
+      "EngagementPersonalDecisionProcess",
+      "EvidenceRedactionRules",
+      "EvidenceRequestRules",
+      "EvidenceRules",
+      "ExaminationEngagementRules",
+      "FindingClosureProcess",
+      "FindingRules",
+      "FirmStaffRegistrationProcess",
+      "IdentityRecoveryProcess",
+      "ImportBatch",
+      "IndependenceRuleCatalogRules",
+      "IndependenceRuleRatificationRules",
+      "IndependentChildMaterialization",
+      "InventoryRegisterRules",
+      "LegacyWorkAssignmentLedger",
+      "LocationNameChangeProcess",
+      "MethodologyTemplateContributionRules",
+      "MethodologyTemplateRules",
+      "NameClaim",
+      "NamedRecord",
+      "NativeAcceptance",
+      "NativeReplayCommitment",
+      "OperationalProcessNameChangeProcess",
+      "PlatformOperatorRosterRules",
+      "PolicyCampaignClosureProcess",
+      "PolicyRules",
+      "ProfessionalDutyChangeProcess",
+      "ProfessionalDutyRules",
+      "ProgramRules",
+      "ProviderChangeImpactRules",
+      "ProviderCoverageGapRules",
+      "ProviderNameChangeProcess",
+      "ProviderReviewProcess",
+      "ProviderRules",
+      "REMOVE",
+      "ReadinessDecisionProcess",
+      "ReadinessDecisionRules",
+      "ReadinessRules",
+      "ReadinessRunProcess",
+      "RemediationLedger",
+      "RiskActionCompletionReviewProcess",
+      "RiskDraftRules",
+      "RiskEvaluationRules",
+      "RiskMethodRules",
+      "RiskTreatmentAssertionRules",
+      "ServiceEngagementRules",
+      "SignificantChangeRules",
+      "SourceUseClaimState",
+      "SystemDescriptionRules",
+      "SystemInstanceAccessReviewScopeRules",
+      "TechnologyInventoryRules",
+      "TemplateApplicationRules",
+      "TenantManagerGuardRules",
+      "TenantOwner",
+      "TrainingRequirementRules",
+      "TypeIICalendarRules",
+      "TypeIIPeriodRules",
+      "TypeIIRangeProcess",
+      "VersionedRecordRules",
+      "WeeklyWorkDigestRules",
+      "WorkDigestDispatchRules"
+    ],
+    "rule": "These classifications remain in full evidence only; they are not canonical business/technical alias join candidates."
+  },
+  "identityReadingRule": "Selected identities preserve exact occupied algorithms and selected typed signature bindings; old baseline RequestId/server-clock/replay observations are evidence only. Full signature/source pointers are in canonical-owner-map.json."
+}

@@ -1,0 +1,12 @@
+{
+  "createdUtc": "2026-10-25T11:22:20Z",
+  "base": "de2e8c36b52a8080700b394d29666360303c6f30",
+  "sourceBranch": "codex/checkpoint-before-inventory-20261025T112220Z",
+  "artifactBranch": "codex/checkpoint-artifacts-20261025T112220Z",
+  "state": "WIP_NOT_READY_TO_MERGE",
+  "implementationHalted": true,
+  "latestFocusedPassed": 309,
+  "fullUnitAndHttpForCurrentCheckpoint": "not completed",
+  "priorRecoveryRoot": "/Users/jrepanich/.codex/recovery/compliance-core-20261024T141258Z",
+  "newGitHubIssuesPermitted": false
+}

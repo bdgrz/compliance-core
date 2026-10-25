@@ -172,16 +172,16 @@ public sealed class TenantManagerGuardTests
         var (first, second) = (await host.AddAdministratorAsync(), await host.AddAdministratorAsync());
         await DriveAsync(host, await host.SubmitAsync(second, await host.SuspendRequestAsync(first)));
         await DriveAsync(host, await host.SubmitAsync(second, await host.RemoveRequestAsync(first)));
-        var reasonsBefore = (await host.GuardAsync()).ReasonsFor(first.EpisodeId).Order().ToArray();
+        var reasonsBefore = (await host.GuardAsync(first.EpisodeId)).ReasonsFor(first.EpisodeId).Order().ToArray();
 
         // Act
         var reinstated = await host.SubmitAsync(second, await host.ReinstateRequestAsync(first));
         await host.DriveAsync(reinstated.Value!.OperationId);
-        var afterReinstate = await host.GuardAsync();
+        var afterReinstate = await host.GuardAsync(first.EpisodeId);
         var factsAfterReinstate = await host.GuardFactsAsync();
         var assigned = await host.SubmitAsync(second, await host.AssignRequestAsync(first));
         await host.DriveAsync(assigned.Value!.OperationId);
-        var afterAssign = await host.GuardAsync();
+        var afterAssign = await host.GuardAsync(first.EpisodeId);
 
         // Assert
         Assert.Equal([TenantManagerGuard.RemovedFromAdministrators, TenantManagerGuard.Suspended], reasonsBefore);
@@ -244,10 +244,10 @@ public sealed class TenantManagerGuardTests
 
         var registration = await host.IntentAsync(registrationId);
         var suspension = await host.IntentAsync(suspensionId);
-        var pendingReasons = (await host.GuardAsync()).ReasonsFor(candidate.EpisodeId);
+        var pendingReasons = (await host.GuardAsync(candidate.EpisodeId)).ReasonsFor(candidate.EpisodeId);
         await host.DriveAsync(registrationId);
         await host.DriveAsync(suspensionId);
-        var guard = await host.GuardAsync();
+        var guard = await host.GuardAsync(candidate.EpisodeId);
         var facts = await host.GuardFactsAsync();
 
         // Assert
@@ -549,7 +549,7 @@ public sealed class TenantManagerGuardTests
 
         // Act
         var baseline = await bootstrap.BuildAsync(host.TenantId, CancellationToken.None);
-        var guard = new TenantManagerGuard(host.TenantId, baseline: baseline);
+        var guard = new TenantManagerGuard(host.TenantId, baseline: baseline, selectedEpisode: suspended.EpisodeId);
 
         // Assert
         Assert.Equal(3, baseline.Contributions.Count);

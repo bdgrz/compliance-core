@@ -1,0 +1,108 @@
+{
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+  "decisionBasis": {
+    "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+    "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+    "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+    "decisionIds": [
+      "ARTIFACT_DOWNLOAD",
+      "PROOF_CARRIERS",
+      "EFFECT_IDENTITIES"
+    ],
+    "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+  },
+  "decisions": [
+    {
+      "id": "OWNER_ApplicationSourceClaim",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "absorb_in_source_authority",
+      "rationale": "Source-wide exact revision/generation and published-batch ordering already own mutable replace/remove mappings. Explicitly absorb the earlier per-record-root role into ApplicationImportSource; preserve full verified mapping authority, immutable plans and publication gates."
+    },
+    {
+      "id": "OWNER_PlatformOperatorGrant",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "one_roster_authority",
+      "rationale": "Keep exact active operator identities/assignment episodes and acting-operator/last-operator checks in one atomic roster decision. Explicitly supersede the earlier per-user split; never reduce authority to a count or cap current membership."
+    },
+    {
+      "id": "OWNER_AuditPopulationRowDecision",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "parent_owns_current_reconciliation",
+      "rationale": "Classification, reconciliation invalidation, complete-source proof and freeze seal are one conflict set on AuditPopulation. Immutable row/version bodies are values, not separate owners. Explicitly supersede the earlier row-root proposal; remove lifetime history coupling without splitting the seal."
+    },
+    {
+      "id": "OWNER_AccessExpectationScopeGuard",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "line_authority_explicit_scope_override",
+      "rationale": "Required exclusion is predecessor/successor competition within the same expectation lineage. Different lines may coexist, including different policies on one system. Explicitly supersede the older unspecified cross-line governor; adding a future cross-line ban is a separately reviewed product/design change with a precise predicate."
+    },
+    {
+      "id": "EV_D01",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "adopt_recommended",
+      "rationale": "A professional assertion identity binding is permanent and non-recyclable. Exclude the stale release label."
+    },
+    {
+      "id": "EV_D02",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "adopt_recommended",
+      "rationale": "Canonical package delivery is manifest Admitted then independent child Delivered. Exclude redundant Authorized; add no automated send authority."
+    },
+    {
+      "id": "EV_D03",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "adopt_recommended",
+      "rationale": "The selected directed source/type/target UUID identity is the relationship uniqueness boundary. Exclude separate identity claim."
+    },
+    {
+      "id": "EV_D04",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "adopt_recommended",
+      "rationale": "Relationship removal records lifecycle, never releases/recycles canonical tuple identity. Exclude separate identity release."
+    },
+    {
+      "id": "EV_D05",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "adopt_recommended",
+      "rationale": "Recorded is the canonical authored preference decision, including accepted NoChange. ChangedAt advances only for actual value changes. Old Changed v1 remains read-only compatibility, with no replay conversion."
+    },
+    {
+      "id": "ARTIFACT_DOWNLOAD",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "artifact_first_202_qualified_grant_v2",
+      "rationale": "Ratify the selected artifact-first Pending202 protocol: stable caller CommandId, atomic local available-artifact reservation in Requested, artifact-qualified derived receiving grant, ordered source-use acquisition, encrypted original ticket before native issuance, terminal settlement/cancellation fencing, current original-actor scoped read, unchanged original expiry, and receiving-issued v2 preserving old artifact-issued v1 decoder."
+    },
+    {
+      "id": "PROOF_CARRIERS",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "admission_reference_and_verified_stage_proofs",
+      "rationale": "Registered root subscription, logical prerequisite fact and continuation carrier are separate. Canonical continuation retains original admission reference and root-derived identity, but receiver must materialize/verify every required typed intermediate/terminal proof and exact immutable intent before effect or early replay where binding does not cover terms. A bare NativeFactReference never grants authority. Selected typed-source tables are corrected to this normative admission-plus-prerequisite model; installed carrier presence is not proof of conformance."
+    },
+    {
+      "id": "EFFECT_IDENTITIES",
+      "status": "ADOPTED_SELECTED_TARGET",
+      "choice": "retain_occupied_v1_version_new_algorithm",
+      "rationale": "Retain exact occupied v1 effect UUID byte algorithm and each process frozen target-key/episode selection. Do not silently replace IDs. Explicitly version and domain-separate any new length-prefixed algorithm; new or ambiguous target/episode domains require a selected injective encoding and compatibility/fencing before use."
+    }
+  ],
+  "pendingOwnerOrProtocolDecisions": [],
+  "implementationHalted": true,
+  "implementationGaps": [
+    "Artifact producer/local availability reservation, receiving owner/typed uses/terminal proofs/encrypted ticket persistence and scoped original-actor query are absent.",
+    "Proof-carrier/field/wire migrations and receiver prerequisite/replay conformance remain individually verifiable implementation work.",
+    "Receiving issuedv2 plus legacy artifact-issuedv1 compatibility and all exact scoped source/projection/snapshot consumers remain implementation work.",
+    "New Artifact effect-v2 implementation must supply fixed byte/UUID vectors before activation; all occupied v1 effect algorithms and target selectors remain unchanged."
+  ],
+  "newArtifactEffectIdentity": {
+    "version": "effect-identity-v2",
+    "namespace": "actual committed EvidenceArtifactDownloadRequested.Metadata.EventId",
+    "fieldsInOrder": [
+      "effectKind (canonical receiver command kind)",
+      "canonical target EventStreamAddress",
+      "episode (exact selected value, initial when absent)"
+    ],
+    "bytes": "UTF8(effect-identity:v2) followed by each field UTF8 bytes prefixed by its unsigned32-bit big-endian byte length; UUIDv5 over these exact name bytes and the actual source EventId namespace.",
+    "rule": "Use only for this new unoccupied process identity domain; occupied v1 algorithms/target-key selections remain unchanged. Implementation must provide fixed byte/UUID vectors before activation."
+  }
+}

@@ -39,7 +39,7 @@ public sealed class WorkforceAuthorizerTests
         var authorizer = new WorkforceAuthorizer(new FixedMembershipDirectory(true),
             new ActiveTenant(), permissions);
         var context = new RequestContext<IWorkforceRequest>(
-            new RecordPerson(tenantId, "Ada Lovelace"), BdgrzActor(userId));
+            new RecordPerson(Uuid.CreateVersion4(), tenantId, "Ada Lovelace"), BdgrzActor(userId));
 
         // Act
         var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);

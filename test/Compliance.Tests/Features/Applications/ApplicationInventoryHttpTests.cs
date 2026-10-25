@@ -202,10 +202,10 @@ public sealed class ApplicationInventoryHttpTests
             Assert.Equal(HttpStatusCode.OK, login.StatusCode);
             await using var scope = _factory.Services.CreateAsyncScope();
             var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
-            var owner = new Person(Tenant, Owner);
+            var owner = new PersonRules(Tenant, Owner);
             Assert.True(owner.Record("Owner", null, ActorReference.ForMember(Uuid.CreateVersion4(), "Author"),
                 ApplicationInventoryHost.Now).IsSuccess);
-            await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            await PersonSeeds.AppendAsync(scope.ServiceProvider, owner);
         }
 
         public string DeclareBody(string name) =>

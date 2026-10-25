@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Content;
@@ -96,10 +97,10 @@ public sealed class RiskMethodPublicationTests
         public static async Task<Fixture> CreateAsync()
         {
             var fixture = new Fixture();
-            var program = new ComplianceProgram(fixture.Tenant, fixture.Program);
+            var program = new ProgramRules(fixture.Tenant, fixture.Program);
             Assert.Null(program.Create("Risk method program", new ProgramPlan(null, null, null, null, null, null),
                 Uuid.CreateVersion4(), "Owner", fixture.Clock.Now));
-            await fixture.Writer.SaveAsync(program, new RequestDispatchContext(RequestActor.System));
+            await ProgramSeeds.WriteAsync(fixture.Reader, fixture.Writer, fixture.Events, fixture.Content, program);
             return fixture;
         }
 

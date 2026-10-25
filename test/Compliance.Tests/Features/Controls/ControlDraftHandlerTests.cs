@@ -93,7 +93,7 @@ public sealed class ControlDraftHandlerTests
             portia => portia.AddRequestHandler<CreateControlDraftHandler>(),
             services => services.AddSingleton<IControlApplicabilityReferenceValidator>(validator));
         await ProgramManagementServices.SeedAsync(provider,
-            new ComplianceProgram(tenantId, programId), program =>
+            new ProgramRules(tenantId, programId), program =>
             {
                 Assert.Null(program.Create("SOC 2",
                     new ProgramPlan(null, null, null, null, null, null),

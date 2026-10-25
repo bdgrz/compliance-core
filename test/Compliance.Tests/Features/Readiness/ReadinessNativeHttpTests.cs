@@ -123,7 +123,7 @@ public sealed class ReadinessNativeHttpTests
     }
 
     static Task SeedProgramAsync(IServiceProvider provider, Uuid tenant, Uuid program) =>
-        ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(tenant, program), owner =>
+        ProgramManagementServices.SeedAsync(provider, new ProgramRules(tenant, program), owner =>
         {
             Assert.Null(owner.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
                 Uuid.CreateVersion4(), "Program author", DateTimeOffset.UtcNow));

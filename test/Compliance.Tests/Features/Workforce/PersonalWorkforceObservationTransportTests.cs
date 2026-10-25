@@ -99,7 +99,7 @@ public sealed class PersonalWorkforceObservationTransportTests
     {
         // Arrange
         await using var fixture = await AttestWorkforceManagementWallTests.Fixture.CreateAsync();
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Person(fixture.TenantId, fixture.PersonId), person =>
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PersonRules(fixture.TenantId, fixture.PersonId), person =>
         {
             Assert.Null(person.Revise(1, "Ada King", "ada@example.com", ActorReference.ForMember(RbacIds.Member(fixture.TenantId, fixture.UserId), "Client author"), DateTimeOffset.UtcNow));
             return Result.Success;

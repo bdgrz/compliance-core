@@ -183,7 +183,8 @@ public sealed class ApplicationReadinessImpactTests
         var events = new InMemoryEventStore();
         var now = DateTimeOffset.UtcNow;
         var actorId = Uuid.CreateVersion4();
-        var sourceEvent = new ProgramCreated(tenantId, programId, "SOC 2",
+        await using var programNative = new ProgramNativeFixture();
+        var sourceEvent = await ProgramSeeds.CreatedAsync(programNative.Content, tenantId, programId, "SOC 2",
             new ProgramPlan(null, null, null, null, null, null), actorId, "Compliance Lead",
             now);
         sourceEvent.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), tenantId, 1,

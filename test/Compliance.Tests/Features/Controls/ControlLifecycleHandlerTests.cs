@@ -686,7 +686,7 @@ public sealed class ControlLifecycleHandlerTests
         public async Task<Uuid> SeedPersonAsync()
         {
             var personId = Uuid.CreateVersion4();
-            await ProgramManagementServices.SeedAsync(Provider, new Person(TenantId, personId),
+            await ProgramManagementServices.SeedAsync(Provider, new PersonRules(TenantId, personId),
                 person => person.Record("Facilities manager", "facilities@example.com",
                     ActorReference.ForMember(Uuid.CreateVersion4(), "Admin"),
                     DateTimeOffset.UtcNow));

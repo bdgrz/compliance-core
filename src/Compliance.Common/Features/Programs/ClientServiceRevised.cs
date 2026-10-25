@@ -1,17 +1,22 @@
+using System.Globalization;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Programs;
 
-[Discriminator("bdgrz.client-service.revised", 1)]
-public sealed record ClientServiceRevised(Uuid TenantId, Uuid ServiceId, long Revision,
-    string Name, string Purpose, string OwnerReference, Uuid ActorMemberId,
-    string ActorDisplay, DateTimeOffset ChangedAt) : DomainEvent
+[Discriminator("bdgrz.client-service.revised", 2)]
+public sealed record ClientServiceRevised(Uuid TenantId, Uuid ServiceId, Uuid ProgramId, long Revision,
+    ImmutableContentRef Content, DateTimeOffset ChangedAt, OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult, ulong NativeSequence)
+    : DomainEvent, IProductClientServiceFact
 {
-    [JsonPropertyName("actor")]
-    public ActorReference? StoredActor { get; init; }
-
     [JsonIgnore]
-    public ActorReference Actor => StoredActor ?? ActorReference.ForMember(ActorMemberId, ActorDisplay);
+    public ActorReference Actor => Operation.Actor;
+    [JsonIgnore]
+    public Uuid ActorMemberId => Uuid.TryParse(Actor.Id, CultureInfo.InvariantCulture, out var member) ? member : Uuid.Empty;
+    [JsonIgnore]
+    public string ActorDisplay => Actor.Display;
 }

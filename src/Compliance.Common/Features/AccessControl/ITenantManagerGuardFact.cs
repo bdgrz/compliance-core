@@ -5,7 +5,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>The shared shape of the facts the tenant manager guard appends for an administrator transition.</summary>
-public interface ITenantManagerGuardFact : INativeOperationFact
+public interface ITenantManagerGuardFact : ITenantManagerAuthorityFact
 {
     /// <summary>The source stream the operation mutates.</summary>
     EventStreamAddress Owner { get; }

@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Workforce;
 
 public sealed class PersonReadConsistency(IPersonDirectoryReader directory,
-    IAggregateReader reader, IDomainEventReader events)
+    IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)
 {
     public async ValueTask<Result<PersonView>> GetAsync(Uuid tenantId, Uuid personId,
         long? minimumRevision, CancellationToken ct)
@@ -11,16 +12,24 @@ public sealed class PersonReadConsistency(IPersonDirectoryReader directory,
         if (minimumRevision is < 1)
             return Result<PersonView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The minimum person revision must be positive."));
-        var source = await reader.HydrateAsync(new Person(tenantId, personId), ct)
-            .ConfigureAwait(false);
+        PersonReadSnapshot snapshot;
+        try
+        {
+            snapshot = await new PersonReader(reader, events, content).ReadAsync(tenantId, personId, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<PersonView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The exact person source values do not verify: {error.Message}", error is ImmutableContentUnavailableException));
+        }
+        var source = snapshot.Owner;
         if (!source.IsCreated)
-            return Result<PersonView>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The person was not found."));
+            return Result<PersonView>.Failure(new RequestError(RequestErrorKind.NotFound, "The person was not found."));
         var view = await directory.GetAsync(tenantId, personId, ct).ConfigureAwait(false);
         if (view is not null && view.TenantId == tenantId && view.PersonId == personId &&
             view.Revision >= source.Revision &&
-            (minimumRevision is null || view.Revision >= minimumRevision))
-            return Result<PersonView>.Success(view);
+            (minimumRevision is null || view.Revision >= minimumRevision && source.Revision >= minimumRevision))
+            return Result<PersonView>.Success(snapshot.View!);
         return Result<PersonView>.Failure(new RequestError(RequestErrorKind.Conflict,
             minimumRevision is { } minimum && source.Revision < minimum
                 ? $"The person source has not reached revision {minimum}."

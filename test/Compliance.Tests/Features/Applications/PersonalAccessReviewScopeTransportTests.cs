@@ -224,7 +224,7 @@ public sealed class PersonalAccessReviewScopeTransportTests
         {
             var fixture = new Fixture();
             var personId = Uuid.CreateVersion4();
-            await ProgramManagementServices.SeedAsync(fixture._provider, new Person(fixture.Tenant, personId), person =>
+            await ProgramManagementServices.SeedAsync(fixture._provider, new PersonRules(fixture.Tenant, personId), person =>
             {
                 var actor = ActorReference.ForMember(RbacIds.Member(fixture.Tenant, fixture.Registrant), "Registrant");
                 Assert.True(person.Record("Access owner", null, actor, DateTimeOffset.UtcNow).IsSuccess);

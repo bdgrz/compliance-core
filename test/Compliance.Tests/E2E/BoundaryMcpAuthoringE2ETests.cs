@@ -174,7 +174,7 @@ public sealed class BoundaryMcpAuthoringE2ETests(BrokerStackFixture broker)
         string? lastResponse = null;
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path,
+            using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}",
                 new { name = "MCP boundary program", plan });
             if (response.StatusCode == HttpStatusCode.OK)
             {

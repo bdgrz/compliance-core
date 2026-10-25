@@ -41,18 +41,18 @@ public sealed class PersonE2ETests(BrokerStackFixture broker)
         });
         var personPath = $"{path}/{personId}";
         var original = await WaitForRevisionAsync(owner, personPath, 1);
-        using var revised = await owner.PutAsJsonAsync(personPath, new
+        using var revised = await owner.PutAsJsonAsync($"{personPath}/revisions/{Guid.NewGuid():D}", new
         {
             expected_revision = 1,
             display_name = "Ada King",
             work_email = "ada@example.com",
         });
-        using var stale = await owner.PutAsJsonAsync(personPath, new
+        using var stale = await owner.PutAsJsonAsync($"{personPath}/revisions/{Guid.NewGuid():D}", new
         {
             expected_revision = 1,
             display_name = "Stale",
         });
-        using var invalid = await owner.PostAsJsonAsync(path, new
+        using var invalid = await owner.PutAsJsonAsync($"{path}/{Guid.NewGuid():D}", new
         {
             display_name = "Nobody",
             work_email = "not-an-email",
@@ -63,7 +63,7 @@ public sealed class PersonE2ETests(BrokerStackFixture broker)
         using var invalidCursor = await owner.GetAsync($"{path}?cursor=invalid");
         using var outsiderRead = await outsider.GetAsync(personPath);
         using var outsiderList = await outsider.GetAsync(path);
-        using var outsiderWrite = await outsider.PostAsJsonAsync(path,
+        using var outsiderWrite = await outsider.PutAsJsonAsync($"{path}/{Guid.NewGuid():D}",
             new { display_name = "Intruder" });
         using var otherTenantRead = await owner.GetAsync(
             $"/api/v1/tenants/{otherTenantId}/people/{personId}");
@@ -75,7 +75,7 @@ public sealed class PersonE2ETests(BrokerStackFixture broker)
         Assert.Equal("manual", original.GetProperty("source_kind").GetString());
         Assert.Equal("member", original.GetProperty("last_changed_by")
             .GetProperty("kind").GetString());
-        Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
         Assert.Equal("Ada King", current.GetProperty("display_name").GetString());
@@ -97,6 +97,7 @@ public sealed class PersonE2ETests(BrokerStackFixture broker)
         {
             _ = await mcp.When("bdgrz.workforce.person.record", new Dictionary<string, object?>
             {
+                ["person_id"] = Guid.NewGuid(),
                 ["tenant_id"] = tenantId,
                 ["display_name"] = "Grace Hopper",
             }).ExpectSuccess();
@@ -107,6 +108,7 @@ public sealed class PersonE2ETests(BrokerStackFixture broker)
             }).ExpectSuccess();
             _ = await mcp.When("bdgrz.workforce.person.revise", new Dictionary<string, object?>
             {
+                ["command_id"] = Guid.NewGuid(),
                 ["tenant_id"] = tenantId,
                 ["person_id"] = personId,
                 ["expected_revision"] = 2,
@@ -167,7 +169,7 @@ public sealed class PersonE2ETests(BrokerStackFixture broker)
         await worker.StopAsync();
 
         // Act
-        using var created = await owner.PostAsJsonAsync(path,
+        using var created = await owner.PutAsJsonAsync($"{path}/{Guid.NewGuid():D}",
             new { display_name = "Grace Hopper" });
         var personId = (await ReadAsync(created)).GetProperty("person_id").GetString();
         using var laggedGet = await owner.GetAsync($"{path}/{personId}");
@@ -210,10 +212,11 @@ public sealed class PersonE2ETests(BrokerStackFixture broker)
     static async Task<string> RecordWhenAuthorizedAsync(HttpClient owner, string path,
         object body)
     {
+        var personId = Guid.NewGuid();
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, body);
+            using var response = await owner.PutAsJsonAsync($"{path}/{personId:D}", body);
             if (response.StatusCode == HttpStatusCode.OK)
                 return (await ReadAsync(response)).GetProperty("person_id").GetString()!;
             Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,

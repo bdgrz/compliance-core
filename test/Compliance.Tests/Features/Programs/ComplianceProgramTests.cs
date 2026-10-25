@@ -19,7 +19,7 @@ public sealed class ComplianceProgramTests
     public void ShouldReturnDomainFailureGivenProgramCreateAndRevisionPrecedence()
     {
         // Arrange
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
         var valid = new ProgramPlan(null, null, null, null, null, null);
         var invalid = valid with
         {
@@ -51,7 +51,7 @@ public sealed class ComplianceProgramTests
         Assert.Equal(1, version.Version?.CurrentRevision);
         Assert.Equal(CommandFailureCode.InvalidContent,
             Assert.IsType<CommandFailure>(invalidCurrent).Code);
-        Assert.Single(new AggregateScenario<ComplianceProgram>(program).PendingEvents);
+        Assert.Single(program.AppliedChanges);
     }
 
     [Fact]
@@ -134,10 +134,10 @@ public sealed class ComplianceProgramTests
     }
 
     [Fact]
-    public void ShouldPreserveEventsAndActorSnapshotGivenProgramRevision()
+    public async Task ShouldPreserveEventsAndActorSnapshotGivenProgramRevision()
     {
         // Arrange
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
         var original = new ProgramPlan(null, new DateOnly(2027, 3, 1),
             new DateOnly(2027, 4, 1), new DateOnly(2028, 3, 31), "Advisor A", null);
         var revised = original with { ReadinessAdvisor = "Advisor B" };
@@ -146,7 +146,8 @@ public sealed class ComplianceProgramTests
         var changed = program.Revise(1, "SOC 2 program", revised, MemberId, "Lead B", Now.AddDays(1));
 
         // Act
-        var events = new AggregateScenario<ComplianceProgram>(program).PendingEvents;
+        await using var native = new ProgramNativeFixture();
+        var events = await ProgramSeeds.FactsAsync(native.Content, program);
 
         // Assert
         Assert.Null(created);
@@ -165,7 +166,7 @@ public sealed class ComplianceProgramTests
     public void ShouldReturnExactCriteriaSelectionEffectiveAtGivenTime()
     {
         // Arrange
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
         var plan = new ProgramPlan(null, null, null, null, null, null);
         var firstEdition = Uuid.CreateVersion4();
         var laterEdition = Uuid.CreateVersion4();
@@ -186,24 +187,21 @@ public sealed class ComplianceProgramTests
     }
 
     [Fact]
-    public void ShouldPreserveLegacyActorGivenDifferentReviserAndReplay()
+    public async Task ShouldPreserveLegacyActorGivenDifferentReviserAndReplay()
     {
         // Arrange
         var originalMemberId = Uuid.CreateVersion4();
         var replacementMemberId = Uuid.CreateVersion4();
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
         var plan = new ProgramPlan(null, null, null, null, null, null);
         Assert.Null(program.Create("SOC 2", plan, originalMemberId, "Original name", Now));
         Assert.Null(program.Revise(1, "SOC 2 revised", plan, replacementMemberId,
             "Replacement name", Now.AddDays(1)));
-        var events = new AggregateScenario<ComplianceProgram>(program).PendingEvents;
+        await using var native = new ProgramNativeFixture();
+        var events = await ProgramSeeds.FactsAsync(native.Content, program);
         var original = Assert.IsType<ProgramCreated>(events[0]);
         var replacement = Assert.IsType<ProgramRevised>(events[1]);
-        var legacyJson = $$"""
-            {"tenant_id":"{{TenantId}}","program_id":"{{ProgramId}}","name":"SOC 2",
-             "plan":{},"actor_member_id":"{{originalMemberId}}",
-             "actor_display":"Original name","changed_at":"{{Now:O}}"}
-            """;
+        var legacyJson = JsonSerializer.Serialize(original, ComplianceCoreJsonContext.Default.ProgramCreated);
         var legacyRevisionJson = $$"""
             {"program_id":"{{ProgramId}}","revision":1,"name":"SOC 2",
              "plan":{},"actor_member_id":"{{originalMemberId}}",
@@ -221,15 +219,15 @@ public sealed class ComplianceProgramTests
 
         // Assert
         Assert.Equal(ActorReference.ForMember(originalMemberId, "Original name"), original.Actor);
-        Assert.Equal(original.Actor, original.StoredActor);
+        Assert.Equal(original.Actor, original.Operation.Actor);
         Assert.Equal(ActorReference.ForMember(originalMemberId, "Original name"), replayed?.Actor);
-        Assert.Null(replayed?.StoredActor);
+        Assert.Equal(original.Operation, replayed?.Operation);
         Assert.Equal(ActorReference.ForMember(originalMemberId, "Original name"), projected?.Actor);
         Assert.Equal(ActorReference.ForMember(replacementMemberId, "Replacement name"),
             replacement.Actor);
-        Assert.Equal(replacement.Actor, replacement.StoredActor);
+        Assert.Equal(replacement.Actor, replacement.Operation.Actor);
         Assert.NotEqual(replacement.Actor.Id, replayed?.Actor.Id);
-        Assert.Equal("Original name", currentDocument.RootElement.GetProperty("actor")
+        Assert.Equal("Original name", currentDocument.RootElement.GetProperty("operation").GetProperty("actor")
             .GetProperty("display").GetString());
     }
 
@@ -237,7 +235,7 @@ public sealed class ComplianceProgramTests
     public void ShouldRejectChangedCreateGivenExistingProgramAndPreserveReplay()
     {
         // Arrange
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
         var original = new ProgramPlan(null, null, null, null, "Advisor A", null);
         Assert.Null(program.Create("SOC 2", original, MemberId, "Lead", Now));
         Assert.Null(program.Revise(1, "SOC 2 revised", original with { ReadinessAdvisor = "Advisor B" },
@@ -252,14 +250,14 @@ public sealed class ComplianceProgramTests
         var conflict = Assert.IsType<CommandFailure>(changed);
         Assert.Equal(CommandFailureCode.StateConflict, conflict.Code);
         Assert.Equal("The program already exists with different content.", conflict.Message);
-        Assert.Equal(2, new AggregateScenario<ComplianceProgram>(program).PendingEvents.Count);
+        Assert.Equal(2, program.AppliedChanges.Count);
     }
 
     [Fact]
     public void ShouldAvoidEventsGivenStaleRevisionOrInvalidPeriod()
     {
         // Arrange
-        var program = new ComplianceProgram(TenantId, ProgramId);
+        var program = new ProgramRules(TenantId, ProgramId);
 
         // Act
         var valid = new ProgramPlan(null, null, null, null, null, null);
@@ -288,7 +286,7 @@ public sealed class ComplianceProgramTests
             Assert.IsType<CommandFailure>(reversed).Code);
         Assert.Equal(CommandFailureCode.InvalidContent,
             Assert.IsType<CommandFailure>(reversedStages).Code);
-        Assert.Single(new AggregateScenario<ComplianceProgram>(program).PendingEvents);
+        Assert.Single(program.AppliedChanges);
     }
 
     static ServiceProvider Services() => ProgramManagementServices.Build(
@@ -299,7 +297,7 @@ public sealed class ComplianceProgramTests
         ClaimsPrincipal actor, Uuid requestId, string name) => RequestScenario.For(provider)
         .GivenActor(actor)
         .GivenMetadata(new RequestMetadata(requestId, requestId, null))
-        .When(new CreateProgram(TenantId, name,
+        .When(new CreateProgram(requestId, TenantId, name,
             new ProgramPlan(null, null, null, null, null, null)))
         .ExpectAuthorized()
         .ExpectHandled();

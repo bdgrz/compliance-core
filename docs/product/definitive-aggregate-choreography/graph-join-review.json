@@ -1,0 +1,48 @@
+{
+  "architectureRows": 185,
+  "ownerRoleExceptions": [
+    [
+      "T050",
+      "logicalPrerequisiteOwner",
+      "Member|TeamMember",
+      null
+    ],
+    [
+      "T052",
+      "logicalPrerequisiteOwner",
+      "Member|TeamMember",
+      null
+    ],
+    [
+      "T110",
+      "logicalPrerequisiteOwner",
+      "EngagementManagementAcknowledgement|PartnerIndependenceDecision",
+      null
+    ],
+    [
+      "N001",
+      "targetOwner",
+      "IEmailChallengeDeliveryLedger",
+      null
+    ],
+    [
+      "N002",
+      "targetOwner",
+      "IEmailChallengeDeliveryLedger",
+      null
+    ],
+    [
+      "S000",
+      "targetOwner",
+      "IArtifactContentStore",
+      null
+    ]
+  ],
+  "eventNameExceptions": [
+    [
+      "T032",
+      "logicalPrerequisiteEvents",
+      "process:verified_build_output"
+    ]
+  ]
+}

@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 static class SampleSelectionPopulationSourceReader
 {
     public static async ValueTask<Result<AuditPopulationVersionView>> LoadAsync(
-        IAggregateReader reader, Uuid tenantId, Uuid programId, Uuid examinationId,
+        AuditPopulationReader populations, Uuid tenantId, Uuid programId, Uuid examinationId,
         Uuid populationId, int populationVersion, IReadOnlyList<Uuid> selectedRowIds,
         CancellationToken ct)
     {
@@ -15,9 +15,8 @@ static class SampleSelectionPopulationSourceReader
             populationId == Uuid.Empty || populationVersion <= 0)
             return Invalid("A sample selection must identify its examination and frozen population version.");
 
-        var population = await reader.HydrateAsync(new AuditPopulation(tenantId, programId,
-            populationId), ct).ConfigureAwait(false);
-        if (population.Current is not { } current || current.TenantId != tenantId ||
+        var population = await populations.ReadAsync(tenantId, programId, populationId, ct).ConfigureAwait(false);
+        if (population.View is not { } current || current.TenantId != tenantId ||
             current.ProgramId != programId || current.AuditPopulationId != populationId)
             return Result<AuditPopulationVersionView>.Failure(new RequestError(
                 RequestErrorKind.NotFound, "The audit population was not found in this program."));

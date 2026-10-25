@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Hosting.Persistence;
@@ -252,8 +253,8 @@ public sealed class MethodologyTemplateCommandHandlerTests
         var reviewer = Uuid.CreateVersion4();
         var approver = Uuid.CreateVersion4();
         var clientAdmin = Uuid.CreateVersion4();
-        var createProgram = await new CreateProgramHandler(scenario.Executor, scenario.Clock).HandleAsync(
-            Scenario.Context(new CreateProgram(tenantId, "Northwind SOC 2", new ProgramPlan(null, null, null,
+        var createProgram = await new CreateProgramHandler(ProgramSeeds.Operations(scenario.Reader, scenario.Writer, scenario.Events, scenario.ContentStore, scenario.Clock)).HandleAsync(
+            Scenario.Context(new CreateProgram(Uuid.CreateVersion4(), tenantId, "Northwind SOC 2", new ProgramPlan(null, null, null,
                 null, null, null)), clientAdmin), CancellationToken.None);
         var programId = createProgram.Value!.ProgramId;
         var createTemplate = new CreateMethodologyTemplateHandler(scenario.TemplateOperations());
@@ -348,6 +349,8 @@ public sealed class MethodologyTemplateCommandHandlerTests
             new(new NativeOperationExecutor(Reader, Executor, ContentStore), ContentStore, clock ?? Clock);
         public IAggregateExecutor Executor { get; }
         public IAggregateReader Reader { get; }
+        public IDomainEventReader Events => _events;
+        public IAggregateWriter Writer => _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
 
         public static RequestContext<TRequest> Context<TRequest>(TRequest request, Uuid userId)
             where TRequest : IRequestBase => new(request, Actor(userId));

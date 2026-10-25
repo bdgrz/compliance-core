@@ -226,10 +226,10 @@ public sealed class MethodologyTemplateNativeHistoryTests
         var tenant = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var client = Uuid.CreateVersion4();
-        var program = new ComplianceProgram(tenant, programId);
+        var program = new ProgramRules(tenant, programId);
         Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
             Uuid.CreateVersion4(), "Lead", Now));
-        await scenario.Writer.SaveAsync(program, new RequestDispatchContext(RequestActor.System));
+        await ProgramSeeds.WriteAsync(scenario.Reader, scenario.Writer, scenario.Events, scenario.Content, program);
         Assert.True((await scenario.CreateAsync(new CreateMethodologyTemplate(template, Content("first"),
             "Initial"), author)).IsSuccess);
         Assert.True((await scenario.ReviewAsync(new ReviewMethodologyTemplate(Uuid.CreateVersion4(), template,

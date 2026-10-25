@@ -236,7 +236,7 @@ public sealed class PersonalMappingDecisionTransportTests
             }
             return fixture;
         }
-        public Task ChangeEditionAsync() => ProgramManagementServices.SeedAsync(_provider, new ComplianceProgram(Tenant, Program),
+        public Task ChangeEditionAsync() => ProgramManagementServices.SeedAsync(_provider, new ProgramRules(Tenant, Program),
             program => { Assert.Null(program.SelectCriteriaEdition(2, NextEdition, Author, "Author", DateTimeOffset.UtcNow)); return Result.Success; });
         public async Task<ulong> PositionAsync(string action)
         {

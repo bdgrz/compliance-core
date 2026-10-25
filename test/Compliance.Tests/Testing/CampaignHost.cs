@@ -93,19 +93,19 @@ sealed class CampaignHost : IAsyncDisposable
     /// <summary>Seeds the program and the two people: a member-correlated learner and a person without a membership.</summary>
     public async Task SeedAsync()
     {
-        await ProgramManagementServices.SeedAsync(_provider, new ComplianceProgram(Tenant, Program), program =>
+        await ProgramManagementServices.SeedAsync(_provider, new ProgramRules(Tenant, Program), program =>
         {
             Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), Manager,
                 "Client manager", Start));
             return Result.Success;
         });
-        await ProgramManagementServices.SeedAsync(_provider, new Person(Tenant, LearnerPerson), person =>
+        await ProgramManagementServices.SeedAsync(_provider, new PersonRules(Tenant, LearnerPerson), person =>
         {
             Assert.True(person.Record("Learner", null, ManagerActor, Start).IsSuccess);
             Assert.Null(person.CorrelateMembership(1, Learner, ManagerActor, Start));
             return Result.Success;
         });
-        await ProgramManagementServices.SeedAsync(_provider, new Person(Tenant, OfflinePerson), person =>
+        await ProgramManagementServices.SeedAsync(_provider, new PersonRules(Tenant, OfflinePerson), person =>
         {
             Assert.True(person.Record("Offline", null, ManagerActor, Start).IsSuccess);
             return Result.Success;

@@ -289,7 +289,8 @@ public sealed class FitzPermissionAuthorizerTests
         var permissions = ActivatorUtilities.CreateInstance<FitzPermissionAuthorizer>(services);
         await SeedActiveTeamGrantAsync(permissions, tenantId, userId, teamId, roleId);
         var programId = Uuid.CreateVersion4();
-        DomainEvent created = new ProgramCreated(tenantId, programId, "SOC 2",
+        await using var programNative = new ProgramNativeFixture();
+        var created = await ProgramSeeds.CreatedAsync(programNative.Content, tenantId, programId, "SOC 2",
             new ProgramPlan(null, null, null, null, null, null), memberId, "Owner",
             DateTimeOffset.UtcNow);
         created.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), programId, 1,

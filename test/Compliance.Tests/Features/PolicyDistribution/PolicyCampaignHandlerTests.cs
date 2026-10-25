@@ -247,7 +247,7 @@ public sealed class PolicyCampaignHandlerTests
             var outsider = new PersonView(fixture.TenantId, fixture.NonMemberPersonId, 1,
                 "Nate Nonmember", null, "manual", actor, Now);
             await ProgramManagementServices.SeedAsync(provider,
-                new Person(fixture.TenantId, fixture.MemberPersonId), person =>
+                new PersonRules(fixture.TenantId, fixture.MemberPersonId), person =>
                 {
                     Assert.True(person.Record(member.DisplayName, null, actor, Now).IsSuccess);
                     return Command(person.CorrelateMembership(1, fixture.MemberUserId, actor, Now));

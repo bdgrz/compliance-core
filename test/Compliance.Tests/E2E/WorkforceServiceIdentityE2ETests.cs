@@ -281,6 +281,12 @@ public sealed class WorkforceServiceIdentityE2ETests(BrokerStackFixture broker)
     static async Task<string> PostWhenAuthorizedAsync(HttpClient client, string path, object body,
         string idProperty, HttpMethod? method = null)
     {
+        var person = path.EndsWith("/people", StringComparison.Ordinal);
+        if (person)
+        {
+            path = $"{path}/{Guid.NewGuid():D}";
+            method = HttpMethod.Put;
+        }
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {

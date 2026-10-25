@@ -298,7 +298,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
         public static async Task<Fixture> CreateAsync(bool approval, bool assigned = false)
         {
             var fixture = new Fixture();
-            await ProgramManagementServices.SeedAsync(fixture._provider, new ComplianceProgram(fixture.Tenant, fixture.Program), program =>
+            await ProgramManagementServices.SeedAsync(fixture._provider, new ProgramRules(fixture.Tenant, fixture.Program), program =>
             {
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null),
                     fixture.Author, "Client manager", At));

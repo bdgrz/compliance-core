@@ -532,8 +532,8 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         Assert.Equal(HttpStatusCode.OK, tenant.StatusCode);
         var tenantId = Guid.Parse((await ReadAsync(tenant)).GetProperty("tenant_id").GetString()!);
         var programId = await CreateProgramAsync(owner, tenantId);
-        using var service = await owner.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenantId}/programs/{programId}/client-services", new
+        using var service = await owner.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/programs/{programId}/client-services" + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "Client service",
                 purpose = "Provide the contracted service",
@@ -580,7 +580,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var program = await owner.PostAsJsonAsync(path, new
+            using var program = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "SOC 2",
                 plan = new

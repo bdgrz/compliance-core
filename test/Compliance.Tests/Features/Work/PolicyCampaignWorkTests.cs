@@ -148,10 +148,10 @@ public sealed class PolicyCampaignWorkTests
         var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         var dispatch = new RequestDispatchContext(RequestActor.System);
         var userId = Uuid.CreateVersion4();
-        var person = new Person(TenantId, Ada);
+        var person = new PersonRules(TenantId, Ada);
         Assert.True(person.Record("Ada", null, Owner, Now).IsSuccess);
         Assert.Null(person.CorrelateMembership(1, userId, Owner, Now));
-        await writer.SaveAsync(person, dispatch, CancellationToken.None);
+        await PersonSeeds.AppendAsync(scope.ServiceProvider, person);
         var open = await harness.LaunchAsync(Ada, Bob);
         var closed = await harness.LaunchAsync(Ada);
         await CampaignSeed.CloseAsync(harness.Provider, TenantId, closed.Id, "Done", Owner, Now.AddDays(1));

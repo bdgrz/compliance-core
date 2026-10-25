@@ -179,6 +179,9 @@ public sealed class ControlOperationE2ETests(BrokerStackFixture broker)
         });
     }
 
+    internal static Task SeedAsync(WebApplicationFactory<Program> factory, ProgramRules rules,
+        Func<ProgramRules, Result> operation) => ProgramManagementServices.SeedAsync(factory.Services, rules, operation);
+
     internal static Task SeedAsync(WebApplicationFactory<Program> factory, ControlRules rules,
         Func<ControlRules, Result> operation) => ProgramManagementServices.SeedAsync(factory.Services, rules, operation);
 
@@ -209,8 +212,8 @@ public sealed class ControlOperationE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var program = await owner.PostAsJsonAsync(
-                $"/api/v1/tenants/{tenantId}/programs", new
+            using var program = await owner.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/programs" + $"/{Uuid.CreateVersion4()}", new
                 {
                     name = "SOC 2",
                     plan = new

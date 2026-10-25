@@ -376,7 +376,7 @@ public sealed class TrainingWorkAuthorityTests
             }
             var now = DateTimeOffset.UtcNow;
             var actor = ActorReference.ForMember(fixture.OwnerMemberId, "Campaign owner");
-            await ProgramManagementServices.SeedAsync(provider, new Person(fixture.TenantId,
+            await ProgramManagementServices.SeedAsync(provider, new PersonRules(fixture.TenantId,
                 fixture.PersonId), person =>
                 {
                     Assert.True(person.Record("Learner", null, actor, now).IsSuccess);

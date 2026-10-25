@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.AuditorRequests;
 ///     acknowledgment, so the selection owner materializes from the accepted proof without reading the live request or
 ///     the latest population, even after the request resolved.
 /// </summary>
-sealed class SampleSelectionAdmission(NativeOperationExecutor operations, IAggregateReader reader,
+sealed class SampleSelectionAdmission(NativeOperationExecutor operations, AuditPopulationReader populations,
     IDomainEventReader events,
     IImmutableContentStore content, TimeProvider clock)
 {
@@ -56,7 +56,7 @@ sealed class SampleSelectionAdmission(NativeOperationExecutor operations, IAggre
                 supersedesSelectionId is not null, rowIds);
                 if (!selection.IsSuccess)
                     return Result<FirstResponseDescriptor>.Failure(selection.Error!);
-                var population = await SampleSelectionPopulationSourceReader.LoadAsync(reader, tenantId, programId,
+                var population = await SampleSelectionPopulationSourceReader.LoadAsync(populations, tenantId, programId,
                 examinationId, populationId, populationVersion, selection.Value!.RowIds, prepareCt).ConfigureAwait(false);
                 if (!population.IsSuccess)
                     return Result<FirstResponseDescriptor>.Failure(population.Error);

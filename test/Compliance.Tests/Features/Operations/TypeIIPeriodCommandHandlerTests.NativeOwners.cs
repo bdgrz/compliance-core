@@ -171,7 +171,8 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             fixture.Host.Content, fixture.CloseClock), new ManagementExecutiveAuthority(fixture.Reader,
             new ExecutivePermissions(RbacPermissions.ManagementExecutiveCiso)), sources,
             new TypeIIPeriodCloseMaterialReader(fixture.Events, fixture.Host.Content, new SystemDescriptionReader(fixture.Reader, fixture.Events, fixture.Host.Content),
-                new RecordedSourceReceiptCutFactory(fixture.Events, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>())), fixture.Host.Content);
+                new RecordedSourceReceiptCutFactory(fixture.Events, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()),
+                new AuditPopulationReader(fixture.Reader, fixture.Events, fixture.Host.Content, new EventStoreSourceFactResolver(fixture.Events))), fixture.Host.Content);
 
     static async Task<TypeIIPeriodCloseSnapshotView> SeedClosedForAmendmentAsync(Fixture fixture)
     {

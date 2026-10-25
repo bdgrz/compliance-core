@@ -44,10 +44,10 @@ public sealed class AdvisorNativeHttpTests
             }));
         using var client = factory.CreateClient();
         var user = Uuid.Parse(await TenantInvitationE2ETests.LoginAsync(client, "advisor-http@example.test"), CultureInfo.InvariantCulture);
-        var program = new ComplianceProgram(source.TenantId, source.ProgramId);
+        var program = new ProgramRules(source.TenantId, source.ProgramId);
         Assert.Null(program.Create("Advisor HTTP", new ProgramPlan(null, null, null, null, null, null),
             RbacIds.Member(source.TenantId, user), "Program author", source.Clock.GetUtcNow()));
-        await source.Writer.SaveAsync(program, new RequestDispatchContext(RequestActor.System));
+        await ProgramSeeds.WriteAsync(source.Reader, source.Writer, source.Events, source.Content, program);
         var request = new CloseAdvisorHandoff(Uuid.CreateVersion4(), source.TenantId, source.ProgramId,
             handoffId, "The review is complete", 2);
         var route = $"/api/v1/tenants/{source.TenantId}/programs/{source.ProgramId}/advisor-handoffs/{handoffId}/closures/{request.CommandId}";

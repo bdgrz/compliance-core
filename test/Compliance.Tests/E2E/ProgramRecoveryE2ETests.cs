@@ -221,7 +221,7 @@ public sealed class ProgramRecoveryE2ETests(RestartableBrokerStackFixture broker
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await client.PostAsJsonAsync(path, new
+            using var response = await client.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "Recovery program",
                 plan = Plan("Recovery source advisor"),
@@ -438,8 +438,8 @@ public sealed class ProgramRecoveryE2ETests(RestartableBrokerStackFixture broker
             provider.GetRequiredService<FitzBoundaryDirectory>());
         builder.Services.AddScoped<IBoundaryDirectoryReader>(provider =>
             provider.GetRequiredService<FitzBoundaryDirectory>());
-        builder.Services.AddPortiaEvent<ProgramCreated>(1, "bdgrz.program.created");
-        builder.Services.AddPortiaEvent<ProgramRevised>(1, "bdgrz.program.revised");
+        builder.Services.AddPortiaEvent<ProgramCreated>(2, "bdgrz.program.created");
+        builder.Services.AddPortiaEvent<ProgramRevised>(2, "bdgrz.program.revised");
         builder.Services.AddPortiaEvent<BoundaryDraftCreated>(1, "bdgrz.boundary.draft.created");
         builder.Services.AddPortiaEvent<BoundaryDraftRevised>(1, "bdgrz.boundary.draft.revised");
         builder.Services.AddPortiaEvent<BoundaryDraftDiscarded>(1,

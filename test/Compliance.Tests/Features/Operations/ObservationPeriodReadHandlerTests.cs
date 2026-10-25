@@ -475,7 +475,8 @@ public sealed class ObservationPeriodReadHandlerTests
                 [], [], prior.AcknowledgedMaterialItemIds)
             { SourceContentManifest = publication, RecordedThrough = at };
             var proof = await new TypeIIPeriodCloseMaterialReader(Events, Content, new SystemDescriptionReader(Reader, Events, Content),
-                new RecordedSourceReceiptCutFactory(Events, Receipts)).FreezeAsync(period.Current, prior, reconciliation, operation, CancellationToken.None);
+                new RecordedSourceReceiptCutFactory(Events, Receipts),
+                new AuditPopulationReader(Reader, Events, Content, new EventStoreSourceFactResolver(Events))).FreezeAsync(period.Current, prior, reconciliation, operation, CancellationToken.None);
             var evidence = await Content.ReadJsonAsync<TypeIIPeriodCloseMaterialProof>(Tenant.ToString(), proof);
             Assert.Null(period.AmendClose(period.Revision, new TypeIIPeriodCloseSnapshotContent(Uuid.CreateVersion4(), [source],
                 prior.ExpectedOccurrenceIds, prior.AcknowledgedMaterialItemIds)

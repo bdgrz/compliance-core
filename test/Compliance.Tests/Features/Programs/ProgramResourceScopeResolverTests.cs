@@ -35,10 +35,12 @@ public sealed class ProgramResourceScopeResolverTests
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
-        var source = new ComplianceProgram(tenantId, programId);
-        var failure = source.Create("Program", new ProgramPlan(null, null, null, null, null, null),
+        var sourceRules = new ProgramRules(tenantId, programId);
+        var failure = sourceRules.Create("Program", new ProgramPlan(null, null, null, null, null, null),
             Uuid.CreateVersion4(), "Admin", DateTimeOffset.UtcNow);
         Assert.Null(failure);
+        await using var programNative = new ProgramNativeFixture();
+        var source = await ProgramSeeds.OwnerAsync(programNative.Content, sourceRules);
         var resolver = new ProgramResourceScopeResolver(new MissingProgramDirectory(),
             new BoundaryDirectory(new BoundaryView(tenantId, boundaryId, programId,
                 null, null, null)), null!, null!, new SourceReader(source));
@@ -63,7 +65,7 @@ public sealed class ProgramResourceScopeResolverTests
         var boundaryId = Uuid.CreateVersion4();
         var serviceId = Uuid.CreateVersion4();
         var snapshotId = Uuid.CreateVersion4();
-        var program = CreatedProgram(tenantId, programId);
+        var program = await CreatedProgram(tenantId, programId);
         await using var native = new BoundaryProjectionScenario();
         var boundaryRules = new BoundaryRules(tenantId, boundaryId);
         Assert.True(boundaryRules.Create(programId, Uuid.CreateVersion5(boundaryId, "draft-1"),
@@ -71,9 +73,11 @@ public sealed class ProgramResourceScopeResolverTests
             "Admin", DateTimeOffset.UtcNow).IsSuccess);
         await native.PublishAsync(boundaryRules);
         var boundary = await native.Reader.HydrateAsync(new SystemBoundary(tenantId, boundaryId));
-        var service = new ClientService(tenantId, serviceId);
-        Assert.True(service.Create(programId, "Service", "Purpose", "Owner", actorId,
+        var serviceRules = new ProductClientServiceRules(tenantId, serviceId);
+        Assert.True(serviceRules.Create(programId, "Service", "Purpose", "Owner", actorId,
             "Admin", DateTimeOffset.UtcNow).IsSuccess);
+        await using var serviceNative = new ProductClientServiceFixture();
+        var service = await ProductClientServiceSeeds.OwnerAsync(serviceNative.Content, serviceRules);
         var manifest = new ProgramScopeManifest(1, tenantId, programId, 1,
             new string('a', 64), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             new string('b', 64));
@@ -107,7 +111,7 @@ public sealed class ProgramResourceScopeResolverTests
         var foreignTenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
-        var foreignProgram = CreatedProgram(foreignTenantId, programId);
+        var foreignProgram = await CreatedProgram(foreignTenantId, programId);
         await using var native = new BoundaryProjectionScenario();
         var foreignBoundaryRules = new BoundaryRules(foreignTenantId, boundaryId);
         Assert.True(foreignBoundaryRules.Create(programId, Uuid.CreateVersion5(boundaryId, "draft-1"),
@@ -153,11 +157,13 @@ public sealed class ProgramResourceScopeResolverTests
         Assert.False(missing);
     }
 
-    static ComplianceProgram CreatedProgram(Uuid tenantId, Uuid programId)
+    static async Task<ComplianceProgram> CreatedProgram(Uuid tenantId, Uuid programId)
     {
-        var source = new ComplianceProgram(tenantId, programId);
-        Assert.Null(source.Create("Program", new ProgramPlan(null, null, null, null, null, null),
+        var sourceRules = new ProgramRules(tenantId, programId);
+        Assert.Null(sourceRules.Create("Program", new ProgramPlan(null, null, null, null, null, null),
             Uuid.CreateVersion4(), "Admin", DateTimeOffset.UtcNow));
+        await using var programNative = new ProgramNativeFixture();
+        var source = await ProgramSeeds.OwnerAsync(programNative.Content, sourceRules);
         return source;
     }
 

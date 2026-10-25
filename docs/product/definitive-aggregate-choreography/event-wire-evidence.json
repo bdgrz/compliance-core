@@ -1,0 +1,429 @@
+{
+  "simpleAliasRows": [
+    {
+      "legacyEvent": "CorrectiveActionAdded",
+      "canonicalEvent": "CorrectiveActionAddedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:CorrectiveActionAdded"
+    },
+    {
+      "legacyEvent": "CorrectiveActionCompleted",
+      "canonicalEvent": "CorrectiveActionCompletedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:CorrectiveActionCompleted"
+    },
+    {
+      "legacyEvent": "EvidenceRedactionApproved",
+      "canonicalEvent": "EvidenceRedactionApprovedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:EvidenceRedactionApproved"
+    },
+    {
+      "legacyEvent": "EvidenceRedactionPrepared",
+      "canonicalEvent": "EvidenceRedactionPreparedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:EvidenceRedactionPrepared"
+    },
+    {
+      "legacyEvent": "FindingAcceptanceLinked",
+      "canonicalEvent": "FindingAcceptanceLinkedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:FindingAcceptanceLinked"
+    },
+    {
+      "legacyEvent": "FindingClosed",
+      "canonicalEvent": "FindingClosedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:FindingClosed"
+    },
+    {
+      "legacyEvent": "FindingRaised",
+      "canonicalEvent": "FindingRaisedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:FindingRaised"
+    },
+    {
+      "legacyEvent": "FindingReopened",
+      "canonicalEvent": "FindingReopenedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:FindingReopened"
+    },
+    {
+      "legacyEvent": "FindingRevised",
+      "canonicalEvent": "FindingRevisedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:FindingRevised"
+    },
+    {
+      "legacyEvent": "TenantActivated",
+      "canonicalEvent": "TenantActivatedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:TenantActivated"
+    },
+    {
+      "legacyEvent": "TenantOffboardingStarted",
+      "canonicalEvent": "TenantOffboardingStartedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:TenantOffboardingStarted"
+    },
+    {
+      "legacyEvent": "TenantReactivated",
+      "canonicalEvent": "TenantReactivatedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:TenantReactivated"
+    },
+    {
+      "legacyEvent": "TenantSuspended",
+      "canonicalEvent": "TenantSuspendedV2",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:TenantSuspended"
+    },
+    {
+      "legacyEvent": "WorkItemAssigned",
+      "canonicalEvent": "WorkItemAssignmentRecorded",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:WorkItemAssignmentRecorded"
+    },
+    {
+      "legacyEvent": "WorkItemAssignmentHistoryImported",
+      "canonicalEvent": "WorkAssignmentLegacyHistoryImported",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:WorkAssignmentLegacyHistoryImported"
+    },
+    {
+      "legacyEvent": "WorkItemEscalated",
+      "canonicalEvent": "WorkItemAssignmentEscalated",
+      "relation": "version_or_name_replacement",
+      "migrationRule": "decoder-only original bytes; no receipt/provenance upgrade",
+      "canonicalSemanticKey": "event:WorkItemAssignmentEscalated"
+    },
+    {
+      "legacyEvent": "DeliveredEngagementHoldReleased",
+      "canonicalEvent": "ArtifactEngagementHoldReleased",
+      "relation": "explicit_vocabulary_or_decision_reuse",
+      "migrationRule": "no duplicate writer or payload conversion",
+      "canonicalSemanticKey": "event:ArtifactEngagementHoldReleased"
+    },
+    {
+      "legacyEvent": "IndependenceRuleVersionRatified",
+      "canonicalEvent": "IndependenceRuleRatificationRecorded",
+      "relation": "explicit_vocabulary_or_decision_reuse",
+      "migrationRule": "no duplicate writer or payload conversion",
+      "canonicalSemanticKey": "event:IndependenceRuleRatificationRecorded"
+    },
+    {
+      "legacyEvent": "NextObservationPeriodStarted",
+      "canonicalEvent": "ProgramNextPeriodCreated",
+      "relation": "explicit_vocabulary_or_decision_reuse",
+      "migrationRule": "no duplicate writer or payload conversion",
+      "canonicalSemanticKey": "event:ProgramNextPeriodCreated"
+    },
+    {
+      "legacyEvent": "ObservationPeriodEnded",
+      "canonicalEvent": "ObservationPeriodCloseFrozen",
+      "relation": "explicit_vocabulary_or_decision_reuse",
+      "migrationRule": "no duplicate writer or payload conversion",
+      "canonicalSemanticKey": "event:ObservationPeriodCloseFrozen"
+    },
+    {
+      "legacyEvent": "OwnAttestRecordDeliveryRecorded",
+      "canonicalEvent": "ClientExportAttestPackageDeliveryRecorded",
+      "relation": "explicit_vocabulary_or_decision_reuse",
+      "migrationRule": "no duplicate writer or payload conversion",
+      "canonicalSemanticKey": "event:ClientExportAttestPackageDeliveryRecorded"
+    },
+    {
+      "legacyEvent": "OwnAttestRecordDeliveryVerified",
+      "canonicalEvent": "ClientExportAttestPackageDeliveryRecorded",
+      "relation": "explicit_vocabulary_or_decision_reuse",
+      "migrationRule": "no duplicate writer or payload conversion",
+      "canonicalSemanticKey": "event:ClientExportAttestPackageDeliveryRecorded"
+    },
+    {
+      "legacyEvent": "OwnAttestRecordPackagePrepared",
+      "canonicalEvent": "ClientExportBuilt",
+      "relation": "explicit_vocabulary_or_decision_reuse",
+      "migrationRule": "no duplicate writer or payload conversion",
+      "canonicalSemanticKey": "event:ClientExportBuilt"
+    },
+    {
+      "legacyEvent": "TypeIIOperatingPlanApproved",
+      "canonicalEvent": "TypeIIPlanApproved",
+      "relation": "explicit_vocabulary_or_decision_reuse",
+      "migrationRule": "no duplicate writer or payload conversion",
+      "canonicalSemanticKey": "event:TypeIIPlanApproved"
+    },
+    {
+      "legacyEvent": "TypeIIOperatingPlanProposed",
+      "canonicalEvent": "TypeIIPlanProposed",
+      "relation": "explicit_vocabulary_or_decision_reuse",
+      "migrationRule": "no duplicate writer or payload conversion",
+      "canonicalSemanticKey": "event:TypeIIPlanProposed"
+    },
+    {
+      "legacyEvent": "TypeIIOperatingPlanReviewed",
+      "canonicalEvent": "TypeIIPlanReviewed",
+      "relation": "explicit_vocabulary_or_decision_reuse",
+      "migrationRule": "no duplicate writer or payload conversion",
+      "canonicalSemanticKey": "event:TypeIIPlanReviewed"
+    },
+    {
+      "legacyEvent": "WorkDigestPreferenceChanged",
+      "canonicalEvent": "WorkDigestPreferenceRecorded",
+      "relation": "OPEN_recommended_authored_choice_name",
+      "decisionId": "EV-D05",
+      "migrationRule": "different wire discriminators; never rewrite old Changed as Recorded",
+      "canonicalSemanticKey": "event:WorkDigestPreferenceRecorded"
+    }
+  ],
+  "protocolReplacementRows": [
+    {
+      "legacyEvent": "ObservationPeriodAmendmentCancelled",
+      "canonicalProtocolFacts": [
+        "TypeIIPeriodRangeSettled"
+      ],
+      "relation": "protocol_role_replacement_not_payload_alias"
+    },
+    {
+      "legacyEvent": "ObservationPeriodAmendmentCompleted",
+      "canonicalProtocolFacts": [
+        "TypeIIPeriodRangeSettled"
+      ],
+      "relation": "protocol_role_replacement_not_payload_alias"
+    },
+    {
+      "legacyEvent": "ObservationPeriodAmendmentReserved",
+      "canonicalProtocolFacts": [
+        "TypeIIPeriodRangeAuthorized"
+      ],
+      "relation": "protocol_role_replacement_not_payload_alias"
+    },
+    {
+      "legacyEvent": "ObservationPeriodReservationReleased",
+      "canonicalProtocolFacts": [
+        "TypeIIPeriodRangeSettled"
+      ],
+      "relation": "protocol_role_replacement_not_payload_alias"
+    },
+    {
+      "legacyEvent": "ObservationPeriodReserved",
+      "canonicalProtocolFacts": [
+        "TypeIIPeriodRangeAuthorized"
+      ],
+      "relation": "protocol_role_replacement_not_payload_alias"
+    },
+    {
+      "legacyEvent": "TenantManagerWithdrawn",
+      "canonicalProtocolFacts": [
+        "TenantManagerWithdrawalAccepted",
+        "TenantManagerSourceMutationAdmitted",
+        "TenantManagerWithdrawalCompleted"
+      ],
+      "relation": "protocol_role_replacement_not_payload_alias"
+    }
+  ],
+  "familyDecisionRows": [
+    {
+      "legacyEvent": "FutureControlScheduleRevised",
+      "canonicalFamily": "Approved ControlOperatingPlan cadence/future-work facts",
+      "status": "explicit_family_not_one_to_one_event_alias",
+      "decisionId": "EV-FAMILY-FutureControlScheduleRevised"
+    },
+    {
+      "legacyEvent": "GovernanceReviewScheduled",
+      "canonicalFamily": "Ordinary ControlOccurrence lifecycle",
+      "status": "explicit_family_not_one_to_one_event_alias",
+      "decisionId": "EV-FAMILY-GovernanceReviewScheduled"
+    },
+    {
+      "legacyEvent": "ManagementReviewActionCompleted",
+      "canonicalFamily": "Shared Finding and CorrectiveAction lifecycle",
+      "status": "explicit_family_not_one_to_one_event_alias",
+      "decisionId": "EV-FAMILY-ManagementReviewActionCompleted"
+    },
+    {
+      "legacyEvent": "ManagementReviewActionRecorded",
+      "canonicalFamily": "Shared Finding and CorrectiveAction lifecycle",
+      "status": "explicit_family_not_one_to_one_event_alias",
+      "decisionId": "EV-FAMILY-ManagementReviewActionRecorded"
+    },
+    {
+      "legacyEvent": "ManagementReviewRecorded",
+      "canonicalFamily": "Ordinary ControlOccurrence lifecycle",
+      "status": "explicit_family_not_one_to_one_event_alias",
+      "decisionId": "EV-FAMILY-ManagementReviewRecorded"
+    },
+    {
+      "legacyEvent": "MissingOccurrenceRecorded",
+      "canonicalFamily": "Generated expected population and observation-period close reconciliation",
+      "status": "explicit_family_not_one_to_one_event_alias",
+      "decisionId": "EV-FAMILY-MissingOccurrenceRecorded"
+    },
+    {
+      "legacyEvent": "OpenRemediationCarriedForward",
+      "canonicalFamily": "ProgramRollover carry-forward protocol",
+      "status": "explicit_family_not_one_to_one_event_alias",
+      "decisionId": "EV-FAMILY-OpenRemediationCarriedForward"
+    }
+  ],
+  "sameWireGroups": [
+    {
+      "discriminator": "bdgrz.application.relationship.removed",
+      "versions": [
+        {
+          "event": "ApplicationRelationshipRemoved",
+          "version": 1
+        },
+        {
+          "event": "ApplicationRelationshipGovernedRemoved",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "discriminator": "bdgrz.evidence.redaction.approved",
+      "versions": [
+        {
+          "event": "EvidenceRedactionApproved",
+          "version": 1
+        },
+        {
+          "event": "EvidenceRedactionApprovedV2",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "discriminator": "bdgrz.evidence.redaction.prepared",
+      "versions": [
+        {
+          "event": "EvidenceRedactionPrepared",
+          "version": 1
+        },
+        {
+          "event": "EvidenceRedactionPreparedV2",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "discriminator": "bdgrz.tenant.activated",
+      "versions": [
+        {
+          "event": "TenantActivated",
+          "version": 1
+        },
+        {
+          "event": "TenantActivatedV2",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "discriminator": "bdgrz.tenant.offboarding.started",
+      "versions": [
+        {
+          "event": "TenantOffboardingStarted",
+          "version": 1
+        },
+        {
+          "event": "TenantOffboardingStartedV2",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "discriminator": "bdgrz.tenant.reactivated",
+      "versions": [
+        {
+          "event": "TenantReactivated",
+          "version": 1
+        },
+        {
+          "event": "TenantReactivatedV2",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "discriminator": "bdgrz.tenant.suspended",
+      "versions": [
+        {
+          "event": "TenantSuspended",
+          "version": 1
+        },
+        {
+          "event": "TenantSuspendedV2",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "discriminator": "bdgrz.work.assigned",
+      "versions": [
+        {
+          "event": "WorkItemAssigned",
+          "version": 1
+        },
+        {
+          "event": "WorkItemAssignmentRecorded",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "discriminator": "bdgrz.work.assignment-history-imported",
+      "versions": [
+        {
+          "event": "WorkItemAssignmentHistoryImported",
+          "version": 1
+        },
+        {
+          "event": "WorkAssignmentLegacyHistoryImported",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "discriminator": "bdgrz.work.escalated",
+      "versions": [
+        {
+          "event": "WorkItemEscalated",
+          "version": 1
+        },
+        {
+          "event": "WorkItemAssignmentEscalated",
+          "version": 2
+        }
+      ]
+    }
+  ],
+  "wireRule": "Keep every version decoder explicit. Same discriminator or semantic key is not sufficient to cast/upgrade payloads or fabricate native acceptance.",
+  "prunedRelationshipPublicPaths": [
+    {
+      "legacyEvent": "ApplicationRelationshipRecorded",
+      "canonicalEvent": "ApplicationRelationshipAdded",
+      "relation": "Public-path supersession after selected tuple identity owner cutover, not a historical payload conversion."
+    },
+    {
+      "legacyEvent": "ApplicationRelationshipGovernedRemoved",
+      "canonicalEvent": "ApplicationRelationshipRemoved",
+      "relation": "Public-path supersession after selected tuple identity owner cutover, not a historical payload conversion."
+    }
+  ]
+}

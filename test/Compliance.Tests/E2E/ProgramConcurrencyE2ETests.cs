@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -47,7 +48,7 @@ public sealed class ProgramConcurrencyE2ETests(BrokerStackFixture broker)
                 new EventStreamAddress(tenantId, "programs", programId).ToString());
 
             // Act
-            using var conflict = await client.PutAsJsonAsync(path, RevisionRequest("Held-session revision"));
+            using var conflict = await client.PutAsJsonAsync(path + $"/revisions/{Uuid.CreateVersion4()}", RevisionRequest("Held-session revision"));
             var conflictBody = await conflict.Content.ReadAsStringAsync();
             using var problem = JsonDocument.Parse(conflictBody);
             var detail = Assert.IsType<string>(problem.RootElement.GetProperty("detail").GetString());
@@ -66,13 +67,13 @@ public sealed class ProgramConcurrencyE2ETests(BrokerStackFixture broker)
             Assert.DoesNotContain(programId, detail, StringComparison.Ordinal);
 
             await blocker.RollbackAsync();
-            using var accepted = await client.PutAsJsonAsync(path, RevisionRequest("Released-session revision"));
-            Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
+            using var accepted = await client.PutAsJsonAsync(path + $"/revisions/{Uuid.CreateVersion4()}", RevisionRequest("Released-session revision"));
+            Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
             await WaitForRevisionAsync(client, path, 2);
             var revisedEvents = await ReadRevisionsAsync(factory, tenantId, programId);
             var revised = Assert.Single(revisedEvents);
             Assert.Equal(2, revised.Revision);
-            Assert.Equal("Released-session revision", revised.Name);
+            Assert.Equal("Released-session revision", (await ProgramReader.ReadContentAsync(factory.Services.GetRequiredService<IImmutableContentStore>(), revised)).Name);
         }
         finally
         {
@@ -144,7 +145,7 @@ public sealed class ProgramConcurrencyE2ETests(BrokerStackFixture broker)
             var revisedEvents = await ReadRevisionsAsync(factory, tenantId, programId);
             var revised = Assert.Single(revisedEvents);
             Assert.Equal(2, revised.Revision);
-            Assert.Equal("Released-session MCP revision", revised.Name);
+            Assert.Equal("Released-session MCP revision", (await ProgramReader.ReadContentAsync(factory.Services.GetRequiredService<IImmutableContentStore>(), revised)).Name);
         }
         finally
         {
@@ -216,7 +217,7 @@ public sealed class ProgramConcurrencyE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await client.PostAsJsonAsync(programs, new
+            using var response = await client.PutAsJsonAsync(programs + $"/{Uuid.CreateVersion4()}", new
             {
                 name = "Concurrent revision program",
                 plan = Plan(),
@@ -286,6 +287,7 @@ public sealed class ProgramConcurrencyE2ETests(BrokerStackFixture broker)
         string tenantId, string programId, string name) => await scenario.When("bdgrz.program.revise",
         new Dictionary<string, object?>
         {
+            ["command_id"] = Uuid.CreateVersion4().ToString(),
             ["tenant_id"] = tenantId,
             ["program_id"] = programId,
             ["expected_revision"] = 1,

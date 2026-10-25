@@ -12,12 +12,15 @@ sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore conte
 {
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
+        if (domainEvent is IProgramFact native)
+            ProgramHistory.ValidateHeader(native);
         switch (domainEvent)
         {
             case ProgramCreated created:
+                var creation = await ProgramReader.ReadContentAsync(content, created, ct).ConfigureAwait(false);
                 await ProgramDirectorySchema.Directory.InsertAsync(Transaction,
-                        new ProgramView(created.TenantId, created.ProgramId, created.Name,
-                            "readiness", "type_i", 1, created.Plan,
+                        new ProgramView(created.TenantId, created.ProgramId, creation.Name,
+                            "readiness", "type_i", 1, creation.Plan,
                             created.ActorMemberId, created.ActorDisplay, created.ChangedAt,
                             [
                                 new ProgramStageView("readiness",
@@ -29,11 +32,12 @@ sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore conte
                             ]), ct)
                     .ConfigureAwait(false);
                 await ProgramDirectorySchema.Revisions.InsertAsync(Transaction,
-                        new ProgramRevisionView(created.ProgramId, 1, created.Name, created.Plan,
+                        new ProgramRevisionView(created.ProgramId, 1, creation.Name, creation.Plan,
                             created.ActorMemberId, created.ActorDisplay, created.ChangedAt), ct)
                     .ConfigureAwait(false);
                 break;
             case ProgramRevised revised:
+                var revision = await ProgramReader.ReadContentAsync(content, revised, ct).ConfigureAwait(false);
                 var current = await ProgramDirectorySchema.Directory.GetAsync(Transaction,
                     revised.ProgramId, ct).ConfigureAwait(false);
                 if (current is null)
@@ -42,22 +46,25 @@ sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore conte
                 await ProgramDirectorySchema.Directory.ReplaceAsync(Transaction, current,
                     current with
                     {
-                        Name = revised.Name,
+                        Name = revision.Name,
                         Revision = revised.Revision,
-                        Plan = revised.Plan,
+                        Plan = revision.Plan,
                         LastChangedByMemberId = revised.ActorMemberId,
                         LastChangedByDisplay = revised.ActorDisplay,
                         LastChangedAt = revised.ChangedAt,
                     }, ct).ConfigureAwait(false);
                 await ProgramDirectorySchema.Revisions.InsertAsync(Transaction,
                     new ProgramRevisionView(revised.ProgramId, revised.Revision,
-                        revised.Name, revised.Plan, revised.ActorMemberId,
+                        revision.Name, revision.Plan, revised.ActorMemberId,
                         revised.ActorDisplay, revised.ChangedAt)
                     {
                         CriteriaEditionId = current.CriteriaEditionId,
                     }, ct).ConfigureAwait(false);
                 break;
             case ProgramCriteriaEditionSelected selected:
+                if (selected.ChangeCount == 0)
+                    break;
+                _ = await ProgramReader.ReadContentAsync(content, selected, ct).ConfigureAwait(false);
                 var beforeSelection = await ProgramDirectorySchema.Directory.GetAsync(Transaction,
                     selected.ProgramId, ct).ConfigureAwait(false);
                 if (beforeSelection is null)

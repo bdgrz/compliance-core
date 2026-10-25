@@ -28,13 +28,13 @@ public sealed class CommitmentHttpRoutesTests
         var program = Uuid.CreateVersion4();
         var service = Uuid.CreateVersion4();
         var id = CommitmentDraft.IdFor(tenant, program, "service_commitment", "SC-HTTP");
-        await ProgramManagementServices.SeedAsync(factory.Services, new ComplianceProgram(tenant, program), owner =>
+        await ProgramManagementServices.SeedAsync(factory.Services, new ProgramRules(tenant, program), owner =>
         {
             Assert.Null(owner.Create("Security", new ProgramPlan(null, null, null, null, null, null),
                 RbacIds.Member(tenant, author), "Author", DateTimeOffset.UtcNow));
             return Result.Success;
         });
-        await ProgramManagementServices.SeedAsync(factory.Services, new ClientService(tenant, service), owner =>
+        await ProgramManagementServices.SeedAsync(factory.Services, new ProductClientServiceRules(tenant, service), owner =>
             owner.Create(program, "Service", "Purpose", "Owner", RbacIds.Member(tenant, author), "Author", DateTimeOffset.UtcNow));
         var path = $"/api/v1/tenants/{tenant}/programs/{program}/commitment-drafts/{id}";
         var create = new { service_id = service.ToString(), kind = "service_commitment", identifier = "SC-HTTP", statement = "First statement", context = "Context", source_reference = "MSA" };

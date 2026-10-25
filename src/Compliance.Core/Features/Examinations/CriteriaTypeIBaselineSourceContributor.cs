@@ -12,7 +12,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Resolves the criteria edition selected for the program at the Type I date.</summary>
-public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader reader,
+public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader reader, IDomainEventReader events,
     ICriteriaCatalog catalog, ICriteriaTextOverlayReader overlays, IImmutableContentStore? content = null)
     : ITypeIBaselineSourceContributor
 {
@@ -34,6 +34,7 @@ public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader read
         }
         catch (ImmutableContentIntegrityException exception)
         {
+            ct.ThrowIfCancellationRequested();
             return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The exact criteria source cannot be verified: " + exception.Message,
                 isTransient: exception is ImmutableContentUnavailableException));
@@ -48,12 +49,22 @@ public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader read
         var receiptCut = context.RecordedThrough is null ? null : context.RequireReceipts(engagement.TenantId);
         var program = await reader.HydrateAsync(new ComplianceProgram(engagement.TenantId,
             engagement.ProgramId), ct).ConfigureAwait(false);
+        var history = await ProgramHistory.ReadAsync(events, program, ct).ConfigureAwait(false);
         var programReceipts = receiptCut is null ? null : await receiptCut.ReadAsync(program.Stream, ct).ConfigureAwait(false);
+        if (programReceipts is not null)
+            foreach (var record in programReceipts.Records)
+            {
+                if (record.ResourceOffset >= program.CommittedStreamPosition)
+                    throw new ImmutableContentUnavailableException("The criteria receipt source advanced beyond its hydrated native cut.");
+                if (!history.Facts.Any(fact => fact.GetType() == record.Event.GetType() && fact.Equals(record.Event) &&
+                    fact.Metadata == record.Event.Metadata))
+                    throw new ImmutableContentIntegrityException("The criteria receipt cut differs from its exact verified native prefix.");
+            }
         var selectedFact = programReceipts?.Included.Select(record => record.Event).OfType<ProgramCriteriaEditionSelected>()
-            .LastOrDefault();
+            .LastOrDefault(static fact => fact.ChangeCount == 1);
         if (selectedFact is not null && (selectedFact.TenantId != engagement.TenantId || selectedFact.ProgramId != engagement.ProgramId))
             throw new ImmutableContentIntegrityException("The criteria selection belongs to another exact program.");
-        var selection = receiptCut is null ? program.CriteriaSelectionAt(through) : selectedFact is null ? null
+        var selection = receiptCut is null ? history.CriteriaSelectionAt(through) : selectedFact is null ? null
             : new ProgramCriteriaEditionSelection(selectedFact.Revision, selectedFact.EditionId, selectedFact.ChangedAt);
         if (!program.IsCreated || selection is null)
             return Result<TypeIBaselineSourceContribution>.Success(Contribution([],
@@ -120,7 +131,8 @@ public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader read
 
         var confirmed = await reader.HydrateAsync(new ComplianceProgram(engagement.TenantId,
             engagement.ProgramId), ct).ConfigureAwait(false);
-        if (receiptCut is null && !Equals(selection, confirmed.CriteriaSelectionAt(through)))
+        var confirmedHistory = await ProgramHistory.ReadAsync(events, confirmed, ct).ConfigureAwait(false);
+        if (receiptCut is null && !Equals(selection, confirmedHistory.CriteriaSelectionAt(through)))
             return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(
                 RequestErrorKind.Conflict,
                 "The program criteria selection changed while the baseline preview was read. Retry the preview.",

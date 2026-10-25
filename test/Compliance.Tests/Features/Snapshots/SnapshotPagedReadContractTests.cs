@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Snapshots;
@@ -17,7 +18,7 @@ public sealed class SnapshotPagedReadContractTests
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var handler = new ListProgramSnapshotsHandler(new SnapshotDirectory(),
-            new AggregateReader(Program(tenantId, programId)));
+            new AggregateReader(await Program(tenantId, programId)));
 
         // Act
         var result = await handler.HandleAsync(Context(new ListProgramSnapshots(tenantId,
@@ -34,7 +35,7 @@ public sealed class SnapshotPagedReadContractTests
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var handler = new ListProgramSnapshotsHandler(new SnapshotDirectory { RejectCursor = true },
-            new AggregateReader(Program(tenantId, programId)));
+            new AggregateReader(await Program(tenantId, programId)));
 
         // Act
         var result = await handler.HandleAsync(Context(new ListProgramSnapshots(tenantId,
@@ -50,12 +51,13 @@ public sealed class SnapshotPagedReadContractTests
     static void AssertValidation(RequestError? error) =>
         Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(error).Kind);
 
-    static ComplianceProgram Program(Uuid tenantId, Uuid programId)
+    static async Task<ComplianceProgram> Program(Uuid tenantId, Uuid programId)
     {
-        var program = new ComplianceProgram(tenantId, programId);
+        var program = new ProgramRules(tenantId, programId);
         Assert.Null(program.Create("Readiness", new ProgramPlan(null, null, null, null, null, null),
             Uuid.CreateVersion4(), "Owner", DateTimeOffset.UtcNow));
-        return program;
+        await using var native = new ProgramNativeFixture();
+        return await ProgramSeeds.OwnerAsync(native.Content, program);
     }
 
     sealed class SnapshotDirectory : ISnapshotDirectoryReader

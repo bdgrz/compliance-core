@@ -169,7 +169,7 @@ public sealed class AttestRiskManagementWriteWallTests
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(
             new RecordingPermissionAuthorizer(true)));
         var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
-        await ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(source.TenantId, source.ProgramId),
+        await ProgramManagementServices.SeedAsync(provider, new ProgramRules(source.TenantId, source.ProgramId),
             program =>
             {
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null),

@@ -3,31 +3,27 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPopulations;
 
-public sealed class GenerateAuditPopulationHandler(IAggregateExecutor executor,
+public sealed class GenerateAuditPopulationHandler(AuditPopulationMutations mutations,
     TimeProvider clock) : IRequestHandler<GenerateAuditPopulation>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<GenerateAuditPopulation> context,
+    public async ValueTask<Result> HandleAsync(IRequestContext<GenerateAuditPopulation> context,
         CancellationToken ct)
     {
         var request = context.Request;
         if (!AuditPopulationCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,
                 out var actorMemberId, out var actorDisplay))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Starting audit population collection requires a personal HTTP actor.")));
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Starting audit population collection requires a personal HTTP actor."));
 
-        return executor.ExecuteAsync(new AuditPopulation(request.TenantId, request.ProgramId,
-                request.DefinitionId), aggregate =>
+        var appended = await mutations.AppendUnqualifiedAsync(context, request.TenantId, request.ProgramId,
+            request.DefinitionId, rules =>
             {
-                if (aggregate.Current is not { } current)
-                    return AggregateOutcome.Discard(Result.Failure(new RequestError(
-                        RequestErrorKind.NotFound, "The audit population was not found.")));
+                if (rules.Current is not { } current)
+                    return CommandFailure.MissingRecord("The audit population was not found.");
                 if (current.CloseSnapshot.CloseSnapshotId != request.PeriodCloseId)
-                    return AggregateOutcome.Discard(Result.Failure(new RequestError(
-                        RequestErrorKind.Conflict,
-                        "Collection must target the exact period-close snapshot pinned by the population.")));
-                return CommandFailureRequestAdapter.ToOutcome(aggregate.Generate(
-                    aggregate.Revision, request.GenerationKey, actorMemberId, actorDisplay,
-                    clock.GetUtcNow()));
-            }, context, ct);
+                    return CommandFailure.StateConflict("Collection must target the exact period-close snapshot pinned by the population.");
+                return rules.Generate(rules.Revision, request.GenerationKey, actorMemberId, actorDisplay, clock.GetUtcNow());
+            }, ct).ConfigureAwait(false);
+        return appended.IsSuccess ? Result.Success : Result.Failure(appended.Error!);
     }
 }

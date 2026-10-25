@@ -78,7 +78,7 @@ public sealed class MemberPresentationE2ETests(BrokerStackFixture broker) : ICla
                 // Act
                 await ObserveProfileAsync(factory.Services, userId, "Provider member");
                 await AssertReadsAsync(owner, paths, userId, "Provider member", email);
-                using var created = await owner.PostAsJsonAsync($"{root}/people", new
+                using var created = await owner.PutAsJsonAsync($"{root}/people/{Guid.NewGuid():D}", new
                 {
                     display_name = "Roster member",
                     work_email = "unverified-roster@example.test",
@@ -86,9 +86,9 @@ public sealed class MemberPresentationE2ETests(BrokerStackFixture broker) : ICla
                 Assert.Equal(HttpStatusCode.OK, created.StatusCode);
                 var personId = (await ReadAsync(created)).GetProperty("person_id").GetString();
                 var personPath = $"{root}/people/{personId}";
-                using var correlated = await owner.PutAsJsonAsync($"{personPath}/membership-correlation",
+                using var correlated = await owner.PutAsJsonAsync($"{personPath}/membership-correlations/{Guid.NewGuid():D}",
                     new { expected_revision = 1, user_id = userId });
-                Assert.Equal(HttpStatusCode.NoContent, correlated.StatusCode);
+                Assert.Equal(HttpStatusCode.OK, correlated.StatusCode);
                 await AssertReadsAsync(owner, paths, userId, "Roster member", email);
                 var otherTenant = await CreateTenantAsync(owner);
                 await AccessGrantE2ESupport.IssueFounderOrganizationGrantAsync(owner, otherTenant);
@@ -102,9 +102,9 @@ public sealed class MemberPresentationE2ETests(BrokerStackFixture broker) : ICla
                 await AssertReadsAsync(owner, paths, userId, "Roster renamed", email);
                 await ObserveProfileAsync(factory.Services, userId, "Provider renamed");
                 await AssertReadsAsync(owner, paths, userId, "Roster renamed", email);
-                using var unlinked = await owner.PutAsJsonAsync($"{personPath}/membership-correlation",
+                using var unlinked = await owner.PutAsJsonAsync($"{personPath}/membership-correlations/{Guid.NewGuid():D}",
                     new { expected_revision = 3, user_id = (string?)null });
-                Assert.Equal(HttpStatusCode.NoContent, unlinked.StatusCode);
+                Assert.Equal(HttpStatusCode.OK, unlinked.StatusCode);
                 await AssertReadsAsync(owner, paths, userId, "Provider renamed", email);
                 await ObserveProfileAsync(factory.Services, userId, null);
                 await AssertReadsAsync(owner, paths, userId, email, email);

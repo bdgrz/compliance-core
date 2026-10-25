@@ -176,13 +176,13 @@ public sealed class ControlOwnerPersonWriteTests
                         new AccessGrantSource("manual", "owner-write-test"), fixture.Actor,
                         Now.AddDays(-1), null)));
             await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new Person(fixture.TenantId, fixture.OriginalPersonId), person =>
+                new PersonRules(fixture.TenantId, fixture.OriginalPersonId), person =>
                     person.Record("Original owner", "original@example.com", fixture.Actor, Now.AddDays(-1)));
             await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new Person(fixture.TenantId, fixture.CandidatePersonId), person =>
+                new PersonRules(fixture.TenantId, fixture.CandidatePersonId), person =>
                     person.Record("Workforce owner", "owner@example.com", fixture.Actor, Now.AddDays(-1)));
             await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new Person(fixture.ForeignTenantId, fixture.ForeignPersonId), person =>
+                new PersonRules(fixture.ForeignTenantId, fixture.ForeignPersonId), person =>
                     person.Record("Foreign owner", "foreign@example.com",
                         ActorReference.ForMember(RbacIds.Member(fixture.ForeignTenantId,
                             Uuid.CreateVersion4()), "Foreign recorder"), Now.AddDays(-1)));

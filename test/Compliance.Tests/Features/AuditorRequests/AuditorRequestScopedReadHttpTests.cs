@@ -264,10 +264,10 @@ public sealed class AuditorRequestScopedReadHttpTests
 
         public async Task SeedProgramAsync(Uuid programId)
         {
-            var program = new ComplianceProgram(Native.TenantId, programId);
+            var program = new ProgramRules(Native.TenantId, programId);
             Assert.Null(program.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null), Native.MemberId,
                 "Program author", AuditorRequestFixture.Now));
-            await Native.Writer.SaveAsync(program, new RequestDispatchContext(RequestActor.System));
+            await ProgramSeeds.WriteAsync(Native.Reader, Native.Writer, Native.Events, Native.Content, program);
         }
 
         public async Task SelectAsync(Uuid selection, Uuid population, Uuid row)

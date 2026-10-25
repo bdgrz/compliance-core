@@ -23,12 +23,12 @@ public sealed class ProviderReferenceTests
         var request = new RecordProvider(Uuid.CreateVersion4(), fixture.TenantId, fixture.Content());
         var scenario = RequestScenario.For(fixture.Services).GivenActor(ProgramManagementServices.Actor(fixture.UserId));
         var first = (await scenario.When(request).ExpectSuccess()).Value;
-        await ProgramManagementServices.SeedAsync(fixture.Services, new Person(fixture.TenantId, fixture.PersonId), person =>
+        await ProgramManagementServices.SeedAsync(fixture.Services, new PersonRules(fixture.TenantId, fixture.PersonId), person =>
         {
             Assert.Null(person.Revise(1, "Second name", null, fixture.Author, fixture.Now.AddMinutes(1)));
             return Result.Success;
         });
-        await ProgramManagementServices.SeedAsync(fixture.Services, new ClientService(fixture.TenantId, fixture.ServiceId), service =>
+        await ProgramManagementServices.SeedAsync(fixture.Services, new ProductClientServiceRules(fixture.TenantId, fixture.ServiceId), service =>
         {
             Assert.Null(service.Revise(1, "Second service", "Purpose", "Owner", fixture.UserId, "Recorder", fixture.Now.AddMinutes(1)));
             return Result.Success;
@@ -48,7 +48,7 @@ public sealed class ProviderReferenceTests
 
         // Act
         var createRetry = await scenario.When(request).ExpectSuccess();
-        await ProgramManagementServices.SeedAsync(fixture.Services, new Person(fixture.TenantId, fixture.PersonId), person =>
+        await ProgramManagementServices.SeedAsync(fixture.Services, new PersonRules(fixture.TenantId, fixture.PersonId), person =>
         {
             Assert.Null(person.Revise(2, "Third name", null, fixture.Author, fixture.Now.AddMinutes(2)));
             return Result.Success;
@@ -94,7 +94,7 @@ public sealed class ProviderReferenceTests
 
         // Act
         var resolved = await fixture.References.ResolveAsync(fixture.TenantId, content, CancellationToken.None);
-        await ProgramManagementServices.SeedAsync(fixture.Services, new Person(fixture.TenantId, fixture.PersonId), person =>
+        await ProgramManagementServices.SeedAsync(fixture.Services, new PersonRules(fixture.TenantId, fixture.PersonId), person =>
         {
             Assert.Null(person.Revise(1, "Revised name", null, fixture.Author, fixture.Now.AddMinutes(1)));
             return Result.Success;
@@ -205,14 +205,14 @@ public sealed class ProviderReferenceTests
                     services.AddScoped<NamedRecordAdmission>();
                 }),
             };
-            await ProgramManagementServices.SeedAsync(fixture.Services, new Person(fixture.TenantId, fixture.PersonId),
+            await ProgramManagementServices.SeedAsync(fixture.Services, new PersonRules(fixture.TenantId, fixture.PersonId),
                 person => person.Record("Non-signing owner", null, fixture.Author, fixture.Now));
-            await ProgramManagementServices.SeedAsync(fixture.Services, new ComplianceProgram(fixture.TenantId, fixture.ProgramId), program =>
+            await ProgramManagementServices.SeedAsync(fixture.Services, new ProgramRules(fixture.TenantId, fixture.ProgramId), program =>
             {
                 Assert.Null(program.Create("SOC2", new ProgramPlan(null, null, null, null, null, null), Uuid.CreateVersion4(), "Recorder", fixture.Now));
                 return Result.Success;
             });
-            await ProgramManagementServices.SeedAsync(fixture.Services, new ClientService(fixture.TenantId, fixture.ServiceId),
+            await ProgramManagementServices.SeedAsync(fixture.Services, new ProductClientServiceRules(fixture.TenantId, fixture.ServiceId),
                 service => service.Create(fixture.ProgramId, "Service", "Purpose", "Owner", Uuid.CreateVersion4(), "Recorder", fixture.Now));
             await ProgramManagementServices.SeedAsync(fixture.Services, new DeclaredApplication(fixture.TenantId, fixture.ApplicationId),
                 application => application.Declare("Application", "Purpose", "Owner", Uuid.CreateVersion4(), "Recorder", fixture.Now));

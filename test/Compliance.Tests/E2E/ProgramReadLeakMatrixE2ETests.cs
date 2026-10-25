@@ -272,22 +272,22 @@ public sealed class ProgramReadLeakMatrixE2ETests(BrokerStackFixture broker)
                 {
                     var tenantPath = TenantPath(scope.TenantId);
                     using var programRevision = await owner.PutAsJsonAsync(
-                        tenantPath + "/programs/" + scope.ProgramIds[0], new
+                        tenantPath + "/programs/" + scope.ProgramIds[0] + $"/revisions/{Uuid.CreateVersion4()}", new
                         {
                             expected_revision = 2,
                             name = scope.Marker + " Program 1 after worker restart",
                             plan = Plan(),
                         });
-                    Assert.Equal(HttpStatusCode.NoContent, programRevision.StatusCode);
+                    Assert.Equal(HttpStatusCode.OK, programRevision.StatusCode);
                     using var serviceRevision = await owner.PutAsJsonAsync(
-                        tenantPath + "/client-services/" + scope.ServiceIds[0], new
+                        tenantPath + "/client-services/" + scope.ServiceIds[0] + $"/revisions/{Uuid.CreateVersion4()}", new
                         {
                             expected_revision = 2,
                             name = scope.Marker + " Service 1 after worker restart",
                             purpose = "Updated while the read worker is stopped",
                             owner_reference = "Operations",
                         });
-                    Assert.Equal(HttpStatusCode.NoContent, serviceRevision.StatusCode);
+                    Assert.Equal(HttpStatusCode.OK, serviceRevision.StatusCode);
 
                     using var staleProgram = await owner.GetAsync(tenantPath + "/programs/" +
                         scope.ProgramIds[0] + "?minimum_revision=3");
@@ -435,14 +435,14 @@ public sealed class ProgramReadLeakMatrixE2ETests(BrokerStackFixture broker)
         var firstProgram = await CreateProgramAsync(owner, programsPath, marker + " Program 1");
         var secondProgram = await CreateProgramAsync(owner, programsPath, marker + " Program 2");
         await WaitForPageCountAsync(owner, programsPath, 2);
-        using var revisedProgram = await owner.PutAsJsonAsync(programsPath + "/" + firstProgram,
+        using var revisedProgram = await owner.PutAsJsonAsync(programsPath + "/" + firstProgram + $"/revisions/{Uuid.CreateVersion4()}",
             new
             {
                 expected_revision = 1,
                 name = marker + " Program 1 revised",
                 plan = Plan(),
             });
-        Assert.Equal(HttpStatusCode.NoContent, revisedProgram.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, revisedProgram.StatusCode);
         await WaitForPageCountAsync(owner, programsPath + "/" + firstProgram +
             "/revisions?minimum_program_revision=2", 2);
 
@@ -454,7 +454,7 @@ public sealed class ProgramReadLeakMatrixE2ETests(BrokerStackFixture broker)
             marker + " Service 2");
         await WaitForPageCountAsync(owner, servicesPath, 2);
         await WaitForPageCountAsync(owner, createServicesPath, 2);
-        using (var revised = await owner.PutAsJsonAsync(servicesPath + "/" + firstService,
+        using (var revised = await owner.PutAsJsonAsync(servicesPath + "/" + firstService + $"/revisions/{Uuid.CreateVersion4()}",
                    new
                    {
                        expected_revision = 1,
@@ -462,7 +462,7 @@ public sealed class ProgramReadLeakMatrixE2ETests(BrokerStackFixture broker)
                        purpose = "Updated tenant read matrix",
                        owner_reference = "Operations",
                    }))
-            Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
         await WaitForPageCountAsync(owner, servicesPath + "/" + firstService +
             "/revisions?minimum_service_revision=2", 2);
 
@@ -494,7 +494,7 @@ public sealed class ProgramReadLeakMatrixE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, new { name, plan = Plan() });
+            using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new { name, plan = Plan() });
             if (response.StatusCode == HttpStatusCode.OK)
                 return (await ReadJsonAsync(response)).GetProperty("program_id").GetString()!;
             Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,
@@ -506,7 +506,7 @@ public sealed class ProgramReadLeakMatrixE2ETests(BrokerStackFixture broker)
 
     static async Task<string> CreateServiceAsync(HttpClient owner, string path, string name)
     {
-        using var response = await owner.PostAsJsonAsync(path, new
+        using var response = await owner.PutAsJsonAsync(path + $"/{Uuid.CreateVersion4()}", new
         {
             name,
             purpose = "Tenant read matrix",

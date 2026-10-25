@@ -60,7 +60,7 @@ public sealed class ControlNativeBoundaryRedTests
         await using var provider = ProgramManagementServices.Build(new RecordingPermissionAuthorizer(true),
             portia => portia.AddRequestHandler<CreateControlDraftHandler>().AddRequestHandler<ReviseControlDraftHandler>(),
             services => services.AddSingleton<IControlApplicabilityReferenceValidator>(new ValidApplicability()));
-        await ProgramManagementServices.SeedAsync(provider, new ComplianceProgram(tenant, program), owner =>
+        await ProgramManagementServices.SeedAsync(provider, new ProgramRules(tenant, program), owner =>
         {
             Assert.Null(owner.Create("SOC 2", new ProgramPlan(null, null, null, null, null, null),
                 RbacIds.Member(tenant, user), "Lead", Now));

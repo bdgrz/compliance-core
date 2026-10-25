@@ -29,11 +29,11 @@ public sealed class AdministratorTransitionAdmission(TenantManagerGuardLoader gu
         var provenance = new OperationProvenance(admission.CommandId, admission.CommandId, null,
             admission.CommandKind, admission.Actor, guardStream, admission.MemberEpisodeId.ToString(),
             admission.AuthoredRevision >= 0 ? (ulong)admission.AuthoredRevision : null,
-            admission.AuthoredIntentSha256, admission.AcceptedAt, admission.SourceOwner, admission.SourceOwner);
+            admission.AuthoredIntentSha256, admission.AcceptedAt, admission.SourceOwner, admission.SourceOwner, FirstOwner: guardStream);
         for (var round = 1; round <= MaximumRounds; round++)
         {
             ct.ThrowIfCancellationRequested();
-            var loaded = await guards.LoadAsync(admission.TenantId, admission.CommandId, ct).ConfigureAwait(false);
+            var loaded = await guards.LoadAsync(admission.TenantId, admission.CommandId, admission.MemberEpisodeId, admission.CommandId, ct).ConfigureAwait(false);
             // A system command authored with the current-episode sentinel resolves its accepted episode from
             // the original fact. The authored digest still distinguishes changed episode inputs and intent.
             var retryProvenance = admission.ResolveCurrentEpisode &&
@@ -44,22 +44,34 @@ public sealed class AdministratorTransitionAdmission(TenantManagerGuardLoader gu
             if (loaded.Guard.Acceptance.Decide(binding) != NativeAcceptanceDecision.None)
                 return await ReplayAsync(context, loaded, binding, realm, ct).ConfigureAwait(false);
 
-            var bound = admission.Bind(loaded.Guard);
-            if (!bound.IsSuccess)
-                return Result<AdministratorTransitionResponse>.Failure(bound.Error!);
-            var planned = loaded.Guard.Plan(admission.CommandKind, admission.MemberEpisodeId);
-            if (!planned.IsSuccess)
-                return Result<AdministratorTransitionResponse>.Failure(planned.Error!);
-            var plan = planned.Value!;
-            var intent = await WriteIntentAsync(admission, guardStream, plan, bound.Value!, realm, ct)
-                .ConfigureAwait(false);
-            var response = await AdministratorTransitionResponses.FreezeAcceptedAsync(content, realm,
-                admission.CommandId, admission.AcceptedAt, ct).ConfigureAwait(false);
+            NativePreparedCut? preparedCut = null;
+            AdmissionPlan? plan = null;
+            ImmutableContentRef? intent = null;
+            var baselineRef = loaded.BaselineRef;
             var accepted = await operations.ExecuteAsync(new NativeOperation<TenantManagerGuard>(binding, loaded.Create,
                 guard => guard.Acceptance,
-                guard => Recheck(guard, admission, plan, bound.Value!, response),
-                (TenantManagerGuard guard, ImmutableContentRef frozen) => guard.Admit(plan, admission.MemberEpisodeId, provenance, admission.SourceOwner,
-                    admission.AuthoredRevision, intent, frozen, loaded.BaselineRef)), context, ct)
+                async (guard, token) =>
+                {
+                    preparedCut = NativePreparedCut.Of(guard, guard.ReplayCut.Digest, guard.ReplayCut.MetadataDigest);
+                    var bound = admission.Bind(guard);
+                    if (!bound.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(bound.Error!);
+                    var planned = guard.Plan(admission.CommandKind, admission.MemberEpisodeId);
+                    if (!planned.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(planned.Error!);
+                    plan = planned.Value!;
+                    if (guard.IsEmpty)
+                        baselineRef = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), GuardBaseline.Schema,
+                            loaded.Baseline, token).ConfigureAwait(false);
+                    intent = await WriteIntentAsync(admission, guardStream, plan, bound.Value!, realm, token).ConfigureAwait(false);
+                    return Result<FirstResponseDescriptor>.Success(await AdministratorTransitionResponses.FreezeAcceptedAsync(content,
+                        realm, admission.CommandId, admission.AcceptedAt, token).ConfigureAwait(false));
+                },
+                (TenantManagerGuard guard, ImmutableContentRef frozen) =>
+                    preparedCut is not null && preparedCut == NativePreparedCut.Of(guard, guard.ReplayCut.Digest, guard.ReplayCut.MetadataDigest)
+                        ? guard.Admit(plan!, admission.MemberEpisodeId, admission.MemberId, retryProvenance,
+                            admission.SourceOwner, admission.AuthoredRevision, intent!, frozen, baselineRef)
+                        : Result.Failure(TenantManagerGuard.StaleConflict)), context, ct)
                 .ConfigureAwait(false);
             if (!accepted.IsSuccess && accepted.Error == TenantManagerGuard.StaleConflict)
                 continue;
@@ -67,20 +79,6 @@ public sealed class AdministratorTransitionAdmission(TenantManagerGuardLoader gu
         }
 
         return Result<AdministratorTransitionResponse>.Failure(TenantManagerGuard.StaleConflict);
-    }
-
-    static Result<FirstResponseDescriptor> Recheck(TenantManagerGuard guard, AdministratorAdmission admission,
-        AdmissionPlan plan, AdministratorSourceBinding bound, FirstResponseDescriptor response)
-    {
-        var rebound = admission.Bind(guard);
-        if (!rebound.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(rebound.Error!);
-        var replanned = guard.Plan(admission.CommandKind, admission.MemberEpisodeId);
-        if (!replanned.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(replanned.Error!);
-        return replanned.Value != plan || rebound.Value != bound
-            ? Result<FirstResponseDescriptor>.Failure(TenantManagerGuard.StaleConflict)
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     async ValueTask<Result<AdministratorTransitionResponse>> ReplayAsync(IExecutionContext context, LoadedGuard loaded,
