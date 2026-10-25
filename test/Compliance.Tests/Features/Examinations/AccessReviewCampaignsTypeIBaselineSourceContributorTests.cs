@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Content;
@@ -39,6 +40,140 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributorTests
     static readonly ActorReference CampaignOwner = ActorReference.ForMember(CampaignOwnerMemberId,
         "Campaign owner");
     static readonly ActorReference Reviewer = ActorReference.ForMember(ReviewerMemberId, "Reviewer");
+
+    [Fact]
+    public async Task ShouldIncludeBothNativeItemsGivenSameCallerDecisionIdAcceptedOnEachOwner()
+    {
+        // Arrange
+        await using var fixture = await AccessReviewFixture.CreateAsync();
+        var (campaignId, selected) = await AccessReviewBulkDecisionTests.LaunchedAsync(fixture);
+        var decisionId = Uuid.CreateVersion4();
+        foreach (var itemId in selected.Take(2))
+        {
+            var decision = await fixture.SendAsync(fixture.ReviewerUserId,
+                fixture.Decision(campaignId, itemId, 1, AccessReviewVocabulary.Keep,
+                    "Still required for this item.", commandId: decisionId));
+            Assert.Equal(decisionId, decision.DecisionId);
+        }
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var events = services.GetRequiredService<IDomainEventReader>();
+        var records = new List<DomainEventRecord>();
+        var cursor = EventCursor.Start;
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(fixture.TenantId.ToString()),
+            EventCursor.Start, CancellationToken.None))
+        {
+            records.Add(record);
+            if (record.Stream == AccessReviewEffects.CampaignStream(fixture.TenantId, campaignId))
+                cursor = record.NextCursor;
+        }
+        var cutoff = fixture.Clock.GetUtcNow().AddDays(1);
+        var receipts = new ScriptedNativeEventReceipts();
+        foreach (var record in records)
+            receipts.Record(record, cutoff);
+        var view = await fixture.CampaignAsync(campaignId);
+        var directory = new CampaignDirectory(new AccessReviewCampaignSummaryView(fixture.TenantId, campaignId,
+            view.Name, view.Deadline, view.Status, view.Items.Count, view.SnapshotId, view.LaunchedAt, null, null),
+            new ProjectionCheckpoint(cursor));
+        var contributor = new AccessReviewCampaignsTypeIBaselineSourceContributor(directory,
+            services.GetRequiredService<IAggregateReader>(), events,
+            services.GetRequiredService<AccessReviewReader>(), services.GetRequiredService<IImmutableContentStore>());
+        var engagement = new ExaminationEngagementView(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4(),
+            "type_i", "Audit firm", DateOnly.FromDateTime(cutoff.UtcDateTime), null, ["security"],
+            Uuid.CreateVersion4(), [], "draft", 1, cutoff, fixture.ManagerMemberId, "Examiner");
+        var context = new TypeIBaselineSourceReadContext(fixture.ManagerUserId, [])
+        {
+            RecordedThrough = cutoff,
+            ReceiptCut = new RecordedSourceReceiptCut(fixture.TenantId, cutoff, events, receipts),
+        };
+
+        // Act
+        var result = await contributor.ReadAsync(engagement, context, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(2, view.Items.Count(item => item.Decision?.DecisionId == decisionId));
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(3, Assert.Single(result.Value.Sources).Revision);
+        Assert.Empty(result.Value.Blockers);
+    }
+
+    [Theory]
+    [InlineData("none")]
+    [InlineData("publication")]
+    [InlineData("admission")]
+    [InlineData("sibling_hold")]
+    [InlineData("sibling_decision")]
+    public async Task ShouldRequireCompleteCausalBulkProofCutGivenNativeSettledBatch(string excludedProof)
+    {
+        // Arrange
+        await using var fixture = await AccessReviewFixture.CreateAsync();
+        var (campaignId, selected) = await AccessReviewBulkDecisionTests.LaunchedAsync(fixture);
+        var (request, _) = await fixture.AdmitBulkAsync(fixture.ReviewerUserId, campaignId, selected);
+        _ = await fixture.RunBulkAsync(campaignId, request.DecisionBatchId);
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var events = services.GetRequiredService<IDomainEventReader>();
+        var content = services.GetRequiredService<IImmutableContentStore>();
+        var campaign = await fixture.CampaignAggregateAsync(campaignId);
+        var batch = await fixture.BatchAsync(campaignId, request.DecisionBatchId);
+        var publication = batch.Published!;
+        var admitted = campaign.AdmittedFor(request.DecisionBatchId)!;
+        var proofs = await content.ReadJsonAsync<IReadOnlyList<BulkItemDecisionProof>>(fixture.TenantId.ToString(), publication.SourceProofs!);
+        var sibling = proofs.Single(proof => proof.ItemId == selected[1]);
+        var records = new List<DomainEventRecord>();
+        var cursor = EventCursor.Start;
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(fixture.TenantId.ToString()),
+            EventCursor.Start, CancellationToken.None))
+        {
+            records.Add(record);
+            if (record.Stream == campaign.Stream)
+                cursor = record.NextCursor;
+        }
+        var omittedId = excludedProof switch
+        {
+            "publication" => publication.Metadata.EventId,
+            "admission" => admitted.Metadata.EventId,
+            "sibling_hold" => sibling.Hold.EventId,
+            "sibling_decision" => sibling.Decision.EventId,
+            _ => Uuid.Empty,
+        };
+        var omitted = records.SingleOrDefault(record => record.Event.Metadata.EventId == omittedId);
+        var cutoff = fixture.Clock.GetUtcNow().AddDays(1);
+        var receipts = new ScriptedNativeEventReceipts();
+        foreach (var record in records)
+            receipts.Record(record, omitted is not null && record.Stream == omitted.Stream && record.ResourceOffset >= omitted.ResourceOffset
+                ? cutoff.AddMilliseconds(1) : cutoff);
+        var view = await fixture.CampaignAsync(campaignId);
+        var directory = new CampaignDirectory(new AccessReviewCampaignSummaryView(fixture.TenantId, campaignId, view.Name,
+            view.Deadline, view.Status, view.Items.Count, view.SnapshotId, view.LaunchedAt, null, null), new ProjectionCheckpoint(cursor));
+        var contributor = new AccessReviewCampaignsTypeIBaselineSourceContributor(directory, reader, events,
+            services.GetRequiredService<AccessReviewReader>(), content);
+        var engagement = new ExaminationEngagementView(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4(), "type_i",
+            "Audit firm", DateOnly.FromDateTime(cutoff.UtcDateTime), null, ["security"], Uuid.CreateVersion4(), [], "draft", 1,
+            cutoff, fixture.ManagerMemberId, "Examiner");
+        var context = new TypeIBaselineSourceReadContext(fixture.ManagerUserId, [])
+        {
+            RecordedThrough = cutoff,
+            ReceiptCut = new RecordedSourceReceiptCut(fixture.TenantId, cutoff, events, receipts),
+        };
+
+        // Act
+        var result = await contributor.ReadAsync(engagement, context, CancellationToken.None);
+
+        // Assert
+        if (excludedProof == "none")
+        {
+            Assert.True(result.IsSuccess, result.Error?.Message);
+            Assert.Equal(1 + selected.Count, Assert.Single(result.Value.Sources).Revision);
+        }
+        else
+        {
+            Assert.False(result.IsSuccess);
+            Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
+            Assert.False(result.Error.IsTransient);
+        }
+    }
 
     [Fact]
     public async Task ShouldKeepCampaignBaselineStableGivenBackdatedDecisionRecordedAfterTypeIDate()

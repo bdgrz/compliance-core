@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Programs;
@@ -11,6 +17,95 @@ public sealed class CriteriaTypeIBaselineSourceContributorTests
     static readonly Uuid TenantId = Uuid.CreateVersion4();
     static readonly Uuid ProgramId = Uuid.CreateVersion4();
     static readonly Uuid MemberId = Uuid.CreateVersion4();
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldSelectCriteriaByBrokerReceiptGivenSelectionPayloadTimeDisagrees(bool lateBrokerReceipt)
+    {
+        // Arrange
+        var cutoff = new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.Zero);
+        var first = Edition(Uuid.CreateVersion4());
+        var second = Edition(Uuid.CreateVersion4(), "later edition");
+        var program = Program(first.EditionId, cutoff.AddDays(-20),
+            (second.EditionId, lateBrokerReceipt ? cutoff.AddDays(-1) : cutoff.AddDays(1)));
+        var events = new InMemoryEventStore();
+        await events.AppendAsync(program.Stream, 0, NativeFacts.Raised(program));
+        var receipts = new ScriptedNativeEventReceipts();
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString()),
+            EventCursor.Start, CancellationToken.None))
+            receipts.Record(record, lateBrokerReceipt && record.Event is ProgramCriteriaEditionSelected selected && selected.EditionId == second.EditionId
+                ? cutoff.AddMilliseconds(1) : cutoff);
+        var contributor = Contributor(new ProgramReader(program), Catalog(lateBrokerReceipt ? first : second));
+        var context = new TypeIBaselineSourceReadContext(Uuid.Empty, [])
+        {
+            RecordedThrough = cutoff,
+            ReceiptCut = new RecordedSourceReceiptCut(TenantId, cutoff, events, receipts),
+        };
+
+        // Act
+        var result = await contributor.ReadAsync(Engagement(), context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Empty(result.Value.Blockers);
+        Assert.Equal(lateBrokerReceipt ? first.EditionId : second.EditionId,
+            Assert.Single(result.Value.Sources, source => source.Kind == "criteria_selection").VersionId);
+        Assert.True(receipts.Reads > 0);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldRetainHistoricalLicensedBodyAndCurrentUsageLimitsGivenLaterOverlayReceipt(bool currentAllowsDisplay)
+    {
+        // Arrange
+        var cutoff = new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.Zero);
+        var edition = Edition(Uuid.CreateVersion4());
+        var catalog = Catalog(edition);
+        var original = catalog.Entries[0];
+        var program = Program(edition.EditionId, cutoff.AddDays(-20));
+        var events = new InMemoryEventStore();
+        await events.AppendAsync(program.Stream, 0, NativeFacts.Raised(program));
+        var store = new FitzKvImmutableContentStore(new InMemoryKvClient());
+        var overlay = new CriteriaTextOverlay(TenantId, edition.EditionId, original.Identifier);
+        var first = new CriteriaTextOverlayContent("Original licensed narrative", "Supplier", "License", new(true, true));
+        var second = new CriteriaTextOverlayContent("Later licensed narrative", "Supplier", "License", new(currentAllowsDisplay, true));
+        var firstBody = await store.WriteJsonAsync(TenantId.ToString(), Uuid.CreateVersion4(), CriteriaTextOverlay.ContentSchema, first);
+        var secondBody = await store.WriteJsonAsync(TenantId.ToString(), Uuid.CreateVersion4(), CriteriaTextOverlay.ContentSchema, second);
+        var firstOperation = NativeFacts.Root(overlay, Uuid.CreateVersion4(), "SetCriteriaTextOverlay", 0, MemberId, cutoff.AddDays(-10));
+        var secondOperation = NativeFacts.Root(overlay, Uuid.CreateVersion4(), "SetCriteriaTextOverlay", 1, MemberId, cutoff.AddDays(-1));
+        Assert.True(overlay.Set(firstOperation, firstBody, NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
+        Assert.True(overlay.Set(secondOperation, secondBody, NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
+        await events.AppendAsync(overlay.Stream, 0, NativeFacts.Raised(overlay));
+        var firstRevision = new CriteriaTextOverlayRevision(TenantId, edition.EditionId, original.Identifier, 1,
+            first, firstOperation.Actor, firstOperation.AcceptedAt);
+        var secondRevision = new CriteriaTextOverlayRevision(TenantId, edition.EditionId, original.Identifier, 2,
+            second, secondOperation.Actor, secondOperation.AcceptedAt);
+        var current = CriteriaTextOverlayPolicy.Apply(original, secondRevision, secondRevision, false);
+        var expectedHistorical = CriteriaTextOverlayPolicy.Apply(original, firstRevision, secondRevision, false);
+        var expected = await Contributor(new ProgramReader(program), catalog, new OverlayReader([expectedHistorical]))
+            .ReadAsync(Engagement(), CancellationToken.None);
+        var receipts = new ScriptedNativeEventReceipts();
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString()),
+            EventCursor.Start, CancellationToken.None))
+            receipts.Record(record, record.Event is CriteriaTextOverlayEntryRevised { Revision: 2 } ? cutoff.AddMilliseconds(1) : cutoff);
+        var contributor = new CriteriaTypeIBaselineSourceContributor(new ProgramReader(program), catalog, new OverlayReader([current]), store);
+        var context = new TypeIBaselineSourceReadContext(Uuid.Empty, [])
+        {
+            RecordedThrough = cutoff,
+            ReceiptCut = new RecordedSourceReceiptCut(TenantId, cutoff, events, receipts),
+        };
+
+        // Act
+        var actual = await contributor.ReadAsync(Engagement(), context, CancellationToken.None);
+
+        // Assert
+        Assert.True(actual.IsSuccess, actual.Error?.Message);
+        Assert.Equal(Assert.Single(expected.Value.Sources, source => source.Kind == "criteria_edition").ContentSha256,
+            Assert.Single(actual.Value.Sources, source => source.Kind == "criteria_edition").ContentSha256);
+        Assert.True(receipts.Reads > 0);
+    }
 
     [Fact]
     public async Task ShouldBindCriteriaSelectionAndCatalogEditionGivenTypeIEngagement()

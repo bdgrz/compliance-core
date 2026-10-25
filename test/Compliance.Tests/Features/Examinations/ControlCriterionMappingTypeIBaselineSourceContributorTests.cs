@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Criteria;
@@ -26,6 +27,38 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
     static readonly CriteriaCatalogEdition Edition = Catalog.Edition;
     static readonly Criterion Criterion = Catalog.ListEntries(Edition.EditionId, null,
         "criterion", null)[0];
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldUseBrokerReceiptPrefixGivenMappingPayloadTimesDisagree(bool lateBrokerReceipt)
+    {
+        // Arrange
+        var fixture = await Fixture(includeFutureSuccessor: true, successorBeforePeriod: lateBrokerReceipt,
+            capturedControlVersionId: lateBrokerReceipt ? ControlVersionId : FutureControlVersionId);
+        var cutoff = new DateTimeOffset(2026, 1, 31, 23, 59, 59, TimeSpan.Zero);
+        var receipts = new ScriptedNativeEventReceipts();
+        await foreach (var record in fixture.Events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(),
+            ControlCriterionMapping.Area), EventCursor.Start, CancellationToken.None))
+        {
+            var successor = record.Event is ControlCriterionMappingProposed { VersionNumber: 2 } or
+                ControlCriterionMappingReviewed { VersionNumber: 2 };
+            receipts.Record(record, lateBrokerReceipt && successor ? cutoff.AddMilliseconds(1) : cutoff);
+        }
+        var context = fixture.Context with
+        {
+            RecordedThrough = cutoff,
+            ReceiptCut = new RecordedSourceReceiptCut(TenantId, cutoff, fixture.Events, receipts),
+        };
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(lateBrokerReceipt ? 1 : 2, Assert.Single(result.Value.Sources).Revision);
+        Assert.True(receipts.Reads > 0);
+    }
 
     [Fact]
     public async Task ShouldCaptureMappingEffectiveOnTypeIDateGivenLaterApprovedSuccessor()
@@ -198,7 +231,7 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
         var context = new TypeIBaselineSourceReadContext(Uuid.Empty, references);
         var contributor = new ControlCriterionMappingTypeIBaselineSourceContributor(mappingReader, consistency,
             Catalog);
-        return new FixtureState(mappingId, contributor, context);
+        return new FixtureState(mappingId, contributor, context, events);
     }
 
     static ExaminationEngagementView Engagement() => new(TenantId, ProgramId,
@@ -218,7 +251,7 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
 
     sealed record FixtureState(Uuid MappingId,
         ControlCriterionMappingTypeIBaselineSourceContributor Contributor,
-        TypeIBaselineSourceReadContext Context);
+        TypeIBaselineSourceReadContext Context, InMemoryEventStore Events);
 
     sealed class UnusedAggregateReader : IAggregateReader
     {

@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Examinations;
@@ -159,10 +161,25 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
         Assert.Equal(baselineArtifact.ContentSha256, laterArtifact.ContentSha256);
     }
 
+    [Fact]
+    public async Task ShouldRefuseHandlingPolicyGivenReferencedArtifactHeadCommitsAfterReceiptCut()
+    {
+        // Arrange
+        var fixture = await Fixture(includeLaterLink: false, includeFutureHandlingPolicy: true, lateArtifactReceipt: true);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.False(result.Error.IsTransient);
+    }
+
     static async Task<FixtureState> Fixture(bool includeLaterLink, bool includeHold = false,
         bool includeLaterReport = false, bool includeDisclosure = false,
         bool includeLaterDisclosure = false, bool includePriorHandlingPolicy = false,
-        bool includeFutureHandlingPolicy = false)
+        bool includeFutureHandlingPolicy = false, bool lateArtifactReceipt = false)
     {
         var store = new InMemoryEventStore();
         var matching = Support(SupportId, ControlId, 2, BeforeTypeIDate);
@@ -334,8 +351,20 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
                 new AggregateReader(fixtureAggregates.ToArray()));
         var effectiveControlVersion = new TypeIBaselineSourceReference("control_version",
             ControlId, Uuid.CreateVersion4(), 2, new string('b', 64));
-        return new FixtureState(contributor, new TypeIBaselineSourceReadContext(MemberId,
-            [effectiveControlVersion]));
+        var context = new TypeIBaselineSourceReadContext(MemberId, [effectiveControlVersion]);
+        if (lateArtifactReceipt)
+        {
+            var cutoff = AfterTypeIDate.AddDays(3);
+            var receipts = new ScriptedNativeEventReceipts();
+            await foreach (var record in store.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString()), EventCursor.Start, CancellationToken.None))
+                receipts.Record(record, record.Event is EvidenceArtifactDownloadIssued ? cutoff.AddMilliseconds(1) : cutoff.AddMilliseconds(-1));
+            context = context with
+            {
+                RecordedThrough = cutoff,
+                ReceiptCut = new RecordedSourceReceiptCutFactory(store, receipts).Create(TenantId, cutoff)
+            };
+        }
+        return new FixtureState(contributor, context);
     }
 
     static EvidenceSupportLinked Support(Uuid supportId, Uuid supportedRecordId,

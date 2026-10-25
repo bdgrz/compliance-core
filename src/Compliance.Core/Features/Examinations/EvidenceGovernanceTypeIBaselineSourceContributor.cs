@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
@@ -49,8 +50,9 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
             if (!ValidSupportRecord(record, engagement.TenantId))
                 return InvalidHistory();
             var link = (EvidenceSupportLinked)record.Event!;
-            if (link.ProgramId != engagement.ProgramId || link.OccurredAt > through ||
-                record.Event!.Metadata!.OccurredOn > through ||
+            if (link.ProgramId != engagement.ProgramId ||
+                (context.RecordedThrough is null ? link.OccurredAt > through || record.Event!.Metadata!.OccurredOn > through :
+                    !await context.IncludesAsync(record.Stream, record.Event!, ct).ConfigureAwait(false)) ||
                 link.PeriodStart > engagement.PeriodStart || link.PeriodEnd < engagement.PeriodStart ||
                 !effectiveSources.Value.Contains((link.SupportedRecordType!,
                     link.SupportedRecordId, link.SupportedRecordRevision)))
@@ -62,14 +64,14 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         var scopeDifferences = new List<string>();
         var sources = new List<TypeIBaselineSourceReference>();
         var artifactIds = supportLinks.Select(static link => link.ArtifactId).ToHashSet();
-        var related = await ReadRelatedGovernanceAsync(engagement, artifactIds, through, ct)
+        var related = await ReadRelatedGovernanceAsync(context, engagement, artifactIds, through, ct)
             .ConfigureAwait(false);
         if (!related.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(related.Error);
         foreach (var artifactGroup in supportLinks.GroupBy(static link => link.ArtifactId)
                      .OrderBy(static group => group.Key.ToString(), StringComparer.Ordinal))
         {
-            var artifact = await ReadArtifactAsOfAsync(engagement.TenantId, artifactGroup.Key,
+            var artifact = await ReadArtifactAsOfAsync(context, engagement.TenantId, artifactGroup.Key,
                 through, ct).ConfigureAwait(false);
             if (!artifact.IsSuccess)
                 return Result<TypeIBaselineSourceContribution>.Failure(artifact.Error);
@@ -78,10 +80,10 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
                 return InvalidHistory();
             if (artifactGroup.Any(link => link.ArtifactContentSha256 !=
                     artifact.Value.Registration.ContentSha256 ||
-                    link.ArtifactRevision < artifact.Value.Events.Count(item =>
-                        item.OccurredOn < link.OccurredAt) ||
-                    link.ArtifactRevision > artifact.Value.Events.Count(item =>
-                        item.OccurredOn <= link.OccurredAt)))
+                    (context.RecordedThrough is null ?
+                        link.ArtifactRevision < artifact.Value.Events.Count(item => item.OccurredOn < link.OccurredAt) ||
+                        link.ArtifactRevision > artifact.Value.Events.Count(item => item.OccurredOn <= link.OccurredAt) :
+                        link.ArtifactRevision < 1 || link.ArtifactRevision > artifact.Value.AsOfRevision)))
                 return InvalidHistory();
             if (artifact.Value.State != EvidenceArtifactStates.Available)
                 blockers.Add($"Evidence artifact {artifactGroup.Key} was not available on the Type I date.");
@@ -96,7 +98,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
             if (supportEvents.Any(static item => item is null))
                 return InvalidHistory();
 
-            var policy = await ReadHandlingPolicyAsOfAsync(engagement.TenantId,
+            var policy = await ReadHandlingPolicyAsOfAsync(context, engagement.TenantId,
                 artifactGroup.Key, through, artifact.Value.AsOfRevision, ct).ConfigureAwait(false);
             if (!policy.IsSuccess)
                 return Result<TypeIBaselineSourceContribution>.Failure(policy.Error);
@@ -107,8 +109,8 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
                      policy.Value.SourceState != artifact.Value.State)
                 blockers.Add($"Evidence artifact {artifactGroup.Key} has a handling policy bound to different source facts.");
 
-            var retention = await ReadRetentionAsOfAsync(engagement.TenantId,
-                artifactGroup.Key, through, ct).ConfigureAwait(false);
+            var retention = await ReadRetentionAsOfAsync(context, engagement.TenantId,
+                artifactGroup.Key, through, artifact.Value.AsOfRevision, ct).ConfigureAwait(false);
             if (!retention.IsSuccess)
                 return Result<TypeIBaselineSourceContribution>.Failure(retention.Error);
             if (retention.Value.Basis is null)
@@ -185,7 +187,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         return Result<HashSet<(string Kind, Uuid RecordId, long Revision)>>.Success(supported);
     }
 
-    async ValueTask<Result<ArtifactAsOf>> ReadArtifactAsOfAsync(Uuid tenantId, Uuid artifactId,
+    async ValueTask<Result<ArtifactAsOf>> ReadArtifactAsOfAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid artifactId,
         DateTimeOffset through, CancellationToken ct)
     {
         var stream = EvidenceStreams.Address(tenantId, artifactId);
@@ -209,13 +211,14 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
             if (item.Stream != stream || item.Event?.Metadata is not { } metadata ||
                 metadata.EventId == Uuid.Empty || !eventIds.Add(metadata.EventId) ||
                 metadata.AggregateId != artifactId || metadata.AggregateVersion != (ulong)index + 1 ||
-                metadata.OccurredOn == default || priorOccurredAt is { } prior &&
+                metadata.OccurredOn == default || context.RecordedThrough is null && priorOccurredAt is { } prior &&
                 metadata.OccurredOn < prior || !TryApplyArtifactEvent(item.Event, tenantId,
                     artifactId, ref currentRegistration, ref currentState, ref currentReason,
                     metadata.OccurredOn))
                 return InvalidArtifactHistory();
 
-            if (metadata.OccurredOn <= through)
+            if (context.RecordedThrough is null ? metadata.OccurredOn <= through :
+                await context.IncludesAsync(item.Stream, item.Event!, ct).ConfigureAwait(false))
             {
                 registration = currentRegistration;
                 state = currentState;
@@ -296,8 +299,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         }
     }
 
-    async ValueTask<Result<EvidenceHandlingPolicyView?>> ReadHandlingPolicyAsOfAsync(
-        Uuid tenantId, Uuid artifactId, DateTimeOffset through, long artifactRevision,
+    async ValueTask<Result<EvidenceHandlingPolicyView?>> ReadHandlingPolicyAsOfAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid artifactId, DateTimeOffset through, long artifactRevision,
         CancellationToken ct)
     {
         var policyId = EvidenceHandlingPolicy.IdFor(tenantId, artifactId);
@@ -316,7 +318,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
             if (record.Stream != stream || record.Event?.Metadata is not { } metadata ||
                 metadata.AggregateId != policyId || metadata.EventId == Uuid.Empty ||
                 !eventIds.Add(metadata.EventId) || metadata.AggregateVersion != expectedVersion ||
-                metadata.OccurredOn == default || priorOccurredAt is { } prior &&
+                metadata.OccurredOn == default || context.RecordedThrough is null && priorOccurredAt is { } prior &&
                 metadata.OccurredOn < prior || !TryReadHandlingPolicyEvent(record.Event,
                     tenantId, artifactId, expectedVersion, metadata.OccurredOn, states,
                     out var state))
@@ -339,7 +341,11 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
                 RequestErrorKind.Conflict,
                 "Evidence handling policy changed during the Type I source read.", isTransient: true));
 
-        var asOf = states.LastOrDefault(state => state.AssignedAt <= through);
+        EvidenceHandlingPolicyView? asOf = null;
+        for (var index = 0; index < states.Count; index++)
+            if (context.RecordedThrough is null ? states[index].AssignedAt <= through :
+                await context.IncludesAsync(read.Value[index].Stream, read.Value[index].Event!, ct).ConfigureAwait(false))
+                asOf = states[index];
         if (asOf is null)
             return Result<EvidenceHandlingPolicyView?>.Success(null);
         if (asOf.SourcePosition > (ulong)artifactRevision)
@@ -403,8 +409,8 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         : (first with { History = [] }).Equals(second with { History = [] }) &&
           first.History.SequenceEqual(second.History);
 
-    async ValueTask<Result<RetentionAsOf>> ReadRetentionAsOfAsync(Uuid tenantId, Uuid artifactId,
-        DateTimeOffset through, CancellationToken ct)
+    async ValueTask<Result<RetentionAsOf>> ReadRetentionAsOfAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid artifactId,
+        DateTimeOffset through, long artifactRevision, CancellationToken ct)
     {
         var loaded = await ArtifactRetentionSourceReader.LoadAsync(aggregates, tenantId,
             "evidence_artifact", artifactId, ct).ConfigureAwait(false);
@@ -419,19 +425,43 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
                 !IsDigest(source.ContentSha256)))
             return InvalidHistory<RetentionAsOf>();
 
-        var basis = retention.Basis is { RecordedAt: var recordedAt } value && recordedAt <= through
-            ? value
-            : null;
-        var holds = retention.Holds.Where(hold => hold.PlacedAt <= through)
-            .Select(hold => hold.ReleasedAt is { } releasedAt && releasedAt > through
-                ? hold with { ReleaseReason = null, ReleasedBy = null, ReleasedAt = null }
-                : hold)
-            .OrderBy(static hold => hold.HoldId.ToString(), StringComparer.Ordinal).ToArray();
+        var basis = retention.Basis;
+        if (basis is not null && !(context.RecordedThrough is null ? basis.RecordedAt <= through :
+                await context.IncludesAsync(new ArtifactRetentionBasis(basis.Source).Stream, basis, ct).ConfigureAwait(false)))
+            basis = null;
+        if (context.RecordedThrough is not null && basis is not null && basis.SourcePosition > (ulong)artifactRevision)
+            return InvalidHistory<RetentionAsOf>();
+        var selectedHolds = new List<ArtifactLegalHoldView>();
+        foreach (var hold in retention.Holds)
+        {
+            if (context.RecordedThrough is null)
+            {
+                if (hold.PlacedAt <= through)
+                    selectedHolds.Add(hold.ReleasedAt is { } releasedAt && releasedAt > through ?
+                        hold with { ReleaseReason = null, ReleasedBy = null, ReleasedAt = null } : hold);
+                continue;
+            }
+            var owner = await aggregates.HydrateAsync(new ArtifactLegalHold(tenantId, hold.HoldId), ct).ConfigureAwait(false);
+            if (owner.Source != retention.Source)
+                return InvalidHistory<RetentionAsOf>();
+            if (owner.Placement is null || owner.View != hold)
+                return Result<RetentionAsOf>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The exact legal hold changed during its receipt source read.", true));
+            if (!await context.IncludesAsync(owner.Stream, owner.Placement, ct).ConfigureAwait(false))
+                continue;
+            if (owner.Placement.SourcePosition > (ulong)artifactRevision)
+                return InvalidHistory<RetentionAsOf>();
+            var released = owner.Release is { } release &&
+                await context.IncludesAsync(owner.Stream, release, ct).ConfigureAwait(false);
+            if (released && owner.Release!.SourcePosition > (ulong)artifactRevision)
+                return InvalidHistory<RetentionAsOf>();
+            selectedHolds.Add(released ? hold : hold with { ReleaseReason = null, ReleasedBy = null, ReleasedAt = null });
+        }
+        var holds = selectedHolds.OrderBy(static hold => hold.HoldId.ToString(), StringComparer.Ordinal).ToArray();
         return Result<RetentionAsOf>.Success(new(basis, Array.AsReadOnly(holds)));
     }
 
-    async ValueTask<Result<RelatedGovernance>> ReadRelatedGovernanceAsync(
-        ExaminationEngagementView engagement, IReadOnlySet<Uuid> artifactIds,
+    async ValueTask<Result<RelatedGovernance>> ReadRelatedGovernanceAsync(TypeIBaselineSourceReadContext context, ExaminationEngagementView engagement, IReadOnlySet<Uuid> artifactIds,
         DateTimeOffset through, CancellationToken ct)
     {
         var byArtifact = new Dictionary<Uuid, List<EvidenceGovernanceSourceEvent>>();
@@ -459,7 +489,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
                     metadata.EventId == Uuid.Empty || !eventIds.Add(metadata.EventId) ||
                     metadata.OccurredOn == default ||
                     metadata.AggregateVersion != versions.GetValueOrDefault(aggregateId) + 1 ||
-                    occurred.TryGetValue(aggregateId, out var prior) && metadata.OccurredOn < prior ||
+                    context.RecordedThrough is null && occurred.TryGetValue(aggregateId, out var prior) && metadata.OccurredOn < prior ||
                     !TryRelatedEvent(record.Event, area, engagement.TenantId, aggregateId,
                         redactionArtifacts, out var businessAt, out var artifactReferences,
                         out var engagementId, out var isHoldEvent))
@@ -468,7 +498,8 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
                 occurred[aggregateId] = metadata.OccurredOn;
                 if (businessAt != metadata.OccurredOn)
                     return InvalidRelatedGovernance();
-                if (businessAt > through || metadata.OccurredOn > through)
+                if (context.RecordedThrough is null ? businessAt > through || metadata.OccurredOn > through :
+                    !await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false))
                     continue;
 
                 EvidenceGovernanceSourceEvent sourceEvent;

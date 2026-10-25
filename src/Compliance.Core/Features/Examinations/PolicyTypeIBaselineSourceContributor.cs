@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
@@ -75,12 +76,19 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
                 if (!IsValidHistory(engagement.TenantId, policy, versions, decisions))
                     return SourceConflict();
 
-                var eligibleVersions = versions.Where(version => version.ApprovedAt <= through &&
+                var receiptStream = context.RecordedThrough is null ? null :
+                    await context.RequireReceipts(engagement.TenantId).ReadAsync(new EventStreamAddress(
+                        engagement.TenantId.ToString(), Policy.Area, policy.Id.ToString()), ct).ConfigureAwait(false);
+                bool DecisionRecorded(PolicyDecisionView decision) => receiptStream is null ? decision.DecidedAt <= through :
+                    DecisionIncluded(receiptStream, decision.DecisionId);
+                bool VersionRecorded(PolicyVersionView version) => receiptStream is null ? version.ApprovedAt <= through :
+                    DecisionIncluded(receiptStream, version.ApprovalDecisionId);
+                var eligibleVersions = versions.Where(version => VersionRecorded(version) &&
                     version.EffectiveFrom <= engagement.PeriodStart).ToArray();
                 var effective = eligibleVersions.LastOrDefault();
                 var retirement = effective is null ? null : decisions.SingleOrDefault(decision =>
                     decision.Kind == "retirement" && decision.Version == effective.Version &&
-                    decision.DecidedAt <= through);
+                    DecisionRecorded(decision));
 
                 if (retirement is not null)
                 {
@@ -109,7 +117,7 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
 
                 if (effective is null)
                 {
-                    if (versions.Any(version => version.ApprovedAt <= through))
+                    if (versions.Any(VersionRecorded))
                         scopeDifferences.Add(
                             $"Policy {item.Identifier} has no approved version effective on the Type I date.");
                     else
@@ -123,7 +131,7 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
 
                 var periodicReviews = decisions.Where(decision =>
                         decision.Kind == "periodic_review" && decision.Version == effective.Version &&
-                        decision.DecidedAt <= through)
+                        DecisionRecorded(decision))
                     .OrderBy(static decision => decision.DecidedAt)
                     .ThenBy(static decision => decision.DecisionId.ToString(), StringComparer.Ordinal)
                     .ToArray();
@@ -167,7 +175,7 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
     }
 
     internal static IReadOnlyList<TypeIBaselineSourceReference> ReferencesAsOf(Uuid tenantId,
-        PolicyReadSnapshot policy, DateOnly periodStart, DateTimeOffset through, out bool valid)
+        PolicyReadSnapshot policy, DateOnly periodStart, DateTimeOffset through, out bool valid, RecordedSourceReceiptPrefix? receipts = null)
     {
         var sources = new List<TypeIBaselineSourceReference>();
         valid = true;
@@ -181,12 +189,12 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
             return sources;
         }
 
-        var effective = versions.LastOrDefault(version => version.ApprovedAt <= through &&
+        var effective = versions.LastOrDefault(version => (receipts is null ? version.ApprovedAt <= through : DecisionIncluded(receipts, version.ApprovalDecisionId)) &&
             version.EffectiveFrom <= periodStart);
         if (effective is null)
             return sources;
         var retirement = decisions.SingleOrDefault(decision => decision.Kind == "retirement" &&
-            decision.Version == effective.Version && decision.DecidedAt <= through);
+            decision.Version == effective.Version && (receipts is null ? decision.DecidedAt <= through : DecisionIncluded(receipts, decision.DecisionId)));
         if (retirement is not null)
         {
             if (effective.EffectiveUntil is not { } effectiveUntil)
@@ -201,7 +209,7 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
 
         var periodicReviews = decisions.Where(decision =>
                 decision.Kind == "periodic_review" && decision.Version == effective.Version &&
-                decision.DecidedAt <= through)
+                (receipts is null ? decision.DecidedAt <= through : DecisionIncluded(receipts, decision.DecisionId)))
             .OrderBy(static decision => decision.DecidedAt)
             .ThenBy(static decision => decision.DecisionId.ToString(), StringComparer.Ordinal)
             .ToArray();
@@ -211,6 +219,16 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
                 decision.DecisionId == effective.AcceptedReviewDecisionId)));
         return sources;
     }
+
+    internal static bool DecisionIncluded(RecordedSourceReceiptPrefix receipts, Uuid decisionId) =>
+        receipts.Includes(fact => fact switch
+        {
+            PolicyReviewed review => review.DecisionId == decisionId,
+            PolicyApproved approval => approval.DecisionId == decisionId,
+            PolicyRetired retirement => retirement.DecisionId == decisionId,
+            PolicyPeriodicReviewConfirmed periodic => periodic.DecisionId == decisionId,
+            _ => false,
+        });
 
     static bool IsValidHistory(Uuid tenantId, PolicyReadSnapshot policy,
         IReadOnlyList<PolicyVersionView> versions,

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Tests.Testing;
@@ -229,6 +230,15 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
             TypeIBaselineSourceReadContext context, CancellationToken ct)
         {
             await source.SeedAsync(policy);
+            if (context.RecordedThrough is { } through)
+            {
+                var receipts = new ScriptedNativeEventReceipts();
+                var stream = new EventStreamAddress(TenantId.ToString(), Policy.Area, policy.Id.ToString());
+                await foreach (var record in source.Events.ReadAsync(stream, 0, ct))
+                    receipts.Record(record, record.Event.Metadata.AggregateVersion >= 4 ?
+                        new DateTimeOffset(2027, 3, 15, 12, 3, 0, TimeSpan.Zero) : ApprovalAt);
+                context = context with { ReceiptCut = new RecordedSourceReceiptCutFactory(source.Events, receipts).Create(TenantId, through) };
+            }
             var directory = new Directory(policy, source);
             return await new PolicyTypeIBaselineSourceContributor(directory, source.Policies,
                 new PolicyDirectoryReadConsistency(directory, source.Events)).ReadAsync(engagement, context, ct);

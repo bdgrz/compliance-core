@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
@@ -56,7 +57,8 @@ public sealed class FindingTypeIBaselineSourceContributor(
             var complete = true;
             foreach (var fact in finding.Facts)
             {
-                if (!InsideCutoff(fact, through))
+                if (!(context.RecordedThrough is null ? InsideCutoff(fact, through) :
+                    await context.IncludesAsync(finding.Stream, fact, ct).ConfigureAwait(false)))
                 {
                     complete = false;
                     continue;
@@ -75,10 +77,13 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 var action = await aggregates.HydrateAsync(new CorrectiveAction(engagement.TenantId,
                     engagement.ProgramId, findingId, admitted.Operation.LogicalId), ct).ConfigureAwait(false);
                 // The action facts are part of the finding's remediation history from the admission on.
-                if (!InsideCutoff(admitted, through))
+                if (!(context.RecordedThrough is null ? InsideCutoff(admitted, through) :
+                    await context.IncludesAsync(finding.Stream, admitted, ct).ConfigureAwait(false)))
                     continue;
-                foreach (var fact in ActionFacts(action).Where(fact => InsideCutoff(fact, through)))
-                    history.Add(Capture(fact));
+                foreach (var fact in ActionFacts(action))
+                    if (context.RecordedThrough is null ? InsideCutoff(fact, through) :
+                        await context.IncludesAsync(action.Stream, fact, ct).ConfigureAwait(false))
+                        history.Add(Capture(fact));
             }
 
             try

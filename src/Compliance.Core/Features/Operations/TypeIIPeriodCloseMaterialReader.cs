@@ -18,7 +18,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 /// are read from verified content; legacy State facts are inspected only at their explicit scoped reference fields.
 /// No directory absence, global identity lookup or invented material identity establishes completeness.
 /// </summary>
-public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, IImmutableContentStore content)
+public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, IImmutableContentStore content, RecordedSourceReceiptCutFactory receiptCuts)
 {
     const int MaximumFacts = 25000;
     static readonly string[] Areas = ["audit-packages", "audit-populations", "management-assertions", "audit-outcomes",
@@ -151,6 +151,7 @@ public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, I
     async Task<IReadOnlyList<TypeIIPeriodCloseNativeSource>> ScanAsync(TypeIIPeriodView period, DateTimeOffset through, CancellationToken ct)
     {
         var result = new List<TypeIIPeriodCloseNativeSource>();
+        var receiptCut = receiptCuts.Create(period.TenantId, through);
         foreach (var area in Areas)
         {
             var requests = new Dictionary<string, Uuid>(StringComparer.Ordinal);
@@ -188,14 +189,12 @@ public sealed class TypeIIPeriodCloseMaterialReader(IDomainEventReader events, I
                 var scopedSubject = Id(native.Payload, "subject_id");
                 if (scopedSubject != Uuid.Empty && scopedSubject.ToString() != record.Stream.Resource)
                     throw new ImmutableContentIntegrityException("The material source differs from its native subject identity.");
-                var at = native.Payload.TryGetProperty("occurred_at", out var occurred) ? occurred.GetDateTimeOffset() :
-                    record.Event is INativeOperationFact fact ? fact.Operation.AcceptedAt :
-                    throw new ImmutableContentIntegrityException("The material source has no exact receipt timestamp.");
-                if (at > through)
+                if (!await receiptCut.IncludesAsync(record, ct).ConfigureAwait(false))
                     throw new ImmutableContentUnavailableException("Examination material advanced after the close amendment receipt cut.");
                 if (result.Count >= MaximumFacts)
                     throw new ImmutableContentIntegrityException("The complete examination impact proof exceeds the supported source bound.");
-                result.Add(native);
+                var receiptStream = await receiptCut.ReadAsync(record.Stream, ct).ConfigureAwait(false);
+                result.Add(native with { RecordedAt = receiptStream.RecordedAt(record.Event) });
             }
         }
         return result.OrderBy(row => row.Fact.Stream.ToString(), StringComparer.Ordinal)

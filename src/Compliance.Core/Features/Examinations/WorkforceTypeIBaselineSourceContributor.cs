@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Portia;
 
@@ -14,8 +15,12 @@ public sealed class WorkforceTypeIBaselineSourceContributor(
 
     public string Family => "workforce";
 
+    public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+        ExaminationEngagementView engagement, CancellationToken ct) =>
+        ReadAsync(engagement, new TypeIBaselineSourceReadContext(Uuid.Empty, []), ct);
+
     public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
-        ExaminationEngagementView engagement, CancellationToken ct)
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context, CancellationToken ct)
     {
         var fence = await consistency.CaptureAsync(engagement.TenantId, ct).ConfigureAwait(false);
         if (!fence.IsSuccess)
@@ -36,7 +41,11 @@ public sealed class WorkforceTypeIBaselineSourceContributor(
                     item.Kind != WorkforceRosterSnapshotContent.Kind ||
                     item.SnapshotId == Uuid.Empty)
                     return InvalidDirectory();
-                if (item.FrozenAt <= through)
+                if (item.FrozenAt <= through && (context.RecordedThrough is null ||
+                    (await context.RequireReceipts(engagement.TenantId).ReadAsync(new EventStreamAddress(
+                        engagement.TenantId.ToString(), "population-snapshots", item.SnapshotId.ToString()), ct)
+                        .ConfigureAwait(false)).Includes(fact => fact is PopulationSnapshotFrozen frozen &&
+                            frozen.SnapshotId == item.SnapshotId && frozen.ContentSha256 == item.ContentSha256)))
                 {
                     selected = item;
                     break;

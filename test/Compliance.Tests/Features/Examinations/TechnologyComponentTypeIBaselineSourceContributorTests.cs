@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Examinations;
@@ -120,8 +121,31 @@ public sealed class TechnologyComponentTypeIBaselineSourceContributorTests
             blocker => blocker.Contains("by the Type I date", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public async Task ShouldKeepOriginalComponentGivenBackdatedRevisionCommitsAfterReceiptCut()
+    {
+        // Arrange
+        var cutoff = DayOne.AddDays(20);
+        var first = Revision(1, "Original VPC", DayOne);
+        var next = Revision(2, "Backdated VPC", DayOne.AddDays(1));
+        var fixture = await Fixture([first, next], recordedThrough: cutoff,
+            committedTimes: [cutoff.AddMilliseconds(-1), cutoff.AddMilliseconds(1)]);
+        var original = await Fixture([first]);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+        var expected = await original.Contributor.ReadAsync(Engagement(), original.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.True(expected.IsSuccess, expected.Error?.Message);
+        Assert.Equal(1, Assert.Single(result.Value.Sources).Revision);
+        Assert.Equal(Assert.Single(expected.Value.Sources).ContentSha256, Assert.Single(result.Value.Sources).ContentSha256);
+    }
+
     static async Task<FixtureState> Fixture(IReadOnlyList<TechnologyComponentRevisionRecorded> history,
-        Uuid? componentId = null, bool includeReviewedSystemSource = false)
+        Uuid? componentId = null, bool includeReviewedSystemSource = false,
+        DateTimeOffset? recordedThrough = null, IReadOnlyList<DateTimeOffset>? committedTimes = null)
     {
         var id = componentId ?? ComponentId;
         var events = new InMemoryEventStore();
@@ -160,8 +184,19 @@ public sealed class TechnologyComponentTypeIBaselineSourceContributorTests
         if (includeReviewedSystemSource)
             priorSources.Add(new TypeIBaselineSourceReference("reviewed_system_revision", id,
                 Uuid.CreateVersion5(id, "reviewed_system_revision_v1:1"), 1, new string('a', 64)));
-        return new FixtureState(contributor,
-            new TypeIBaselineSourceReadContext(Uuid.CreateVersion4(), priorSources.AsReadOnly()));
+        var context = new TypeIBaselineSourceReadContext(Uuid.CreateVersion4(), priorSources.AsReadOnly());
+        if (recordedThrough is { } through)
+        {
+            var receipts = new ScriptedNativeEventReceipts();
+            await foreach (var record in events.ReadAsync(stream, 0, CancellationToken.None))
+                receipts.Record(record, committedTimes![checked((int)record.ResourceOffset)]);
+            context = context with
+            {
+                RecordedThrough = through,
+                ReceiptCut = new RecordedSourceReceiptCutFactory(events, receipts).Create(TenantId, through)
+            };
+        }
+        return new FixtureState(contributor, context);
     }
 
     static TechnologyComponentRevisionRecorded Revision(long revision, string name,

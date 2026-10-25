@@ -6,6 +6,8 @@ using System.Text.Json;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -40,6 +42,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                 RequestErrorKind.Validation,
                 "A policy communication baseline read requires its engagement and source context."));
 
+        var receiptCut = context.RecordedThrough is null ? null : context.RequireReceipts(engagement.TenantId);
         var fence = await consistency.CaptureAsync(engagement.TenantId, ct)
             .ConfigureAwait(false);
         if (!fence.IsSuccess)
@@ -53,7 +56,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             .ToDictionary(static group => group.Key, static group => group
                 .OrderBy(source => source.Kind, StringComparer.Ordinal).ToArray());
         var trainingSnapshot = await CaptureTrainingCatalogAsync(engagement.TenantId,
-            engagement.ProgramId, through, ct).ConfigureAwait(false);
+            engagement.ProgramId, through, context, ct).ConfigureAwait(false);
         if (!trainingSnapshot.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(trainingSnapshot.Error);
 
@@ -79,6 +82,15 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                 if (item.LaunchedAt > effectiveThrough)
                     continue;
 
+                var campaignStream = new PolicyDistributionCampaign(engagement.TenantId, item.CampaignId).Stream;
+                var campaignReceipts = receiptCut is null ? null : await receiptCut.ReadAsync(campaignStream, ct).ConfigureAwait(false);
+                if (campaignReceipts is not null)
+                {
+                    var nativeLaunch = campaignReceipts.Records.Select(record => record.Event).OfType<PolicyCampaignLaunched>().SingleOrDefault()
+                        ?? throw new ImmutableContentUnavailableException("The listed campaign has no exact native launch fact.");
+                    if (!campaignReceipts.Includes(nativeLaunch))
+                        continue;
+                }
                 PolicyReadSnapshot? policy = null;
                 if (item.SubjectKind == "policy")
                 {
@@ -90,7 +102,8 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                             return SourceConflict();
                         var currentReferences = PolicyTypeIBaselineSourceContributor.ReferencesAsOf(
                             engagement.TenantId, policy, engagement.PeriodStart, through,
-                            out var validHistory);
+                            out var validHistory, receiptCut is null ? null : await receiptCut.ReadAsync(
+                                new Policy(engagement.TenantId, policy.Id).Stream, ct).ConfigureAwait(false));
                         if (!validHistory || currentReferences.Count == 0 ||
                             policyReferences.TryGetValue(item.SubjectId, out var captured) &&
                             !currentReferences.OrderBy(static source => source.Kind,
@@ -118,6 +131,12 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                     return SourceConflict();
 
                 var launch = history.Value.Launch;
+                if (campaignReceipts is not null && (!campaignReceipts.Includes(launch) ||
+                    !campaignReceipts.Includes(history.Value.Frozen)))
+                {
+                    blockers.Add($"Campaign {item.SubjectIdentifier} had no complete frozen audience at the recorded cutoff.");
+                    continue;
+                }
                 if (launch.LaunchedAt > effectiveThrough)
                     continue;
                 if (launch.Subject.Kind == "policy")
@@ -132,20 +151,22 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
 
                 try
                 {
-                    var acknowledgements = history.Value.Acknowledgements.Where(item =>
-                            item.AcknowledgedAt <= through)
-                        .ToArray();
-                    var completions = history.Value.Completions.Where(item =>
-                            item.CompletedOn <= engagement.PeriodStart && item.RecordedAt <= through)
-                        .ToArray();
-                    var waivers = history.Value.Waivers.Where(item => item.ApprovedAt <= through)
-                        .ToArray();
+                    var acknowledgements = await RecordedResultsAsync(history.Value.Acknowledgements, receiptCut,
+                        item => PolicyCampaignParticipant.StreamOf(engagement.TenantId, item.CampaignId, item.PersonId),
+                        item => item.AcknowledgedAt <= through, campaignReceipts, ct).ConfigureAwait(false);
+                    var completions = await RecordedResultsAsync(history.Value.Completions.Where(item =>
+                            item.CompletedOn <= engagement.PeriodStart).ToArray(), receiptCut,
+                        item => PolicyCampaignParticipant.StreamOf(engagement.TenantId, item.CampaignId, item.PersonId),
+                        item => item.RecordedAt <= through, campaignReceipts, ct).ConfigureAwait(false);
+                    var waivers = await RecordedResultsAsync(history.Value.Waivers, receiptCut,
+                        item => PolicyCampaignParticipant.StreamOf(engagement.TenantId, item.CampaignId, item.PersonId),
+                        item => item.ApprovedAt <= through, campaignReceipts, ct).ConfigureAwait(false);
                     var amendments = history.Value.Amendments.Where(item =>
-                            item.Fact.AmendedAt <= through && item.Fact.ObservedOn <= engagement.PeriodStart)
+                            item.Fact.ObservedOn <= engagement.PeriodStart && (campaignReceipts is null
+                                ? item.Fact.AmendedAt <= through : campaignReceipts.Includes(item.Fact)))
                         .ToArray();
-                    var closure = history.Value.Closure is { } closed && closed.ClosedAt <= through
-                        ? closed
-                        : null;
+                    var closure = history.Value.Closure is { } closed && (campaignReceipts is null
+                        ? closed.ClosedAt <= through : campaignReceipts.Includes(closed)) ? closed : null;
                     var content = new PolicyCommunicationCampaignSourceContent(
                         engagement.PeriodStart, launch, history.Value.Teams, history.Value.FrozenBatchCount,
                         history.Value.InitialAudience, amendments,
@@ -162,8 +183,8 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                             content, ComplianceCoreJsonContext.Default
                                 .PolicyCommunicationCampaignSourceContent)));
                 }
-                catch (Exception exception) when (exception is ArgumentException or JsonException or
-                    InvalidOperationException or NotSupportedException)
+                catch (Exception exception) when ((exception is ArgumentException or JsonException or
+                    InvalidOperationException or NotSupportedException) && exception is not ImmutableContentIntegrityException)
                 {
                     scopeDifferences.Add(
                         $"Campaign {item.SubjectIdentifier} has invalid canonical communication content.");
@@ -179,7 +200,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         } while (cursor is not null);
 
         var confirmedCatalog = await CaptureTrainingCatalogAsync(engagement.TenantId,
-            engagement.ProgramId, through, ct).ConfigureAwait(false);
+            engagement.ProgramId, through, context, ct).ConfigureAwait(false);
         if (!confirmedCatalog.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(confirmedCatalog.Error);
         if (CatalogFingerprint(trainingSnapshot.Value.Latest) != CatalogFingerprint(confirmedCatalog.Value.Latest))
@@ -194,6 +215,57 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             new TypeIBaselineSourceContribution(Family, sources.AsReadOnly(),
                 blockers.AsReadOnly(),
                 scopeDifferences.AsReadOnly()));
+    }
+
+    static async Task<T[]> RecordedResultsAsync<T>(IReadOnlyList<T> facts, RecordedSourceReceiptCut? cut,
+        Func<T, EventStreamAddress> sourceStream, Func<T, bool> legacyIncluded,
+        RecordedSourceReceiptPrefix? campaignReceipts, CancellationToken ct) where T : DomainEvent, INativeOperationFact
+    {
+        var selected = new List<T>();
+        foreach (var fact in facts)
+        {
+            var participant = sourceStream(fact);
+            if (cut is null ? !legacyIncluded(fact) : !await cut.IncludesAsync(participant, fact, ct).ConfigureAwait(false))
+                continue;
+            if (cut is not null)
+                RequireAdmissionReceipt(fact, participant, campaignReceipts);
+            selected.Add(fact);
+        }
+        return selected.ToArray();
+    }
+
+    static void RequireAdmissionReceipt<T>(T fact, EventStreamAddress participant,
+        RecordedSourceReceiptPrefix? campaignReceipts) where T : DomainEvent, INativeOperationFact
+    {
+        if (campaignReceipts is null)
+            throw new ImmutableContentUnavailableException("The result's exact campaign admission source is not configured.");
+        var causation = fact.Operation.CausationEventId
+            ?? throw new ImmutableContentIntegrityException("The participant result has no native admission identity.");
+        var admissions = campaignReceipts.Records.Where(record => record.Event.Metadata.EventId == causation).ToArray();
+        if (admissions.Length == 0)
+            throw new ImmutableContentUnavailableException("The participant result's exact admission is not visible.");
+        var intent = fact switch
+        {
+            PolicyAcknowledgementRecorded acknowledgement => acknowledgement.Intent,
+            TrainingCompletionRecorded completion => completion.Intent,
+            CampaignWaiverApproved waiver => waiver.Intent,
+            _ => throw new ImmutableContentIntegrityException("The participant result has another native result kind."),
+        };
+        var kind = fact switch
+        {
+            PolicyAcknowledgementRecorded => nameof(AcknowledgePolicy),
+            TrainingCompletionRecorded => nameof(RecordTrainingCompletion),
+            CampaignWaiverApproved => nameof(ApproveCampaignWaiver),
+            _ => string.Empty,
+        };
+        if (admissions.Length != 1 || admissions[0].Event is not PolicyParticipantResultAdmitted admitted ||
+            admitted.Owner != campaignReceipts.Stream || admitted.Operation.Owner != campaignReceipts.Stream ||
+            admitted.Operation.RootOperationId != fact.Operation.RootOperationId || admitted.Operation.CommandKind != kind ||
+            admitted.Operation.AffectedOwner != participant || admitted.Operation.ExpectedRevisionOwner != campaignReceipts.Stream ||
+            fact.Operation.Owner != participant || fact.Operation.FirstOwner != campaignReceipts.Stream || admitted.Intent != intent)
+            throw new ImmutableContentIntegrityException("The participant result differs from its exact campaign admission root, target, or intent.");
+        if (!campaignReceipts.Includes(admitted))
+            throw new ImmutableContentIntegrityException("The participant result's receipt cutoff excludes its required causal admission.");
     }
 
     static bool ValidSummary(CampaignSummaryView? summary,
@@ -394,7 +466,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             view.Status != expectedStatus || view.Totals.LaunchAudience != launch.AudienceCount)
             return InvalidHistory();
 
-        return Result<CampaignHistory>.Success(new CampaignHistory(launch, state.Teams, 1,
+        return Result<CampaignHistory>.Success(new CampaignHistory(launch, frozen, state.Teams, 1,
             entries, amendments.AsReadOnly(),
             acknowledgements.OrderBy(static item => item.AcknowledgedAt).ToArray(),
             completions.OrderBy(static item => item.RecordedAt).ToArray(),
@@ -522,8 +594,9 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
     ///     catalog projection can never hide a requirement or a version.
     /// </summary>
     async ValueTask<Result<TrainingCatalogSnapshot>> CaptureTrainingCatalogAsync(Uuid tenantId, Uuid programId,
-        DateTimeOffset through, CancellationToken ct)
+        DateTimeOffset through, TypeIBaselineSourceReadContext context, CancellationToken ct)
     {
+        var receiptCut = context.RecordedThrough is null ? null : context.RequireReceipts(tenantId);
         var byRequirement = new Dictionary<Uuid, List<TrainingRequirementDefined>>();
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(),
                            TrainingRequirement.Area), EventCursor.Start, ct).ConfigureAwait(false))
@@ -568,7 +641,8 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                     version.ChangedAt == default)
                     return Result<TrainingCatalogSnapshot>.Failure(InvalidTrainingCatalogError());
                 versionsById[(requirementId, version.Version)] = version;
-                if (version.ChangedAt <= through)
+                if (receiptCut is null ? version.ChangedAt <= through : await receiptCut.IncludesAsync(
+                        new TrainingRequirement(tenantId, requirementId).Stream, fact, ct).ConfigureAwait(false))
                     asOf = version;
                 if (number == versions.Count)
                     latest.Add(version);
@@ -708,7 +782,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             Versions.GetValueOrDefault((requirementId, version));
     }
 
-    sealed record CampaignHistory(PolicyCampaignLaunched Launch, IReadOnlyList<string> Teams, int FrozenBatchCount,
+    sealed record CampaignHistory(PolicyCampaignLaunched Launch, PolicyCampaignAudienceFrozen Frozen, IReadOnlyList<string> Teams, int FrozenBatchCount,
         IReadOnlyList<CampaignAudienceEntry> InitialAudience,
         IReadOnlyList<PolicyCommunicationAudienceAmendment> Amendments,
         IReadOnlyList<PolicyAcknowledgementRecorded> Acknowledgements,

@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -81,7 +83,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
 
             var stream = new EventStreamAddress(engagement.TenantId.ToString(),
                 AccessReviewCampaign.Area, summary.CampaignId.ToString());
-            var history = await ReadHistoryAsync(stream, engagement.TenantId, summary.CampaignId,
+            var history = await ReadHistoryAsync(context, stream, engagement.TenantId, summary.CampaignId,
                 through, summary, ct).ConfigureAwait(false);
             if (!history.IsSuccess)
                 return Result<TypeIBaselineSourceContribution>.Failure(history.Error);
@@ -139,14 +141,18 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                 blockers.AsReadOnly(), scopeDifferences.AsReadOnly()));
     }
 
-    async ValueTask<Result<AccessReviewCampaignHistory>> ReadHistoryAsync(
-        EventStreamAddress stream, Uuid tenantId, Uuid campaignId, DateTimeOffset through,
+    async ValueTask<Result<AccessReviewCampaignHistory>> ReadHistoryAsync(TypeIBaselineSourceReadContext context, EventStreamAddress stream, Uuid tenantId, Uuid campaignId, DateTimeOffset through,
         AccessReviewCampaignSummaryView summary, CancellationToken ct)
     {
         try
         {
-            return await ReadHistoryCoreAsync(stream, tenantId, campaignId, through, summary, ct)
+            return await ReadHistoryCoreAsync(context, stream, tenantId, campaignId, through, summary, ct)
                 .ConfigureAwait(false);
+        }
+        catch (ImmutableContentUnavailableException)
+        {
+            return Result<AccessReviewCampaignHistory>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact access review source receipt or content is not available yet.", true));
         }
         catch (ImmutableContentIntegrityException)
         {
@@ -154,13 +160,10 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
         }
     }
 
-    async ValueTask<Result<AccessReviewCampaignHistory>> ReadHistoryCoreAsync(
-        EventStreamAddress stream, Uuid tenantId, Uuid campaignId, DateTimeOffset through,
+    async ValueTask<Result<AccessReviewCampaignHistory>> ReadHistoryCoreAsync(TypeIBaselineSourceReadContext context, EventStreamAddress stream, Uuid tenantId, Uuid campaignId, DateTimeOffset through,
         AccessReviewCampaignSummaryView summary, CancellationToken ct)
     {
         var seenEventIds = new HashSet<Uuid>();
-        var usedDecisionIds = new HashSet<Uuid>();
-        var usedReassignmentIds = new HashSet<Uuid>();
         var asOf = new List<AsOfEvent>();
         var states = new Dictionary<Uuid, CampaignItemHistory>();
         var aggregate = await reader.HydrateAsync(new AccessReviewCampaign(tenantId, campaignId), ct)
@@ -185,14 +188,16 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                 metadata.EventId == Uuid.Empty || !seenEventIds.Add(metadata.EventId) ||
                 metadata.AggregateId != campaignId || metadata.AggregateVersion != expectedVersion ||
                 metadata.OccurredOn == default ||
-                priorRecordedAt is { } earlierRecord && metadata.OccurredOn < earlierRecord)
+                context.RecordedThrough is null && priorRecordedAt is { } earlierRecord && metadata.OccurredOn < earlierRecord)
                 return InvalidHistory();
+            var receiptIncluded = context.RecordedThrough is null ? (bool?)null :
+                await context.IncludesAsync(record.Stream, domainEvent, ct).ConfigureAwait(false);
             switch (domainEvent)
             {
                 case AccessReviewCampaignLaunched when expectedVersion == 1:
                     Include(asOf, launch.LaunchedAt, metadata, "campaign_launched", stream,
                         JsonSerializer.SerializeToElement(launch, ComplianceCoreJsonContext.Default.AccessReviewLaunch),
-                        through);
+                        through, receiptIncluded);
                     break;
                 case AccessReviewCampaignCompletionAccepted or AccessReviewCampaignCompletionCanceled or
                     AccessReviewDecisionBatchAdmitted when expectedVersion > 1 && completion is null:
@@ -203,7 +208,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                     Include(asOf, completion.CompletedAt, metadata, "campaign_completed", stream,
                         JsonSerializer.SerializeToElement(new AccessReviewCampaignCompletionSource(completed.Revision,
                             completion), ComplianceCoreJsonContext.Default.AccessReviewCampaignCompletionSource),
-                        through);
+                        through, receiptIncluded);
                     break;
                 default:
                     return InvalidHistory();
@@ -218,8 +223,8 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
 
         foreach (var item in launch.Items)
         {
-            var replayed = await ReplayItemAsync(tenantId, campaignId, launch, item, states[item.ItemId], seenEventIds,
-                usedDecisionIds, usedReassignmentIds, asOf, through, ct).ConfigureAwait(false);
+            var replayed = await ReplayItemAsync(context, tenantId, campaignId, launch, item, states[item.ItemId], seenEventIds,
+                asOf, through, ct).ConfigureAwait(false);
             if (!replayed)
                 return InvalidHistory();
         }
@@ -239,11 +244,14 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
             ordered.Count, [.. ordered.Select(static fact => fact.Event)]));
     }
 
-    async ValueTask<bool> ReplayItemAsync(Uuid tenantId, Uuid campaignId, AccessReviewLaunch launch,
+    async ValueTask<bool> ReplayItemAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid campaignId, AccessReviewLaunch launch,
         AccessReviewItemView frozen, CampaignItemHistory state, HashSet<Uuid> seenEventIds,
-        HashSet<Uuid> usedDecisionIds, HashSet<Uuid> usedReassignmentIds, List<AsOfEvent> asOf,
+        List<AsOfEvent> asOf,
         DateTimeOffset through, CancellationToken ct)
     {
+        // Decision and reassignment identities are local to each native item owner.
+        var usedDecisionIds = new HashSet<Uuid>();
+        var usedReassignmentIds = new HashSet<Uuid>();
         var stream = AccessReviewEffects.ItemStream(tenantId, campaignId, frozen.ItemId);
         var streamId = AccessReviewEffects.ItemStreamId(tenantId, campaignId, frozen.ItemId);
         ulong expectedVersion = 1;
@@ -261,8 +269,10 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                     metadata.EventId == Uuid.Empty || !seenEventIds.Add(metadata.EventId) ||
                     metadata.AggregateId != streamId || metadata.AggregateVersion != expectedVersion ||
                     metadata.OccurredOn == default ||
-                    priorRecordedAt is { } earlierRecord && metadata.OccurredOn < earlierRecord)
+                    context.RecordedThrough is null && priorRecordedAt is { } earlierRecord && metadata.OccurredOn < earlierRecord)
                     return false;
+                var receiptIncluded = context.RecordedThrough is null ? (bool?)null :
+                    await context.IncludesAsync(record.Stream, domainEvent, ct).ConfigureAwait(false);
                 priorRecordedAt = metadata.OccurredOn;
                 expectedVersion++;
                 if (domainEvent is AccessReviewItemCampaignCompletionUseAuthorized or
@@ -276,11 +286,13 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                     {
                         if (!state.Pending.Remove(settledDecision.Operation.RootOperationId, out var pending))
                             return false;
+                        if (receiptIncluded == true)
+                            await RequireBulkPublicationAsync(context, tenantId, campaignId, settledDecision, pending, ct).ConfigureAwait(false);
                         state.Decisions.Add(pending.Decision);
                         Include(asOf, pending.Decision.DecidedAt, metadata, "decisions_recorded", stream,
                             JsonSerializer.SerializeToElement(new AccessReviewItemDecisionsSource(frozen.ItemId,
                                 pending.Revision, [pending.Decision]),
-                                ComplianceCoreJsonContext.Default.AccessReviewItemDecisionsSource), through);
+                                ComplianceCoreJsonContext.Default.AccessReviewItemDecisionsSource), through, receiptIncluded);
                     }
                     else
                     {
@@ -310,10 +322,10 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                     return false;
                 if (kind == ProvisionalKind)
                     continue;
-                if (priorOccurredAt is { } earlierEvent && at < earlierEvent)
+                if (context.RecordedThrough is null && priorOccurredAt is { } earlierEvent && at < earlierEvent)
                     return false;
                 priorOccurredAt = at;
-                Include(asOf, at, metadata, kind, stream, payload, through);
+                Include(asOf, at, metadata, kind, stream, payload, through, receiptIncluded);
             }
         }
         catch (InvalidOperationException) when (expectedVersion == 1)
@@ -322,6 +334,87 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
         }
 
         return true;
+    }
+
+    async Task RequireBulkPublicationAsync(TypeIBaselineSourceReadContext context, Uuid tenant, Uuid campaignId,
+        AccessReviewItemDecisionSettled settled, PendingDecision pending, CancellationToken ct)
+    {
+        var cut = context.RequireReceipts(tenant);
+        var operationId = settled.Operation.RootOperationId;
+        var settlement = await AccessReviewContent.ReadAsync<SourceUseAuthorizationIntent>(content, tenant,
+            settled.Intent, ct).ConfigureAwait(false);
+        var itemOwner = AccessReviewEffects.ItemStream(tenant, campaignId, settled.ItemId);
+        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, campaignId), ct).ConfigureAwait(false);
+        var admitted = campaign.AdmittedFor(operationId)
+            ?? throw new ImmutableContentUnavailableException("The settled bulk decision admission is not visible.");
+        var admission = NativeFactReference.Of(campaign.Stream, admitted);
+        var verifier = new AccessReviewBulkVerifier(reader, content, new AccessReviewManifests(content));
+        var verified = await verifier.VerifyAsync(tenant, campaignId, admission, settlement.ParentIntent, operationId, ct).ConfigureAwait(false);
+        if (verified.Error is { } error)
+            throw error.IsTransient ? new ImmutableContentUnavailableException(error.Message)
+                : new ImmutableContentIntegrityException(error.Message);
+        var intent = verified.Intent!;
+        var batch = await reader.HydrateAsync(new AccessReviewDecisionBatch(tenant, campaignId, operationId), ct).ConfigureAwait(false);
+        var published = batch.Published ?? throw new ImmutableContentUnavailableException("The settled bulk decision has no visible publication.");
+        if (settled.TenantId != tenant || settled.CampaignId != campaignId || settled.Owner != itemOwner ||
+            settled.Operation.Owner != itemOwner || settled.Operation.FirstOwner != campaign.Stream ||
+            settled.Operation.CausationEventId != admission.EventId || pending.Source.Stream != itemOwner ||
+            published.Owner != batch.Stream || published.Operation.Owner != batch.Stream ||
+            published.Operation.RootOperationId != operationId || published.Operation.CausationEventId != admission.EventId ||
+            published.Generation != AccessReviewEffects.Generation || published.Intent != settlement.ParentIntent ||
+            settled.Generation != AccessReviewEffects.Generation || settled.Revision != pending.Revision ||
+            settlement.Header != intent.Header || settlement.Disposition != SourceUseSettlementDisposition.IrreversibleDecision ||
+            batch.Accepted is not { } accepted || accepted.Intent != settlement.ParentIntent || published.SourceProofs is null)
+            throw new ImmutableContentIntegrityException("The settled bulk decision differs from its exact admitted publication root or owner.");
+        if (!(await cut.ReadAsync(campaign.Stream, ct).ConfigureAwait(false)).Includes(admitted))
+            throw new ImmutableContentIntegrityException("The settlement receipt cutoff excludes its required campaign admission.");
+        var batchReceipts = await cut.ReadAsync(batch.Stream, ct).ConfigureAwait(false);
+        if (!batchReceipts.Includes(accepted) || !batchReceipts.Includes(published))
+            throw new ImmutableContentIntegrityException("The settlement receipt cutoff excludes its required complete batch publication.");
+        var items = await content.ReadJsonAsync<IReadOnlyList<BulkAccessDecisionItemIntent>>(tenant.ToString(), intent.Items.Content, ct)
+            .ConfigureAwait(false);
+        var proofs = await AccessReviewContent.ReadAsync<IReadOnlyList<BulkItemDecisionProof>>(content, tenant,
+            published.SourceProofs, ct).ConfigureAwait(false);
+        if (items.Count == 0 || items.Count != intent.Items.Count || intent.Items.ItemsSha256 != intent.Items.Content.Sha256 ||
+            proofs.Count != items.Count || items.Select(item => item.ItemId).Distinct().Count() != items.Count ||
+            proofs.Select(proof => proof.ItemId).Distinct().Count() != proofs.Count ||
+            items.Count(item => item.ItemId == settled.ItemId) != 1)
+            throw new ImmutableContentIntegrityException("The published proof set does not cover the exact complete frozen selection.");
+        foreach (var selected in items)
+        {
+            var target = AccessReviewEffects.ItemStream(tenant, campaignId, selected.ItemId);
+            var proof = proofs.SingleOrDefault(proof => proof.ItemId == selected.ItemId)
+                ?? throw new ImmutableContentIntegrityException("The published proof set omits a selected item.");
+            if (selected.ItemOwner != target || proof.Hold.Stream != target || proof.Decision.Stream != target)
+                throw new ImmutableContentIntegrityException("A selected bulk proof belongs to another item owner.");
+            var source = await cut.ReadAsync(target, ct).ConfigureAwait(false);
+            if (!source.Includes(proof.Hold) || !source.Includes(proof.Decision))
+                throw new ImmutableContentIntegrityException("The settlement receipt cutoff excludes a selected item's required hold or provisional decision.");
+            var held = source.Records.Single(record => record.Event.Metadata.EventId == proof.Hold.EventId).Event;
+            var applied = source.Records.Single(record => record.Event.Metadata.EventId == proof.Decision.EventId).Event;
+            if (held is not AccessReviewItemDecisionAuthorized hold || hold.Owner != target || hold.TenantId != tenant ||
+                hold.CampaignId != campaignId || hold.ItemId != selected.ItemId || hold.Revision != (long)selected.ExpectedItemRevision ||
+                hold.Generation != AccessReviewEffects.Generation ||
+                hold.Operation.Owner != target || hold.Operation.RootOperationId != operationId || hold.Operation.CausationEventId != admission.EventId ||
+                applied is not AccessDecisionsRecorded decision || decision.TenantId != tenant || decision.CampaignId != campaignId ||
+                decision.ItemId != selected.ItemId || decision.Revision != (long)selected.ExpectedItemRevision + 1 ||
+                !decision.PublicationRequired || decision.DecisionBatchId != operationId || decision.Intent != settlement.ParentIntent ||
+                decision.Operation.Owner != target || decision.Operation.RootOperationId != operationId || decision.Operation.CausationEventId != admission.EventId ||
+                selected.ItemId == settled.ItemId && proof.Decision != pending.Source)
+                throw new ImmutableContentIntegrityException("The publication proof differs from its exact selected hold or provisional native decision.");
+            var heldIntent = await AccessReviewContent.ReadAsync<SourceUseAuthorizationIntent>(content, tenant, hold.Intent, ct)
+                .ConfigureAwait(false);
+            var head = await verifier.HeadOfAsync(tenant, selected, ct).ConfigureAwait(false);
+            var key = AccessReviewEffects.BulkUseKey(operationId, campaign.Stream, target);
+            var requirement = new SourceUseRequirement(target, head, selected.ExpectedItemRevision,
+                SourceUsePurpose.BulkDecision, selected.EligibilityProofs.Content);
+            if (head.Stream != target || !source.Includes(head) || heldIntent.Header != intent.Header ||
+                heldIntent.ParentIntent != settlement.ParentIntent || heldIntent.Reservation != key ||
+                heldIntent.Requirement != requirement || heldIntent.Grant is not null || heldIntent.Disposition is not null ||
+                selected.ItemId == settled.ItemId && (settlement.Reservation != key || settlement.Requirement != requirement ||
+                    settlement.Grant is not { ReservationGeneration: > 0 } grant || grant.Key != key || grant.GrantEvent != proof.Hold))
+                throw new ImmutableContentIntegrityException("The exact source-use wrappers do not bind the frozen parent intent, item head and original grant.");
+        }
     }
 
     async ValueTask<(string? Kind, DateTimeOffset At, JsonElement Payload)> ApplyItemFactAsync(DomainEvent domainEvent,
@@ -348,7 +441,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                     {
                         // Hidden until the batch published: kept pending, counted in the item's revision.
                         if (list.Count != 1 || !state.Pending.TryAdd(batchId, new PendingDecision(list[0],
-                                decisions.Revision)))
+                                decisions.Revision, NativeFactReference.Of(AccessReviewEffects.ItemStream(tenantId, campaignId, itemId), decisions))))
                             return invalid;
                         return (ProvisionalKind, list[0].DecidedAt, default);
                     }
@@ -426,9 +519,9 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
     }
 
     static void Include(List<AsOfEvent> asOf, DateTimeOffset at, DomainEventMetadata metadata, string kind,
-        EventStreamAddress stream, JsonElement payload, DateTimeOffset through)
+        EventStreamAddress stream, JsonElement payload, DateTimeOffset through, bool? receiptIncluded)
     {
-        if (at <= through && metadata.OccurredOn <= through)
+        if (receiptIncluded ?? (at <= through && metadata.OccurredOn <= through))
             asOf.Add(new AsOfEvent(at, stream, new AccessReviewCampaignSourceEvent(metadata.EventId,
                 metadata.AggregateVersion, metadata.OccurredOn, kind, payload)));
     }
@@ -801,7 +894,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
         public AccessRemediationExceptionView? Exception { get; set; }
     }
 
-    sealed record PendingDecision(AccessDecisionView Decision, long Revision);
+    sealed record PendingDecision(AccessDecisionView Decision, long Revision, NativeFactReference Source);
 
     const string ProvisionalKind = "provisional";
 

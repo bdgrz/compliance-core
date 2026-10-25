@@ -1,0 +1,56 @@
+{
+  "initialBeforeFullUnit": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "decision": {
+        "type": "choice",
+        "choice": "merge_scoped_repair",
+        "confidence": 0.41,
+        "probabilities": {
+          "merge_scoped_repair": 0.61,
+          "refine_before_merge": 0.37,
+          "blocked_by_missing_authority": 0.02
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.35
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.2
+      }
+    },
+    "usage": {
+      "input_tokens": 52650,
+      "output_tokens": 98
+    }
+  },
+  "final": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "decision": {
+        "type": "choice",
+        "choice": "merge_scoped_repair",
+        "confidence": 0.52,
+        "probabilities": {
+          "merge_scoped_repair": 0.68,
+          "refine_before_merge": 0.3,
+          "blocked_by_missing_authority": 0.02
+        }
+      },
+      "introduced_regression": {
+        "type": "noul",
+        "noul": 0.36
+      },
+      "scope_misrepresentation": {
+        "type": "noul",
+        "noul": 0.19
+      }
+    },
+    "usage": {
+      "input_tokens": 62146,
+      "output_tokens": 98
+    }
+  }
+}

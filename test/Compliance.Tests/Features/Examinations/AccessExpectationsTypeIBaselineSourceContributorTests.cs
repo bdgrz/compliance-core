@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Content;
@@ -115,6 +117,49 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributorTests
         Assert.Empty(result.Value.Blockers);
     }
 
+    [Fact]
+    public async Task ShouldExcludeBackdatedExpectationGivenAppendCommitsAfterFrozenReceiptCut()
+    {
+        // Arrange
+        var fixture = await Fixture(includeApproval: false, committedAt: AfterTypeIDate);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Empty(result.Value.Sources);
+    }
+
+    [Fact]
+    public async Task ShouldAcceptValidExpectationHistoryGivenOccurrenceMetadataDescendsBeforeReceiptCut()
+    {
+        // Arrange
+        var fixture = await Fixture(includeApproval: true, committedAt: TypeIThrough.AddSeconds(-1), descendingOccurrence: true);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(4, Assert.Single(result.Value.Sources).Revision);
+    }
+
+    [Fact]
+    public async Task ShouldAcceptIndependentExceptionsGivenBusinessClockRegressesWithinValidReceiptPrefix()
+    {
+        // Arrange
+        var fixture = await Fixture(includeApproval: true, committedAt: TypeIThrough.AddSeconds(-1), descendingBodyTimes: true);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(5, Assert.Single(result.Value.Sources).Revision);
+        Assert.Empty(result.Value.Blockers);
+    }
+
     static AccessExpectationView View(Uuid expectationId, long revision, DateTimeOffset proposedAt,
         string ruleKind, AccessExpectationParameters parameters, Uuid? supersedes = null) => new(expectationId,
         SystemInstanceId, supersedes, ruleKind, parameters, "Human access must use federated roles.",
@@ -122,7 +167,8 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributorTests
         proposedAt, null, null, null, revision);
 
     static async Task<FixtureState> Fixture(bool includeApproval, bool laterChanges = false,
-        DateTimeOffset? recordedAt = null, bool approvedAfterTypeIDate = false, bool secondLine = false)
+        DateTimeOffset? recordedAt = null, bool approvedAfterTypeIDate = false, bool secondLine = false,
+        DateTimeOffset? committedAt = null, bool descendingOccurrence = false, bool descendingBodyTimes = false)
     {
         var content = AccessReviewFacts.Content();
         var events = new InMemoryEventStore();
@@ -187,6 +233,11 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributorTests
                 new DateTimeOffset(2027, 3, 1, 12, 0, 0, TimeSpan.Zero), recordedAt);
         }
 
+        if (descendingBodyTimes)
+            await Except(LineStream, ExpectationId, FutureExceptionId, ExpectationId, "independent-legacy-user",
+                new DateTimeOffset(2027, 4, 30, 0, 0, 0, TimeSpan.Zero),
+                new DateTimeOffset(2027, 2, 15, 12, 0, 0, TimeSpan.Zero));
+
         if (approvedAfterTypeIDate)
             Approve(LineStream, ExpectationId, ExpectationId, AfterTypeIDate);
         if (laterChanges)
@@ -199,6 +250,12 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributorTests
                 new DateTimeOffset(2027, 8, 1, 0, 0, 0, TimeSpan.Zero), AfterTypeIDate.AddMinutes(2));
         }
 
+        if (descendingOccurrence && facts[1] is AccessExpectationApproved approval)
+        {
+            var descending = approval with { };
+            descending.AttachMetadata(approval.Metadata with { OccurredOn = facts[0].Metadata.OccurredOn.AddDays(-1) });
+            facts[1] = descending;
+        }
         var attached = facts.ToArray();
         await events.AppendAsync(LineStream, 0, attached);
         lines.Add(new AggregateScenario<AccessExpectation>(new AccessExpectation(TenantId, ExpectationId))
@@ -233,7 +290,19 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributorTests
 
         var contributor = new AccessExpectationsTypeIBaselineSourceContributor(new LineReader(lines), events,
             content);
-        return new FixtureState(contributor, Context());
+        var context = Context();
+        if (committedAt is { } at)
+        {
+            var receipts = new ScriptedNativeEventReceipts();
+            await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString()), EventCursor.Start, CancellationToken.None))
+                receipts.Record(record, at);
+            context = context with
+            {
+                RecordedThrough = TypeIThrough,
+                ReceiptCut = new RecordedSourceReceiptCutFactory(events, receipts).Create(TenantId, TypeIThrough)
+            };
+        }
+        return new FixtureState(contributor, context);
     }
 
     static ExaminationEngagementView Engagement() => new(TenantId, ProgramId,

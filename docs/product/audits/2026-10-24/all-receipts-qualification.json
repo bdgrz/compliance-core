@@ -1,0 +1,38 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Shared exact broker receipt prefix;20 contributor files/21 source families; exact causal dependencies and legacy Incident prefix.",
+  "validation": {
+    "originalApiRedFailed": 8,
+    "originalValidControlPassed": 1,
+    "additionalNativeLocalIdentityRedFailed": 1,
+    "strictBuildWarnings": 0,
+    "focusedPassed": 228,
+    "backendUnitPassed": 5885,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 29,
+    "signalsTriaged": 9,
+    "mergeProbability": 0.68,
+    "adopted": "merge scoped repair; continue prepared owners and source-use compaction",
+    "basis": "Direct Jev selected merge before/after full unit proof; parent verified actual source invariants, real native positive and negative cases, typed failures and canonical digest preservation."
+  },
+  "parentRefinements": [
+    "Renamed non-IO RecordedSourceReceiptStream to RecordedSourceReceiptPrefix for strict analyzer; fixed nullable/collection/indexable diagnostics.",
+    "Real application-import fixture captures tenant-end source checkpoint so all3 scenarios reach the intended receipt guard.",
+    "Bulk proof guard decodes actual SourceUseAuthorizationIntent wrappers and binds ParentIntent, reservation/requirement, native item head, original grant and complete admitted/published sibling proof set. Diagnostic source instrumentation was removed before final build/review.",
+    "Actual native same-command two-personal-owner regression reproduces old global seen-set rejection; decision/reassignment seen IDs now scoped per item."
+  ],
+  "qualification": [
+    "Inclusive authenticated broker epoch milliseconds; tied same-ms receipts have no claimed sub-ms physical ordering.",
+    "No-cutoff ordinary Type I reads preserve canonical preimages and do not perform receipt RPC.42 captured canonical helpers were unchanged in preparation; focused source and snapshot suites pass.",
+    "No retained history converter, data reset, deployment or missing live-source hold protocol.",
+    "Native Incident, Risk and SystemDescription compaction remain independently queued; frozen owner overlay variants preserve this seam."
+  ],
+  "remaining": "SD/Risk/Calendar/catalog/Incident;baseline projection identity;generic SourceUseReservations; actual unassigned owner/reactor inventory."
+}

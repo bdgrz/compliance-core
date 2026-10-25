@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
@@ -52,7 +53,7 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
         var scopeDifferences = new List<string>();
         foreach (var systemId in systemIds)
         {
-            var history = await ReadHistoryAsync(engagement.TenantId, systemId, through, ct)
+            var history = await ReadHistoryAsync(context, engagement.TenantId, systemId, through, ct)
                 .ConfigureAwait(false);
             if (!history.IsSuccess)
                 return Result<TypeIBaselineSourceContribution>.Failure(history.Error);
@@ -93,7 +94,7 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
                 blockers.AsReadOnly(), scopeDifferences.AsReadOnly()));
     }
 
-    async ValueTask<Result<AccessExpectationHistory>> ReadHistoryAsync(Uuid tenantId, Uuid systemId,
+    async ValueTask<Result<AccessExpectationHistory>> ReadHistoryAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid systemId,
         DateTimeOffset through, CancellationToken ct)
     {
         var lines = new SortedSet<Uuid>(Comparer<Uuid>.Create(static (left, right) =>
@@ -118,7 +119,7 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
         long asOfFacts = 0;
         foreach (var lineId in lines)
         {
-            var line = await ReadLineAsync(tenantId, systemId, lineId, through, ct).ConfigureAwait(false);
+            var line = await ReadLineAsync(context, tenantId, systemId, lineId, through, ct).ConfigureAwait(false);
             if (!line.IsSuccess)
                 return Result<AccessExpectationHistory>.Failure(line.Error);
             asOfExpectations.AddRange(line.Value.Expectations);
@@ -128,7 +129,7 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
 
         foreach (var exceptionId in exceptionStreams)
         {
-            var exception = await ReadPopulationExceptionAsync(tenantId, systemId, exceptionId, through, ct)
+            var exception = await ReadPopulationExceptionAsync(context, tenantId, systemId, exceptionId, through, ct)
                 .ConfigureAwait(false);
             if (!exception.IsSuccess)
                 return Result<AccessExpectationHistory>.Failure(exception.Error);
@@ -148,7 +149,7 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
                 .ThenBy(static item => item.ExceptionId.ToString(), StringComparer.Ordinal).ToArray()));
     }
 
-    async ValueTask<Result<LineHistory>> ReadLineAsync(Uuid tenantId, Uuid systemId, Uuid lineId,
+    async ValueTask<Result<LineHistory>> ReadLineAsync(TypeIBaselineSourceReadContext context, Uuid tenantId, Uuid systemId, Uuid lineId,
         DateTimeOffset through, CancellationToken ct)
     {
         var stream = new EventStreamAddress(tenantId.ToString(), AccessExpectation.Area, lineId.ToString());
@@ -173,7 +174,7 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
                 metadata.EventId == Uuid.Empty || !seenEventIds.Add(metadata.EventId) ||
                 metadata.AggregateId != lineId || metadata.AggregateVersion != expectedVersion ||
                 metadata.OccurredOn == default ||
-                priorRecordedAt is { } earlierRecord && metadata.OccurredOn < earlierRecord)
+                context.RecordedThrough is null && priorRecordedAt is { } earlierRecord && metadata.OccurredOn < earlierRecord)
                 return InvalidLine();
 
             DateTimeOffset occurredAt;
@@ -197,7 +198,8 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
                     occurredAt = expectation.ProposedAt;
                     expectationIndexes.Add(expectation.ExpectationId, currentExpectations.Count);
                     currentExpectations.Add(expectation);
-                    if (occurredAt <= through && metadata.OccurredOn <= through)
+                    if (context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
+                        await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false))
                     {
                         asOfExpectationIndexes.Add(expectation.ExpectationId, asOfExpectations.Count);
                         asOfExpectations.Add(expectation);
@@ -223,7 +225,8 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
                         SeparationOfDutiesWaiverId = approved.SeparationOfDutiesWaiverId,
                     };
                     currentExpectations[index] = approvedExpectation;
-                    if (occurredAt <= through && metadata.OccurredOn <= through)
+                    if (context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
+                        await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false))
                     {
                         if (!asOfExpectationIndexes.TryGetValue(approved.ExpectationId, out var asOfIndex))
                             return InvalidLine();
@@ -248,7 +251,8 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
                         exceptionExpectation.ApprovedAt > expectationException.ApprovedAt)
                         return InvalidLine();
                     occurredAt = expectationException.ApprovedAt;
-                    if (occurredAt <= through && metadata.OccurredOn <= through)
+                    if (context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
+                        await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false))
                     {
                         if (!asOfExpectationIndexes.ContainsKey(expectationException.ExpectationId))
                             return InvalidLine();
@@ -260,11 +264,12 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
                     return InvalidLine();
             }
 
-            if (priorOccurredAt is { } earlierOccurredAt && occurredAt < earlierOccurredAt)
+            if (context.RecordedThrough is null && priorOccurredAt is { } earlierOccurredAt && occurredAt < earlierOccurredAt)
                 return InvalidLine();
             priorOccurredAt = occurredAt;
             priorRecordedAt = metadata.OccurredOn;
-            if (occurredAt <= through && metadata.OccurredOn <= through)
+            if (context.RecordedThrough is null ? occurredAt <= through && metadata.OccurredOn <= through :
+                        await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false))
                 asOfFacts++;
             expectedRevision++;
             expectedVersion++;
@@ -276,7 +281,7 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
         return Result<LineHistory>.Success(new LineHistory(asOfFacts, asOfExpectations, asOfExceptions));
     }
 
-    async ValueTask<Result<AccessPopulationExceptionView?>> ReadPopulationExceptionAsync(Uuid tenantId,
+    async ValueTask<Result<AccessPopulationExceptionView?>> ReadPopulationExceptionAsync(TypeIBaselineSourceReadContext context, Uuid tenantId,
         Uuid systemId, Uuid exceptionId, DateTimeOffset through, CancellationToken ct)
     {
         var stream = new EventStreamAddress(tenantId.ToString(), AccessPopulationException.Area,
@@ -296,7 +301,8 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
                 recorded.ExceptionContent, ct).ConfigureAwait(false);
             if (!ValidPopulationException(exception, systemId) || exception!.ExceptionId != exceptionId)
                 return InvalidException();
-            if (exception.ApprovedAt <= through && metadata.OccurredOn <= through)
+            if (context.RecordedThrough is null ? exception.ApprovedAt <= through && metadata.OccurredOn <= through :
+                await context.IncludesAsync(record.Stream, record.Event, ct).ConfigureAwait(false))
                 included = exception;
         }
 

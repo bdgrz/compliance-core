@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Snapshots;
@@ -133,6 +135,43 @@ public sealed class WorkforceTypeIBaselineSourceContributorTests
             StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public async Task ShouldSelectEarlierIntactRosterGivenLaterFreezeCommitsAfterReceiptCut()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var earlier = Snapshot(engagement.TenantId, new DateTimeOffset(2026, 9, 29, 12, 0, 0, TimeSpan.Zero));
+        var later = Snapshot(engagement.TenantId, new DateTimeOffset(2026, 9, 30, 12, 0, 0, TimeSpan.Zero));
+        var events = new InMemoryEventStore();
+        var receipts = new ScriptedNativeEventReceipts();
+        var through = Now;
+        foreach (var pair in new[] { earlier, later })
+        {
+            var fact = DomainEventSeed.Attach(pair.Source.FrozenFact! with { }, pair.Source.Id, 1);
+            await events.AppendAsync(pair.Source.Stream, 0, [fact]);
+            await foreach (var record in events.ReadAsync(pair.Source.Stream, 0, CancellationToken.None))
+                receipts.Record(record, pair.Source.Id == later.Source.Id ? through.AddMilliseconds(1) : through.AddMilliseconds(-1));
+        }
+        var cursor = EventCursor.Start;
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(engagement.TenantId.ToString(), "population-snapshots"), cursor, CancellationToken.None))
+            cursor = record.NextCursor;
+        var directory = new SnapshotDirectory(earlier.Summary, later.Summary) { Checkpoint = new(cursor) };
+        ITypeIBaselineSourceContributor contributor = Contributor(directory, new SnapshotAggregateReader(earlier.Source, later.Source), events);
+        var context = new TypeIBaselineSourceReadContext(Uuid.Empty, [])
+        {
+            RecordedThrough = through,
+            ReceiptCut = new RecordedSourceReceiptCutFactory(events, receipts).Create(engagement.TenantId, through)
+        };
+
+        // Act
+        var result = await contributor.ReadAsync(engagement, context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(earlier.Source.Id, Assert.Single(result.Value.Sources).VersionId);
+        Assert.Empty(result.Value.Blockers);
+    }
+
     static WorkforceTypeIBaselineSourceContributor Contributor(
         IPopulationSnapshotDirectoryReader directory,
         IAggregateReader reader, IDomainEventReader events) =>
@@ -161,8 +200,9 @@ public sealed class WorkforceTypeIBaselineSourceContributorTests
     sealed class SnapshotDirectory(params PopulationSnapshotSummary[] snapshots)
         : IPopulationSnapshotDirectoryReader
     {
+        public ProjectionCheckpoint Checkpoint { get; init; } = ProjectionCheckpoint.Start;
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+            CancellationToken ct = default) => ValueTask.FromResult(Checkpoint);
 
         public ValueTask<Page<PopulationSnapshotSummary>> ListAsync(Uuid tenantId, string kind,
             int limit, string? cursor, CancellationToken ct = default) => ValueTask.FromResult(

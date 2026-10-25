@@ -826,6 +826,7 @@ public static class ComplianceServiceCollectionExtensions
         services.TryAddScoped<ISourceFactResolver>(provider => new FitzSourceFactResolver(
             provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>()));
         services.TryAddScoped<INativeEventReceiptReader, FitzNativeEventReceiptReader>();
+        services.AddScoped<RecordedSourceReceiptCutFactory>();
         // The fixed-cut reader shares the Portia stream client.
         services.TryAddScoped<IAuthoritativeSnapshotReader>(provider => new FitzAuthoritativeSnapshotReader(
             provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>(),

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Text;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Boundaries;
@@ -189,8 +190,11 @@ public sealed class CommitmentTypeIBaselineSourceReader(
             if (!viewResult.IsSuccess)
                 return Result<TypeIBaselineSourceContribution>.Failure(viewResult.Error);
             var view = viewResult.Value;
-            if (context.RecordedThrough is { } cutoff &&
-                (view.Approval?.DecidedAt ?? view.Decision.DecidedAt) > cutoff)
+            var receiptStream = context.RecordedThrough is null ? null :
+                await context.RequireReceipts(engagement.TenantId).ReadAsync(new EventStreamAddress(
+                    engagement.TenantId.ToString(), CommitmentDraft.Area, draftId.ToString()), ct).ConfigureAwait(false);
+            if (receiptStream is not null && !receiptStream.Includes(fact => fact is CommitmentApproved approved &&
+                    approved.ChangeCount > 0 && approved.Version == view.Version && approved.Revision == view.Revision))
                 return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
                     "An effective commitment changed after the frozen close receipt cutoff.", true));
             var history = await ReadHistoryAsync(engagement.TenantId, engagement.ProgramId,
@@ -254,11 +258,13 @@ public sealed class CommitmentTypeIBaselineSourceReader(
             var effectiveThrough = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
                 DateTimeKind.Utc));
             var through = context.RecordedThrough ?? effectiveThrough;
-            if (context.RecordedThrough is { } retirementCutoff && retirement.OccurredAt > retirementCutoff &&
-                retirement.EffectiveOn <= engagement.PeriodStart)
+            var retirementRecorded = receiptStream is null ? retirement.OccurredAt <= through :
+                receiptStream.Includes(fact => fact is CommitmentRetired retired && retired.ChangeCount > 0 &&
+                    retired.Revision == retirement.Revision);
+            if (receiptStream is not null && !retirementRecorded && retirement.EffectiveOn <= engagement.PeriodStart)
                 return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
                     "A commitment retirement changed after the frozen close receipt cutoff.", true));
-            if (retirement.OccurredAt <= through || retirement.EffectiveOn <= engagement.PeriodStart)
+            if (retirementRecorded || retirement.EffectiveOn <= engagement.PeriodStart)
             {
                 var retirementKind = stem + "_retirement";
                 try
@@ -276,7 +282,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
                 }
                 if (retirement.EffectiveOn > engagement.PeriodStart)
                     scopeDifferences.Add($"Commitment {draft.Identifier} has a retirement scheduled after the Type I date.");
-                else if (retirement.OccurredAt > through)
+                else if (!retirementRecorded)
                     scopeDifferences.Add($"Commitment {draft.Identifier} was retired retroactively after the Type I date.");
                 else
                     scopeDifferences.Add($"Commitment {draft.Identifier} was retired on or before the Type I date.");

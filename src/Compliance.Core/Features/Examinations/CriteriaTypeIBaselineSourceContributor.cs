@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -11,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Resolves the criteria edition selected for the program at the Type I date.</summary>
 public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader reader,
-    ICriteriaCatalog catalog, ICriteriaTextOverlayReader overlays)
+    ICriteriaCatalog catalog, ICriteriaTextOverlayReader overlays, IImmutableContentStore? content = null)
     : ITypeIBaselineSourceContributor
 {
     const string SelectionDomain = "bdgrz.snapshot.source.criteria_selection.v1\0";
@@ -19,14 +21,40 @@ public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader read
 
     public string Family => "criteria";
 
+    public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+        ExaminationEngagementView engagement, CancellationToken ct) =>
+        ReadAsync(engagement, new TypeIBaselineSourceReadContext(Uuid.Empty, []), ct);
+
     public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
-        ExaminationEngagementView engagement, CancellationToken ct)
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context, CancellationToken ct)
+    {
+        try
+        {
+            return await ReadCoreAsync(engagement, context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The exact criteria source cannot be verified: " + exception.Message,
+                isTransient: exception is ImmutableContentUnavailableException));
+        }
+    }
+
+    async ValueTask<Result<TypeIBaselineSourceContribution>> ReadCoreAsync(
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context, CancellationToken ct)
     {
         var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
             DateTimeKind.Utc));
+        var receiptCut = context.RecordedThrough is null ? null : context.RequireReceipts(engagement.TenantId);
         var program = await reader.HydrateAsync(new ComplianceProgram(engagement.TenantId,
             engagement.ProgramId), ct).ConfigureAwait(false);
-        var selection = program.CriteriaSelectionAt(through);
+        var programReceipts = receiptCut is null ? null : await receiptCut.ReadAsync(program.Stream, ct).ConfigureAwait(false);
+        var selectedFact = programReceipts?.Included.Select(record => record.Event).OfType<ProgramCriteriaEditionSelected>()
+            .LastOrDefault();
+        if (selectedFact is not null && (selectedFact.TenantId != engagement.TenantId || selectedFact.ProgramId != engagement.ProgramId))
+            throw new ImmutableContentIntegrityException("The criteria selection belongs to another exact program.");
+        var selection = receiptCut is null ? program.CriteriaSelectionAt(through) : selectedFact is null ? null
+            : new ProgramCriteriaEditionSelection(selectedFact.Revision, selectedFact.EditionId, selectedFact.ChangedAt);
         if (!program.IsCreated || selection is null)
             return Result<TypeIBaselineSourceContribution>.Success(Contribution([],
                 ["No criteria edition was selected for the program by the Type I date."], []));
@@ -62,6 +90,12 @@ public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader read
         for (var index = 0; index < applied.Value.Count; index++)
         {
             var entry = applied.Value[index];
+            if (receiptCut is not null)
+            {
+                effectiveEntries[index] = await HistoricalOverlayAsync(engagement.TenantId, originalEntries[index],
+                    entry, receiptCut, ct).ConfigureAwait(false);
+                continue;
+            }
             if (entry.Overlay is { } current && (current.Revision < 1 ||
                 string.IsNullOrWhiteSpace(current.Supplier) ||
                 string.IsNullOrWhiteSpace(current.LicenseReference) ||
@@ -86,7 +120,7 @@ public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader read
 
         var confirmed = await reader.HydrateAsync(new ComplianceProgram(engagement.TenantId,
             engagement.ProgramId), ct).ConfigureAwait(false);
-        if (!Equals(selection, confirmed.CriteriaSelectionAt(through)))
+        if (receiptCut is null && !Equals(selection, confirmed.CriteriaSelectionAt(through)))
             return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(
                 RequestErrorKind.Conflict,
                 "The program criteria selection changed while the baseline preview was read. Retry the preview.",
@@ -102,6 +136,45 @@ public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader read
         };
         return Result<TypeIBaselineSourceContribution>.Success(Contribution(sources, blockers,
             scopeDifferences));
+    }
+
+    async Task<Criterion> HistoricalOverlayAsync(Uuid tenant, Criterion original, Criterion projected,
+        RecordedSourceReceiptCut cut, CancellationToken ct)
+    {
+        var stream = new CriteriaTextOverlay(tenant, original.EditionId, original.Identifier).Stream;
+        var captured = await cut.ReadAsync(stream, ct).ConfigureAwait(false);
+        var all = captured.Records.Select(record => record.Event).OfType<CriteriaTextOverlayEntryRevised>().ToArray();
+        if (all.Length != captured.Records.Count)
+            throw new ImmutableContentIntegrityException("The overlay source contains another native fact kind.");
+        CriteriaTextOverlayRevision? retained = null;
+        CriteriaTextOverlayRevision? current = null;
+        long revision = 0;
+        foreach (var fact in all)
+        {
+            if (fact.TenantId != tenant || fact.EditionId != original.EditionId || fact.Identifier != original.Identifier ||
+                fact.Operation.Owner != stream || fact.Revision != ++revision)
+                throw new ImmutableContentIntegrityException("The licensed overlay source has another exact scope or revision.");
+            if (content is null)
+                throw new ImmutableContentUnavailableException("Historical licensed overlay content is not configured.");
+            var supplied = await content.ReadJsonAsync<CriteriaTextOverlayContent>(tenant.ToString(), fact.OverlayContent, ct)
+                .ConfigureAwait(false);
+            var cleaned = CriteriaTextOverlayRules.Clean(supplied);
+            if (cleaned is null || cleaned != supplied || fact.Operation.Actor.Kind != "member")
+                throw new ImmutableContentIntegrityException("The licensed overlay content does not satisfy its original source contract.");
+            current = new CriteriaTextOverlayRevision(tenant, original.EditionId, original.Identifier, fact.Revision,
+                supplied, fact.Operation.Actor, fact.Operation.AcceptedAt);
+            if (captured.Includes(fact))
+                retained = current;
+        }
+        if (current is null)
+        {
+            if (projected != original)
+                throw new ImmutableContentUnavailableException("The projected overlay has no exact native source.");
+            return original;
+        }
+        if (CriteriaTextOverlayPolicy.Apply(original, current, current, false) != projected)
+            throw new ImmutableContentUnavailableException("The projected licensed overlay differs from its current native source.");
+        return retained is null ? original : CriteriaTextOverlayPolicy.Apply(original, retained, current, false);
     }
 
     static TypeIBaselineSourceContribution Contribution(
