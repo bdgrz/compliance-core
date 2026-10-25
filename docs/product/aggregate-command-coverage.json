@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-25",
-  "sourceCommit": "8743b1b9229ca5ab9f2e21b65dd3e3525d9cb479",
+  "sourceCommit": "de49ad86b15be3a487776779371974cab6fa5140",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -8452,7 +8452,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Examinations/ExaminationEngagementTests.cs",
-        "test/Compliance.Tests/Features/Examinations/FitzExaminationEngagementDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Examinations/FitzExaminationEngagementDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Examinations/TypeIBaselineScopedIdentityTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -20663,7 +20664,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Examinations/TypeIBaselineScopedIdentityTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },

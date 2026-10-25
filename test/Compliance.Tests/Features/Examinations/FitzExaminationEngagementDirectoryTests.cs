@@ -66,7 +66,7 @@ public sealed class FitzExaminationEngagementDirectoryTests
         };
         var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzExaminationEngagementDirectory.ProjectorName,
-            EventStreamPattern.ForPattern(tenantId.ToString()));
+            EventStreamPattern.ForPattern(tenantId.ToString(), "examinations"));
 
         // Act
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
@@ -87,9 +87,9 @@ public sealed class FitzExaminationEngagementDirectoryTests
         }
         var current = await directory.GetAsync(tenantId, engagementId);
         var otherTenant = await directory.GetAsync(Uuid.CreateVersion4(), engagementId);
-        var frozenBaseline = await directory.GetBaselineAsync(tenantId, baseline.TypeIBaselineId);
-        var amendedBaseline = await directory.GetBaselineAsync(tenantId, amended.TypeIBaselineId);
-        var otherTenantBaseline = await directory.GetBaselineAsync(Uuid.CreateVersion4(),
+        var frozenBaseline = await directory.GetBaselineAsync(tenantId, engagementId, baseline.TypeIBaselineId);
+        var amendedBaseline = await directory.GetBaselineAsync(tenantId, engagementId, amended.TypeIBaselineId);
+        var otherTenantBaseline = await directory.GetBaselineAsync(Uuid.CreateVersion4(), engagementId,
             baseline.TypeIBaselineId);
 
         // Assert

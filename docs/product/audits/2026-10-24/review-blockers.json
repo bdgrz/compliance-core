@@ -185,7 +185,13 @@
     "all-receipts-file-reviews.json",
     "all-receipts-file-triage.json",
     "all-receipts-integration-jev.json",
-    "all-receipts-qualification.json"
+    "all-receipts-qualification.json",
+    "baseline-identity-file-reviews.json",
+    "baseline-identity-file-triage.json",
+    "baseline-identity-integration-jev.json",
+    "baseline-identity-qualification.json",
+    "remaining-owner-reactor-inventory.json",
+    "remaining-owner-reactor-inventory.md"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 91,
@@ -459,12 +465,21 @@
     },
     {
       "id": "all-source-receipt-selection",
-      "status": "locally_verified_pending_merge",
+      "status": "merged",
       "focusedPassed": 228,
       "fullUnitPassed": 5885,
       "directJevProductionFilesReviewed": 29,
       "modelMergeProbability": 0.68,
-      "qualificationArtifact": "all-receipts-qualification.json"
+      "qualificationArtifact": "all-receipts-qualification.json",
+      "pullRequest": 1113,
+      "mergeCommit": "de49ad86b15be3a487776779371974cab6fa5140"
+    },
+    {
+      "id": "typei-baseline-projection-identity",
+      "status": "locally_verified_pending_merge",
+      "fullUnitPassed": 5896,
+      "focusedPassed": 49,
+      "qualificationArtifact": "baseline-identity-qualification.json"
     }
   ],
   "resolved": [
@@ -504,14 +519,15 @@
       "artifactDirectory": "/tmp/compliance-ratification-native-prepared"
     },
     {
-      "id": "typei-baseline-projection-identity",
+      "id": "compliance-incident-native",
       "status": "frozen_runtime_pending",
-      "artifactDirectory": "/tmp/compliance-baseline-identity-prepared"
+      "artifactDirectory": "/tmp/compliance-incident-native-prepared"
     }
   ],
   "continuingPreparation": [
-    "ComplianceIncident native authority/consumers and exact completion proofs",
-    "Generic SourceUseReservations bounded active/terminal authority",
-    "Actual remaining owner/reactor inventory; lexical inventory counts are not completion evidence"
+    "Generic SourceUseReservations live+selected state with full exact-cut transient validation and explicit proof selection",
+    "AccessPrincipalClassification/CriteriaTextOverlay/TrainingRequirement small native history compactions",
+    "RiskMethod/RiskGovernance/RiskTreatmentAssertion/RiskTreatmentAction current/native history group",
+    "Remaining owner/reactor candidates in remaining-owner-reactor-inventory.json; finite/current/one-shot qualifications must be checked before changing a candidate"
   ]
 }

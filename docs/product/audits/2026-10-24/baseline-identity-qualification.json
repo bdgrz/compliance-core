@@ -1,0 +1,33 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Exact owner-qualified baseline rows/amendment predecessors, ambiguity-preserving public lookup and examination source fences, proof-descriptor replay equality.",
+  "validation": {
+    "originalApiGenuineRedFailed": 5,
+    "strictBuildWarnings": 0,
+    "focusedPassed": 49,
+    "backendUnitPassed": 5896,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 5,
+    "signalsTriaged": 2,
+    "mergeProbability": 0.9400000000000001,
+    "adopted": "merge scoped repair; continue actual owner/reactor queue"
+  },
+  "parentRefinements": [
+    "Initial proof-descriptor RED failed on a stale fixture checkpoint. Corrected old-API fixture reads checkpoint by actual batch identity; reran and observed real Assert.IsType failure because changed descriptor was wrongly accepted. Preserved corrected old-API test in recovery; final GREEN tests use consistent v3 area checkpoint.",
+    "Static/runtime-name inventory found only deliberate old generation refusal tests; production worker uses actual generation constant."
+  ],
+  "qualification": [
+    "Fresh projection v3 requires exact examination-source replay; old generations remain intact.",
+    "Public route/DTO, baseline/source/digest/proof/lineage IDs retained. Ambiguity conflicts; no global ID uniqueness or inferred alias.",
+    "Native ExaminationEngagement history compaction remains independent.",
+    "Remaining-owner inventory is read-only source guidance; bounded/current/one-shot qualifications are explicit, not57 asserted unbounded defects.",
+    "No data reset, persisted-state converter or deployment."
+  ]
+}

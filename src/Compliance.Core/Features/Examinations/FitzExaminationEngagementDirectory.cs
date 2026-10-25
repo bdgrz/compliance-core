@@ -1,13 +1,32 @@
+using System.Globalization;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
 sealed class FitzExaminationEngagementDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/examination-engagement-directory/projection-v2",
+    : FitzKvProjectionStore(client, "kv://bdgrz/examination-engagement-directory/projection-v3",
         ProjectorName), IExaminationEngagementDirectoryReader, IExaminationEngagementDirectoryProjection
 {
-    public const string ProjectorName = "ExaminationEngagementDirectoryV2";
+    public const string ProjectorName = "ExaminationEngagementDirectoryV3";
+
+    Uuid? _batchTenantId;
+
+    public new ValueTask<IProjectionBatch> BeginAsync(ProjectionBatchContext context, CancellationToken ct = default) =>
+        BeginTenantBatchAsync(context, ct);
+
+    ValueTask<IProjectionBatch> IProjectionStore.BeginAsync(ProjectionBatchContext context, CancellationToken ct) =>
+        BeginTenantBatchAsync(context, ct);
+
+    async ValueTask<IProjectionBatch> BeginTenantBatchAsync(ProjectionBatchContext context, CancellationToken ct)
+    {
+        if (context.Identity.Pattern.Area != "examinations" || context.Identity.Pattern.Resource is not null ||
+            !Uuid.TryParse(context.Identity.Pattern.Realm, CultureInfo.InvariantCulture, out var tenant) || tenant == Uuid.Empty)
+            throw new InvalidOperationException("An examination directory batch requires its exact tenant examination area.");
+        var batch = await base.BeginAsync(context, ct).ConfigureAwait(false);
+        _batchTenantId = tenant;
+        return batch;
+    }
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
@@ -28,7 +47,7 @@ sealed class FitzExaminationEngagementDirectory(IKvClient client)
         }
         if ((domainEvent is TypeIBaselineFrozen or TypeIBaselineAmended) && baseline is null)
             throw new InvalidOperationException("The Type I baseline projection event is invalid.");
-        if (tenantId == Uuid.Empty || engagement.TenantId != tenantId ||
+        if (tenantId == Uuid.Empty || _batchTenantId != tenantId || engagement.TenantId != tenantId ||
             engagement.ProgramId == Uuid.Empty || engagement.ExaminationEngagementId == Uuid.Empty ||
             engagement.Revision <= 0 || engagement.UpdatedAt == default)
             throw new InvalidOperationException("The examination engagement projection event is invalid.");
@@ -111,7 +130,7 @@ sealed class FitzExaminationEngagementDirectory(IKvClient client)
                     baseline.AffectedPackageMaterialIds.Count)
                     throw new InvalidOperationException("The Type I baseline amendment event is invalid.");
                 predecessor = await ExaminationEngagementDirectorySchema.Baselines.GetAsync(Transaction,
-                    predecessorId, ct).ConfigureAwait(false);
+                    ExaminationEngagementDirectorySchema.BaselineKey(baseline.ExaminationEngagementId, predecessorId), ct).ConfigureAwait(false);
                 if (predecessor is null || predecessor.TenantId != tenantId ||
                     predecessor.ProgramId != baseline.ProgramId ||
                     predecessor.ExaminationEngagementId != baseline.ExaminationEngagementId ||
@@ -124,7 +143,7 @@ sealed class FitzExaminationEngagementDirectory(IKvClient client)
         }
 
         var existing = await ExaminationEngagementDirectorySchema.Baselines.GetAsync(Transaction,
-            baseline.TypeIBaselineId, ct).ConfigureAwait(false);
+            ExaminationEngagementDirectorySchema.BaselineKey(baseline.ExaminationEngagementId, baseline.TypeIBaselineId), ct).ConfigureAwait(false);
         if (existing is not null)
         {
             if (!SameBaseline(existing, baseline))
@@ -199,7 +218,7 @@ sealed class FitzExaminationEngagementDirectory(IKvClient client)
         left.AmendsBaselineId == right.AmendsBaselineId && left.AmendmentReason == right.AmendmentReason &&
         left.ChangedRecordIds.SequenceEqual(right.ChangedRecordIds) &&
         left.AffectedPackageMaterialIds.SequenceEqual(right.AffectedPackageMaterialIds) &&
-        left.AmendmentDepth == right.AmendmentDepth;
+        left.AmendmentDepth == right.AmendmentDepth && left.SourceContentManifest == right.SourceContentManifest;
 
     static bool SameRevision(ExaminationEngagementView left, ExaminationEngagementView right) =>
         left.TenantId == right.TenantId && left.ProgramId == right.ProgramId &&
@@ -222,15 +241,25 @@ sealed class FitzExaminationEngagementDirectory(IKvClient client)
     }
 
     public async ValueTask<TypeIBaselineView?> GetBaselineAsync(Uuid tenantId,
-        Uuid typeIBaselineId, CancellationToken ct = default)
+        Uuid examinationEngagementId, Uuid typeIBaselineId, CancellationToken ct = default)
     {
         await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
         return await ExaminationEngagementDirectorySchema.Baselines.GetAsync(tx,
-            typeIBaselineId, ct).ConfigureAwait(false);
+            ExaminationEngagementDirectorySchema.BaselineKey(examinationEngagementId, typeIBaselineId), ct).ConfigureAwait(false);
+    }
+
+    public async ValueTask<IReadOnlyList<TypeIBaselineView>> FindBaselinesAsync(Uuid tenantId, Uuid programId,
+        Uuid typeIBaselineId, CancellationToken ct = default)
+    {
+        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+        var matches = await ExaminationEngagementDirectorySchema.Baselines.QueryAsync(tx,
+            ExaminationEngagementDirectorySchema.ByProgramBaseline.Query().WithPrefix(programId.ToString(), typeIBaselineId.ToString())
+                .Take(2), ct).ConfigureAwait(false);
+        return matches.Items;
     }
 
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
         CancellationToken ct = default) =>
         base.LoadCheckpointAsync(new CheckpointIdentity(ProjectorName,
-            EventStreamPattern.ForPattern(tenantId.ToString())), ct);
+            EventStreamPattern.ForPattern(tenantId.ToString(), "examinations")), ct);
 }

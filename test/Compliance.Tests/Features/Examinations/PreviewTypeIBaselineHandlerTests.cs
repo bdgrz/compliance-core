@@ -137,6 +137,11 @@ public sealed class PreviewTypeIBaselineHandlerTests
     sealed class StaticEngagementDirectory : IExaminationEngagementDirectoryReader
     {
         public ExaminationEngagementView? Engagement { get; set; }
+        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default) =>
+            ValueTask.FromResult(ProjectionCheckpoint.Start);
+        public ValueTask<IReadOnlyList<TypeIBaselineView>> FindBaselinesAsync(Uuid tenantId, Uuid programId, Uuid typeIBaselineId,
+            CancellationToken ct = default) => ValueTask.FromResult<IReadOnlyList<TypeIBaselineView>>([]);
+
 
         public ValueTask<ExaminationEngagementView?> GetAsync(Uuid tenantId,
             Uuid examinationEngagementId, CancellationToken ct = default) =>
@@ -149,7 +154,7 @@ public sealed class PreviewTypeIBaselineHandlerTests
                     ? Engagement
                     : null);
 
-        public ValueTask<TypeIBaselineView?> GetBaselineAsync(Uuid tenantId,
+        public ValueTask<TypeIBaselineView?> GetBaselineAsync(Uuid tenantId, Uuid examinationEngagementId,
             Uuid typeIBaselineId, CancellationToken ct = default) =>
             ValueTask.FromResult<TypeIBaselineView?>(null);
     }

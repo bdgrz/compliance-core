@@ -4,7 +4,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-public sealed class GetTypeIBaselineHandler(IExaminationEngagementDirectoryReader directory,
+public sealed class GetTypeIBaselineHandler(IExaminationEngagementDirectoryReader directory, IDomainEventReader events,
     IImmutableContentStore? content = null)
     : IRequestHandler<GetTypeIBaseline, TypeIBaselineView>
 {
@@ -17,10 +17,26 @@ public sealed class GetTypeIBaselineHandler(IExaminationEngagementDirectoryReade
             return Result<TypeIBaselineView>.Failure(new RequestError(
                 RequestErrorKind.Validation, "Tenant, program, and baseline identities are required."));
 
-        var baseline = await directory.GetBaselineAsync(request.TenantId,
+        var before = await directory.LoadCheckpointAsync(request.TenantId, ct).ConfigureAwait(false);
+        if (await HasPendingSourceAsync(request.TenantId, before, ct).ConfigureAwait(false))
+            return BehindSource();
+        var matches = await directory.FindBaselinesAsync(request.TenantId, request.ProgramId,
             request.TypeIBaselineId, ct).ConfigureAwait(false);
+        if (matches.Count > 2 || matches.Any(row => row.TenantId != request.TenantId || row.ProgramId != request.ProgramId ||
+            row.TypeIBaselineId != request.TypeIBaselineId || row.ExaminationEngagementId == Uuid.Empty) ||
+            matches.Select(row => row.ExaminationEngagementId).Distinct().Count() != matches.Count)
+            return Result<TypeIBaselineView>.Failure(new RequestError(RequestErrorKind.Conflict, "The baseline locator returned invalid owner scope."));
+        var after = await directory.LoadCheckpointAsync(request.TenantId, ct).ConfigureAwait(false);
+        if (before != after || await HasPendingSourceAsync(request.TenantId, after, ct).ConfigureAwait(false))
+            return BehindSource();
+        if (matches.Count > 1)
+            return Result<TypeIBaselineView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The baseline identity belongs to more than one examination in the requested program."));
+        var baseline = matches.Count == 0 ? null : await directory.GetBaselineAsync(request.TenantId,
+            matches[0].ExaminationEngagementId, request.TypeIBaselineId, ct).ConfigureAwait(false);
         if (baseline is not { } view || view.TenantId != request.TenantId ||
-            view.ProgramId != request.ProgramId || view.TypeIBaselineId != request.TypeIBaselineId)
+            view.ProgramId != request.ProgramId || view.TypeIBaselineId != request.TypeIBaselineId ||
+            view.ExaminationEngagementId != matches[0].ExaminationEngagementId)
             return Result<TypeIBaselineView>.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The Type I baseline was not found."));
         if (view.SourceContentManifest is null)
@@ -57,4 +73,14 @@ public sealed class GetTypeIBaselineHandler(IExaminationEngagementDirectoryReade
                 "The source byte proof does not verify: " + exception.Message, false));
         }
     }
+
+    async ValueTask<bool> HasPendingSourceAsync(Uuid tenantId, ProjectionCheckpoint checkpoint, CancellationToken ct)
+    {
+        await using var pending = events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(), "examinations"),
+            checkpoint.Cursor, ct).GetAsyncEnumerator(ct);
+        return await pending.MoveNextAsync().ConfigureAwait(false);
+    }
+
+    static Result<TypeIBaselineView> BehindSource() => Result<TypeIBaselineView>.Failure(new RequestError(RequestErrorKind.Conflict,
+        "The examination baseline directory changed or has not reached its exact source. Retry the read.", true));
 }

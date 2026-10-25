@@ -117,7 +117,7 @@ public sealed class SnapshotSourcePublicationTests
         var baseline = await fixture.FreezeAsync();
         var directory = fixture.Directory;
         directory.Baseline = baseline;
-        var baselineRead = await new GetTypeIBaselineHandler(directory, fixture.Content).HandleAsync(
+        var baselineRead = await new GetTypeIBaselineHandler(directory, fixture.PeriodEvents, fixture.Content).HandleAsync(
             fixture.Context(new GetTypeIBaseline(fixture.TenantId, fixture.ProgramId, fixture.BaselineId)),
             CancellationToken.None);
         var source = baselineRead.Value!.Sources.Single(row => row.Kind == "workforce_roster_snapshot");
@@ -184,7 +184,7 @@ public sealed class SnapshotSourcePublicationTests
         await fixture.SeedAsync();
         var baseline = await fixture.FreezeAsync();
         fixture.Directory.Baseline = baseline;
-        var read = await new GetTypeIBaselineHandler(fixture.Directory, fixture.Content).HandleAsync(
+        var read = await new GetTypeIBaselineHandler(fixture.Directory, fixture.PeriodEvents, fixture.Content).HandleAsync(
             fixture.Context(new GetTypeIBaseline(fixture.TenantId, fixture.ProgramId, fixture.BaselineId)),
             CancellationToken.None);
         var source = read.Value!.Sources.Single(row => row.Kind == "workforce_roster_snapshot");
@@ -231,11 +231,12 @@ public sealed class SnapshotSourcePublicationTests
         public TypeIBaselinePreviewReader Sources => _productionScope.ServiceProvider.GetRequiredService<TypeIBaselinePreviewReader>();
         public ExaminationEngagementView? Engagement { get; private set; }
         public BoundaryVersionView Boundary { get; private set; } = null!;
-        public EngagementDirectory Directory { get; } = new();
+        public EngagementDirectory Directory { get; }
         public TimeProvider Clock => new FixedClock(_now.AddMinutes(1));
 
         public Fixture()
         {
+            Directory = new EngagementDirectory(PeriodEvents);
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
@@ -360,14 +361,25 @@ public sealed class SnapshotSourcePublicationTests
                 new TypeIBaselineSourceContribution(family, [], [], [])));
     }
 
-    sealed class EngagementDirectory : IExaminationEngagementDirectoryReader
+    sealed class EngagementDirectory(IDomainEventReader events) : IExaminationEngagementDirectoryReader
     {
         public ExaminationEngagementView? Engagement { get; set; }
         public TypeIBaselineView? Baseline { get; set; }
         public ValueTask<ExaminationEngagementView?> GetAsync(Uuid tenantId, Uuid examinationEngagementId,
             CancellationToken ct = default) => ValueTask.FromResult(Engagement);
-        public ValueTask<TypeIBaselineView?> GetBaselineAsync(Uuid tenantId, Uuid typeIBaselineId,
-            CancellationToken ct = default) => ValueTask.FromResult(Baseline);
+        public ValueTask<TypeIBaselineView?> GetBaselineAsync(Uuid tenantId, Uuid examinationEngagementId, Uuid typeIBaselineId,
+            CancellationToken ct = default) => ValueTask.FromResult(Baseline is { } value && value.TenantId == tenantId &&
+                value.ExaminationEngagementId == examinationEngagementId && value.TypeIBaselineId == typeIBaselineId ? value : null);
+        public ValueTask<IReadOnlyList<TypeIBaselineView>> FindBaselinesAsync(Uuid tenantId, Uuid programId, Uuid typeIBaselineId,
+            CancellationToken ct = default) => ValueTask.FromResult<IReadOnlyList<TypeIBaselineView>>(Baseline is { } value &&
+                value.TenantId == tenantId && value.ProgramId == programId && value.TypeIBaselineId == typeIBaselineId ? [value] : []);
+        public async ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default)
+        {
+            var cursor = EventCursor.Start;
+            await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(), "examinations"), cursor, ct))
+                cursor = record.NextCursor;
+            return new ProjectionCheckpoint(cursor);
+        }
     }
 
     sealed class PopulationDirectory(PopulationSnapshotSummary summary) : IPopulationSnapshotDirectoryReader
