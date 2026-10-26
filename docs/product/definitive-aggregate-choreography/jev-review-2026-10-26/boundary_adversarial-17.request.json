@@ -1,0 +1,75 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_adversarial",
+    "owners": [
+      {
+        "owner": "WorkforceSourceObservation",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 tenant+length-prefixed source kind/system/record/revision. Record ensures IdFor; equivalent normalized fact retry no-op, changed source intent conflict. Decision checks prior before revision. OCC.",
+        "selectedIdentity": "Existing UUIDv5 of tenant + length-prefixed source kind/system/record/revision tuple. Supplied ObservationId must equal the unchanged IdFor result; selected mutations use CommandId with the exact source tuple.",
+        "invariant": "One immutable external source revision has one target/fact correlation and at most one final attributed reconciliation decision tied to exact canonical revision.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Observed fact plus final decision should remain together so changed source/decision cannot overwrite. Canonical workforce mutations remain their own owners.",
+        "commands": [
+          {
+            "command": "ReconcileWorkforceSourceObservation",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ObservationId:Uuid",
+              "ExpectedRevision:long",
+              "ExpectedTargetRevision:long",
+              "Outcome:string",
+              "Note:string"
+            ]
+          },
+          {
+            "command": "RecordWorkforceSourceObservation",
+            "logicalIdentity": "ObservationId",
+            "fields": [
+              "ObservationId:Uuid",
+              "TenantId:Uuid",
+              "Source:WorkforceSourceIdentity",
+              "TargetKind:string",
+              "TargetId:Uuid",
+              "ExpectedTargetRevision:long",
+              "Facts:WorkforceSourceFacts",
+              "ObservedAt:DateTimeOffset"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "WorkforceSourceObserved"
+          },
+          {
+            "event": "WorkforceSourceReconciled"
+          }
+        ],
+        "choreography": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of WorkforceSourceObservation?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle WorkforceSourceObservation's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

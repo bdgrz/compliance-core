@@ -1,0 +1,976 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_adversarial",
+    "owners": [
+      {
+        "owner": "AuditorFeedbackThread",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(requestId, threadId)",
+        "selectedIdentity": "(requestId, threadId)",
+        "invariant": "Independent comments and responses with stable command identity.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Admission cannot race resolution; exact response selections and dispositions are immutable proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "AuditorRequestCommentRecorded",
+            "discriminator": "bdgrz.auditorrequests.auditor-request-comment-recorded",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AuditorCommentMaterializationReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorFeedbackThread",
+            "command": "MaterializeAuditorComment"
+          }
+        ]
+      },
+      {
+        "owner": "AuditorRequest",
+        "classification": "business_aggregate",
+        "declaredIdentity": "requestId",
+        "selectedIdentity": "requestId",
+        "invariant": "Admission seal, response-completeness and final resolution decision.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Admission cannot race resolution; exact response selections and dispositions are immutable proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AmendSampleSelection",
+            "logicalIdentity": {
+              "field": "SelectionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "AuditorRequestId:Uuid",
+              "ExpectedRequestRevision:long",
+              "SelectionId:Uuid",
+              "SupersedesSelectionId:Uuid",
+              "PopulationId:Uuid",
+              "PopulationVersion:int",
+              "PopulationRowIds:IReadOnlyList<Uuid>",
+              "SelectionMethod:string",
+              "Source:string",
+              "ExternalReference:string",
+              "AmendmentReason:string"
+            ]
+          },
+          {
+            "command": "AssignAuditorRequest",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly",
+              "AssignmentReason:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "CreateAuditResponseDraft",
+            "logicalIdentity": {
+              "field": "ResponseId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "ResponseId:Uuid",
+              "Summary:string",
+              "EvidenceArtifactIds:IReadOnlyList<Uuid>",
+              "ExpectedRequestRevision:long"
+            ]
+          },
+          {
+            "command": "RecordAuditorRequest",
+            "logicalIdentity": {
+              "field": "RequestId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "ExaminationId:Uuid",
+              "Source:string",
+              "ExternalReference:string",
+              "Wording:string",
+              "Scope:string",
+              "Priority:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly"
+            ]
+          },
+          {
+            "command": "RecordAuditorRequestComment",
+            "logicalIdentity": {
+              "field": "CommentId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "CommentId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "Body:string",
+              "Compartment:string",
+              "ExpectedRequestRevision:long"
+            ]
+          },
+          {
+            "command": "RecordSampleSelection",
+            "logicalIdentity": {
+              "field": "SelectionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "AuditorRequestId:Uuid",
+              "ExpectedRequestRevision:long",
+              "SelectionId:Uuid",
+              "PopulationId:Uuid",
+              "PopulationVersion:int",
+              "PopulationRowIds:IReadOnlyList<Uuid>",
+              "SelectionMethod:string",
+              "Source:string",
+              "ExternalReference:string"
+            ]
+          },
+          {
+            "command": "ReopenAuditorRequest",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "ReopenReason:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ResolveAuditorRequest",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "Resolution:string",
+              "ExpectedRevision:long",
+              "ResponseIds:IReadOnlyList<Uuid>"
+            ]
+          },
+          {
+            "command": "ReviseAuditorRequest",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "ExpectedRevision:long",
+              "Wording:string",
+              "Scope:string",
+              "Priority:string",
+              "DueOn:DateOnly",
+              "ChangeReason:string"
+            ]
+          },
+          {
+            "command": "AbortAuditorRequestResolution",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AuditorCommentAdmitted",
+            "discriminator": "bdgrz.auditor-request.auditor-comment-admitted",
+            "version": 1
+          },
+          {
+            "event": "AuditorRequestAssigned",
+            "discriminator": "bdgrz.auditorrequests.auditor-request-assigned",
+            "version": 1
+          },
+          {
+            "event": "AuditorRequestRecorded",
+            "discriminator": "bdgrz.auditorrequests.auditor-request-recorded",
+            "version": 1
+          },
+          {
+            "event": "AuditorRequestReopened",
+            "discriminator": "bdgrz.auditorrequests.auditor-request-reopened",
+            "version": 1
+          },
+          {
+            "event": "AuditorRequestResolutionAccepted",
+            "discriminator": "bdgrz.auditor-request.auditor-request-resolution-accepted",
+            "version": 1
+          },
+          {
+            "event": "AuditorRequestResolutionCanceled",
+            "discriminator": "bdgrz.auditor-request.auditor-request-resolution-canceled",
+            "version": 1
+          },
+          {
+            "event": "AuditorRequestResolved",
+            "discriminator": "bdgrz.auditorrequests.auditor-request-resolved",
+            "version": 1
+          },
+          {
+            "event": "AuditorRequestRevised",
+            "discriminator": "bdgrz.auditorrequests.auditor-request-revised",
+            "version": 1
+          },
+          {
+            "event": "AuditorResponseAdmitted",
+            "discriminator": "bdgrz.auditor-request.auditor-response-admitted",
+            "version": 1
+          },
+          {
+            "event": "AuditorSampleSelectionAdmitted",
+            "discriminator": "bdgrz.auditor-request.auditor-sample-selection-admitted",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AuditorResponseMaterializationReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorResponse",
+            "command": "MaterializeAuditorResponse"
+          },
+          {
+            "reactor": "AuditorCommentMaterializationReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorFeedbackThread",
+            "command": "MaterializeAuditorComment"
+          },
+          {
+            "reactor": "AuditorRequestResolutionReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorRequest",
+            "command": "CompleteAuditorRequestResolution"
+          },
+          {
+            "reactor": "RequestResolutionAuditorResponseAuthorizationReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorResponse",
+            "command": "AuthorizeAuditorResponseRequestResolutionUse"
+          },
+          {
+            "reactor": "RequestResolutionAuditorResponseSettlementReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorResponse",
+            "command": "SettleAuditorResponseRequestResolutionUse"
+          },
+          {
+            "reactor": "AuditorSampleSelectionMaterializationReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorSampleSelection",
+            "command": "MaterializeAuditorSampleSelection"
+          }
+        ]
+      },
+      {
+        "owner": "AuditorResponse",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(requestId, responseId)",
+        "selectedIdentity": "(requestId, responseId)",
+        "invariant": "One response draft, independent disclosure review, delivery and exact disposition lifecycle. Response admission and disposition remain linked to the parent request through immutable proofs.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Admission cannot race resolution; exact response selections and dispositions are immutable proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "DeliverAuditResponse",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "ResponseId:Uuid",
+              "Version:long",
+              "Recipient:string",
+              "DeliveryReference:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "RecordAuditorResponseDisposition",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "ResponseId:Uuid",
+              "Version:long",
+              "Disposition:string",
+              "ExternalReference:string?",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ReviewAuditResponse",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "ResponseId:Uuid",
+              "Version:long",
+              "Outcome:string",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ReviseAuditResponseDraft",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "ResponseId:Uuid",
+              "ExpectedRevision:long",
+              "Summary:string",
+              "EvidenceArtifactIds:IReadOnlyList<Uuid>"
+            ]
+          },
+          {
+            "command": "SubmitAuditResponse",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequestId:Uuid",
+              "ResponseId:Uuid",
+              "Version:long",
+              "SubmissionNote:string",
+              "ExpectedRevision:long"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AuditResponseDraftCreated",
+            "discriminator": "bdgrz.auditorrequests.audit-response-draft-created",
+            "version": 1
+          },
+          {
+            "event": "AuditResponseDraftRevised",
+            "discriminator": "bdgrz.auditorrequests.audit-response-draft-revised",
+            "version": 1
+          },
+          {
+            "event": "AuditorResponseDelivered",
+            "discriminator": "bdgrz.auditorrequests.auditor-response-delivered",
+            "version": 1
+          },
+          {
+            "event": "AuditorResponseDisclosureReviewed",
+            "discriminator": "bdgrz.auditorrequests.auditor-response-disclosure-reviewed",
+            "version": 1
+          },
+          {
+            "event": "AuditorResponseDispositionRecorded",
+            "discriminator": "bdgrz.auditorrequests.auditor-response-disposition-recorded",
+            "version": 1
+          },
+          {
+            "event": "AuditorResponseRequestResolutionUseAuthorized",
+            "discriminator": "bdgrz.auditor-response.auditor-response-request-resolution-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "AuditorResponseRequestResolutionUseSettled",
+            "discriminator": "bdgrz.auditor-response.auditor-response-request-resolution-use-settled",
+            "version": 1
+          },
+          {
+            "event": "AuditorResponseSubmitted",
+            "discriminator": "bdgrz.auditorrequests.auditor-response-submitted",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AuditorResponseMaterializationReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorResponse",
+            "command": "MaterializeAuditorResponse"
+          },
+          {
+            "reactor": "RequestResolutionAuditorResponseAuthorizationReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorResponse",
+            "command": "AuthorizeAuditorResponseRequestResolutionUse"
+          },
+          {
+            "reactor": "RequestResolutionAuditorResponseSettlementReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorResponse",
+            "command": "SettleAuditorResponseRequestResolutionUse"
+          }
+        ]
+      },
+      {
+        "owner": "AuditorSampleSelection",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(requestId, selectionId)",
+        "selectedIdentity": "(requestId, selectionId)",
+        "invariant": "Independent exact sample selection lifecycle.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Admission cannot race resolution; exact response selections and dispositions are immutable proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "SampleSelectionRecorded",
+            "discriminator": "bdgrz.auditorrequests.sample-selection-recorded",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AuditorSampleSelectionMaterializationReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorSampleSelection",
+            "command": "MaterializeAuditorSampleSelection"
+          }
+        ]
+      },
+      {
+        "owner": "ClientExport",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / client-exports / exportId; attemptId and sequence checked, final delivery immutable and exact; result handler binds requested event; expected revision. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / client-exports / ExportId, with exact approved frozen inventory, attempt identity and attest-package proofs. ExportId creates the export; selected mutations use their declared CommandId/PackageId.",
+        "invariant": "Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package.",
+        "boundaryDecision": "process",
+        "boundaryRationale": "The all-required-deliveries gate must stay in a compact export completion coordinator if executor/attest delivery lifecycles split; source content can be immutable chunks/proof.",
+        "commands": [
+          {
+            "command": "RecordClientExportBuildResult",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ExportId:Uuid",
+              "ExpectedRevision:long",
+              "BuildRequestEventId:Uuid",
+              "Result:ClientExportBuildResultContent",
+              "CompletedAt:DateTimeOffset"
+            ]
+          },
+          {
+            "command": "RecordClientExportDelivery",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ExportId:Uuid",
+              "ExpectedRevision:long",
+              "Recipient:string",
+              "DeliveredAt:DateTimeOffset",
+              "DeliveryReference:string"
+            ]
+          },
+          {
+            "command": "RecordOwnAttestRecordDelivery",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "PackageId:Uuid",
+              "Recipient:string",
+              "DeliveredAt:DateTimeOffset",
+              "DeliveryReference:string"
+            ]
+          },
+          {
+            "command": "RecordOwnAttestRecordPackageResult",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "PackageId:Uuid",
+              "Outcome:string",
+              "ArtifactId:Uuid?",
+              "FailureCode:string?",
+              "CompletedAt:DateTimeOffset"
+            ]
+          },
+          {
+            "command": "RequestClientExport",
+            "logicalIdentity": "ExportId",
+            "fields": [
+              "TenantId:Uuid",
+              "ExportId:Uuid",
+              "Scope:string",
+              "Format:string",
+              "ExportKey:string"
+            ]
+          },
+          {
+            "command": "RequestOwnAttestRecordPackage",
+            "logicalIdentity": "PackageId",
+            "fields": [
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "PackageId:Uuid",
+              "PackageKey:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ClientExportAttestPackageDeliveryRecorded"
+          },
+          {
+            "event": "ClientExportBuildFailed"
+          },
+          {
+            "event": "ClientExportBuilt"
+          },
+          {
+            "event": "ClientExportDelivered"
+          },
+          {
+            "event": "ClientExportRequested"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ClientIndependenceDecision",
+        "classification": "immutable_business_artifact_or_decision",
+        "declaredIdentity": "tenant / evaluationId",
+        "selectedIdentity": "tenant / evaluationId",
+        "invariant": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "ClientIndependenceEvaluated",
+            "discriminator": "bdgrz.independence.evaluated",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ClientIndependencePreviewReactor",
+            "sourceOwner": "ClientServiceIndependence",
+            "targetOwner": "ClientIndependenceDecision",
+            "command": "MaterializeClientIndependencePreview"
+          }
+        ]
+      },
+      {
+        "owner": "ClientService",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / client-services / serviceId, Create handler uses context.RequestId; initial content preserved across edits; revision/retirement checked before replay comparisons on mutators. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant + caller ServiceId; creation uses that identity and mutations use caller CommandId.",
+        "invariant": "Once retired a service cannot be revised, and its program identity cannot be rebound; create identity is immutable.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "No independent child lifecycle is retained. Lifecycle and changes to this service belong together.",
+        "commands": [
+          {
+            "command": "CreateClientService",
+            "logicalIdentity": "ServiceId",
+            "fields": [
+              "ServiceId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Name:string",
+              "Purpose:string",
+              "OwnerReference:string"
+            ]
+          },
+          {
+            "command": "RetireClientService",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ServiceId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ReviseClientService",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ServiceId:Uuid",
+              "ExpectedRevision:long",
+              "Name:string",
+              "Purpose:string",
+              "OwnerReference:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ClientServiceCreated"
+          },
+          {
+            "event": "ClientServiceRetired"
+          },
+          {
+            "event": "ClientServiceRevised"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ClientServiceIndependence",
+        "classification": "business_governor",
+        "declaredIdentity": "tenant / client-service-epoch",
+        "selectedIdentity": "tenant / client-service-epoch",
+        "invariant": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "EvaluateClientIndependence",
+            "logicalIdentity": {
+              "field": "EvaluationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "EvaluationId:Uuid",
+              "RuleSetVersion:long",
+              "ExaminationPeriodStart:DateOnly",
+              "ExpectedServiceEpoch:long"
+            ]
+          },
+          {
+            "command": "RecordNonattestService",
+            "logicalIdentity": {
+              "field": "ServiceRecordId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ServiceRecordId:Uuid",
+              "ExpectedServiceEpoch:long",
+              "Content:NonattestServiceContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ClientIndependenceEvaluationAdmitted",
+            "discriminator": "bdgrz.client-service-independence.client-independence-evaluation-admitted",
+            "version": 1
+          },
+          {
+            "event": "ClientServicePersonalDecisionUseAuthorized",
+            "discriminator": "bdgrz.client-service-independence.client-service-personal-decision-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "ClientServicePersonalDecisionUseSettled",
+            "discriminator": "bdgrz.client-service-independence.client-service-personal-decision-use-settled",
+            "version": 1
+          },
+          {
+            "event": "EngagementServiceEpochAuthorized",
+            "discriminator": "bdgrz.client-service-independence.engagement-service-epoch-authorized",
+            "version": 1
+          },
+          {
+            "event": "EngagementServiceEpochSettled",
+            "discriminator": "bdgrz.client-service-independence.engagement-service-epoch-settled",
+            "version": 1
+          },
+          {
+            "event": "NonattestServiceRecorded",
+            "discriminator": "bdgrz.independence.service.recorded",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "EngagementAcceptanceReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ClientServiceIndependence",
+            "command": "AcquireEngagementServiceEpoch"
+          },
+          {
+            "reactor": "EngagementServiceEpochReleaseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ClientServiceIndependence",
+            "command": "ReleaseEngagementServiceEpoch"
+          },
+          {
+            "reactor": "ClientIndependencePreviewReactor",
+            "sourceOwner": "ClientServiceIndependence",
+            "targetOwner": "ClientIndependenceDecision",
+            "command": "MaterializeClientIndependencePreview"
+          },
+          {
+            "reactor": "EngagementPersonalDecisionSourceUseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ClientServiceIndependence",
+            "command": "AuthorizeClientServicePersonalDecisionUse"
+          },
+          {
+            "reactor": "ClientServicePersonalDecisionSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ClientServiceIndependence",
+            "command": "SettleClientServicePersonalDecisionUse"
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of AuditorFeedbackThread?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AuditorFeedbackThread's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of AuditorRequest?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AuditorRequest's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of AuditorResponse?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AuditorResponse's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of AuditorSampleSelection?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AuditorSampleSelection's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ClientExport?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ClientExport's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ClientIndependenceDecision?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ClientIndependenceDecision's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ClientService?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ClientService's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ClientServiceIndependence?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ClientServiceIndependence's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

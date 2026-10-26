@@ -1,0 +1,36 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "flow": {
+        "type": "choice",
+        "choice": "unresolved",
+        "confidence": 0.72,
+        "probabilities": {
+          "coherent": 0.16,
+          "defect": 0.02,
+          "unresolved": 0.81
+        }
+      },
+      "proof": {
+        "type": "noul",
+        "noul": 0.12
+      },
+      "counterfactual": {
+        "type": "choice",
+        "choice": "reject_before_grant",
+        "confidence": 0.97,
+        "probabilities": {
+          "reject_before_grant": 0.98,
+          "grant_old_epoch": 0,
+          "depends": 0.02
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 2480,
+      "output_tokens": 110
+    }
+  }
+}

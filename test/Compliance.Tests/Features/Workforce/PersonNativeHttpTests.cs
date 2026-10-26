@@ -3,6 +3,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Tests.Features.AccessControl;
 using Bdgrz.Compliance.Tests.E2E;
 using Bdgrz.Compliance.Tests.Features.Providers;
 using Bdgrz.Compliance.Tests.Testing;

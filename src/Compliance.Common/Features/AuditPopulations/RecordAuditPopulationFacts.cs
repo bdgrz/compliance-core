@@ -6,7 +6,7 @@ namespace Bdgrz.Compliance.Features.AuditPopulations;
 
 /// <summary>Records an attributed source snapshot and its complete, individually inspectable rows.</summary>
 [Discriminator("bdgrz.audit-populations.record-audit-population-facts", 3)]
-public sealed record RecordAuditPopulationFacts(Uuid CommandId, 
+public sealed record RecordAuditPopulationFacts(Uuid CommandId,
     Uuid TenantId,
     Uuid ProgramId,
     Uuid DefinitionId,

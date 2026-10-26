@@ -1,0 +1,410 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Review these selected domain boundaries against the included source records. Do not treat a catalog label as evidence by itself; do not invent policy.",
+    "pass": "neutral_source_review",
+    "owners": [
+      {
+        "owner": "ControlCriterionMapping",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "(programId, controlId, editionId, criterionId)",
+        "invariant": "One mapping tuple proposal and immutable approved successor line.",
+        "boundary": "selected_split",
+        "mustPreserve": "Independent review approves exact pending proposal and supersedes only its predecessor.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/11/targetOwners/0",
+            "evidence": "{\"proposedAggregate\":\"ControlCriterionMapping\",\"identity\":\"(programId, controlId, editionId, criterionId)\",\"owns\":\"One mapping tuple proposal and immutable approved successor line.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"ControlCriterionMappingProposed\",\"ControlCriterionMappingRetired\",\"ControlCriterionMappingReviewed\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"ProposeControlCriterionMapping\",\"RetireControlCriterionMapping\",\"ReviewControlCriterionMapping\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "ProposeControlCriterionMapping",
+            "identity": {
+              "field": "MappingId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "MappingId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ControlVersionId:Uuid",
+              "EditionId:Uuid",
+              "CriterionIdentifier:string",
+              "ExpectedRevision:long",
+              "Rationale:string",
+              "ApplicabilityExplanation:string"
+            ]
+          },
+          {
+            "name": "RetireControlCriterionMapping",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "MappingId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "name": "ReviewControlCriterionMapping",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "MappingId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ControlCriterionMappingProposed",
+            "discriminator": "bdgrz.control_mapping.proposed",
+            "version": 1
+          },
+          {
+            "event": "ControlCriterionMappingRetired",
+            "discriminator": "bdgrz.control_mapping.retired",
+            "version": 1
+          },
+          {
+            "event": "ControlCriterionMappingReviewed",
+            "discriminator": "bdgrz.control_mapping.reviewed",
+            "version": 1
+          }
+        ],
+        "relatedFlows": []
+      },
+      {
+        "owner": "ControlOccurrence",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "(tenantId, programId, controlId, businessWindow)",
+        "invariant": "One planned/attested/corrected/reviewed occurrence for a control performance window.",
+        "boundary": "selected_split",
+        "mustPreserve": "Occurrence facts bind exact frozen plan and evidence requirements; one business window has one identity across all generators.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/16/targetOwners/1",
+            "evidence": "{\"proposedAggregate\":\"ControlOccurrence\",\"identity\":\"(tenantId, programId, controlId, businessWindow)\",\"owns\":\"One planned/attested/corrected/reviewed occurrence for a control performance window.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"ControlOccurrenceAttested\",\"ControlOccurrenceOpened\",\"ControlOccurrenceReviewed\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"AttestControlOccurrence\",\"CorrectControlAttestation\",\"OpenControlOccurrence\",\"ReviewControlOccurrence\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "AttestControlOccurrence",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "OccurrenceId:Uuid",
+              "ExpectedRevision:long",
+              "Result:string",
+              "PerformedAt:DateTimeOffset",
+              "CoveredFrom:DateOnly?",
+              "CoveredUntil:DateOnly?",
+              "Notes:string?",
+              "Rationale:string?",
+              "Evidence:IReadOnlyList<EvidenceReference>",
+              "PerformedByPersonId:Uuid?"
+            ]
+          },
+          {
+            "name": "CorrectControlAttestation",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "OccurrenceId:Uuid",
+              "ExpectedRevision:long",
+              "Result:string",
+              "PerformedAt:DateTimeOffset",
+              "CoveredFrom:DateOnly?",
+              "CoveredUntil:DateOnly?",
+              "Notes:string?",
+              "Rationale:string?",
+              "Evidence:IReadOnlyList<EvidenceReference>",
+              "CorrectionReason:string",
+              "PerformedByPersonId:Uuid?"
+            ]
+          },
+          {
+            "name": "OpenControlOccurrence",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "Trigger:string",
+              "OccurredOn:DateOnly",
+              "ExpectedRevision:long",
+              "CommandId:Uuid",
+              "BusinessWindow:ControlBusinessWindow"
+            ]
+          },
+          {
+            "name": "ReviewControlOccurrence",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "OccurrenceId:Uuid",
+              "ExpectedRevision:long",
+              "AttestationId:Uuid",
+              "Outcome:string",
+              "Rationale:string",
+              "RequestedActions:IReadOnlyList<string>?",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ControlOccurrenceAttested",
+            "discriminator": "bdgrz.control.occurrence.attested",
+            "version": 1
+          },
+          {
+            "event": "ControlOccurrenceOpened",
+            "discriminator": "bdgrz.control.occurrence.opened",
+            "version": 1
+          },
+          {
+            "event": "ControlOccurrenceReviewed",
+            "discriminator": "bdgrz.control.occurrence.reviewed",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "ControlOccurrenceMaterializationReactor",
+            "sourceOwner": "TypeIIPeriod",
+            "targetOwner": "ControlOccurrence",
+            "command": "MaterializeControlOccurrence",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/40",
+              "line": 3387,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "CriteriaTextOverlay",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "(editionId, normalizedCriterionId)",
+        "invariant": "One licensed text overlay and sequential revision line.",
+        "boundary": "selected_split",
+        "mustPreserve": "Exact prior revision and one request identity/intent; license/source proof validated per overlay.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/13/targetOwners/0",
+            "evidence": "{\"proposedAggregate\":\"CriteriaTextOverlay\",\"identity\":\"(editionId, normalizedCriterionId)\",\"owns\":\"One licensed text overlay and sequential revision line.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"CriteriaTextOverlayEntryRevised\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"SetCriteriaTextOverlay\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "SetCriteriaTextOverlay",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EditionId:Uuid",
+              "Identifier:string",
+              "ExpectedRevision:long",
+              "Content:CriteriaTextOverlayContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "CriteriaTextOverlayEntryRevised",
+            "discriminator": "bdgrz.criteria-overlay.entry-revised",
+            "version": 1
+          }
+        ],
+        "relatedFlows": []
+      },
+      {
+        "owner": "EngagementManagementAcknowledgement",
+        "classification": "immutable_business_artifact_or_decision",
+        "businessAggregate": true,
+        "identity": "tenant / acknowledgementId",
+        "invariant": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+        "boundary": "selected_split",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/2/targetOwners/5",
+            "evidence": "{\"proposedAggregate\":\"EngagementManagementAcknowledgement\",\"existingDomainEvents\":[\"EngagementManagementAcknowledged\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"identity\":\"tenant / acknowledgementId\",\"owns\":\"One personal management acknowledgement bound to exact engagement revision and complete service history.\",\"commands\":[]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "EngagementManagementAcknowledged",
+            "discriminator": "bdgrz.service-engagement.management-acknowledged",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "ManagementAcknowledgementMaterializationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "EngagementManagementAcknowledgement",
+            "command": "MaterializeEngagementManagementAcknowledgement",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/108",
+              "line": 9324,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves ControlCriterionMapping's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Do the source records establish ControlCriterionMapping's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves ControlOccurrence's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Do the source records establish ControlOccurrence's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves CriteriaTextOverlay's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_2": {
+      "type": "noul",
+      "instructions": "Do the source records establish CriteriaTextOverlay's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves EngagementManagementAcknowledgement's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_3": {
+      "type": "noul",
+      "instructions": "Do the source records establish EngagementManagementAcknowledgement's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    }
+  }
+}

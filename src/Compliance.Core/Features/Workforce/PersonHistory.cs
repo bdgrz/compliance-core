@@ -24,14 +24,16 @@ public static class PersonHistory
             {
                 header = NextNative(owner.TenantId, owner.Id, owner.Stream, header, fact);
                 current = native.Content;
-                if (!logical.Add(native.Operation.LogicalId)) throw Invalid("A person history repeats an unselected native operation.");
+                if (!logical.Add(native.Operation.LogicalId))
+                    throw Invalid("A person history repeats an unselected native operation.");
                 if (native.Operation.LogicalId == owner.Acceptance.SelectedLogicalId &&
                     (owner.Acceptance.SelectedFact is not { } selected || !selected.Equals(fact) || selected.Metadata != fact.Metadata))
                     throw Invalid("The selected person receipt differs from its actual payload and full metadata.");
             }
             else
             {
-                if (current is not null) throw Invalid("Read-only legacy person history cannot follow native content authority.");
+                if (current is not null)
+                    throw Invalid("Read-only legacy person history cannot follow native content authority.");
                 header = NextLegacy(owner.TenantId, owner.Id, header, fact);
             }
             digest = NativeReplayCommitment.Append(digest, fact);
@@ -57,7 +59,8 @@ public static class PersonHistory
             case PersonMembershipCorrelated value when before is not null && value.TenantId == tenant && value.PersonId == person &&
                 value.Revision == before.Revision + 1 && value.UserId != Uuid.Empty && value.UserId != before.CorrelatedUserId && value.Actor is not null && value.ChangedAt != default:
                 return before with { Revision = value.Revision, CorrelatedUserId = value.UserId, LastChangedBy = value.Actor, LastChangedAt = value.ChangedAt };
-            default: throw Invalid("The read-only legacy person source has another identity, revision or values transition.");
+            default:
+                throw Invalid("The read-only legacy person source has another identity, revision or values transition.");
         }
     }
     internal static PersonHeader NextNative(Uuid tenant, Uuid person, EventStreamAddress stream, PersonHeader? before, DomainEvent fact)

@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Events;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
@@ -9,6 +11,33 @@ namespace Bdgrz.Compliance.Tests.Features.Applications;
 
 public sealed class ApplicationRelationshipTests
 {
+    [Fact]
+    public void ShouldRejectNonCanonicalRelationshipIdGivenRelationshipTuple()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var sourceId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var changedAt = DateTimeOffset.UtcNow;
+        var source = NewApplication(tenantId, sourceId, actorId, changedAt);
+        var nonCanonicalRelationshipId = Uuid.CreateVersion4();
+        var pendingEventCount = new AggregateScenario<DeclaredApplication>(source)
+            .PendingEvents.Count;
+
+        // Act
+        var result = source.AddApplicationRelationship(0, nonCanonicalRelationshipId,
+            targetId, "depends_on", actorId, "Inventory manager", changedAt);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Validation,
+            Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Equal(pendingEventCount,
+            new AggregateScenario<DeclaredApplication>(source).PendingEvents.Count);
+        Assert.Empty(source.ReadApplicationRelationships());
+    }
+
     [Fact]
     public void ShouldPersistDirectedRelationshipWithoutChangingApplicationRevisionGivenValidAdd()
     {

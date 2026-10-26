@@ -1,0 +1,859 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_fit",
+    "owners": [
+      {
+        "owner": "TemplateApplication",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / template-applications / UUIDv5(programId, templateId+trimmed ApplicationKey); per-entry planned UUIDv5(applicationId,entryKey). Same application/proposal/disposition compares generated timestamps; drafts have stable exact receipt comparison. Pinned Portia uses full physical stream replay and expected physical position; no durable request dedup is supplied.",
+        "selectedIdentity": "Tenant / template-applications / existing UUIDv5 of ProgramId and TemplateId + trimmed ApplicationKey. ApplicationKey is the selected logical creation key; per-entry UUIDv5(applicationId, entryKey) and selected mutation CommandIds remain exact.",
+        "invariant": "One application pins exact published template provenance, fixed planned tenant draft identities and completion state; one pending later-version adoption proposal receives one immutable disposition before next successor.",
+        "boundaryDecision": "process",
+        "boundaryRationale": "All-drafts-created is technical orchestration; each draft has own lifecycle in its real owner and needs no lifetime copy in parent domain state. Pending successor/version ordering requires compact admission owner if decisions split.",
+        "commands": [
+          {
+            "command": "ApplyMethodologyTemplate",
+            "logicalIdentity": "ApplicationKey",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "TemplateId:Uuid",
+              "TemplateVersion:long",
+              "ApplicationKey:string"
+            ]
+          },
+          {
+            "command": "ProposeTemplateSuccessorAdoption",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "TemplateId:Uuid",
+              "ApplicationKey:string",
+              "ExpectedRevision:long",
+              "NewTemplateVersion:long",
+              "Disposition:string"
+            ]
+          },
+          {
+            "command": "RecordTemplateSuccessorDisposition",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "TemplateId:Uuid",
+              "ApplicationKey:string",
+              "ExpectedRevision:long",
+              "NewTemplateVersion:long",
+              "Disposition:string",
+              "Rationale:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "MethodologyTemplateApplied"
+          },
+          {
+            "event": "TemplateApplicationDraftCreated"
+          },
+          {
+            "event": "TemplateSuccessorAdoptionProposed"
+          },
+          {
+            "event": "TemplateSuccessorDispositionRecorded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "Tenant",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Create context.RequestId; Register exact retry currently conflict. Tenant commands mostly current-state idempotent; no stable per-transition intent identity. Append OCC.",
+        "selectedIdentity": "Caller TenantId is immutable tenant creation identity; lifecycle operations use caller CommandId.",
+        "invariant": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Tenant lifecycle and activation/current-slug link need coherence; global slug uniqueness belongs slug authority. Previous slug history and transport correlation need not live in tenant.",
+        "commands": [
+          {
+            "command": "ActivateTenant",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "FirstAdministratorUserId:Uuid",
+              "FirstAdministratorEmail:string?"
+            ]
+          },
+          {
+            "command": "ChangeTenantSlug",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Slug:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "CompleteTenantOffboarding",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "OffboardingId:Uuid",
+              "ExpectedRevision:long",
+              "ExportReference:string",
+              "RetentionDecisionReference:string",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ConfirmTenantSlug",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Slug:string"
+            ]
+          },
+          {
+            "command": "ConfirmTenantSlugSurrender",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Slug:string"
+            ]
+          },
+          {
+            "command": "OffboardTenant",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Reason:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ReactivateTenant",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "RegisterTenant",
+            "logicalIdentity": "TenantId",
+            "fields": [
+              "TenantId:Uuid",
+              "Name:string",
+              "Slug:string",
+              "LegalName:string?",
+              "FirstAdministratorEmail:string?"
+            ]
+          },
+          {
+            "command": "RejectTenantSlug",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Slug:string"
+            ]
+          },
+          {
+            "command": "RejectTenantSlugSurrender",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Slug:string"
+            ]
+          },
+          {
+            "command": "RequestTenantSlugSurrender",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Slug:string"
+            ]
+          },
+          {
+            "command": "SuspendTenant",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Reason:string",
+              "ExpectedRevision:long"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TenantActivated"
+          },
+          {
+            "event": "TenantOffboardingStarted"
+          },
+          {
+            "event": "TenantReactivated"
+          },
+          {
+            "event": "TenantRegistered"
+          },
+          {
+            "event": "TenantSlugChangeRejected"
+          },
+          {
+            "event": "TenantSlugChangeRequested"
+          },
+          {
+            "event": "TenantSlugChanged"
+          },
+          {
+            "event": "TenantSlugConfirmed"
+          },
+          {
+            "event": "TenantSlugRejected"
+          },
+          {
+            "event": "TenantSlugSurrenderConfirmed"
+          },
+          {
+            "event": "TenantSlugSurrenderFailed"
+          },
+          {
+            "event": "TenantSlugSurrenderRequested"
+          },
+          {
+            "event": "TenantSuspended"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "TenantIdentityProvider",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant+providerConnectionId; expectedRevision. TestKey/pending retry and result intent checks exist; Configure after revisions and older rotation retries not uniformly recognized.",
+        "selectedIdentity": "Tenant + ProviderConnectionId with immutable tenant binding. Selected CommandId and TestKey bind exact configuration, test, key and rotation episodes.",
+        "invariant": "Connection enables only with successful test of current credential epoch; rotation invalidates pending/old result; disabled connection stays terminal.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Credential epoch and activation decision must remain authoritative together. Test attempt lifecycle/history can be separate via explicit admission/epoch proof.",
+        "commands": [
+          {
+            "command": "ConfigureTenantIdentityProvider",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProviderConnectionId:Uuid",
+              "Issuer:string",
+              "ClientId:string",
+              "EncryptedCredentialReference:string",
+              "AllowedAudiences:IReadOnlyList<string>",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "DisableTenantIdentityProvider",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProviderConnectionId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "RecordTenantIdentityProviderTestResult",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProviderConnectionId:Uuid",
+              "ExpectedRevision:long",
+              "TestRequestEventId:Uuid",
+              "Result:TenantIdentityProviderTestResultContent",
+              "CompletedAt:DateTimeOffset"
+            ]
+          },
+          {
+            "command": "RotateTenantIdentityProviderCredentials",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProviderConnectionId:Uuid",
+              "EncryptedCredentialReference:string",
+              "RotationReference:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "TestTenantIdentityProvider",
+            "logicalIdentity": "TestKey",
+            "fields": [
+              "TenantId:Uuid",
+              "ProviderConnectionId:Uuid",
+              "ExpectedRevision:long",
+              "TestKey:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TenantIdentityProviderConfigured",
+            "discriminator": "bdgrz.useridentities.tenant-identity-provider-configured",
+            "version": 2
+          },
+          {
+            "event": "TenantIdentityProviderCredentialsRotated",
+            "discriminator": "bdgrz.useridentities.tenant-identity-provider-credentials-rotated",
+            "version": 2
+          },
+          {
+            "event": "TenantIdentityProviderTestRequested",
+            "discriminator": "bdgrz.user-identities.tenant-identity-provider-test-requested",
+            "version": 1
+          },
+          {
+            "event": "TenantIdentityProviderTested",
+            "discriminator": "bdgrz.useridentities.tenant-identity-provider-tested",
+            "version": 3
+          },
+          {
+            "event": "TenantIdentityProviderDisabled",
+            "discriminator": "bdgrz.useridentities.tenant-identity-provider-disabled",
+            "version": 2
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "TenantInvitation",
+        "classification": "business_aggregate",
+        "declaredIdentity": "invitationId",
+        "selectedIdentity": "invitationId",
+        "invariant": "One immutable offer, token acceptance and terminal lifecycle; each invitation has exact recipient, purpose, scopes and expiry.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Retry same invitation ID with exact terms returns original acceptance; changed terms conflict. New invitation generation is independent. Delivery retries preserve exact token and accepted at-least-once policy.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AcceptTenantInvitation",
+            "logicalIdentity": {
+              "field": "InvitationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "InvitationId:Uuid",
+              "TenantId:Uuid",
+              "EmailAddress:string",
+              "Token:string"
+            ]
+          },
+          {
+            "command": "InviteGuestConsultant",
+            "logicalIdentity": {
+              "field": "InvitationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "InvitationId:Uuid",
+              "TenantId:Uuid",
+              "EmailAddress:string",
+              "ProgramIds:IReadOnlyList<Uuid>",
+              "ExpiresOn:DateOnly"
+            ]
+          },
+          {
+            "command": "InviteOrganizationMember",
+            "logicalIdentity": {
+              "field": "InvitationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "InvitationId:Uuid",
+              "TenantId:Uuid",
+              "EmailAddress:string",
+              "BuiltInRole:string"
+            ]
+          },
+          {
+            "command": "InviteTenantMember",
+            "logicalIdentity": {
+              "field": "InvitationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "InvitationId:Uuid",
+              "TenantId:Uuid",
+              "EmailAddress:string",
+              "Affiliation:string",
+              "Administrator:bool"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TenantInvitationAccepted",
+            "discriminator": "bdgrz.tenant-invitation.accepted",
+            "version": 1
+          },
+          {
+            "event": "TenantMemberInvited",
+            "discriminator": "bdgrz.tenant-member.invited",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "TenantInvitationDeliveryProcessReactor",
+            "sourceOwner": "TenantInvitation",
+            "targetOwner": "TenantInvitationDeliveryProcess",
+            "command": "SendTenantInvitation"
+          },
+          {
+            "reactor": "TenantInvitationDeliveryProcessReactor",
+            "sourceOwner": "TenantInvitation",
+            "targetOwner": "TenantInvitationDeliveryProcess",
+            "command": "RecordTenantInvitationDeliverySent"
+          },
+          {
+            "reactor": "TenantInvitationDeliveryProcessReactor",
+            "sourceOwner": "TenantInvitation",
+            "targetOwner": "TenantInvitationDeliveryProcess",
+            "command": "RecordTenantInvitationDeliveryFailed"
+          }
+        ]
+      },
+      {
+        "owner": "TenantInvitationMailboxClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "declaredIdentity": "tenant / normalizedEmail",
+        "selectedIdentity": "tenant / normalizedEmail",
+        "invariant": "At most one pending invitation per mailbox. InvitationId and generation live in state and every release compares both; generation is never part of the stream key.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Retry same invitation ID with exact terms returns original acceptance; changed terms conflict. New invitation generation is independent. Delivery retries preserve exact token and accepted at-least-once policy.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [],
+        "choreography": []
+      },
+      {
+        "owner": "TenantManagerGuard",
+        "classification": "business_governor",
+        "declaredIdentity": "Tenant singleton, observed Sequence value, reasons per member, append OCC. Reasons suppress immediate duplicate withdrawal but no operation/generation token binds source write or restoration.",
+        "selectedIdentity": "Tenant singleton manager guard in its existing address. Selected CommandId binds exact contributor/member episode, generation and withdrawal/restoration transition; current complete eligible contributors remain authoritative.",
+        "invariant": "Removal from effective administrator set must leave another active tenant administrator.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Without a shared authoritative decision/hold two removals could each rely on the other. The coordination boundary is justified; guard-to-member transition protocol is incomplete.",
+        "commands": [
+          {
+            "command": "SuspendMember",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "UserId:Uuid",
+              "Reason:string",
+              "MemberEpisodeId:Uuid",
+              "ExpectedMemberRevision:long"
+            ]
+          },
+          {
+            "command": "DeprovisionMember",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "UserId:Uuid",
+              "Reason:string",
+              "MemberEpisodeId:Uuid",
+              "ExpectedMemberRevision:long"
+            ]
+          },
+          {
+            "command": "RemoveTeamMember",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "TeamId:Uuid",
+              "MemberId:Uuid",
+              "MemberEpisodeId:Uuid",
+              "ExpectedAssignmentRevision:long",
+              "ExpectedAssignmentGeneration:long"
+            ]
+          },
+          {
+            "command": "ReinstateMember",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "UserId:Uuid",
+              "MemberEpisodeId:Uuid",
+              "ExpectedMemberRevision:long"
+            ]
+          },
+          {
+            "command": "AssignTeamMember",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "TeamId:Uuid",
+              "MemberId:Uuid",
+              "MemberEpisodeId:Uuid",
+              "ExpectedAssignmentRevision:long",
+              "ExpectedAssignmentGeneration:long"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TenantManagerRestorationAccepted",
+            "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-restoration-accepted",
+            "version": 1
+          },
+          {
+            "event": "TenantManagerRestorationCompleted",
+            "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-restoration-completed",
+            "version": 1
+          },
+          {
+            "event": "TenantManagerRestored",
+            "discriminator": "bdgrz.rbac.manager_guard.restored",
+            "version": 1
+          },
+          {
+            "event": "TenantManagerSourceMutationAdmitted",
+            "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted",
+            "version": 1
+          },
+          {
+            "event": "TenantManagerWithdrawalAccepted",
+            "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-withdrawal-accepted",
+            "version": 1
+          },
+          {
+            "event": "TenantManagerWithdrawalCompleted",
+            "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-withdrawal-completed",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AdministratorWithdrawalReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "Member",
+            "command": "ApplyMemberWithdrawal"
+          },
+          {
+            "reactor": "AdministratorAssignmentWithdrawalReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "TeamMember",
+            "command": "ApplyAdministratorAssignmentWithdrawal"
+          },
+          {
+            "reactor": "AdministratorNeutralMemberMutationReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "Member",
+            "command": "ApplyNeutralMemberSourceMutation"
+          },
+          {
+            "reactor": "AdministratorNeutralAssignmentMutationReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "TeamMember",
+            "command": "ApplyNeutralAdministratorAssignmentMutation"
+          },
+          {
+            "reactor": "AdministratorWithdrawalCompletionReactor",
+            "sourceOwner": "Member|TeamMember",
+            "targetOwner": "TenantManagerGuard",
+            "command": "CompleteAdministratorWithdrawal"
+          },
+          {
+            "reactor": "AdministratorRestorationReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "Member",
+            "command": "ApplyMemberRestoration"
+          },
+          {
+            "reactor": "AdministratorRestorationCompletionReactor",
+            "sourceOwner": "Member|TeamMember",
+            "targetOwner": "TenantManagerGuard",
+            "command": "CompleteAdministratorRestoration"
+          },
+          {
+            "reactor": "AdministratorAssignmentRestorationReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "TeamMember",
+            "command": "ApplyAdministratorAssignmentRestoration"
+          }
+        ]
+      },
+      {
+        "owner": "TenantSlug",
+        "classification": "business_identity_or_uniqueness_authority",
+        "declaredIdentity": "UUIDv5 normalized slug. Register current same owner emits duplicate fact; rejection emits reply receipts; expected-position OCC enforces competing claims.",
+        "selectedIdentity": "Existing UUIDv5 of normalized slug. Selected CommandId binds exact claimant tenant and reservation episode; the existing normalization and UUID algorithm remain unchanged.",
+        "invariant": "One normalized global slug can belong to one tenant and once surrendered is permanently retired.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Global claim/retirement must be atomic; tenant activation and reply transport need not be in same owner.",
+        "commands": [
+          {
+            "command": "RegisterTenantSlug",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Slug:string"
+            ]
+          },
+          {
+            "command": "SurrenderTenantSlug",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "Slug:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TenantSlugRegistered"
+          },
+          {
+            "event": "TenantSlugRegistrationRejected"
+          },
+          {
+            "event": "TenantSlugSurrenderRejected"
+          },
+          {
+            "event": "TenantSlugSurrendered"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "TrainingRequirement",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(tenantId, programId, normalizedRequirementId)",
+        "selectedIdentity": "(tenantId, programId, normalizedRequirementId)",
+        "invariant": "One normalized training requirement creation and version line.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Original creation identity remains recognizable after revisions; each revision uses expected version and valid audience/source.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "DefineTrainingRequirement",
+            "logicalIdentity": {
+              "field": "RequirementId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "RequirementId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Identifier:string",
+              "Content:TrainingRequirementContent"
+            ]
+          },
+          {
+            "command": "ReviseTrainingRequirement",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequirementId:Uuid",
+              "ExpectedVersion:long",
+              "Content:TrainingRequirementContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TrainingRequirementDefined",
+            "discriminator": "bdgrz.training_requirement.defined",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TemplateApplication fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TemplateApplication's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for Tenant fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle Tenant's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TenantIdentityProvider fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TenantIdentityProvider's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TenantInvitation fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TenantInvitation's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TenantInvitationMailboxClaim fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TenantInvitationMailboxClaim's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TenantManagerGuard fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TenantManagerGuard's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TenantSlug fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TenantSlug's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TrainingRequirement fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TrainingRequirement's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

@@ -34,7 +34,8 @@ public sealed class ListPeopleHandler(IPersonDirectoryReader directory,
         foreach (var item in page.Items)
         {
             var source = await consistency.GetAsync(request.TenantId, item.PersonId, item.Revision, ct).ConfigureAwait(false);
-            if (!source.IsSuccess) return Result<Page<PersonView>>.Failure(source.Error!);
+            if (!source.IsSuccess)
+                return Result<Page<PersonView>>.Failure(source.Error!);
             verified.Add(source.Value with { PersonalContact = null, RestrictedFieldsRedacted = true });
         }
         var held = await consistency.EnsureFenceHeldAsync(request.TenantId, ready.Value, ct).ConfigureAwait(false);

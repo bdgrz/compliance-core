@@ -1,0 +1,824 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_fit",
+    "owners": [
+      {
+        "owner": "ControlOperatingPlan",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(tenantId, programId, controlId)",
+        "selectedIdentity": "(tenantId, programId, controlId)",
+        "invariant": "One independently approved, non-overlapping plan version line for a control.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Occurrence facts bind exact frozen plan and evidence requirements; one business window has one identity across all generators.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "ApproveControlOperatingPlan",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedRevision:long",
+              "PlanVersionId:Uuid",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "ProposeControlOperatingPlan",
+            "logicalIdentity": {
+              "field": "PlanVersionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "PlanVersionId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedRevision:long",
+              "ControlVersionId:Uuid",
+              "Owner:OperatingHolder",
+              "BackupOwner:OperatingHolder?",
+              "ReviewerMemberId:Uuid",
+              "Cadence:ControlCadence",
+              "EffectiveFrom:DateOnly",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ControlOperatingPlanApproved",
+            "discriminator": "bdgrz.control.operating_plan.approved",
+            "version": 1
+          },
+          {
+            "event": "ControlOperatingPlanProposed",
+            "discriminator": "bdgrz.control.operating_plan.proposed",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "CorrectiveAction",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(findingId, actionId)",
+        "selectedIdentity": "(findingId, actionId)",
+        "invariant": "Independent corrective-action lifecycle, evidence and completion proof.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Close only with at least one action, all complete, evidence/rationale present and independent closer unless exact waiver. Closed finding is immutable until reopen.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "CompleteCorrectiveAction",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "ActionId:Uuid",
+              "ResolutionNotes:string",
+              "Evidence:IReadOnlyList<EvidenceReference>"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "CorrectiveActionAddedV2",
+            "discriminator": "bdgrz.finding.corrective_action.added",
+            "version": 1
+          },
+          {
+            "event": "CorrectiveActionCompletedV2",
+            "discriminator": "bdgrz.finding.corrective_action.completed",
+            "version": 1
+          },
+          {
+            "event": "CorrectiveActionFindingClosureUseAuthorized",
+            "discriminator": "bdgrz.corrective-action.corrective-action-finding-closure-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "CorrectiveActionFindingClosureUseSettled",
+            "discriminator": "bdgrz.corrective-action.corrective-action-finding-closure-use-settled",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "CorrectiveActionMaterializationReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "MaterializeCorrectiveAction"
+          },
+          {
+            "reactor": "FindingClosureCorrectiveActionAuthorizationReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "AuthorizeCorrectiveActionFindingClosureUse"
+          },
+          {
+            "reactor": "FindingClosureCorrectiveActionSettlementReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "SettleCorrectiveActionFindingClosureUse"
+          }
+        ]
+      },
+      {
+        "owner": "CriteriaTextOverlay",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(editionId, normalizedCriterionId)",
+        "selectedIdentity": "(editionId, normalizedCriterionId)",
+        "invariant": "One licensed text overlay and sequential revision line.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Exact prior revision and one request identity/intent; license/source proof validated per overlay.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "SetCriteriaTextOverlay",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EditionId:Uuid",
+              "Identifier:string",
+              "ExpectedRevision:long",
+              "Content:CriteriaTextOverlayContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "CriteriaTextOverlayEntryRevised",
+            "discriminator": "bdgrz.criteria-overlay.entry-revised",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "CriterionApplicability",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(programId, editionId, criterionId)",
+        "selectedIdentity": "(programId, editionId, criterionId)",
+        "invariant": "One applicability decision lineage.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Only independent accepted review can make a criterion not applicable; withdrawal restores coverage.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "ProposeCriterionNotApplicable",
+            "logicalIdentity": {
+              "field": "DecisionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "DecisionId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "EditionId:Uuid",
+              "CriterionIdentifier:string",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ReviewCriterionApplicability",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DecisionId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "WithdrawCriterionNotApplicable",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DecisionId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "CriterionApplicabilityReviewed",
+            "discriminator": "bdgrz.criterion_applicability.reviewed",
+            "version": 1
+          },
+          {
+            "event": "CriterionNotApplicableProposed",
+            "discriminator": "bdgrz.criterion_applicability.not_applicable_proposed",
+            "version": 1
+          },
+          {
+            "event": "CriterionNotApplicableWithdrawn",
+            "discriminator": "bdgrz.criterion_applicability.not_applicable_withdrawn",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "DataFlow",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Shared tenant+id address, foreign sentinels, RequestId creation identity. Semantic asset-list equality for immediate create retry but compares current state after revisions. Expected revision/physical OCC; no selected prior operation recognition.",
+        "selectedIdentity": "Tenant + caller DataFlowId under the preserved shared technology-inventory address/sentinel scheme.",
+        "invariant": "One tenant inventory identity has one record kind; flow endpoint/asset scope and encryption or approved-exception terms must match highest admitted carried classification, and effective date never moves backward.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Shared type exclusion must remain in one physical slot. Complete carried-asset relation is evidence for one atomic encryption rule; asset identity/lifecycle remains separate. No reason for all flows to share a revision.",
+        "commands": [
+          {
+            "command": "RecordDataFlow",
+            "logicalIdentity": "DataFlowId",
+            "fields": [
+              "DataFlowId:Uuid",
+              "TenantId:Uuid",
+              "SourceType:string",
+              "SourceId:Uuid",
+              "DestinationType:string",
+              "InformationAssetIds:IReadOnlyList<Uuid>",
+              "Purpose:string",
+              "EncryptedInTransit:bool",
+              "EncryptedAtRest:bool",
+              "EffectiveFrom:DateOnly",
+              "OwnerPersonId:Uuid",
+              "DestinationId:Uuid?",
+              "DestinationParty:string?",
+              "ExceptionReference:string?"
+            ]
+          },
+          {
+            "command": "ReviseDataFlow",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "DataFlowId:Uuid",
+              "ExpectedRevision:long",
+              "SourceType:string",
+              "SourceId:Uuid",
+              "DestinationType:string",
+              "InformationAssetIds:IReadOnlyList<Uuid>",
+              "Purpose:string",
+              "EncryptedInTransit:bool",
+              "EncryptedAtRest:bool",
+              "EffectiveFrom:DateOnly",
+              "OwnerPersonId:Uuid",
+              "Lifecycle:string",
+              "DestinationId:Uuid?",
+              "DestinationParty:string?",
+              "ExceptionReference:string?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "DataFlowRevisionRecorded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "DeclaredApplication",
+        "classification": "business_aggregate",
+        "declaredIdentity": "applicationId",
+        "selectedIdentity": "applicationId",
+        "invariant": "Application creation, metadata revision, retirement and import admission generation.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Retirement requires an approved successor for exact app revision; import holds block incompatible local change.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "ApplyApplicationImportEffect",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "source_event_effect",
+              "rule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId."
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "Source:SourceFactProof<ApplicationImportExecutionAuthorized>",
+              "Target:EventStreamAddress",
+              "OperationId:Uuid",
+              "Generation:long",
+              "ExpectedRevision:long?",
+              "Intent:ImmutableContentRef",
+              "BatchId:Uuid",
+              "ApplicationId:Uuid",
+              "RowGroup:ImmutableContentRef"
+            ]
+          },
+          {
+            "command": "DeclareApplication",
+            "logicalIdentity": {
+              "field": "ApplicationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ApplicationId:Uuid",
+              "TenantId:Uuid",
+              "Name:string",
+              "Purpose:string",
+              "OwnerReference:string?",
+              "Classification:string?",
+              "SystemOwnerPersonId:Uuid?",
+              "AccessOwnerPersonId:Uuid?",
+              "IsRestricted:bool",
+              "ApplicationKind:string?",
+              "Criticality:string?"
+            ]
+          },
+          {
+            "command": "RetireApplication",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "ExpectedRevision:long",
+              "EffectiveAt:DateTimeOffset",
+              "Reason:string",
+              "MergedIntoApplicationId:Uuid?"
+            ]
+          },
+          {
+            "command": "ReviseApplication",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "ExpectedRevision:long",
+              "Name:string",
+              "Purpose:string",
+              "OwnerReference:string?",
+              "Classification:string?",
+              "SystemOwnerPersonId:Uuid?",
+              "AccessOwnerPersonId:Uuid?",
+              "IsRestricted:bool?",
+              "ApplicationKind:string?",
+              "Criticality:string?",
+              "ClassificationIntent:ApplicationRevisionField",
+              "SystemOwnerIntent:ApplicationRevisionField",
+              "AccessOwnerIntent:ApplicationRevisionField"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ApplicationDeclared",
+            "discriminator": "bdgrz.application.declared",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportEffectCanceled",
+            "discriminator": "bdgrz.declared-application.application-import-effect-canceled",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportEffectPending",
+            "discriminator": "bdgrz.application_import.effect_pending",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportTargetAuthorized",
+            "discriminator": "bdgrz.declared-application.application-import-target-authorized",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportTargetSettled",
+            "discriminator": "bdgrz.declared-application.application-import-target-settled",
+            "version": 1
+          },
+          {
+            "event": "ApplicationRetired",
+            "discriminator": "bdgrz.application.retired",
+            "version": 1
+          },
+          {
+            "event": "ApplicationRevised",
+            "discriminator": "bdgrz.application.revised",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ImportTargetReservationReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "DeclaredApplication",
+            "command": "ReserveApplicationImportTarget"
+          },
+          {
+            "reactor": "ImportTargetApplicationReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "DeclaredApplication",
+            "command": "ApplyApplicationImportEffect"
+          },
+          {
+            "reactor": "ImportCancellationFenceReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "DeclaredApplication",
+            "command": "FenceApplicationImportTarget"
+          },
+          {
+            "reactor": "ImportTargetReleaseReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "DeclaredApplication",
+            "command": "ReleaseApplicationImportTarget"
+          }
+        ]
+      },
+      {
+        "owner": "DeclaredSystemInstance",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Per instance minted/business id; declaration compares current fields, retirement rejects already-retired retry, revision commands have no selected logical request lookup.",
+        "selectedIdentity": "Tenant + caller SystemInstanceId with immutable owning application/program scope.",
+        "invariant": "One system instance has one immutable application parent and registered identity; metadata revisions and terminal retirement follow its own expected revision.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Separating independent instances is already safe. Immutable parent binding and retirement gate belong with this instance, rather than parent roster state.",
+        "commands": [
+          {
+            "command": "DeclareSystemInstance",
+            "logicalIdentity": "SystemInstanceId",
+            "fields": [
+              "SystemInstanceId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "ExpectedApplicationRevision:long",
+              "Name:string",
+              "Kind:string",
+              "AccessBoundaryReference:string?",
+              "SourceIdentifier:string?"
+            ]
+          },
+          {
+            "command": "RetireSystemInstance",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "SystemInstanceId:Uuid",
+              "ExpectedRevision:long",
+              "EffectiveAt:DateTimeOffset",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "ReviseSystemInstance",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "SystemInstanceId:Uuid",
+              "ExpectedRevision:long",
+              "Name:string",
+              "SourceIdentifier:string",
+              "AccessBoundary:string",
+              "Rationale:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "SystemInstanceRegistered"
+          },
+          {
+            "event": "SystemInstanceRetired"
+          },
+          {
+            "event": "SystemInstanceRevised"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "EmailAddress",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 normalized address. Reserve owner retry safe; challenge issue handler mints random ID per invocation; recovery pair retry stable until overwritten. Expected-position OCC.",
+        "selectedIdentity": "Existing UUIDv5 of the normalized email address. ChallengeId and selected CommandId are distinct stable operation identities bound to this exact address, owner and recovery episode.",
+        "invariant": "A normalized address reserves exactly one platform user; verification requires its current challenge; a claimed recovery binds one old/replacement pair.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Ownership and current-proof consumption require one authority; delivery outcomes do not. A recovery lifecycle can be separate only with durable claim/admission and revocation recovery.",
+        "commands": [
+          {
+            "command": "CompleteEmailChallenge",
+            "logicalIdentity": "ChallengeId",
+            "fields": [
+              "ChallengeId:Uuid",
+              "UserId:Uuid",
+              "EmailAddress:string",
+              "Token:string"
+            ]
+          },
+          {
+            "command": "IssueEmailChallenge",
+            "logicalIdentity": "ChallengeId",
+            "fields": [
+              "ChallengeId:Uuid",
+              "UserId:Uuid",
+              "EmailAddress:string"
+            ]
+          },
+          {
+            "command": "ReserveEmail",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "UserId:Uuid",
+              "EmailAddress:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "CompleteIdentityRecovery",
+            "logicalIdentity": "ChallengeId",
+            "fields": [
+              "EmailAddress:string",
+              "ChallengeId:Uuid",
+              "Token:string",
+              "OldIdentityId:Uuid"
+            ]
+          },
+          {
+            "command": "StartIdentityRecovery",
+            "logicalIdentity": "ChallengeId",
+            "fields": [
+              "ChallengeId:Uuid",
+              "EmailAddress:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "IdentityRecoveryChallengeClaimed",
+            "discriminator": "bdgrz.identity-recovery.challenge-claimed",
+            "version": 1
+          },
+          {
+            "event": "IdentityRecoveryChallengeCompleted",
+            "discriminator": "bdgrz.identity-recovery.challenge-completed",
+            "version": 1
+          },
+          {
+            "event": "IdentityRecoveryChallengeIssued",
+            "discriminator": "bdgrz.identity-recovery.challenge-issued",
+            "version": 1
+          },
+          {
+            "event": "EmailAddressReserved",
+            "discriminator": "bdgrz.email-address.reserved",
+            "version": 1
+          },
+          {
+            "event": "EmailChallengeIssued",
+            "discriminator": "bdgrz.email-address.challenge-issued",
+            "version": 1
+          },
+          {
+            "event": "EmailAddressVerified",
+            "discriminator": "bdgrz.email-address.verified",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "IdentityRecoveryAcceptanceReactor",
+            "sourceOwner": "EmailAddress",
+            "targetOwner": "IdentityRecovery",
+            "command": "MaterializeIdentityRecoveryPreparation"
+          },
+          {
+            "reactor": "IdentityRecoveryEmailCompletionReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "EmailAddress",
+            "command": "CompleteEmailRecoveryChallenge"
+          },
+          {
+            "reactor": "EmailChallengeDeliveryReactor",
+            "sourceOwner": "EmailAddress",
+            "targetOwner": "EmailChallengeDeliveryLedger",
+            "command": "DeliverEmailChallenge"
+          },
+          {
+            "reactor": "RecoveryChallengeDeliveryReactor",
+            "sourceOwner": "EmailAddress",
+            "targetOwner": "EmailChallengeDeliveryLedger",
+            "command": "DeliverRecoveryChallenge"
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ControlOperatingPlan fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ControlOperatingPlan's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for CorrectiveAction fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle CorrectiveAction's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for CriteriaTextOverlay fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle CriteriaTextOverlay's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for CriterionApplicability fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle CriterionApplicability's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for DataFlow fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle DataFlow's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for DeclaredApplication fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle DeclaredApplication's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for DeclaredSystemInstance fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle DeclaredSystemInstance's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for EmailAddress fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle EmailAddress's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

@@ -59,7 +59,7 @@ The source-backed command plan for the product features we have committed to sup
 ### Applications
 
 - **AcceptApplicationImport** — exists ([contract](../../src/Compliance.Common/Features/Applications/AcceptApplicationImport.cs#L6))
-- **AddApplicationRelationship** — exists ([contract](../../src/Compliance.Common/Features/Applications/AddApplicationRelationship.cs#L6))
+- **AddApplicationRelationship** — exists ([contract](../../src/Compliance.Common/Features/Applications/Commands/AddApplicationRelationship.cs#L6))
 - **ApplyApplicationImportEffect** — exists ([contract](../../src/Compliance.Common/Features/Applications/ApplyApplicationImportEffect.cs#L7))
 - **CancelApplicationImport** — exists ([contract](../../src/Compliance.Common/Features/Applications/CancelApplicationImport.cs#L6))
 - **CorrelateApplicationImportRow** — exists ([contract](../../src/Compliance.Common/Features/Applications/CorrelateApplicationImportRow.cs#L6))
@@ -68,7 +68,7 @@ The source-backed command plan for the product features we have committed to sup
 - **DeclareSystemInstance** — exists ([contract](../../src/Compliance.Common/Features/Applications/DeclareSystemInstance.cs#L6))
 - **ExecuteApplicationImport** — exists ([contract](../../src/Compliance.Common/Features/Applications/ExecuteApplicationImport.cs#L7))
 - **FreezeApplicationImportOmissionProposal** — extend ([contract](../../src/Compliance.Common/Features/Applications/FreezeApplicationImportOmissionProposal.cs#L7))
-- **RemoveApplicationRelationship** — exists ([contract](../../src/Compliance.Common/Features/Applications/RemoveApplicationRelationship.cs#L6))
+- **RemoveApplicationRelationship** — exists ([contract](../../src/Compliance.Common/Features/Applications/Commands/RemoveApplicationRelationship.cs#L6))
 - **RetireApplication** — extend ([contract](../../src/Compliance.Common/Features/Applications/RetireApplication.cs#L6))
 - **RetireSystemInstance** — extend ([contract](../../src/Compliance.Common/Features/Applications/RetireSystemInstance.cs#L6))
 - **ReviseApplication** — extend ([contract](../../src/Compliance.Common/Features/Applications/ReviseApplication.cs#L7))

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Applications.Commands;
 namespace Bdgrz.Compliance.Hosting.NativeResponses;
 
 /// <summary>Fixed, unambiguous success contracts selected in the accepted 2026-10-23 catalogs; native receipts override these fallbacks.</summary>

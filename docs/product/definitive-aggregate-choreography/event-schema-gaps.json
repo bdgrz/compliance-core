@@ -645,7 +645,7 @@
     {
       "event": "ApplicationRelationshipAdded",
       "selectedOwner": "ApplicationRelationship",
-      "currentContract": "src/Compliance.Common/Features/Applications/ApplicationRelationshipAdded.cs",
+      "currentContract": "src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipAdded.cs",
       "missingSelectedFields": [
         "Operation",
         "FirstResponse",
@@ -659,7 +659,7 @@
     {
       "event": "ApplicationRelationshipApproved",
       "selectedOwner": "ApplicationRelationship",
-      "currentContract": "src/Compliance.Common/Features/Applications/ApplicationRelationshipApproved.cs",
+      "currentContract": "src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipApproved.cs",
       "missingSelectedFields": [
         "Operation",
         "FirstResponse",
@@ -673,7 +673,7 @@
     {
       "event": "ApplicationRelationshipRemoved",
       "selectedOwner": "ApplicationRelationship",
-      "currentContract": "src/Compliance.Common/Features/Applications/ApplicationRelationshipRemoved.cs",
+      "currentContract": "src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipRemoved.cs",
       "missingSelectedFields": [
         "Operation",
         "FirstResponse",

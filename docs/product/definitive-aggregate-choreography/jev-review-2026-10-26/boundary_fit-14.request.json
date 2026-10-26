@@ -1,0 +1,768 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_fit",
+    "owners": [
+      {
+        "owner": "SignificantChange",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Per change id is a valid stable creation identity. SameInitial/revision/assessment helpers compare server RecordedAt; fresh handler clock makes an exact client retry conflict or append. No selected RequestId guard.",
+        "selectedIdentity": "Tenant / significant-changes / ChangeId, with immutable ProgramId. ChangeId is the selected immutable creation identity; later selected commands use CommandId and exact changed-version/source bindings.",
+        "invariant": "One change version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Keep current version, assessment and eligibility/independence gate atomic. Historical versions/decisions are immutable histories; do not split current gate simply by entity nouns. Required work selection can be sealed exact-version content with authority proofs.",
+        "commands": [
+          {
+            "command": "AssessSignificantChange",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ChangeId:Uuid",
+              "ExpectedRevision:long",
+              "Content:SignificantChangeImpactContent"
+            ]
+          },
+          {
+            "command": "LinkImpactReviewWork",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ChangeId:Uuid",
+              "ContentVersion:int"
+            ]
+          },
+          {
+            "command": "RecordSignificantChange",
+            "logicalIdentity": "ChangeId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ChangeId:Uuid",
+              "Content:SignificantChangeContent"
+            ]
+          },
+          {
+            "command": "RecordSignificantChangeSystemDescriptionDecision",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ChangeId:Uuid",
+              "ContentVersion:int",
+              "SystemDescriptionId:Uuid",
+              "SystemDescriptionVersionId:Uuid",
+              "DecisionId:Uuid",
+              "Decision:string",
+              "AssessmentSha256:string"
+            ]
+          },
+          {
+            "command": "ReviseSignificantChange",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ChangeId:Uuid",
+              "ExpectedRevision:long",
+              "Content:SignificantChangeContent",
+              "ChangeReason:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ImpactReviewWorkLinked"
+          },
+          {
+            "event": "SignificantChangeImpactAssessed"
+          },
+          {
+            "event": "SignificantChangeRecorded"
+          },
+          {
+            "event": "SignificantChangeRevised"
+          },
+          {
+            "event": "SignificantChangeSystemDescriptionDecisionRecorded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "SystemBoundary",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant+boundaryId, create handler derives from RequestId, draft1=UUIDv5 boundary+draft1, successor draftID supplied from stable request. Create compares initial content even after revisions. Review DecisionId=RequestId but no duplicate/change check; revision/approval retries fail after success. Expected physical append OCC.",
+        "selectedIdentity": "Tenant + caller BoundaryId with exact immutable program scope and selected stable draft identities.",
+        "invariant": "A boundary has one current draft; approval requires latest accepted review of exact draft revision, an independent/waived actor and strictly increasing approved effective date; exact-scope responsibility changes cannot create retroactive unwaived decision conflict.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Retain the complete conflict-relevant responsibility/decision state for the current exact boundary draft scope in the same authoritative decision boundary as its review and approval. Do not turn current assignments into independent unconstrained aggregate streams. Narrow accumulated past-scope/version histories and external waiver behavior; a physical draft/publication split is a conditional future design, not the present audit verdict. The collection protects an actual atomic rule over its members: one member cannot hold overlapping work and review/approval responsibilities for the same exact version/revision without an accepted exact waiver, and a later backdated assignment cannot invalidate a prior unwaived review/approval decision. This falls under rule4. Record identity alone does not justify separating assignments.",
+        "commands": [
+          {
+            "command": "ApproveBoundary",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "BoundaryId:Uuid",
+              "DraftVersionId:Uuid",
+              "ExpectedRevision:long",
+              "AcceptedReviewDecisionId:Uuid",
+              "EffectiveFrom:DateOnly",
+              "Rationale:string",
+              "ImpactDigest:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "CreateBoundary",
+            "logicalIdentity": "BoundaryId",
+            "fields": [
+              "BoundaryId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Content:BoundaryContent"
+            ]
+          },
+          {
+            "command": "DiscardBoundaryDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "BoundaryId:Uuid",
+              "DraftVersionId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ProposeBoundarySuccessor",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "BoundaryId:Uuid",
+              "ExpectedApprovedVersionId:Uuid",
+              "Content:BoundaryContent",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ReviewBoundary",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "BoundaryId:Uuid",
+              "DraftVersionId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "ReviseBoundaryDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "BoundaryId:Uuid",
+              "DraftVersionId:Uuid",
+              "ExpectedRevision:long",
+              "Content:BoundaryContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "BoundaryApproved"
+          },
+          {
+            "event": "BoundaryDraftCreated"
+          },
+          {
+            "event": "BoundaryDraftDiscarded"
+          },
+          {
+            "event": "BoundaryDraftRevised"
+          },
+          {
+            "event": "BoundaryReviewed"
+          },
+          {
+            "event": "BoundarySuccessorProposed"
+          },
+          {
+            "event": "ResponsibilityAssigned"
+          },
+          {
+            "event": "ResponsibilityRevoked"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "SystemDescription",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(tenantId, programId, descriptionId)",
+        "selectedIdentity": "(tenantId, programId, descriptionId)",
+        "invariant": "Immutable narrative versions, completeness and approval against exact source snapshot.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "No approved content or source snapshot mutates; exact changes and period decisions are admitted before approval.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "ApproveSystemDescription",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DescriptionId:Uuid",
+              "Version:long",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "BindSystemDescriptionSources",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DescriptionId:Uuid",
+              "ExpectedRevision:long",
+              "SourceVersionIds:IReadOnlyList<Uuid>"
+            ]
+          },
+          {
+            "command": "BindSystemDescriptionToExamination",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DescriptionId:Uuid",
+              "Version:long",
+              "ExaminationId:Uuid",
+              "BindingPurpose:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "CreateSystemDescriptionDraft",
+            "logicalIdentity": {
+              "field": "DescriptionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DescriptionId:Uuid",
+              "ExaminationId:Uuid",
+              "Title:string",
+              "Sections:IReadOnlyList<SystemDescriptionSection>"
+            ]
+          },
+          {
+            "command": "ProposeSystemDescriptionSuccessor",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DescriptionId:Uuid",
+              "ExpectedRevision:long",
+              "ChangeReason:string"
+            ]
+          },
+          {
+            "command": "RecordSystemDescriptionNoChangeDecision",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DescriptionId:Uuid",
+              "Version:long",
+              "ChangeId:Uuid",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ReviewSystemDescription",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DescriptionId:Uuid",
+              "Version:long",
+              "Outcome:string",
+              "Comments:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ReviseSystemDescriptionDraft",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DescriptionId:Uuid",
+              "ExpectedRevision:long",
+              "Title:string",
+              "Sections:IReadOnlyList<SystemDescriptionSection>",
+              "ChangeReason:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "SystemDescriptionApproved",
+            "discriminator": "bdgrz.systemdescription.system-description-approved",
+            "version": 1
+          },
+          {
+            "event": "SystemDescriptionBound",
+            "discriminator": "bdgrz.systemdescription.system-description-bound",
+            "version": 1
+          },
+          {
+            "event": "SystemDescriptionDraftCreated",
+            "discriminator": "bdgrz.systemdescription.system-description-draft-created",
+            "version": 1
+          },
+          {
+            "event": "SystemDescriptionDraftRevised",
+            "discriminator": "bdgrz.systemdescription.system-description-draft-revised",
+            "version": 1
+          },
+          {
+            "event": "SystemDescriptionNoChangeRecorded",
+            "discriminator": "bdgrz.systemdescription.system-description-no-change-recorded",
+            "version": 1
+          },
+          {
+            "event": "SystemDescriptionReviewed",
+            "discriminator": "bdgrz.systemdescription.system-description-reviewed",
+            "version": 1
+          },
+          {
+            "event": "SystemDescriptionSourcesBound",
+            "discriminator": "bdgrz.systemdescription.system-description-sources-bound",
+            "version": 1
+          },
+          {
+            "event": "SystemDescriptionSuccessorProposed",
+            "discriminator": "bdgrz.systemdescription.system-description-successor-proposed",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "SystemInstanceAccessReviewScope",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Stream uses instance id. DecisionId lookup returns prior success without comparing changed decision, reason, actor, effective dates or instance version.",
+        "selectedIdentity": "Tenant + SystemInstanceId in its existing access-review-scope address, with exact current instance version. Selected CommandId binds the decision and its exact scope/version/effective terms.",
+        "invariant": "Scope decisions for one instance advance a monotonic effective date and expected decision sequence with independent approver or exact-scope waiver.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Current decision and last effective date must remain ordered. Historical decisions are read history, not independent mutable owners. Moving the list to projection must retain the current/sequence gate.",
+        "commands": [
+          {
+            "command": "DecideAccessReviewScope",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "SystemInstanceId:Uuid",
+              "ExpectedSystemInstanceRevision:long",
+              "ExpectedDecisionCount:long",
+              "Decision:string",
+              "Reason:string",
+              "EffectiveFrom:DateTimeOffset",
+              "ReviewBy:DateTimeOffset?",
+              "SeparationOfDutiesWaiverId:Uuid?",
+              "ExpectedRevision:long"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessReviewScopeDecided"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "Team",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Caller stable teamId in tenant stream; Define unconditional existing no-op hides changed intent. Expected-position OCC.",
+        "selectedIdentity": "Tenant + TeamId; TeamId is immutable creation identity. Selected mutations use CommandId and the exact team binding.",
+        "invariant": "One team definition has an active/deleted lifecycle and built-in team cannot be deleted.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Membership and role assignments need independent lifecycles, which current design already supplies; team itself owns only existence/deletion.",
+        "commands": [
+          {
+            "command": "DefineTeam",
+            "logicalIdentity": "TeamId",
+            "fields": [
+              "TenantId:Uuid",
+              "TeamId:Uuid",
+              "Name:string"
+            ]
+          },
+          {
+            "command": "DeleteTeam",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "TeamId:Uuid"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TeamDefined"
+          },
+          {
+            "event": "TeamDeleted"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "TeamMember",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 tenant/team/member. Assignment can change episode; old RequestId not recognized; repeated Remove notFound; expected-position OCC.",
+        "selectedIdentity": "Existing UUIDv5 of tenant + team + member. Each assignment episode remains exact; selected native operation/receiver identity is bound to that member/team episode.",
+        "invariant": "One tenant/team/member relationship is active only for one current membership episode.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Membership episode and active flag must be together; team-wide roster does not need an atomic revision. Tenant-manager invariant requires separate authoritative removal coordination.",
+        "commands": [],
+        "events": [
+          {
+            "event": "TeamMemberAssigned",
+            "discriminator": "bdgrz.rbac.team-member.assigned",
+            "version": 1
+          },
+          {
+            "event": "TeamMemberRemoved",
+            "discriminator": "bdgrz.rbac.team-member.removed",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AdministratorAssignmentWithdrawalReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "TeamMember",
+            "command": "ApplyAdministratorAssignmentWithdrawal"
+          },
+          {
+            "reactor": "AdministratorNeutralAssignmentMutationReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "TeamMember",
+            "command": "ApplyNeutralAdministratorAssignmentMutation"
+          },
+          {
+            "reactor": "AdministratorAssignmentRestorationReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "TeamMember",
+            "command": "ApplyAdministratorAssignmentRestoration"
+          }
+        ]
+      },
+      {
+        "owner": "TeamRole",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 tenant/team/role; immediate Assign retry no-op, older replay after Remove reassigns; repeated Remove notFound; append OCC.",
+        "selectedIdentity": "Existing UUIDv5 of tenant + team + role. Selected CommandId binds the exact assignment episode and removal intent.",
+        "invariant": "One tenant/team/role relationship has a single active assignment.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Each role assignment lifecycle independent; Team need not own collection. Critical built-in role removal policy remains external command admission.",
+        "commands": [
+          {
+            "command": "AssignTeamRole",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "TenantId:Uuid",
+              "TeamId:Uuid",
+              "RoleId:Uuid",
+              "CommandId:Uuid",
+              "ExpectedRevision:ulong"
+            ]
+          },
+          {
+            "command": "RemoveTeamRole",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "TenantId:Uuid",
+              "TeamId:Uuid",
+              "RoleId:Uuid",
+              "CommandId:Uuid",
+              "ExpectedRevision:ulong",
+              "AssignmentId:Uuid"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TeamRoleAssigned"
+          },
+          {
+            "event": "TeamRoleRemoved"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "TechnologyComponent",
+        "classification": "business_aggregate",
+        "declaredIdentity": "TechnologyInventoryStreams.Address(tenant,id) physically shared with InformationAsset/DataFlow; foreign-event sentinels reject other kinds and shared append OCC serializes competing creates. Cloud account id=systemInstanceId; other creation id=RequestId. Create compares current content instead of original; Revise expectedRevision lacks exact retry recognition.",
+        "selectedIdentity": "Tenant + caller ComponentId using preserved TechnologyInventoryStreams identity; cloud-account identity remains bound to its selected system instance.",
+        "invariant": "One tenant inventory identity has exactly one record kind; a component keeps immutable category/system-instance binding, cloud account keyed to its unique instance, and category-specific valid content/lifecycle.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Splitting class-specific record streams by type would lose shared identity-kind exclusion. Component mutable values/category restrictions belong one governed component lifecycle; no parent component roster needed.",
+        "commands": [
+          {
+            "command": "RecordTechnologyComponent",
+            "logicalIdentity": "ComponentId",
+            "fields": [
+              "ComponentId:Uuid",
+              "TenantId:Uuid",
+              "Category:string",
+              "Name:string",
+              "OwnerPersonId:Uuid",
+              "EnvironmentReference:string?",
+              "LocationReference:string?",
+              "SystemInstanceId:Uuid?",
+              "EndpointCount:int?",
+              "ManagementSource:string?"
+            ]
+          },
+          {
+            "command": "ReviseTechnologyComponent",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ComponentId:Uuid",
+              "ExpectedRevision:long",
+              "Name:string",
+              "OwnerPersonId:Uuid",
+              "Lifecycle:string",
+              "EnvironmentReference:string?",
+              "LocationReference:string?",
+              "EndpointCount:int?",
+              "ManagementSource:string?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TechnologyComponentRevisionRecorded"
+          }
+        ],
+        "choreography": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for SignificantChange fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle SignificantChange's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for SystemBoundary fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle SystemBoundary's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for SystemDescription fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle SystemDescription's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for SystemInstanceAccessReviewScope fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle SystemInstanceAccessReviewScope's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for Team fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle Team's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TeamMember fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TeamMember's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TeamRole fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TeamRole's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TechnologyComponent fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TechnologyComponent's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

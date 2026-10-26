@@ -99,7 +99,8 @@ static class AuditPopulationHistory
     }
     static void Apply(AuditPopulationRules rules, DomainEvent fact)
     {
-        try { rules.Apply(fact); }
+        try
+        { rules.Apply(fact); }
         catch (InvalidOperationException error) when (error.Message is "The audit-population event is invalid." or "The population read mutation has another exact kind.")
         { throw Invalid(error.Message); }
     }

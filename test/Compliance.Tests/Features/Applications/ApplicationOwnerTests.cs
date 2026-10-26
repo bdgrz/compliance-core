@@ -284,7 +284,7 @@ public sealed class ApplicationOwnerTests
             var person = new PersonRules(Uuid.CreateVersion4(), invalidOwner);
             Assert.True(person.Record("Foreign Owner", null,
                 ActorReference.ForMember(Uuid.CreateVersion4(), "Manager"), Now).IsSuccess);
-            await PersonSeeds.AppendAsync(scenario._scope.ServiceProvider, person);
+            await PersonSeeds.AppendAsync(scenario.Services, person);
         }
         var applicationId = Uuid.CreateVersion4();
         var request = new DeclareApplication(Uuid.CreateVersion4(), scenario.TenantId, "Payroll", "Run payroll",
@@ -398,7 +398,7 @@ public sealed class ApplicationOwnerTests
         var foreignOwner = new PersonRules(foreignTenantId, foreignOwnerId);
         Assert.True(foreignOwner.Record("Ada Lovelace", null,
             ActorReference.ForMember(Uuid.CreateVersion4(), "Manager"), Now).IsSuccess);
-        await PersonSeeds.AppendAsync(scenario._scope.ServiceProvider, foreignOwner);
+        await PersonSeeds.AppendAsync(scenario.Services, foreignOwner);
         var requestId = Uuid.CreateVersion4();
         // Act
         RequestError? error;
@@ -472,6 +472,7 @@ public sealed class ApplicationOwnerTests
 
         public Uuid TenantId { get; }
         public Uuid ExistingApplicationId { get; }
+        public IServiceProvider Services => _scope.ServiceProvider;
         public IAggregateReader Reader => _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         public IAggregateWriter Writer => _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         public IAggregateExecutor Executor => _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();

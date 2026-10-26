@@ -33,12 +33,14 @@ public sealed class Person : Aggregate
     public Result Append(PersonPrepared prepared, OperationProvenance operation, ImmutableContentRef frozen)
     {
         var ready = ReplayCut.Require(this, Acceptance, operation);
-        if (!ready.IsSuccess) return ready;
+        if (!ready.IsSuccess)
+            return ready;
         if (prepared.Version != Version || prepared.Position != CommittedStreamPosition || prepared.PrefixSha256 != ReplayCut.Digest || prepared.MetadataSha256 != ReplayCut.MetadataDigest ||
             prepared.Before != Header || prepared.BeforeContent != CurrentContent || !PersonContent.Verify(prepared, operation))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The exact prepared person values or native prefix changed.", true));
         _emitting = true;
-        try { RaiseEvent(PersonContent.Fact(prepared, operation, frozen)); }
+        try
+        { RaiseEvent(PersonContent.Fact(prepared, operation, frozen)); }
         finally { _emitting = false; }
         return Result.Success;
     }
@@ -56,7 +58,8 @@ public sealed class Person : Aggregate
     }
     protected override void Apply(DomainEvent ev)
     {
-        if (!ev.Metadata.IsAudit) ReplayCut.Observe(ev, _emitting);
+        if (!ev.Metadata.IsAudit)
+            ReplayCut.Observe(ev, _emitting);
         base.Apply(ev);
     }
 }

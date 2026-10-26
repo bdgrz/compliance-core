@@ -68,8 +68,10 @@ public sealed class PersonNativeHistoryTests
         // Assert
         Assert.True(retry.IsSuccess, retry.Error?.Message);
         Assert.Equal(first.Value, retry.Value);
-        if (unavailable) Assert.IsType<ImmutableContentUnavailableException>(failure);
-        else Assert.IsType<ImmutableContentIntegrityException>(failure);
+        if (unavailable)
+            Assert.IsType<ImmutableContentUnavailableException>(failure);
+        else
+            Assert.IsType<ImmutableContentIntegrityException>(failure);
         Assert.Equal(2, (await FactsAsync(fixture.Provider, owner.Stream)).Count);
     }
 
@@ -81,7 +83,7 @@ public sealed class PersonNativeHistoryTests
     [InlineData("execution")]
     [InlineData("actor")]
     [InlineData("truncate")]
-    public async Task ShouldRefuseDifferentUnselectedIntermediateSavedPersonPrefix(string fault)
+    public async Task ShouldRefuseDifferentUnselectedIntermediateSavedPersonPrefixGivenCorruptedHistory(string fault)
     {
         // Arrange
         await using var fixture = await AttestWorkforceManagementWallTests.Fixture.CreateAsync();
@@ -92,7 +94,8 @@ public sealed class PersonNativeHistoryTests
         await using var scope = fixture.Provider.CreateAsyncScope();
         var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new Person(fixture.TenantId, request.PersonId));
         var facts = (await FactsAsync(fixture.Provider, owner.Stream)).ToArray();
-        if (fault == "truncate") facts = facts[..^1];
+        if (fault == "truncate")
+            facts = facts[..^1];
         else
         {
             var original = Assert.IsType<PersonDetailsRevised>(facts[1]);
@@ -113,8 +116,10 @@ public sealed class PersonNativeHistoryTests
         var failure = await Record.ExceptionAsync(async () => _ = await PersonHistory.ReadAsync(owner, new Records(owner.Stream, facts)));
 
         // Assert
-        if (fault == "truncate") Assert.IsType<ImmutableContentUnavailableException>(failure);
-        else Assert.IsType<ImmutableContentIntegrityException>(failure);
+        if (fault == "truncate")
+            Assert.IsType<ImmutableContentUnavailableException>(failure);
+        else
+            Assert.IsType<ImmutableContentIntegrityException>(failure);
         Assert.Equal(3, owner.Revision);
     }
 
@@ -269,7 +274,8 @@ public sealed class PersonNativeHistoryTests
     {
         await using var scope = services.CreateAsyncScope();
         var facts = new List<DomainEvent>();
-        await foreach (var record in scope.ServiceProvider.GetRequiredService<IDomainEventReader>().ReadAsync(stream, 0)) facts.Add(record.Event);
+        await foreach (var record in scope.ServiceProvider.GetRequiredService<IDomainEventReader>().ReadAsync(stream, 0))
+            facts.Add(record.Event);
         return facts;
     }
     sealed class Records(EventStreamAddress stream, DomainEvent[] facts) : IDomainEventReader
@@ -279,7 +285,8 @@ public sealed class PersonNativeHistoryTests
         async IAsyncEnumerable<DomainEventRecord> Enumerate(EventStreamAddress address, ulong fromOffset, [EnumeratorCancellation] CancellationToken ct)
         {
             await Task.CompletedTask.ConfigureAwait(false);
-            if (address != stream) yield break;
+            if (address != stream)
+                yield break;
             for (var index = fromOffset; index < (ulong)facts.Length; index++)
             {
                 ct.ThrowIfCancellationRequested();

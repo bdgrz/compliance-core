@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "actualProtocol": {
+      "admission": [
+        "Load exact engagement owner, hydrate client service owner, reconstruct exact service history through NativeOwnerHistory at hydrated physical/native cut, validate every saved immutable service body against exact original request/actor/result and complete replay digest. Write complete services selection to immutable content. Freeze SourceUseRequirement with that content, current epoch and exact latest service NativeFactReference/EventId. Recheck epoch before acceptance admission append.",
+        "Process stores original typed admission source reference and immutable intent, then serially acquires every source use in canonical stream-key order before authorization/commit."
+      ],
+      "receiver": [
+        "Receiver resolves original request against engagement owner operation and verifies actual admission EventId/stream/version and exact immutable intent.",
+        "Receiver loads exact frozen SourceUseRequirement. Requires source owner=client service owner, purpose=EngagementAcceptance, generation exact; expected content event ID and resource revision must equal frozen selection.",
+        "ClientServiceIndependence owner at append requires use reservation guard and ReplayCut, then emits authorized at current owner epoch. Handler checks owner.Epoch equals frozen revision and owner.LatestService.Metadata.EventId equals frozen latest source event ID.",
+        "While use is active service writes are rejected; release requires exact actual engagement terminal fact. Abort fences even a not-yet-held key."
+      ]
+    }
+  },
+  "questions": {
+    "judgment": {
+      "type": "choice",
+      "instructions": "Does this source-use acquire logically preserve the exact complete service history selected at admission and prevent a service change race before irreversible engagement authorization?",
+      "criteria": {
+        "sound": "Admission freezes a verified complete service prefix and current epoch/latest source event; receiver revalidates exact source operation and requirement, checks current epoch/latest event at append and atomically holds it before later process commit. A service append before acquire rejects.",
+        "missing_gate": "A source change can race through, or incomplete history is not bound.",
+        "unclear": "The evidence does not decide."
+      }
+    },
+    "specific": {
+      "type": "choice",
+      "instructions": "If a new nonattest service append wins after engagement admission but before the acquire receiver append, what does the protocol do?",
+      "criteria": {
+        "reject": "Exact epoch/latest-event check fails, so no hold is emitted and process abort fences before authorization.",
+        "grant": "It holds stale service history and proceeds.",
+        "unclear": "Unclear."
+      }
+    },
+    "proof": {
+      "type": "noul",
+      "instructions": "Does the required proof tuple include actual operation admission, exact frozen complete-history content selection, source EventId, resource epoch, process authorization order and abort fencing?",
+      "criteria": {
+        "true": "Every listed fact is explicitly committed and independently verified.",
+        "false": "A listed binding is absent."
+      }
+    }
+  }
+}

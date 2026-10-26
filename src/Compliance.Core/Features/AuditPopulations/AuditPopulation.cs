@@ -64,7 +64,8 @@ public sealed class AuditPopulation : Aggregate
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The population decision requires its exact selected native operation and original Unit result."));
         _emitting = true;
-        try { RaiseEvent(fact); }
+        try
+        { RaiseEvent(fact); }
         finally { _emitting = false; }
         return Result.Success;
     }
@@ -100,9 +101,9 @@ public sealed class AuditPopulation : Aggregate
             throw new ImmutableContentIntegrityException("The bounded population authority has another identity, chronology or revision.");
         Header = header;
     }
-    protected override void Apply(DomainEvent fact)
+    protected override void Apply(DomainEvent ev)
     {
-        base.Apply(fact);
-        ReplayCut.Observe(fact, _emitting);
+        base.Apply(ev);
+        ReplayCut.Observe(ev, _emitting);
     }
 }

@@ -1,0 +1,593 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_adversarial",
+    "owners": [
+      {
+        "owner": "ProviderAssuranceReview",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant / reviewId",
+        "selectedIdentity": "tenant / reviewId",
+        "invariant": "One immutable personal same-provider due-diligence review bound to exact report revision, evidence kind, validity window and cadence.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Risk adoption cannot close a gap or occur after closure; each review binds same provider/current report.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "RecordProviderReview",
+            "logicalIdentity": {
+              "field": "ReviewId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ReviewId:Uuid",
+              "TenantId:Uuid",
+              "ProviderId:Uuid",
+              "Content:ProviderReviewContent"
+            ]
+          },
+          {
+            "command": "AbortProviderReview",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ProviderReviewCanceled",
+            "discriminator": "bdgrz.provider-assurance-review.provider-review-canceled",
+            "version": 1
+          },
+          {
+            "event": "ProviderReviewRecorded",
+            "discriminator": "bdgrz.provider.review.recorded",
+            "version": 1
+          },
+          {
+            "event": "ProviderReviewRequested",
+            "discriminator": "bdgrz.provider-assurance-review.provider-review-requested",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ProviderReviewProviderAssuranceReportAuthorizationReactor",
+            "sourceOwner": "ProviderAssuranceReview",
+            "targetOwner": "ProviderAssuranceReport",
+            "command": "AuthorizeProviderAssuranceReportProviderReviewUse"
+          },
+          {
+            "reactor": "ProviderReviewProviderAssuranceReportSettlementReactor",
+            "sourceOwner": "ProviderAssuranceReview",
+            "targetOwner": "ProviderAssuranceReport",
+            "command": "SettleProviderAssuranceReportProviderReviewUse"
+          },
+          {
+            "reactor": "ProviderReviewCompletionReactor",
+            "sourceOwner": "ProviderAssuranceReview",
+            "targetOwner": "ProviderAssuranceReview",
+            "command": "CompleteProviderAssuranceReview"
+          }
+        ]
+      },
+      {
+        "owner": "ProviderNameClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "declaredIdentity": "(tenantId, normalizedGovernedName)",
+        "selectedIdentity": "(tenantId, normalizedGovernedName)",
+        "invariant": "Authoritative unique active name reservation.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "ProviderNameClaimed",
+            "discriminator": "bdgrz.provider-name-claim.provider-name-claimed",
+            "version": 1
+          },
+          {
+            "event": "ProviderNameReleased",
+            "discriminator": "bdgrz.provider-name-claim.provider-name-released",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ProviderNameClaimReactor",
+            "sourceOwner": "Provider",
+            "targetOwner": "ProviderNameClaim",
+            "command": "ClaimProviderName"
+          },
+          {
+            "reactor": "ProviderChangeApplicationReactor",
+            "sourceOwner": "ProviderNameClaim",
+            "targetOwner": "Provider",
+            "command": "ApplyProviderChange"
+          },
+          {
+            "reactor": "ProviderOldNameReleaseReactor",
+            "sourceOwner": "Provider",
+            "targetOwner": "ProviderNameClaim",
+            "command": "ReleaseProviderName"
+          }
+        ]
+      },
+      {
+        "owner": "ProviderRiskAcceptance",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant / linkId (equal to the admitting CommandId)",
+        "selectedIdentity": "tenant / linkId (equal to the admitting CommandId)",
+        "invariant": "One immutable accepted-risk linkage admitted on an open provider gap; source gap serializes duplicate tuple and closure. Never owns gap closure.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Risk adoption cannot close a gap or occur after closure; each review binds same provider/current report.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "ProviderCoverageGapRiskAcceptanceLinked",
+            "discriminator": "bdgrz.provider.coverage_gap.risk_acceptance_linked",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ProviderRiskAcceptanceLinkReactor",
+            "sourceOwner": "ProviderAssuranceGap",
+            "targetOwner": "ProviderRiskAcceptance",
+            "command": "MaterializeProviderRiskAcceptanceLink"
+          }
+        ]
+      },
+      {
+        "owner": "ReadinessAssessment",
+        "classification": "business_aggregate",
+        "declaredIdentity": "assessmentId",
+        "selectedIdentity": "assessmentId",
+        "invariant": "One immutable assessment source/rule revision and findings.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "No projected latest assessment or gap list can authorize entry; all exceptions/required plans acknowledged.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "ReadinessAssessmentRecorded",
+            "discriminator": "bdgrz.readiness.assessment.recorded",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ReadinessAssessmentAdoptionReactor",
+            "sourceOwner": "ReadinessAssessment",
+            "targetOwner": "ProgramReadiness",
+            "command": "AdoptReadinessAssessment"
+          },
+          {
+            "reactor": "ReadinessAssessmentComputationReactor",
+            "sourceOwner": "ProgramReadiness",
+            "targetOwner": "ReadinessAssessment",
+            "command": "ComputeReadinessAssessment"
+          }
+        ]
+      },
+      {
+        "owner": "ReadinessGapPlan",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant / (programId, gapId)",
+        "selectedIdentity": "tenant / (programId, gapId)",
+        "invariant": "One stable gap action/owner/date plan and independent annotations; admission/seal generation fences changes during a readiness decision.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "No projected latest assessment or gap list can authorize entry; all exceptions/required plans acknowledged.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AnnotateReadinessGap",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "AssessmentId:Uuid",
+              "GapId:Uuid",
+              "ExpectedRevision:long",
+              "Body:string"
+            ]
+          },
+          {
+            "command": "PlanReadinessGap",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "GapId:Uuid",
+              "ExpectedRevision:long",
+              "OwnerMemberId:Uuid",
+              "TargetDate:DateOnly",
+              "Action:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ReadinessGapAnnotated",
+            "discriminator": "bdgrz.readiness.gap.annotated",
+            "version": 1
+          },
+          {
+            "event": "ReadinessGapPlanReadinessDecisionUseAuthorized",
+            "discriminator": "bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "ReadinessGapPlanReadinessDecisionUseSettled",
+            "discriminator": "bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-settled",
+            "version": 1
+          },
+          {
+            "event": "ReadinessGapPlanned",
+            "discriminator": "bdgrz.readiness.gap.planned",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ReadinessDecisionReadinessGapPlanAuthorizationReactor",
+            "sourceOwner": "ProgramReadiness",
+            "targetOwner": "ReadinessGapPlan",
+            "command": "AuthorizeReadinessGapPlanReadinessDecisionUse"
+          },
+          {
+            "reactor": "ReadinessDecisionReadinessGapPlanSettlementReactor",
+            "sourceOwner": "ProgramReadiness",
+            "targetOwner": "ReadinessGapPlan",
+            "command": "SettleReadinessGapPlanReadinessDecisionUse"
+          }
+        ]
+      },
+      {
+        "owner": "RiskDraft",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant/risks/riskId derived tenant+program+normalized identifier; createRequestId+initial content exact match; Revise only expected content revision with no request intent receipt.",
+        "selectedIdentity": "Tenant / risks / RiskId; supplied RiskId must equal the unchanged tenant/program/normalized-identifier UUIDv5. Selected mutations use CommandId and exact authored-content revision.",
+        "invariant": "Normalized identifier has one creation identity/content within tenant/program and narrative updates require current revision. No additional risk-governance decision is made by this class.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Retain independent authored risk identity/lifecycle and normalized identifier admission. No source establishes atomic narrative-assessment freshness requiring a merge. If a future domain rule introduces that coupling, reassess the narrow owner; repair current retry behavior now.",
+        "commands": [
+          {
+            "command": "CreateRiskDraft",
+            "logicalIdentity": "RiskId",
+            "fields": [
+              "RiskId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Identifier:string",
+              "Title:string",
+              "Scenario:string",
+              "PotentialEffect:string",
+              "SourceNote:string?"
+            ]
+          },
+          {
+            "command": "ReviseRiskDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ExpectedRevision:long",
+              "Title:string",
+              "Scenario:string",
+              "PotentialEffect:string",
+              "SourceNote:string?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "RiskDraftCreated"
+          },
+          {
+            "event": "RiskDraftRevised"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "RiskEvaluation",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant/risk-evaluations/riskId; assessment/acceptance IDs are stable request identities; shared evaluation Revision. Reused assessment compares only phase/score/method, acceptance only residual+approver, missing full changed intent comparison.",
+        "selectedIdentity": "Tenant / risk-evaluations / RiskId, with immutable ProgramId and exact method/risk version. Selected CommandId binds assessment/acceptance intent and expected evaluation revision.",
+        "invariant": "Assessment phases follow inherent/current method; residual requires treatment and mitigate admission proof; acceptance must name current residual and accept treatment, satisfy score/appetite/authority/expiry, and be independent from assessor/owner unless exactly waived.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Separating current treatment/residual from acceptance without a coordinating owner can accept stale terms. Keep a narrow risk assessment/acceptance decision context; independent historical assessment/acceptance decisions can have their own immutable IDs with current decision owner binding exact proofs.",
+        "commands": [
+          {
+            "command": "AcceptRisk",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ExpectedRevision:long",
+              "ResidualAssessmentId:Uuid",
+              "ApproverAuthority:string",
+              "ExpiresAt:DateTimeOffset",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "ChooseRiskTreatment",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ExpectedRevision:long",
+              "Kind:string",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "RecordRiskAssessment",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ExpectedRevision:long",
+              "MethodVersion:long",
+              "Phase:string",
+              "Likelihood:int",
+              "Impact:int",
+              "Rationale:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "RiskAccepted"
+          },
+          {
+            "event": "RiskAssessmentRecorded"
+          },
+          {
+            "event": "RiskTreatmentChosen"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "RiskGovernance",
+        "classification": "business_aggregate",
+        "declaredIdentity": "riskId",
+        "selectedIdentity": "riskId",
+        "invariant": "One risk’s governance and reassessment obligations.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Assessment belongs to RiskEvaluation; risk governance consumes exact risk/source proofs, no live aggregate authority.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AssignRiskOwner",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ExpectedRevision:long",
+              "PersonId:Uuid",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "RaiseRiskReassessmentTriggers",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "source_event_effect",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "TriggerKind:string",
+              "SourceReference:string",
+              "RaisedAt:DateTimeOffset",
+              "MethodVersionId:Uuid?",
+              "RiskId:Uuid"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "RiskOwnerAssigned",
+            "discriminator": "bdgrz.risk.owner.assigned",
+            "version": 1
+          },
+          {
+            "event": "RiskReassessmentTriggered",
+            "discriminator": "bdgrz.risk.reassessment.triggered",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ProviderAssuranceReview?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ProviderAssuranceReview's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ProviderNameClaim?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ProviderNameClaim's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ProviderRiskAcceptance?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ProviderRiskAcceptance's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ReadinessAssessment?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ReadinessAssessment's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ReadinessGapPlan?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ReadinessGapPlan's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of RiskDraft?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle RiskDraft's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of RiskEvaluation?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle RiskEvaluation's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of RiskGovernance?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle RiskGovernance's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

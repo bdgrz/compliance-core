@@ -1,0 +1,380 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Review these selected domain boundaries against the included source records. Do not treat a catalog label as evidence by itself; do not invent policy.",
+    "pass": "adversarial_source_review",
+    "owners": [
+      {
+        "owner": "PartnerIndependenceDecision",
+        "classification": "immutable_business_artifact_or_decision",
+        "businessAggregate": true,
+        "identity": "tenant / evaluationId",
+        "invariant": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.",
+        "boundary": "selected_split",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/2/targetOwners/4",
+            "evidence": "{\"proposedAggregate\":\"PartnerIndependenceDecision\",\"existingDomainEvents\":[\"PartnerIndependenceEvaluationRecorded\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"identity\":\"tenant / evaluationId\",\"owns\":\"One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.\",\"commands\":[]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "PartnerIndependenceEvaluationRecorded",
+            "discriminator": "bdgrz.service-engagement.partner-evaluation.recorded",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "PartnerIndependenceDecisionMaterializationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "PartnerIndependenceDecision",
+            "command": "MaterializePartnerIndependenceDecision",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/109",
+              "line": 9406,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "PolicyCampaignParticipant",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "(campaignId, personId)",
+        "invariant": "Independent acknowledgement, completion, exception and delivery status.",
+        "boundary": "selected_split",
+        "mustPreserve": "Every result binds the accepted campaign version/hash and included participant; after close, no result accepted.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/17/targetOwners/1",
+            "evidence": "{\"proposedAggregate\":\"PolicyCampaignParticipant\",\"identity\":\"(campaignId, personId)\",\"owns\":\"Independent acknowledgement, completion, exception and delivery status.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"CampaignWaiverApproved\",\"PolicyAcknowledgementRecorded\",\"TrainingCompletionRecorded\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "CampaignWaiverApproved",
+            "discriminator": "bdgrz.policy_campaign.waiver.approved",
+            "version": 1
+          },
+          {
+            "event": "PolicyAcknowledgementRecorded",
+            "discriminator": "bdgrz.policy.acknowledgement.recorded",
+            "version": 1
+          },
+          {
+            "event": "PolicyCampaignParticipantCampaignClosureUseAuthorized",
+            "discriminator": "bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "PolicyCampaignParticipantCampaignClosureUseSettled",
+            "discriminator": "bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-settled",
+            "version": 1
+          },
+          {
+            "event": "TrainingCompletionRecorded",
+            "discriminator": "bdgrz.training_completion.recorded",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "CampaignClosurePolicyCampaignParticipantAuthorizationReactor",
+            "sourceOwner": "PolicyDistributionCampaign",
+            "targetOwner": "PolicyCampaignParticipant",
+            "command": "AuthorizePolicyCampaignParticipantCampaignClosureUse",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/67",
+              "line": 5764,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "CampaignClosurePolicyCampaignParticipantSettlementReactor",
+            "sourceOwner": "PolicyDistributionCampaign",
+            "targetOwner": "PolicyCampaignParticipant",
+            "command": "SettlePolicyCampaignParticipantCampaignClosureUse",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/68",
+              "line": 5851,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "PolicyParticipantResultReactor",
+            "sourceOwner": "PolicyDistributionCampaign",
+            "targetOwner": "PolicyCampaignParticipant",
+            "command": "ApplyPolicyParticipantResult",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/76",
+              "line": 6538,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "ProgramRollover",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "Tenant / program-rollovers / RolloverId, with exact source program/version and successor proof. RolloverId identifies creation; selected mutations use CommandId.",
+        "invariant": "One exact carry-forward proposal version requires independent approval and an atomic execution claim before successor writes; the claim pins that version against revision, and exact successor completion is recorded only in recoverable private process state.",
+        "boundary": "process",
+        "rationale": "ProgramRollover owns proposal, independent approval, and one atomic version-pinning execution claim/fence because the claim closes the revise-versus-execute race. Recoverable private ProgramRolloverExecutionProcess owns progress and verified successor receipts. A person authors the complete successor TypeIIPlan under its independent owner lifecycle. Prior proposal history and successor acknowledgements are not business aggregate state.",
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+            "jsonPointer": "/aggregates/62",
+            "evidence": "{\"aggregate\":\"ProgramRollover\",\"source\":\"src/Compliance.Core/Features/Programs/ProgramRollover.cs\",\"feature\":null,\"identity\":\"Tenant / program-rollovers / rolloverId; proposal content compare; approval per version no-op; revision command checks before comparison; exact successor receipt compares timestamp. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.\",\"invariant\":\"One exact carry-forward proposal version needs independent approved decision before recording exact successor period/plan identities; completed source provenance remains immutable.\",\"boundaryDecision\":\"process\",\"boundaryRationale\":\"Proposal/current approval and execution claim must coordinate to prevent approved version changing while successor is created. Prior proposal history is unnecessary state; successor creation acknowledgement belongs to recoverable process storage.\",\"observations\":[{\"id\":\"ASSURE-15\",\"priority\":\"P2\",\"state\":\"pending\",\"title\":\"Domain decisions carry bounded technical execution and successor receipts\"},{\"id\":\"ASSURE-17\",\"priority\":\"P2\",\"state\":\"pending\",\"title\":\"Approval workflows retain complete immutable version histories and impose version caps\"},{\"id\":\"ASSURE-11\",\"priority\":\"P2\",\"state\":\"pending\",\"title\":\"Several mutations reject an already accepted exact retry before recognizing its command\"},{\"id\":\"CORE-01\",\"priority\":\"P1\",\"state\":\"complete\",\"title\":\"Fourteen aggregate payload guards measure base DomainEvent as empty JSON\"}],\"commands\":[{\"request\":\"ApproveProgramRollover\",\"classification\":\"command\",\"contract\":\"src/Compliance.Common/Features/Programs/ApproveProgramRollover.cs\",\"interfaces\":\"IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable\",\"authorizationScopes\":[\"IProgramScopedRequest\",\"IClientManagementMutationRequest\"],\"identityFields\":[\"TenantId\",\"ProgramId\",\"RolloverId\",\"Version\",\"Decision\",\"Rationale\"],\"handlers\":[{\"name\":\"ApproveProgramRolloverHandler\",\"source\":\"src/Compliance.Core/Features/Programs/ApproveProgramRolloverHandler.cs\",\"registered\":true}],\"registered\":true,\"authorizerSources\":[\"src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs\",\"src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs\"],\"operatesOn\":[\"ProgramRollover\"],\"helperServices\":[],\"guardsRequired\":[\"Authorize before resolving exact retries; use the request authorization scope IProgramScopedRequest, IClientManagementMutationRequest.\",\"Validate tenant/program and typed owner identity against the target stream before loading or mutating it.\",\"For an accepted operation identity, compare owner, lifecycle episode, original actor, canonical authored intent and original expected revision; exact retry returns the original result without appending.\",\"For a new operation, enforce expected revision/physical append OCC. If a repeated mutation has no stable typed identity or revision, add it before enabling retries.\",\"Owner-specific cross-boundary "
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "ApproveProgramRollover",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RolloverId:Uuid",
+              "Version:long",
+              "Decision:string",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "name": "ProposeProgramRollover",
+            "identity": "RolloverId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RolloverId:Uuid",
+              "Content:ProgramRolloverContent"
+            ]
+          },
+          {
+            "name": "ClaimProgramRolloverExecution",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RolloverId:Uuid",
+              "ExpectedRevision:long",
+              "ApprovedVersion:long",
+              "ApprovedContentSha256:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ProgramRolloverApproved"
+          },
+          {
+            "event": "ProgramRolloverDecisionRecorded"
+          },
+          {
+            "event": "ProgramRolloverProposed"
+          },
+          {
+            "event": "ProgramRolloverRevised"
+          },
+          {
+            "event": "ProgramRolloverExecutionClaimed"
+          }
+        ],
+        "relatedFlows": []
+      },
+      {
+        "owner": "ProviderAssuranceReview",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "tenant / reviewId",
+        "invariant": "One immutable personal same-provider due-diligence review bound to exact report revision, evidence kind, validity window and cadence.",
+        "boundary": "selected_split",
+        "mustPreserve": "Risk adoption cannot close a gap or occur after closure; each review binds same provider/current report.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/19/targetOwners/1",
+            "evidence": "{\"proposedAggregate\":\"ProviderAssuranceReview\",\"identity\":\"tenant / reviewId\",\"owns\":\"One immutable personal same-provider due-diligence review bound to exact report revision, evidence kind, validity window and cadence.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"ProviderReviewRecorded\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"RecordProviderReview\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "RecordProviderReview",
+            "identity": {
+              "field": "ReviewId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ReviewId:Uuid",
+              "TenantId:Uuid",
+              "ProviderId:Uuid",
+              "Content:ProviderReviewContent"
+            ]
+          },
+          {
+            "name": "AbortProviderReview",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ProviderReviewCanceled",
+            "discriminator": "bdgrz.provider-assurance-review.provider-review-canceled",
+            "version": 1
+          },
+          {
+            "event": "ProviderReviewRecorded",
+            "discriminator": "bdgrz.provider.review.recorded",
+            "version": 1
+          },
+          {
+            "event": "ProviderReviewRequested",
+            "discriminator": "bdgrz.provider-assurance-review.provider-review-requested",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "ProviderReviewProviderAssuranceReportAuthorizationReactor",
+            "sourceOwner": "ProviderAssuranceReview",
+            "targetOwner": "ProviderAssuranceReport",
+            "command": "AuthorizeProviderAssuranceReportProviderReviewUse",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/69",
+              "line": 5940,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "ProviderReviewProviderAssuranceReportSettlementReactor",
+            "sourceOwner": "ProviderAssuranceReview",
+            "targetOwner": "ProviderAssuranceReport",
+            "command": "SettleProviderAssuranceReportProviderReviewUse",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/70",
+              "line": 6027,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "ProviderReviewCompletionReactor",
+            "sourceOwner": "ProviderAssuranceReview",
+            "targetOwner": "ProviderAssuranceReview",
+            "command": "CompleteProviderAssuranceReview",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/77",
+              "line": 6627,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "What conclusion is best supported about the proposed boundary for PartnerIndependenceDecision after examining its source records?",
+      "criteria": {
+        "selected_boundary_supported": "The selected boundary has explicit source support and no concrete alternative better preserves authority, identity, atomicity, lifecycle, or recovery.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Do the source records establish PartnerIndependenceDecision's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "What conclusion is best supported about the proposed boundary for PolicyCampaignParticipant after examining its source records?",
+      "criteria": {
+        "selected_boundary_supported": "The selected boundary has explicit source support and no concrete alternative better preserves authority, identity, atomicity, lifecycle, or recovery.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Do the source records establish PolicyCampaignParticipant's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "What conclusion is best supported about the proposed boundary for ProgramRollover after examining its source records?",
+      "criteria": {
+        "selected_boundary_supported": "The selected boundary has explicit source support and no concrete alternative better preserves authority, identity, atomicity, lifecycle, or recovery.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_2": {
+      "type": "noul",
+      "instructions": "Do the source records establish ProgramRollover's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "What conclusion is best supported about the proposed boundary for ProviderAssuranceReview after examining its source records?",
+      "criteria": {
+        "selected_boundary_supported": "The selected boundary has explicit source support and no concrete alternative better preserves authority, identity, atomicity, lifecycle, or recovery.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_3": {
+      "type": "noul",
+      "instructions": "Do the source records establish ProviderAssuranceReview's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    }
+  }
+}

@@ -1,0 +1,644 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Review these selected domain boundaries against the included source records. Do not treat a catalog label as evidence by itself; do not invent policy.",
+    "pass": "adversarial_source_review",
+    "owners": [
+      {
+        "owner": "FindingAggregate",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "(tenantId, programId, findingId)",
+        "invariant": "Finding description, status and closure admission generation.",
+        "boundary": "selected_split",
+        "mustPreserve": "Close only with at least one action, all complete, evidence/rationale present and independent closer unless exact waiver. Closed finding is immutable until reopen.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/22/targetOwners/0",
+            "evidence": "{\"proposedAggregate\":\"FindingAggregate\",\"identity\":\"(tenantId, programId, findingId)\",\"owns\":\"Finding description, status and closure admission generation.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"FindingAcceptanceLinkedV2\",\"FindingClosedV2\",\"FindingRaisedV2\",\"FindingReopenedV2\",\"FindingRevisedV2\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"AddCorrectiveAction\",\"CloseFinding\",\"LinkFindingAcceptance\",\"RaiseFinding\",\"RaiseOccurrenceFinding\",\"ReopenFinding\",\"ReviseFinding\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "AddCorrectiveAction",
+            "identity": {
+              "field": "ActionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ActionId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedFindingRevision:long",
+              "Description:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly"
+            ]
+          },
+          {
+            "name": "CloseFinding",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "VerificationRationale:string",
+              "ResolutionEvidence:IReadOnlyList<EvidenceReference>",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "name": "LinkFindingAcceptance",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "Kind:string",
+              "RecordId:Uuid",
+              "DecisionId:Uuid?"
+            ]
+          },
+          {
+            "name": "RaiseFinding",
+            "identity": {
+              "field": "FindingId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "FindingId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Source:FindingSource",
+              "Title:string",
+              "Description:string",
+              "Severity:string",
+              "AffectedScope:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly",
+              "Links:IReadOnlyList<FindingLink>?"
+            ]
+          },
+          {
+            "name": "RaiseOccurrenceFinding",
+            "identity": {
+              "field": "FindingId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "source_event_effect",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ControlId:Uuid",
+              "OccurrenceId:Uuid",
+              "SourceVersion:string",
+              "SourceKind:string",
+              "SourceText:string"
+            ]
+          },
+          {
+            "name": "ReopenFinding",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "name": "ReviseFinding",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "Severity:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly",
+              "AffectedScope:string",
+              "RootCause:string?",
+              "Reason:string"
+            ]
+          },
+          {
+            "name": "RaiseEvaluationDeviationFinding",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ControlId:Uuid",
+              "EvaluationId:Uuid",
+              "DeviationId:Uuid"
+            ]
+          },
+          {
+            "name": "AbortFindingClosure",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "CorrectiveActionAdmitted",
+            "discriminator": "bdgrz.finding-aggregate.corrective-action-admitted",
+            "version": 1
+          },
+          {
+            "event": "FindingAcceptanceLinkedV2",
+            "discriminator": "bdgrz.finding.acceptance.linked",
+            "version": 1
+          },
+          {
+            "event": "FindingClosedV2",
+            "discriminator": "bdgrz.finding.closed",
+            "version": 1
+          },
+          {
+            "event": "FindingClosureAccepted",
+            "discriminator": "bdgrz.finding-aggregate.finding-closure-accepted",
+            "version": 1
+          },
+          {
+            "event": "FindingClosureCanceled",
+            "discriminator": "bdgrz.finding-aggregate.finding-closure-canceled",
+            "version": 1
+          },
+          {
+            "event": "FindingRaisedV2",
+            "discriminator": "bdgrz.finding.raised",
+            "version": 1
+          },
+          {
+            "event": "FindingReopenedV2",
+            "discriminator": "bdgrz.finding.reopened",
+            "version": 1
+          },
+          {
+            "event": "FindingRevisedV2",
+            "discriminator": "bdgrz.finding.revised",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "CorrectiveActionMaterializationReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "MaterializeCorrectiveAction",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/36",
+              "line": 3049,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "FindingClosureReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "FindingAggregate",
+            "command": "CompleteFindingClosure",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/37",
+              "line": 3131,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "FindingClosureCorrectiveActionAuthorizationReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "AuthorizeCorrectiveActionFindingClosureUse",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/63",
+              "line": 5408,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "FindingClosureCorrectiveActionSettlementReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "SettleCorrectiveActionFindingClosureUse",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/64",
+              "line": 5495,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "FirmStaffIdentityClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "businessAggregate": true,
+        "identity": "platform / canonicalUserId",
+        "invariant": "Permanent canonical user to staffMemberId/practice mapping; disable/status changes never release this mapping.",
+        "boundary": "selected_split",
+        "mustPreserve": "Canonical user maps to exactly one immutable staff/practice identity; status proofs remain versioned and authoritative.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/1/targetOwners/1",
+            "evidence": "{\"proposedAggregate\":\"FirmStaffIdentityClaim\",\"identity\":\"platform / canonicalUserId\",\"owns\":\"Permanent canonical user to staffMemberId/practice mapping; disable/status changes never release this mapping.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[],\"newDomainEvents\":[\"FirmStaffIdentityClaimed\"],\"technicalProcessState\":[],\"commands\":[]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "FirmStaffIdentityClaimed",
+            "discriminator": "bdgrz.firm-staff-identity-claim.firm-staff-identity-claimed",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "FirmStaffIdentityClaimReactor",
+            "sourceOwner": "FirmStaffRecord",
+            "targetOwner": "FirmStaffIdentityClaim",
+            "command": "ClaimFirmStaffIdentity",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/2",
+              "line": 187,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "FirmStaffRegistrationReactor",
+            "sourceOwner": "FirmStaffIdentityClaim",
+            "targetOwner": "FirmStaffRecord",
+            "command": "CompleteFirmStaffRegistration",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/3",
+              "line": 274,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "IdentityRecovery",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "platform / challengeId",
+        "invariant": "Immutable both-proof-verified candidate and preparation; complete protection proofs precede accepted exact swap. Preparation can reject/fence; accepted swap completes forward. Exact account, old/replacement identities and actor/proof provenance retained without bearer tokens.",
+        "boundary": "business",
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/target-owner-extensions.json",
+            "jsonPointer": "/owners/0",
+            "evidence": "{\"owner\":\"IdentityRecovery\",\"identity\":\"platform / challengeId\",\"kind\":\"business\",\"state\":\"Immutable both-proof-verified candidate and preparation; complete protection proofs precede accepted exact swap. Preparation can reject/fence; accepted swap completes forward. Exact account, old/replacement identities and actor/proof provenance retained without bearer tokens.\",\"sourceCommand\":\"CompleteIdentityRecovery\",\"events\":[\"IdentityRecoveryPrepared\",\"IdentityRecoveryPreparationRejected\",\"IdentityRecoveryAccepted\",\"IdentityRecoveryCompleted\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "RejectIdentityRecoveryPreparation",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "ChallengeId:Uuid",
+              "Generation:long",
+              "ConflictProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "IdentityRecoveryAccepted",
+            "discriminator": "bdgrz.identity-recovery.identity-recovery-accepted",
+            "version": 1
+          },
+          {
+            "event": "IdentityRecoveryCompleted",
+            "discriminator": "bdgrz.identity-recovery.identity-recovery-completed",
+            "version": 1
+          },
+          {
+            "event": "IdentityRecoveryPreparationRejected",
+            "discriminator": "bdgrz.identity-recovery.identity-recovery-preparation-rejected",
+            "version": 1
+          },
+          {
+            "event": "IdentityRecoveryPrepared",
+            "discriminator": "bdgrz.identity-recovery.identity-recovery-prepared",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "IdentityRecoveryContinuationReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "ProtectRecoveryIdentity",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/41",
+              "line": 3479,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "IdentityRecoveryReplacementReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "RegisterRecoveredIdentity",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/42",
+              "line": 3581,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "IdentityRecoveryOldRevocationReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "RevokeRecoveredOldIdentity",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/43",
+              "line": 3673,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "IdentityRecoveryCompletionReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "IdentityRecovery",
+            "command": "CompleteAcceptedIdentityRecovery",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/44",
+              "line": 3765,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "IdentityRecoveryCompletionNoticeReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "IdentityRecoveryNoticeProcess",
+            "command": "SendIdentityRecoveryNotice",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/45",
+              "line": 3857,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "IdentityRecoveryAcceptanceReactor",
+            "sourceOwner": "EmailAddress",
+            "targetOwner": "IdentityRecovery",
+            "command": "MaterializeIdentityRecoveryPreparation",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/56",
+              "line": 4798,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "IdentityRecoveryProtectionReleaseReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "SettleRecoveryIdentityProtection",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/57",
+              "line": 4895,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "IdentityRecoveryEmailCompletionReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "EmailAddress",
+            "command": "CompleteEmailRecoveryChallenge",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/58",
+              "line": 4979,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "ProtectedIdentityRecoveryAcceptanceReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "IdentityRecovery",
+            "command": "AcceptProtectedIdentityRecovery",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/97",
+              "line": 8416,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "OperationalProcessNameClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "businessAggregate": true,
+        "identity": "(tenantId, normalizedName)",
+        "invariant": "Authoritative active normalized-name uniqueness.",
+        "boundary": "selected_split",
+        "mustPreserve": "Process content/version is checked against exact prior revision; inactive names may be reused only when policy permits.",
+        "technicalStateToSeparate": [
+          "name-claim execution retry/cursor metadata"
+        ],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/27/targetOwners/1",
+            "evidence": "{\"proposedAggregate\":\"OperationalProcessNameClaim\",\"identity\":\"(tenantId, normalizedName)\",\"owns\":\"Authoritative active normalized-name uniqueness.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[],\"newDomainEvents\":[\"OperationalProcessNameClaimed\",\"OperationalProcessNameReleased\"],\"technicalProcessState\":[\"name-claim execution retry/cursor metadata\"],\"commands\":[]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "OperationalProcessNameClaimed",
+            "discriminator": "bdgrz.operational-process-name-claim.operational-process-name-claimed",
+            "version": 1
+          },
+          {
+            "event": "OperationalProcessNameReleased",
+            "discriminator": "bdgrz.operational-process-name-claim.operational-process-name-released",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "OperationalProcessNameClaimReactor",
+            "sourceOwner": "OperationalProcess",
+            "targetOwner": "OperationalProcessNameClaim",
+            "command": "ClaimOperationalProcessName",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/28",
+              "line": 2383,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "OperationalProcessChangeApplicationReactor",
+            "sourceOwner": "OperationalProcessNameClaim",
+            "targetOwner": "OperationalProcess",
+            "command": "ApplyOperationalProcessChange",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/29",
+              "line": 2470,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "OperationalProcessOldNameReleaseReactor",
+            "sourceOwner": "OperationalProcess",
+            "targetOwner": "OperationalProcessNameClaim",
+            "command": "ReleaseOperationalProcessName",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/30",
+              "line": 2547,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "What conclusion is best supported about the proposed boundary for FindingAggregate after examining its source records?",
+      "criteria": {
+        "selected_boundary_supported": "The selected boundary has explicit source support and no concrete alternative better preserves authority, identity, atomicity, lifecycle, or recovery.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Do the source records establish FindingAggregate's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "What conclusion is best supported about the proposed boundary for FirmStaffIdentityClaim after examining its source records?",
+      "criteria": {
+        "selected_boundary_supported": "The selected boundary has explicit source support and no concrete alternative better preserves authority, identity, atomicity, lifecycle, or recovery.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Do the source records establish FirmStaffIdentityClaim's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "What conclusion is best supported about the proposed boundary for IdentityRecovery after examining its source records?",
+      "criteria": {
+        "selected_boundary_supported": "The selected boundary has explicit source support and no concrete alternative better preserves authority, identity, atomicity, lifecycle, or recovery.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_2": {
+      "type": "noul",
+      "instructions": "Do the source records establish IdentityRecovery's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "What conclusion is best supported about the proposed boundary for OperationalProcessNameClaim after examining its source records?",
+      "criteria": {
+        "selected_boundary_supported": "The selected boundary has explicit source support and no concrete alternative better preserves authority, identity, atomicity, lifecycle, or recovery.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_3": {
+      "type": "noul",
+      "instructions": "Do the source records establish OperationalProcessNameClaim's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    }
+  }
+}

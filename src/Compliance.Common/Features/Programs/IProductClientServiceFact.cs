@@ -11,6 +11,7 @@ public interface IProductClientServiceFact : INativeOperationFact
     Uuid ProgramId { get; }
     long Revision { get; }
     ImmutableContentRef Content { get; }
+    ImmutableContentRef? OperationResult { get; }
     DateTimeOffset ChangedAt { get; }
     ulong NativeSequence { get; }
 }

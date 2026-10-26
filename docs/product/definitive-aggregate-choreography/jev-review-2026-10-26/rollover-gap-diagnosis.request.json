@@ -1,0 +1,40 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "summary": "Final selected target: atomic ProgramRolloverExecutionClaimed state pins approved version/content hash/approval member-role-time, command ID and claim time; blocks revision/rejection. Durable private process root starts on claim. A person authors full TypeIIPlanContent; process checks source validation and exhaustive mapping of all rollover records/commitments; changes_requested loops through revised version and remapping; reject terminates failed. Independent review then distinct CEO/CISO approval. Exact approved current plan precedes StartTypeIIObservationPeriod. TypeIIPeriodOpeningAccepted stays pending; exact ObservationPeriodStarted native chain including opening intent, plan proofs/hash, range, calendar auth/generation and operation result is terminal. No ProgramNextPeriodCreated emission. Process recovers exact target writes and persists before checkpoint.",
+    "reviewQuestion": "The boundary verdict still split. Identify the single most material remaining missing rule, if any, from the choices; distinguish a true invariant gap from residual low confidence."
+  },
+  "questions": {
+    "gap": {
+      "type": "choice",
+      "instructions": "What is the strongest remaining completeness objection to this selected rollover boundary?",
+      "criteria": {
+        "claim_transition": "Aggregate transition schema does not fully express expected-revision/idempotent claim or valid claimed state.",
+        "plan_correlation": "Process does not prove the complete human-authored plan and mapping belong to this exact rollover/next plan identity.",
+        "plan_revision": "changes_requested/revision loop can silently substitute another plan version or invalid mapping.",
+        "terminal_chain": "ObservationPeriodStarted is not tied through actual accepted opening and calendar operation proof to exact claim.",
+        "failure_recovery": "Failure/rejection leaves execution permanently claimed with no safe product recovery route.",
+        "duplicate_source_rollover": "No cross-rollover uniqueness rule prevents multiple rollover IDs for same closed source period.",
+        "no_concrete_gap": "The explicit state, owner flows and terminal proof cover these invariants; residual uncertainty is not a concrete omitted rule.",
+        "other_business_policy": "A product policy not present in the supplied source is required."
+      }
+    },
+    "correlation": {
+      "type": "noul",
+      "instructions": "Does the process bind the exact plan proposal/revisions/mapping to the claimed rollover ID and frozen NextTypeIIPlanId rather than merely accepting a matching plan event?",
+      "criteria": {
+        "true": "Complete correlation is explicit.",
+        "false": "Cross-root correlation is absent."
+      }
+    },
+    "recovery": {
+      "type": "choice",
+      "instructions": "Does a failed plan/period process need to release or undo the execution claim?",
+      "criteria": {
+        "permanent_fence": "No. The durable process retries transient outages and terminal rejection/failure is not completion; releasing would reopen the approved version race. Any new business attempt is a separate proposal/decision.",
+        "release_required": "Yes. Failure must restore editable approved status on the same aggregate.",
+        "policy_missing": "Unclear."
+      }
+    }
+  }
+}

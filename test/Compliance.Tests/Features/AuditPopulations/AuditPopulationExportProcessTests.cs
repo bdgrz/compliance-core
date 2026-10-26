@@ -10,7 +10,7 @@ public sealed partial class GenerateAuditPopulationExportHandlerTests
     public async Task ShouldKeepOriginalArtifactPresentationGivenAuditPopulationExportProcessNativeBoundary()
     {
         // Arrange: real CSV construction, governed artifact registration and retention, with a declared test inspector.
-        await using var fixture = new Fixture(ArtifactInspectionState.Indeterminate);
+        await using var fixture = new Fixture(ArtifactInspectionState.NotInspected);
         var population = await fixture.SeedPopulationAsync(frozen: true);
         var request = fixture.Request(population, "csv", "original-export-receipt");
         var context = fixture.Context(request);

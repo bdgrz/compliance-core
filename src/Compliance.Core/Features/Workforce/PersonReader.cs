@@ -11,7 +11,8 @@ public sealed class PersonReader(IAggregateReader reader, IDomainEventReader eve
     public async Task<PersonReadSnapshot> ReadAsync(Person owner, CancellationToken ct = default)
     {
         var facts = await PersonHistory.ReadAsync(owner, events, ct).ConfigureAwait(false);
-        if (!owner.IsCreated) return new(owner, null);
+        if (!owner.IsCreated)
+            return new(owner, null);
         var view = facts[^1] is IPersonNativeFact ? await ReadNativeAsync(facts, facts[^1], ct).ConfigureAwait(false) : Legacy(owner, facts);
         if (view is null || PersonContent.Header(view) != owner.Header)
             throw new ImmutableContentIntegrityException("The current person values differ from their exact native header.");
@@ -19,11 +20,13 @@ public sealed class PersonReader(IAggregateReader reader, IDomainEventReader eve
     }
     public async Task<PersonView> ReadFactAsync(DomainEvent fact, CancellationToken ct = default)
     {
-        if (fact is not IPersonNativeFact native) throw new ImmutableContentIntegrityException("The source is not a native person fact.");
+        if (fact is not IPersonNativeFact native)
+            throw new ImmutableContentIntegrityException("The source is not a native person fact.");
         var owner = await reader.HydrateAsync(new Person(native.Header.TenantId, native.Header.PersonId, native.Operation.LogicalId), ct).ConfigureAwait(false);
         var facts = await PersonHistory.ReadAsync(owner, events, ct).ConfigureAwait(false);
         var actual = facts.FirstOrDefault(value => value.Metadata.EventId == fact.Metadata.EventId);
-        if (actual is null) throw new ImmutableContentUnavailableException("The exact producing person fact is not visible.");
+        if (actual is null)
+            throw new ImmutableContentUnavailableException("The exact producing person fact is not visible.");
         if (!actual.Equals(fact) || actual.Metadata != fact.Metadata)
             throw new ImmutableContentIntegrityException("The person producing source differs from actual payload/full metadata.");
         return await ReadNativeAsync(facts, actual, ct).ConfigureAwait(false);
@@ -39,8 +42,10 @@ public sealed class PersonReader(IAggregateReader reader, IDomainEventReader eve
         Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? prior = null;
         foreach (var value in facts.Take(index))
         {
-            if (value is IPersonNativeFact previous) { before = previous.Header; prior = previous.Content; }
-            else before = PersonHistory.NextLegacy(native.Header.TenantId, native.Header.PersonId, before, value);
+            if (value is IPersonNativeFact previous)
+            { before = previous.Header; prior = previous.Content; }
+            else
+                before = PersonHistory.NextLegacy(native.Header.TenantId, native.Header.PersonId, before, value);
         }
         if (mutation.Before != before || mutation.BeforeContent != prior || mutation.After != native.Header || mutation.Content != native.Content ||
             mutation.CommandKind != native.Operation.CommandKind || mutation.Changed != native.Changed || PersonContent.Header(view) != native.Header ||
@@ -51,7 +56,8 @@ public sealed class PersonReader(IAggregateReader reader, IDomainEventReader eve
     static PersonView? Legacy(Person owner, IReadOnlyList<DomainEvent> facts)
     {
         var rules = new PersonRules(owner.TenantId, owner.Id);
-        foreach (var fact in facts) rules.Observe(fact);
+        foreach (var fact in facts)
+            rules.Observe(fact);
         return rules.Current;
     }
 }

@@ -1,0 +1,65 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "candidate": {
+      "aggregate": "ProgramRollover",
+      "command": "ClaimProgramRolloverExecution(CommandId,TenantId,ProgramId,RolloverId,ExpectedRevision,ApprovedVersion,ApprovedContentSha256)",
+      "event": "ProgramRolloverExecutionClaimed",
+      "effect": "atomic status approved -> execution_claimed; exact retry same command+tuple no-op; revisions/rejections/new claims conflict thereafter",
+      "process": "ProgramRolloverExecutionProcess: propose plan -> independently review -> independent exec approve -> StartTypeIIObservationPeriod -> pending at TypeIIPeriodOpeningAccepted -> complete only actual ObservationPeriodStarted exact pinned plan version/range/root; private durable proof refs; reject/failure never inferred success",
+      "oldEvent": "ProgramNextPeriodCreated removed from selected business emissions and terminal acknowledgement stored privately"
+    },
+    "sourceRules": [
+      "ProgramRollover currently allows revise while approved until period_created, so process-only claim races.",
+      "Start period validates current approved plan and emits accepted 202. TypeIIRangeProcess then acquires/applies/settles and ObservationPeriodStarted is target-owned terminal fact.",
+      "TypeIIPlan owner requires proposal, independent reviewer, separate executive approver; each exact plan version."
+    ]
+  },
+  "questions": {
+    "atomicity": {
+      "type": "choice",
+      "instructions": "Is the proposed aggregate execution claim sufficiently narrow and atomic to close the rollover revise-vs-execute race while preserving approval as a business fact?",
+      "criteria": {
+        "adequate": "Atomic expected-revision command pins exact approved version/hash; after claim revisions and second claim fail; transient process failure preserves claim for resume.",
+        "too_much_state": "Aggregate should own process progress and all successor receipts.",
+        "insufficient": "Claim guard or retry semantics are materially ambiguous."
+      }
+    },
+    "terminal": {
+      "type": "choice",
+      "instructions": "Does the selected process terminal rule correctly distinguish target period admission from actual period start?",
+      "criteria": {
+        "correct": "202 acceptance is pending; exact actual ObservationPeriodStarted is required for complete.",
+        "early": "Opening accepted is full completion.",
+        "too_strict": "Plan approval or accepted opening is enough even if start process later fails.",
+        "insufficient": "Source does not support."
+      }
+    },
+    "proof": {
+      "type": "noul",
+      "instructions": "Does the proposed terminal proof pin all values needed to rule out a different period, changed plan version, or unrelated operation?",
+      "criteria": {
+        "true": "Actual saved ObservationPeriodStarted and its exact native chain establish period owner, requested range, plan ID/version/content hash, operation root and calendar authorization.",
+        "false": "A required binding is absent."
+      }
+    },
+    "revision": {
+      "type": "choice",
+      "instructions": "What should happen if the TypeIIPlan is revised after approval but before StartTypeIIObservationPeriod executes?",
+      "criteria": {
+        "pinned_approved_exact": "Start fails until the exact approved version is again current; process must not silently switch version, and rollover pin remains the named approved carry-forward plan/version.",
+        "allow_plan_revision": "The process may adopt the latest plan version if IDs match.",
+        "require_business_decision": "The product rule is unspecified."
+      }
+    },
+    "claim_version": {
+      "type": "choice",
+      "instructions": "Should claim pin only rollover version/content hash or additionally require the accepted approved decision fact and approval identity/time?",
+      "criteria": {
+        "pin_approval_tuple": "Pin exact rollover version/hash plus actual approved decision actor/role/time or its native approval proof reference; verify approval belongs to same version.",
+        "version_only": "Version/hash suffice.",
+        "insufficient": "Unclear."
+      }
+    }
+  }
+}

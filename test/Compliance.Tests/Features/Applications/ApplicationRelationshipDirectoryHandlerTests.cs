@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Applications.Events;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;

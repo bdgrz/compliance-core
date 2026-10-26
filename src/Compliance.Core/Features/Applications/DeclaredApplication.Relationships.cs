@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Events;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
@@ -84,6 +86,9 @@ public sealed partial class DeclaredApplication
             Id == Uuid.Empty || targetApplicationId == Id ||
             relationshipType is not "depends_on" and not "replaces")
             return Invalid("A relationship requires nonempty distinct IDs and a supported type.");
+        if (relationshipId != ApplicationRelationshipIdentity.Id(Id, relationshipType,
+                targetApplicationId))
+            return Invalid("A relationship ID must match its directed source, type and target tuple.");
         if (expectedRelationshipRevision < 0)
             return Invalid("The expected relationship revision cannot be negative.");
         if (TryResolveApplicationRelationshipAdd(relationshipId, targetApplicationId,

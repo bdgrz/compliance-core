@@ -56,7 +56,7 @@ public sealed class ClientServiceNativeBoundaryTests
         var tenant = Uuid.CreateVersion4();
         var selectedService = Uuid.CreateVersion4();
         var actor = ProgramManagementServices.Actor(Uuid.CreateVersion4());
-        var programJson = $$"""{"program_id":"{{Uuid.CreateVersion4()}}","tenant_id":"{{tenant}}","name":"SOC 2","plan":{}}""";
+        var programJson = $$"""{"program_id":"{{Uuid.CreateVersion4()}}","tenant_id":"{{tenant}}","name":"SOC 2","plan":{} }""";
         var programRequest = JsonSerializer.Deserialize(programJson, ComplianceCoreJsonContext.Default.CreateProgram)!;
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var program = await bus.SendAsync(programRequest, actor);

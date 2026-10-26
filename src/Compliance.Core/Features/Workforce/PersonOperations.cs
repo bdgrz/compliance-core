@@ -39,7 +39,8 @@ public sealed class PersonOperations(NativeOperationExecutor operations, PersonR
             {
                 if (request.UserId is { } user)
                 {
-                    if (user == Uuid.Empty) return Result.Failure(new RequestError(RequestErrorKind.Validation, "A correlated platform member ID cannot be empty."));
+                    if (user == Uuid.Empty)
+                        return Result.Failure(new RequestError(RequestErrorKind.Validation, "A correlated platform member ID cannot be empty."));
                     var member = await reader.HydrateAsync(new Member(request.TenantId, user), token).ConfigureAwait(false);
                     if (!member.IsRegistered || member.UserId != user)
                         return Result.Failure(new RequestError(RequestErrorKind.Validation, "The platform member was not found in the tenant."));
@@ -61,7 +62,8 @@ public sealed class PersonOperations(NativeOperationExecutor operations, PersonR
         var actor = WorkforceActor.From(context);
         var stream = new Person(request.TenantId, personId).Stream;
         var operation = RootOperation.Provenance(logical, command, stream, actor, expectedRevision,
-            AuthoredIntentDigest.Compute(request), clock.GetUtcNow()) with { FirstOwner = stream };
+            AuthoredIntentDigest.Compute(request), clock.GetUtcNow()) with
+        { FirstOwner = stream };
         var binding = AcceptedOperationBinding.Of(operation);
         PersonPrepared? prepared = null;
         return await operations.ExecuteAsync(new NativeOperation<Person>(binding,
@@ -74,7 +76,8 @@ public sealed class PersonOperations(NativeOperationExecutor operations, PersonR
                 var snapshot = await people.ReadAsync(owner, token).ConfigureAwait(false);
                 var rules = snapshot.Rules;
                 var changed = await mutate(rules, operation, token).ConfigureAwait(false);
-                if (!changed.IsSuccess) return Result<FirstResponseDescriptor>.Failure(changed.Error!);
+                if (!changed.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(changed.Error!);
                 prepared = await PersonContent.FreezeAsync(content, snapshot, rules, operation, token).ConfigureAwait(false);
                 return Result<FirstResponseDescriptor>.Success(prepared.Response);
             }, (Person owner, ImmutableContentRef frozen) => owner.Append(prepared!, operation, frozen)), context, ct).ConfigureAwait(false);

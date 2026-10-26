@@ -1,0 +1,946 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_adversarial",
+    "owners": [
+      {
+        "owner": "AdvisorFeedbackThread",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(handoffId, feedbackId)",
+        "selectedIdentity": "(handoffId, feedbackId)",
+        "invariant": "Immutable contribution with its correction/response lifecycle.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Feedback records exact selected source version and admitted generation; later selection makes it historical.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "CorrectAdvisorFeedback",
+            "logicalIdentity": {
+              "field": "CorrectionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "HandoffId:Uuid",
+              "FeedbackId:Uuid",
+              "CorrectionId:Uuid",
+              "CorrectedBody:string",
+              "CorrectionReason:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ResolveAdvisorFeedback",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "HandoffId:Uuid",
+              "FeedbackId:Uuid",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "RespondToAdvisorFeedback",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "HandoffId:Uuid",
+              "FeedbackId:Uuid",
+              "Response:string",
+              "ExpectedRevision:long"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AdvisorFeedbackCorrected",
+            "discriminator": "bdgrz.advisor-feedback.corrected",
+            "version": 1
+          },
+          {
+            "event": "AdvisorFeedbackRecorded",
+            "discriminator": "bdgrz.advisor-feedback.recorded",
+            "version": 1
+          },
+          {
+            "event": "AdvisorFeedbackResolved",
+            "discriminator": "bdgrz.advisor-feedback.resolved",
+            "version": 1
+          },
+          {
+            "event": "AdvisorFeedbackResponded",
+            "discriminator": "bdgrz.advisor-feedback.responded",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AdvisorFeedbackMaterializationReactor",
+            "sourceOwner": "AdvisorHandoff",
+            "targetOwner": "AdvisorFeedbackThread",
+            "command": "MaterializeAdvisorFeedback"
+          }
+        ]
+      },
+      {
+        "owner": "AdvisorHandoff",
+        "classification": "business_aggregate",
+        "declaredIdentity": "handoffId",
+        "selectedIdentity": "handoffId",
+        "invariant": "Small selection, readiness, revocation/closure and admission-generation authority.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Feedback records exact selected source version and admitted generation; later selection makes it historical.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "CloseAdvisorHandoff",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "HandoffId:Uuid",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "CreateAdvisorHandoff",
+            "logicalIdentity": {
+              "field": "HandoffId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "HandoffId:Uuid",
+              "RecordVersions:IReadOnlyList<AdvisorRecordVersion>",
+              "Purpose:string",
+              "ExpiresOn:DateOnly",
+              "ComparedToHandoffId:Uuid?"
+            ]
+          },
+          {
+            "command": "MarkAdvisorHandoffReadyForReview",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "HandoffId:Uuid",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "RecordAdvisorFeedback",
+            "logicalIdentity": {
+              "field": "FeedbackId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "HandoffId:Uuid",
+              "FeedbackId:Uuid",
+              "RecordId:Uuid",
+              "RecordVersionId:Uuid",
+              "Kind:string",
+              "Body:string",
+              "ExpectedHandoffRevision:long",
+              "SelectedSource:AdvisorRecordVersion?"
+            ]
+          },
+          {
+            "command": "ReviseAdvisorHandoffSelection",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "HandoffId:Uuid",
+              "ExpectedRevision:long",
+              "RecordVersions:IReadOnlyList<AdvisorRecordVersion>",
+              "ChangeReason:string"
+            ]
+          },
+          {
+            "command": "RevokeAdvisorHandoff",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "HandoffId:Uuid",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AdvisorArtifactDownloadUseAuthorized",
+            "discriminator": "bdgrz.advisor-handoff.advisor-artifact-download-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "AdvisorArtifactDownloadUseSettled",
+            "discriminator": "bdgrz.advisor-handoff.advisor-artifact-download-use-settled",
+            "version": 1
+          },
+          {
+            "event": "AdvisorFeedbackAdmitted",
+            "discriminator": "bdgrz.advisor-handoff.advisor-feedback-admitted",
+            "version": 1
+          },
+          {
+            "event": "AdvisorHandoffClosed",
+            "discriminator": "bdgrz.advisor-handoff.closed",
+            "version": 1
+          },
+          {
+            "event": "AdvisorHandoffCreated",
+            "discriminator": "bdgrz.advisor-handoff.created",
+            "version": 1
+          },
+          {
+            "event": "AdvisorHandoffReadiedForReview",
+            "discriminator": "bdgrz.advisor-handoff.readied-for-review",
+            "version": 1
+          },
+          {
+            "event": "AdvisorHandoffRevoked",
+            "discriminator": "bdgrz.advisor-handoff.revoked",
+            "version": 1
+          },
+          {
+            "event": "AdvisorHandoffSelectionRevised",
+            "discriminator": "bdgrz.advisor-handoff.selection-revised",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AdvisorFeedbackMaterializationReactor",
+            "sourceOwner": "AdvisorHandoff",
+            "targetOwner": "AdvisorFeedbackThread",
+            "command": "MaterializeAdvisorFeedback"
+          },
+          {
+            "reactor": "AdvisorArtifactDownloadUseReactor",
+            "sourceOwner": "EvidenceArtifact",
+            "targetOwner": "AdvisorHandoff",
+            "command": "AuthorizeAdvisorArtifactDownloadUse"
+          },
+          {
+            "reactor": "SettleAdvisorArtifactDownloadUseReactor",
+            "sourceOwner": "ArtifactDownloadGrant",
+            "targetOwner": "AdvisorHandoff",
+            "command": "SettleAdvisorArtifactDownloadUse"
+          }
+        ]
+      },
+      {
+        "owner": "ApplicationImportBatch",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(tenantId, sourceKey, namespace, batchId)",
+        "selectedIdentity": "Tenant + exact validated SourceKey/namespace + BatchId under unchanged ApplicationImportBatch.BatchIdFor and selected SubmissionId/BatchKey bindings. No case folding or source-key normalization is introduced.",
+        "invariant": "Frozen source rows, row outcomes, per-batch execution and terminal disposition.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Freeze complete rows and expected revisions. No partial batch visibility. Target owner replay uses accepted native facts without live coordinator lookup. Staged observation and execution share one ApplicationImportBatch revision; old ImportBatch is a cutover predecessor only.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AcceptApplicationImport",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "BatchId:Uuid",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "CancelApplicationImport",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "BatchId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "CorrelateApplicationImportRow",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "BatchId:Uuid",
+              "RowId:Uuid",
+              "ExpectedRevision:long",
+              "Decision:string",
+              "ApplicationId:Uuid?",
+              "ExpectedApplicationRevision:long?",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "ExecuteApplicationImport",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "source_event_effect",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "BatchId:Uuid"
+            ]
+          },
+          {
+            "command": "FreezeApplicationImportOmissionProposal",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "BatchId:Uuid",
+              "ExpectedRevision:long",
+              "ExpectedSourcePosition:ulong",
+              "ExpectedContentSha256:string",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "StageApplicationImport",
+            "logicalIdentity": "SubmissionId",
+            "fields": [
+              "TenantId:Uuid",
+              "SubmissionId:Uuid",
+              "SourceKey:string",
+              "SourceNamespace:string",
+              "Coverage:string",
+              "Rows:IReadOnlyList<ApplicationImportInputRow>"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ApplicationImportCanceled",
+            "discriminator": "bdgrz.application_import.canceled",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportCancellationAccepted",
+            "discriminator": "bdgrz.application-import-batch.application-import-cancellation-accepted",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportCommitted",
+            "discriminator": "bdgrz.application_import.committed",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportExecutionAuthorized",
+            "discriminator": "bdgrz.application-import-batch.application-import-execution-authorized",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportFailed",
+            "discriminator": "bdgrz.application_import.failed",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportPlanSealed",
+            "discriminator": "bdgrz.application_import.plan_sealed",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportRetirementProposalSealed",
+            "discriminator": "bdgrz.application_import.retirement_proposal_sealed",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportRowCorrelated",
+            "discriminator": "bdgrz.application_import.row_correlated",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportStaged",
+            "discriminator": "bdgrz.application_import.staged",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ImportSourceAdmissionReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "ApplicationImportSource",
+            "command": "ClaimApplicationImportSource"
+          },
+          {
+            "reactor": "ImportTargetReservationReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "DeclaredApplication",
+            "command": "ReserveApplicationImportTarget"
+          },
+          {
+            "reactor": "ImportTargetApplicationReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "DeclaredApplication",
+            "command": "ApplyApplicationImportEffect"
+          },
+          {
+            "reactor": "ImportPublicationReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "ApplicationImportBatch",
+            "command": "CommitApplicationImportBatch"
+          },
+          {
+            "reactor": "ImportCancellationFenceReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "DeclaredApplication",
+            "command": "FenceApplicationImportTarget"
+          },
+          {
+            "reactor": "ImportCancellationCompletionReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "ApplicationImportBatch",
+            "command": "CompleteApplicationImportCancellation"
+          },
+          {
+            "reactor": "ImportSourceReleaseReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "ApplicationImportSource",
+            "command": "ReleaseApplicationImportSource"
+          },
+          {
+            "reactor": "ImportTargetReleaseReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "DeclaredApplication",
+            "command": "ReleaseApplicationImportTarget"
+          }
+        ]
+      },
+      {
+        "owner": "ApplicationImportSource",
+        "classification": "business_governor",
+        "declaredIdentity": "tenant / (normalizedSourceKey, namespace)",
+        "selectedIdentity": "Tenant + EXACT validated SourceKey + EXACT validated namespace under unchanged length-prefixed ApplicationImportSource.IdFor. Validation rejects surrounding whitespace/oversize values; there is no case folding, Unicode normalization or source-key normalization. Existing SourceRecordId ordinal equality and mapping publication identity remain exact.",
+        "invariant": "One exact tenant/source-key/namespace authority serializes batch admission and durable source-record mapping publication. Complete verified published-batch order and frozen SourceClaims define mutable replace/remove mappings; source revision/generation fences stale plans and omissions. There is no independent ApplicationSourceClaim root.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Freeze complete rows and expected revisions. No partial batch visibility. Target owner replay uses accepted native facts without live coordinator lookup. Staged observation and execution share one ApplicationImportBatch revision; old ImportBatch is a cutover predecessor only.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "ApplicationImportSourceAdmissionRecorded",
+            "discriminator": "bdgrz.application-import-source.application-import-source-admission-recorded",
+            "version": 1
+          },
+          {
+            "event": "ApplicationImportSourceSettled",
+            "discriminator": "bdgrz.application-import-source.application-import-source-settled",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ImportSourceAdmissionReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "ApplicationImportSource",
+            "command": "ClaimApplicationImportSource"
+          },
+          {
+            "reactor": "ImportSourceReleaseReactor",
+            "sourceOwner": "ApplicationImportBatch",
+            "targetOwner": "ApplicationImportSource",
+            "command": "ReleaseApplicationImportSource"
+          }
+        ]
+      },
+      {
+        "owner": "ApplicationRelationship",
+        "classification": "business_aggregate",
+        "declaredIdentity": "relationshipId",
+        "selectedIdentity": "Tenant + exact directed source application / relationship kind / target application tuple under its unchanged existing UUIDv5 IdFor. Supplied RelationshipId must equal this tuple identity; it is not an arbitrary caller UUID. Source and target direction is significant; accepted EV-D03/EV-D04 remove any separate tuple claim/release owner.",
+        "invariant": "One exact directed source/kind/target relationship lifecycle with unchanged deterministic UUIDv5 tuple identity; active endpoint/source-visibility and exact source/target revision guards remain. No independent tuple claim/release authority is introduced.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Retirement requires an approved successor for exact app revision; import holds block incompatible local change.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AddApplicationRelationship",
+            "logicalIdentity": {
+              "field": "RelationshipId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "RelationshipId:Uuid",
+              "ExpectedRevision:long",
+              "TargetApplicationId:Uuid",
+              "RelationshipType:string"
+            ]
+          },
+          {
+            "command": "ApproveApplicationSuccessor",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "PredecessorApplicationId:Uuid",
+              "SuccessorApplicationId:Uuid",
+              "ExpectedSourceRevision:long",
+              "ExpectedTargetRevision:long",
+              "ExpectedRevision:long",
+              "ImpactDigest:string"
+            ]
+          },
+          {
+            "command": "RemoveApplicationRelationship",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "RelationshipId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ApplicationRelationshipAdded",
+            "discriminator": "bdgrz.application.relationship.added",
+            "version": 1
+          },
+          {
+            "event": "ApplicationRelationshipApproved",
+            "discriminator": "bdgrz.application.relationship.approved",
+            "version": 1
+          },
+          {
+            "event": "ApplicationRelationshipRemoved",
+            "discriminator": "bdgrz.application.relationship.removed",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ArtifactDisclosure",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / artifact-disclosures / DisclosureId; changed initial intent conflicts; logical expectedRevision on delivery/revoke; approval/delivery compare server timestamps for retries. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / artifact-disclosures / DisclosureId, with exact artifact content, handling-policy revision and recipient/purpose binding. Selected mutations use CommandId.",
+        "invariant": "One disclosure binds immutable artifact content, handling-policy revision, recipient and purpose; delivery requires that approved identity and revocation is final.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Separating approval from delivery without a one-use approval authorization could deliver changed content or a different recipient. These three monotonic states fit together.",
+        "commands": [
+          {
+            "command": "ApproveArtifactDisclosure",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "DisclosureId:Uuid",
+              "ArtifactId:Uuid",
+              "Recipient:string",
+              "Purpose:string",
+              "ArtifactRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "RecordArtifactDisclosureDelivery",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "DisclosureId:Uuid",
+              "ArtifactId:Uuid",
+              "ExpectedRevision:long",
+              "DeliveredAt:DateTimeOffset",
+              "DeliveryReference:string"
+            ]
+          },
+          {
+            "command": "RevokeArtifactDisclosure",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "DisclosureId:Uuid",
+              "ArtifactId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ArtifactDisclosureApproved"
+          },
+          {
+            "event": "ArtifactDisclosureDelivered"
+          },
+          {
+            "event": "ArtifactDisclosureRevoked"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ArtifactDisposition",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / artifact-dispositions / dispositionId; explicit revision; result handler binds execution-event ID and attempt number; approval retry includes ApprovedAt. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / artifact-dispositions / DispositionId, with exact approved content and execution attempt identity. Selected mutations use CommandId.",
+        "invariant": "Only an approved exact source with elapsed retention/no active holds or reliance may start execution; one outstanding attempt; disposed result is terminal and yields tombstone.",
+        "boundaryDecision": "process",
+        "boundaryRationale": "Approval and execution need an explicit durable authorization token and one outstanding executor claim if separated; the lifetime attempt history itself is unnecessary to that rule.",
+        "commands": [
+          {
+            "command": "ApproveArtifactDisposition",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "DispositionId:Uuid",
+              "ArtifactId:Uuid",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ExecuteArtifactDisposition",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "DispositionId:Uuid",
+              "ArtifactId:Uuid"
+            ]
+          },
+          {
+            "command": "RecordArtifactDispositionResult",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "DispositionId:Uuid",
+              "ArtifactId:Uuid",
+              "ExpectedRevision:long",
+              "AttemptNumber:int",
+              "ExecutionRequestEventId:Uuid",
+              "Outcome:string",
+              "FailureCode:string?",
+              "CompletedAt:DateTimeOffset"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ArtifactDispositionApproved"
+          },
+          {
+            "event": "ArtifactDispositionExecutionRequested"
+          },
+          {
+            "event": "ArtifactDispositionResultRecorded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ArtifactDownloadGrant",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant / artifact-qualified derived receiving GrantId; caller root CommandId remains distinct",
+        "selectedIdentity": "UUIDv5 namespace ArtifactId, UTF8 artifact-download-grant:v1:{canonical TenantId}:{canonical CommandId}. Receiving root additionally verifies exact artifact/command/original-actor tuple. No generic operation lookup.",
+        "invariant": "One exact receiving grant owns the authenticated encrypted original artifact ticket/result after EvidenceArtifact first admitted and pinned availability with frozen202. Complete required held source uses and exact issue DecisionAt precede native issued-v2; cancellation fences delayed issuance and terminal proofs settle all uses. Original expiry never renews under the same root identity. Existing artifact-issued v1 decoder remains read-only compatibility.",
+        "boundaryDecision": "business",
+        "commands": [
+          {
+            "command": "CancelProtectedArtifactDownloadGrant",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "GrantId:Uuid",
+              "RootOperationId:Uuid",
+              "Generation:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ArtifactDownloadGrantCanceled",
+            "discriminator": "bdgrz.artifact-download-grant.artifact-download-grant-canceled",
+            "version": 1
+          },
+          {
+            "event": "EvidenceArtifactDownloadIssued",
+            "discriminator": "bdgrz.evidence.evidence-artifact-download-issued",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ProtectedArtifactDownloadGrantReactor",
+            "sourceOwner": "EvidenceArtifact",
+            "targetOwner": "ArtifactDownloadGrant",
+            "command": "IssueProtectedArtifactDownloadGrant"
+          },
+          {
+            "reactor": "SettleAdvisorArtifactDownloadUseReactor",
+            "sourceOwner": "ArtifactDownloadGrant",
+            "targetOwner": "AdvisorHandoff",
+            "command": "SettleAdvisorArtifactDownloadUse"
+          },
+          {
+            "reactor": "SettleArtifactHandlingDownloadUseReactor",
+            "sourceOwner": "ArtifactDownloadGrant",
+            "targetOwner": "EvidenceHandlingPolicy",
+            "command": "SettleArtifactHandlingDownloadUse"
+          },
+          {
+            "reactor": "SettleArtifactDownloadAvailabilityUseReactor",
+            "sourceOwner": "ArtifactDownloadGrant",
+            "targetOwner": "EvidenceArtifact",
+            "command": "SettleArtifactDownloadAvailabilityUse"
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of AdvisorFeedbackThread?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AdvisorFeedbackThread's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of AdvisorHandoff?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AdvisorHandoff's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ApplicationImportBatch?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ApplicationImportBatch's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ApplicationImportSource?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ApplicationImportSource's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ApplicationRelationship?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ApplicationRelationship's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ArtifactDisclosure?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ArtifactDisclosure's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ArtifactDisposition?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ArtifactDisposition's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ArtifactDownloadGrant?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ArtifactDownloadGrant's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

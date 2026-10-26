@@ -74,8 +74,12 @@ public static class AuditPopulationContent
         return request switch
         {
             ReviseAuditPopulationDefinition value when rules.Current?.CurrentDefinition is { } prior => rules.ReviseDefinition(
-                value.ExpectedRevision, prior.Content with { SourceUniverse = value.SourceBoundary, InclusionRules = value.InclusionRules,
-                    ExclusionRules = value.ExclusionRules }, value.ChangeReason, memberId, actor.Display, at),
+                value.ExpectedRevision, prior.Content with
+                {
+                    SourceUniverse = value.SourceBoundary,
+                    InclusionRules = value.InclusionRules,
+                    ExclusionRules = value.ExclusionRules
+                }, value.ChangeReason, memberId, actor.Display, at),
             RecordAuditPopulationFacts value => rules.RecordFacts(value.ExpectedRevision, value.SourceSnapshot, value.Rows, memberId, actor.Display, at),
             ClassifyAuditPopulationRow value => rules.ClassifyRow(rules.Revision, value.RowId, value.Classification, value.Rationale, memberId, actor.Display, at),
             ReconcileAuditPopulation value when rules.Current is { } current => rules.Reconcile(value.ExpectedRevision,

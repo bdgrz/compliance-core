@@ -1,6 +1,6 @@
 # Required choreography
 
-185 selected architecture rows:161 regular reactions/stages,22 abort/fence bindings, artifact admission P000 and scoped read Q000. Physical registration plan:65 existing handlers plus one planned artifact-root starter;28 existing process definitions plus one planned artifact process. No new hosted worker is selected.
+186 selected architecture rows:162 regular reactions/stages,22 abort/fence bindings, artifact admission P000, scoped read Q000, and rollover execution R000. Physical registration plan:65 existing handlers plus two planned process-root starters;28 existing process definitions plus two planned process definitions. No new hosted worker is selected.
 
 The original admission, logical prerequisite, actual root subscription and required stage/terminal proofs are distinct. A verified process output is not a fabricated domain event. Full proof/identity/recovery contracts are in [the graph](choreography.json) and [physical plan](choreography/physical-plan.json).
 
@@ -143,6 +143,8 @@ The original admission, logical prerequisite, actual root subscription and requi
 | S014 | business_receiver | TenantRegistered | `AssignTeamRole` | TeamRole | TeamRoleAssigned | TenantRegistered |
 | S015 | business_receiver | TenantRegistered | `AssignRolePermission` | RolePermission | RolePermissionAssigned | TenantRegistered |
 | S016 | business_receiver | TenantRegistered | `AssignTeamMember` | TeamMember | TeamMemberAssigned | TenantRegistered |
+
+S011–S016 are not independent unordered effects. `TenantRbacBootstrapReactor` executes them serially for one `TenantRegistered` admission: define the administrator role and team; register the owner only when `ownerBecomesAdministrator`; assign the administrator role to the team; commit `TenantAccess`, `TenantRbacManage`, and `ProgramManage`; then, only for that same administrator-owner condition, assign the owner to the administrators team. `TeamMemberAssigned` is the activation trigger, so it must follow all three permission commits. Any earlier failure prevents assignment; assignment failure prevents reactor checkpoint completion. The selected graph and physical plan carry these exact dependencies.
 | S017 | business_receiver | FirmStaffChangeRecorded | `RecordDirectoryIndependenceReevaluation` | ServiceEngagementIndependence | DirectoryIndependenceReevaluated | FirmStaffChangeRecorded |
 | S018 | business_receiver | ServiceEngagementAcceptanceRecorded, ServiceEngagementStaffAssigned | `RecordDirectoryIndependenceReevaluation` | ServiceEngagementIndependence | DirectoryIndependenceReevaluated | ServiceEngagementAcceptanceRecorded, ServiceEngagementStaffAssigned |
 | S019 | business_receiver | SignificantChangeImpactAssessed | `LinkImpactReviewWork` | SignificantChange | ImpactReviewWorkLinked | SignificantChangeImpactAssessed |
@@ -191,3 +193,7 @@ The original admission, logical prerequisite, actual root subscription and requi
 | A021 | process_abort_binding | EvidenceArtifactDownloadRequested | `CancelProtectedArtifactDownloadGrant` | ArtifactDownloadGrant | ArtifactDownloadGrantCanceled | EvidenceArtifactDownloadRequested |
 | P000 | personal_source_admission | current-authorized personal HTTP command, not an event subscription | `IssueArtifactDownload` | EvidenceArtifact | EvidenceArtifactDownloadRequested |  |
 | Q000 | personal_scoped_query | EvidenceArtifactDownloadRequested, EvidenceArtifactDownloadIssued, ArtifactDownloadGrantCanceled | `GetArtifactDownloadGrant` | ArtifactDownloadGrant |  |  |
+
+## Program rollover execution
+
+`ProgramRollover` retains the exact proposal and independent approval, then atomically claims the approved version before any successor mutation. The claim prevents revise/reject races and pins the actual approval tuple. `ProgramRolloverExecutionProcess` waits for a person to author a complete successor `TypeIIPlan` under normal source-validation rules, freezes that proposal and an exhaustive mapping of each rollover record and commitment to a plan destination or justified nonrepresentation, then waits for independent review and executive approval; `changes_requested` returns to human revision and a new complete mapping, while `reject` terminates as failed. It submits the exact `StartTypeIIObservationPeriod` command. Its 202 opening acceptance is pending. The process is complete only after it verifies the actual `ObservationPeriodStarted` chain against the immutable opening intent, exact plan proposal/review/approval facts and content hash, period/range, calendar authorization, operation root and result. Process state stores verified proof references and terminal outcome; the business aggregate does not emit `ProgramNextPeriodCreated`. Rejection/failure never implies the period started.

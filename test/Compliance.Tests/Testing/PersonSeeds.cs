@@ -33,25 +33,33 @@ static class PersonSeeds
             switch (change)
             {
                 case PersonRecorded value:
-                    actor = value.Actor; at = value.ChangedAt; kind = nameof(RecordPerson);
+                    actor = value.Actor;
+                    at = value.ChangedAt;
+                    kind = nameof(RecordPerson);
                     var created = rules.Record(value.DisplayName, value.WorkEmail, value.PersonalContact, actor, at);
                     result = created.IsSuccess ? Result.Success : Result.Failure(created.Error!);
                     break;
                 case PersonRevised value:
-                    actor = value.Actor; at = value.ChangedAt; kind = nameof(RevisePerson);
+                    actor = value.Actor;
+                    at = value.ChangedAt;
+                    kind = nameof(RevisePerson);
                     var revised = rules.Revise(value.Revision - 1, value.DisplayName, value.WorkEmail, value.PersonalContact, actor, at);
                     result = revised is null ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Conflict, revised.Message!));
                     break;
                 case PersonMembershipCorrelated value:
-                    actor = value.Actor; at = value.ChangedAt; kind = nameof(CorrelatePersonMembership);
+                    actor = value.Actor;
+                    at = value.ChangedAt;
+                    kind = nameof(CorrelatePersonMembership);
                     var correlated = rules.CorrelateMembership(value.Revision - 1, value.UserId, actor, at);
                     result = correlated is null ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Conflict, correlated.Message!));
                     break;
-                default: throw new InvalidOperationException("Another pure person fixture mutation.");
+                default:
+                    throw new InvalidOperationException("Another pure person fixture mutation.");
             }
             Assert.True(result.IsSuccess, result.Error?.Message);
             var operation = RootOperation.Provenance(logical, kind, owner.Stream, actor,
-                change is PersonRecorded ? null : owner.Revision, ContentDigest.Sha256(change, change.GetType()), at) with { FirstOwner = owner.Stream };
+                change is PersonRecorded ? null : owner.Revision, ContentDigest.Sha256(change, change.GetType()), at) with
+            { FirstOwner = owner.Stream };
             var prepared = await PersonContent.FreezeAsync(content, snapshot, rules, operation, ct);
             var frozen = await FirstResponses.FreezeAsync(content, owner.Stream.Realm, prepared.Response, ct);
             var appended = owner.Append(prepared, operation, frozen);

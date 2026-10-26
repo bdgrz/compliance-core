@@ -1,0 +1,194 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Re-evaluate selected choreography rows using only their material source/target facts and proof rules. A dispatcher is not proof of target commitment. Do not require child-stage proofs where the selected row has no intermediate stage; judge the row kind and its actual conditions.",
+    "pass": "neutral_flow_precision",
+    "ownerFacts": [
+      {
+        "owner": "ServiceEngagementIndependence",
+        "classification": "business_aggregate",
+        "identity": "tenant / engagementId",
+        "invariant": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs."
+      },
+      {
+        "owner": "ClientServiceIndependence",
+        "classification": "business_governor",
+        "identity": "tenant / client-service-epoch",
+        "invariant": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads.",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs."
+      },
+      {
+        "owner": "AccessReviewCampaign",
+        "classification": "business_governor",
+        "identity": "campaignId",
+        "invariant": "Frozen campaign snapshot, generation, and compact completion gate.",
+        "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion."
+      },
+      {
+        "owner": "AccessReviewItem",
+        "classification": "business_aggregate",
+        "identity": "(campaignId, itemId)",
+        "invariant": "One reviewer decision, reassignment, remediation verification, exception and history for one frozen item.",
+        "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion."
+      },
+      {
+        "owner": "Provider",
+        "classification": "business_aggregate",
+        "identity": "providerId",
+        "invariant": "One provider content, version and retirement lifecycle.",
+        "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant."
+      },
+      {
+        "owner": "ProviderNameClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "identity": "(tenantId, normalizedGovernedName)",
+        "invariant": "Authoritative unique active name reservation.",
+        "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant."
+      }
+    ],
+    "orderedPhysicalPlans": [],
+    "flows": [
+      {
+        "id": "T004",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "ServiceEngagementIndependence",
+        "targetOwner": "ClientServiceIndependence",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested"
+        ],
+        "originalAdmissionKinds": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested"
+        ],
+        "logicalPrerequisiteFacts": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested"
+        ],
+        "receiverCommand": "AcquireEngagementServiceEpoch",
+        "emittedSemanticFacts": [
+          "EngagementServiceEpochAuthorized"
+        ],
+        "processes": [
+          "EngagementAcceptanceProcess"
+        ],
+        "proofGate": "Exact full service manifest and current epoch; acceptance holds source epoch through accepted append.",
+        "requiredTypedStageProofSets": [],
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "effectIdentity": {}
+      },
+      {
+        "id": "T008",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "AccessReviewCampaign",
+        "targetOwner": "AccessReviewItem",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "AccessReviewCampaignLaunched"
+        ],
+        "originalAdmissionKinds": [
+          "AccessReviewCampaignLaunched"
+        ],
+        "logicalPrerequisiteFacts": [
+          "AccessReviewCampaignLaunched"
+        ],
+        "receiverCommand": "MaterializeAccessReviewItem",
+        "emittedSemanticFacts": [
+          "AccessReviewItemOpened"
+        ],
+        "processes": [
+          "AccessReviewLaunchFanOut"
+        ],
+        "proofGate": "Source complete launch manifest includes this exact item and personal responsibility.",
+        "requiredTypedStageProofSets": [],
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "effectIdentity": {}
+      },
+      {
+        "id": "T022",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "Provider",
+        "targetOwner": "ProviderNameClaim",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "ProviderChangeAccepted"
+        ],
+        "originalAdmissionKinds": [
+          "ProviderChangeAccepted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "ProviderChangeAccepted"
+        ],
+        "receiverCommand": "ClaimProviderName",
+        "emittedSemanticFacts": [
+          "ProviderNameClaimed"
+        ],
+        "processes": [
+          "ProviderNameChangeProcess"
+        ],
+        "proofGate": "Use existing normalization/active/kind policy; new and old claims acquired canonically. Permanent unique active binding until exact record change/fence. ",
+        "requiredTypedStageProofSets": [],
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "effectIdentity": {}
+      }
+    ]
+  },
+  "questions": {
+    "flow_0": {
+      "type": "choice",
+      "instructions": "Is selected flow T004 logically coherent across the named source and target owners, given its exact proof gate and terminal rules?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Does selected flow T004 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    },
+    "flow_1": {
+      "type": "choice",
+      "instructions": "Is selected flow T008 logically coherent across the named source and target owners, given its exact proof gate and terminal rules?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Does selected flow T008 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    },
+    "flow_2": {
+      "type": "choice",
+      "instructions": "Is selected flow T022 logically coherent across the named source and target owners, given its exact proof gate and terminal rules?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_2": {
+      "type": "noul",
+      "instructions": "Does selected flow T022 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    }
+  }
+}

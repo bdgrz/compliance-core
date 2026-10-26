@@ -1,0 +1,625 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_fit",
+    "owners": [
+      {
+        "owner": "EngagementManagementAcknowledgement",
+        "classification": "immutable_business_artifact_or_decision",
+        "declaredIdentity": "tenant / acknowledgementId",
+        "selectedIdentity": "tenant / acknowledgementId",
+        "invariant": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "EngagementManagementAcknowledged",
+            "discriminator": "bdgrz.service-engagement.management-acknowledged",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ManagementAcknowledgementMaterializationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "EngagementManagementAcknowledgement",
+            "command": "MaterializeEngagementManagementAcknowledgement"
+          }
+        ]
+      },
+      {
+        "owner": "EvidenceArtifact",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant EvidenceStreams key artifactId; capture registration stable source identity; inspection is single transition; download uses requestId in event but never retains/compares it; OCC uses hydrated stream position. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / existing EvidenceStreams artifact key / ArtifactId, with immutable source identity and verified content binding. ArtifactId identifies registration; selected mutations use CommandId. Download grants use the separately adopted artifact-qualified receiving identity.",
+        "invariant": "Immutable content remains unavailable until clean inspection; malware alone can be released with attributed clean rescan; secret/invalid rejection is final.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Inspection and quarantine release share availability decision. Download authorization needs an admission proof against that decision but every historical download need not extend artifact lifecycle stream.",
+        "commands": [
+          {
+            "command": "CaptureEvidenceArtifact",
+            "logicalIdentity": "ArtifactId",
+            "fields": [
+              "ArtifactId:Uuid",
+              "TenantId:Uuid",
+              "Content:byte[]",
+              "Metadata:EvidenceArtifactContent"
+            ]
+          },
+          {
+            "command": "IssueArtifactDownload",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ArtifactId:Uuid",
+              "Purpose:string",
+              "ExpectedArtifactRevision:long",
+              "ProgramId:Uuid?",
+              "AdvisorHandoffId:Uuid?",
+              "SelectedSource:AdvisorRecordVersion?"
+            ]
+          },
+          {
+            "command": "RecordEvidenceArtifactInspection",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ArtifactId:Uuid",
+              "Outcome:EvidenceInspectionOutcome",
+              "InspectedAt:DateTimeOffset"
+            ]
+          },
+          {
+            "command": "ReleaseEvidenceArtifactQuarantine",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ArtifactId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ArtifactDownloadAvailabilityUseSettled",
+            "discriminator": "bdgrz.evidence-artifact.artifact-download-availability-use-settled",
+            "version": 1
+          },
+          {
+            "event": "EvidenceArtifactDownloadRequested",
+            "discriminator": "bdgrz.evidence-artifact.evidence-artifact-download-requested",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AdvisorArtifactDownloadUseReactor",
+            "sourceOwner": "EvidenceArtifact",
+            "targetOwner": "AdvisorHandoff",
+            "command": "AuthorizeAdvisorArtifactDownloadUse"
+          },
+          {
+            "reactor": "ArtifactHandlingDownloadUseReactor",
+            "sourceOwner": "EvidenceArtifact",
+            "targetOwner": "EvidenceHandlingPolicy",
+            "command": "AuthorizeArtifactHandlingDownloadUse"
+          },
+          {
+            "reactor": "ProtectedArtifactDownloadGrantReactor",
+            "sourceOwner": "EvidenceArtifact",
+            "targetOwner": "ArtifactDownloadGrant",
+            "command": "IssueProtectedArtifactDownloadGrant"
+          },
+          {
+            "reactor": "SettleArtifactDownloadAvailabilityUseReactor",
+            "sourceOwner": "ArtifactDownloadGrant",
+            "targetOwner": "EvidenceArtifact",
+            "command": "SettleArtifactDownloadAvailabilityUse"
+          }
+        ]
+      },
+      {
+        "owner": "EvidenceHandlingPolicy",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 tenant+artifactId; expectedRevision; changed content binding conflicts; exact current assignment comparison wrongly includes generated AssignedAt. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Existing UUIDv5 of TenantId + ArtifactId; selected CommandId is bound to the exact artifact/content and policy assignment scope.",
+        "invariant": "One exact artifact identity has one current reviewed classification, changed only at expected revision with attributed rationale.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Current classification CAS must remain atomic; past classifications/history do not participate in that decision.",
+        "commands": [
+          {
+            "command": "AssignArtifactHandlingPolicy",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ArtifactId:Uuid",
+              "ExpectedRevision:long",
+              "HandlingClass:string",
+              "PolicyVersion:long",
+              "Rationale:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ArtifactHandlingDownloadUseAuthorized",
+            "discriminator": "bdgrz.evidence-handling-policy.artifact-handling-download-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "ArtifactHandlingDownloadUseSettled",
+            "discriminator": "bdgrz.evidence-handling-policy.artifact-handling-download-use-settled",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ArtifactHandlingDownloadUseReactor",
+            "sourceOwner": "EvidenceArtifact",
+            "targetOwner": "EvidenceHandlingPolicy",
+            "command": "AuthorizeArtifactHandlingDownloadUse"
+          },
+          {
+            "reactor": "SettleArtifactHandlingDownloadUseReactor",
+            "sourceOwner": "ArtifactDownloadGrant",
+            "targetOwner": "EvidenceHandlingPolicy",
+            "command": "SettleArtifactHandlingDownloadUse"
+          }
+        ]
+      },
+      {
+        "owner": "EvidenceRedaction",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / evidence-redactions / redactionId; preparation/approval IDs are context.RequestId and compare normalized intent before revision. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / evidence-redactions / RedactionId, with exact source artifact/content/version. Selected preparations, approvals and other mutations use CommandId.",
+        "invariant": "A redaction approval must target current exact original/derived preparation and be independent of its preparer unless exact scoped waiver proof authorizes self-approval.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Preparation and approval need same-version admission gate; historical preparations/approvals can be read-side facts with selected-command retry lookup. Waiver is a separate owner and must enter as a value proof.",
+        "commands": [
+          {
+            "command": "ApproveEvidenceRedaction",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "RedactionId:Uuid",
+              "ExpectedRevision:long",
+              "PreparationId:Uuid",
+              "PreparedRevision:long",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "PrepareEvidenceRedaction",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "RedactionId:Uuid",
+              "ExpectedRevision:long",
+              "OriginalArtifactId:Uuid",
+              "DerivedArtifactId:Uuid",
+              "Provenance:string",
+              "Reason:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "EvidenceRedactionApproved"
+          },
+          {
+            "event": "EvidenceRedactionPrepared"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "EvidenceRequest",
+        "classification": "business_aggregate",
+        "declaredIdentity": "requestId",
+        "selectedIdentity": "requestId",
+        "invariant": "One open-to-fulfilled/cancelled lifecycle.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Exactly one terminal transition; require exact source/delivery proof as appropriate.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "CancelEvidenceRequest",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "EvidenceRequestId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "FulfilEvidenceRequest",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "EvidenceRequestId:Uuid",
+              "ExpectedRevision:long",
+              "ArtifactId:Uuid"
+            ]
+          },
+          {
+            "command": "OpenEvidenceRequest",
+            "logicalIdentity": {
+              "field": "EvidenceRequestId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "EvidenceRequestId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Title:string",
+              "Instructions:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly",
+              "ControlId:Uuid?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "EvidenceRequestActionCompletionUseAuthorized",
+            "discriminator": "bdgrz.evidence-request.evidence-request-action-completion-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "EvidenceRequestActionCompletionUseSettled",
+            "discriminator": "bdgrz.evidence-request.evidence-request-action-completion-use-settled",
+            "version": 1
+          },
+          {
+            "event": "EvidenceRequestCancelled",
+            "discriminator": "bdgrz.evidence.request.cancelled",
+            "version": 1
+          },
+          {
+            "event": "EvidenceRequestFulfilled",
+            "discriminator": "bdgrz.evidence.request.fulfilled",
+            "version": 1
+          },
+          {
+            "event": "EvidenceRequestOpened",
+            "discriminator": "bdgrz.evidence.request.opened",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ActionCompletionEvidenceRequestAuthorizationReactor",
+            "sourceOwner": "RiskTreatmentAction",
+            "targetOwner": "EvidenceRequest",
+            "command": "AuthorizeEvidenceRequestActionCompletionUse"
+          },
+          {
+            "reactor": "ActionCompletionEvidenceRequestSettlementReactor",
+            "sourceOwner": "RiskTreatmentAction",
+            "targetOwner": "EvidenceRequest",
+            "command": "SettleEvidenceRequestActionCompletionUse"
+          }
+        ]
+      },
+      {
+        "owner": "EvidenceSupport",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 tenant + program/artifact/type/target/revision/period; exact retry matches all relationship facts/actor; one creation append. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Existing deterministic UUIDv5 of tenant + program/artifact/type/target/revision/period. Selected CommandId binds the exact immutable relationship and actor; the tuple algorithm is unchanged.",
+        "invariant": "One relationship identity immutably binds exact artifact content/revision, target revision and covered period with attributed sufficiency rationale.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Relationship components must be bound together to distinguish conflicting assertions; source artifact and target lifecycles already remain elsewhere.",
+        "commands": [
+          {
+            "command": "LinkEvidenceSupport",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ArtifactId:Uuid",
+              "SupportedRecordType:string",
+              "SupportedRecordId:Uuid",
+              "SupportedRecordRevision:long",
+              "PeriodStart:DateOnly",
+              "PeriodEnd:DateOnly",
+              "Purpose:string",
+              "SufficiencyRationale:string",
+              "ExpectedRevision:long"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "EvidenceSupportLinked"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ExaminationEngagement",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / examinations / engagementId; baselineId and amendmentId supplied; original freeze and historical amendment retries compared by baselineId; Revise checks expected revision first. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / examinations / ExaminationId, with immutable ProgramId and exact baseline/amendment identities. ExaminationId identifies creation; selected mutations use CommandId and exact source-version bindings.",
+        "invariant": "Freeze locks Type I setup to exact approved boundary and complete source coverage; amendments preserve prior baseline and enumerate changed sources.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Setup/freeze must commit one chosen baseline authorization atomically. Immutable baseline snapshots and history can be separately stored after preparing digest/content; current pointer/lock remains with engagement.",
+        "commands": [
+          {
+            "command": "AmendTypeIBaseline",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "BaselineId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string",
+              "ChangedRecordIds:IReadOnlyList<Uuid>",
+              "ExpectedPreviewSha256:string",
+              "AffectedPackageMaterialIds:IReadOnlyList<Uuid>"
+            ]
+          },
+          {
+            "command": "CreateExaminationEngagement",
+            "logicalIdentity": "ExaminationId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "EngagementType:string",
+              "AuditFirm:string",
+              "PeriodStart:DateOnly",
+              "PeriodEnd:DateOnly?",
+              "TrustServicesCategories:IReadOnlyList<string>",
+              "BoundaryId:Uuid",
+              "ManagementContactMemberIds:IReadOnlyList<Uuid>?"
+            ]
+          },
+          {
+            "command": "FreezeTypeIBaseline",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "BaselineId:Uuid",
+              "ExpectedRevision:long",
+              "ConfirmationRationale:string",
+              "ExpectedPreviewSha256:string"
+            ]
+          },
+          {
+            "command": "ReviseExaminationEngagement",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "ExpectedRevision:long",
+              "AuditFirm:string",
+              "PeriodStart:DateOnly",
+              "PeriodEnd:DateOnly?",
+              "TrustServicesCategories:IReadOnlyList<string>",
+              "ManagementContactMemberIds:IReadOnlyList<Uuid>?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ExaminationEngagementOpened"
+          },
+          {
+            "event": "ExaminationEngagementRevised"
+          },
+          {
+            "event": "TypeIBaselineAmended"
+          },
+          {
+            "event": "TypeIBaselineFrozen"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ExaminationSignOff",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / examination-signoffs / signOffId; first accepted content immutable; same initial content/actor/role/time retry; handler reuses retained SignedOffAt. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / examination-signoffs / SignOffId, with exact examination, package/snapshot, signer and role binding. SignOffId is the selected immutable creation identity.",
+        "invariant": "One final personal management decision binds exact package/assertion/letter/outcome and acknowledges exactly every unresolved material item.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Known exceptions and acknowledgements form one accepted decision capsule; splitting them would permit signing a different set. Referenced source lifecycles stay independent.",
+        "commands": [
+          {
+            "command": "RecordManagementExaminationReview",
+            "logicalIdentity": "SignOffId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "SignOffId:Uuid",
+              "Content:ExaminationSignOffContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ExaminationSignedOff"
+          }
+        ],
+        "choreography": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for EngagementManagementAcknowledgement fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle EngagementManagementAcknowledgement's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for EvidenceArtifact fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle EvidenceArtifact's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for EvidenceHandlingPolicy fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle EvidenceHandlingPolicy's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for EvidenceRedaction fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle EvidenceRedaction's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for EvidenceRequest fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle EvidenceRequest's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for EvidenceSupport fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle EvidenceSupport's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ExaminationEngagement fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ExaminationEngagement's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ExaminationSignOff fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ExaminationSignOff's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

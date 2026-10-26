@@ -1,0 +1,49 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "source_authority": "docs/product/definitive-aggregate-choreography/aggregates.json: ApplicationRelationship; selected owner identity and event list. docs/product/audits/2026-10-23/aggregate-split-targets.json /splitOwners/8/targetOwners/1. The selected catalog is the domain design authority.",
+    "approved_identity": "Tenant plus exact directed source application, relationship kind, and target application tuple under the existing UUIDv5 identity. RelationshipId must equal that derived tuple. Direction is significant. No separate tuple claim/release facts or owner.",
+    "approved_lifecycle": "One relationship lifecycle: added, approval of a replaces successor when required, and removal. Source and target application revisions and active/visible endpoint checks remain enforced by their owners and the relationship command path.",
+    "event_meanings": {
+      "ApplicationRelationshipAdded": "A directed relationship between source and target applications was added.",
+      "ApplicationRelationshipApproved": "A proposed successor relationship was approved against exact source and target application revisions and impact digest.",
+      "ApplicationRelationshipRemoved": "A directed relationship was removed."
+    },
+    "current_contracts": "Selected event catalog lists bdgrz.application.relationship.added v1, bdgrz.application.relationship.approved v1, bdgrz.application.relationship.removed v1. Existing code also contains legacy Recorded and GovernedRemoved types; do not infer these are selected target facts.",
+    "requested_judgment_scope": "Judge only whether each selected event name clearly names its stated completed fact and is distinguishable from the other lifecycle facts. Do not decide ownership, authorization, policy, or implementation."
+  },
+  "questions": {
+    "added_name": {
+      "type": "noul",
+      "instructions": "Does ApplicationRelationshipAdded clearly and precisely name the completed fact stated for that event?",
+      "criteria": {
+        "true": "The name directly denotes the addition of a directed relationship.",
+        "false": "The name is materially vague, misleading, or suggests another lifecycle fact."
+      }
+    },
+    "approved_name": {
+      "type": "noul",
+      "instructions": "Does ApplicationRelationshipApproved clearly and precisely name the completed fact stated for that event?",
+      "criteria": {
+        "true": "The name directly denotes approval of the successor relationship.",
+        "false": "The name obscures whether the fact is proposal, approval, activation, or another decision."
+      }
+    },
+    "removed_name": {
+      "type": "noul",
+      "instructions": "Does ApplicationRelationshipRemoved clearly and precisely name the completed fact stated for that event?",
+      "criteria": {
+        "true": "The name directly denotes removal of a directed relationship.",
+        "false": "The name is materially vague, misleading, or suggests approval or another lifecycle fact."
+      }
+    },
+    "names_distinct": {
+      "type": "noul",
+      "instructions": "Are the three selected event names distinguishable as addition, approval, and removal facts in the stated lifecycle?",
+      "criteria": {
+        "true": "Each name points to a distinct lifecycle fact without implying another listed fact.",
+        "false": "At least two names are likely to be confused or encode overlapping meanings."
+      }
+    }
+  }
+}

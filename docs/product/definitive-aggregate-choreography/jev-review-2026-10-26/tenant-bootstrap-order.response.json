@@ -1,0 +1,31 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "flow": {
+        "type": "choice",
+        "choice": "runtime_sound_target_under_specified",
+        "confidence": 0.76,
+        "probabilities": {
+          "runtime_and_target_sound": 0.14,
+          "runtime_sound_target_under_specified": 0.82,
+          "runtime_flow_defect": 0.04,
+          "evidence_insufficient": 0
+        }
+      },
+      "target_order_explicit": {
+        "type": "noul",
+        "noul": 0.3
+      },
+      "sequence_sufficient": {
+        "type": "noul",
+        "noul": 0.79
+      }
+    },
+    "usage": {
+      "input_tokens": 2429,
+      "output_tokens": 109
+    }
+  }
+}

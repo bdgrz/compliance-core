@@ -1,0 +1,40 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "facts": {
+      "businessOwner": "ProgramRollover owns a reviewed proposal with NextPeriodId and NextTypeIIPlanId, including an exact approved proposal version.",
+      "reviseRule": "The current aggregate permits Revise when status is proposed, approved, or rejected, provided period creation has not completed. Revision changes status back to proposed and advances version.",
+      "sourceBoundaryRationale": "The selected rationale says proposal/current approval and execution claim must coordinate to prevent the approved version changing while successors are created; successor creation acknowledgement belongs to recoverable process storage.",
+      "missingTargetEvidence": "No ProgramRollover execution process or rollover choreography rows are in the selected process/flow inventories.",
+      "requiredOutcome": "Create the exact selected successor period and TypeIIPlan, then record actual committed target-owner proofs against one immutable approved version; a process-side read/check alone must not race with revision."
+    }
+  },
+  "questions": {
+    "boundary": {
+      "type": "choice",
+      "instructions": "Which coordination boundary best preserves the approved rollover version while independently owned successors are created?",
+      "criteria": {
+        "aggregate_execution_claim_then_private_process": "Add an owner-authorized execution claim/fence on ProgramRollover that pins the exact approved version and blocks later revisions; a private durable process then creates successors in their owning aggregates and records exact committed proofs.",
+        "private_process_claim_only": "A private process can pin approval and create successor streams without a durable fence on ProgramRollover, while remaining safe against a concurrent revision.",
+        "approval_is_final_no_revision": "Make approval itself permanently prohibit revision, then use a private process for successor creation and proof.",
+        "product_rule_unresolved": "The supplied product facts do not decide whether approval can be revised or which owner must fence execution."
+      }
+    },
+    "noul": {
+      "type": "noul",
+      "instructions": "Can a private process claim alone prevent a concurrent ProgramRollover revision from changing the approved version after the process checks it but before successor creation commits?",
+      "criteria": {
+        "true": "A selected atomic owner fence, reservation protocol or equivalent excludes revision across successor creation.",
+        "false": "The process-side check can race with a ProgramRollover revision unless the aggregate durably fences the approved version."
+      }
+    },
+    "coverage": {
+      "type": "noul",
+      "instructions": "Does the selected definitive set currently name the required execution claim, private process definition, successor target commands, and proof-based terminal step?",
+      "criteria": {
+        "true": "Each required claim/process/receiver/proof step is selected in the catalog.",
+        "false": "At least one required execution boundary or causal flow is missing."
+      }
+    }
+  }
+}

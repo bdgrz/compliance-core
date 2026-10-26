@@ -13,7 +13,7 @@ Each previously unlisted source declaration now has an explicit disposition. Twe
 | Source event | Requirement mapping |
 | --- | --- |
 | [AccessReviewResponsibilityReassigned](../../src/Compliance.Common/Features/AccessReviews/AccessReviewResponsibilityReassigned.cs) | Accepted R2-06 responsibility reassignment. |
-| [ApplicationRelationshipApproved](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipApproved.cs) | Accepted R1-10 relationship approval. |
+| [ApplicationRelationshipApproved](../../src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipApproved.cs) | Accepted R1-10 relationship approval. |
 | [ApplicationRelationshipGovernedRemoved](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipGovernedRemoved.cs) | Accepted R1-10 governed relationship removal. |
 | [ApplicationRelationshipRecorded](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipRecorded.cs) | Accepted R1-10 relationship creation. |
 | [AuditPopulationDefinitionRevised](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationDefinitionRevised.cs) | Accepted T3-02 population-definition revision. |

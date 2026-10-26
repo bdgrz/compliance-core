@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Applications.Commands;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Independence;

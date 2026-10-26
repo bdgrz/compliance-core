@@ -3,7 +3,7 @@
   "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
   "summary": {
     "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
-    "rawNameUnion": 558,
+    "rawNameUnion": 559,
     "baselineRawNames": 418,
     "currentRawDomainEventNames": 516,
     "selectedSchemaNames": 295,
@@ -42,7 +42,8 @@
     "architectureAuthoritySha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
     "canonicalOwnerMapSha256": "16810bae3968518a4526d32754b47e836c605e4157782b602f8803bec7f59f86",
     "ownerAliasesSha256": "ebbc06df8e2d399022d415b9d045a2f1fe2ff41940b132d21f681efb06983847",
-    "compactCanonicalOwnerMapSha256": "8ea1499bf7384ac3b926c1987d063b9c0ed23595b7533843e0c119faecc3e9da"
+    "compactCanonicalOwnerMapSha256": "8ea1499bf7384ac3b926c1987d063b9c0ed23595b7533843e0c119faecc3e9da",
+    "selectedCanonicalEmissions": 492
   },
   "rules": [
     "Every baseline/current/selected/split name has one dictionary row; no name is silently dropped.",
@@ -12352,7 +12353,7 @@
       ],
       "reason": "Retain exact business meaning; selected native operation/source-proof/original-result rules apply.",
       "sourceEvidence": [
-        "src/Compliance.Common/Features/Applications/ApplicationRelationshipAdded.cs",
+        "src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipAdded.cs",
         "docs/product/audits/2026-10-23/command-event-contracts.json#/events/40",
         "docs/product/audits/2026-10-23/target-event-contracts.json#/events/56",
         "docs/product/audits/2026-10-23/aggregate-split-targets.json"
@@ -12519,7 +12520,7 @@
       ],
       "reason": "Retain exact business meaning; selected native operation/source-proof/original-result rules apply.",
       "sourceEvidence": [
-        "src/Compliance.Common/Features/Applications/ApplicationRelationshipApproved.cs",
+        "src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipApproved.cs",
         "docs/product/audits/2026-10-23/command-event-contracts.json#/events/41",
         "docs/product/audits/2026-10-23/target-event-contracts.json#/events/57",
         "docs/product/audits/2026-10-23/aggregate-split-targets.json"
@@ -13088,7 +13089,7 @@
       ],
       "reason": "Retain exact business meaning; selected native operation/source-proof/original-result rules apply.",
       "sourceEvidence": [
-        "src/Compliance.Common/Features/Applications/ApplicationRelationshipRemoved.cs",
+        "src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipRemoved.cs",
         "docs/product/audits/2026-10-23/command-event-contracts.json#/events/44",
         "docs/product/audits/2026-10-23/target-event-contracts.json#/events/58",
         "docs/product/audits/2026-10-23/aggregate-split-targets.json"
@@ -69413,7 +69414,7 @@
         "split162": false
       },
       "category": "intended_business",
-      "proposedFutureEmission": "emit_business",
+      "proposedFutureEmission": false,
       "canonicalReplacementEvents": [
         "ProgramNextPeriodCreated"
       ],
@@ -69489,7 +69490,7 @@
       ],
       "remainingPolicyAssociationScope": "owner-level candidates, not a claim every command emits this fact",
       "decisionIds": [],
-      "reason": "Retain exact business meaning; selected native operation/source-proof/original-result rules apply.",
+      "reason": "Historical/current event retained for source reconciliation only. Selected target removes successor receipt from the business aggregate; recoverable process state stores verified actual successor proof references.",
       "sourceEvidence": [
         "src/Compliance.Common/Features/Programs/ProgramNextPeriodCreated.cs",
         "docs/product/audits/2026-10-23/command-event-contracts.json#/events/273"
@@ -69533,11 +69534,13 @@
       ],
       "targetFieldQualification": "Captured source fields preserve meaning; this is not a claim that current inline state/history shapes are the final compact native schema. See schema-and-owner-gaps.json and artifact-only draft versions.",
       "preAdjudicationCategory": "intended_business",
-      "adoptedDecisionIds": [],
+      "adoptedDecisionIds": [
+        "PROGRAM_ROLLOVER_EXECUTION"
+      ],
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "none",
       "canonicalOwners": [
         "ProgramRollover"
       ],
@@ -104243,6 +104246,119 @@
       "adoptedOwnerMappingStatus": "resolved_for_intended_event_name_and_authority",
       "schemaAndRuntimeQualification": "Separate work; no source implementation or runtime qualification claimed by this inventory.",
       "ownerAliasMapBinding": "ebbc06df8e2d399022d415b9d045a2f1fe2ff41940b132d21f681efb06983847"
+    },
+    {
+      "event": "ProgramRolloverExecutionClaimed",
+      "membership": "new_selected_target",
+      "category": "business",
+      "proposedFutureEmission": true,
+      "canonicalReplacementEvents": [],
+      "canonicalReplacementFamily": null,
+      "proposedOwners": [
+        "ProgramRollover"
+      ],
+      "ownerEvidenceKind": "currentReducer",
+      "currentReducerOwners": [
+        "ProgramRollover"
+      ],
+      "baselineReducerOwners": [
+        "ProgramRollover"
+      ],
+      "splitAllocations": [],
+      "selectedSchemaOwner": "ProgramRollover",
+      "schemaStatus": "NEW_SELECTED_TARGET_NO_IMPLEMENTATION_AUTHORIZED",
+      "targetFields": [
+        "TenantId",
+        "SubjectId",
+        "Revision",
+        "ActorMemberId",
+        "State",
+        "OccurredAt"
+      ],
+      "targetContentSchemas": [],
+      "currentWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.programs.program-rollover-execution-claimed",
+        "version": 1
+      },
+      "sourceInventoryDisposition": "new_target_decision",
+      "sourceInventoryNote": "Atomic execution claim fences exact approved rollover version before cross-owner successor creation.",
+      "currentConstructionSites": [],
+      "currentRegisteredEmitters": [],
+      "selectedDirectCommands": [
+        "ClaimProgramRolloverExecution"
+      ],
+      "remainingOwnerPolicyCommands": [
+        "ApproveProgramRollover",
+        "ProposeProgramRollover"
+      ],
+      "remainingPolicyAssociationScope": "owner-level candidates, not a claim every command emits this fact",
+      "decisionIds": [
+        "PROGRAM_ROLLOVER_EXECUTION"
+      ],
+      "reason": "Atomic business aggregate fence for the revise-versus-execute race.",
+      "sourceEvidence": [],
+      "canonicalSemanticKey": "event:ProgramRolloverExecutionClaimed",
+      "canonicalSemanticTargetKeys": [
+        "event:ProgramRolloverExecutionClaimed"
+      ],
+      "fieldAuthority": "ProgramRollover",
+      "sourceFields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "origin": "constructor"
+        },
+        {
+          "name": "SubjectId",
+          "type": "Uuid",
+          "origin": "constructor"
+        },
+        {
+          "name": "Revision",
+          "type": "long",
+          "origin": "constructor"
+        },
+        {
+          "name": "ActorMemberId",
+          "type": "Uuid?",
+          "origin": "constructor"
+        },
+        {
+          "name": "State",
+          "type": "ProgramRolloverView",
+          "origin": "constructor"
+        },
+        {
+          "name": "OccurredAt",
+          "type": "DateTimeOffset",
+          "origin": "constructor"
+        }
+      ],
+      "targetFieldQualification": "Captured source fields preserve meaning; this is not a claim that current inline state/history shapes are the final compact native schema. See schema-and-owner-gaps.json and artifact-only draft versions.",
+      "preAdjudicationCategory": null,
+      "adoptedDecisionIds": [
+        "PROGRAM_ROLLOVER_EXECUTION"
+      ],
+      "finalOwnerMappingEvidence": [
+        "selected event owner/allocation before generic owner aliases"
+      ],
+      "emissionKind": "business",
+      "canonicalOwners": [
+        "ProgramRollover"
+      ],
+      "canonicalOwnerSelection": "one exact canonical authority owner",
+      "historicalDecoderOwners": [
+        "ProgramRollover"
+      ],
+      "canonicalReplacementOwners": [
+        "ProgramRollover"
+      ],
+      "adoptedOwnerMappingStatus": "resolved_for_intended_event_name_and_authority",
+      "schemaAndRuntimeQualification": "Separate work; no source implementation or runtime qualification claimed by this inventory.",
+      "ownerAliasMapBinding": "ebbc06df8e2d399022d415b9d045a2f1fe2ff41940b132d21f681efb06983847",
+      "rawNameDisposition": "selected_new_target",
+      "targetStatus": "SELECTED_TARGET_NO_IMPLEMENTATION_AUTHORIZED"
     }
   ],
   "adjudication": {

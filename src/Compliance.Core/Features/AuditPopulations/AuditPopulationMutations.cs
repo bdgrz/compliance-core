@@ -17,7 +17,8 @@ public sealed class AuditPopulationMutations(NativeOperationExecutor operations,
 {
     public async ValueTask<Result> ExecuteAsync<T>(IRequestContext<T> context, CancellationToken ct) where T : IRequest
     {
-        try { return await ExecuteCoreAsync(context, ct).ConfigureAwait(false); }
+        try
+        { return await ExecuteCoreAsync(context, ct).ConfigureAwait(false); }
         catch (ImmutableContentIntegrityException error)
         {
             ct.ThrowIfCancellationRequested();
@@ -38,7 +39,8 @@ public sealed class AuditPopulationMutations(NativeOperationExecutor operations,
         var actor = ActorReference.ForMember(member, display.Trim());
         var ownerStream = new AuditPopulation(selection.TenantId, selection.ProgramId, selection.PopulationId).Stream;
         var operation = RootOperation.Provenance(selection.CommandId, selection.Kind, ownerStream, actor,
-            selection.ExpectedRevision, selection.Digest, clock.GetUtcNow()) with { FirstOwner = ownerStream };
+            selection.ExpectedRevision, selection.Digest, clock.GetUtcNow()) with
+        { FirstOwner = ownerStream };
         Prepared? prepared = null;
         var accepted = await operations.ExecuteAsync(new NativeOperation<AuditPopulation>(AcceptedOperationBinding.Of(operation),
             () => new AuditPopulation(selection.TenantId, selection.ProgramId, selection.PopulationId, selection.CommandId),

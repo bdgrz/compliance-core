@@ -1,0 +1,184 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "owner": {
+      "invariant": "One exact carry-forward proposal version requires independent approval and an atomic execution claim before successor writes; the claim pins that version against revision, and exact successor completion is recorded only in recoverable private process state.",
+      "boundary": "ProgramRollover owns proposal, independent approval, and one atomic version-pinning execution claim/fence because the claim closes the revise-versus-execute race. Recoverable private ProgramRolloverExecutionProcess owns progress and verified successor receipts. A person authors the complete successor TypeIIPlan under its independent owner lifecycle. Prior proposal history and successor acknowledgements are not business aggregate state.",
+      "identity": "Tenant / program-rollovers / RolloverId, with exact source program/version and successor proof. RolloverId identifies creation; selected mutations use CommandId.",
+      "claimCommand": {
+        "command": "ClaimProgramRolloverExecution",
+        "logicalIdentity": "CommandId",
+        "fields": [
+          {
+            "name": "CommandId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RolloverId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ApprovedVersion",
+            "type": "int",
+            "required": true
+          },
+          {
+            "name": "ApprovedContentSha256",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responseContract": {
+          "mode": "immediate_original_result",
+          "responseType": "Unit",
+          "firstHttpStatus": 200,
+          "terminalResultType": "Unit"
+        },
+        "http": [],
+        "targetStatus": "SELECTED_TARGET_ONLY_NO_ROUTE_AUTHORIZED",
+        "semanticRule": "Internal process command; no public route. Atomically require status approved, exact ExpectedRevision, exact current ApprovedVersion/content SHA256 and latest actual ProgramRolloverApproved fact. Derive and copy immutable approval actor/role/time into ProgramRolloverExecutionClaimView; store CommandId and ClaimedAt; transition status to execution_claimed in one append. Exact retry only same command+tuple; reject all later revisions/rejections/claims. Event actor attribution retains the approving member; process identity is separately recorded in private process state."
+      },
+      "event": {
+        "event": "ProgramRolloverExecutionClaimed",
+        "owner": "ProgramRollover",
+        "authority": "business_aggregate_atomic_execution_fence",
+        "targetStatus": "NEW_SELECTED_TARGET_EVENT_NO_IMPLEMENTATION_AUTHORIZED",
+        "fields": [
+          "TenantId",
+          "SubjectId",
+          "Revision",
+          "ActorMemberId",
+          "State",
+          "OccurredAt"
+        ],
+        "selectedContract": "State has status execution_claimed and one immutable ProgramRolloverExecutionClaimView copying CommandId, approved version/hash, approving member/role/time, and ClaimedAt. Removed CreatedPeriodId/CreatedTypeIIPlanId/NextPeriodCreatedAt from selected aggregate state; successor receipts are private process state."
+      },
+      "stateContract": {
+        "view": "ProgramRolloverView",
+        "statusValues": [
+          "proposed",
+          "approved",
+          "rejected",
+          "execution_claimed"
+        ],
+        "claimField": "ProgramRolloverExecutionClaimView? ExecutionClaim",
+        "claimFields": [
+          "CommandId:Uuid",
+          "ApprovedVersion:int",
+          "ApprovedContentSha256:string",
+          "ApprovedByMemberId:Uuid",
+          "ApproverRole:string",
+          "ApprovedAt:DateTimeOffset",
+          "ClaimedAt:DateTimeOffset"
+        ],
+        "claimRule": "Set exactly once in same atomic aggregate append that changes status approved -> execution_claimed. It copies the exact current approved version/hash and approval actor/role/time from the immutable approval history. It remains permanent across process success/failure. Every revision/rejection/second claim conflicts after this transition. The event/stream retains the proposal and approval facts.",
+        "removedSelectedStateFields": [
+          "CreatedPeriodId",
+          "CreatedTypeIIPlanId",
+          "NextPeriodCreatedAt"
+        ],
+        "fieldRationale": "Successor creation receipts and completion time belong to durable private process state. The business aggregate stores only proposal/approval and the concurrency fence."
+      }
+    },
+    "process": {
+      "process": "ProgramRolloverExecutionProcess",
+      "rootSourceEvents": [
+        "ProgramRolloverExecutionClaimed"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "await_successor_plan_proposal",
+          "receivers": [],
+          "rule": "A personal authorized actor authors complete TypeIIPlanContent under TypeIIPlan source validation. Freeze exact actual proposal version/content hash; do not invent missing baseline, system description, controls, findings or required changes."
+        },
+        {
+          "stage": "validate_exhaustive_carry_forward_mapping",
+          "receivers": [],
+          "rule": "Every pinned rollover record and commitment has exactly one explicit plan destination or justified nonrepresentation consistent with approved disposition; preserve exact source/version/hash; reject omissions, duplicates, mismatches and unsupported conversions; freeze complete mapping manifest/hash privately."
+        },
+        {
+          "stage": "await_plan_review",
+          "receivers": [],
+          "rule": "Wait for actual TypeIIPlanReviewed on the exact current frozen version/hash. Reviewer differs from proposer. Outcome approve advances to executive approval. changes_requested returns to human plan revision, owner source validation and a newly frozen exhaustive mapping for the new exact version/hash. Outcome reject terminates execution as failed; it never advances to period opening."
+        },
+        {
+          "stage": "await_independent_executive_approval",
+          "receivers": [],
+          "rule": "Wait for actual TypeIIPlanApproved on the same exact current version/hash whose review outcome is approve; approver differs from proposer and reviewer and satisfies owner rules. Approved plan is immutable."
+        },
+        {
+          "stage": "accept_period_opening",
+          "receivers": [
+            "StartTypeIIObservationPeriod"
+          ],
+          "rule": "Only after actual approved plan proof, issue exact next period/plan/examination/dates from pinned rollover. Verify TypeIIPeriodOpeningAccepted and original 202; accepted is pending."
+        },
+        {
+          "stage": "complete",
+          "receivers": [],
+          "rule": "Complete only on actual ObservationPeriodStarted chain linked to immutable opening intent, operation root/result, exact final plan proposal/revision/review/approval facts and hashes, exhaustive mapping manifest/hash, period/range, calendar authorization ID/generation and exact rollover claim. Store verified proof references privately; never emit ProgramNextPeriodCreated."
+        }
+      ],
+      "abort": [
+        "RejectTypeIIPeriodOpening"
+      ]
+    },
+    "source": "Current ProgramRolloverView stores CreatedPeriodId, CreatedTypeIIPlanId and NextPeriodCreatedAt, but selected target removes these and stores immutable execution claim; status execution_claimed blocks revision/rejection. Private process stores all actual successor proof references."
+  },
+  "questions": {
+    "shape": {
+      "type": "choice",
+      "instructions": "Does the selected aggregate state shape encode an actual atomic immutable execution fence while avoiding successor receipt state?",
+      "criteria": {
+        "adequate": "One claim record copies command ID, approved version/hash and actual approver identity/role/time plus claim time; status execution_claimed; no successor receipt fields.",
+        "insufficient": "A concurrency/fence binding or claim identity is missing.",
+        "wrong_boundary": "Claim/progress belongs only in private process.",
+        "overloaded": "Aggregate stores too much process progress."
+      }
+    },
+    "transition": {
+      "type": "noul",
+      "instructions": "Can every transition and retry be distinguished and safely validated from this state contract?",
+      "criteria": {
+        "true": "Claim applies exactly once from approved at expected revision; exact idempotent retry is bound; revisions/rejections/second claims are invalid afterward.",
+        "false": "Transition/retry ambiguity remains."
+      }
+    },
+    "approval": {
+      "type": "noul",
+      "instructions": "Does the claim pin the complete approval fact, rather than only approval status?",
+      "criteria": {
+        "true": "Approver identity, role, time, approved version, content hash and approval event are exact.",
+        "false": "Approval proof can drift or be substituted."
+      }
+    },
+    "process": {
+      "type": "choice",
+      "instructions": "Do successor IDs and final receipts belong in the aggregate state or process record?",
+      "criteria": {
+        "process": "Private process stores exact successor target IDs/receipts/result; aggregate stores proposal and permanent execution fence.",
+        "aggregate": "Aggregate must store process progress and final receipt.",
+        "both": "Both layers should duplicate the receipts.",
+        "insufficient": "Unclear."
+      }
+    }
+  }
+}

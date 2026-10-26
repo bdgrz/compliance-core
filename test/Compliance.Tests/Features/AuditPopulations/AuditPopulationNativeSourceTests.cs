@@ -214,7 +214,8 @@ public sealed partial class DefineAuditPopulationHandlerTests
             if (reference == selected)
             {
                 Reads++;
-                if (cancellation is not null) { cancellation.Cancel(); ct.ThrowIfCancellationRequested(); }
+                if (cancellation is not null)
+                { cancellation.Cancel(); ct.ThrowIfCancellationRequested(); }
                 throw missing ? new ImmutableContentUnavailableException("The exact retained source is not visible yet.") :
                     new ImmutableContentIntegrityException("The exact retained source is corrupt.");
             }

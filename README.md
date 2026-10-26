@@ -35,7 +35,7 @@ contract.
 Copy `.env.example` to `.env` and set `GITHUB_ACTOR` and `GITHUB_TOKEN` for .NET package restore. Run the backend checks independently:
 
 ```console
-dotnet restore Compliance.slnx --locked-mode
+dotnet restore Compliance.slnx
 dotnet build Compliance.slnx --configuration Release --no-restore
 dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
 ```

@@ -1,0 +1,80 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "rolloverContent": [
+      "SourcePeriodId",
+      "SourceExaminationId",
+      "SourceCloseSnapshotId/hash",
+      "AuditOutcomeId/hash",
+      "NextPeriodStart/End",
+      "NextPeriodId",
+      "NextTypeIIPlanId",
+      "Records",
+      "Commitments",
+      "ComparisonMeasures"
+    ],
+    "nextTypeIIPlanRequires": [
+      "ExaminationId",
+      "SourceSnapshotId/hash",
+      "SystemDescriptionVersionId",
+      "PeriodStart/End",
+      "TypeIBaselineId",
+      "TypeIOutcomeId",
+      "CarryForwardInputs",
+      "Controls",
+      "CarriedForwardGaps",
+      "AcknowledgedGaps",
+      "RequiredChanges"
+    ],
+    "sourceValidation": [
+      "An actual ExaminationEngagement owner must exist for plan.ExaminationId.",
+      "TypeIBaseline must be an exact frozen baseline for same next examination, with exact approved source set and completeness.",
+      "TypeIOutcome must be recorded auditor outcome for that exact Type I baseline/examination.",
+      "Approved SystemDescription version must be bound to same examination and baseline.",
+      "Only then can a TypeIIPlan be proposed/reviewed/approved and period started."
+    ],
+    "currentRolloverContentHasNextExaminationId": false,
+    "availableCreateOwnerCommand": "CreateExaminationEngagement(TenantId, ProgramId, ExaminationId, EngagementType, AuditFirm, PeriodStart, PeriodEnd, TrustServicesCategories, BoundaryId, ManagementContactMemberIds)",
+    "userScope": "The approved rollover proposal must pin the exact successor examination identity and period dates; a process may not choose a new ExaminationId after independent rollover approval."
+  },
+  "questions": {
+    "decision": {
+      "type": "choice",
+      "instructions": "What is the sound boundary for the missing successor examination/Type I prerequisites?",
+      "criteria": {
+        "pin_next_exam_and_wait": "Add NextExaminationId to approved ProgramRolloverContent. Process waits for an actual examination owner and exact completed Type I baseline, auditor outcome and approved bound system-description facts for that identity before accepting a successor plan; plan content binds those exact source IDs/hashes and same exam/date. Do not bypass existing owner workflows.",
+        "process_choose_exam": "Let process or plan author choose an examination ID after rollover approval.",
+        "rollover_owns_typei": "Put examination, baseline, audit outcome and system-description lifecycles inside ProgramRollover.",
+        "unfinished": "The exact prerequisite source workflow or identity policy is not established."
+      }
+    },
+    "missing": {
+      "type": "noul",
+      "instructions": "Is successor ExaminationId an essential missing identity in the currently selected rollover proposal if this same process is expected to create the next TypeIIPlan?",
+      "criteria": {
+        "true": "Next plan route and source validation require a concrete examination identity which the rollover currently does not pin.",
+        "false": "It is already uniquely derivable from approved rollover content."
+      }
+    },
+    "order": {
+      "type": "choice",
+      "instructions": "What order is required before the next TypeIIPlan can be proposed?",
+      "criteria": {
+        "examination_typei_sources_first": "Create successor ExaminationEngagement; freeze its exact Type I baseline; record auditor outcome and approve/bind system description for same exam/baseline; then author/validate TypeIIPlan; then review/approve; then start period.",
+        "typeii_plan_first": "Create plan first and later backfill the examination sources.",
+        "parallel_claim": "Plan and Type I prerequisites may proceed independently without exact association.",
+        "unknown": "Unclear."
+      }
+    },
+    "owner": {
+      "type": "choice",
+      "instructions": "Where do Type I baseline, audit outcome and system description lifecycles belong?",
+      "criteria": {
+        "their_existing_owners": "Each existing examination, baseline, outcome and system-description owner retains its own author/approval authority; rollover process only coordinates actual proofs.",
+        "rollover_owner": "ProgramRollover owns these artifacts.",
+        "process_owner": "Private process becomes authoritative owner for those business facts.",
+        "unknown": "Insufficient."
+      }
+    }
+  }
+}

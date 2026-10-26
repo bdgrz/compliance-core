@@ -2,7 +2,7 @@
   "status": "ADOPTED_INTENDED_NAME_OWNER_DISPOSITION_MAP_NO_IMPLEMENTATION_AUTHORIZED",
   "counts": {
     "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
-    "rawNameUnion": 558,
+    "rawNameUnion": 559,
     "baselineRawNames": 418,
     "currentRawDomainEventNames": 516,
     "selectedSchemaNames": 295,
@@ -15,7 +15,7 @@
     "additionalWeeklySchedulingCaptureJournalRole": true,
     "auditSemanticEmissions": 2,
     "migrationImportSemanticEmissions": 1,
-    "nonEmittedRawCompatibilityOrExcludedNames": 66,
+    "nonEmittedRawCompatibilityOrExcludedNames": 67,
     "rawNameDispositionCounts": {
       "audit_only": 2,
       "excluded_redundant_or_contradictory_split_name": 4,
@@ -29,7 +29,8 @@
       "pruned_future_writer": 3,
       "retained_technical_emission": 9,
       "superseded_vocabulary_or_decision": 17,
-      "technical_process_only": 12
+      "technical_process_only": 12,
+      "retired_business_event_process_receipt_only": 1
     },
     "selected295WithinBusinessSemantics": 295,
     "businessSemanticNamesOutsideSelected295": 185,
@@ -5856,7 +5857,10 @@
       },
       "wireQualification": "Exact current/selected wire shape remains subject to documented final-schema reconciliation; semantic owner/name is fixed.",
       "adoptedDecisionIds": [],
-      "schemaStatus": "retained_current_schema_native_qualification_required"
+      "schemaStatus": "retained_current_schema_native_qualification_required",
+      "selectedTargetDisposition": "retired_from_business_owner_process_receipt_only",
+      "selectedTargetOwner": null,
+      "targetStatus": "NOT_SELECTED_AS_A_DOMAIN_EVENT"
     },
     {
       "canonicalSemanticKey": "event:ProgramRevised",
@@ -8923,6 +8927,26 @@
       "wireQualification": "Exact current/selected wire shape remains subject to documented final-schema reconciliation; semantic owner/name is fixed.",
       "adoptedDecisionIds": [],
       "schemaStatus": "retained_current_schema_native_qualification_required"
+    },
+    {
+      "canonicalSemanticKey": "event:ProgramRolloverExecutionClaimed",
+      "event": "ProgramRolloverExecutionClaimed",
+      "emissionKind": "business",
+      "owners": [
+        "ProgramRollover"
+      ],
+      "ownerSelection": "one exact canonical authority owner",
+      "selected295": true,
+      "targetConcreteType": "ProgramRolloverExecutionClaimed",
+      "adoptedTargetWire": {
+        "discriminator": "bdgrz.programs.program-rollover-execution-claimed",
+        "version": 1
+      },
+      "wireQualification": "New target schema; discriminator collision check required before implementation.",
+      "adoptedDecisionIds": [
+        "PROGRAM_ROLLOVER_EXECUTION"
+      ],
+      "schemaStatus": "NEW_SELECTED_TARGET_NO_IMPLEMENTATION_AUTHORIZED"
     }
   ],
   "ownerMappingAuthority": {

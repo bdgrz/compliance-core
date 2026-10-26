@@ -1,0 +1,179 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Check only actual dependency logic. S013 is conditional: the selected owner member is registered only if ownerBecomesAdministrator. Role/team are created before optional registration. The team-role and grants are required regardless. The activation-triggering team-member assignment occurs only if condition true, and requires registration plus all grants/team-role. Determine whether graph dependencies accurately encode conditional prerequisite versus total order.",
+    "flows": [
+      {
+        "id": "S011",
+        "receiver": "DefineRole",
+        "target": "Role",
+        "fact": [
+          "RoleDefined"
+        ],
+        "condition": {
+          "order": 1,
+          "condition": "always"
+        }
+      },
+      {
+        "id": "S012",
+        "receiver": "DefineTeam",
+        "target": "Team",
+        "fact": [
+          "TeamDefined"
+        ],
+        "condition": {
+          "order": 2,
+          "condition": "always"
+        }
+      },
+      {
+        "id": "S013",
+        "receiver": "RegisterMember",
+        "target": "Member",
+        "fact": [
+          "MemberRegistered"
+        ],
+        "condition": {
+          "order": 3,
+          "condition": "ownerBecomesAdministrator"
+        }
+      },
+      {
+        "id": "S014",
+        "receiver": "AssignTeamRole",
+        "target": "TeamRole",
+        "fact": [
+          "TeamRoleAssigned"
+        ],
+        "condition": {
+          "order": 4,
+          "condition": "always",
+          "after": [
+            "S011",
+            "S012",
+            "S013"
+          ]
+        }
+      },
+      {
+        "id": "S015",
+        "receiver": "AssignRolePermission",
+        "target": "RolePermission",
+        "fact": [
+          "RolePermissionAssigned"
+        ],
+        "condition": {
+          "order": 5,
+          "condition": "always",
+          "after": [
+            "S014"
+          ],
+          "requiredEffects": [
+            "TenantAccess",
+            "TenantRbacManage",
+            "ProgramManage"
+          ]
+        }
+      },
+      {
+        "id": "S016",
+        "receiver": "AssignTeamMember",
+        "target": "TeamMember",
+        "fact": [
+          "TeamMemberAssigned"
+        ],
+        "condition": {
+          "order": 6,
+          "condition": "ownerBecomesAdministrator",
+          "after": [
+            "S014",
+            "S015"
+          ],
+          "activationTrigger": true
+        }
+      }
+    ],
+    "physicalPlan": {
+      "group": "TenantRbacBootstrap",
+      "sourceEvent": "TenantRegistered",
+      "execution": "One reactor processes the command list serially; each send completes before the next command is sent.",
+      "condition": "ownerBecomesAdministrator = CreatorIsAdministrator OR FirstAdministratorEmail is null.",
+      "orderedEffects": [
+        {
+          "order": 1,
+          "command": "DefineRole",
+          "targetOwner": "Role",
+          "condition": "always",
+          "intent": "Define the canonical tenant-administrator role."
+        },
+        {
+          "order": 2,
+          "command": "DefineTeam",
+          "targetOwner": "Team",
+          "condition": "always",
+          "intent": "Define the canonical administrators team."
+        },
+        {
+          "order": 3,
+          "command": "RegisterMember",
+          "targetOwner": "Member",
+          "condition": "ownerBecomesAdministrator",
+          "intent": "Register the tenant owner for the administrator episode."
+        },
+        {
+          "order": 4,
+          "command": "AssignTeamRole",
+          "targetOwner": "TeamRole",
+          "condition": "always",
+          "intent": "Link the administrators team to the administrator role."
+        },
+        {
+          "order": 5,
+          "command": "AssignRolePermission",
+          "targetOwner": "RolePermission",
+          "condition": "always",
+          "requiredPermissionEffects": [
+            "TenantAccess",
+            "TenantRbacManage",
+            "ProgramManage"
+          ],
+          "intent": "Commit all three core administrator permissions."
+        },
+        {
+          "order": 6,
+          "command": "AssignTeamMember",
+          "targetOwner": "TeamMember",
+          "condition": "ownerBecomesAdministrator",
+          "intent": "Assign the exact owner member to the administrators team; TeamMemberAssigned can trigger tenant activation."
+        }
+      ],
+      "activationFence": "The order-6 TeamMemberAssigned effect is forbidden until the order-4 TeamRoleAssigned fact and all three order-5 RolePermissionAssigned facts have committed for this same tenant registration and administrator role.",
+      "failureBehavior": "Any prerequisite send failure stops before activation assignment; activation assignment failure fails the reactor invocation and prevents its checkpoint from completing. Replays reuse the same source-derived command identities.",
+      "sourceEvidence": {
+        "path": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+        "sha256": "63c50627f2de825bc2d66e3cfcb4756d9b5178902c3817b5dde3be62dafd3a52"
+      }
+    }
+  },
+  "questions": {
+    "edges": {
+      "type": "choice",
+      "instructions": "Which graph dependency correction best represents conditional ordering without incorrectly making S013 mandatory?",
+      "criteria": {
+        "conditional_dependency": "S014 depends on S011 and S012; S015 follows S014; S016 depends on S013 when ownerBecomesAdministrator and always on S014/S015.",
+        "keep_current": "S014 must depend on conditional S013 even when condition false.",
+        "only_total_order": "Order numbers alone suffice and dependency fields are unnecessary.",
+        "insufficient": "Cannot determine."
+      }
+    },
+    "sufficiency": {
+      "type": "noul",
+      "instructions": "After correcting dependencies as proposed, does the physical plan preserve the true preconditions for activation while allowing owner-not-admin setup?",
+      "criteria": {
+        "true": "The true/false branches are represented and all grants precede activation.",
+        "false": "A required precondition is absent or optional registration is made unconditional."
+      }
+    }
+  }
+}

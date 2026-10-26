@@ -74,7 +74,8 @@ static class ProductClientServiceSeeds
         var owner = new ClientService(tenant, service);
         var operation = OwnerProvenance.For(owner, logical, change.Kind, change.Actor, RootOperation.InitialEpisode,
             change.Kind == nameof(CreateClientService) ? null : unchecked((ulong)(change.Revision - 1)), digest, change.ChangedAt)
-            with { FirstOwner = owner.Stream };
+            with
+        { FirstOwner = owner.Stream };
         var value = change.Content is { } authored
             ? await NativeContent.WriteAsync(content, tenant, ProductClientServiceContent.Schema, authored) : current!;
         var response = change.Kind == nameof(CreateClientService)

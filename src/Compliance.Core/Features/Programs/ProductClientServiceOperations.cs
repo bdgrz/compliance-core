@@ -25,8 +25,12 @@ public sealed class ProductClientServiceOperations(NativeOperationExecutor opera
     {
         var request = context.Request;
         var result = await ExecuteAsync<ReviseClientService, UnitResult>(context, request.CommandId, nameof(ReviseClientService),
-            request.ExpectedRevision, request with { Name = request.Name?.Trim()!, Purpose = request.Purpose?.Trim()!,
-                OwnerReference = request.OwnerReference?.Trim()! }, ct).ConfigureAwait(false);
+            request.ExpectedRevision, request with
+            {
+                Name = request.Name?.Trim()!,
+                Purpose = request.Purpose?.Trim()!,
+                OwnerReference = request.OwnerReference?.Trim()!
+            }, ct).ConfigureAwait(false);
         return result.IsSuccess ? Result.Success : Result.Failure(result.Error!);
     }
 
@@ -62,7 +66,8 @@ public sealed class ProductClientServiceOperations(NativeOperationExecutor opera
             throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
         var selected = new ClientService(tenant, service);
         var operation = OwnerProvenance.For(selected, logicalId, kind, ActorReference.ForMember(member, display), RootOperation.InitialEpisode,
-            expectedRevision is { } expected ? unchecked((ulong)expected) : null, Digest(intent), clock.GetUtcNow()) with { FirstOwner = selected.Stream };
+            expectedRevision is { } expected ? unchecked((ulong)expected) : null, Digest(intent), clock.GetUtcNow()) with
+        { FirstOwner = selected.Stream };
         ImmutableContentRef? preparedContent = null;
         ImmutableContentRef? frozenResult = null;
         PreparedCut? preparedCut = null;

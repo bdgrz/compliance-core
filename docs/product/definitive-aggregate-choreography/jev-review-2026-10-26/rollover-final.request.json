@@ -1,0 +1,59 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "candidate": "ProgramRollover now has one atomic execution claim pinning exact approved version/hash and approval tuple; claim disables revision/rejection. Private process: plan proposal -> independent review -> separate executive approval -> period-opening admission (pending) -> actual started terminal. Actual terminal proof must link immutable intent, actual plan events/content, accepted-opening fact/native operation chain, actual started fact, calendar authorization id/generation and result. No ProgramNextPeriodCreated business event; process stores proof references. S014 role/team prerequisites, S015 follows S014, S016 conditionally requires S013 plus S014/S015.",
+    "currentSourceFacts": [
+      "ProgramRollover.Revise allows revision while status approved until period_created.",
+      "StartTypeIIObservationPeriod requires exact current approved plan and emits TypeIIPeriodOpeningAccepted.",
+      "TypeIIRangeProcess later commits ObservationPeriodStarted.",
+      "TypeIIPlan has separate proposal, review and executive approval events."
+    ]
+  },
+  "questions": {
+    "boundary": {
+      "type": "choice",
+      "instructions": "Is the revised aggregate/process split logically coherent?",
+      "criteria": {
+        "coherent": "Business aggregate owns approved decision and one atomic execution fence; private process owns progress/receipts.",
+        "incomplete": "A needed cross-owner state is still placed in wrong owner or absent.",
+        "over_split": "Execution fence should also be private only.",
+        "insufficient": "Insufficient."
+      }
+    },
+    "race": {
+      "type": "noul",
+      "instructions": "Does atomic claim close revise-versus-execute and exact-version drift races?",
+      "criteria": {
+        "true": "Actual expected revision, approved decision tuple and content hash are pinned; no later revision/rejection can proceed.",
+        "false": "A race remains or tuple not complete."
+      }
+    },
+    "process": {
+      "type": "choice",
+      "instructions": "Is this cross-aggregate sequence correctly ordered and complete?",
+      "criteria": {
+        "coherent": "Independent plan proposal/review/approval precedes start; accepted opening remains pending; exact actual started chain is terminal.",
+        "missing": "Required owner or proof/stage omitted.",
+        "wrong_order": "Order violates owner requirements.",
+        "insufficient": "Insufficient."
+      }
+    },
+    "terminal": {
+      "type": "noul",
+      "instructions": "Is the terminal proof chain now sufficient to bind success to the exact claimed rollover and target started period?",
+      "criteria": {
+        "true": "It binds approval, exact plan proposal/review/approval and hash, frozen opening intent/admission, period start, calendar authorization/generation, native root/result.",
+        "false": "A material binding is missing."
+      }
+    },
+    "legacy": {
+      "type": "choice",
+      "instructions": "Should ProgramNextPeriodCreated remain a selected domain event?",
+      "criteria": {
+        "process_receipt_only": "Remove from selected business event emissions; durable process terminal owns actual receipts.",
+        "aggregate_event": "Keep aggregate terminal event as well as process receipt.",
+        "insufficient": "Unclear."
+      }
+    }
+  }
+}

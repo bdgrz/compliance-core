@@ -10,7 +10,7 @@ The web client is maintained in [bdgrz/compliance-web](https://github.com/bdgrz/
 
 Use the .NET SDK selected by `global.json` and Docker Compose. Copy `.env.example` to `.env` and configure package-registry credentials before restoring .NET packages.
 
-- `dotnet restore Compliance.slnx --locked-mode`: restore .NET dependencies.
+- `dotnet restore Compliance.slnx`: restore .NET dependencies.
 - `dotnet build Compliance.slnx -c Release --no-restore`: compile with analyzers and warnings as errors.
 - `dotnet test Compliance.slnx -c Release --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"`: run the backend unit-test suite.
 - `docker compose up --build`: start the standalone app and its dependencies at `http://127.0.0.1:8080`.

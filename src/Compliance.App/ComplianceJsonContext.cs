@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Applications.Commands;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.Applications;
@@ -78,4 +79,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.AssignBody))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.DelegateBody))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.EscalateBody))]
+[JsonSerializable(typeof(PersonHttp.RecordBody))]
+[JsonSerializable(typeof(PersonHttp.ReviseBody))]
+[JsonSerializable(typeof(PersonHttp.CorrelateBody))]
 sealed partial class ComplianceJsonContext : JsonSerializerContext;

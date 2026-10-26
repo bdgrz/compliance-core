@@ -1,0 +1,927 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_fit",
+    "owners": [
+      {
+        "owner": "FindingAggregate",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(tenantId, programId, findingId)",
+        "selectedIdentity": "(tenantId, programId, findingId)",
+        "invariant": "Finding description, status and closure admission generation.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Close only with at least one action, all complete, evidence/rationale present and independent closer unless exact waiver. Closed finding is immutable until reopen.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AddCorrectiveAction",
+            "logicalIdentity": {
+              "field": "ActionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ActionId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedFindingRevision:long",
+              "Description:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly"
+            ]
+          },
+          {
+            "command": "CloseFinding",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "VerificationRationale:string",
+              "ResolutionEvidence:IReadOnlyList<EvidenceReference>",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "LinkFindingAcceptance",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "Kind:string",
+              "RecordId:Uuid",
+              "DecisionId:Uuid?"
+            ]
+          },
+          {
+            "command": "RaiseFinding",
+            "logicalIdentity": {
+              "field": "FindingId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "FindingId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Source:FindingSource",
+              "Title:string",
+              "Description:string",
+              "Severity:string",
+              "AffectedScope:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly",
+              "Links:IReadOnlyList<FindingLink>?"
+            ]
+          },
+          {
+            "command": "RaiseOccurrenceFinding",
+            "logicalIdentity": {
+              "field": "FindingId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "source_event_effect",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ControlId:Uuid",
+              "OccurrenceId:Uuid",
+              "SourceVersion:string",
+              "SourceKind:string",
+              "SourceText:string"
+            ]
+          },
+          {
+            "command": "ReopenFinding",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "ReviseFinding",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "Severity:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly",
+              "AffectedScope:string",
+              "RootCause:string?",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "RaiseEvaluationDeviationFinding",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ControlId:Uuid",
+              "EvaluationId:Uuid",
+              "DeviationId:Uuid"
+            ]
+          },
+          {
+            "command": "AbortFindingClosure",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "CorrectiveActionAdmitted",
+            "discriminator": "bdgrz.finding-aggregate.corrective-action-admitted",
+            "version": 1
+          },
+          {
+            "event": "FindingAcceptanceLinkedV2",
+            "discriminator": "bdgrz.finding.acceptance.linked",
+            "version": 1
+          },
+          {
+            "event": "FindingClosedV2",
+            "discriminator": "bdgrz.finding.closed",
+            "version": 1
+          },
+          {
+            "event": "FindingClosureAccepted",
+            "discriminator": "bdgrz.finding-aggregate.finding-closure-accepted",
+            "version": 1
+          },
+          {
+            "event": "FindingClosureCanceled",
+            "discriminator": "bdgrz.finding-aggregate.finding-closure-canceled",
+            "version": 1
+          },
+          {
+            "event": "FindingRaisedV2",
+            "discriminator": "bdgrz.finding.raised",
+            "version": 1
+          },
+          {
+            "event": "FindingReopenedV2",
+            "discriminator": "bdgrz.finding.reopened",
+            "version": 1
+          },
+          {
+            "event": "FindingRevisedV2",
+            "discriminator": "bdgrz.finding.revised",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "CorrectiveActionMaterializationReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "MaterializeCorrectiveAction"
+          },
+          {
+            "reactor": "FindingClosureReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "FindingAggregate",
+            "command": "CompleteFindingClosure"
+          },
+          {
+            "reactor": "FindingClosureCorrectiveActionAuthorizationReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "AuthorizeCorrectiveActionFindingClosureUse"
+          },
+          {
+            "reactor": "FindingClosureCorrectiveActionSettlementReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "SettleCorrectiveActionFindingClosureUse"
+          }
+        ]
+      },
+      {
+        "owner": "FirmProfessionalDutyDesignation",
+        "classification": "business_aggregate",
+        "declaredIdentity": "platform / (canonicalUserId, duty, nullable tenantScope)",
+        "selectedIdentity": "platform / (canonicalUserId, duty, nullable tenantScope)",
+        "invariant": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Exact predecessor, monotonically increasing authority revision, stable signed subject, valid staff source proof.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "RecordFirmProfessionalDutyDesignation",
+            "logicalIdentity": {
+              "field": "AssertionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable signed authority assertion; verified AssertionId must match the signed assertion"
+            },
+            "fields": [
+              "AssertionId:Uuid",
+              "DesignationId:Uuid",
+              "SignedAssertion:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "RevokeFirmProfessionalDutyDesignation",
+            "logicalIdentity": {
+              "field": "AssertionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable signed authority assertion; verified AssertionId must match the signed assertion"
+            },
+            "fields": [
+              "AssertionId:Uuid",
+              "DesignationId:Uuid",
+              "SignedAssertion:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "RejectProfessionalDutyChange",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "FirmProfessionalDutyDesignationEngagementUseAuthorized",
+            "discriminator": "bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "FirmProfessionalDutyDesignationEngagementUseSettled",
+            "discriminator": "bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-settled",
+            "version": 1
+          },
+          {
+            "event": "FirmProfessionalDutyDesignationRecorded",
+            "discriminator": "bdgrz.firm.professional-duty.designation-recorded",
+            "version": 1
+          },
+          {
+            "event": "FirmProfessionalDutyDesignationRevoked",
+            "discriminator": "bdgrz.firm.professional-duty.designation-revoked",
+            "version": 1
+          },
+          {
+            "event": "ProfessionalDutyChangeAccepted",
+            "discriminator": "bdgrz.firm-professional-duty-designation.professional-duty-change-accepted",
+            "version": 1
+          },
+          {
+            "event": "ProfessionalDutyChangeRejected",
+            "discriminator": "bdgrz.firm-professional-duty-designation.professional-duty-change-rejected",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ProfessionalAssertionClaimReactor",
+            "sourceOwner": "FirmProfessionalDutyDesignation",
+            "targetOwner": "ProfessionalAssertionIdentityClaim",
+            "command": "ClaimProfessionalAssertionIdentity"
+          },
+          {
+            "reactor": "ProfessionalDesignationApplicationReactor",
+            "sourceOwner": "ProfessionalAssertionIdentityClaim",
+            "targetOwner": "FirmProfessionalDutyDesignation",
+            "command": "ApplyProfessionalDutyChange"
+          },
+          {
+            "reactor": "EngagementFirmProfessionalDutyDesignationUseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "FirmProfessionalDutyDesignation",
+            "command": "AuthorizeFirmProfessionalDutyDesignationEngagementUse"
+          },
+          {
+            "reactor": "EngagementFirmProfessionalDutyDesignationUseSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "FirmProfessionalDutyDesignation",
+            "command": "SettleFirmProfessionalDutyDesignationEngagementUse"
+          },
+          {
+            "reactor": "ProfessionalDutyStaffEligibilityReactor",
+            "sourceOwner": "FirmProfessionalDutyDesignation",
+            "targetOwner": "FirmStaffRecord",
+            "command": "AuthorizeFirmStaffProfessionalDutyUse"
+          },
+          {
+            "reactor": "ProfessionalDutyStaffEligibilitySettlementReactor",
+            "sourceOwner": "FirmProfessionalDutyDesignation",
+            "targetOwner": "FirmStaffRecord",
+            "command": "SettleFirmStaffProfessionalDutyUse"
+          }
+        ]
+      },
+      {
+        "owner": "FirmStaffIdentityClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "declaredIdentity": "platform / canonicalUserId",
+        "selectedIdentity": "platform / canonicalUserId",
+        "invariant": "Permanent canonical user to staffMemberId/practice mapping; disable/status changes never release this mapping.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Canonical user maps to exactly one immutable staff/practice identity; status proofs remain versioned and authoritative.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "FirmStaffIdentityClaimed",
+            "discriminator": "bdgrz.firm-staff-identity-claim.firm-staff-identity-claimed",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "FirmStaffIdentityClaimReactor",
+            "sourceOwner": "FirmStaffRecord",
+            "targetOwner": "FirmStaffIdentityClaim",
+            "command": "ClaimFirmStaffIdentity"
+          },
+          {
+            "reactor": "FirmStaffRegistrationReactor",
+            "sourceOwner": "FirmStaffIdentityClaim",
+            "targetOwner": "FirmStaffRecord",
+            "command": "CompleteFirmStaffRegistration"
+          }
+        ]
+      },
+      {
+        "owner": "FirmStaffRecord",
+        "classification": "business_aggregate",
+        "declaredIdentity": "platform / staffMemberId",
+        "selectedIdentity": "platform / staffMemberId",
+        "invariant": "Immutable canonical user, practice and registration source, plus one staff record active/status revision.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Canonical user maps to exactly one immutable staff/practice identity; status proofs remain versioned and authoritative.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "RegisterFirmStaff",
+            "logicalIdentity": {
+              "field": "StaffMemberId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "StaffMemberId:Uuid",
+              "UserId:Uuid",
+              "Practice:string",
+              "SourceReference:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "SetFirmStaffStatus",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "StaffMemberId:Uuid",
+              "IsActive:bool",
+              "Reason:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "RejectFirmStaffRegistration",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "FirmStaffChangeRecorded",
+            "discriminator": "bdgrz.firm-staff.changed",
+            "version": 1
+          },
+          {
+            "event": "FirmStaffProfessionalDutyUseAuthorized",
+            "discriminator": "bdgrz.firm-staff-record.firm-staff-professional-duty-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "FirmStaffProfessionalDutyUseSettled",
+            "discriminator": "bdgrz.firm-staff-record.firm-staff-professional-duty-use-settled",
+            "version": 1
+          },
+          {
+            "event": "FirmStaffRecordEngagementUseAuthorized",
+            "discriminator": "bdgrz.firm-staff-record.firm-staff-record-engagement-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "FirmStaffRecordEngagementUseSettled",
+            "discriminator": "bdgrz.firm-staff-record.firm-staff-record-engagement-use-settled",
+            "version": 1
+          },
+          {
+            "event": "FirmStaffRegistrationAccepted",
+            "discriminator": "bdgrz.firm-staff-record.firm-staff-registration-accepted",
+            "version": 1
+          },
+          {
+            "event": "FirmStaffRegistrationRejected",
+            "discriminator": "bdgrz.firm-staff-record.firm-staff-registration-rejected",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "FirmStaffIdentityClaimReactor",
+            "sourceOwner": "FirmStaffRecord",
+            "targetOwner": "FirmStaffIdentityClaim",
+            "command": "ClaimFirmStaffIdentity"
+          },
+          {
+            "reactor": "FirmStaffRegistrationReactor",
+            "sourceOwner": "FirmStaffIdentityClaim",
+            "targetOwner": "FirmStaffRecord",
+            "command": "CompleteFirmStaffRegistration"
+          },
+          {
+            "reactor": "EngagementFirmStaffRecordUseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "FirmStaffRecord",
+            "command": "AuthorizeFirmStaffRecordEngagementUse"
+          },
+          {
+            "reactor": "EngagementFirmStaffRecordUseSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "FirmStaffRecord",
+            "command": "SettleFirmStaffRecordEngagementUse"
+          },
+          {
+            "reactor": "ProfessionalDutyStaffEligibilityReactor",
+            "sourceOwner": "FirmProfessionalDutyDesignation",
+            "targetOwner": "FirmStaffRecord",
+            "command": "AuthorizeFirmStaffProfessionalDutyUse"
+          },
+          {
+            "reactor": "ProfessionalDutyStaffEligibilitySettlementReactor",
+            "sourceOwner": "FirmProfessionalDutyDesignation",
+            "targetOwner": "FirmStaffRecord",
+            "command": "SettleFirmStaffProfessionalDutyUse"
+          }
+        ]
+      },
+      {
+        "owner": "IdentityRecovery",
+        "classification": "business_aggregate",
+        "declaredIdentity": "platform / challengeId",
+        "selectedIdentity": "platform / challengeId",
+        "invariant": "Immutable both-proof-verified candidate and preparation; complete protection proofs precede accepted exact swap. Preparation can reject/fence; accepted swap completes forward. Exact account, old/replacement identities and actor/proof provenance retained without bearer tokens.",
+        "boundaryDecision": "business",
+        "commands": [
+          {
+            "command": "RejectIdentityRecoveryPreparation",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "ChallengeId:Uuid",
+              "Generation:long",
+              "ConflictProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "IdentityRecoveryAccepted",
+            "discriminator": "bdgrz.identity-recovery.identity-recovery-accepted",
+            "version": 1
+          },
+          {
+            "event": "IdentityRecoveryCompleted",
+            "discriminator": "bdgrz.identity-recovery.identity-recovery-completed",
+            "version": 1
+          },
+          {
+            "event": "IdentityRecoveryPreparationRejected",
+            "discriminator": "bdgrz.identity-recovery.identity-recovery-preparation-rejected",
+            "version": 1
+          },
+          {
+            "event": "IdentityRecoveryPrepared",
+            "discriminator": "bdgrz.identity-recovery.identity-recovery-prepared",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "IdentityRecoveryContinuationReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "ProtectRecoveryIdentity"
+          },
+          {
+            "reactor": "IdentityRecoveryReplacementReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "RegisterRecoveredIdentity"
+          },
+          {
+            "reactor": "IdentityRecoveryOldRevocationReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "RevokeRecoveredOldIdentity"
+          },
+          {
+            "reactor": "IdentityRecoveryCompletionReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "IdentityRecovery",
+            "command": "CompleteAcceptedIdentityRecovery"
+          },
+          {
+            "reactor": "IdentityRecoveryCompletionNoticeReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "IdentityRecoveryNoticeProcess",
+            "command": "SendIdentityRecoveryNotice"
+          },
+          {
+            "reactor": "IdentityRecoveryAcceptanceReactor",
+            "sourceOwner": "EmailAddress",
+            "targetOwner": "IdentityRecovery",
+            "command": "MaterializeIdentityRecoveryPreparation"
+          },
+          {
+            "reactor": "IdentityRecoveryProtectionReleaseReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "SettleRecoveryIdentityProtection"
+          },
+          {
+            "reactor": "IdentityRecoveryEmailCompletionReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "EmailAddress",
+            "command": "CompleteEmailRecoveryChallenge"
+          },
+          {
+            "reactor": "ProtectedIdentityRecoveryAcceptanceReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "IdentityRecovery",
+            "command": "AcceptProtectedIdentityRecovery"
+          }
+        ]
+      },
+      {
+        "owner": "ImmutableSnapshot",
+        "classification": "immutable_business_artifact_or_decision",
+        "declaredIdentity": "Tenant / snapshots / context.RequestId minted creation identity; same canonical content/linkage/actor retries; one append. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant + selected SnapshotId, immutable canonical manifest and exact amendment lineage; no generated creation fallback.",
+        "invariant": "One snapshot identity can freeze exactly one canonical manifest/hash with immutable, attributed amendment lineage.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "One immutable source capsule must be committed whole; amended snapshots already have separate identities and do not mutate parent.",
+        "commands": [
+          {
+            "command": "AmendProgramScopeSnapshot",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "SnapshotId:Uuid",
+              "ProgramId:Uuid",
+              "ExpectedProgramRevision:long",
+              "BoundaryId:Uuid",
+              "ApprovedBoundaryVersionId:Uuid",
+              "Reason:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "FreezeProgramScopeSnapshot",
+            "logicalIdentity": "SnapshotId",
+            "fields": [
+              "SnapshotId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExpectedProgramRevision:long",
+              "BoundaryId:Uuid",
+              "ApprovedBoundaryVersionId:Uuid"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "SnapshotFrozen"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "IndependenceRuleCatalog",
+        "classification": "business_governor",
+        "declaredIdentity": "Fixed CatalogId; request intent+actor map; expected Sequence, consecutive version and append OCC.",
+        "selectedIdentity": "Existing fixed CatalogId in its existing platform scope; selected CommandId binds exact rule version and expected catalog sequence.",
+        "invariant": "Authored independence rules advance consecutively and cannot falsely claim professional ratification.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Global version allocation/current activation requires atomic sequence; historical documents do not need retained command-state list.",
+        "commands": [
+          {
+            "command": "ReviseIndependenceRules",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "ExpectedSequence:long",
+              "Content:IndependenceRuleContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "IndependenceRuleCatalogEngagementUseAuthorized",
+            "discriminator": "bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "IndependenceRuleCatalogEngagementUseSettled",
+            "discriminator": "bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-settled",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "EngagementIndependenceRuleCatalogUseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "IndependenceRuleCatalog",
+            "command": "AuthorizeIndependenceRuleCatalogEngagementUse"
+          },
+          {
+            "reactor": "EngagementIndependenceRuleCatalogUseSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "IndependenceRuleCatalog",
+            "command": "SettleIndependenceRuleCatalogEngagementUse"
+          }
+        ]
+      },
+      {
+        "owner": "IndependenceRuleRatificationCatalog",
+        "classification": "business_governor",
+        "declaredIdentity": "Fixed CatalogId; stable ratificationId+ruleVersion and requestID intent+actor map; expected sequence.",
+        "selectedIdentity": "Existing fixed CatalogId in its existing platform scope; selected CommandId binds exact ratification identity, rule version and expected catalog sequence.",
+        "invariant": "Only valid professional proof can ratify an exact immutable rule digest, and active ratified rule version advances monotonically.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Monotonic activation cannot be projection maximum; immutable personal ratification histories can leave active coordinator.",
+        "commands": [
+          {
+            "command": "RatifyIndependenceRuleVersion",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "RatificationId:Uuid",
+              "RuleVersion:long",
+              "ExpectedRuleCatalogSequence:long",
+              "ExpectedRatificationSequence:long",
+              "ExpectedContentDigest:string",
+              "SourceReference:string",
+              "ExpectedRevision:long"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "IndependenceRuleRatificationCatalogEngagementUseAuthorized",
+            "discriminator": "bdgrz.independence-rule-ratification-catalog.independence-rule-ratification-catalog-engagement-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "IndependenceRuleRatificationCatalogEngagementUseSettled",
+            "discriminator": "bdgrz.independence-rule-ratification-catalog.independence-rule-ratification-catalog-engagement-use-settled",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "EngagementIndependenceRuleRatificationCatalogUseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "IndependenceRuleRatificationCatalog",
+            "command": "AuthorizeIndependenceRuleRatificationCatalogEngagementUse"
+          },
+          {
+            "reactor": "EngagementIndependenceRuleRatificationCatalogUseSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "IndependenceRuleRatificationCatalog",
+            "command": "SettleIndependenceRuleRatificationCatalogEngagementUse"
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for FindingAggregate fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle FindingAggregate's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for FirmProfessionalDutyDesignation fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle FirmProfessionalDutyDesignation's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for FirmStaffIdentityClaim fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle FirmStaffIdentityClaim's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for FirmStaffRecord fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle FirmStaffRecord's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for IdentityRecovery fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle IdentityRecovery's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ImmutableSnapshot fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ImmutableSnapshot's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for IndependenceRuleCatalog fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle IndependenceRuleCatalog's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for IndependenceRuleRatificationCatalog fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle IndependenceRuleRatificationCatalog's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

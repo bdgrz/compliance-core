@@ -6,9 +6,9 @@ ARG TARGETARCH
 
 COPY .editorconfig Directory.Build.props Directory.Packages.props NuGet.Config global.json ./
 COPY src/Directory.Build.props src/
-COPY src/Compliance.Common/Compliance.Common.csproj src/Compliance.Common/packages.lock.json src/Compliance.Common/
-COPY src/Compliance.Core/Compliance.Core.csproj src/Compliance.Core/packages.lock.json src/Compliance.Core/
-COPY src/Compliance.App/Compliance.App.csproj src/Compliance.App/packages.lock.json src/Compliance.App/
+COPY src/Compliance.Common/Compliance.Common.csproj src/Compliance.Common/
+COPY src/Compliance.Core/Compliance.Core.csproj src/Compliance.Core/
+COPY src/Compliance.App/Compliance.App.csproj src/Compliance.App/
 
 ARG GITHUB_ACTOR
 RUN --mount=type=secret,id=github_token,required=true \
@@ -22,8 +22,7 @@ RUN --mount=type=secret,id=github_token,required=true \
     dotnet restore src/Compliance.App/Compliance.App.csproj \
       --runtime "$compliance_rid" \
       --force-evaluate \
-      /p:PublishAot=true \
-      /p:RestorePackagesWithLockFile=true'
+      /p:PublishAot=true'
 
 COPY src/ src/
 

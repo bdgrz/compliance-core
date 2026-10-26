@@ -13,15 +13,20 @@
     "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
   },
   "counts": {
-    "reactionOrRegularStages": 161,
+    "reactionOrRegularStages": 162,
     "abortBindings": 22,
     "artifactPersonalAdmission": 1,
     "artifactScopedRead": 1,
-    "totalArchitectureRows": 185,
+    "totalArchitectureRows": 186,
     "existingPhysicalReactors": 65,
     "plannedArtifactRootStarters": 1,
     "existingProcessDefinitions": 28,
-    "plannedArtifactDefinitions": 1
+    "plannedArtifactDefinitions": 1,
+    "architectureRows": 186,
+    "plannedProcessDefinitions": 2,
+    "intendedProcessDefinitions": 30,
+    "plannedReactors": 2,
+    "intendedPhysicalReactors": 67
   },
   "pendingOwnerOrProtocolDecisions": [],
   "edges": [
@@ -379,10 +384,21 @@
           "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
           "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
         },
-        "requiredTypedStageProofSets": [],
+        "requiredTypedStageProofSets": [
+          {
+            "factKinds": [
+              "ServiceEngagementAcceptanceRequested",
+              "ServiceEngagementStaffAssignmentRequested"
+            ],
+            "role": "exact original first-owner admission selected by operation kind; one applicable variant, not both",
+            "quantifier": "exactly_one_selected_variant",
+            "condition": "acceptance_or_staff_assignment",
+            "requiredVerification": "Resolve actual saved source-owner fact, exact engagement/tenant, original root/episode/personal actor/frozen intent and complete immutable manifest; pin complete service epoch and exact latest service fact EventId/revision before authorize or commit."
+          }
+        ],
         "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
-        "proofGate": "Exact full service manifest and current epoch; acceptance holds source epoch through accepted append.",
-        "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes."
+        "proofGate": "Exactly one actual applicable acceptance/staff-assignment root and its complete frozen service manifest. On the client service owner, verify current epoch equals pinned revision and current latest service EventId equals the exact frozen source fact, then atomically hold that epoch through acceptance/assignment completion or fenced abort. Any service advance before hold rejects; later service writes are blocked until settlement.",
+        "requiredLogicalPrerequisiteProofs": "Exactly one applicable typed request variant is independently resolved as actual committed source fact; never require both. Exact immutable root and full source manifest determine the epoch; current client service owner independently checks latest event ID/revision and atomically grants the hold."
       },
       "effectIdentity": {
         "decisionId": "EFFECT_IDENTITIES",
@@ -9834,7 +9850,12 @@
         "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
         "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
       },
-      "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "orderedGroup": "TenantRbacBootstrap",
+      "orderingConstraint": {
+        "order": 1,
+        "condition": "always"
+      }
     },
     {
       "id": "S012",
@@ -9873,7 +9894,12 @@
         "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
         "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
       },
-      "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "orderedGroup": "TenantRbacBootstrap",
+      "orderingConstraint": {
+        "order": 2,
+        "condition": "always"
+      }
     },
     {
       "id": "S013",
@@ -9912,7 +9938,12 @@
         "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
         "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
       },
-      "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "orderedGroup": "TenantRbacBootstrap",
+      "orderingConstraint": {
+        "order": 3,
+        "condition": "ownerBecomesAdministrator"
+      }
     },
     {
       "id": "S014",
@@ -9951,7 +9982,16 @@
         "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
         "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
       },
-      "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "orderedGroup": "TenantRbacBootstrap",
+      "orderingConstraint": {
+        "order": 4,
+        "condition": "always",
+        "after": [
+          "S011",
+          "S012"
+        ]
+      }
     },
     {
       "id": "S015",
@@ -9990,7 +10030,20 @@
         "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
         "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
       },
-      "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "orderedGroup": "TenantRbacBootstrap",
+      "orderingConstraint": {
+        "order": 5,
+        "condition": "always",
+        "after": [
+          "S014"
+        ],
+        "requiredEffects": [
+          "TenantAccess",
+          "TenantRbacManage",
+          "ProgramManage"
+        ]
+      }
     },
     {
       "id": "S016",
@@ -10029,7 +10082,18 @@
         "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
         "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
       },
-      "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      "implementationConformance": "NOT_ASSERTED; current source evidence only",
+      "orderedGroup": "TenantRbacBootstrap",
+      "orderingConstraint": {
+        "order": 6,
+        "condition": "ownerBecomesAdministrator",
+        "after": [
+          "S013",
+          "S014",
+          "S015"
+        ],
+        "activationTrigger": true
+      }
     },
     {
       "id": "S017",
@@ -13455,6 +13519,112 @@
         "implementationConformance": "UNIMPLEMENTED_REQUIRED_TARGET"
       },
       "implementationConformance": "UNIMPLEMENTED_REQUIRED_TARGET"
+    },
+    {
+      "id": "R000",
+      "kind": "reaction_or_regular_process_stage",
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "sourceOwner": "ProgramRollover",
+      "logicalPrerequisiteFacts": [
+        "ProgramRolloverApproved"
+      ],
+      "physicalRootEvents": [
+        "ProgramRolloverExecutionClaimed"
+      ],
+      "receiverCommand": "StartProgramRolloverExecutionProcess",
+      "targetOwner": "ProgramRolloverExecutionProcess",
+      "targetAuthorityKind": "private_recoverable_process",
+      "emittedSemanticFacts": [],
+      "currentRegisteredRootTypes": [],
+      "plannedRootRole": "one new committed execution-claim starter",
+      "processes": [
+        "ProgramRolloverExecutionProcess"
+      ],
+      "requiredProofContract": {
+        "proofGate": "Verify actual approved rollover fact and atomic claim pinning version/content hash/approval actor-role-time. Rollover content pins NextExaminationId, NextTypeIIPlanId, NextPeriodId and dates. Observe actual Type I entry approval; actual human-created successor examination; exact frozen Type I baseline, auditor outcome and approved/bound system-description version; human-authored source-validated TypeIIPlan; exhaustive carry-forward mapping; independent review and executive approval. Then submit exact period start. Pending admission is not completion; require actual started chain with immutable opening intent, native root/result, exact source and target facts/hashes, period/range and calendar authorization ID/generation.",
+        "mappingManifest": "Each rollover record and commitment maps exactly once to a TypeIIPlan destination or justified nonrepresentation consistent with approved disposition; exact source/version/hash, complete frozen manifest/hash; reject omissions, duplicates, mismatch and unsupported conversion.",
+        "requiredTypedStageProofSets": [
+          {
+            "factKinds": [
+              "ProgramRolloverApproved",
+              "ProgramRolloverExecutionClaimed"
+            ],
+            "role": "exact rollover version and approval tuple pinned before successor work",
+            "quantifier": "exactly_one_each",
+            "condition": "always",
+            "requiredVerification": "same tenant/program/rollover, version/content hash and approver identity/role/time; claim content binds NextExaminationId, NextTypeIIPlanId, NextPeriodId and dates."
+          },
+          {
+            "factKinds": [
+              "TypeIEntryDecisionRecorded",
+              "ExaminationEngagementOpened"
+            ],
+            "role": "authorized successor Type I examination",
+            "quantifier": "exactly_one_each",
+            "condition": "always",
+            "requiredVerification": "actual current approved/approved_with_exceptions readiness decision; actual examination event same tenant/program and exact NextExaminationId, with approved next dates."
+          },
+          {
+            "factKinds": [
+              "TypeIBaselineFrozen",
+              "AuditOutcomeRecorded",
+              "SystemDescriptionApproved",
+              "SystemDescriptionBound"
+            ],
+            "role": "complete Type I prerequisite source chain",
+            "quantifier": "exactly_one_each",
+            "condition": "always",
+            "requiredVerification": "same NextExaminationId; frozen baseline ID/hash and complete manifest; recorded auditor Type I outcome bound to exact baseline/hash; approved description version exists in baseline and is actually bound for same examination, type_i_baseline purpose and baseline ID."
+          },
+          {
+            "factKinds": [
+              "TypeIIPlanProposed",
+              "TypeIIPlanReviewed",
+              "TypeIIPlanApproved"
+            ],
+            "role": "complete human-authored successor plan and independent governance",
+            "quantifier": "one_current_exact_version_each (revisions may add earlier proposals)",
+            "condition": "always",
+            "requiredVerification": "same NextTypeIIPlanId and NextExaminationId; current version hash; baseline/outcome/description source IDs and hashes exact; dates match rollover; complete exhaustive carry-forward mapping; reviewer and executive approver distinct from proposer and each other; actual facts."
+          },
+          {
+            "factKinds": [
+              "TypeIIPeriodOpeningAccepted"
+            ],
+            "role": "successor opening admission",
+            "quantifier": "exactly_one",
+            "condition": "always",
+            "requiredVerification": "exact NextPeriodId, NextTypeIIPlanId, NextExaminationId and dates; immutable intent and original 202; pending only."
+          },
+          {
+            "factKinds": [
+              "ObservationPeriodStarted"
+            ],
+            "role": "successor period terminal",
+            "quantifier": "exactly_one",
+            "condition": "always",
+            "requiredVerification": "actual native chain to accepted opening; exact period stream/range and plan ID/version/hash; operation root/result and calendar authorization ID/generation."
+          }
+        ],
+        "recoveryContract": "Persist before starter checkpoint; retry deterministic exact identities; observe human decisions only through actual typed facts; after lost append reload and verify actual facts. Missing dependencies retry; invalid/mismatched proofs quarantine. Rejection/failure never implies success or release; accepted remains pending, started is complete. A changes_requested plan version loops through an exact revised version and new complete mapping; a rejected plan terminates as failed. Missing Type I prerequisites wait/retry under their exact owners; the process never fabricates a baseline, outcome, description or examination. A changes_requested plan loops to human revision/remapping; explicit reject is terminal failed. An opening rejection is never started.",
+        "implementationStatus": "New target; no implementation authorized.",
+        "crossOwnerCorrelation": "Private process record is rooted in actual ProgramRolloverExecutionClaimed. It verifies every fact on the owner-specific tenant/program/examination/baseline/plan/period stream named by the pinned content. The next plan and period commands repeat exact NextExaminationId/NextTypeIIPlanId/NextPeriodId; mismatched owner identities cannot advance."
+      },
+      "effectIdentity": {
+        "version": "effect-identity-v2",
+        "namespace": "actual committed ProgramRolloverExecutionClaimed.Metadata.EventId",
+        "fieldsInOrder": [
+          "effectKind",
+          "canonical target EventStreamAddress",
+          "episode"
+        ],
+        "rule": "Use an explicitly versioned injective length-prefixed encoding for this new domain; preserve any occupied IDs unchanged; fixed vectors required before activation."
+      },
+      "implementationConformance": "UNIMPLEMENTED_REQUIRED_TARGET",
+      "sourceOwners": [
+        "ProgramRollover"
+      ],
+      "canonicalTargetOwner": "ProgramRolloverExecutionProcess"
     }
   ],
   "qualification": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."

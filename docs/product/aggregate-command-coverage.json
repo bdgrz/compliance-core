@@ -1104,7 +1104,7 @@
     },
     {
       "fact": "ApplicationRelationshipAdded",
-      "contract": "src/Compliance.Common/Features/Applications/ApplicationRelationshipAdded.cs",
+      "contract": "src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipAdded.cs",
       "reducers": [
         {
           "aggregate": "DeclaredApplication",
@@ -1124,7 +1124,7 @@
     },
     {
       "fact": "ApplicationRelationshipApproved",
-      "contract": "src/Compliance.Common/Features/Applications/ApplicationRelationshipApproved.cs",
+      "contract": "src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipApproved.cs",
       "reducers": [
         {
           "aggregate": "DeclaredApplication",
@@ -1186,7 +1186,7 @@
     },
     {
       "fact": "ApplicationRelationshipRemoved",
-      "contract": "src/Compliance.Common/Features/Applications/ApplicationRelationshipRemoved.cs",
+      "contract": "src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipRemoved.cs",
       "reducers": [
         {
           "aggregate": "DeclaredApplication",
@@ -13086,13 +13086,13 @@
     },
     {
       "request": "AddApplicationRelationship",
-      "contract": "src/Compliance.Common/Features/Applications/AddApplicationRelationship.cs",
+      "contract": "src/Compliance.Common/Features/Applications/Commands/AddApplicationRelationship.cs",
       "interfaces": "IRequest<ApplicationRelationshipChange>,\n    IApplicationInventoryWriteRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
           "name": "AddApplicationRelationshipHandler",
-          "source": "src/Compliance.Core/Features/Applications/AddApplicationRelationshipHandler.cs",
+          "source": "src/Compliance.Core/Features/Applications/Commands/AddApplicationRelationshipHandler.cs",
           "registered": true
         }
       ],
@@ -13869,13 +13869,13 @@
     },
     {
       "request": "ApproveApplicationSuccessor",
-      "contract": "src/Compliance.Common/Features/Applications/ApproveApplicationSuccessor.cs",
+      "contract": "src/Compliance.Common/Features/Applications/Commands/ApproveApplicationSuccessor.cs",
       "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
           "name": "ApproveApplicationSuccessorHandler",
-          "source": "src/Compliance.Core/Features/Applications/ApproveApplicationSuccessorHandler.cs",
+          "source": "src/Compliance.Core/Features/Applications/Commands/ApproveApplicationSuccessorHandler.cs",
           "registered": true
         }
       ],
@@ -28267,13 +28267,13 @@
     },
     {
       "request": "RemoveApplicationRelationship",
-      "contract": "src/Compliance.Common/Features/Applications/RemoveApplicationRelationship.cs",
+      "contract": "src/Compliance.Common/Features/Applications/Commands/RemoveApplicationRelationship.cs",
       "interfaces": "IRequest<ApplicationRelationshipChange>, IApplicationInventoryWriteRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
           "name": "RemoveApplicationRelationshipHandler",
-          "source": "src/Compliance.Core/Features/Applications/RemoveApplicationRelationshipHandler.cs",
+          "source": "src/Compliance.Core/Features/Applications/Commands/RemoveApplicationRelationshipHandler.cs",
           "registered": true
         }
       ],

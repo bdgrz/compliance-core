@@ -31,11 +31,14 @@ public sealed class ProductClientServiceNativeHistoryTests
         var second = Assert.IsType<ClientServiceRevised>(history.Facts[1]);
         var corrupt = malformed switch
         {
-            "duplicate" => second with { Operation = second.Operation with
+            "duplicate" => second with
             {
-                LogicalId = first.Operation.LogicalId,
-                RootOperationId = first.Operation.LogicalId,
-            } },
+                Operation = second.Operation with
+                {
+                    LogicalId = first.Operation.LogicalId,
+                    RootOperationId = first.Operation.LogicalId,
+                }
+            },
             "program" => second with { ProgramId = Uuid.CreateVersion4() },
             _ => second with { Operation = second.Operation with { Actor = second.Operation.Actor with { Kind = "system" } } },
         };
@@ -122,11 +125,14 @@ public sealed class ProductClientServiceNativeHistoryTests
         var history = await original.Services.HistoryAsync(tenant, rules.Id);
         var second = Assert.IsType<ClientServiceRevised>(history.Facts[1]);
         var third = Assert.IsType<ClientServiceRevised>(history.Facts[2]);
-        var malformed = third with { Operation = third.Operation with
+        var malformed = third with
         {
-            LogicalId = second.Operation.LogicalId,
-            RootOperationId = second.Operation.LogicalId,
-        } };
+            Operation = third.Operation with
+            {
+                LogicalId = second.Operation.LogicalId,
+                RootOperationId = second.Operation.LogicalId,
+            }
+        };
         malformed.AttachMetadata(third.Metadata);
         var events = new InMemoryEventStore();
         await events.AppendAsync(history.Owner.Stream, 0, [history.Facts[0], second, malformed]);

@@ -1,0 +1,263 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Re-evaluate selected choreography rows using only their material source/target facts and proof rules. A dispatcher is not proof of target commitment. Do not require child-stage proofs where the selected row has no intermediate stage; judge the row kind and its actual conditions.",
+    "pass": "neutral_flow_precision",
+    "ownerFacts": [
+      {
+        "owner": "EvidenceArtifact",
+        "classification": "business_aggregate",
+        "identity": "Tenant / existing EvidenceStreams artifact key / ArtifactId, with immutable source identity and verified content binding. ArtifactId identifies registration; selected mutations use CommandId. Download grants use the separately adopted artifact-qualified receiving identity.",
+        "invariant": "Immutable content remains unavailable until clean inspection; malware alone can be released with attributed clean rescan; secret/invalid rejection is final.",
+        "boundaryRationale": "Inspection and quarantine release share availability decision. Download authorization needs an admission proof against that decision but every historical download need not extend artifact lifecycle stream."
+      },
+      {
+        "owner": "ArtifactDownloadGrant",
+        "classification": "business_aggregate",
+        "identity": "UUIDv5 namespace ArtifactId, UTF8 artifact-download-grant:v1:{canonical TenantId}:{canonical CommandId}. Receiving root additionally verifies exact artifact/command/original-actor tuple. No generic operation lookup.",
+        "invariant": "One exact receiving grant owns the authenticated encrypted original artifact ticket/result after EvidenceArtifact first admitted and pinned availability with frozen202. Complete required held source uses and exact issue DecisionAt precede native issued-v2; cancellation fences delayed issuance and terminal proofs settle all uses. Original expiry never renews under the same root identity. Existing artifact-issued v1 decoder remains read-only compatibility."
+      }
+    ],
+    "orderedPhysicalPlans": [],
+    "flows": [
+      {
+        "id": "P000",
+        "kind": "personal_source_admission",
+        "sourceOwner": null,
+        "targetOwner": "EvidenceArtifact",
+        "targetAuthorityKind": "business_first_owner",
+        "physicalRootEvents": [],
+        "logicalPrerequisiteFacts": [],
+        "receiverCommand": "IssueArtifactDownload",
+        "emittedSemanticFacts": [
+          "EvidenceArtifactDownloadRequested"
+        ],
+        "selectedContract": {
+          "id": "P000",
+          "kind": "personal_source_admission",
+          "request": "IssueArtifactDownload",
+          "handlerRole": "identified personal admission on EvidenceArtifact",
+          "requestFields": [
+            {
+              "name": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "route": "command_id"
+            },
+            {
+              "name": "TenantId",
+              "type": "Uuid",
+              "required": true,
+              "route": "tenant_id"
+            },
+            {
+              "name": "ArtifactId",
+              "type": "Uuid",
+              "required": true,
+              "route": "artifact_id"
+            },
+            {
+              "name": "Purpose",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "ProgramId",
+              "type": "Uuid?",
+              "required": false
+            },
+            {
+              "name": "AdvisorHandoffId",
+              "type": "Uuid?",
+              "required": false
+            },
+            {
+              "name": "SelectedSource",
+              "type": "AdvisorRecordVersion?",
+              "required": false
+            }
+          ],
+          "identifiedRequestRule": "IIdentifiedRequest.RequestId maps to the caller CommandId; reject missing/empty/malformed identity, never substitute context trace/request id.",
+          "http": {
+            "method": "PUT",
+            "path": "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads/{command_id}",
+            "body": "existing authored purpose and optional complete consultant scope; all route identities canonical and cannot be replaced by query/body identity",
+            "firstStatus": 202,
+            "firstBodyType": "OperationAcceptedResponse",
+            "mcp": false
+          },
+          "firstOwner": "EvidenceArtifact",
+          "firstOwnerScope": "tenant + artifact",
+          "logicalOperationId": "caller CommandId scoped to first owner",
+          "emittedBusinessEvents": [
+            "EvidenceArtifactDownloadRequested"
+          ],
+          "currentGuardsPreserved": [
+            "Personal HTTP invocation only; no system actor; Bdgrz user maps to tenant member actor with display.",
+            "Tenant/artifact nonempty; bounded trimmed Purpose (EvidenceRules.MaximumTextLength).",
+            "Ordinary caller: current exact SharedResource artifact EvidenceArtifactRead permission via IAccessGrantScopePermissionAuthorizer.",
+            "Consultant scope is all-or-none: nonempty ProgramId + AdvisorHandoffId + supported evidence-artifact SelectedSource matching ArtifactId, active shared-source authorization and sourceVersions.RequireCurrentAsync.",
+            "Capture actual canonical registration/current metadata and complete source prefix; artifact Available with nonfuture availability instant; content hash/length exact; physical source position must fit signed long.",
+            "IssueDeliveryAsync only for actual tenant/hash/length; absolute HTTPS or urn:bdgrz:artifact-delivery: URI; expiry > now and <= now + five minutes.",
+            "Recheck access and canonical metadata after ticket preparation; append checks unchanged physical position, Available state, hash and length.",
+            "RecordDownload validates exact business revision, request UUID, member kind/UUID/display<=200, IssuedAt>=RegisteredAt, canonical purpose and content tuple."
+          ],
+          "admissionAuthorization": "Current personal Bdgrz HTTP caller and exact artifact read right before native replay. Preserve ordinary current scoped permission path and all-or-none consultant program/handoff/selected-source authorization. Exact retry compares same original actor identity and normalized authored terms.",
+          "frozenIntent": "Exact canonical original request, root/actor/first-owner provenance, derived GrantId, actual content hash/length/head and available-inspection source/cut, complete optional handoff + explicit handling-policy requirements, maximum delivery lifetime. Freeze actual immutable default policy when selected; no absent-source surrogate.",
+          "atomicLocalAvailabilityRole": {
+            "authority": "The single committed EvidenceArtifactDownloadRequested fact simultaneously records admission and installs its exact local availability reservation/fence.",
+            "predicate": "Pin this artifact-owned available inspected content/head and exact generation for this admitted root through actual receiving issue or cancellation. Any artifact-owned mutation that would invalidate it must honor the reservation.",
+            "identity": "Exact first-owner artifact + root CommandId + receiving derived grant + purpose/generation; no global command uniqueness assumption.",
+            "proofTiming": "Before append, only prove actual already-saved predecessor/content sources. Never construct a proof of the future Requested fact. After append, derive and verify actual saved Requested source/metadata and local reservation authority; that fact proves the availability grant for foreign issue.",
+            "bounds": "Retain every active reservation legitimately needed for current authority; no arbitrary cap. Closed history/fences may be externalized only with verified immutable exact-cut authority.",
+            "externalBoundary": "This local hold does not claim an atomic transaction with foreign owners or physical content storage. Issue still proves actual stored content/URI and bounded lifetime; unavailable dependencies remain transient. No invented cross-owner permit or absence proof."
+          },
+          "originalResponse": "Freeze the exact standard 202 OperationAcceptedResponse(CommandId, artifact-scoped status URL, original AcceptedAt) on first acceptance. Later receiving issuance never replaces or reconstructs that root first response.",
+          "replayAndFailure": "Current public authorization first; exact native original202 returns only for fully bound original intent/actor. Equal winner and unknown append recover actual committed acceptance; requested cancellation passes through. Availability/source conflict or corruption does not silently become cancellation without the selected proof.",
+          "receiverCommand": "IssueArtifactDownload",
+          "targetOwner": "EvidenceArtifact",
+          "logicalPrerequisiteEvents": [],
+          "emittedEventContracts": [
+            {
+              "event": "EvidenceArtifactDownloadRequested",
+              "version": 1,
+              "owner": "EvidenceArtifact",
+              "native": true
+            }
+          ],
+          "sourceEntry": "current-authorized personal HTTP command, not an event subscription",
+          "requestContract": "IRequest<OperationAcceptedResponse>, IIdentifiedRequest; existing personal artifact mutation authorization retained",
+          "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+          "decisionBasis": {
+            "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+            "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+            "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+            "decisionIds": [
+              "ARTIFACT_DOWNLOAD",
+              "PROOF_CARRIERS",
+              "EFFECT_IDENTITIES"
+            ],
+            "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+          },
+          "implementationConformance": "UNIMPLEMENTED_REQUIRED_TARGET"
+        }
+      },
+      {
+        "id": "Q000",
+        "kind": "personal_scoped_query",
+        "sourceOwner": null,
+        "targetOwner": "ArtifactDownloadGrant",
+        "targetAuthorityKind": "business_scoped_read",
+        "physicalRootEvents": [],
+        "logicalPrerequisiteFacts": [
+          "EvidenceArtifactDownloadRequested",
+          "EvidenceArtifactDownloadIssued",
+          "ArtifactDownloadGrantCanceled"
+        ],
+        "receiverCommand": "GetArtifactDownloadGrant",
+        "emittedSemanticFacts": [],
+        "selectedContract": {
+          "id": "Q000",
+          "kind": "personal_scoped_query",
+          "request": "GetArtifactDownloadGrant",
+          "http": {
+            "method": "GET",
+            "path": "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads/{command_id}",
+            "mcp": false
+          },
+          "requiredFields": [
+            "TenantId:Uuid",
+            "ArtifactId:Uuid",
+            "CommandId:Uuid"
+          ],
+          "identityRule": "All identity comes from the canonical scoped path; misleading query identities cannot override it. Derive exact receiving GrantId locally, never scan a generic operation registry.",
+          "authorization": "Current personal HTTP actor must match the original admitted personal actor identity AND still possess current exact artifact read rights/required current consultant handoff scope. Current rights alone do not authorize another actor original ticket; original actor alone does not bypass current rights. Use existing denial/concealment behavior for unauthorized or mismatched owner/root.",
+          "response": "closed Pending / issued / canceled union, bound to same tenant/artifact/root command/GrantId",
+          "variants": [
+            {
+              "state": "pending",
+              "authority": "actual verified Requested admission, with no receiving terminal outcome yet provable",
+              "contents": "scoped identity + original accepted state/time; no ticket or guessed cancellation"
+            },
+            {
+              "state": "issued",
+              "authority": "actual receiving issued v2 plus authenticated encrypted original ticket/result and matching root/actor/proofs",
+              "contents": "same stored original ticket location and expiry, never regenerated or extended; return original expired ticket unchanged when authorized"
+            },
+            {
+              "state": "canceled",
+              "authority": "actual receiving cancellation/fence bound to same root and generation",
+              "contents": "scoped canceled status and selected safe bounded failure code; no ticket"
+            }
+          ],
+          "unavailableRule": "Source/protected-result unavailability is transient, never guessed pending/canceled/absent authority; malformed/corrupt proof fails closed. A legitimately missing admitted root is not found.",
+          "emittedBusinessEvents": [],
+          "noRenewal": "Read and exact write retry cannot mint/refresh a ticket. A new authorized command is required for a new delivery.",
+          "legacyRule": "Old artifact-issued v1 has no persisted native admission/encrypted ticket. Preserve historical metadata decoder/read behavior, but never fabricate a native grant or original ticket for it.",
+          "receiverCommand": "GetArtifactDownloadGrant",
+          "targetOwner": "ArtifactDownloadGrant",
+          "logicalPrerequisiteEvents": [
+            "EvidenceArtifactDownloadRequested",
+            "EvidenceArtifactDownloadIssued",
+            "ArtifactDownloadGrantCanceled"
+          ],
+          "logicalPrerequisiteRule": "Verified Requested admission AND the actual selected state: pending with no terminal yet provable, receiving issuedv2, or cancellation. These event variants are not an all-events requirement.",
+          "requiredEventVersions": {
+            "EvidenceArtifactDownloadRequested": 1,
+            "EvidenceArtifactDownloadIssued": 2
+          },
+          "sourceEntry": "original-actor + current-rights artifact-scoped personal GET",
+          "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+          "decisionBasis": {
+            "path": "/tmp/compliance-definitive-inventory/adjudication/adopted-decisions.json",
+            "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+            "sourceCheckpoint": "8074fb02e1f5137fb3c9653231e1551f5fde34f2",
+            "decisionIds": [
+              "ARTIFACT_DOWNLOAD",
+              "PROOF_CARRIERS",
+              "EFFECT_IDENTITIES"
+            ],
+            "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+          },
+          "implementationConformance": "UNIMPLEMENTED_REQUIRED_TARGET"
+        }
+      }
+    ]
+  },
+  "questions": {
+    "flow_0": {
+      "type": "choice",
+      "instructions": "Is selected flow P000 logically coherent across the named source and target owners, given its exact proof gate and terminal rules?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Does selected flow P000 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    },
+    "flow_1": {
+      "type": "choice",
+      "instructions": "Is selected flow Q000 logically coherent across the named source and target owners, given its exact proof gate and terminal rules?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Does selected flow Q000 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    }
+  }
+}

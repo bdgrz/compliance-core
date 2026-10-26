@@ -1,0 +1,1111 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_fit",
+    "owners": [
+      {
+        "owner": "RiskMethod",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant/risk-methods/v5(tenant,risk-method:program); versionId derives current sequential number. Publish lacks stable request identity; exact retry with original expectedVersion conflicts instead of no-op.",
+        "selectedIdentity": "Existing tenant-scoped risk-method identity derived from ProgramId by the unchanged UUIDv5 algorithm. Selected CommandId identifies publication of one exact method/version intent.",
+        "invariant": "The program method advances sequentially by expected published version and each immutable definition has complete valid 5x5 scales and permitted appetite.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Scales/appetite together define one method version and should remain atomic; historical versions can be immutable definition records read as values while narrow owner retains current version identity. No need split scale members.",
+        "commands": [
+          {
+            "command": "PublishRiskMethodVersion",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExpectedVersion:long",
+              "LikelihoodScale:IReadOnlyList<string>",
+              "ImpactScale:IReadOnlyList<string>",
+              "AppetiteThreshold:int?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "RiskMethodVersionPublished"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "RiskTreatmentAction",
+        "classification": "business_aggregate",
+        "declaredIdentity": "actionId",
+        "selectedIdentity": "actionId",
+        "invariant": "One accountable action, completion and independent review lifecycle.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Assessment belongs to RiskEvaluation; risk governance consumes exact risk/source proofs, no live aggregate authority.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AddRiskTreatmentAction",
+            "logicalIdentity": {
+              "field": "ActionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ActionId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ExpectedRevision:long",
+              "Title:string",
+              "TargetState:string",
+              "ExpectedEvidence:string",
+              "DueOn:DateOnly",
+              "AccountableMemberId:Uuid",
+              "EvidenceRequestIds:IReadOnlyList<Uuid>?"
+            ]
+          },
+          {
+            "command": "CancelRiskTreatmentAction",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ActionId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ReviewRiskTreatmentActionCompletion",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ActionId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "ReviseRiskTreatmentAction",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ActionId:Uuid",
+              "ExpectedRevision:long",
+              "Title:string",
+              "TargetState:string",
+              "ExpectedEvidence:string",
+              "DueOn:DateOnly",
+              "AccountableMemberId:Uuid",
+              "EvidenceRequestIds:IReadOnlyList<Uuid>?"
+            ]
+          },
+          {
+            "command": "SubmitRiskTreatmentActionCompletion",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ActionId:Uuid",
+              "ExpectedRevision:long",
+              "Summary:string",
+              "EvidenceRequestIds:IReadOnlyList<Uuid>"
+            ]
+          },
+          {
+            "command": "AbortRiskTreatmentActionReview",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "RiskTreatmentActionAdded",
+            "discriminator": "bdgrz.risk.treatment_action.added",
+            "version": 1
+          },
+          {
+            "event": "RiskTreatmentActionCancelled",
+            "discriminator": "bdgrz.risk.treatment_action.cancelled",
+            "version": 1
+          },
+          {
+            "event": "RiskTreatmentActionCompletionReviewAccepted",
+            "discriminator": "bdgrz.risk-treatment-action.risk-treatment-action-completion-review-accepted",
+            "version": 1
+          },
+          {
+            "event": "RiskTreatmentActionCompletionReviewCanceled",
+            "discriminator": "bdgrz.risk-treatment-action.risk-treatment-action-completion-review-canceled",
+            "version": 1
+          },
+          {
+            "event": "RiskTreatmentActionCompletionReviewed",
+            "discriminator": "bdgrz.risk.treatment_action.completion_reviewed",
+            "version": 1
+          },
+          {
+            "event": "RiskTreatmentActionCompletionSubmitted",
+            "discriminator": "bdgrz.risk.treatment_action.completion_submitted",
+            "version": 1
+          },
+          {
+            "event": "RiskTreatmentActionRevised",
+            "discriminator": "bdgrz.risk.treatment_action.revised",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ActionCompletionEvidenceRequestAuthorizationReactor",
+            "sourceOwner": "RiskTreatmentAction",
+            "targetOwner": "EvidenceRequest",
+            "command": "AuthorizeEvidenceRequestActionCompletionUse"
+          },
+          {
+            "reactor": "ActionCompletionEvidenceRequestSettlementReactor",
+            "sourceOwner": "RiskTreatmentAction",
+            "targetOwner": "EvidenceRequest",
+            "command": "SettleEvidenceRequestActionCompletionUse"
+          },
+          {
+            "reactor": "RiskActionCompletionReviewReactor",
+            "sourceOwner": "RiskTreatmentAction",
+            "targetOwner": "RiskTreatmentAction",
+            "command": "CompleteRiskTreatmentActionReview"
+          }
+        ]
+      },
+      {
+        "owner": "RiskTreatmentAssertion",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(riskId, controlId)",
+        "selectedIdentity": "(riskId, controlId)",
+        "invariant": "One pending/accepted assertion line per risk/control.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Assessment belongs to RiskEvaluation; risk governance consumes exact risk/source proofs, no live aggregate authority.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "ProposeRiskControlTreatment",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "ExpectedRevision:long",
+              "ControlId:Uuid",
+              "ControlVersionId:Uuid",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "RetireRiskControlTreatment",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "TreatmentId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ReviewRiskControlTreatment",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RiskId:Uuid",
+              "TreatmentId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "RiskControlTreatmentProposed",
+            "discriminator": "bdgrz.risk.control_treatment.proposed",
+            "version": 1
+          },
+          {
+            "event": "RiskControlTreatmentRetired",
+            "discriminator": "bdgrz.risk.control_treatment.retired",
+            "version": 1
+          },
+          {
+            "event": "RiskControlTreatmentReviewed",
+            "discriminator": "bdgrz.risk.control_treatment.reviewed",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "Role",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Per tenant roleId, built-in IDs stable; system-only Define gate. Define ignores changed creation content; Rename is idempotent by normalized current name; expected-position OCC.",
+        "selectedIdentity": "Tenant + RoleId; built-in identities remain fixed. RoleId identifies immutable creation; selected mutations use CommandId with current authorized role scope.",
+        "invariant": "One role has one active/deleted lifecycle, normalized display name and built-in protection.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Display name and deletion are one role lifecycle; permissions/teams correctly separate identity/lifecycles and projections.",
+        "commands": [
+          {
+            "command": "DefineRole",
+            "logicalIdentity": "RoleId",
+            "fields": [
+              "TenantId:Uuid",
+              "RoleId:Uuid",
+              "Name:string"
+            ]
+          },
+          {
+            "command": "DeleteRole",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "RoleId:Uuid"
+            ]
+          },
+          {
+            "command": "RenameRole",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "RoleId:Uuid",
+              "Name:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "RoleDefined"
+          },
+          {
+            "event": "RoleDeleted"
+          },
+          {
+            "event": "RoleRenamed"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "RolePermission",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 tenant+role+normalized permission. Current bool handles immediate Assign retry; lacks assignment/request identity for replay after removal; repeated Remove notFound.",
+        "selectedIdentity": "Existing UUIDv5 of tenant + role + normalized permission. Selected CommandId and assignment episode bind the exact assignment/removal intent.",
+        "invariant": "One normalized role-permission tuple has a single active relationship at a time.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Relationship can be assigned/removed without serializing unrelated permissions; a roster in Role is unnecessary.",
+        "commands": [
+          {
+            "command": "AssignRolePermission",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "TenantId:Uuid",
+              "RoleId:Uuid",
+              "Permission:string",
+              "CommandId:Uuid",
+              "ExpectedRevision:ulong"
+            ]
+          },
+          {
+            "command": "RemoveRolePermission",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "TenantId:Uuid",
+              "RoleId:Uuid",
+              "Permission:string",
+              "CommandId:Uuid",
+              "ExpectedRevision:ulong",
+              "AssignmentId:Uuid"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "RolePermissionAssigned"
+          },
+          {
+            "event": "RolePermissionRemoved"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "SeparationOfDutiesWaiver",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Create waiverId=context.RequestId. Record normalized terms compare; approval exact approver retry no-op and changed approver conflict. Expected-position OCC.",
+        "selectedIdentity": "Tenant + caller WaiverId; original approval scope/subject/revision remains immutable.",
+        "invariant": "Exact record/version/action/beneficiary exception can be approved once only by a different administrator who is neither requester nor beneficiary, during its validity window.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Request scope/actors and approval must remain one authority. Another waiver has independent lifecycle.",
+        "commands": [
+          {
+            "command": "ApproveSeparationOfDutiesWaiver",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "WaiverId:Uuid",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "RecordSeparationOfDutiesWaiver",
+            "logicalIdentity": "WaiverId",
+            "fields": [
+              "WaiverId:Uuid",
+              "TenantId:Uuid",
+              "Scope:SeparationOfDutiesWaiverScope",
+              "BeneficiaryUserId:Uuid",
+              "Rationale:string",
+              "ExpiresAt:DateTimeOffset"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "SeparationOfDutiesWaiverApproved"
+          },
+          {
+            "event": "SeparationOfDutiesWaiverRecorded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ServiceEngagementIndependence",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant / engagementId",
+        "selectedIdentity": "tenant / engagementId",
+        "invariant": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AcceptServiceEngagement",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "AcknowledgeEngagementManagement",
+            "logicalIdentity": {
+              "field": "AcknowledgementId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "AcknowledgementId:Uuid",
+              "ExpectedEngagementRevision:long",
+              "CompleteServiceRecordIds:IReadOnlyList<Uuid>",
+              "Statement:string",
+              "ExpectedServiceEpoch:long"
+            ]
+          },
+          {
+            "command": "AmendServiceEngagement",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "ExpectedRevision:long",
+              "Content:ServiceEngagementDraftContent"
+            ]
+          },
+          {
+            "command": "AssignServiceEngagementStaff",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "StaffMemberId:Uuid",
+              "ExpectedRevision:long",
+              "EffectiveFrom:DateOnly"
+            ]
+          },
+          {
+            "command": "CloseServiceEngagement",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "CreateServiceEngagement",
+            "logicalIdentity": {
+              "field": "EngagementId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "ExpectedRevision:long",
+              "Content:ServiceEngagementDraftContent"
+            ]
+          },
+          {
+            "command": "ProposeServiceEngagementStaff",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "StaffMemberId:Uuid",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "RecordDirectoryIndependenceReevaluation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "source_event_effect",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "DirectoryResourceOffset:ulong",
+              "DirectoryEventId:Uuid",
+              "DirectoryPayloadSha256:string",
+              "AcceptanceResourceOffset:ulong",
+              "AcceptanceEventId:Uuid",
+              "AcceptanceRequestId:Uuid",
+              "AcceptancePayloadSha256:string",
+              "StaffMemberId:Uuid",
+              "UserId:Uuid",
+              "EngagementId:Uuid",
+              "AcceptedServiceEpoch:long"
+            ]
+          },
+          {
+            "command": "RecordPartnerIndependenceEvaluation",
+            "logicalIdentity": {
+              "field": "EvaluationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "EvaluationId:Uuid",
+              "ExpectedEngagementRevision:long",
+              "RuleVersion:long",
+              "ExpectedRuleContentDigest:string",
+              "ExpectedServiceHistoryDigest:string",
+              "Rationale:string",
+              "ExpectedServiceEpoch:long"
+            ]
+          },
+          {
+            "command": "RevokeServiceEngagementActualStaff",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "StaffMemberId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "WithdrawServiceEngagementStaffProposal",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EngagementId:Uuid",
+              "StaffMemberId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "RejectServiceEngagementAcceptance",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          },
+          {
+            "command": "RejectServiceEngagementStaffAssignment",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          },
+          {
+            "command": "CancelEngagementPersonalDecision",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "RootOperationId:Uuid",
+              "EngagementId:Uuid",
+              "Generation:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AssignmentIndependenceReevaluated",
+            "discriminator": "bdgrz.independence.assignment-reevaluated",
+            "version": 1
+          },
+          {
+            "event": "DirectoryIndependenceReevaluated",
+            "discriminator": "bdgrz.independence.directory-reevaluated",
+            "version": 1
+          },
+          {
+            "event": "EngagementPersonalDecisionAdmitted",
+            "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-admitted",
+            "version": 1
+          },
+          {
+            "event": "EngagementPersonalDecisionAuthorized",
+            "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-authorized",
+            "version": 1
+          },
+          {
+            "event": "EngagementPersonalDecisionCanceled",
+            "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-canceled",
+            "version": 1
+          },
+          {
+            "event": "EngagementPersonalDecisionMaterialized",
+            "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-materialized",
+            "version": 1
+          },
+          {
+            "event": "EngagementPracticeCommitmentsAuthorized",
+            "discriminator": "bdgrz.service-engagement-independence.engagement-practice-commitments-authorized",
+            "version": 1
+          },
+          {
+            "event": "ServiceEngagementAcceptanceRecorded",
+            "discriminator": "bdgrz.service-engagement.acceptance-recorded",
+            "version": 1
+          },
+          {
+            "event": "ServiceEngagementAcceptanceRejected",
+            "discriminator": "bdgrz.service-engagement-independence.service-engagement-acceptance-rejected",
+            "version": 1
+          },
+          {
+            "event": "ServiceEngagementAcceptanceRequested",
+            "discriminator": "bdgrz.service-engagement-independence.service-engagement-acceptance-requested",
+            "version": 1
+          },
+          {
+            "event": "ServiceEngagementAssignmentRevoked",
+            "discriminator": "bdgrz.service-engagement.assignment-revoked",
+            "version": 1
+          },
+          {
+            "event": "ServiceEngagementMutationRecorded",
+            "discriminator": "bdgrz.service-engagement.changed",
+            "version": 1
+          },
+          {
+            "event": "ServiceEngagementStaffAssigned",
+            "discriminator": "bdgrz.access-control.service-engagement.staff-assigned",
+            "version": 1
+          },
+          {
+            "event": "ServiceEngagementStaffAssignmentRejected",
+            "discriminator": "bdgrz.service-engagement-independence.service-engagement-staff-assignment-rejected",
+            "version": 1
+          },
+          {
+            "event": "ServiceEngagementStaffAssignmentRequested",
+            "discriminator": "bdgrz.service-engagement-independence.service-engagement-staff-assignment-requested",
+            "version": 1
+          },
+          {
+            "event": "ServiceIndependenceReevaluated",
+            "discriminator": "bdgrz.independence.service-reevaluated",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "EngagementAcceptanceReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ClientServiceIndependence",
+            "command": "AcquireEngagementServiceEpoch"
+          },
+          {
+            "reactor": "EngagementPracticeCommitmentReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "PracticeIndependenceCommitment",
+            "command": "CommitPracticeIndependence"
+          },
+          {
+            "reactor": "EngagementAcceptanceCompletionReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ServiceEngagementIndependence",
+            "command": "CompleteServiceEngagementAcceptance"
+          },
+          {
+            "reactor": "EngagementServiceEpochReleaseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ClientServiceIndependence",
+            "command": "ReleaseEngagementServiceEpoch"
+          },
+          {
+            "reactor": "EngagementStaffAssignmentCompletionReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ServiceEngagementIndependence",
+            "command": "CompleteServiceEngagementStaffAssignment"
+          },
+          {
+            "reactor": "EngagementPracticeReservationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "PracticeIndependenceCommitment",
+            "command": "ReservePracticeIndependence"
+          },
+          {
+            "reactor": "EngagementPracticeAuthorizationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ServiceEngagementIndependence",
+            "command": "AuthorizeEngagementPracticeCommitments"
+          },
+          {
+            "reactor": "EngagementPracticeReservationSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "PracticeIndependenceCommitment",
+            "command": "SettlePracticeIndependenceReservation"
+          },
+          {
+            "reactor": "EngagementFirmStaffRecordUseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "FirmStaffRecord",
+            "command": "AuthorizeFirmStaffRecordEngagementUse"
+          },
+          {
+            "reactor": "EngagementFirmStaffRecordUseSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "FirmStaffRecord",
+            "command": "SettleFirmStaffRecordEngagementUse"
+          },
+          {
+            "reactor": "EngagementFirmProfessionalDutyDesignationUseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "FirmProfessionalDutyDesignation",
+            "command": "AuthorizeFirmProfessionalDutyDesignationEngagementUse"
+          },
+          {
+            "reactor": "EngagementFirmProfessionalDutyDesignationUseSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "FirmProfessionalDutyDesignation",
+            "command": "SettleFirmProfessionalDutyDesignationEngagementUse"
+          },
+          {
+            "reactor": "EngagementIndependenceRuleCatalogUseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "IndependenceRuleCatalog",
+            "command": "AuthorizeIndependenceRuleCatalogEngagementUse"
+          },
+          {
+            "reactor": "EngagementIndependenceRuleCatalogUseSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "IndependenceRuleCatalog",
+            "command": "SettleIndependenceRuleCatalogEngagementUse"
+          },
+          {
+            "reactor": "EngagementIndependenceRuleRatificationCatalogUseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "IndependenceRuleRatificationCatalog",
+            "command": "AuthorizeIndependenceRuleRatificationCatalogEngagementUse"
+          },
+          {
+            "reactor": "EngagementIndependenceRuleRatificationCatalogUseSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "IndependenceRuleRatificationCatalog",
+            "command": "SettleIndependenceRuleRatificationCatalogEngagementUse"
+          },
+          {
+            "reactor": "EngagementPersonalDecisionSourceUseReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ClientServiceIndependence",
+            "command": "AuthorizeClientServicePersonalDecisionUse"
+          },
+          {
+            "reactor": "ManagementAcknowledgementMaterializationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "EngagementManagementAcknowledgement",
+            "command": "MaterializeEngagementManagementAcknowledgement"
+          },
+          {
+            "reactor": "PartnerIndependenceDecisionMaterializationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "PartnerIndependenceDecision",
+            "command": "MaterializePartnerIndependenceDecision"
+          },
+          {
+            "reactor": "EngagementPersonalDecisionSettlementReactor",
+            "sourceOwner": "EngagementManagementAcknowledgement|PartnerIndependenceDecision",
+            "targetOwner": "ServiceEngagementIndependence",
+            "command": "SettleEngagementPersonalDecision"
+          },
+          {
+            "reactor": "ClientServicePersonalDecisionSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ClientServiceIndependence",
+            "command": "SettleClientServicePersonalDecisionUse"
+          },
+          {
+            "reactor": "EngagementPersonalDecisionAuthorizationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "ServiceEngagementIndependence",
+            "command": "AuthorizeEngagementPersonalDecision"
+          }
+        ]
+      },
+      {
+        "owner": "ServiceIdentity",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Create context.RequestId; normalized initial intent compare. Revision mutation uses expectedRevision; exact revision retry stale. Date-dependent validation runs before create-retry recognition.",
+        "selectedIdentity": "Tenant + caller ServiceIdentityId; creation uses that identity and revisions use caller CommandId.",
+        "invariant": "One governed nonhuman identity has exactly one accountable person/team owner, approved purpose, valid lifecycle/expiry and review date within one year.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Owner/purpose/review/active expiry must be coherent at each record revision; other identities and roster need no shared stream.",
+        "commands": [
+          {
+            "command": "RecordServiceIdentity",
+            "logicalIdentity": "ServiceIdentityId",
+            "fields": [
+              "ServiceIdentityId:Uuid",
+              "TenantId:Uuid",
+              "DisplayName:string",
+              "IdentityKind:string",
+              "Purpose:string",
+              "OwnerKind:string",
+              "OwnerId:Uuid",
+              "ReviewBy:DateOnly",
+              "Environment:string?",
+              "ExpiresOn:DateOnly?"
+            ]
+          },
+          {
+            "command": "ReviseServiceIdentity",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ServiceIdentityId:Uuid",
+              "ExpectedRevision:long",
+              "DisplayName:string",
+              "IdentityKind:string",
+              "Purpose:string",
+              "OwnerKind:string",
+              "OwnerId:Uuid",
+              "ReviewBy:DateOnly",
+              "LifecycleStatus:string",
+              "Environment:string?",
+              "ExpiresOn:DateOnly?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ServiceIdentityRecorded"
+          },
+          {
+            "event": "ServiceIdentityRevised"
+          }
+        ],
+        "choreography": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for RiskMethod fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle RiskMethod's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for RiskTreatmentAction fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle RiskTreatmentAction's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for RiskTreatmentAssertion fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle RiskTreatmentAssertion's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for Role fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle Role's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for RolePermission fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle RolePermission's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for SeparationOfDutiesWaiver fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle SeparationOfDutiesWaiver's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ServiceEngagementIndependence fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ServiceEngagementIndependence's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ServiceIdentity fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ServiceIdentity's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

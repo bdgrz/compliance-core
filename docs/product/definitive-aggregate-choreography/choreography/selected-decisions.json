@@ -10,7 +10,10 @@
       "PROOF_CARRIERS",
       "EFFECT_IDENTITIES"
     ],
-    "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
+    "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work.",
+    "newDecisionIds": [
+      "PROGRAM_ROLLOVER_EXECUTION"
+    ]
   },
   "decisions": [
     {
@@ -84,6 +87,24 @@
       "status": "ADOPTED_SELECTED_TARGET",
       "choice": "retain_occupied_v1_version_new_algorithm",
       "rationale": "Retain exact occupied v1 effect UUID byte algorithm and each process frozen target-key/episode selection. Do not silently replace IDs. Explicitly version and domain-separate any new length-prefixed algorithm; new or ambiguous target/episode domains require a selected injective encoding and compatibility/fencing before use."
+    },
+    {
+      "id": "PROGRAM_ROLLOVER_EXECUTION",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "atomic_claim_private_human_governed_process",
+      "rationale": "Atomically claim the exact approved version and actual approval tuple, including pinned NextExaminationId/NextTypeIIPlanId/NextPeriodId and dates. The private process coordinates existing readiness, examination, Type I baseline/auditor outcome/system description, TypeIIPlan review/approval and TypeIIPeriod start owners. It never synthesizes or owns their facts. A human-authored complete plan exhaustively maps every rollover item. Opening acceptance remains pending; actual ObservationPeriodStarted is terminal. Retire ProgramNextPeriodCreated from selected business emissions.",
+      "jev": {
+        "model": "jev-1.14.0",
+        "evidenceFiles": [
+          "jev-review-2026-10-26/program-rollover-gap.response.json",
+          "jev-review-2026-10-26/rollover-protocol.response.json",
+          "jev-review-2026-10-26/rollover-content.response.json",
+          "jev-review-2026-10-26/rollover-r000.response.json",
+          "jev-review-2026-10-26/rollover-claim-state.response.json",
+          "jev-review-2026-10-26/rollover-typei-gap.response.json"
+        ]
+      },
+      "authority": "User-directed definitive target selection after source inspection and repeated Jev review. Target only; not implementation or runtime qualification."
     }
   ],
   "pendingOwnerOrProtocolDecisions": [],

@@ -57,20 +57,35 @@ public sealed class PersonRules
                     PersonalContact: _personalContact);
                 break;
             case PersonRevised ev:
-                if (Current is null) throw new InvalidOperationException("The person revision has no creation.");
+                if (Current is null)
+                    throw new InvalidOperationException("The person revision has no creation.");
                 _revision = ev.Revision;
                 _personalContact = ev.PersonalContact;
-                Current = Current with { Revision = ev.Revision, DisplayName = ev.DisplayName, WorkEmail = ev.WorkEmail,
-                    PersonalContact = ev.PersonalContact, LastChangedBy = ev.Actor, LastChangedAt = ev.ChangedAt };
+                Current = Current with
+                {
+                    Revision = ev.Revision,
+                    DisplayName = ev.DisplayName,
+                    WorkEmail = ev.WorkEmail,
+                    PersonalContact = ev.PersonalContact,
+                    LastChangedBy = ev.Actor,
+                    LastChangedAt = ev.ChangedAt
+                };
                 break;
             case PersonMembershipCorrelated ev:
-                if (Current is null) throw new InvalidOperationException("The person correlation has no creation.");
+                if (Current is null)
+                    throw new InvalidOperationException("The person correlation has no creation.");
                 _revision = ev.Revision;
                 _correlatedUserId = ev.UserId;
-                Current = Current with { Revision = ev.Revision, CorrelatedUserId = ev.UserId,
-                    LastChangedBy = ev.Actor, LastChangedAt = ev.ChangedAt };
+                Current = Current with
+                {
+                    Revision = ev.Revision,
+                    CorrelatedUserId = ev.UserId,
+                    LastChangedBy = ev.Actor,
+                    LastChangedAt = ev.ChangedAt
+                };
                 break;
-            default: throw new InvalidOperationException("Another person values mutation kind.");
+            default:
+                throw new InvalidOperationException("Another person values mutation kind.");
         }
     }
     public Result<PersonRegistration> Record(string displayName, string? workEmail,

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
@@ -28,7 +29,8 @@ public static class PersonContent
             : await NativeContent.FreezeUnitAsync(store, before.Owner.TenantId, ct).ConfigureAwait(false);
         var prepared = new PersonPrepared(before.Owner.Version, before.Owner.CommittedStreamPosition, before.Owner.ReplayCut.Digest, before.Owner.ReplayCut.MetadataDigest,
             before.Owner.Header, before.Owner.CurrentContent, before.View, view, body, mutation, change, changed, frozen.Response, frozen.Result);
-        if (!Verify(prepared, operation)) throw new ImmutableContentIntegrityException("The person mutation does not match its exact prepared source values.");
+        if (!Verify(prepared, operation))
+            throw new ImmutableContentIntegrityException("The person mutation does not match its exact prepared source values.");
         return prepared;
     }
     public static bool Verify(PersonPrepared value, OperationProvenance operation) =>
@@ -50,17 +52,21 @@ public static class PersonContent
         {
             case nameof(RecordPerson):
                 if (value.Before is not null || !rules.Record(value.View.DisplayName, value.View.WorkEmail,
-                    value.View.PersonalContact, operation.Actor, operation.AcceptedAt).IsSuccess) return false;
+                    value.View.PersonalContact, operation.Actor, operation.AcceptedAt).IsSuccess)
+                    return false;
                 break;
             case nameof(RevisePerson):
                 if (rules.Revise(value.Before?.Revision ?? 0, value.View.DisplayName, value.View.WorkEmail,
-                    value.View.PersonalContact, operation.Actor, operation.AcceptedAt) is not null) return false;
+                    value.View.PersonalContact, operation.Actor, operation.AcceptedAt) is not null)
+                    return false;
                 break;
             case nameof(CorrelatePersonMembership):
                 if (rules.CorrelateMembership(value.Before?.Revision ?? 0, value.View.CorrelatedUserId,
-                    operation.Actor, operation.AcceptedAt) is not null) return false;
+                    operation.Actor, operation.AcceptedAt) is not null)
+                    return false;
                 break;
-            default: return false;
+            default:
+                return false;
         }
         return rules.Current == value.View && (rules.PendingEvents.Count != 0) == value.Changed;
     }

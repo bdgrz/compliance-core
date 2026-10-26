@@ -1,0 +1,354 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "sourceFacts": {
+      "rollover": {
+        "owner": "ProgramRollover",
+        "identity": "Tenant / program-rollovers / RolloverId, with exact source program/version and successor proof. RolloverId identifies creation; selected mutations use CommandId.",
+        "invariant": "One exact carry-forward proposal version needs independent approved decision before recording exact successor period/plan identities; completed source provenance remains immutable.",
+        "boundary": "process",
+        "rationale": "Proposal/current approval and execution claim must coordinate to prevent approved version changing while successor is created. Prior proposal history is unnecessary state; successor creation acknowledgement belongs to recoverable process storage.",
+        "commands": [
+          {
+            "name": "ApproveProgramRollover",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RolloverId:Uuid",
+              "Version:long",
+              "Decision:string",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "name": "ProposeProgramRollover",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RolloverId:Uuid",
+              "Content:ProgramRolloverContent"
+            ]
+          }
+        ],
+        "events": [
+          "ProgramNextPeriodCreated",
+          "ProgramRolloverApproved",
+          "ProgramRolloverDecisionRecorded",
+          "ProgramRolloverProposed",
+          "ProgramRolloverRevised"
+        ],
+        "flows": []
+      },
+      "plan": {
+        "owner": "TypeIIPlan",
+        "identity": "Tenant / type-ii-plans / PlanId, with immutable ProgramId. PlanId identifies creation; selected mutations use CommandId with exact plan version/source/decision bindings.",
+        "invariant": "Only current proposed content with exact carried-gap acknowledgements receives an independent review; executive approval requires review and three distinct roles, after which plan is immutable.",
+        "boundary": "narrow",
+        "rationale": "Current authored content/reviewer/approver must remain one same-version decision. Past proposal bodies/reviews are historical records and need not remain state.",
+        "commands": [
+          {
+            "name": "ApproveTypeIIOperatingPlan",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PlanId:Uuid",
+              "Version:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "name": "ProposeTypeIIOperatingPlan",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PlanId:Uuid",
+              "ExaminationId:Uuid",
+              "Content:TypeIIPlanContent"
+            ]
+          },
+          {
+            "name": "ReviewTypeIIOperatingPlan",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PlanId:Uuid",
+              "Version:long",
+              "Outcome:string",
+              "Comments:string"
+            ]
+          }
+        ],
+        "events": [
+          "TypeIIPlanApproved",
+          "TypeIIPlanProposed",
+          "TypeIIPlanReviewed",
+          "TypeIIPlanRevised"
+        ],
+        "flows": []
+      },
+      "period": {
+        "owner": "TypeIIPeriod",
+        "identity": "Tenant / type-ii-periods / PeriodId, with immutable ProgramId and exact accepted plan/opening. PeriodId identifies creation; selected CommandId/GenerationKey identify exact freeze/reconciliation/amendment operations and their immutable closing identities.",
+        "invariant": "One period binds exact approved opening plan/population; close must reconcile the approved expected population, independently acknowledge all unresolved material items, and freeze the same approved sources. Close amendments preserve original expected population/acknowledgements and chain exact changed sources.",
+        "boundary": "narrow",
+        "rationale": "The immutable approved expected-population manifest is a legitimate value proof for close, not a live roster of occurrence children. Keep a narrow period close/lineage owner; move occurrence-generation process/batches and immutable close snapshots/history out of active state. Preserve canonical frozen manifest and current closure lineage digest so atomic close rules remain exact.",
+        "commands": [
+          {
+            "name": "AmendTypeIIPeriodClose",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "CloseSnapshotId:Uuid",
+              "ExpectedRevision:long",
+              "AmendmentReason:string"
+            ]
+          },
+          {
+            "name": "ApproveTypeIIPeriodClose",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string",
+              "AcknowledgedMaterialItemIds:IReadOnlyList<Uuid>"
+            ]
+          },
+          {
+            "name": "FreezeTypeIIPeriodClose",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "CloseSnapshotId:Uuid",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "name": "GenerateDueControlOccurrences",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "ThroughDate:DateOnly",
+              "GenerationKey:string"
+            ]
+          },
+          {
+            "name": "StartTypeIIObservationPeriod",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "ExaminationId:Uuid",
+              "PlanId:Uuid",
+              "PeriodStart:DateOnly",
+              "PeriodEnd:DateOnly"
+            ]
+          },
+          {
+            "name": "AmendTypeIIObservationPeriod",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "ExpectedRevision:long",
+              "PeriodStart:DateOnly?",
+              "PeriodEnd:DateOnly?",
+              "AmendmentReason:string"
+            ]
+          },
+          {
+            "name": "CancelTypeIIPeriodAmendment",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "AmendmentId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "name": "RejectTypeIIPeriodOpening",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          },
+          {
+            "name": "RejectTypeIIPeriodAmendment",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          "DueControlOccurrencesGenerated",
+          "ObservationPeriodAmended",
+          "ObservationPeriodCloseFrozen",
+          "ObservationPeriodStarted",
+          "TypeIIPeriodAmendmentAccepted",
+          "TypeIIPeriodAmendmentCanceled",
+          "TypeIIPeriodOpeningAccepted",
+          "TypeIIPeriodOpeningRejected"
+        ],
+        "flows": [
+          {
+            "reactor": "ControlOccurrenceMaterializationReactor",
+            "sourceOwner": "TypeIIPeriod",
+            "targetOwner": "ControlOccurrence",
+            "command": "MaterializeControlOccurrence",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/40",
+              "line": 3387,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "TypeIIPeriodRangeReactor",
+            "sourceOwner": "TypeIIPeriod",
+            "targetOwner": "TypeIIObservationCalendar",
+            "command": "AcquireTypeIIPeriodRange",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/53",
+              "line": 4546,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "TypeIIPeriodRangeApplicationReactor",
+            "sourceOwner": "TypeIIObservationCalendar",
+            "targetOwner": "TypeIIPeriod",
+            "command": "ApplyTypeIIPeriodRange",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/54",
+              "line": 4635,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "TypeIIPeriodRangeReleaseReactor",
+            "sourceOwner": "TypeIIPeriod",
+            "targetOwner": "TypeIIObservationCalendar",
+            "command": "SettleTypeIIPeriodRange",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/55",
+              "line": 4713,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      }
+    },
+    "currentProcessInventory": [
+      "ProfessionalDutyChangeProcess",
+      "FirmStaffRegistrationProcess",
+      "EngagementAcceptanceProcess",
+      "EngagementPersonalDecisionProcess",
+      "ClientIndependencePreviewProcess",
+      "AccessReviewLaunchFanOut",
+      "BulkAccessDecisionProcess",
+      "AccessReviewCampaignCompletionProcess",
+      "AuditorRequestResolutionProcess",
+      "FindingClosureProcess",
+      "ReadinessDecisionProcess",
+      "PolicyCampaignClosureProcess",
+      "ProviderReviewProcess",
+      "RiskActionCompletionReviewProcess",
+      "ApplicationImportExecutionProcess",
+      "ProviderNameChangeProcess",
+      "LocationNameChangeProcess",
+      "OperationalProcessNameChangeProcess",
+      "AuditPackageBuildProcess",
+      "AuditPackageDeliveryRecordingProcess",
+      "ReadinessRunProcess",
+      "IdentityRecoveryProcess",
+      "AdministratorTransitionProcess",
+      "TypeIIRangeProcess",
+      "ArtifactDownloadProcess",
+      "ControlOccurrenceFanOut",
+      "IndependentChildMaterialization",
+      "EmailChallengeDeliveryProcess",
+      "TenantInvitationDeliveryProcess"
+    ],
+    "relevantRules": [
+      "Rollover proposal freezes exact source closed period/outcome, carry-forward choices, NextPeriodId, NextTypeIIPlanId, and dates. It is independently approved by version; revisions remain possible before period_created.",
+      "TypeII plan proposal is an independent owner. It requires exact source review; an exact plan version requires independent review and separate executive approval (different actors), and can be revised.",
+      "StartTypeIIObservationPeriod only accepts exact current approved TypeIIPlan version and source tuple, then emits TypeIIPeriodOpeningAccepted. Existing TypeIIRangeProcess acquires range, applies opening, and settles; actual started fact is later than accepted admission.",
+      "Current rollover event ProgramNextPeriodCreated is emitted by ProgramRollover after checking exact successor IDs but catalog boundary rationale says successor creation acknowledgement belongs in recoverable private process storage."
+    ]
+  },
+  "questions": {
+    "fence": {
+      "type": "choice",
+      "instructions": "Which execution fence is required before any successor owner is mutated?",
+      "criteria": {
+        "aggregate_claim": "A single atomic ProgramRollover command claims the exact approved version and prevents revision/rejection after claim; then a durable private process executes.",
+        "private_claim_only": "A process-store CAS on its own is sufficient; aggregate revision can remain independently permitted.",
+        "read_then_write": "Read approved revision, then issue target commands; stale revision can be detected at terminal receipt.",
+        "insufficient": "The facts do not establish the race."
+      }
+    },
+    "terminal": {
+      "type": "choice",
+      "instructions": "What event constitutes successful completion of this rollover process?",
+      "criteria": {
+        "period_started": "Wait for actual ObservationPeriodStarted for the exact pinned period, plan and approved version, plus verified plan approval/review proofs; only then report operational completion.",
+        "opening_accepted": "TypeIIPeriodOpeningAccepted for the exact plan and period is sufficient; report accepted/pending while existing TypeIIRangeProcess continues independently.",
+        "plan_approved": "Approved TypeIIPlan is sufficient; period creation may proceed later.",
+        "insufficient": "No selected completion state is supported."
+      }
+    },
+    "plan_boundary": {
+      "type": "choice",
+      "instructions": "May rollover process directly create an approved TypeIIPlan in one step?",
+      "criteria": {
+        "must_preserve_independent_plan_governance": "No. It may submit the exact frozen plan proposal to the TypeIIPlan owner, but that owner must receive its required independent plan review and separate executive approval before period start.",
+        "rollover_approval_covers_plan": "Yes. Independent rollover approval can substitute for TypeIIPlan owner review and approval.",
+        "not_enough_info": "The plan owner rules are not supplied."
+      }
+    },
+    "rows": {
+      "type": "noul",
+      "instructions": "Does the current selected catalog define all rollover execution commands, events, process stages, source proofs and recovery outcomes?",
+      "criteria": {
+        "true": "The selected rows identify the atomic version fence, target owner commands, actual approval/period proofs, terminal rule, and restart/idempotency/abort behavior.",
+        "false": "At least one of these decision-critical parts is absent."
+      }
+    },
+    "event": {
+      "type": "choice",
+      "instructions": "Where should the terminal successor acknowledgement live?",
+      "criteria": {
+        "process_record": "Private process record stores the exact verified plan and period terminal fact references; ProgramRollover remains proposal/approval plus one atomic execution claim/fence and does not emit ProgramNextPeriodCreated.",
+        "rollover_event": "ProgramRollover emits ProgramNextPeriodCreated after the process receives exact target proofs.",
+        "both": "Keep both a private process terminal and aggregate acknowledgement event.",
+        "insufficient": "The appropriate authority boundary is unclear."
+      }
+    }
+  }
+}

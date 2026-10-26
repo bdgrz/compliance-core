@@ -114,7 +114,8 @@ public sealed class AuditPopulationSources(IDomainEventReader events, ISourceFac
     }
     async Task<ResolvedSourceFact> ResolveAsync(EventStreamAddress stream, ulong position, CancellationToken ct)
     {
-        try { return await resolver.ResolveAsync(stream, position, ct).ConfigureAwait(false); }
+        try
+        { return await resolver.ResolveAsync(stream, position, ct).ConfigureAwait(false); }
         catch (SourceFactUnavailableException error) { throw new ImmutableContentUnavailableException(error.Message); }
         catch (SourceFactVerificationException error) { throw Invalid(error.Message); }
     }

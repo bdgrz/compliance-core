@@ -210,6 +210,26 @@
         }
       },
       "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "PROGRAM_ROLLOVER_EXECUTION",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "atomic_claim_private_human_governed_process",
+      "rationale": "Atomically claim the exact approved version and actual approval tuple, including pinned NextExaminationId/NextTypeIIPlanId/NextPeriodId and dates. The private process coordinates existing readiness, examination, Type I baseline/auditor outcome/system description, TypeIIPlan review/approval and TypeIIPeriod start owners. It never synthesizes or owns their facts. A human-authored complete plan exhaustively maps every rollover item. Opening acceptance remains pending; actual ObservationPeriodStarted is terminal. Retire ProgramNextPeriodCreated from selected business emissions.",
+      "jev": {
+        "model": "jev-1.14.0",
+        "evidenceFiles": [
+          "jev-review-2026-10-26/program-rollover-gap.response.json",
+          "jev-review-2026-10-26/rollover-protocol.response.json",
+          "jev-review-2026-10-26/rollover-protocol-v2.response.json",
+          "jev-review-2026-10-26/rollover-content.response.json",
+          "jev-review-2026-10-26/rollover-final.response.json",
+          "jev-review-2026-10-26/rollover-typei-gap.response.json",
+          "jev-review-2026-10-26/rollover-r000.response.json",
+          "jev-review-2026-10-26/rollover-claim-state.response.json"
+        ]
+      },
+      "authority": "User-directed definitive target selection after source inspection and multi-pass Jev review. New target only; not implementation or runtime qualification."
     }
   ],
   "artifactDownloadDetails": "reactors/artifact-download-decision.json optionA with explicit original-actor/current-rights read and no generic operation lookup",

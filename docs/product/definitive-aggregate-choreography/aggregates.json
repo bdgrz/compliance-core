@@ -13,9 +13,10 @@
     "transientRulesDeclarations": 56,
     "businessAuthorityOwners": 129,
     "declaredTechnicalOwnerLabels": 13,
-    "additionalLogicalTechnicalResponsibilities": 1
+    "additionalLogicalTechnicalResponsibilities": 1,
+    "selectedProcessDefinitions": 30
   },
-  "countWarning": "129 selected business/authority owners. The103\u221229+65 arithmetic yields139 structural labels before excluding8 technical/storage and4 compatibility/projection/absorbed roots and adding2 business extensions. Four explicit new adjudications absorb earlier candidate roles without adding owners.13 declared technical labels plus WeeklyScheduling logical capture/page-result responsibility are separate; physical CLR/native-journal counts are not business-owner counts.",
+  "countWarning": "129 selected business/authority owners. The103−29+65 arithmetic yields139 structural labels before excluding8 technical/storage and4 compatibility/projection/absorbed roots and adding2 business extensions. Four explicit new adjudications absorb earlier candidate roles without adding owners.13 declared technical labels plus WeeklyScheduling logical capture/page-result responsibility are separate; physical CLR/native-journal counts are not business-owner counts.",
   "precedence": [
     "docs/product/audits/2026-10-23/implementation-decisions.md",
     "docs/product/audits/2026-10-23/aggregate-split-targets.json",
@@ -31704,9 +31705,9 @@
         "ProgramRollover"
       ],
       "declaredIdentity": "Tenant / program-rollovers / rolloverId; proposal content compare; approval per version no-op; revision command checks before comparison; exact successor receipt compares timestamp. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
-      "invariant": "One exact carry-forward proposal version needs independent approved decision before recording exact successor period/plan identities; completed source provenance remains immutable.",
+      "invariant": "One exact carry-forward proposal version, including the exact successor examination, plan and period identities, requires independent approval and an atomic execution claim before successor writes; the claim pins that version against revision. The recoverable private process coordinates existing source owners and stores exact completion proof.",
       "boundaryDecision": "process",
-      "boundaryRationale": "Proposal/current approval and execution claim must coordinate to prevent approved version changing while successor is created. Prior proposal history is unnecessary state; successor creation acknowledgement belongs to recoverable process storage.",
+      "boundaryRationale": "ProgramRollover owns the approved carry-forward intent and pins NextExaminationId, NextTypeIIPlanId and NextPeriodId. An atomic execution claim closes the revise-versus-execute race. Private ProgramRolloverExecutionProcess coordinates the existing readiness, examination, Type I baseline/outcome, system description, TypeIIPlan and TypeIIPeriod owner lifecycles without owning their facts; it stores exact successor receipts. Prior proposal history and successor acknowledgements are not business aggregate state.",
       "sources": [
         {
           "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
@@ -31815,7 +31816,24 @@
             {
               "name": "Content",
               "type": "ProgramRolloverContent",
-              "required": true
+              "required": true,
+              "nestedFields": [
+                "SourcePeriodId:Uuid",
+                "SourceExaminationId:Uuid",
+                "SourceCloseSnapshotId:Uuid",
+                "SourceCloseSnapshotSha256:string",
+                "AuditOutcomeId:Uuid",
+                "AuditOutcomeContentSha256:string",
+                "NextPeriodStart:DateOnly",
+                "NextPeriodEnd:DateOnly",
+                "NextExaminationId:Uuid",
+                "NextPeriodId:Uuid",
+                "NextTypeIIPlanId:Uuid",
+                "Records:IReadOnlyList<ProgramRolloverRecordContent>",
+                "Commitments:IReadOnlyList<ProgramRolloverCommitmentContent>",
+                "ComparisonMeasures:IReadOnlyList<string>",
+                "ProposalRationale:string"
+              ]
             }
           ],
           "responseContract": {
@@ -31836,61 +31854,62 @@
             "jsonPointer": "/contracts/96",
             "line": 7132,
             "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-          }
+          },
+          "semanticRule": "NextExaminationId is a required, nonempty successor identity, distinct from SourceExaminationId, frozen in the exact version and approval hash together with next period/plan IDs and dates."
+        },
+        {
+          "command": "ClaimProgramRolloverExecution",
+          "logicalIdentity": "CommandId",
+          "fields": [
+            {
+              "name": "CommandId",
+              "type": "Uuid",
+              "required": true
+            },
+            {
+              "name": "TenantId",
+              "type": "Uuid",
+              "required": true
+            },
+            {
+              "name": "ProgramId",
+              "type": "Uuid",
+              "required": true
+            },
+            {
+              "name": "RolloverId",
+              "type": "Uuid",
+              "required": true
+            },
+            {
+              "name": "ExpectedRevision",
+              "type": "long",
+              "required": true
+            },
+            {
+              "name": "ApprovedVersion",
+              "type": "int",
+              "required": true
+            },
+            {
+              "name": "ApprovedContentSha256",
+              "type": "string",
+              "required": true
+            }
+          ],
+          "responseContract": {
+            "mode": "immediate_original_result",
+            "responseType": "Unit",
+            "firstHttpStatus": 200,
+            "terminalResultType": "Unit"
+          },
+          "http": [],
+          "targetStatus": "SELECTED_TARGET_ONLY_NO_ROUTE_AUTHORIZED",
+          "semanticRule": "Internal process command; no public route. Atomically require status approved, exact ExpectedRevision, exact current ApprovedVersion/content SHA256 and latest actual ProgramRolloverApproved fact. Derive and copy immutable approval actor/role/time into ProgramRolloverExecutionClaimView; store CommandId and ClaimedAt; transition status to execution_claimed in one append. Exact retry only same command+tuple; reject all later revisions/rejections/claims. Event actor attribution retains the approving member; process identity is separately recorded in private process state."
         }
       ],
       "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
       "events": [
-        {
-          "event": "ProgramNextPeriodCreated",
-          "source": {
-            "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-            "jsonPointer": "/aggregates/62",
-            "line": 40066,
-            "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-          },
-          "baselineContract": {
-            "event": "ProgramNextPeriodCreated",
-            "emitters": [
-              "src/Compliance.Core/Features/Programs/ProgramRollover.cs"
-            ],
-            "eventDisposition": "aggregate_fact",
-            "emitterOwnership": "aggregate or partial source",
-            "typedFields": [
-              {
-                "name": "TenantId",
-                "type": "Uuid",
-                "required": true
-              },
-              {
-                "name": "SubjectId",
-                "type": "Uuid",
-                "required": true
-              },
-              {
-                "name": "Revision",
-                "type": "long",
-                "required": true
-              },
-              {
-                "name": "ActorMemberId",
-                "type": "Uuid?",
-                "required": true
-              },
-              {
-                "name": "State",
-                "type": "ProgramRolloverView",
-                "required": true
-              },
-              {
-                "name": "OccurredAt",
-                "type": "DateTimeOffset",
-                "required": true
-              }
-            ],
-            "eventContract": "src/Compliance.Common/Features/Programs/ProgramNextPeriodCreated.cs"
-          }
-        },
         {
           "event": "ProgramRolloverApproved",
           "source": {
@@ -32090,6 +32109,37 @@
             ],
             "eventContract": "src/Compliance.Common/Features/Programs/ProgramRolloverRevised.cs"
           }
+        },
+        {
+          "event": "ProgramRolloverApproved",
+          "owner": "ProgramRollover"
+        },
+        {
+          "event": "ProgramRolloverDecisionRecorded",
+          "owner": "ProgramRollover"
+        },
+        {
+          "event": "ProgramRolloverExecutionClaimed",
+          "owner": "ProgramRollover",
+          "authority": "business_aggregate_atomic_execution_fence",
+          "targetStatus": "NEW_SELECTED_TARGET_EVENT_NO_IMPLEMENTATION_AUTHORIZED",
+          "fields": [
+            "TenantId",
+            "SubjectId",
+            "Revision",
+            "ActorMemberId",
+            "State",
+            "OccurredAt"
+          ],
+          "selectedContract": "State has status execution_claimed and one immutable ProgramRolloverExecutionClaimView copying CommandId, approved version/hash, approving member/role/time, and ClaimedAt. Removed CreatedPeriodId/CreatedTypeIIPlanId/NextPeriodCreatedAt from selected aggregate state; successor receipts are private process state."
+        },
+        {
+          "event": "ProgramRolloverProposed",
+          "owner": "ProgramRollover"
+        },
+        {
+          "event": "ProgramRolloverRevised",
+          "owner": "ProgramRollover"
         }
       ],
       "choreography": [],
@@ -32122,7 +32172,118 @@
           }
         }
       ],
-      "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity."
+      "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+      "selectedEvents": [
+        "ProgramRolloverApproved",
+        "ProgramRolloverDecisionRecorded",
+        "ProgramRolloverExecutionClaimed",
+        "ProgramRolloverProposed",
+        "ProgramRolloverRevised"
+      ],
+      "selectedEventContracts": [
+        {
+          "event": "ProgramRolloverProposed",
+          "source": {
+            "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+            "jsonPointer": "/aggregates/62",
+            "line": 40066,
+            "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+          },
+          "baselineContract": {
+            "event": "ProgramRolloverProposed",
+            "emitters": [
+              "src/Compliance.Core/Features/Programs/ProgramRollover.cs"
+            ],
+            "eventDisposition": "aggregate_fact",
+            "emitterOwnership": "aggregate or partial source",
+            "typedFields": [
+              {
+                "name": "TenantId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "SubjectId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "Revision",
+                "type": "long",
+                "required": true
+              },
+              {
+                "name": "ActorMemberId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "State",
+                "type": "ProgramRolloverView",
+                "required": true
+              },
+              {
+                "name": "OccurredAt",
+                "type": "DateTimeOffset",
+                "required": true
+              }
+            ],
+            "eventContract": "src/Compliance.Common/Features/Programs/ProgramRolloverProposed.cs"
+          }
+        }
+      ],
+      "selectedStateContract": {
+        "view": "ProgramRolloverView",
+        "statusValues": [
+          "proposed",
+          "approved",
+          "rejected",
+          "execution_claimed"
+        ],
+        "claimField": "ProgramRolloverExecutionClaimView? ExecutionClaim",
+        "claimFields": [
+          "CommandId:Uuid",
+          "ApprovedVersion:int",
+          "ApprovedContentSha256:string",
+          "ApprovedByMemberId:Uuid",
+          "ApproverRole:string",
+          "ApprovedAt:DateTimeOffset",
+          "ClaimedAt:DateTimeOffset"
+        ],
+        "claimRule": "Set exactly once in same atomic aggregate append that changes status approved -> execution_claimed. It copies the exact current approved version/hash and approval actor/role/time from the immutable approval history. It remains permanent across process success/failure. Every revision/rejection/second claim conflicts after this transition. The event/stream retains the proposal and approval facts.",
+        "removedSelectedStateFields": [
+          "CreatedPeriodId",
+          "CreatedTypeIIPlanId",
+          "NextPeriodCreatedAt"
+        ],
+        "fieldRationale": "Successor creation receipts and completion time belong to durable private process state. The business aggregate stores only proposal/approval and the concurrency fence."
+      },
+      "selectedContentContract": {
+        "type": "ProgramRolloverContent",
+        "fields": [
+          "SourcePeriodId:Uuid",
+          "SourceExaminationId:Uuid",
+          "SourceCloseSnapshotId:Uuid",
+          "SourceCloseSnapshotSha256:string",
+          "AuditOutcomeId:Uuid",
+          "AuditOutcomeContentSha256:string",
+          "NextPeriodStart:DateOnly",
+          "NextPeriodEnd:DateOnly",
+          "NextExaminationId:Uuid",
+          "NextPeriodId:Uuid",
+          "NextTypeIIPlanId:Uuid",
+          "Records:IReadOnlyList<ProgramRolloverRecordContent>",
+          "Commitments:IReadOnlyList<ProgramRolloverCommitmentContent>",
+          "ComparisonMeasures:IReadOnlyList<string>",
+          "ProposalRationale:string"
+        ],
+        "invariants": [
+          "NextExaminationId is nonempty and differs from SourceExaminationId.",
+          "NextPeriodId and NextTypeIIPlanId are nonempty.",
+          "NextExaminationId is used by CreateExaminationEngagement and every successor Type I proof.",
+          "Successor examination and Type II plan period dates equal the approved NextPeriodStart/NextPeriodEnd."
+        ]
+      }
     },
     {
       "owner": "Provider",
@@ -34521,7 +34682,7 @@
         "RiskGovernanceLedger"
       ],
       "declaredIdentity": "riskId",
-      "invariant": "One risk\u2019s governance and reassessment obligations.",
+      "invariant": "One risk’s governance and reassessment obligations.",
       "boundaryDecision": "selected_split",
       "mustPreserve": "Assessment belongs to RiskEvaluation; risk governance consumes exact risk/source proofs, no live aggregate authority.",
       "sources": [
@@ -52636,6 +52797,65 @@
         }
       ],
       "abort": []
+    },
+    {
+      "process": "ProgramRolloverExecutionProcess",
+      "rootSourceEvents": [
+        "ProgramRolloverExecutionClaimed"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "await_type_i_entry_approval",
+          "receivers": [],
+          "rule": "Require actual current TypeIEntryDecisionRecorded for this tenant/program with outcome approve or approve_with_exceptions before creating the successor Type I examination. This decision remains owned by ReadinessAssessment."
+        },
+        {
+          "stage": "await_successor_examination",
+          "receivers": [],
+          "rule": "A personal authorized actor creates exact NextExaminationId through CreateExaminationEngagement under ExaminationEngagement rules. Verify actual ExaminationEngagementOpened, exact tenant/program/examination identity and approved next-period dates; examination owner retains its own lifecycle."
+        },
+        {
+          "stage": "await_frozen_type_i_sources",
+          "receivers": [],
+          "rule": "Wait for actual TypeIBaselineFrozen on exact NextExaminationId; capture exact baseline ID/hash and complete source manifest. Require actual AuditOutcomeRecorded with status recorded, scope type_i, source kind auditor, same examination and exact baseline ID/hash. Require actual SystemDescriptionApproved and SystemDescriptionBound to same examination, type_i_baseline purpose, exact baseline ID and a system-description version present in the frozen baseline. These facts remain owned by their existing aggregates."
+        },
+        {
+          "stage": "await_successor_plan_proposal",
+          "receivers": [],
+          "rule": "A personal authorized actor authors complete TypeIIPlanContent under TypeIIPlan source validation, with exact NextExaminationId, exact Type I baseline/outcome/system-description IDs/hashes, NextTypeIIPlanId and approved period dates. Freeze actual proposal version/content hash; do not invent missing sources, controls, findings or required changes."
+        },
+        {
+          "stage": "validate_exhaustive_carry_forward_mapping",
+          "receivers": [],
+          "rule": "Every pinned rollover record and commitment has exactly one explicit plan destination or justified nonrepresentation consistent with approved disposition; preserve exact source/version/hash; reject omissions, duplicates, mismatches and unsupported conversions; freeze complete mapping manifest/hash privately."
+        },
+        {
+          "stage": "await_plan_review",
+          "receivers": [],
+          "rule": "Wait for actual TypeIIPlanReviewed on exact current frozen version/hash. Reviewer differs from proposer. approve advances; changes_requested loops through human revision, target-owner source validation and a newly frozen exhaustive mapping. reject terminates as failed."
+        },
+        {
+          "stage": "await_independent_executive_approval",
+          "receivers": [],
+          "rule": "Wait for actual TypeIIPlanApproved on same exact current version/hash whose review outcome is approve; approver differs from proposer and reviewer and satisfies owner rules. Approved plan is immutable."
+        },
+        {
+          "stage": "accept_period_opening",
+          "receivers": [
+            "StartTypeIIObservationPeriod"
+          ],
+          "rule": "Only after actual approved plan proof, submit exact NextPeriodId, NextTypeIIPlanId, NextExaminationId and dates from the claimed rollover. Verify TypeIIPeriodOpeningAccepted and original 202; accepted is pending."
+        },
+        {
+          "stage": "complete",
+          "receivers": [],
+          "rule": "Complete only on actual ObservationPeriodStarted chain linked to immutable opening intent, operation root/result, exact rollover claim and IDs, actual examination open fact, Type I entry decision, frozen baseline/hash/source manifest, auditor outcome/hash, approved+bound description fact/version, final plan proposal/revision/review/approval facts and hashes, exhaustive mapping manifest/hash, period/range and calendar authorization ID/generation. Store verified proof references privately; never emit ProgramNextPeriodCreated."
+        }
+      ],
+      "abort": [
+        "RejectTypeIIPeriodOpening"
+      ]
     }
   ],
   "outstanding": "Target architecture selected; concrete schema/wire/implementation/runtime qualification remains separate. No application implementation is authorized.",
@@ -52685,5 +52905,6 @@
     "implementationHalted": true
   },
   "remainingArchitectureDecisions": [],
-  "definitionOfFinal": "Final names, ownership, selected identity summaries/signatures and stated invariants, including explicit new overrides. Old declaredIdentity and baselineIdentityObservation prose is retained only as source evidence. Source presence is not implementation completion; concrete schema/wire/runtime qualification remains separate."
+  "definitionOfFinal": "Final names, ownership, selected identity summaries/signatures and stated invariants, including explicit new overrides. Old declaredIdentity and baselineIdentityObservation prose is retained only as source evidence. Source presence is not implementation completion; concrete schema/wire/runtime qualification remains separate.",
+  "selectedProcessDefinitions": 30
 }

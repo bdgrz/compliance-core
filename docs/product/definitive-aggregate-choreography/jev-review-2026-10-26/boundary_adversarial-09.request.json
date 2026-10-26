@@ -1,0 +1,637 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_adversarial",
+    "owners": [
+      {
+        "owner": "InformationAsset",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Shared tenant+record address and foreign sentinels; RequestId-derived creation ID. Create compares mutable current content; revision exact retries stale. Expected physical append OCC.",
+        "selectedIdentity": "Tenant + caller InformationAssetId under the preserved shared technology-inventory address/sentinel scheme.",
+        "invariant": "One tenant inventory identity has one record kind and one revisioned information classification/retention/owner/lifecycle record.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Shared type exclusion must survive; no rule requires all information assets together. Classification/retention values form one governed record, not its own collection lifecycle.",
+        "commands": [
+          {
+            "command": "RecordInformationAsset",
+            "logicalIdentity": "InformationAssetId",
+            "fields": [
+              "InformationAssetId:Uuid",
+              "TenantId:Uuid",
+              "Name:string",
+              "Classification:string",
+              "RetentionReference:string",
+              "OwnerPersonId:Uuid",
+              "Description:string?"
+            ]
+          },
+          {
+            "command": "ReviseInformationAsset",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "InformationAssetId:Uuid",
+              "ExpectedRevision:long",
+              "Name:string",
+              "Classification:string",
+              "RetentionReference:string",
+              "OwnerPersonId:Uuid",
+              "Lifecycle:string",
+              "Description:string?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "InformationAssetRevisionRecorded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "Location",
+        "classification": "business_aggregate",
+        "declaredIdentity": "locationId",
+        "selectedIdentity": "locationId",
+        "invariant": "Independent location record lifecycle.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Kind is immutable; only active same-kind names are unique.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "RecordLocation",
+            "logicalIdentity": {
+              "field": "LocationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "LocationId:Uuid",
+              "TenantId:Uuid",
+              "Kind:string",
+              "Name:string",
+              "OwnerPersonId:Uuid",
+              "GeographyReference:string?"
+            ]
+          },
+          {
+            "command": "ReviseLocation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "LocationId:Uuid",
+              "ExpectedRevision:long",
+              "Name:string",
+              "OwnerPersonId:Uuid",
+              "Lifecycle:string",
+              "GeographyReference:string?"
+            ]
+          },
+          {
+            "command": "CancelLocationChange",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "RecordId:Uuid",
+              "ChangeOperationId:Uuid",
+              "ExpectedRevision:long",
+              "DefiniteFailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "LocationChangeAccepted",
+            "discriminator": "bdgrz.location.location-change-accepted",
+            "version": 1
+          },
+          {
+            "event": "LocationChangeCanceled",
+            "discriminator": "bdgrz.location.location-change-canceled",
+            "version": 1
+          },
+          {
+            "event": "LocationRevisionRecorded",
+            "discriminator": "bdgrz.inventory.location.revision_recorded",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "LocationNameClaimReactor",
+            "sourceOwner": "Location",
+            "targetOwner": "LocationNameClaim",
+            "command": "ClaimLocationName"
+          },
+          {
+            "reactor": "LocationChangeApplicationReactor",
+            "sourceOwner": "LocationNameClaim",
+            "targetOwner": "Location",
+            "command": "ApplyLocationChange"
+          },
+          {
+            "reactor": "LocationOldNameReleaseReactor",
+            "sourceOwner": "Location",
+            "targetOwner": "LocationNameClaim",
+            "command": "ReleaseLocationName"
+          }
+        ]
+      },
+      {
+        "owner": "LocationNameClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "declaredIdentity": "(tenantId, locationKind, normalizedName)",
+        "selectedIdentity": "(tenantId, locationKind, normalizedName)",
+        "invariant": "Authoritative active-name uniqueness claim.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Kind is immutable; only active same-kind names are unique.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "LocationNameClaimed",
+            "discriminator": "bdgrz.location-name-claim.location-name-claimed",
+            "version": 1
+          },
+          {
+            "event": "LocationNameReleased",
+            "discriminator": "bdgrz.location-name-claim.location-name-released",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "LocationNameClaimReactor",
+            "sourceOwner": "Location",
+            "targetOwner": "LocationNameClaim",
+            "command": "ClaimLocationName"
+          },
+          {
+            "reactor": "LocationChangeApplicationReactor",
+            "sourceOwner": "LocationNameClaim",
+            "targetOwner": "Location",
+            "command": "ApplyLocationChange"
+          },
+          {
+            "reactor": "LocationOldNameReleaseReactor",
+            "sourceOwner": "Location",
+            "targetOwner": "LocationNameClaim",
+            "command": "ReleaseLocationName"
+          }
+        ]
+      },
+      {
+        "owner": "ManagementAssertion",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / management-assertions / assertionId; create compares current content/actor (not original after revise); approvals per version can replay; Revise expected revision before retry. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / management-assertions / AssertionId, with immutable ProgramId/examination scope. AssertionId identifies creation; selected mutations use CommandId and exact asserted version/source proofs.",
+        "invariant": "One exact current authored assertion version receives at most one immutable independent named CEO/CISO decision; revision creates changed wording/input bindings.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Current version/proposer/signers and decision must stay atomic. Historical version bodies and past approvals are not needed in current state; separate immutable versions or historical reads preserve provenance.",
+        "commands": [
+          {
+            "command": "ApproveManagementAssertion",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "AssertionId:Uuid",
+              "Version:long",
+              "Outcome:string",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "RecordManagementAssertion",
+            "logicalIdentity": "AssertionId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "AssertionId:Uuid",
+              "Content:ManagementAssertionContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ManagementAssertionApproved"
+          },
+          {
+            "event": "ManagementAssertionRecorded"
+          },
+          {
+            "event": "ManagementAssertionRevised"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ManagementRepresentationLetter",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / management-representation-letters / letterId; signature keyed by signer; changed artifact/time conflicts, identical signature no-ops before revision; handler supplies request.SignedAt. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / management-representation-letters / LetterId, with exact examination and document content. LetterId identifies creation; selected signature mutations use CommandId with the exact signer and version.",
+        "invariant": "Letter becomes signed exactly when every fixed named required signer has one immutable distinct signed artifact; no unlisted signer may sign.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Required signer set and signatures jointly decide completeness/duplicate-artifact exclusion atomically. Signature artifacts themselves remain evidence aggregates, so retaining this fixed decision set is justified.",
+        "commands": [
+          {
+            "command": "RecordManagementRepresentationLetter",
+            "logicalIdentity": "LetterId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "LetterId:Uuid",
+              "AssertionId:Uuid",
+              "ArtifactId:Uuid",
+              "SourceReference:string",
+              "LetterDate:DateOnly",
+              "RequiredSignerIds:IReadOnlyList<Uuid>"
+            ]
+          },
+          {
+            "command": "SignManagementRepresentationLetter",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "LetterId:Uuid",
+              "SignerMemberId:Uuid",
+              "SignedArtifactId:Uuid",
+              "SignedAt:DateTimeOffset"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ManagementRepresentationLetterSigned"
+          },
+          {
+            "event": "RepresentationLetterRecorded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "Member",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 tenant+user. New episode minted on accepted re-registration. Current flags make some retries no-ops but no operation+episode identity fences old commands. Append OCC serializes member writes.",
+        "selectedIdentity": "Existing UUIDv5 of TenantId + UserId; membership episodes remain distinct and exact. Selected CommandId binds the original member/episode and intended transition.",
+        "invariant": "One tenant-user membership has one affiliation/expiry episode; deprovision closes authority and a fresh episode cannot start until authority cleanup completes.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Affiliation, lifecycle and current episode must change together. Cleanup completion is an authority-release gate; membership roster/grants remain external.",
+        "commands": [
+          {
+            "command": "CompleteMemberRetirement",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "TenantId:Uuid",
+              "MemberId:Uuid",
+              "MembershipEpisodeId:Uuid",
+              "TerminationEventId:Uuid",
+              "CommandId:Uuid"
+            ]
+          },
+          {
+            "command": "RegisterMember",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "UserId:Uuid",
+              "Affiliation:string",
+              "MembershipExpiresOn:DateOnly?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "MemberDeprovisioned",
+            "discriminator": "bdgrz.rbac.member.deprovisioned",
+            "version": 1
+          },
+          {
+            "event": "MemberReinstated",
+            "discriminator": "bdgrz.rbac.member.reinstated",
+            "version": 1
+          },
+          {
+            "event": "MemberSuspended",
+            "discriminator": "bdgrz.rbac.member.suspended",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AdministratorWithdrawalReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "Member",
+            "command": "ApplyMemberWithdrawal"
+          },
+          {
+            "reactor": "AdministratorNeutralMemberMutationReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "Member",
+            "command": "ApplyNeutralMemberSourceMutation"
+          },
+          {
+            "reactor": "AdministratorRestorationReactor",
+            "sourceOwner": "TenantManagerGuard",
+            "targetOwner": "Member",
+            "command": "ApplyMemberRestoration"
+          }
+        ]
+      },
+      {
+        "owner": "MethodologyTemplate",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Platform bdgrz / methodology-templates / templateId; new version/review UUID minted within command, caller context.RequestId not passed. Create/revise/review/publish/retire retry checks include newly generated server timestamps. Pinned Portia uses full physical stream replay and expected physical position; no durable request dedup is supplied.",
+        "selectedIdentity": "Platform bdgrz + caller TemplateId; mutation CommandId is distinct from server-frozen version values.",
+        "invariant": "Publish current authored template only after independent review and distinct third-party approver; published content immutable; retirement stops further template revisions. Contributed records require exact accepted deidentified provenance.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Current draft/review/approval must share version identity; prior immutable published version bodies and all historical accepted-contribution records need not remain live parent state. A compact retirement/publication authority can coordinate independently owned version lifecycles.",
+        "commands": [
+          {
+            "command": "ApproveMethodologyTemplateVersion",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TemplateId:Uuid",
+              "Version:long",
+              "ApprovalRationale:string"
+            ]
+          },
+          {
+            "command": "CreateMethodologyTemplate",
+            "logicalIdentity": "TemplateId",
+            "fields": [
+              "TemplateId:Uuid",
+              "Content:MethodologyTemplateContent",
+              "ChangeNotes:string"
+            ]
+          },
+          {
+            "command": "RetireMethodologyTemplate",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TemplateId:Uuid",
+              "ExpectedRevision:long",
+              "EffectiveOn:DateOnly",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ReviewMethodologyTemplate",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TemplateId:Uuid",
+              "Version:long",
+              "Outcome:string",
+              "Comments:string"
+            ]
+          },
+          {
+            "command": "ReviseMethodologyTemplateDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TemplateId:Uuid",
+              "ExpectedRevision:long",
+              "Content:MethodologyTemplateContent",
+              "ChangeNotes:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "MethodologyTemplateCreated"
+          },
+          {
+            "event": "MethodologyTemplateDraftReviewed"
+          },
+          {
+            "event": "MethodologyTemplateDraftRevised"
+          },
+          {
+            "event": "MethodologyTemplateRetired"
+          },
+          {
+            "event": "MethodologyTemplateVersionPublished"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "MethodologyTemplateContribution",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / methodology-template-contributions / contributionId; one immutable proposal; current review/acceptance immutable. Exact retries compare server generated ProposedAt/ReviewedAt/AcceptedAt and proposal only replays at revision1. Pinned Portia uses full physical stream replay and expected physical position; no durable request dedup is supplied.",
+        "selectedIdentity": "Tenant / methodology-template-contributions / ContributionId, with exact immutable proposal/source/template lineage. ContributionId identifies creation; selected review/acceptance mutations use CommandId.",
+        "invariant": "Only immutable proposed deidentified record that receives independent approved review then acceptance by a third platform operator becomes shareable; tenant/source lineage stays in tenant-owned stream.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "These three irreversible decisions jointly authorize sharing one content capsule; separating author/review/acceptance without exact value/version gate would leak unapproved content. No retained child roster.",
+        "commands": [
+          {
+            "command": "AcceptTemplateContribution",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ContributionId:Uuid",
+              "AcceptanceRationale:string"
+            ]
+          },
+          {
+            "command": "ProposeDeidentifiedTemplateContribution",
+            "logicalIdentity": "ContributionId",
+            "fields": [
+              "TenantId:Uuid",
+              "ContributionId:Uuid",
+              "SourceRecordId:Uuid",
+              "SourceVersion:long",
+              "ProposedContent:MethodologyTemplateRecordContent",
+              "DeidentificationRationale:string"
+            ]
+          },
+          {
+            "command": "ReviewTemplateContribution",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ContributionId:Uuid",
+              "Outcome:string",
+              "ReviewNotes:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "MethodologyTemplateContributionAccepted"
+          },
+          {
+            "event": "MethodologyTemplateContributionProposed"
+          },
+          {
+            "event": "MethodologyTemplateContributionReviewed"
+          }
+        ],
+        "choreography": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of InformationAsset?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle InformationAsset's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of Location?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle Location's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of LocationNameClaim?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle LocationNameClaim's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ManagementAssertion?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ManagementAssertion's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ManagementRepresentationLetter?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ManagementRepresentationLetter's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of Member?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle Member's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of MethodologyTemplate?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle MethodologyTemplate's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of MethodologyTemplateContribution?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle MethodologyTemplateContribution's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

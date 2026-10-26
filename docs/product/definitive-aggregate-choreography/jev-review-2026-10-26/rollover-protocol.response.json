@@ -1,0 +1,59 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "fence": {
+        "type": "choice",
+        "choice": "aggregate_claim",
+        "confidence": 0.85,
+        "probabilities": {
+          "aggregate_claim": 0.89,
+          "private_claim_only": 0.03,
+          "read_then_write": 0.05,
+          "insufficient": 0.03
+        }
+      },
+      "terminal": {
+        "type": "choice",
+        "choice": "period_started",
+        "confidence": 0.53,
+        "probabilities": {
+          "period_started": 0.65,
+          "opening_accepted": 0.17,
+          "plan_approved": 0.02,
+          "insufficient": 0.16
+        }
+      },
+      "plan_boundary": {
+        "type": "choice",
+        "choice": "must_preserve_independent_plan_governance",
+        "confidence": 1,
+        "probabilities": {
+          "must_preserve_independent_plan_governance": 1,
+          "rollover_approval_covers_plan": 0,
+          "not_enough_info": 0
+        }
+      },
+      "rows": {
+        "type": "noul",
+        "noul": 0.12
+      },
+      "event": {
+        "type": "choice",
+        "choice": "process_record",
+        "confidence": 0.97,
+        "probabilities": {
+          "process_record": 0.98,
+          "rollover_event": 0.02,
+          "both": 0,
+          "insufficient": 0
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 4284,
+      "output_tokens": 236
+    }
+  }
+}

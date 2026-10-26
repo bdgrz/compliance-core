@@ -1,0 +1,96 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "item_0": {
+        "type": "choice",
+        "choice": "flow_is_logical",
+        "confidence": 0.72,
+        "probabilities": {
+          "flow_is_logical": 0.81,
+          "flow_boundary_or_order_defect": 0.03,
+          "proof_or_recovery_gap": 0.16
+        }
+      },
+      "item_0_evidence": {
+        "type": "noul",
+        "noul": 0.4
+      },
+      "item_1": {
+        "type": "choice",
+        "choice": "flow_is_logical",
+        "confidence": 0.74,
+        "probabilities": {
+          "flow_is_logical": 0.83,
+          "flow_boundary_or_order_defect": 0.04,
+          "proof_or_recovery_gap": 0.13
+        }
+      },
+      "item_1_evidence": {
+        "type": "noul",
+        "noul": 0.46
+      },
+      "item_2": {
+        "type": "choice",
+        "choice": "flow_is_logical",
+        "confidence": 0.67,
+        "probabilities": {
+          "flow_is_logical": 0.78,
+          "flow_boundary_or_order_defect": 0.07,
+          "proof_or_recovery_gap": 0.15
+        }
+      },
+      "item_2_evidence": {
+        "type": "noul",
+        "noul": 0.44
+      },
+      "item_3": {
+        "type": "choice",
+        "choice": "flow_is_logical",
+        "confidence": 0.61,
+        "probabilities": {
+          "flow_is_logical": 0.74,
+          "flow_boundary_or_order_defect": 0.05,
+          "proof_or_recovery_gap": 0.21
+        }
+      },
+      "item_3_evidence": {
+        "type": "noul",
+        "noul": 0.53
+      },
+      "item_4": {
+        "type": "choice",
+        "choice": "flow_is_logical",
+        "confidence": 0.77,
+        "probabilities": {
+          "flow_is_logical": 0.85,
+          "flow_boundary_or_order_defect": 0.03,
+          "proof_or_recovery_gap": 0.12
+        }
+      },
+      "item_4_evidence": {
+        "type": "noul",
+        "noul": 0.53
+      },
+      "item_5": {
+        "type": "choice",
+        "choice": "flow_is_logical",
+        "confidence": 0.72,
+        "probabilities": {
+          "flow_is_logical": 0.81,
+          "flow_boundary_or_order_defect": 0.07,
+          "proof_or_recovery_gap": 0.12
+        }
+      },
+      "item_5_evidence": {
+        "type": "noul",
+        "noul": 0.48
+      }
+    },
+    "usage": {
+      "input_tokens": 5446,
+      "output_tokens": 448
+    }
+  }
+}

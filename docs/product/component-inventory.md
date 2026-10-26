@@ -358,7 +358,7 @@ The aggregate count and source list were reconciled on 2026-10-21 against the
 #### Applications
 
 - [AcceptApplicationImport](../../src/Compliance.Common/Features/Applications/AcceptApplicationImport.cs#L6) — `bdgrz.application_import.accept` v1
-- [AddApplicationRelationship](../../src/Compliance.Common/Features/Applications/AddApplicationRelationship.cs#L6) — `bdgrz.application.relationship.add` v1
+- [AddApplicationRelationship](../../src/Compliance.Common/Features/Applications/Commands/AddApplicationRelationship.cs#L6) — `bdgrz.application.relationship.add` v1
 - [ApplyApplicationImportEffect](../../src/Compliance.Common/Features/Applications/ApplyApplicationImportEffect.cs#L7) — `bdgrz.application_import.apply_effect` v1
 - [CancelApplicationImport](../../src/Compliance.Common/Features/Applications/CancelApplicationImport.cs#L6) — `bdgrz.application_import.cancel` v1
 - [CorrelateApplicationImportRow](../../src/Compliance.Common/Features/Applications/CorrelateApplicationImportRow.cs#L6) — `bdgrz.application_import.correlate_row` v1
@@ -367,7 +367,7 @@ The aggregate count and source list were reconciled on 2026-10-21 against the
 - [DeclareSystemInstance](../../src/Compliance.Common/Features/Applications/DeclareSystemInstance.cs#L6) — `bdgrz.system_instance.declare` v1
 - [ExecuteApplicationImport](../../src/Compliance.Common/Features/Applications/ExecuteApplicationImport.cs#L7) — `bdgrz.application_import.execute` v1
 - [FreezeApplicationImportOmissionProposal](../../src/Compliance.Common/Features/Applications/FreezeApplicationImportOmissionProposal.cs#L7) — `bdgrz.application_import.omission.freeze` v1
-- [RemoveApplicationRelationship](../../src/Compliance.Common/Features/Applications/RemoveApplicationRelationship.cs#L6) — `bdgrz.application.relationship.remove` v1
+- [RemoveApplicationRelationship](../../src/Compliance.Common/Features/Applications/Commands/RemoveApplicationRelationship.cs#L6) — `bdgrz.application.relationship.remove` v1
 - [RetireApplication](../../src/Compliance.Common/Features/Applications/RetireApplication.cs#L6) — `bdgrz.application.retire` v1
 - [RetireSystemInstance](../../src/Compliance.Common/Features/Applications/RetireSystemInstance.cs#L6) — `bdgrz.system_instance.retire` v1
 - [ReviseApplication](../../src/Compliance.Common/Features/Applications/ReviseApplication.cs#L7) — `bdgrz.application.revise` v1
@@ -1502,8 +1502,8 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [ApplicationImportRetirementRowFrozen](../../src/Compliance.Common/Features/Applications/ApplicationImportRetirementRowFrozen.cs#L6) — `bdgrz.application_import.retirement_row_frozen` v1
 - [ApplicationImportRowCorrelated](../../src/Compliance.Common/Features/Applications/ApplicationImportRowCorrelated.cs#L6) — `bdgrz.application_import.row_correlated` v1
 - [ApplicationImportStaged](../../src/Compliance.Common/Features/Applications/ApplicationImportStaged.cs#L6) — `bdgrz.application_import.staged` v1
-- [ApplicationRelationshipAdded](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipAdded.cs#L8) — `bdgrz.application.relationship.added` v1
-- [ApplicationRelationshipRemoved](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipRemoved.cs#L8) — `bdgrz.application.relationship.removed` v1
+- [ApplicationRelationshipAdded](../../src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipAdded.cs#L8) — `bdgrz.application.relationship.added` v1
+- [ApplicationRelationshipRemoved](../../src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipRemoved.cs#L8) — `bdgrz.application.relationship.removed` v1
 - [ApplicationRetired](../../src/Compliance.Common/Features/Applications/ApplicationRetired.cs#L9) — `bdgrz.application.retired` v1
 - [ApplicationRevised](../../src/Compliance.Common/Features/Applications/ApplicationRevised.cs#L8) — `bdgrz.application.revised` v1
 - [SystemInstanceDeclared](../../src/Compliance.Common/Features/Applications/SystemInstanceDeclared.cs#L8) — `bdgrz.system_instance.declared` v1
