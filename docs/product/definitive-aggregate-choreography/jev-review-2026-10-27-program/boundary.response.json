@@ -1,0 +1,45 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "plan_boundary": {
+        "type": "choice",
+        "choice": "one_program_owner",
+        "confidence": 1,
+        "probabilities": {
+          "one_program_owner": 1,
+          "separate_date_owners": 0,
+          "evidence_insufficient": 0
+        }
+      },
+      "plan_boundary_evidence": {
+        "type": "noul",
+        "noul": 0.78
+      },
+      "identity": {
+        "type": "noul",
+        "noul": 0.85
+      },
+      "history_boundary": {
+        "type": "choice",
+        "choice": "compact_owner_with_verified_history",
+        "confidence": 1,
+        "probabilities": {
+          "compact_owner_with_verified_history": 1,
+          "unbounded_owner_history": 0,
+          "separate_selection_aggregate": 0,
+          "evidence_insufficient": 0
+        }
+      },
+      "history_boundary_evidence": {
+        "type": "noul",
+        "noul": 0.64
+      }
+    },
+    "usage": {
+      "input_tokens": 11699,
+      "output_tokens": 181
+    }
+  }
+}
