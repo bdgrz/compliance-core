@@ -1,0 +1,220 @@
+# Dependency-ordered aggregate backlog
+
+Snapshot: 2026-10-27. The approved [aggregate catalog](aggregates.json) is the target; the active [product project](https://github.com/orgs/bdgrz/projects/2) and linked GitHub issues remain authoritative for scope, acceptance, readiness and delivery. This list organizes aggregate review and implementation; it does not create issues, add GitHub dependencies, change sprint commitments or claim runtime completion.
+
+The order follows the selected [choreography](choreography.json): when a source owner establishes a prerequisite fact for another business owner, the source appears earlier. A group with multiple owners contains a cycle between event stages. Plan the relevant stages together while keeping implementation slices bounded; group membership does not require all owners to be completed together. Within the available choices, directly mapped open P0 stories and their upstream groups sort first, followed by P1, P2 and unmapped owners; direct open issue blockers are a tie-breaker within each priority, not a blanket aggregate gate. A source-to-target edge is an event-stage relationship, not proof that a whole source aggregate must be completed before any target work.
+
+This ordering covers 129 business/authority owners in 112 groups, using 79 distinct owner pairs from 126 choreography rows. It is not a complete dependency graph: composite/alternative sources, technical processes, proof gates, product prerequisites, and edges absent from the choreography require the linked contracts and live issue review. Do not infer that an isolated or unblocked row is ready for implementation.
+
+“Done” below is the existing focused aggregate-scope evidence in [aggregate status](aggregate-status.md), not full product, CI or production acceptance. A declaration means only that a matching source type exists. Product story mappings are inherited from that table; a closed story does not prove the aggregate is complete.
+
+| Group | Owner | Direct mapped story priorities | Earlier source-owner groups | Aggregate scope |
+| ---: | --- | --- | --- | --- |
+| 1 | `ClientService` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8)) | — | Done (focused aggregate scope) |
+| 2 | `Location` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Source present; verify |
+| 2 | `LocationNameClaim` | No direct story mapping | — | Source present; verify |
+| 3 | `OperationalProcess` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Source present; verify |
+| 3 | `OperationalProcessNameClaim` | No direct story mapping | — | Source present; verify |
+| 4 | `Person` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-11](https://github.com/bdgrz/compliance-core/issues/49))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | — | Source present; verify |
+| 5 | `ServiceIdentity` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-11](https://github.com/bdgrz/compliance-core/issues/49))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | — | Source present; verify |
+| 6 | `SystemBoundary` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8)) | — | Done (focused aggregate scope) |
+| 7 | `TenantManagerGuard` | No direct story mapping | — | Source present; verify |
+| 8 | `Member` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P0 ([R1-15](https://github.com/bdgrz/compliance-core/issues/127))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P2 ([T1-03](https://github.com/bdgrz/compliance-core/issues/26))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | 7: `TenantManagerGuard` | Done (focused aggregate scope) |
+| 8 | `Team` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P1 ([T2-04](https://github.com/bdgrz/compliance-core/issues/34)) | — | Done (focused aggregate scope) |
+| 8 | `TeamMember` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10)) | 7: `TenantManagerGuard` | Done (focused aggregate scope) |
+| 8 | `Tenant` | No direct story mapping | — | Source present; verify |
+| 8 | `TenantInvitation` | No direct story mapping | — | Source present; verify |
+| 8 | `TenantSlug` | No direct story mapping | — | Source present; verify |
+| 9 | `Provider` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P0 ([R1-14](https://github.com/bdgrz/compliance-core/issues/52))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P2 ([T2-08](https://github.com/bdgrz/compliance-core/issues/38)) | — | Source present; verify |
+| 9 | `ProviderNameClaim` | No direct story mapping | — | Source present; verify |
+| 10 | `Role` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P2 ([T1-03](https://github.com/bdgrz/compliance-core/issues/26))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | 8: `Tenant` | Done (focused aggregate scope) |
+| 11 | `ControlCriterionMapping` | P0 ([R1-06](https://github.com/bdgrz/compliance-core/issues/12)) | — | Source present; verify |
+| 12 | `ProgramReadiness` | No direct story mapping | — | Source present; verify |
+| 12 | `ReadinessAssessment` | P0 ([R1-08](https://github.com/bdgrz/compliance-core/issues/14)) | — | Source present; verify |
+| 13 | `DataFlow` | P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Source present; verify |
+| 14 | `InformationAsset` | P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Source present; verify |
+| 15 | `Policy` | P0 ([R2-02](https://github.com/bdgrz/compliance-core/issues/16))<br>P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53))<br>P1 ([R2-12](https://github.com/bdgrz/compliance-core/issues/55))<br>P1 ([T2-02](https://github.com/bdgrz/compliance-core/issues/32)) | — | Source present; verify |
+| 16 | `ArtifactDownloadGrant` | No direct story mapping | — | Mapping needed |
+| 16 | `EvidenceArtifact` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | — | Source present; verify |
+| 17 | `EvidenceSupport` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | — | Source present; verify |
+| 18 | `RiskTreatmentAction` | No direct story mapping | — | Source present; verify |
+| 19 | `EvidenceRequest` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | 18: `RiskTreatmentAction` | Source present; verify |
+| 20 | `TypeIIObservationCalendar` | No direct story mapping | — | Source present; verify |
+| 20 | `TypeIIPeriod` | P1 ([T2-01](https://github.com/bdgrz/compliance-core/issues/31))<br>P1 ([T3-01](https://github.com/bdgrz/compliance-core/issues/40)) | — | Source present; verify |
+| 21 | `ControlOccurrence` | P0 ([R2-04](https://github.com/bdgrz/compliance-core/issues/18))<br>P1 ([T2-02](https://github.com/bdgrz/compliance-core/issues/32))<br>P2 ([T2-09](https://github.com/bdgrz/compliance-core/issues/39)) | 20: `TypeIIPeriod` | Source present; verify |
+| 22 | `ControlEvaluation` | P0 ([R2-05](https://github.com/bdgrz/compliance-core/issues/19)) | — | Source present; verify |
+| 23 | `ControlEvaluationPlan` | P0 ([R2-05](https://github.com/bdgrz/compliance-core/issues/19)) | — | Source present; verify |
+| 24 | `AccessExpectation` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | — | Source present; verify |
+| 25 | `AccessGrant` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | 8: `Member`, `TenantInvitation` | Source present; verify |
+| 26 | `AccessPopulation` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Source present; verify |
+| 27 | `AccessReviewCampaign` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Source present; verify |
+| 28 | `AccessReviewDecisionBatch` | No direct story mapping | 27: `AccessReviewCampaign` | Source present; verify |
+| 29 | `AccessReviewItem` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | 27: `AccessReviewCampaign`; 28: `AccessReviewDecisionBatch` | Source present; verify |
+| 30 | `PopulationSnapshot` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Source present; verify |
+| 31 | `FindingAggregate` | No direct story mapping | 21: `ControlOccurrence`; 22: `ControlEvaluation` | Source present; verify |
+| 32 | `CorrectiveAction` | P0 ([R2-07](https://github.com/bdgrz/compliance-core/issues/21))<br>P1 ([T1-06](https://github.com/bdgrz/compliance-core/issues/29)) | 31: `FindingAggregate` | Source present; verify |
+| 33 | `AdvisorHandoff` | P0 ([R2-08](https://github.com/bdgrz/compliance-core/issues/22)) | 16: `ArtifactDownloadGrant`, `EvidenceArtifact` | Source present; verify |
+| 34 | `PolicyDistributionCampaign` | P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53)) | — | Source present; verify |
+| 35 | `TrainingRequirement` | P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53)) | — | Source present; verify |
+| 36 | `EvidenceHandlingPolicy` | P1 ([R2-12](https://github.com/bdgrz/compliance-core/issues/55)) | 16: `ArtifactDownloadGrant`, `EvidenceArtifact` | Source present; verify |
+| 37 | `SystemDescription` | P1 ([T1-02](https://github.com/bdgrz/compliance-core/issues/25)) | — | Source present; verify |
+| 38 | `AuditorRequest` | P1 ([T1-04](https://github.com/bdgrz/compliance-core/issues/27))<br>P1 ([T3-03](https://github.com/bdgrz/compliance-core/issues/42)) | — | Source present; verify |
+| 39 | `ComplianceIncident` | P1 ([T2-07](https://github.com/bdgrz/compliance-core/issues/37)) | 37: `SystemDescription` | Source present; verify |
+| 40 | `SignificantChange` | P1 ([T2-07](https://github.com/bdgrz/compliance-core/issues/37)) | 37: `SystemDescription` | Source present; verify |
+| 41 | `AuditPopulation` | P1 ([T3-02](https://github.com/bdgrz/compliance-core/issues/41)) | — | Source present; verify |
+| 42 | `ClientExport` | P1 ([F1-01](https://github.com/bdgrz/compliance-core/issues/128)) | — | Source present; verify |
+| 43 | `TemplateApplication` | P1 ([F1-04](https://github.com/bdgrz/compliance-core/issues/131)) | — | Source present; verify |
+| 44 | `AccessPopulationException` | No direct story mapping | — | Source present; verify |
+| 45 | `AccessPrincipalClassification` | No direct story mapping | — | Source present; verify |
+| 46 | `AdvisorFeedbackThread` | No direct story mapping | 33: `AdvisorHandoff` | Source present; verify |
+| 47 | `ApplicationImportBatch` | No direct story mapping | — | Source present; verify |
+| 48 | `ApplicationImportSource` | No direct story mapping | 47: `ApplicationImportBatch` | Source present; verify |
+| 49 | `ApplicationRelationship` | No direct story mapping | — | Source present; verify |
+| 50 | `ArtifactDisclosure` | No direct story mapping | — | Source present; verify |
+| 51 | `ArtifactDisposition` | No direct story mapping | — | Source present; verify |
+| 52 | `ArtifactEngagementHold` | No direct story mapping | — | Source present; verify |
+| 53 | `ArtifactLegalHold` | No direct story mapping | — | Source present; verify |
+| 54 | `ArtifactRetentionBasis` | No direct story mapping | — | Source present; verify |
+| 55 | `AuditObservation` | No direct story mapping | — | Source present; verify |
+| 56 | `AuditOutcome` | No direct story mapping | — | Source present; verify |
+| 57 | `AuditPackageManifest` | No direct story mapping | — | Source present; verify |
+| 58 | `AuditPackageDelivery` | No direct story mapping | 57: `AuditPackageManifest` | Source present; verify |
+| 59 | `AuditorFeedbackThread` | No direct story mapping | 38: `AuditorRequest` | Source present; verify |
+| 60 | `AuditorResponse` | No direct story mapping | 38: `AuditorRequest` | Source present; verify |
+| 61 | `AuditorSampleSelection` | No direct story mapping | 38: `AuditorRequest` | Source present; verify |
+| 62 | `CommitmentDraft` | No direct story mapping | — | Source present; verify |
+| 63 | `ComplianceProgram` | P0 ([R1-01](https://github.com/bdgrz/compliance-core/issues/7)) | — | Done (focused aggregate scope) |
+| 64 | `ControlDraft` | No direct story mapping | — | Source present; verify |
+| 65 | `ControlOperatingPlan` | No direct story mapping | — | Source present; verify |
+| 66 | `CriteriaTextOverlay` | No direct story mapping | — | Source present; verify |
+| 67 | `CriterionApplicability` | No direct story mapping | — | Source present; verify |
+| 68 | `DeclaredApplication` | No direct story mapping | 47: `ApplicationImportBatch` | Source present; verify |
+| 69 | `DeclaredSystemInstance` | No direct story mapping | — | Source present; verify |
+| 70 | `EmailAddress` | No direct story mapping | — | Source present; verify |
+| 70 | `IdentityRecovery` | No direct story mapping | — | Source present; verify |
+| 70 | `UserIdentity` | No direct story mapping | — | Source present; verify |
+| 71 | `EvidenceRedaction` | No direct story mapping | — | Source present; verify |
+| 72 | `ExaminationEngagement` | No direct story mapping | — | Source present; verify |
+| 73 | `ExaminationSignOff` | No direct story mapping | — | Source present; verify |
+| 74 | `FirmProfessionalDutyDesignation` | No direct story mapping | — | Source present; verify |
+| 74 | `FirmStaffIdentityClaim` | No direct story mapping | — | Source present; verify |
+| 74 | `FirmStaffRecord` | No direct story mapping | — | Source present; verify |
+| 74 | `ProfessionalAssertionIdentityClaim` | No direct story mapping | — | Source present; verify |
+| 74 | `ServiceEngagementIndependence` | No direct story mapping | — | Source present; verify |
+| 75 | `ClientServiceIndependence` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
+| 76 | `ClientIndependenceDecision` | No direct story mapping | 75: `ClientServiceIndependence` | Source present; verify |
+| 77 | `EngagementManagementAcknowledgement` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
+| 78 | `ImmutableSnapshot` | No direct story mapping | — | Source present; verify |
+| 79 | `IndependenceRuleCatalog` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
+| 80 | `IndependenceRuleRatificationCatalog` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
+| 81 | `ManagementAssertion` | No direct story mapping | — | Source present; verify |
+| 82 | `ManagementRepresentationLetter` | No direct story mapping | — | Source present; verify |
+| 83 | `MethodologyTemplate` | No direct story mapping | — | Source present; verify |
+| 84 | `MethodologyTemplateContribution` | No direct story mapping | — | Source present; verify |
+| 85 | `PartnerIndependenceDecision` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
+| 86 | `PlatformOperatorRoster` | No direct story mapping | — | Source present; verify |
+| 87 | `PolicyCampaignParticipant` | No direct story mapping | 34: `PolicyDistributionCampaign` | Source present; verify |
+| 88 | `PracticeIndependenceCommitment` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
+| 89 | `ProgramRollover` | No direct story mapping | — | Source present; verify |
+| 90 | `ProviderAssuranceGap` | No direct story mapping | — | Source present; verify |
+| 91 | `ProviderAssuranceReview` | No direct story mapping | — | Source present; verify |
+| 92 | `ProviderAssuranceReport` | No direct story mapping | 91: `ProviderAssuranceReview` | Source present; verify |
+| 93 | `ProviderRiskAcceptance` | No direct story mapping | 90: `ProviderAssuranceGap` | Source present; verify |
+| 94 | `ReadinessGapPlan` | No direct story mapping | 12: `ProgramReadiness` | Source present; verify |
+| 95 | `RiskDraft` | No direct story mapping | — | Source present; verify |
+| 96 | `RiskEvaluation` | No direct story mapping | — | Source present; verify |
+| 97 | `RiskMethod` | No direct story mapping | — | Source present; verify |
+| 98 | `RiskGovernance` | No direct story mapping | 6: `SystemBoundary`; 97: `RiskMethod` | Source present; verify |
+| 99 | `RiskTreatmentAssertion` | No direct story mapping | — | Source present; verify |
+| 100 | `RolePermission` | No direct story mapping | 8: `Tenant`; 10: `Role` | Source present; verify |
+| 101 | `SeparationOfDutiesWaiver` | No direct story mapping | — | Source present; verify |
+| 102 | `SystemInstanceAccessReviewScope` | No direct story mapping | — | Source present; verify |
+| 103 | `TeamRole` | No direct story mapping | 8: `Tenant`; 10: `Role` | Source present; verify |
+| 104 | `TechnologyComponent` | No direct story mapping | — | Source present; verify |
+| 105 | `TenantIdentityProvider` | No direct story mapping | — | Source present; verify |
+| 106 | `TenantInvitationMailboxClaim` | No direct story mapping | — | Source present; verify |
+| 107 | `TypeIIPlan` | No direct story mapping | — | Source present; verify |
+| 108 | `WorkDigestPreference` | No direct story mapping | — | Source present; verify |
+| 109 | `WorkItemAssignment` | No direct story mapping | — | Source present; verify |
+| 110 | `WorkRelationship` | P0 ([R1-11](https://github.com/bdgrz/compliance-core/issues/49)) | — | Source present; verify |
+| 111 | `WorkforceObservationResolution` | No direct story mapping | — | Source present; verify |
+| 112 | `WorkforceSourceObservation` | No direct story mapping | — | Source present; verify |
+
+## Coordinated cycles
+
+- **Group 2:** `Location`, `LocationNameClaim`. Selected stages: `Location` → `LocationNameClaim` (T025, T027); `LocationNameClaim` → `Location` (T026).
+- **Group 3:** `OperationalProcess`, `OperationalProcessNameClaim`. Selected stages: `OperationalProcess` → `OperationalProcessNameClaim` (T028, T030); `OperationalProcessNameClaim` → `OperationalProcess` (T029).
+- **Group 8:** `Member`, `Team`, `TeamMember`, `Tenant`, `TenantInvitation`, `TenantSlug`. Selected stages: `Member` → `TeamMember` (S004); `Team` → `TeamMember` (S010); `TeamMember` → `Tenant` (S034); `Tenant` → `Member` (S013); `Tenant` → `Team` (S012); `Tenant` → `TeamMember` (S016); `Tenant` → `TenantInvitation` (S031); `Tenant` → `TenantSlug` (S030, S032, S033); `TenantInvitation` → `Member` (S026); `TenantInvitation` → `TeamMember` (S027); `TenantInvitation` → `Tenant` (S029); `TenantSlug` → `Tenant` (S022, S023, S024, S025).
+- **Group 9:** `Provider`, `ProviderNameClaim`. Selected stages: `Provider` → `ProviderNameClaim` (T022, T024); `ProviderNameClaim` → `Provider` (T023).
+- **Group 12:** `ProgramReadiness`, `ReadinessAssessment`. Selected stages: `ProgramReadiness` → `ReadinessAssessment` (T087); `ReadinessAssessment` → `ProgramReadiness` (T039).
+- **Group 16:** `ArtifactDownloadGrant`, `EvidenceArtifact`. Selected stages: `ArtifactDownloadGrant` → `EvidenceArtifact` (T104); `EvidenceArtifact` → `ArtifactDownloadGrant` (T101, A021).
+- **Group 20:** `TypeIIObservationCalendar`, `TypeIIPeriod`. Selected stages: `TypeIIObservationCalendar` → `TypeIIPeriod` (T054); `TypeIIPeriod` → `TypeIIObservationCalendar` (T053, T055).
+- **Group 70:** `EmailAddress`, `IdentityRecovery`, `UserIdentity`. Selected stages: `EmailAddress` → `IdentityRecovery` (T056, A017); `IdentityRecovery` → `EmailAddress` (T058); `IdentityRecovery` → `UserIdentity` (T041, T042, T043, T057); `UserIdentity` → `EmailAddress` (S035).
+- **Group 74:** `FirmProfessionalDutyDesignation`, `FirmStaffIdentityClaim`, `FirmStaffRecord`, `ProfessionalAssertionIdentityClaim`, `ServiceEngagementIndependence`. Selected stages: `FirmProfessionalDutyDesignation` → `FirmStaffRecord` (T113, T114); `FirmProfessionalDutyDesignation` → `ProfessionalAssertionIdentityClaim` (T000); `FirmStaffIdentityClaim` → `FirmStaffRecord` (T003); `FirmStaffRecord` → `FirmStaffIdentityClaim` (T002); `FirmStaffRecord` → `ServiceEngagementIndependence` (S017); `ProfessionalAssertionIdentityClaim` → `FirmProfessionalDutyDesignation` (T001); `ServiceEngagementIndependence` → `FirmProfessionalDutyDesignation` (T091, T092); `ServiceEngagementIndependence` → `FirmStaffRecord` (T089, T090).
+
+## Composite and technical stages
+
+The following rows are not imposed as ordinary owner-to-owner edges. A `|` source means the catalog names alternative/applicable source owners; it is not an assertion that every named owner is a mandatory prerequisite. Process, scoped-read and artifact admission rows require their own exact proof and recovery contracts.
+
+- `T031`: `AuditPackageManifest` → `AuditPackageBuildProcess`; prerequisites: `AuditPackageBuildRequested`.
+- `T032`: `AuditPackageBuildProcess` → `AuditPackageManifest`; prerequisites: `process:verified_build_output`.
+- `T045`: `IdentityRecovery` → `IdentityRecoveryNoticeProcess`; prerequisites: `IdentityRecoveryCompleted`.
+- `T050`: `Member|TeamMember` → `TenantManagerGuard`; prerequisites: `MemberSuspended`, `MemberDeprovisioned`, `TeamMemberRemoved`.
+- `T052`: `Member|TeamMember` → `TenantManagerGuard`; prerequisites: `MemberReinstated`, `TeamMemberAssigned`.
+- `T110`: `EngagementManagementAcknowledgement|PartnerIndependenceDecision` → `ServiceEngagementIndependence`; prerequisites: `EngagementManagementAcknowledged`, `PartnerIndependenceEvaluationRecorded`.
+- `T115`: `EmailAddress` → `EmailChallengeDeliveryLedger`; prerequisites: `EmailChallengeIssued`.
+- `T116`: `EmailAddress` → `EmailChallengeDeliveryLedger`; prerequisites: `IdentityRecoveryChallengeIssued`.
+- `T117`: `TenantInvitation` → `TenantInvitationDeliveryProcess`; prerequisites: `TenantMemberInvited`.
+- `T118`: `TenantInvitation` → `TenantInvitationDeliveryProcess`; prerequisites: `TenantMemberInvited`.
+- `T119`: `TenantInvitation` → `TenantInvitationDeliveryProcess`; prerequisites: `TenantMemberInvited`.
+- `S000`: `EvidenceArtifact` → `technical stage`; prerequisites: `EvidenceArtifactInspected`.
+- `N001`: `EmailAddress` → `EmailChallengeDeliveryLedger`; prerequisites: `EmailChallengeIssued`, `IdentityRecoveryChallengeIssued`.
+- `N002`: `EmailAddress` → `EmailChallengeDeliveryLedger`; prerequisites: `EmailChallengeIssued`, `IdentityRecoveryChallengeIssued`.
+- `P000`: `admission/read source` → `EvidenceArtifact`; prerequisites: current-authorized personal HTTP command, not an event subscription.
+- `Q000`: `admission/read source` → `ArtifactDownloadGrant`; prerequisites: `EvidenceArtifactDownloadRequested`, `EvidenceArtifactDownloadIssued`, `ArtifactDownloadGrantCanceled`.
+- `R000`: `ProgramRollover` → `ProgramRolloverExecutionProcess`; prerequisites: `ProgramRolloverApproved`.
+
+## Live product-story dependencies
+
+Direct `blockedBy` relationships were read from GitHub on 2026-10-27. They gate the issue acceptance they actually cover; they do not automatically block all aggregate-local work. Project readiness and commitment are shown as recorded and may differ from issue state.
+
+| Story | Issue state | Project readiness / commitment | Direct open blockers |
+| --- | --- | --- | --- |
+| [F1-01 #128](https://github.com/bdgrz/compliance-core/issues/128) | Open | Needs refinement / Unscheduled | [[M0-D25a] Decide retention of firm advisory material when a client offboards](https://github.com/bdgrz/compliance-core/issues/346), [[F1-07] Record client engagements and accept them after independence checks](https://github.com/bdgrz/compliance-core/issues/134), [[F1-04] Maintain a reusable template library and apply it to clients](https://github.com/bdgrz/compliance-core/issues/131), [[R2-12] Govern evidence access, retention, and disclosure](https://github.com/bdgrz/compliance-core/issues/55), [[R1-15] Provision a client organization and its first administrators](https://github.com/bdgrz/compliance-core/issues/127) |
+| [F1-04 #131](https://github.com/bdgrz/compliance-core/issues/131) | Open | Needs refinement / Forecast | [[R2-02] Maintain approved policies and review cycles](https://github.com/bdgrz/compliance-core/issues/16), [[R1-05] Build the control inventory and implementation narratives](https://github.com/bdgrz/compliance-core/issues/11) |
+| [R1-01 #7](https://github.com/bdgrz/compliance-core/issues/7) | Closed | — / — | [[R1-15] Provision a client organization and its first administrators](https://github.com/bdgrz/compliance-core/issues/127) |
+| [R1-02 #8](https://github.com/bdgrz/compliance-core/issues/8) | Open | Needs refinement / Forecast | — |
+| [R1-04 #10](https://github.com/bdgrz/compliance-core/issues/10) | Open | Needs refinement / Unscheduled | [[R1-15] Provision a client organization and its first administrators](https://github.com/bdgrz/compliance-core/issues/127) |
+| [R1-06 #12](https://github.com/bdgrz/compliance-core/issues/12) | Open | Needs refinement / Forecast | [[R1-05] Build the control inventory and implementation narratives](https://github.com/bdgrz/compliance-core/issues/11), [[R1-03] Select a traceable SOC 2 criteria catalog](https://github.com/bdgrz/compliance-core/issues/9) |
+| [R1-08 #14](https://github.com/bdgrz/compliance-core/issues/14) | Open | Needs refinement / Forecast | [[R1-14] Evaluate vendors and subservice organizations](https://github.com/bdgrz/compliance-core/issues/52), [[R1-13] Record service commitments, system requirements, and user responsibilities](https://github.com/bdgrz/compliance-core/issues/51), [[R1-12] Inventory scoped technology and information assets](https://github.com/bdgrz/compliance-core/issues/50), [[R1-10] Establish the application inventory and review scope](https://github.com/bdgrz/compliance-core/issues/48), [[R1-07] Assess scoped risks and choose treatment](https://github.com/bdgrz/compliance-core/issues/13), [[R1-06] Map controls to criteria and explain applicability](https://github.com/bdgrz/compliance-core/issues/12) |
+| [R1-11 #49](https://github.com/bdgrz/compliance-core/issues/49) | Closed | — / — | — |
+| [R1-12 #50](https://github.com/bdgrz/compliance-core/issues/50) | Open | Needs refinement / Forecast | [[R1-10] Establish the application inventory and review scope](https://github.com/bdgrz/compliance-core/issues/48), [[R1-02] Define the system boundary and intended audit scope](https://github.com/bdgrz/compliance-core/issues/8) |
+| [R1-14 #52](https://github.com/bdgrz/compliance-core/issues/52) | Open | Needs refinement / Forecast | [[EN-06] Store governed artifacts with immutable content identity](https://github.com/bdgrz/compliance-core/issues/92), [[R1-13] Record service commitments, system requirements, and user responsibilities](https://github.com/bdgrz/compliance-core/issues/51), [[R1-10] Establish the application inventory and review scope](https://github.com/bdgrz/compliance-core/issues/48), [[R1-02] Define the system boundary and intended audit scope](https://github.com/bdgrz/compliance-core/issues/8) |
+| [R1-15 #127](https://github.com/bdgrz/compliance-core/issues/127) | Open | Needs refinement / Forecast | — |
+| [R2-02 #16](https://github.com/bdgrz/compliance-core/issues/16) | Open | Needs refinement / Forecast | [[EN-06] Store governed artifacts with immutable content identity](https://github.com/bdgrz/compliance-core/issues/92), [[R1-04] Invite the compliance team and assign responsibilities](https://github.com/bdgrz/compliance-core/issues/10) |
+| [R2-03 #17](https://github.com/bdgrz/compliance-core/issues/17) | Open | Needs refinement / Forecast | [[EN-06] Store governed artifacts with immutable content identity](https://github.com/bdgrz/compliance-core/issues/92), [[R1-04] Invite the compliance team and assign responsibilities](https://github.com/bdgrz/compliance-core/issues/10) |
+| [R2-04 #18](https://github.com/bdgrz/compliance-core/issues/18) | Open | Needs refinement / Forecast | [[R2-03] Request and capture trustworthy evidence](https://github.com/bdgrz/compliance-core/issues/17), [[R2-01] Assign control ownership and operating cadence](https://github.com/bdgrz/compliance-core/issues/15) |
+| [R2-05 #19](https://github.com/bdgrz/compliance-core/issues/19) | Open | Needs refinement / Unscheduled | [[R2-03] Request and capture trustworthy evidence](https://github.com/bdgrz/compliance-core/issues/17), [[R1-05] Build the control inventory and implementation narratives](https://github.com/bdgrz/compliance-core/issues/11) |
+| [R2-06 #20](https://github.com/bdgrz/compliance-core/issues/20) | Open | Needs refinement / Unscheduled | [[R1-10] Establish the application inventory and review scope](https://github.com/bdgrz/compliance-core/issues/48) |
+| [R2-07 #21](https://github.com/bdgrz/compliance-core/issues/21) | Open | Needs refinement / Forecast | [[R1-08] Complete the readiness assessment and own the gap plan](https://github.com/bdgrz/compliance-core/issues/14) |
+| [R2-08 #22](https://github.com/bdgrz/compliance-core/issues/22) | Open | Needs refinement / Forecast | [[EN-06] Store governed artifacts with immutable content identity](https://github.com/bdgrz/compliance-core/issues/92), [[R1-08] Complete the readiness assessment and own the gap plan](https://github.com/bdgrz/compliance-core/issues/14) |
+| [R2-10 #53](https://github.com/bdgrz/compliance-core/issues/53) | Open | Needs refinement / Forecast | [[R2-02] Maintain approved policies and review cycles](https://github.com/bdgrz/compliance-core/issues/16) |
+| [R2-12 #55](https://github.com/bdgrz/compliance-core/issues/55) | Open | Needs refinement / Forecast | [[R2-03] Request and capture trustworthy evidence](https://github.com/bdgrz/compliance-core/issues/17) |
+| [T1-02 #25](https://github.com/bdgrz/compliance-core/issues/25) | Open | Needs refinement / Forecast | [[T1-01] Establish the Type I engagement and point-in-time snapshot](https://github.com/bdgrz/compliance-core/issues/24) |
+| [T1-03 #26](https://github.com/bdgrz/compliance-core/issues/26) | Open | Needs refinement / Forecast | [[T1-03 discovery] Validate demand for direct external-auditor access](https://github.com/bdgrz/compliance-core/issues/547), [[T1-01] Establish the Type I engagement and point-in-time snapshot](https://github.com/bdgrz/compliance-core/issues/24) |
+| [T1-04 #27](https://github.com/bdgrz/compliance-core/issues/27) | Open | Needs refinement / Forecast | [[R2-03] Request and capture trustworthy evidence](https://github.com/bdgrz/compliance-core/issues/17), [[T1-01] Establish the Type I engagement and point-in-time snapshot](https://github.com/bdgrz/compliance-core/issues/24) |
+| [T1-06 #29](https://github.com/bdgrz/compliance-core/issues/29) | Open | Needs refinement / Forecast | [[R2-07] Resolve findings, exceptions, and corrective actions](https://github.com/bdgrz/compliance-core/issues/21), [[T1-01] Establish the Type I engagement and point-in-time snapshot](https://github.com/bdgrz/compliance-core/issues/24) |
+| [T2-01 #31](https://github.com/bdgrz/compliance-core/issues/31) | Open | Needs refinement / Forecast | [[T1-07] Record the Type I outcome and approve the Type II plan](https://github.com/bdgrz/compliance-core/issues/30) |
+| [T2-02 #32](https://github.com/bdgrz/compliance-core/issues/32) | Open | Needs refinement / Forecast | [[R2-01] Assign control ownership and operating cadence](https://github.com/bdgrz/compliance-core/issues/15), [[T2-01] Start the Type II observation period from the approved baseline](https://github.com/bdgrz/compliance-core/issues/31) |
+| [T2-04 #34](https://github.com/bdgrz/compliance-core/issues/34) | Open | Needs refinement / Forecast | [[R1-08] Complete the readiness assessment and own the gap plan](https://github.com/bdgrz/compliance-core/issues/14), [[T2-01] Start the Type II observation period from the approved baseline](https://github.com/bdgrz/compliance-core/issues/31) |
+| [T2-05 #35](https://github.com/bdgrz/compliance-core/issues/35) | Open | Needs refinement / Forecast | [[R2-06] Reconcile application access and complete the initial review](https://github.com/bdgrz/compliance-core/issues/20), [[T2-01] Start the Type II observation period from the approved baseline](https://github.com/bdgrz/compliance-core/issues/31) |
+| [T2-07 #37](https://github.com/bdgrz/compliance-core/issues/37) | Open | Needs refinement / Forecast | [[T1-02] Author, approve, and maintain the system description](https://github.com/bdgrz/compliance-core/issues/25), [[T2-01] Start the Type II observation period from the approved baseline](https://github.com/bdgrz/compliance-core/issues/31) |
+| [T2-08 #38](https://github.com/bdgrz/compliance-core/issues/38) | Open | Needs refinement / Unscheduled | [[T2-D1] Measure manual effort per source and rank candidate connectors](https://github.com/bdgrz/compliance-core/issues/342) |
+| [T2-09 #39](https://github.com/bdgrz/compliance-core/issues/39) | Closed | — / — | [[T2-04] Monitor readiness and intervene before gaps age](https://github.com/bdgrz/compliance-core/issues/34) |
+| [T3-01 #40](https://github.com/bdgrz/compliance-core/issues/40) | Open | Needs refinement / Forecast | [[T2-07] Assess system changes and incidents for compliance impact](https://github.com/bdgrz/compliance-core/issues/37), [[T2-05] Run recurring application access reviews](https://github.com/bdgrz/compliance-core/issues/35), [[T2-03] Collect and review evidence for every required occurrence](https://github.com/bdgrz/compliance-core/issues/33) |
+| [T3-02 #41](https://github.com/bdgrz/compliance-core/issues/41) | Open | Needs refinement / Forecast | [[T3-01] Close the observation period and freeze the examination snapshot](https://github.com/bdgrz/compliance-core/issues/40) |
+| [T3-03 #42](https://github.com/bdgrz/compliance-core/issues/42) | Open | Needs refinement / Forecast | [[T1-04] Respond to auditor requests and samples](https://github.com/bdgrz/compliance-core/issues/27), [[T3-02] Demonstrate complete audit populations](https://github.com/bdgrz/compliance-core/issues/41) |
+
+## Selection rule
+
+Select the earliest group whose specific source facts, owner invariants and directly applicable issue dependencies are understood. Complete one bounded owner or coordinated protocol slice at a time. For each selected owner, verify the current declaration, source-backed behavior and existing tests before adding a gap test. Treat the catalog and this ordering as design/navigation evidence; completion requires the repository’s focused behavior, replay, review and broader validation evidence.

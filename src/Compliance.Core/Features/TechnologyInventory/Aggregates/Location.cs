@@ -29,7 +29,7 @@ public sealed class Location : NamedRecord
         _tenantId = tenantId;
         On<LocationChangeAccepted>(ObserveAccepted);
         On<LocationChangeCanceled>(ObserveCanceled);
-        On<LocationRevisionRecorded>(ObserveApplied);
+        On<LocationRevisionRecorded>(ObserveLocationRevision);
     }
 
     /// <inheritdoc />
@@ -66,5 +66,12 @@ public sealed class Location : NamedRecord
         RaiseEvent(new LocationChangeCanceled(Stream, pending.ExpectedRevision, pending.Generation, pending.Intent,
             failureProof, operation, null, null));
         return Result.Success;
+    }
+
+    void ObserveLocationRevision(LocationRevisionRecorded fact)
+    {
+        if (fact.TenantId != _tenantId)
+            throw new InvalidOperationException("A location revision must belong to its tenant.");
+        ObserveApplied(fact);
     }
 }
