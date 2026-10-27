@@ -218,3 +218,7 @@ Direct `blockedBy` relationships were read from GitHub on 2026-10-27. They gate 
 ## Selection rule
 
 Select the earliest group whose specific source facts, owner invariants and directly applicable issue dependencies are understood. Complete one bounded owner or coordinated protocol slice at a time. For each selected owner, verify the current declaration, source-backed behavior and existing tests before adding a gap test. Treat the catalog and this ordering as design/navigation evidence; completion requires the repository’s focused behavior, replay, review and broader validation evidence.
+
+## Execution checkpoint (2026-10-27)
+
+Focused review slices are already recorded for `Location`, `OperationalProcess`, `OperationalProcessNameClaim`, and `Person` ([Location](location-review-2026-10-27.md), [OperationalProcess](operational-process-review-2026-10-27.md), [OperationalProcessNameClaim](operational-process-name-claim-review-2026-10-27.md), [Person](jev-review-2026-10-27-person/README.md)). These reviews do not mark full aggregate conformance as done; do not select them again unless a new gap or an explicitly requested deeper review justifies it. The next seven not-yet-reviewed owner slices, skipping those reviewed and those already marked done, are: `LocationNameClaim`, `ServiceIdentity`, `TenantManagerGuard`, `Tenant`, `TenantInvitation`, `TenantSlug`, and `Provider`.
