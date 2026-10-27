@@ -115,6 +115,10 @@ public sealed class TenantManagerGuard : Aggregate
     void ApplyFact<T>(T fact) where T : DomainEvent, ITenantManagerAuthorityFact
     {
         var value = fact.CurrentAuthority ?? throw new InvalidOperationException("A native guard fact requires its bounded affected-episode authority.");
+        if (fact is TenantManagerRestored restored && (restored.TenantId != TenantId ||
+            restored.MemberId != value.MemberId || !_pending.TryGetValue(restored.Operation.RootOperationId, out var restoration) ||
+            restoration.IsWithdrawal || (restoration.Reason ?? Registered) != restored.Reason))
+            throw new InvalidOperationException("A restored administrator must match its tenant, member, and pending restoration.");
         if (!Uuid.TryParse(fact.Operation.Episode, System.Globalization.CultureInfo.InvariantCulture, out var episode) || episode != value.EpisodeId ||
             value.MemberId == Uuid.Empty || fact.Operation.Owner != Stream || value.Reasons is null || value.NeutralReasons is null ||
             value.AssignmentGeneration < 0 || value.Available && !value.HasContribution ||

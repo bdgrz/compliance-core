@@ -31,13 +31,8 @@ public sealed class ServiceIdentity : Aggregate
             serviceIdentityId.ToString()))
     {
         _tenantId = tenantId;
-        On<ServiceIdentityRecorded>(ev =>
-        {
-            _created = true;
-            _revision = 1;
-            _initialTerms = ev.Terms;
-        });
-        On<ServiceIdentityRevised>(ev => _revision = ev.Revision);
+        On<ServiceIdentityRecorded>(ObserveRecorded);
+        On<ServiceIdentityRevised>(ObserveRevised);
     }
 
     public Result<ServiceIdentityRegistration> Record(ServiceIdentityTerms terms, DateOnly today,
@@ -106,4 +101,27 @@ public sealed class ServiceIdentity : Aggregate
         Purpose = terms.Purpose.Trim(),
         Environment = string.IsNullOrWhiteSpace(terms.Environment) ? null : terms.Environment.Trim(),
     };
+
+    void ObserveRecorded(ServiceIdentityRecorded fact)
+    {
+        if (fact.TenantId != _tenantId || fact.ServiceIdentityId != Id || _created)
+            throw new InvalidOperationException("A service identity record must create this tenant's identity exactly once.");
+        var validation = Validate(fact.Terms, DateOnly.FromDateTime(fact.ChangedAt.UtcDateTime));
+        if (validation is not null || fact.Terms != Clean(fact.Terms))
+            throw new InvalidOperationException("A service identity record must contain valid canonical terms.");
+        _created = true;
+        _revision = 1;
+        _initialTerms = fact.Terms;
+    }
+
+    void ObserveRevised(ServiceIdentityRevised fact)
+    {
+        if (fact.TenantId != _tenantId || fact.ServiceIdentityId != Id || !_created ||
+            fact.Revision != _revision + 1)
+            throw new InvalidOperationException("A service identity revision must follow its tenant's current identity revision.");
+        var validation = Validate(fact.Terms, DateOnly.FromDateTime(fact.ChangedAt.UtcDateTime));
+        if (validation is not null || fact.Terms != Clean(fact.Terms))
+            throw new InvalidOperationException("A service identity revision must contain valid canonical terms.");
+        _revision = fact.Revision;
+    }
 }
