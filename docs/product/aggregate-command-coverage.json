@@ -6805,7 +6805,7 @@
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs"
+        "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
@@ -6838,7 +6838,7 @@
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs"
+        "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
@@ -32558,7 +32558,7 @@
       "ownerIssue": 1022,
       "callerSources": [
         {
-          "source": "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxes.cs",
+          "source": "src/Compliance.Core/Features/Tenants/Services/TenantInvitationMailboxes.cs",
           "methods": [
             "Claim"
           ]
@@ -32576,7 +32576,7 @@
       "ownerIssue": 1022,
       "callerSources": [
         {
-          "source": "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxes.cs",
+          "source": "src/Compliance.Core/Features/Tenants/Services/TenantInvitationMailboxes.cs",
           "methods": [
             "Claim"
           ]
@@ -32668,7 +32668,7 @@
   "factEmissionHelpers": [
     {
       "name": "ResponsibilitySet",
-      "source": "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs",
+      "source": "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs",
       "routeThroughMethod": "GetResponsibilitySet",
       "note": "Aggregate roots pass their RaiseEvent callback into this helper; the helper constructs ResponsibilityAssigned and ResponsibilityRevoked."
     }

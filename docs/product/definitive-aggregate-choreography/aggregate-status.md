@@ -80,7 +80,7 @@ Priority is mapped only when an aggregate is named in a backlog story's body; Co
 | `Member` | Done (aggregate scope): Jev reviewed; 61 focused tests pass | P0 (R1-04)<br>P0 (R1-15)<br>P0 (R2-06)<br>P2 (T1-03)<br>P1 (T2-05) | `src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs` |
 | `MethodologyTemplate` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs` |
 | `MethodologyTemplateContribution` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateContribution.cs` |
-| `OperationalProcess` | Source present; target conformance not verified | P0 (R1-02)<br>P0 (R1-12) | `src/Compliance.Core/Features/TechnologyInventory/Aggregates/OperationalProcess.cs` |
+| `OperationalProcess` | Focused review (2026-10-27): tenant replay guard verified; 22 named-process tests pass; full catalog conformance remains unqualified | P0 (R1-02)<br>P0 (R1-12) | `src/Compliance.Core/Features/TechnologyInventory/Aggregates/OperationalProcess.cs` |
 | `OperationalProcessNameClaim` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs` |
 | `PartnerIndependenceDecision` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/AccessControl/Aggregates/PartnerIndependenceDecision.cs` |
 | `Person` | Source present; target conformance not verified | P0 (R1-02)<br>P0 (R1-11)<br>P0 (R2-06)<br>P1 (T2-05) | `src/Compliance.Core/Features/Workforce/Aggregates/Person.cs` |

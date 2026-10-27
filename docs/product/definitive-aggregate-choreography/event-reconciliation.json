@@ -76924,7 +76924,7 @@
         }
       ],
       "currentRegisteredEmitters": [
-        "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs"
+        "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
       ],
       "selectedDirectCommands": [],
       "remainingOwnerPolicyCommands": [
@@ -77179,7 +77179,7 @@
         }
       ],
       "currentRegisteredEmitters": [
-        "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs"
+        "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
       ],
       "selectedDirectCommands": [],
       "remainingOwnerPolicyCommands": [

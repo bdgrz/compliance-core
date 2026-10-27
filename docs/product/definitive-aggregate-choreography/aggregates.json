@@ -13088,7 +13088,7 @@
           "baselineContract": {
             "event": "ResponsibilityAssigned",
             "emitters": [
-              "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs"
+              "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
             ],
             "eventDisposition": "aggregate_fact",
             "emitterOwnership": "shared scoped helper executed within the owner stream",
@@ -13163,7 +13163,7 @@
           "baselineContract": {
             "event": "ResponsibilityRevoked",
             "emitters": [
-              "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs"
+              "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
             ],
             "eventDisposition": "aggregate_fact",
             "emitterOwnership": "shared scoped helper executed within the owner stream",
@@ -16025,7 +16025,7 @@
           "baselineContract": {
             "event": "ResponsibilityAssigned",
             "emitters": [
-              "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs"
+              "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
             ],
             "eventDisposition": "aggregate_fact",
             "emitterOwnership": "shared scoped helper executed within the owner stream",
@@ -16100,7 +16100,7 @@
           "baselineContract": {
             "event": "ResponsibilityRevoked",
             "emitters": [
-              "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs"
+              "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
             ],
             "eventDisposition": "aggregate_fact",
             "emitterOwnership": "shared scoped helper executed within the owner stream",
@@ -40136,7 +40136,7 @@
           "baselineContract": {
             "event": "ResponsibilityAssigned",
             "emitters": [
-              "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs"
+              "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
             ],
             "eventDisposition": "aggregate_fact",
             "emitterOwnership": "shared scoped helper executed within the owner stream",
@@ -40211,7 +40211,7 @@
           "baselineContract": {
             "event": "ResponsibilityRevoked",
             "emitters": [
-              "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs"
+              "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
             ],
             "eventDisposition": "aggregate_fact",
             "emitterOwnership": "shared scoped helper executed within the owner stream",

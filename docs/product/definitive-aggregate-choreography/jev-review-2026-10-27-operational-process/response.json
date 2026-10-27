@@ -1,0 +1,13 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "tenant_guard_justified": {
+      "type": "noul",
+      "noul": 0.96
+    }
+  },
+  "usage": {
+    "input_tokens": 528,
+    "output_tokens": 24
+  }
+}

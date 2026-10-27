@@ -1,0 +1,17 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "OperationalProcess",
+    "catalog_identity": "processId; one tenant-scoped operational process record",
+    "selected_invariant": "An operational process revision belongs to the tenant that owns the process stream.",
+    "fact": "OperationalProcessRevisionRecorded carries TenantId and OperationalProcessId, and the aggregate is opened with a tenant and process ID.",
+    "source_evidence": "The definitive aggregate catalog selects OperationalProcess as an independent governed operational process lifecycle. The command contract includes TenantId and OperationalProcessId. The current reducer checks the event TenantId against its configured tenant before applying the revision.",
+    "excluded_conclusion": "This review does not decide API scope, process name uniqueness, name-claim choreography, or event ownership."
+  },
+  "questions": {
+    "tenant_guard_justified": {
+      "type": "noul",
+      "instructions": "Does the selected owner contract support rejecting an OperationalProcessRevisionRecorded fact whose TenantId differs from the tenant that owns the opened process stream? Answer true when the tenant mismatch contradicts the stated identity/invariant; answer false when tenant equality is not implied by that contract."
+    }
+  }
+}
