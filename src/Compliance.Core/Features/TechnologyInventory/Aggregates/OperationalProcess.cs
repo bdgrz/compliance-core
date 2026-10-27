@@ -29,7 +29,7 @@ public sealed class OperationalProcess : NamedRecord
         _tenantId = tenantId;
         On<OperationalProcessChangeAccepted>(ObserveAccepted);
         On<OperationalProcessChangeCanceled>(ObserveCanceled);
-        On<OperationalProcessRevisionRecorded>(ObserveApplied);
+        On<OperationalProcessRevisionRecorded>(ObserveOperationalProcessRevision);
     }
 
     /// <inheritdoc />
@@ -66,5 +66,12 @@ public sealed class OperationalProcess : NamedRecord
         RaiseEvent(new OperationalProcessChangeCanceled(Stream, pending.ExpectedRevision, pending.Generation, pending.Intent,
             failureProof, operation, null, null));
         return Result.Success;
+    }
+
+    void ObserveOperationalProcessRevision(OperationalProcessRevisionRecorded fact)
+    {
+        if (fact.TenantId != _tenantId)
+            throw new InvalidOperationException("An operational process revision must belong to its tenant.");
+        ObserveApplied(fact);
     }
 }
