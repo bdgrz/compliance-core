@@ -1,0 +1,55 @@
+{
+  "path": "src/Compliance.Core/Features/AccessControl/Member.cs",
+  "kinds": [
+    "aggregate"
+  ],
+  "sha256": "e7b3ab991f9000c0073776eacbfb22a094df95ac33763cdab4bdcf34ca22b063",
+  "dependency_sha256": [
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+      "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+    },
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/MemberDeprovisionCleanupCompleted.cs",
+      "sha256": "cb1168de67c5437ba551df48b150be1f947c900a8e4cd22ffdcc41f726768fe5"
+    },
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/MemberDeprovisioned.cs",
+      "sha256": "c6b1544386812ca6d14238d975b215ace7567cc1fcae4cec26ab456264412512"
+    },
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/MemberRegistered.cs",
+      "sha256": "75daadcf1364e862444d44fe633c9b3d7cbae1db206837aba30ed362e3566f42"
+    },
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/MemberReinstated.cs",
+      "sha256": "03e0e47b87dade15cd955a796eda302175e9781fd70484dc392fb96f50ab592a"
+    }
+  ],
+  "review_key": "8480afa2013080a19de4aae8bd693f1e860079444b6e1e67ca0890c134f71650",
+  "reviewed_at": "2026-10-27T12:40:17.782Z",
+  "status": "reviewed",
+  "model": "jev-1.14.0",
+  "answers": {
+    "authority_gap": {
+      "type": "noul",
+      "noul": 0.54
+    },
+    "invariant_gap": {
+      "type": "noul",
+      "noul": 0.64
+    },
+    "recovery_gap": {
+      "type": "noul",
+      "noul": 0.68
+    },
+    "incomplete_path": {
+      "type": "noul",
+      "noul": 0.44
+    }
+  },
+  "usage": {
+    "input_tokens": 8130,
+    "output_tokens": 78
+  }
+}

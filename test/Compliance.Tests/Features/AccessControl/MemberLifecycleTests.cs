@@ -20,6 +20,101 @@ public sealed class MemberLifecycleTests
     static readonly DateTimeOffset ActionAt = new(2026, 9, 29, 14, 0, 0, TimeSpan.Zero);
     static readonly DateOnly GuestExpiresOn = new(2026, 11, 30);
 
+    [Theory]
+    [InlineData(false, "tenant")]
+    [InlineData(false, "member")]
+    [InlineData(false, "user")]
+    [InlineData(true, "tenant")]
+    [InlineData(true, "member")]
+    [InlineData(true, "user")]
+    public void ShouldRejectLifecycleFactGivenDifferentMemberIdentityOnReplay(bool reinstating, string field)
+    {
+        // Arrange
+        var member = new Member(TenantId, UserId);
+        var facts = new List<DomainEvent>
+        {
+            DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
+                membershipEpisodeId: Uuid.CreateVersion4()), member.Id, 1),
+        };
+        var suspension = MemberFacts.Suspended(TenantId, member.Id, UserId, ActorMemberId, "Admin", ActionAt, "Reason");
+        DomainEvent foreign;
+        if (reinstating)
+        {
+            facts.Add(DomainEventSeed.Attach(suspension, member.Id, 2));
+            var reinstatement = MemberFacts.Reinstated(TenantId, member.Id, UserId, "client_personnel", ActorMemberId, "Admin", ActionAt);
+            foreign = field switch
+            {
+                "tenant" => reinstatement with { TenantId = Uuid.CreateVersion4() },
+                "member" => reinstatement with { MemberId = Uuid.CreateVersion4() },
+                _ => reinstatement with { UserId = Uuid.CreateVersion4() },
+            };
+        }
+        else
+            foreign = field switch
+            {
+                "tenant" => suspension with { TenantId = Uuid.CreateVersion4() },
+                "member" => suspension with { MemberId = Uuid.CreateVersion4() },
+                _ => suspension with { UserId = Uuid.CreateVersion4() },
+            };
+        facts.Add(DomainEventSeed.Attach(foreign, member.Id, (ulong)facts.Count + 1));
+
+        // Act
+        var error = Record.Exception(() => new AggregateScenario<Member>(member).Given(facts.ToArray()));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(error);
+    }
+
+    [Theory]
+    [InlineData("tenant")]
+    [InlineData("member")]
+    [InlineData("user")]
+    public void ShouldRejectRegistrationGivenDifferentMemberIdentityOnReplay(string field)
+    {
+        // Arrange
+        var member = new Member(TenantId, UserId);
+        var fact = MemberFacts.Registered(TenantId, member.Id, UserId, membershipEpisodeId: Uuid.CreateVersion4());
+        fact = field switch
+        {
+            "tenant" => fact with { TenantId = Uuid.CreateVersion4() },
+            "member" => fact with { MemberId = Uuid.CreateVersion4() },
+            _ => fact with { UserId = Uuid.CreateVersion4() },
+        };
+        var stored = DomainEventSeed.Attach(fact, member.Id, 1);
+
+        // Act
+        var error = Record.Exception(() => new AggregateScenario<Member>(member).Given(stored));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(error);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ShouldRejectAnotherMembershipEpisodeGivenLiveOrUncleanedEpisodeOnReplay(bool deprovisioned)
+    {
+        // Arrange
+        var member = new Member(TenantId, UserId);
+        var firstEpisode = Uuid.CreateVersion4();
+        var facts = new List<DomainEvent>
+        {
+            DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
+                membershipEpisodeId: firstEpisode), member.Id, 1),
+        };
+        if (deprovisioned)
+            facts.Add(DomainEventSeed.Attach(MemberFacts.Deprovisioned(TenantId, member.Id, UserId,
+                ActorMemberId, "Alex Admin", ActionAt, "Access ended", firstEpisode), member.Id, 2));
+        facts.Add(DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
+            membershipEpisodeId: Uuid.CreateVersion4()), member.Id, (ulong)facts.Count + 1));
+
+        // Act
+        var error = Record.Exception(() => new AggregateScenario<Member>(member).Given(facts.ToArray()));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(error);
+    }
+
     [Fact]
     public void ShouldRegisterGuestGivenExternalConsultantMembership()
     {

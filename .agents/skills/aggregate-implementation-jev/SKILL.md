@@ -17,6 +17,17 @@ Use this skill when implementing or completing a domain aggregate in `compliance
 - Do not introduce a command, event, field, interface, aggregate, or policy without a source-backed working behavior and tests. Negative responses and technical receipts are not automatically business events.
 - Do not rebuild framework responsibilities. Inspect the pinned Portia/Fitz package API, analyzers, tests, and existing repository adapters before adding command dispatch, stream identity, hydration, metadata, OCC, persistence, authorization context, reactor delivery, process execution, or serialization plumbing. Add an adapter only where a concrete compliance behavior or framework gap requires it; document the evidence for that gap.
 - Never claim host, provider, durable-store, migration, or production qualification from controlled tests. Report each evidence boundary accurately.
+- The application owns business rules, lifecycle behavior and invariants. Portia/Fitz own their documented infrastructure responsibilities. Do not turn a history-size observation, advisory Jev score, or ordinary replay requirement into a new application-level framework or a speculative blocking defect. Investigate a concrete business failure against the actual framework and existing consumers first; retain any demonstrated limitation in the evidence.
+- When scope is one aggregate and its tests, do not expand into other aggregates, framework plumbing or unrelated fixes. Focused review evidence and an explicitly requested status table may be updated. Keep aggregate completion distinct from repository-wide suite, CI and production qualification.
+
+## Efficient single-aggregate loop
+
+- Select the next owner from the approved catalog and the highest-priority applicable backlog story, considering dependencies. A story may own more than one aggregate; finish the remaining relevant P0 owner before skipping to a later story. Catalog baseline paths can be stale: resolve the current declaration before labeling an owner missing.
+- Start with the owner invariant, identity, lifecycle and current tests. Map each rule to existing executable coverage before adding tests. Add tests for concrete gaps, not to manufacture a red run when behavior is already implemented. For a behavior defect, capture a meaningful red test before changing production code.
+- Check that business lifecycle and owner-identity invariants also hold when facts are replayed. A command guard alone does not prove that an invalid prior episode or mismatched owner identity is rejected during rehydration; use focused malformed-history tests when this distinction is material. Leave stream loading and persistence to the framework.
+- Run the smallest relevant test selection first; run the requested or repository-required broader checks once when appropriate. Do not run builds concurrently against the same output directories. If `--no-restore` reports stale package paths, restore the existing solution without introducing lock files when the user has requested no lock files, then retry. Record actual command, scope and result; an interrupted suite has no final pass/fail total, though individual failures observed are evidence.
+- Use Jev on the exact owner and focused source-backed questions, and retain the request and response. Each question must stand alone: name the specific invariant or test rather than referring to another question or “those cases.” Treat near-even scores as prompts for source review, not defects or approval. Preserve earlier worktree changes and review artifacts; do not repeat a review or successful test without a specific change, failure or open question that makes the repeat useful.
+- Record brief evidence for completion: selected invariant and lifecycle, what tests establish, Jev's actual judgment, and concrete remaining limits. A local aggregate may be complete while unrelated full-suite failures remain; report both without attributing unrelated failures to that aggregate or claiming full repository qualification.
 
 ## Boundary, split, and reactor decisions
 
@@ -51,13 +62,9 @@ Before coding, record a short decision such as: `keep together because ...`; `sp
 
 ## Feature directory layout
 
-Keep capability roots under `Features/<Capability>` and use subdirectories to make ownership visible:
+Keep capability roots under `Features/<Capability>` and favor the existing shallow layout. Introduce a subdirectory for commands, aggregates, tests or another role only when it makes a substantial feature easier to navigate; the user specifically wants fewer directories. Do not create a folder solely for symmetry.
 
-- `Compliance.Common/Features/<Capability>/Commands` for request contracts; `Events` for domain-event contracts; `Contracts` for shared DTOs and value contracts.
-- `Compliance.Core/Features/<Capability>/Aggregates` for aggregate classes and their private reducers/state helpers; `Commands` for command handlers and command-specific validation; `Reactors`, `Processes`, `Projections`, and `Readers` for those distinct roles.
-- `Compliance.Tests/Features/<Capability>/Aggregates` for owner behavior and replay tests; sibling `Commands`, `Reactors`, and `Processes` folders for their behavioral tests.
-
-Preserve existing C# namespaces when moving files unless a namespace change is itself part of the reviewed contract. Move only files in the active slice, update source-path references and generators that treat paths as data, and retain historical source locations when they document baseline evidence. Do not create a folder solely to achieve symmetry, or reorganize unrelated features as drive-by cleanup. Keep shared Portia/Fitz integration in the existing hosting/composition boundary; do not create per-aggregate framework plumbing.
+Preserve existing C# namespaces when moving files unless a namespace change is itself part of the reviewed contract. Move only files in the active slice, update source-path references and generators that treat paths as data, and retain historical source locations when they document baseline evidence. Do not reorganize unrelated features as drive-by cleanup. Keep shared Portia/Fitz integration in the existing hosting/composition boundary; do not create per-aggregate framework plumbing.
 
 ## Working cycle
 

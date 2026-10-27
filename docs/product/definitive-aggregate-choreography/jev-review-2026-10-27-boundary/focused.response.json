@@ -1,0 +1,24 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "same_owner": {
+        "type": "noul",
+        "noul": 0.9
+      },
+      "history_growth": {
+        "type": "noul",
+        "noul": 0.7
+      },
+      "replay_validation": {
+        "type": "noul",
+        "noul": 0.38
+      }
+    },
+    "usage": {
+      "input_tokens": 12228,
+      "output_tokens": 56
+    }
+  }
+}

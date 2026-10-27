@@ -265,6 +265,71 @@ public sealed class BoundaryNativeAuthorityTests
         Assert.Null(snapshot.Draft);
     }
 
+    [Fact]
+    public async Task ShouldRequireLatestAcceptedReviewGivenLaterReviewAfterReplay()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync(seed: true);
+        var rules = await scenario.Source.Boundaries.RulesAsync(scenario.Tenant, scenario.Program, scenario.Id);
+        var first = Uuid.CreateVersion4();
+        var latest = Uuid.CreateVersion4();
+        var approver = Uuid.CreateVersion4();
+        Assert.Null(rules.Review(scenario.Version, 1, first, "accept", "First review",
+            scenario.ReviewerMember, "Reviewer", scenario.Source.Clock.Now));
+        Assert.Null(rules.Review(scenario.Version, 1, Uuid.CreateVersion4(), "request_changes", "Further changes needed",
+            scenario.ReviewerMember, "Reviewer", scenario.Source.Clock.Now));
+        await scenario.Source.SeedAsync(rules);
+        var reloaded = await scenario.Source.Boundaries.RulesAsync(scenario.Tenant, scenario.Program, scenario.Id);
+        var before = await scenario.ReadAsync();
+
+        // Act
+        var rejected = reloaded.Approve(scenario.Version, 1, Uuid.CreateVersion4(), first, new DateOnly(2027, 1, 1),
+            "Approved", "impact", approver, "Approver", scenario.Source.Clock.Now);
+        Assert.Null(reloaded.Review(scenario.Version, 1, latest, "accept", "Reviewed again",
+            scenario.ReviewerMember, "Reviewer", scenario.Source.Clock.Now));
+        var stale = reloaded.Approve(scenario.Version, 1, Uuid.CreateVersion4(), first, new DateOnly(2027, 1, 1),
+            "Approved", "impact", approver, "Approver", scenario.Source.Clock.Now);
+        var approved = reloaded.Approve(scenario.Version, 1, Uuid.CreateVersion4(), latest, new DateOnly(2027, 1, 1),
+            "Approved", "impact", approver, "Approver", scenario.Source.Clock.Now);
+
+        // Assert
+        Assert.Equal("Approval requires the latest accepted review of this draft revision.", rejected?.Message);
+        Assert.Equal("Approval requires the latest accepted review of this draft revision.", stale?.Message);
+        Assert.Null(approved);
+        Assert.Equal(2, reloaded.PendingChanges.Count);
+        Assert.Equal(before.SourcePhysicalPosition, (await scenario.ReadAsync()).SourcePhysicalPosition);
+        await scenario.Source.SeedAsync(reloaded);
+        Assert.Equal(scenario.Version, (await scenario.ReadAsync()).LatestApprovedVersionId);
+    }
+
+    [Fact]
+    public async Task ShouldRejectRetroactiveAssignmentGivenEarlierReviewAfterReplay()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync(seed: true);
+        var rules = await scenario.Source.Boundaries.RulesAsync(scenario.Tenant, scenario.Program, scenario.Id);
+        var firstReview = scenario.Source.Clock.Now.AddMinutes(1);
+        Assert.Null(rules.Review(scenario.Version, 1, Uuid.CreateVersion4(), "request_changes", "First review",
+            scenario.ReviewerMember, "First reviewer", firstReview));
+        Assert.Null(rules.Review(scenario.Version, 1, Uuid.CreateVersion4(), "accept", "Second review",
+            Uuid.CreateVersion4(), "Second reviewer", firstReview.AddMinutes(1)));
+        await scenario.Source.SeedAsync(rules);
+        var reloaded = await scenario.Source.Boundaries.RulesAsync(scenario.Tenant, scenario.Program, scenario.Id);
+        var scope = new ResponsibilityScope("boundary", scenario.Id, scenario.Version, 1);
+        var before = await scenario.ReadAsync();
+
+        // Act
+        var result = reloaded.AssignResponsibility(scope, Uuid.CreateVersion4(), scenario.ReviewerMember,
+            ResponsibilityType.ControlOwner, scenario.AuthorMember, "Author", firstReview.AddMinutes(2),
+            firstReview.AddMinutes(-1), firstReview.AddTicks(1), []);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("The responsibility would create an unwaived conflict with a prior decision on this exact revision.", result.Message);
+        Assert.Empty(reloaded.PendingChanges);
+        Assert.Equal(before.SourcePhysicalPosition, (await scenario.ReadAsync()).SourcePhysicalPosition);
+    }
+
     static BoundaryContent Content(string statement) => new(statement, "type_i", ["security"], []);
     sealed class References : IBoundaryReferenceValidator
     {

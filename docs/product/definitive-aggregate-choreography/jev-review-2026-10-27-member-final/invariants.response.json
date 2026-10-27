@@ -1,0 +1,32 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "episode": {
+        "type": "noul",
+        "noul": 0.96
+      },
+      "identity": {
+        "type": "noul",
+        "noul": 0.97
+      },
+      "lifecycle_identity": {
+        "type": "noul",
+        "noul": 0.97
+      },
+      "valid_successor": {
+        "type": "noul",
+        "noul": 0.96
+      },
+      "tests": {
+        "type": "noul",
+        "noul": 0.92
+      }
+    },
+    "usage": {
+      "input_tokens": 14377,
+      "output_tokens": 91
+    }
+  }
+}

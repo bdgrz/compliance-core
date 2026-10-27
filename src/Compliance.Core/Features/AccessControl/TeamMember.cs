@@ -48,11 +48,11 @@ public sealed class TeamMember : Aggregate
         Acceptance = new NativeAcceptance(selectedCommandId);
         On<TeamMemberAssigned>(assigned =>
         {
-            Acceptance.Observe(assigned);
             if (_isAssigned || assigned.TenantId != _tenantId || assigned.TeamId != _teamId ||
-                assigned.MemberId != _memberId)
+                assigned.MemberId != _memberId || assigned.MembershipEpisodeId == Uuid.Empty)
                 throw new InvalidOperationException("Assignment requires its exact owner and an empty active slot.");
             RequireOwnOperation(assigned.CommandId, assigned.Operation);
+            Acceptance.Observe(assigned);
             _isAssigned = true;
             _assignmentGeneration++;
             _membershipEpisodeId = assigned.MembershipEpisodeId;
@@ -61,12 +61,12 @@ public sealed class TeamMember : Aggregate
         });
         On<TeamMemberRemoved>(removed =>
         {
-            Acceptance.Observe(removed);
             if (!_isAssigned || removed.TenantId != _tenantId || removed.TeamId != _teamId ||
                 removed.MemberId != _memberId || removed.MembershipEpisodeId != _membershipEpisodeId ||
                 removed.AssignmentEventId != _assignmentEventId)
                 throw new InvalidOperationException("Removal must close the exact team assignment and membership episode.");
             RequireOwnOperation(removed.CommandId, removed.Operation);
+            Acceptance.Observe(removed);
             _isAssigned = false;
             _membershipEpisodeId = Uuid.Empty;
             _assignmentEventId = Uuid.Empty;

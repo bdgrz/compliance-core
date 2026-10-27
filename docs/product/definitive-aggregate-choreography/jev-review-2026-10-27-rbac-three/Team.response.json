@@ -1,0 +1,55 @@
+{
+  "path": "src/Compliance.Core/Features/AccessControl/Team.cs",
+  "kinds": [
+    "aggregate"
+  ],
+  "sha256": "7ce587bbc99d9762546ac61e50fd72a1e1bd4986eb14895e60173193c350fc71",
+  "dependency_sha256": [
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/TeamDefined.cs",
+      "sha256": "729389b869c90cca15307397e9b3727c5252cf84f9370d557b0868c7ad7cfdc5"
+    },
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/TeamDeleted.cs",
+      "sha256": "69242ab19aeb428bca16ffaa0fbb0cd9f677b357fd11d039936c4fb4e3797b62"
+    },
+    {
+      "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+      "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+    },
+    {
+      "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+      "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/BuiltInRbac.cs",
+      "sha256": "92b5d77b5c8a875d09d793c7fe4a496ddb69f8d80166481c77c96f4375ef1563"
+    }
+  ],
+  "review_key": "bbbdf5b73aa7be402dc7c7da254a1bd8f05c16387d61a8cd36d7a2d841e0d0a2",
+  "reviewed_at": "2026-10-27T12:45:37.914Z",
+  "status": "reviewed",
+  "model": "jev-1.14.0",
+  "answers": {
+    "authority_gap": {
+      "type": "noul",
+      "noul": 0.35
+    },
+    "invariant_gap": {
+      "type": "noul",
+      "noul": 0.26
+    },
+    "recovery_gap": {
+      "type": "noul",
+      "noul": 0.36
+    },
+    "incomplete_path": {
+      "type": "noul",
+      "noul": 0.2
+    }
+  },
+  "usage": {
+    "input_tokens": 4233,
+    "output_tokens": 78
+  }
+}

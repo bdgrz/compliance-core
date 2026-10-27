@@ -68,7 +68,7 @@ public sealed class TeamMemberTests
         // Arrange
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
         var scenario = new AggregateScenario<TeamMember>(teamMember)
-            .Given(DomainEventSeed.Attach(TeamMemberFacts.Assigned(TenantId, TeamId, MemberId), teamMember.Id, 1));
+            .Given(DomainEventSeed.Attach(TeamMemberFacts.Assigned(TenantId, TeamId, MemberId, Uuid.CreateVersion4()), teamMember.Id, 1));
 
         // Act
         var result = scenario.Aggregate.Remove();
@@ -98,7 +98,7 @@ public sealed class TeamMemberTests
     {
         // Arrange
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
-        var assignment = DomainEventSeed.Attach(TeamMemberFacts.Assigned(TenantId, TeamId, MemberId), teamMember.Id, 1);
+        var assignment = DomainEventSeed.Attach(TeamMemberFacts.Assigned(TenantId, TeamId, MemberId, Uuid.CreateVersion4()), teamMember.Id, 1);
         var scenario = new AggregateScenario<TeamMember>(teamMember)
             .Given(assignment,
                 DomainEventSeed.Attach(TeamMemberFacts.Removed(TenantId, TeamId, MemberId,
@@ -117,7 +117,7 @@ public sealed class TeamMemberTests
     {
         // Arrange
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
-        var assignment = DomainEventSeed.Attach(TeamMemberFacts.Assigned(TenantId, TeamId, MemberId), teamMember.Id, 1);
+        var assignment = DomainEventSeed.Attach(TeamMemberFacts.Assigned(TenantId, TeamId, MemberId, Uuid.CreateVersion4()), teamMember.Id, 1);
         var scenario = new AggregateScenario<TeamMember>(teamMember)
             .Given(assignment,
                 DomainEventSeed.Attach(TeamMemberFacts.Removed(TenantId, TeamId, MemberId,

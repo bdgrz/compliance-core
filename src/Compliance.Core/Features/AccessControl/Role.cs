@@ -36,17 +36,24 @@ public sealed class Role : Aggregate
         Acceptance = new NativeAcceptance(selectedCommandId);
         On<RoleDefined>(ev =>
         {
+            if (ev.TenantId != _tenantId || ev.RoleId != Id || _isDefined || _isDeleted || string.IsNullOrWhiteSpace(ev.Name) ||
+                ev.CommandId != Id && !(BuiltInRbac.IsBuiltInRole(_tenantId, Id) && ev.Operation.CommandKind == nameof(RenameRole)))
+                throw new InvalidOperationException("Role definition must preserve its owner, creation identity and lifecycle.");
             Accept(ev, ev.CommandId, ev.Operation);
             _isDefined = true;
             _name = ev.Name;
         });
         On<RoleRenamed>(ev =>
         {
+            if (ev.TenantId != _tenantId || ev.RoleId != Id || !_isDefined || _isDeleted || string.IsNullOrWhiteSpace(ev.Name))
+                throw new InvalidOperationException("Role rename requires the exact active role.");
             Accept(ev, ev.CommandId, ev.Operation);
             _name = ev.Name;
         });
         On<RoleDeleted>(ev =>
         {
+            if (ev.TenantId != _tenantId || ev.RoleId != Id || !_isDefined || _isDeleted || BuiltInRbac.IsBuiltInRole(_tenantId, Id))
+                throw new InvalidOperationException("Role deletion requires the exact active non-built-in role.");
             Accept(ev, ev.CommandId, ev.Operation);
             _isDeleted = true;
         });
@@ -68,6 +75,8 @@ public sealed class Role : Aggregate
         var prepared = Prepare(operation, firstResponse, PrepareDefine(name));
         if (!prepared.IsSuccess)
             return prepared;
+        if (operation.LogicalId != Id)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "Role definition requires its role identity."));
         RaiseEvent(new RoleDefined(_tenantId, Id, name.Trim(), operation.LogicalId, operation, firstResponse));
         return Result.Success;
     }
@@ -78,7 +87,7 @@ public sealed class Role : Aggregate
     /// </summary>
     public Result PrepareRename(string name)
     {
-        if (_isDeleted)
+        if (_isDeleted || !_isDefined && !BuiltInRbac.IsBuiltInRole(_tenantId, Id))
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The role is not defined."));
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "A role requires a name."));

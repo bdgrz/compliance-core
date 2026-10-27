@@ -31,11 +31,15 @@ public sealed class Team : Aggregate
         Acceptance = new NativeAcceptance(selectedCommandId);
         On<TeamDefined>(ev =>
         {
+            if (ev.TenantId != _tenantId || ev.TeamId != Id || ev.CommandId != Id || _isDefined || _isDeleted || string.IsNullOrWhiteSpace(ev.Name))
+                throw new InvalidOperationException("Team definition must preserve its owner, creation identity and lifecycle.");
             Accept(ev, ev.CommandId, ev.Operation);
             _isDefined = true;
         });
         On<TeamDeleted>(ev =>
         {
+            if (ev.TenantId != _tenantId || ev.TeamId != Id || !_isDefined || _isDeleted || BuiltInRbac.IsBuiltInTeam(_tenantId, Id))
+                throw new InvalidOperationException("Team deletion requires the exact active non-built-in team.");
             Accept(ev, ev.CommandId, ev.Operation);
             _isDeleted = true;
         });
@@ -57,6 +61,8 @@ public sealed class Team : Aggregate
         var prepared = Prepare(operation, firstResponse, PrepareDefine(name));
         if (!prepared.IsSuccess)
             return prepared;
+        if (operation.LogicalId != Id)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "Team definition requires its team identity."));
         RaiseEvent(new TeamDefined(_tenantId, Id, name.Trim(), operation.LogicalId, operation, firstResponse));
         return Result.Success;
     }

@@ -67,6 +67,48 @@ public sealed class ProductClientServiceNativeHistoryTests
     }
 
     [Fact]
+    public async Task ShouldKeepRetirementTerminalAndProgramIdentityGivenReplayedService()
+    {
+        // Arrange
+        await using var fixture = new ProductClientServiceFixture();
+        var tenant = Uuid.CreateVersion4();
+        var program = Uuid.CreateVersion4();
+        var service = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
+        await fixture.SeedProgramAsync(tenant, program, user);
+        var actor = ProgramManagementServices.Actor(user);
+        var create = new CreateClientService(service, tenant, program, "Payroll", "Process payroll", "Operations");
+        var retire = new RetireClientService(Uuid.CreateVersion4(), tenant, service, 1, "Service ended");
+        var created = await fixture.Operations.CreateAsync(new RequestContext<CreateClientService>(create, actor), CancellationToken.None);
+        Assert.True(created.IsSuccess, created.Error?.Message);
+        Assert.True((await fixture.Operations.RetireAsync(new RequestContext<RetireClientService>(retire, actor), CancellationToken.None)).IsSuccess);
+        var before = await fixture.Services.HistoryAsync(tenant, service);
+
+        // Act
+        var revised = await fixture.Operations.ReviseAsync(new RequestContext<ReviseClientService>(
+            new ReviseClientService(Uuid.CreateVersion4(), tenant, service, 2, "Other", "Purpose", "Owner"), actor), CancellationToken.None);
+        var retiredAgain = await fixture.Operations.RetireAsync(new RequestContext<RetireClientService>(
+            retire with { CommandId = Uuid.CreateVersion4(), ExpectedRevision = 2 }, actor), CancellationToken.None);
+        var rebound = await fixture.Operations.CreateAsync(new RequestContext<CreateClientService>(
+            create with { ProgramId = Uuid.CreateVersion4() }, actor), CancellationToken.None);
+        var originalCreate = await fixture.Operations.CreateAsync(new RequestContext<CreateClientService>(create, actor), CancellationToken.None);
+        var originalRetire = await fixture.Operations.RetireAsync(new RequestContext<RetireClientService>(retire, actor), CancellationToken.None);
+        var after = await fixture.Services.HistoryAsync(tenant, service);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, revised.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, retiredAgain.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, rebound.Error?.Kind);
+        Assert.True(originalCreate.IsSuccess, originalCreate.Error?.Message);
+        Assert.Equal(created.Value, originalCreate.Value);
+        Assert.True(originalRetire.IsSuccess, originalRetire.Error?.Message);
+        Assert.False(after.Owner.IsActive);
+        Assert.Equal(program, after.Owner.ProgramId);
+        Assert.Equal(before.Owner.NativeSequence, after.Owner.NativeSequence);
+        Assert.Equal(2, after.Facts.Count);
+    }
+
+    [Fact]
     public async Task ShouldRetainOriginalCreateAndRetirementResponseGivenUnavailableAuthoredBodies()
     {
         // Arrange

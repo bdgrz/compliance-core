@@ -75,7 +75,11 @@ public sealed class Member : Aggregate
         Acceptance = new NativeAcceptance(selectedCommandId);
         On<MemberRegistered>(registered =>
         {
-            Acceptance.Observe(registered);
+            if (_isRegistered || _isDeprovisioned && !_isDeprovisionCleanupComplete)
+                throw new InvalidOperationException("A new membership episode requires the previous episode's authority cleanup to be complete.");
+            if (registered.TenantId != _tenantId || registered.MemberId != Id || registered.UserId == Uuid.Empty ||
+                RbacIds.Member(_tenantId, registered.UserId) != Id || _userId != Uuid.Empty && registered.UserId != _userId)
+                throw new InvalidOperationException("The member registration must retain the exact tenant and user identity.");
             if (registered.CommandId == Uuid.Empty || registered.MembershipEpisodeId != registered.CommandId ||
                 registered.Operation.LogicalId != registered.CommandId || registered.Operation.Owner != Stream)
                 throw new InvalidOperationException(
@@ -86,6 +90,7 @@ public sealed class Member : Aggregate
                 registered.Affiliation == "guest" && !hasFiniteExpiry ||
                 registered.Affiliation != "guest" && registered.MembershipExpiresOn is not null)
                 throw new InvalidOperationException("The member registration event has invalid affiliation or expiry terms.");
+            Acceptance.Observe(registered);
             _isRegistered = true;
             _affiliation = registered.Affiliation;
             _membershipExpiresOn = registered.MembershipExpiresOn;
@@ -103,14 +108,16 @@ public sealed class Member : Aggregate
         });
         On<MemberSuspended>(suspended =>
         {
-            Acceptance.Observe(suspended);
             RequireOwnOperation(suspended.Operation);
+            RequireMemberIdentity(suspended.TenantId, suspended.MemberId, suspended.UserId);
+            Acceptance.Observe(suspended);
             _isSuspended = true;
         });
         On<MemberReinstated>(reinstated =>
         {
-            Acceptance.Observe(reinstated);
             RequireOwnOperation(reinstated.Operation);
+            RequireMemberIdentity(reinstated.TenantId, reinstated.MemberId, reinstated.UserId);
+            Acceptance.Observe(reinstated);
             _isSuspended = false;
         });
         On<MemberDeprovisioned>(deprovisioned =>
@@ -381,6 +388,12 @@ public sealed class Member : Aggregate
     {
         if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
             throw new InvalidOperationException("A member lifecycle fact must accept its own logical operation on this owner.");
+    }
+
+    void RequireMemberIdentity(Uuid tenantId, Uuid memberId, Uuid userId)
+    {
+        if (tenantId != _tenantId || memberId != Id || userId == Uuid.Empty || userId != _userId)
+            throw new InvalidOperationException("The member lifecycle fact must retain the exact tenant and user identity.");
     }
 
     void EnsureUserIdentity()
