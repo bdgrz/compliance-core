@@ -83,6 +83,7 @@ public static class PersonHistory
             command == nameof(RecordPerson) && (before is not null || native.Operation.LogicalId != person || !native.Changed || header.Revision != 1 || header.CorrelatedUserId is not null) ||
             command != nameof(RecordPerson) && (before is null || header.Revision != before.Revision + (native.Changed ? 1 : 0)) ||
             command == nameof(RevisePerson) && (!native.Changed || header.CorrelatedUserId != before!.CorrelatedUserId) ||
+            command == nameof(CorrelatePersonMembership) && header.ValuesSha256 != before!.ValuesSha256 ||
             command == nameof(CorrelatePersonMembership) && native.Changed == (header.CorrelatedUserId == before!.CorrelatedUserId) ||
             native.Changed && (header.LastChangedBy != native.Operation.Actor || header.LastChangedAt != native.Operation.AcceptedAt) ||
             !native.Changed && header != before)

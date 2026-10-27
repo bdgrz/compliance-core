@@ -12,27 +12,27 @@ Each previously unlisted source declaration now has an explicit disposition. Twe
 
 | Source event | Requirement mapping |
 | --- | --- |
-| [AccessReviewResponsibilityReassigned](../../src/Compliance.Common/Features/AccessReviews/AccessReviewResponsibilityReassigned.cs) | Accepted R2-06 responsibility reassignment. |
+| [AccessReviewResponsibilityReassigned](../../src/Compliance.Common/Features/AccessReviews/Events/AccessReviewResponsibilityReassigned.cs) | Accepted R2-06 responsibility reassignment. |
 | [ApplicationRelationshipApproved](../../src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipApproved.cs) | Accepted R1-10 relationship approval. |
-| [ApplicationRelationshipGovernedRemoved](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipGovernedRemoved.cs) | Accepted R1-10 governed relationship removal. |
-| [ApplicationRelationshipRecorded](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipRecorded.cs) | Accepted R1-10 relationship creation. |
-| [AuditPopulationDefinitionRevised](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationDefinitionRevised.cs) | Accepted T3-02 population-definition revision. |
-| [ClientExportAttestPackageDeliveryRecorded](../../src/Compliance.Common/Features/Exports/ClientExportAttestPackageDeliveryRecorded.cs) | Accepted F1-01/F1-07/F1-08 delivery receipt fact; the own-attest package aggregate remains an unresolved prerequisite. |
-| [ComplianceIncidentSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentSystemDescriptionDecisionRecorded.cs) | Accepted T2-07 exact no-change disposition fact. |
-| [FirmProfessionalDutyDesignationRecorded](../../src/Compliance.Common/Features/AccessControl/FirmProfessionalDutyDesignationRecorded.cs) | Accepted M0-D26 professional-duty designation. |
-| [FirmProfessionalDutyDesignationRevoked](../../src/Compliance.Common/Features/AccessControl/FirmProfessionalDutyDesignationRevoked.cs) | Accepted M0-D26 professional-duty designation revocation. |
-| [IndependenceRuleRatificationRecorded](../../src/Compliance.Common/Features/AccessControl/IndependenceRuleRatificationRecorded.cs) | Accepted M0-D26 ratification catalog fact. |
-| [MethodologyTemplateDraftReviewed](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateDraftReviewed.cs) | Accepted F1-04 methodology-template draft review. |
-| [ProgramNextPeriodCreated](../../src/Compliance.Common/Features/Programs/ProgramNextPeriodCreated.cs) | Accepted T3-07 next-period creation. |
-| [ProgramRolloverDecisionRecorded](../../src/Compliance.Common/Features/Programs/ProgramRolloverDecisionRecorded.cs) | Accepted T3-07 explicit rollover decision. |
-| [ProgramRolloverRevised](../../src/Compliance.Common/Features/Programs/ProgramRolloverRevised.cs) | Accepted T3-07 carry-forward selection revision. |
-| [SignificantChangeSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Changes/SignificantChangeSystemDescriptionDecisionRecorded.cs) | Accepted T2-07 exact system-description disposition fact. |
-| [TemplateApplicationDraftCreated](../../src/Compliance.Common/Features/MethodologyTemplates/TemplateApplicationDraftCreated.cs) | Accepted F1-04 template-application draft creation. |
-| [WorkDigestDispatchAttemptStarted](../../src/Compliance.Common/Features/Work/WorkDigestDispatchAttemptStarted.cs) | Accepted R2-11/M0-D15 delivery-attempt fact. |
-| [WorkDigestDispatchOutcomeRecorded](../../src/Compliance.Common/Features/Work/WorkDigestDispatchOutcomeRecorded.cs) | Accepted R2-11/M0-D15 provider-outcome fact. |
-| [WorkDigestDispatchScheduled](../../src/Compliance.Common/Features/Work/WorkDigestDispatchScheduled.cs) | Accepted R2-11/M0-D15 schedule fact. |
-| [WorkDigestUnknownRetryAuthorized](../../src/Compliance.Common/Features/Work/WorkDigestUnknownRetryAuthorized.cs) | Accepted R2-11/M0-D15 retry-authorization fact. |
-| [WorkItemAssignmentHistoryImported](../../src/Compliance.Common/Features/Work/WorkItemAssignmentHistoryImported.cs) | Explicitly out of scope for accepted manual P0/P1 workflows; retained only for legacy assignment-history migration. |
+| [ApplicationRelationshipGovernedRemoved](../../src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipGovernedRemoved.cs) | Accepted R1-10 governed relationship removal. |
+| [ApplicationRelationshipRecorded](../../src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipRecorded.cs) | Accepted R1-10 relationship creation. |
+| [AuditPopulationDefinitionRevised](../../src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationDefinitionRevised.cs) | Accepted T3-02 population-definition revision. |
+| [ClientExportAttestPackageDeliveryRecorded](../../src/Compliance.Common/Features/Exports/Events/ClientExportAttestPackageDeliveryRecorded.cs) | Accepted F1-01/F1-07/F1-08 delivery receipt fact; the own-attest package aggregate remains an unresolved prerequisite. |
+| [ComplianceIncidentSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentSystemDescriptionDecisionRecorded.cs) | Accepted T2-07 exact no-change disposition fact. |
+| [FirmProfessionalDutyDesignationRecorded](../../src/Compliance.Common/Features/AccessControl/Events/FirmProfessionalDutyDesignationRecorded.cs) | Accepted M0-D26 professional-duty designation. |
+| [FirmProfessionalDutyDesignationRevoked](../../src/Compliance.Common/Features/AccessControl/Events/FirmProfessionalDutyDesignationRevoked.cs) | Accepted M0-D26 professional-duty designation revocation. |
+| [IndependenceRuleRatificationRecorded](../../src/Compliance.Common/Features/AccessControl/Events/IndependenceRuleRatificationRecorded.cs) | Accepted M0-D26 ratification catalog fact. |
+| [MethodologyTemplateDraftReviewed](../../src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftReviewed.cs) | Accepted F1-04 methodology-template draft review. |
+| [ProgramNextPeriodCreated](../../src/Compliance.Common/Features/Programs/Events/ProgramNextPeriodCreated.cs) | Accepted T3-07 next-period creation. |
+| [ProgramRolloverDecisionRecorded](../../src/Compliance.Common/Features/Programs/Events/ProgramRolloverDecisionRecorded.cs) | Accepted T3-07 explicit rollover decision. |
+| [ProgramRolloverRevised](../../src/Compliance.Common/Features/Programs/Events/ProgramRolloverRevised.cs) | Accepted T3-07 carry-forward selection revision. |
+| [SignificantChangeSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Changes/Events/SignificantChangeSystemDescriptionDecisionRecorded.cs) | Accepted T2-07 exact system-description disposition fact. |
+| [TemplateApplicationDraftCreated](../../src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateApplicationDraftCreated.cs) | Accepted F1-04 template-application draft creation. |
+| [WorkDigestDispatchAttemptStarted](../../src/Compliance.Common/Features/Work/Events/WorkDigestDispatchAttemptStarted.cs) | Accepted R2-11/M0-D15 delivery-attempt fact. |
+| [WorkDigestDispatchOutcomeRecorded](../../src/Compliance.Common/Features/Work/Events/WorkDigestDispatchOutcomeRecorded.cs) | Accepted R2-11/M0-D15 provider-outcome fact. |
+| [WorkDigestDispatchScheduled](../../src/Compliance.Common/Features/Work/Events/WorkDigestDispatchScheduled.cs) | Accepted R2-11/M0-D15 schedule fact. |
+| [WorkDigestUnknownRetryAuthorized](../../src/Compliance.Common/Features/Work/Events/WorkDigestUnknownRetryAuthorized.cs) | Accepted R2-11/M0-D15 retry-authorization fact. |
+| [WorkItemAssignmentHistoryImported](../../src/Compliance.Common/Features/Work/Events/WorkItemAssignmentHistoryImported.cs) | Explicitly out of scope for accepted manual P0/P1 workflows; retained only for legacy assignment-history migration. |
 
 ## Backfill result
 
@@ -342,10 +342,10 @@ Events to backfill:
 The aggregate retains a stable member/week schedule, deterministic delivery attempts, suppression, and exact provider outcome callbacks. Command handlers emit these four events; current authorized work snapshot composition and trusted email delivery remain reactor work.
 
 Events:
-- [WeeklyWorkDigestScheduled](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestScheduled.cs#L8)
-- [WeeklyWorkDigestDeliveryRequested](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRequested.cs#L8)
-- [WeeklyWorkDigestDeliveryRecorded](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRecorded.cs#L8)
-- [WeeklyWorkDigestDeliverySuppressed](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliverySuppressed.cs#L8)
+- [WeeklyWorkDigestScheduled](../../src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestScheduled.cs#L8)
+- [WeeklyWorkDigestDeliveryRequested](../../src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRequested.cs#L8)
+- [WeeklyWorkDigestDeliveryRecorded](../../src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRecorded.cs#L8)
+- [WeeklyWorkDigestDeliverySuppressed](../../src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliverySuppressed.cs#L8)
 
 ## Deferred event family — readiness-material import
 

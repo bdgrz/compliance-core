@@ -12,6 +12,34 @@ namespace Bdgrz.Compliance.Tests.Features.Workforce;
 public sealed class PersonNativeHistoryTests
 {
     [Fact]
+    public async Task ShouldRejectCorrelationThatChangesPersonValuesGivenMalformedHistory()
+    {
+        // Arrange
+        await using var fixture = await AttestWorkforceManagementWallTests.Fixture.CreateAsync();
+        var person = new RecordPerson(Uuid.CreateVersion4(), fixture.TenantId, "Grace");
+        Assert.True((await fixture.BusAsync(person)).IsSuccess);
+        Assert.True((await CorrelateAsync(fixture, new CorrelatePersonMembership(Uuid.CreateVersion4(), fixture.TenantId, person.PersonId, 1, fixture.UserId))).IsSuccess);
+        var stream = new Person(fixture.TenantId, person.PersonId).Stream;
+        var facts = (await FactsAsync(fixture.Provider, stream)).ToArray();
+        var correlation = Assert.IsType<PersonMembershipCorrelationRecorded>(facts[1]);
+        var altered = correlation with { Header = correlation.Header with { ValuesSha256 = new string('a', 64) } };
+        altered.AttachMetadata(correlation.Metadata);
+        facts[1] = altered;
+        var store = new InMemoryEventStore();
+        await store.AppendAsync(stream, 0, facts);
+        var services = new ServiceCollection();
+        services.AddSingleton<IEventStore>(store);
+        services.AddPortia();
+        await using var provider = services.BuildServiceProvider();
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => _ = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(new Person(fixture.TenantId, person.PersonId)));
+
+        // Assert
+        Assert.IsType<ImmutableContentIntegrityException>(failure);
+    }
+
+    [Fact]
     public async Task ShouldReplayActualEqualCreationWinnerGivenLosingPersonValuePublicationUnavailable()
     {
         // Arrange

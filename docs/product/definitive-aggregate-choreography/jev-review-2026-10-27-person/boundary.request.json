@@ -1,0 +1,26 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "source": "The definitive catalog defines Person as one tenant and caller PersonId, with immutable creation identity, revisioned contact content and at most one current platform membership correlation. PersonRules.CorrelateMembership changes the correlation, revision, actor and time but not the person's contact values. PersonRules.Revise changes contact values but retains the correlation.",
+    "boundary": "The person owner stores one current header and an immutable content reference. Membership authority belongs to Member. A correlation fact is a decision about the person's reference to a platform user, not a change to contact values.",
+    "replay_question": "A native correlation fact has a valid operation and revision but its values hash differs from the preceding person header."
+  },
+  "questions": {
+    "correlation_values": {
+      "type": "noul",
+      "instructions": "Does the stated Person invariant require replay to reject a membership correlation fact that changes the person's contact-values hash?",
+      "criteria": {
+        "true": "Correlation only changes the membership reference and cannot revise contact values.",
+        "false": "Correlation is authorized to revise the person's contact values."
+      }
+    },
+    "boundary": {
+      "type": "noul",
+      "instructions": "Is keeping the current contact values and current membership correlation under one Person owner consistent with the stated revisioned person identity?",
+      "criteria": {
+        "true": "One revisioned person record decides changes to its own details and membership reference.",
+        "false": "The stated person identity requires these current fields to be independently governed owners."
+      }
+    }
+  }
+}

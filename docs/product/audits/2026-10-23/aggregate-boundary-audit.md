@@ -136,66 +136,66 @@ These remain the actionable design risks from the full source review. “Split�
 
 | Aggregate | Feature | Boundary decision | Original observations | Jev Noul risk | Source |
 |---|---|---|---|---:|---|
-| AccessGrant | AccessControl | retain | ACCESS-10 (pending) | 0.21 | [source](../../../../src/Compliance.Core/Features/AccessControl/AccessGrant.cs) |
+| AccessGrant | AccessControl | retain | ACCESS-10 (pending) | 0.21 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/AccessGrant.cs) |
 | FirmProfessionalDutyCatalog | AccessControl | split | ACCESS-04 (split into FirmProfessionalDutyDesignation and ProfessionalAssertionIdentityClaim) | 0.91 | `FirmProfessionalDutyCatalog.cs` (removed by the FirmProfessionalDutyDesignation split, #1022) |
 | FirmStaffDirectory | AccessControl | split | ACCESS-03 (split into FirmStaffRecord and FirmStaffIdentityClaim) | 0.91 | `FirmStaffDirectory.cs` (removed by the FirmStaffRecord split, #1022) |
 | IndependenceLedger | AccessControl | split | ACCESS-02 (split into ServiceEngagementIndependence, ClientServiceIndependence, PracticeIndependenceCommitment and the independent decision owners) | 0.90 | `IndependenceLedger.cs` (removed by the PracticeIndependenceCommitment split, #1022) |
-| IndependenceRuleCatalog | AccessControl | narrow | ACCESS-05 (pending) | 0.67 | [source](../../../../src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs) |
-| IndependenceRuleRatificationCatalog | AccessControl | narrow | ACCESS-06 (pending) | 0.76 | [source](../../../../src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs) |
-| Member | AccessControl | retain | ACCESS-01 (pending), ACCESS-08 (in_progress), ACCESS-10 (pending) | 0.29 | [source](../../../../src/Compliance.Core/Features/AccessControl/Member.cs) |
-| Role | AccessControl | retain | ACCESS-09 (pending) | 0.23 | [source](../../../../src/Compliance.Core/Features/AccessControl/Role.cs) |
-| RolePermission | AccessControl | retain | ACCESS-08 (in_progress) | 0.19 | [source](../../../../src/Compliance.Core/Features/AccessControl/RolePermission.cs) |
-| SeparationOfDutiesWaiver | AccessControl | retain | — | 0.17 | [source](../../../../src/Compliance.Core/Features/AccessControl/SeparationOfDutiesWaiver.cs) |
-| Team | AccessControl | retain | ACCESS-09 (pending) | 0.15 | [source](../../../../src/Compliance.Core/Features/AccessControl/Team.cs) |
-| TeamMember | AccessControl | retain | ACCESS-01 (pending), ACCESS-08 (in_progress) | 0.26 | [source](../../../../src/Compliance.Core/Features/AccessControl/TeamMember.cs) |
-| TeamRole | AccessControl | retain | ACCESS-08 (in_progress) | 0.16 | [source](../../../../src/Compliance.Core/Features/AccessControl/TeamRole.cs) |
-| TenantManagerGuard | AccessControl | retain | ACCESS-01 (pending) | 0.68 | [source](../../../../src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs) |
-| AccessPopulation | AccessReviews | split | OPS-07 (pending), OPS-15 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/AccessReviews/AccessPopulation.cs) |
-| AccessReviewCampaign | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.89 | split into campaign and item owners (#1022); [campaign](../../../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs), [item](../../../../src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs) |
+| IndependenceRuleCatalog | AccessControl | narrow | ACCESS-05 (pending) | 0.67 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/IndependenceRuleCatalog.cs) |
+| IndependenceRuleRatificationCatalog | AccessControl | narrow | ACCESS-06 (pending) | 0.76 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/IndependenceRuleRatificationCatalog.cs) |
+| Member | AccessControl | retain | ACCESS-01 (pending), ACCESS-08 (in_progress), ACCESS-10 (pending) | 0.29 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs) |
+| Role | AccessControl | retain | ACCESS-09 (pending) | 0.23 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/Role.cs) |
+| RolePermission | AccessControl | retain | ACCESS-08 (in_progress) | 0.19 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/RolePermission.cs) |
+| SeparationOfDutiesWaiver | AccessControl | retain | — | 0.17 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/SeparationOfDutiesWaiver.cs) |
+| Team | AccessControl | retain | ACCESS-09 (pending) | 0.15 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/Team.cs) |
+| TeamMember | AccessControl | retain | ACCESS-01 (pending), ACCESS-08 (in_progress) | 0.26 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/TeamMember.cs) |
+| TeamRole | AccessControl | retain | ACCESS-08 (in_progress) | 0.16 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/TeamRole.cs) |
+| TenantManagerGuard | AccessControl | retain | ACCESS-01 (pending) | 0.68 | [source](../../../../src/Compliance.Core/Features/AccessControl/Aggregates/TenantManagerGuard.cs) |
+| AccessPopulation | AccessReviews | split | OPS-07 (pending), OPS-15 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/AccessReviews/Aggregates/AccessPopulation.cs) |
+| AccessReviewCampaign | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.89 | split into campaign and item owners (#1022); [campaign](../../../../src/Compliance.Core/Features/AccessReviews/Aggregates/AccessReviewCampaign.cs), [item](../../../../src/Compliance.Core/Features/AccessReviews/Aggregates/AccessReviewItem.cs) |
 | AccessReviewSystemLedger | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.91 | retired by the expectation line and population exception split (#1022) |
-| AdvisorHandoff | AdvisorCollaboration | split | ROOTASSURE-01 (pending), ROOTASSURE-04 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs) |
+| AdvisorHandoff | AdvisorCollaboration | split | ROOTASSURE-01 (pending), ROOTASSURE-04 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/AdvisorCollaboration/Aggregates/AdvisorHandoff.cs) |
 | ApplicationImportLedger | Applications | split | ROOT-02 (pending) | 0.86 |  |
 | DeclaredApplication | Applications | split | ROOT-01 (pending), ROOT-02 (pending), ROOT-04 (pending), ROOT-05 (pending) | 0.93 |  |
-| DeclaredSystemInstance | Applications | retain | ROOT-05 (pending) | 0.57 | [source](../../../../src/Compliance.Core/Features/Applications/DeclaredSystemInstance.cs) |
+| DeclaredSystemInstance | Applications | retain | ROOT-05 (pending) | 0.57 | [source](../../../../src/Compliance.Core/Features/Applications/Aggregates/DeclaredSystemInstance.cs) |
 | ImportBatch | Applications | retain | ROOT-02 (pending), ROOT-05 (pending) | 0.45 |  |
-| SystemInstanceAccessReviewScope | Applications | narrow | ROOT-03 (pending) | 0.84 | [source](../../../../src/Compliance.Core/Features/Applications/SystemInstanceAccessReviewScope.cs) |
+| SystemInstanceAccessReviewScope | Applications | narrow | ROOT-03 (pending) | 0.84 | [source](../../../../src/Compliance.Core/Features/Applications/Aggregates/SystemInstanceAccessReviewScope.cs) |
 | AuditPackage | AuditPackages | split | ASSURE-02 (pending), ASSURE-10 (pending), CORE-01 (complete) | 0.89 | [source](https://github.com/bdgrz/compliance-core/blob/b7a2bd02cc90c6734c94391399a55c0da1621521/src/Compliance.Core/Features/AuditPackages/AuditPackage.cs) |
-| AuditPopulation | AuditPopulations | narrow | ASSURE-04 (pending), ASSURE-10 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.83 | [source](../../../../src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs) |
-| AuditorRequest | AuditorRequests | split | ASSURE-03 (pending), ASSURE-09 (pending), ASSURE-10 (pending), ASSURE-11 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs) |
-| SystemBoundary | Boundaries | narrow | ROOTACCESS-01 (pending), ROOTACCESS-02 (pending), ROOTACCESS-04 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Boundaries/SystemBoundary.cs) |
-| SignificantChange | Changes | narrow | ROOT-06 (pending), ROOT-07 (pending), CORE-01 (complete) | 0.82 | [source](../../../../src/Compliance.Core/Features/Changes/SignificantChange.cs) |
-| CommitmentDraft | Commitments | narrow | ROOTACCESS-01 (pending), ROOTACCESS-02 (pending), ROOTACCESS-04 (pending) | 0.69 | [source](../../../../src/Compliance.Core/Features/Commitments/CommitmentDraft.cs) |
+| AuditPopulation | AuditPopulations | narrow | ASSURE-04 (pending), ASSURE-10 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.83 | [source](../../../../src/Compliance.Core/Features/AuditPopulations/Aggregates/AuditPopulation.cs) |
+| AuditorRequest | AuditorRequests | split | ASSURE-03 (pending), ASSURE-09 (pending), ASSURE-10 (pending), ASSURE-11 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/AuditorRequests/Aggregates/AuditorRequest.cs) |
+| SystemBoundary | Boundaries | narrow | ROOTACCESS-01 (pending), ROOTACCESS-02 (pending), ROOTACCESS-04 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Boundaries/Aggregates/SystemBoundary.cs) |
+| SignificantChange | Changes | narrow | ROOT-06 (pending), ROOT-07 (pending), CORE-01 (complete) | 0.82 | [source](../../../../src/Compliance.Core/Features/Changes/Aggregates/SignificantChange.cs) |
+| CommitmentDraft | Commitments | narrow | ROOTACCESS-01 (pending), ROOTACCESS-02 (pending), ROOTACCESS-04 (pending) | 0.69 | [source](../../../../src/Compliance.Core/Features/Commitments/Aggregates/CommitmentDraft.cs) |
 | ControlCriterionMappingLedger | ControlMappings | split | OPS-01 (pending), OPS-11 (pending), OPS-15 (pending) | 0.85 | retired by the criteria and evaluation split (#1022) |
 | CriterionApplicabilityLedger | ControlMappings | split | OPS-01 (pending), OPS-11 (pending), OPS-15 (pending) | 0.85 | retired by the criteria and evaluation split (#1022) |
-| ControlDraft | Controls | narrow | OPS-11 (pending), OPS-13 (pending), OPS-15 (pending) | 0.63 | [source](../../../../src/Compliance.Core/Features/Controls/ControlDraft.cs) |
+| ControlDraft | Controls | narrow | OPS-11 (pending), OPS-13 (pending), OPS-15 (pending) | 0.63 | [source](../../../../src/Compliance.Core/Features/Controls/Aggregates/ControlDraft.cs) |
 | CriteriaTextOverlayLedger | Criteria | split | OPS-05 (pending) | 0.76 | retired by the criteria and evaluation split (#1022) |
 | ControlEvaluationLedger | Evaluations | split | OPS-02 (pending), OPS-11 (pending), OPS-15 (pending), OPS-16 (pending) | 0.84 | retired by the criteria and evaluation split (#1022) |
-| ControlEvaluationPlan | Evaluations | narrow | OPS-13 (pending) | 0.52 | [source](../../../../src/Compliance.Core/Features/Evaluations/ControlEvaluationPlan.cs) |
-| EvidenceArtifact | Evidence | narrow | ASSURE-08 (pending) | 0.76 | [source](../../../../src/Compliance.Core/Features/Evidence/EvidenceArtifact.cs) |
-| EvidenceRedaction | Evidence | narrow | ASSURE-06 (pending), ASSURE-07 (pending) | 0.85 | [source](../../../../src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs) |
+| ControlEvaluationPlan | Evaluations | narrow | OPS-13 (pending) | 0.52 | [source](../../../../src/Compliance.Core/Features/Evaluations/Aggregates/ControlEvaluationPlan.cs) |
+| EvidenceArtifact | Evidence | narrow | ASSURE-08 (pending) | 0.76 | [source](../../../../src/Compliance.Core/Features/Evidence/Aggregates/EvidenceArtifact.cs) |
+| EvidenceRedaction | Evidence | narrow | ASSURE-06 (pending), ASSURE-07 (pending) | 0.85 | [source](../../../../src/Compliance.Core/Features/Evidence/Aggregates/EvidenceRedaction.cs) |
 | EvidenceRequestLedger | Evidence | split | ASSURE-01 (pending), ASSURE-11 (pending) | 0.82 | [source](https://github.com/bdgrz/compliance-core/blob/b7a2bd02cc90c6734c94391399a55c0da1621521/src/Compliance.Core/Features/Evidence/EvidenceRequestLedger.cs) |
-| EvidenceSupport | Evidence | retain | — | 0.11 | [source](../../../../src/Compliance.Core/Features/Evidence/EvidenceSupport.cs) |
-| AuditObservation | Examinations | retain | — | 0.26 | [source](../../../../src/Compliance.Core/Features/Examinations/AuditObservation.cs) |
-| AuditOutcome | Examinations | retain | CORE-01 (complete) | 0.12 | [source](../../../../src/Compliance.Core/Features/Examinations/AuditOutcome.cs) |
-| ExaminationEngagement | Examinations | narrow | ASSURE-13 (pending), ASSURE-11 (pending) | 0.81 | [source](../../../../src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs) |
-| ExaminationSignOff | Examinations | retain | — | 0.16 | [source](../../../../src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs) |
-| ManagementAssertion | Examinations | narrow | ASSURE-17 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.80 | [source](../../../../src/Compliance.Core/Features/Examinations/ManagementAssertion.cs) |
-| ManagementRepresentationLetter | Examinations | retain | CORE-01 (complete) | 0.15 | [source](../../../../src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs) |
-| TypeIIPlan | Examinations | narrow | ASSURE-17 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.72 | [source](../../../../src/Compliance.Core/Features/Examinations/TypeIIPlan.cs) |
-| ClientExport | Exports | process | ASSURE-15 (pending), CORE-01 (complete) | 0.71 | [source](../../../../src/Compliance.Core/Features/Exports/ClientExport.cs) |
-| ComplianceIncident | Incidents | narrow | ROOT-06 (pending), ROOT-07 (pending), CORE-01 (complete), ROOT-08 (pending) | 0.84 | [source](../../../../src/Compliance.Core/Features/Incidents/ComplianceIncident.cs) |
-| MethodologyTemplate | MethodologyTemplates | narrow | ROOTASSURE-02 (pending), ROOTASSURE-04 (pending), CORE-01 (complete) | 0.86 | [source](../../../../src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs) |
-| MethodologyTemplateContribution | MethodologyTemplates | retain | ROOTASSURE-04 (pending), CORE-01 (complete) | 0.16 | [source](../../../../src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs) |
-| TemplateApplication | MethodologyTemplates | process | ROOTASSURE-03 (pending), ROOTASSURE-04 (pending), CORE-01 (complete) | 0.88 | [source](../../../../src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs) |
+| EvidenceSupport | Evidence | retain | — | 0.11 | [source](../../../../src/Compliance.Core/Features/Evidence/Aggregates/EvidenceSupport.cs) |
+| AuditObservation | Examinations | retain | — | 0.26 | [source](../../../../src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs) |
+| AuditOutcome | Examinations | retain | CORE-01 (complete) | 0.12 | [source](../../../../src/Compliance.Core/Features/Examinations/Aggregates/AuditOutcome.cs) |
+| ExaminationEngagement | Examinations | narrow | ASSURE-13 (pending), ASSURE-11 (pending) | 0.81 | [source](../../../../src/Compliance.Core/Features/Examinations/Aggregates/ExaminationEngagement.cs) |
+| ExaminationSignOff | Examinations | retain | — | 0.16 | [source](../../../../src/Compliance.Core/Features/Examinations/Aggregates/ExaminationSignOff.cs) |
+| ManagementAssertion | Examinations | narrow | ASSURE-17 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.80 | [source](../../../../src/Compliance.Core/Features/Examinations/Aggregates/ManagementAssertion.cs) |
+| ManagementRepresentationLetter | Examinations | retain | CORE-01 (complete) | 0.15 | [source](../../../../src/Compliance.Core/Features/Examinations/Aggregates/ManagementRepresentationLetter.cs) |
+| TypeIIPlan | Examinations | narrow | ASSURE-17 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.72 | [source](../../../../src/Compliance.Core/Features/Examinations/Aggregates/TypeIIPlan.cs) |
+| ClientExport | Exports | process | ASSURE-15 (pending), CORE-01 (complete) | 0.71 | [source](../../../../src/Compliance.Core/Features/Exports/Aggregates/ClientExport.cs) |
+| ComplianceIncident | Incidents | narrow | ROOT-06 (pending), ROOT-07 (pending), CORE-01 (complete), ROOT-08 (pending) | 0.84 | [source](../../../../src/Compliance.Core/Features/Incidents/Aggregates/ComplianceIncident.cs) |
+| MethodologyTemplate | MethodologyTemplates | narrow | ROOTASSURE-02 (pending), ROOTASSURE-04 (pending), CORE-01 (complete) | 0.86 | [source](../../../../src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs) |
+| MethodologyTemplateContribution | MethodologyTemplates | retain | ROOTASSURE-04 (pending), CORE-01 (complete) | 0.16 | [source](../../../../src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateContribution.cs) |
+| TemplateApplication | MethodologyTemplates | process | ROOTASSURE-03 (pending), ROOTASSURE-04 (pending), CORE-01 (complete) | 0.88 | [source](../../../../src/Compliance.Core/Features/MethodologyTemplates/Aggregates/TemplateApplication.cs) |
 | ControlOperationsLedger | Operations | split | OPS-03 (pending), OPS-11 (pending), OPS-15 (pending), OPS-16 (pending) | 0.88 | retired by the plan/occurrence split (#1022) |
-| TypeIIObservationCalendar | Operations | narrow | OPS-09 (pending), OPS-10 (pending), OPS-16 (pending) | 0.87 | [source](../../../../src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs) |
-| TypeIIPeriod | Operations | narrow | OPS-09 (pending), OPS-10 (pending), OPS-12 (pending), OPS-17 (pending), CORE-01 (complete) | 0.91 | [source](../../../../src/Compliance.Core/Features/Operations/TypeIIPeriod.cs) |
-| Policy | Policies | narrow | OPS-11 (pending), OPS-13 (pending), OPS-15 (pending) | 0.78 | [source](../../../../src/Compliance.Core/Features/Policies/Policy.cs) |
-| PolicyDistributionCampaign | PolicyDistribution | split | OPS-07 (pending), OPS-16 (pending) | 0.91 | [source](../../../../src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs) |
+| TypeIIObservationCalendar | Operations | narrow | OPS-09 (pending), OPS-10 (pending), OPS-16 (pending) | 0.87 | [source](../../../../src/Compliance.Core/Features/Operations/Aggregates/TypeIIObservationCalendar.cs) |
+| TypeIIPeriod | Operations | narrow | OPS-09 (pending), OPS-10 (pending), OPS-12 (pending), OPS-17 (pending), CORE-01 (complete) | 0.91 | [source](../../../../src/Compliance.Core/Features/Operations/Aggregates/TypeIIPeriod.cs) |
+| Policy | Policies | narrow | OPS-11 (pending), OPS-13 (pending), OPS-15 (pending) | 0.78 | [source](../../../../src/Compliance.Core/Features/Policies/Aggregates/Policy.cs) |
+| PolicyDistributionCampaign | PolicyDistribution | split | OPS-07 (pending), OPS-16 (pending) | 0.91 | [source](../../../../src/Compliance.Core/Features/PolicyDistribution/Aggregates/PolicyDistributionCampaign.cs) |
 | TrainingCatalog | PolicyDistribution | split | OPS-05 (pending), OPS-15 (pending) | 0.88 | retired by the training requirement split (#1022) |
-| ClientService | Programs | retain | ASSURE-11 (pending) | 0.15 | [source](../../../../src/Compliance.Core/Features/Programs/ClientService.cs) |
-| ComplianceProgram | Programs | narrow | ASSURE-16 (pending), ASSURE-11 (pending) | 0.79 | [source](../../../../src/Compliance.Core/Features/Programs/ComplianceProgram.cs) |
-| ProgramRollover | Programs | process | ASSURE-15 (pending), ASSURE-17 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.78 | [source](../../../../src/Compliance.Core/Features/Programs/ProgramRollover.cs) |
+| ClientService | Programs | retain | ASSURE-11 (pending) | 0.15 | [source](../../../../src/Compliance.Core/Features/Programs/Aggregates/ClientService.cs) |
+| ComplianceProgram | Programs | narrow | ASSURE-16 (pending), ASSURE-11 (pending) | 0.79 | [source](../../../../src/Compliance.Core/Features/Programs/Aggregates/ComplianceProgram.cs) |
+| ProgramRollover | Programs | process | ASSURE-15 (pending), ASSURE-17 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.78 | [source](../../../../src/Compliance.Core/Features/Programs/Aggregates/ProgramRollover.cs) |
 | ProviderAssuranceRegister | Providers | split | ROOTTECH-03 (split into ProviderAssuranceReport, ProviderAssuranceReview, ProviderAssuranceGap and ProviderRiskAcceptance), ROOTTECH-04 (split into ProviderAssuranceGap and ProviderRiskAcceptance) | 0.90 | `ProviderAssuranceRegister.cs` (removed by the provider assurance split, #1022) |
 | ProviderRegister | Providers | split | ROOTTECH-01 (pending) | 0.89 | source retired by S18 (`Providers/ProviderRegister.cs`) |
 | ReadinessLedger | Readiness | split | OPS-08 (pending), OPS-11 (pending), OPS-16 (pending) | 0.93 | [source](https://github.com/bdgrz/compliance-core/blob/b7a2bd02cc90c6734c94391399a55c0da1621521/src/Compliance.Core/Features/Readiness/ReadinessLedger.cs) |
@@ -203,42 +203,42 @@ These remain the actionable design risks from the full source review. “Split�
 | FindingMigrationAggregate | Remediation | process | OPS-12 (pending) | 0.18 | retired by the finding and corrective action split (#1022) |
 | RemediationLedger | Remediation | legacy | — | 0.19 | retired by the finding and corrective action split (#1022) |
 | RemediationMigrationFenceAggregate | Remediation | process | OPS-12 (pending) | 0.20 | retired by the finding and corrective action split (#1022) |
-| ArtifactDisclosure | Retention | retain | ASSURE-10 (pending) | 0.17 | [source](../../../../src/Compliance.Core/Features/Retention/ArtifactDisclosure.cs) |
-| ArtifactDisposition | Retention | process | ASSURE-15 (pending) | 0.81 | [source](../../../../src/Compliance.Core/Features/Retention/ArtifactDisposition.cs) |
-| ArtifactEngagementHold | Retention | retain | ASSURE-10 (pending) | 0.15 | [source](../../../../src/Compliance.Core/Features/Retention/ArtifactEngagementHold.cs) |
+| ArtifactDisclosure | Retention | retain | ASSURE-10 (pending) | 0.17 | [source](../../../../src/Compliance.Core/Features/Retention/Aggregates/ArtifactDisclosure.cs) |
+| ArtifactDisposition | Retention | process | ASSURE-15 (pending) | 0.81 | [source](../../../../src/Compliance.Core/Features/Retention/Aggregates/ArtifactDisposition.cs) |
+| ArtifactEngagementHold | Retention | retain | ASSURE-10 (pending) | 0.15 | [source](../../../../src/Compliance.Core/Features/Retention/Aggregates/ArtifactEngagementHold.cs) |
 | ArtifactRetention | Retention | split | ASSURE-12 (pending) | 0.88 | [source](https://github.com/bdgrz/compliance-core/blob/b7a2bd02cc90c6734c94391399a55c0da1621521/src/Compliance.Core/Features/Retention/ArtifactRetention.cs) |
-| EvidenceHandlingPolicy | Retention | narrow | ASSURE-05 (pending), ASSURE-10 (pending) | 0.67 | [source](../../../../src/Compliance.Core/Features/Retention/EvidenceHandlingPolicy.cs) |
-| RiskDraft | Risks | retain | OPS-14 (not in active ledger), OPS-15 (pending) | 0.24 | [source](../../../../src/Compliance.Core/Features/Risks/RiskDraft.cs) |
-| RiskEvaluation | Risks | narrow | OPS-11 (pending), OPS-13 (pending), OPS-16 (pending) | 0.78 | [source](../../../../src/Compliance.Core/Features/Risks/RiskEvaluation.cs) |
+| EvidenceHandlingPolicy | Retention | narrow | ASSURE-05 (pending), ASSURE-10 (pending) | 0.67 | [source](../../../../src/Compliance.Core/Features/Retention/Aggregates/EvidenceHandlingPolicy.cs) |
+| RiskDraft | Risks | retain | OPS-14 (not in active ledger), OPS-15 (pending) | 0.24 | [source](../../../../src/Compliance.Core/Features/Risks/Aggregates/RiskDraft.cs) |
+| RiskEvaluation | Risks | narrow | OPS-11 (pending), OPS-13 (pending), OPS-16 (pending) | 0.78 | [source](../../../../src/Compliance.Core/Features/Risks/Aggregates/RiskEvaluation.cs) |
 | RiskGovernanceLedger | Risks | split | OPS-04 (pending), OPS-11 (pending), OPS-15 (pending), OPS-16 (pending) | 0.93 | [source](https://github.com/bdgrz/compliance-core/blob/b7a2bd02cc90c6734c94391399a55c0da1621521/src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs) |
-| RiskMethod | Risks | narrow | OPS-13 (pending), OPS-15 (pending) | 0.39 | [source](../../../../src/Compliance.Core/Features/Risks/RiskMethod.cs) |
-| ImmutableSnapshot | Snapshots | retain | ASSURE-13 (pending) | 0.35 | [source](../../../../src/Compliance.Core/Features/Snapshots/ImmutableSnapshot.cs) |
-| PopulationSnapshot | Snapshots | retain | ASSURE-13 (pending) | 0.28 | [source](../../../../src/Compliance.Core/Features/Snapshots/PopulationSnapshot.cs) |
-| PopulationSnapshotChunk | Snapshots | process | ASSURE-14 (pending) | 0.31 | [source](../../../../src/Compliance.Core/Features/Snapshots/PopulationSnapshotChunk.cs) |
-| SystemDescription | SystemDescription | split | ROOTACCESS-03 (pending), ROOTACCESS-04 (pending), ROOTACCESS-05 (pending) | 0.80 | [source](../../../../src/Compliance.Core/Features/SystemDescription/SystemDescription.cs) |
-| DataFlow | TechnologyInventory | retain | ROOTTECH-02 (pending), ROOTTECH-05 (pending) | 0.41 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/DataFlow.cs) |
-| InformationAsset | TechnologyInventory | retain | ROOTTECH-02 (pending) | 0.53 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/InformationAsset.cs) |
+| RiskMethod | Risks | narrow | OPS-13 (pending), OPS-15 (pending) | 0.39 | [source](../../../../src/Compliance.Core/Features/Risks/Aggregates/RiskMethod.cs) |
+| ImmutableSnapshot | Snapshots | retain | ASSURE-13 (pending) | 0.35 | [source](../../../../src/Compliance.Core/Features/Snapshots/Aggregates/ImmutableSnapshot.cs) |
+| PopulationSnapshot | Snapshots | retain | ASSURE-13 (pending) | 0.28 | [source](../../../../src/Compliance.Core/Features/Snapshots/Aggregates/PopulationSnapshot.cs) |
+| PopulationSnapshotChunk | Snapshots | process | ASSURE-14 (pending) | 0.31 | [source](../../../../src/Compliance.Core/Features/Snapshots/Aggregates/PopulationSnapshotChunk.cs) |
+| SystemDescription | SystemDescription | split | ROOTACCESS-03 (pending), ROOTACCESS-04 (pending), ROOTACCESS-05 (pending) | 0.80 | [source](../../../../src/Compliance.Core/Features/SystemDescription/Aggregates/SystemDescription.cs) |
+| DataFlow | TechnologyInventory | retain | ROOTTECH-02 (pending), ROOTTECH-05 (pending) | 0.41 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/Aggregates/DataFlow.cs) |
+| InformationAsset | TechnologyInventory | retain | ROOTTECH-02 (pending) | 0.53 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/Aggregates/InformationAsset.cs) |
 | LocationRegister | TechnologyInventory | split | ROOTTECH-01 (pending), ROOTTECH-02 (pending) | 0.86 | source retired by S18 (`TechnologyInventory/LocationRegister.cs`) |
 | OperationalProcessRegister | TechnologyInventory | split | ROOTTECH-01 (pending), ROOTTECH-02 (pending) | 0.89 | source retired by S18 (`TechnologyInventory/OperationalProcessRegister.cs`) |
-| TechnologyComponent | TechnologyInventory | retain | ROOTTECH-02 (pending) | 0.52 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/TechnologyComponent.cs) |
-| PlatformOperatorRoster | Tenants | retain | ACCESS-08 (in_progress) | 0.25 | [source](../../../../src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs) |
-| Tenant | Tenants | narrow | ACCESS-10 (pending), ACCESS-16 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Tenants/Tenant.cs) |
-| TenantInvitation | Tenants | split | ACCESS-11 (pending), ACCESS-13 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantInvitation.cs) |
+| TechnologyComponent | TechnologyInventory | retain | ROOTTECH-02 (pending) | 0.52 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/Aggregates/TechnologyComponent.cs) |
+| PlatformOperatorRoster | Tenants | retain | ACCESS-08 (in_progress) | 0.25 | [source](../../../../src/Compliance.Core/Features/Tenants/Aggregates/PlatformOperatorRoster.cs) |
+| Tenant | Tenants | narrow | ACCESS-10 (pending), ACCESS-16 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Tenants/Aggregates/Tenant.cs) |
+| TenantInvitation | Tenants | split | ACCESS-11 (pending), ACCESS-13 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Tenants/Aggregates/TenantInvitation.cs) |
 | TenantOwner | Tenants | project | ACCESS-15 (pending) | 0.71 | source retired with the cutover |
-| TenantSlug | Tenants | retain | ACCESS-14 (pending) | 0.45 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantSlug.cs) |
-| EmailAddress | UserIdentities | narrow | ACCESS-12 (pending), ACCESS-13 (pending) | 0.80 | [source](../../../../src/Compliance.Core/Features/UserIdentities/EmailAddress.cs) |
-| TenantIdentityProvider | UserIdentities | narrow | ACCESS-07 (pending), ACCESS-10 (pending) | 0.83 | [source](../../../../src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs) |
-| UserIdentity | UserIdentities | narrow | ACCESS-12 (pending), ACCESS-17 (complete) | 0.37 | [source](../../../../src/Compliance.Core/Features/UserIdentities/UserIdentity.cs) |
-| LegacyWorkAssignmentLedger | Work | legacy | — | 0.26 | [source](../../../../src/Compliance.Core/Features/Work/LegacyWorkAssignmentLedger.cs) |
-| WeeklyWorkDigest | Work | process | OPS-12 (pending) | 0.75 | [source](../../../../src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs) |
-| WorkDigestDispatch | Work | process | OPS-12 (pending) | 0.80 | [source](../../../../src/Compliance.Core/Features/Work/WorkDigestDispatch.cs) |
-| WorkDigestPreference | Work | retain | OPS-14 (not in active ledger), OPS-15 (pending) | 0.50 | [source](../../../../src/Compliance.Core/Features/Work/WorkDigestPreference.cs) |
-| WorkItemAssignment | Work | narrow | OPS-12 (pending), OPS-13 (pending), OPS-15 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Work/WorkItemAssignment.cs) |
-| Person | Workforce | retain | ACCESS-10 (pending) | 0.60 | [source](../../../../src/Compliance.Core/Features/Workforce/Person.cs) |
-| ServiceIdentity | Workforce | retain | ACCESS-10 (pending) | 0.57 | [source](../../../../src/Compliance.Core/Features/Workforce/ServiceIdentity.cs) |
-| WorkRelationship | Workforce | retain | ACCESS-10 (pending) | 0.46 | [source](../../../../src/Compliance.Core/Features/Workforce/WorkRelationship.cs) |
-| WorkforceObservationResolution | Workforce | retain | — | 0.25 | [source](../../../../src/Compliance.Core/Features/Workforce/WorkforceObservationResolution.cs) |
-| WorkforceSourceObservation | Workforce | retain | — | 0.22 | [source](../../../../src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs) |
+| TenantSlug | Tenants | retain | ACCESS-14 (pending) | 0.45 | [source](../../../../src/Compliance.Core/Features/Tenants/Aggregates/TenantSlug.cs) |
+| EmailAddress | UserIdentities | narrow | ACCESS-12 (pending), ACCESS-13 (pending) | 0.80 | [source](../../../../src/Compliance.Core/Features/UserIdentities/Aggregates/EmailAddress.cs) |
+| TenantIdentityProvider | UserIdentities | narrow | ACCESS-07 (pending), ACCESS-10 (pending) | 0.83 | [source](../../../../src/Compliance.Core/Features/UserIdentities/Aggregates/TenantIdentityProvider.cs) |
+| UserIdentity | UserIdentities | narrow | ACCESS-12 (pending), ACCESS-17 (complete) | 0.37 | [source](../../../../src/Compliance.Core/Features/UserIdentities/Aggregates/UserIdentity.cs) |
+| LegacyWorkAssignmentLedger | Work | legacy | — | 0.26 | [source](../../../../src/Compliance.Core/Features/Work/Aggregates/LegacyWorkAssignmentLedger.cs) |
+| WeeklyWorkDigest | Work | process | OPS-12 (pending) | 0.75 | [source](../../../../src/Compliance.Core/Features/Work/Aggregates/WeeklyWorkDigest.cs) |
+| WorkDigestDispatch | Work | process | OPS-12 (pending) | 0.80 | [source](../../../../src/Compliance.Core/Features/Work/Aggregates/WorkDigestDispatch.cs) |
+| WorkDigestPreference | Work | retain | OPS-14 (not in active ledger), OPS-15 (pending) | 0.50 | [source](../../../../src/Compliance.Core/Features/Work/Aggregates/WorkDigestPreference.cs) |
+| WorkItemAssignment | Work | narrow | OPS-12 (pending), OPS-13 (pending), OPS-15 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Work/Aggregates/WorkItemAssignment.cs) |
+| Person | Workforce | retain | ACCESS-10 (pending) | 0.60 | [source](../../../../src/Compliance.Core/Features/Workforce/Aggregates/Person.cs) |
+| ServiceIdentity | Workforce | retain | ACCESS-10 (pending) | 0.57 | [source](../../../../src/Compliance.Core/Features/Workforce/Aggregates/ServiceIdentity.cs) |
+| WorkRelationship | Workforce | retain | ACCESS-10 (pending) | 0.46 | [source](../../../../src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs) |
+| WorkforceObservationResolution | Workforce | retain | — | 0.25 | [source](../../../../src/Compliance.Core/Features/Workforce/Aggregates/WorkforceObservationResolution.cs) |
+| WorkforceSourceObservation | Workforce | retain | — | 0.22 | [source](../../../../src/Compliance.Core/Features/Workforce/Aggregates/WorkforceSourceObservation.cs) |
 
 ## Current reactor inventory
 
@@ -246,30 +246,30 @@ The 21 surviving baseline reactor rows retain their original source-reviewed fai
 
 | Reactor | Baseline finding(s) | Current Jev Noul risk | Current source |
 |---|---|---:|---|
-| AcceptedStaffDirectoryReconciliationReactor | — | 0.42 | [source](../../../../src/Compliance.Core/Features/AccessControl/AcceptedStaffDirectoryReconciliationReactor.cs) |
-| FirmStaffStatusReevaluationReactor | — | 0.67 | [source](../../../../src/Compliance.Core/Features/AccessControl/FirmStaffStatusReevaluationReactor.cs) |
-| MemberRetirementReactor | CHOREO-03 | 0.36 | [source](../../../../src/Compliance.Core/Features/AccessControl/MemberRetirementReactor.cs) |
-| RetiredMemberGrantReactor | CHOREO-03, CHOREO-06 | 0.56 | [source](../../../../src/Compliance.Core/Features/AccessControl/RetiredMemberGrantReactor.cs) |
-| RetiredTeamAssignmentReactor | CHOREO-03, CHOREO-06 | 0.54 | [source](../../../../src/Compliance.Core/Features/AccessControl/RetiredTeamAssignmentReactor.cs) |
-| RoleCleanupReactor | CHOREO-06 | 0.64 | [source](../../../../src/Compliance.Core/Features/AccessControl/RoleCleanupReactor.cs) |
-| TeamCleanupReactor | CHOREO-06 | 0.53 | [source](../../../../src/Compliance.Core/Features/AccessControl/TeamCleanupReactor.cs) |
-| TenantRbacBootstrapReactor | — | 0.54 | [source](../../../../src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs) |
+| AcceptedStaffDirectoryReconciliationReactor | — | 0.42 | [source](../../../../src/Compliance.Core/Features/AccessControl/Reactors/AcceptedStaffDirectoryReconciliationReactor.cs) |
+| FirmStaffStatusReevaluationReactor | — | 0.67 | [source](../../../../src/Compliance.Core/Features/AccessControl/Reactors/FirmStaffStatusReevaluationReactor.cs) |
+| MemberRetirementReactor | CHOREO-03 | 0.36 | [source](../../../../src/Compliance.Core/Features/AccessControl/Reactors/MemberRetirementReactor.cs) |
+| RetiredMemberGrantReactor | CHOREO-03, CHOREO-06 | 0.56 | [source](../../../../src/Compliance.Core/Features/AccessControl/Reactors/RetiredMemberGrantReactor.cs) |
+| RetiredTeamAssignmentReactor | CHOREO-03, CHOREO-06 | 0.54 | [source](../../../../src/Compliance.Core/Features/AccessControl/Reactors/RetiredTeamAssignmentReactor.cs) |
+| RoleCleanupReactor | CHOREO-06 | 0.64 | [source](../../../../src/Compliance.Core/Features/AccessControl/Reactors/RoleCleanupReactor.cs) |
+| TeamCleanupReactor | CHOREO-06 | 0.53 | [source](../../../../src/Compliance.Core/Features/AccessControl/Reactors/TeamCleanupReactor.cs) |
+| TenantRbacBootstrapReactor | — | 0.54 | [source](../../../../src/Compliance.Core/Features/AccessControl/Reactors/TenantRbacBootstrapReactor.cs) |
 | ApplicationImportExecutionReactor | CHOREO-05 | 0.35 |  |
-| LinkImpactReviewWorkReactor | CHOREO-09 | 0.49 | [source](../../../../src/Compliance.Core/Features/Changes/LinkImpactReviewWorkReactor.cs) |
-| SystemDescriptionDecisionReactor | CHOREO-09 | 0.57 | [source](../../../../src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs) |
-| ControlEvaluationDeviationFindingReactor | — | 0.30 | [source](../../../../src/Compliance.Core/Features/Evaluations/ControlEvaluationDeviationFindingReactor.cs) |
-| EvidenceArtifactInspectionEffectsReactor | — | 0.49 | [source](../../../../src/Compliance.Core/Features/Evidence/EvidenceArtifactInspectionEffectsReactor.cs) |
-| ControlOccurrenceFindingReactor | — | 0.32 | [source](../../../../src/Compliance.Core/Features/Remediation/ControlOccurrenceFindingReactor.cs) |
-| BoundaryRiskReassessmentReactor | — | 0.53 | [source](../../../../src/Compliance.Core/Features/Risks/BoundaryRiskReassessmentReactor.cs) |
-| RiskMethodReassessmentReactor | — | 0.41 | [source](../../../../src/Compliance.Core/Features/Risks/RiskMethodReassessmentReactor.cs) |
+| LinkImpactReviewWorkReactor | CHOREO-09 | 0.49 | [source](../../../../src/Compliance.Core/Features/Changes/Reactors/LinkImpactReviewWorkReactor.cs) |
+| SystemDescriptionDecisionReactor | CHOREO-09 | 0.57 | [source](../../../../src/Compliance.Core/Features/Changes/Reactors/SystemDescriptionDecisionReactor.cs) |
+| ControlEvaluationDeviationFindingReactor | — | 0.30 | [source](../../../../src/Compliance.Core/Features/Evaluations/Reactors/ControlEvaluationDeviationFindingReactor.cs) |
+| EvidenceArtifactInspectionEffectsReactor | — | 0.49 | [source](../../../../src/Compliance.Core/Features/Evidence/Reactors/EvidenceArtifactInspectionEffectsReactor.cs) |
+| ControlOccurrenceFindingReactor | — | 0.32 | [source](../../../../src/Compliance.Core/Features/Remediation/Reactors/ControlOccurrenceFindingReactor.cs) |
+| BoundaryRiskReassessmentReactor | — | 0.53 | [source](../../../../src/Compliance.Core/Features/Risks/Reactors/BoundaryRiskReassessmentReactor.cs) |
+| RiskMethodReassessmentReactor | — | 0.41 | [source](../../../../src/Compliance.Core/Features/Risks/Reactors/RiskMethodReassessmentReactor.cs) |
 | TenantInvitationDeliveryReactor | CHOREO-07 | 0.67 | (removed in #1022) |
-| TenantInvitationReactor | — | 0.63 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantInvitationReactor.cs) |
-| TenantRegistrationReactor | CHOREO-08 | 0.60 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs) |
-| TenantSelfServiceActivationReactor | — | 0.68 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantSelfServiceActivationReactor.cs) |
-| TenantSlugReactor | CHOREO-08 | 0.42 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs) |
-| EmailChallengeDeliveryReactor (now the root reactor of EmailChallengeDeliveryProcess; delivery receipts are ledger state, #1022 S17) | CHOREO-07, ACCESS-13 | 0.62 | [source](../../../../src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryProcess.cs) |
-| EmailReservationReactor | — | 0.52 | [source](../../../../src/Compliance.Core/Features/UserIdentities/EmailReservationReactor.cs) |
-| IdentityRecoveryNoticeReactor (replaced by the SendIdentityRecoveryNotice receiver of IdentityRecoveryProcess, #1022 S4) | CHOREO-01, CHOREO-07 | 0.58 | [source](../../../../src/Compliance.Core/Features/UserIdentities/IdentityRecoveryProcess.cs) |
+| TenantInvitationReactor | — | 0.63 | [source](../../../../src/Compliance.Core/Features/Tenants/Reactors/TenantInvitationReactor.cs) |
+| TenantRegistrationReactor | CHOREO-08 | 0.60 | [source](../../../../src/Compliance.Core/Features/Tenants/Reactors/TenantRegistrationReactor.cs) |
+| TenantSelfServiceActivationReactor | — | 0.68 | [source](../../../../src/Compliance.Core/Features/Tenants/Reactors/TenantSelfServiceActivationReactor.cs) |
+| TenantSlugReactor | CHOREO-08 | 0.42 | [source](../../../../src/Compliance.Core/Features/Tenants/Reactors/TenantSlugReactor.cs) |
+| EmailChallengeDeliveryReactor (now the root reactor of EmailChallengeDeliveryProcess; delivery receipts are ledger state, #1022 S17) | CHOREO-07, ACCESS-13 | 0.62 | [source](../../../../src/Compliance.Core/Features/UserIdentities/Processes/EmailChallengeDeliveryProcess.cs) |
+| EmailReservationReactor | — | 0.52 | [source](../../../../src/Compliance.Core/Features/UserIdentities/Reactors/EmailReservationReactor.cs) |
+| IdentityRecoveryNoticeReactor (replaced by the SendIdentityRecoveryNotice receiver of IdentityRecoveryProcess, #1022 S4) | CHOREO-01, CHOREO-07 | 0.58 | [source](../../../../src/Compliance.Core/Features/UserIdentities/Processes/IdentityRecoveryProcess.cs) |
 
 ### Removed baseline reactor classes
 
