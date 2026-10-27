@@ -53504,13 +53504,13 @@
       "currentConstructionSites": [
         {
           "type": "LocationNameClaim",
-          "path": "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs",
+          "path": "src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs",
           "line": 43,
           "persistentOwner": true
         }
       ],
       "currentRegisteredEmitters": [
-        "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs"
+        "src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs"
       ],
       "selectedDirectCommands": [],
       "remainingOwnerPolicyCommands": [],
@@ -53741,13 +53741,13 @@
       "currentConstructionSites": [
         {
           "type": "LocationNameClaim",
-          "path": "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs",
+          "path": "src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs",
           "line": 54,
           "persistentOwner": true
         }
       ],
       "currentRegisteredEmitters": [
-        "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs"
+        "src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs"
       ],
       "selectedDirectCommands": [],
       "remainingOwnerPolicyCommands": [],
@@ -60556,13 +60556,13 @@
       "currentConstructionSites": [
         {
           "type": "OperationalProcessNameClaim",
-          "path": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs",
+          "path": "src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs",
           "line": 43,
           "persistentOwner": true
         }
       ],
       "currentRegisteredEmitters": [
-        "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs"
+        "src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs"
       ],
       "selectedDirectCommands": [],
       "remainingOwnerPolicyCommands": [],
@@ -60793,13 +60793,13 @@
       "currentConstructionSites": [
         {
           "type": "OperationalProcessNameClaim",
-          "path": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs",
+          "path": "src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs",
           "line": 54,
           "persistentOwner": true
         }
       ],
       "currentRegisteredEmitters": [
-        "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs"
+        "src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs"
       ],
       "selectedDirectCommands": [],
       "remainingOwnerPolicyCommands": [],
@@ -72279,13 +72279,13 @@
       "currentConstructionSites": [
         {
           "type": "ProviderNameClaim",
-          "path": "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs",
+          "path": "src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs",
           "line": 49,
           "persistentOwner": true
         }
       ],
       "currentRegisteredEmitters": [
-        "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs"
+        "src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs"
       ],
       "selectedDirectCommands": [],
       "remainingOwnerPolicyCommands": [],
@@ -72516,13 +72516,13 @@
       "currentConstructionSites": [
         {
           "type": "ProviderNameClaim",
-          "path": "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs",
+          "path": "src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs",
           "line": 60,
           "persistentOwner": true
         }
       ],
       "currentRegisteredEmitters": [
-        "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs"
+        "src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs"
       ],
       "selectedDirectCommands": [],
       "remainingOwnerPolicyCommands": [],

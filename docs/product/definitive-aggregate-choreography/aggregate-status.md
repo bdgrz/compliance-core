@@ -74,14 +74,14 @@ Priority is mapped only when an aggregate is named in a backlog story's body; Co
 | `IndependenceRuleRatificationCatalog` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/AccessControl/Aggregates/IndependenceRuleRatificationCatalog.cs` |
 | `InformationAsset` | Source present; target conformance not verified | P0 (R1-12) | `src/Compliance.Core/Features/TechnologyInventory/Aggregates/InformationAsset.cs` |
 | `Location` | Source present; target conformance not verified | P0 (R1-02)<br>P0 (R1-12) | `src/Compliance.Core/Features/TechnologyInventory/Aggregates/Location.cs` |
-| `LocationNameClaim` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs` |
+| `LocationNameClaim` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs` |
 | `ManagementAssertion` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Examinations/Aggregates/ManagementAssertion.cs` |
 | `ManagementRepresentationLetter` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Examinations/Aggregates/ManagementRepresentationLetter.cs` |
 | `Member` | Done (aggregate scope): Jev reviewed; 61 focused tests pass | P0 (R1-04)<br>P0 (R1-15)<br>P0 (R2-06)<br>P2 (T1-03)<br>P1 (T2-05) | `src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs` |
 | `MethodologyTemplate` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs` |
 | `MethodologyTemplateContribution` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateContribution.cs` |
 | `OperationalProcess` | Source present; target conformance not verified | P0 (R1-02)<br>P0 (R1-12) | `src/Compliance.Core/Features/TechnologyInventory/Aggregates/OperationalProcess.cs` |
-| `OperationalProcessNameClaim` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs` |
+| `OperationalProcessNameClaim` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs` |
 | `PartnerIndependenceDecision` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/AccessControl/Aggregates/PartnerIndependenceDecision.cs` |
 | `Person` | Source present; target conformance not verified | P0 (R1-02)<br>P0 (R1-11)<br>P0 (R2-06)<br>P1 (T2-05) | `src/Compliance.Core/Features/Workforce/Aggregates/Person.cs` |
 | `PlatformOperatorRoster` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Tenants/Aggregates/PlatformOperatorRoster.cs` |
@@ -97,7 +97,7 @@ Priority is mapped only when an aggregate is named in a backlog story's body; Co
 | `ProviderAssuranceGap` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Providers/Aggregates/ProviderAssuranceGap.cs` |
 | `ProviderAssuranceReport` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Providers/Aggregates/ProviderAssuranceReport.cs` |
 | `ProviderAssuranceReview` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Providers/Aggregates/ProviderAssuranceReview.cs` |
-| `ProviderNameClaim` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Providers/ProviderNameClaim.cs` |
+| `ProviderNameClaim` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs` |
 | `ProviderRiskAcceptance` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Providers/Aggregates/ProviderRiskAcceptance.cs` |
 | `ReadinessAssessment` | Source present; target conformance not verified | P0 (R1-08) | `src/Compliance.Core/Features/Readiness/Aggregates/ReadinessAssessment.cs` |
 | `ReadinessGapPlan` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Readiness/Aggregates/ReadinessGapPlan.cs` |

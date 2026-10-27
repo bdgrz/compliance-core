@@ -4860,11 +4860,11 @@
       "reducers": [
         {
           "aggregate": "LocationNameClaim",
-          "source": "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs"
+          "source": "src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs"
+        "src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -4876,11 +4876,11 @@
       "reducers": [
         {
           "aggregate": "LocationNameClaim",
-          "source": "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs"
+          "source": "src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs"
+        "src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -5419,11 +5419,11 @@
       "reducers": [
         {
           "aggregate": "OperationalProcessNameClaim",
-          "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs"
+          "source": "src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs"
+        "src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -5435,11 +5435,11 @@
       "reducers": [
         {
           "aggregate": "OperationalProcessNameClaim",
-          "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs"
+          "source": "src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs"
+        "src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -6441,11 +6441,11 @@
       "reducers": [
         {
           "aggregate": "ProviderNameClaim",
-          "source": "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs"
+          "source": "src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs"
+        "src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs"
@@ -6459,11 +6459,11 @@
       "reducers": [
         {
           "aggregate": "ProviderNameClaim",
-          "source": "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs"
+          "source": "src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs"
+        "src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs"
@@ -11149,7 +11149,7 @@
     },
     {
       "aggregate": "LocationNameClaim",
-      "source": "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs",
+      "source": "src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs",
       "appliedFacts": [
         "LocationNameClaimed",
         "LocationNameReleased"
@@ -11308,7 +11308,7 @@
     },
     {
       "aggregate": "OperationalProcessNameClaim",
-      "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs",
+      "source": "src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs",
       "appliedFacts": [
         "OperationalProcessNameClaimed",
         "OperationalProcessNameReleased"
@@ -11720,7 +11720,7 @@
     },
     {
       "aggregate": "ProviderNameClaim",
-      "source": "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs",
+      "source": "src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs",
       "appliedFacts": [
         "ProviderNameClaimed",
         "ProviderNameReleased"

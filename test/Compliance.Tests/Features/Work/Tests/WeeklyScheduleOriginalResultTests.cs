@@ -46,18 +46,23 @@ namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
 
 public sealed class WeeklyScheduleOriginalResultTests
 {
-    static readonly DateOnly WeekStarting = new(2026, 10, 12);
+    static DateOnly CurrentWeekStarting(WeeklyWorkDigestCommandHandlerTests.Fixture fixture)
+    {
+        var today = DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime);
+        return today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+    }
 
     [Fact]
     public async Task ShouldReturnOriginalPageResultGivenSameScheduleRequestIsRepeated()
     {
         // Arrange
         await using var fixture = new WeeklyWorkDigestCommandHandlerTests.Fixture();
+        var weekStarting = CurrentWeekStarting(fixture);
         var user = Uuid.CreateVersion4();
         await fixture.SeedRecipientAsync(user, verifiedEmail: true);
         var directory = new Directory(fixture.TenantId, [new TenantMembershipView(user, fixture.TenantId)]);
         var handler = fixture.ScheduleHandler(directory);
-        var request = new ScheduleWeeklyWorkDigest(fixture.TenantId, WeekStarting, "original-page");
+        var request = new ScheduleWeeklyWorkDigest(fixture.TenantId, weekStarting, "original-page");
         var first = await handler.HandleAsync(WeeklyWorkDigestCommandHandlerTests.Fixture.ScheduleContext(request), CancellationToken.None);
         Assert.True(first.IsSuccess, first.Error?.Message);
         Assert.Equal(1, first.Value.DigestsScheduled);
@@ -75,9 +80,10 @@ public sealed class WeeklyScheduleOriginalResultTests
     {
         // Arrange
         await using var fixture = new WeeklyWorkDigestCommandHandlerTests.Fixture();
+        var weekStarting = CurrentWeekStarting(fixture);
         var directory = new Directory(fixture.TenantId, []);
         var handler = fixture.ScheduleHandler(directory);
-        var request = new ScheduleWeeklyWorkDigest(fixture.TenantId, WeekStarting, "original-empty-page");
+        var request = new ScheduleWeeklyWorkDigest(fixture.TenantId, weekStarting, "original-empty-page");
         var first = await handler.HandleAsync(WeeklyWorkDigestCommandHandlerTests.Fixture.ScheduleContext(request), CancellationToken.None);
         Assert.True(first.IsSuccess, first.Error?.Message);
         Assert.Equal(new WorkDigestSchedulePageView(0, 0, 0, null), first.Value);
@@ -92,7 +98,7 @@ public sealed class WeeklyScheduleOriginalResultTests
         Assert.True(retry.IsSuccess, retry.Error?.Message);
         Assert.Equal(first.Value, retry.Value);
         var owner = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.TenantId,
-            WeeklyWorkDigest.IdFor(fixture.TenantId, RbacIds.Member(fixture.TenantId, user), WeekStarting)));
+            WeeklyWorkDigest.IdFor(fixture.TenantId, RbacIds.Member(fixture.TenantId, user), weekStarting)));
         Assert.Equal(0UL, owner.Version);
     }
 
@@ -101,8 +107,9 @@ public sealed class WeeklyScheduleOriginalResultTests
     {
         // Arrange
         await using var fixture = new WeeklyWorkDigestCommandHandlerTests.Fixture();
+        var weekStarting = CurrentWeekStarting(fixture);
         var handler = fixture.ScheduleHandler(new Directory(fixture.TenantId, []));
-        var request = new ScheduleWeeklyWorkDigest(fixture.TenantId, WeekStarting, "original-previous-week");
+        var request = new ScheduleWeeklyWorkDigest(fixture.TenantId, weekStarting, "original-previous-week");
         var first = await handler.HandleAsync(WeeklyWorkDigestCommandHandlerTests.Fixture.ScheduleContext(request), CancellationToken.None);
         Assert.True(first.IsSuccess, first.Error?.Message);
         fixture.Clock.Set(fixture.Clock.GetUtcNow().AddDays(7));

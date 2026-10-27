@@ -50128,7 +50128,7 @@
     },
     {
       "type": "LocationNameClaim",
-      "path": "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs",
+      "path": "src/Compliance.Core/Features/TechnologyInventory/Services/LocationNameClaim.cs",
       "line": 13,
       "sha256": "23df9541e024a0d68907e13bec6ab1c9e48f2b084ca44384f2d2edacb7b3b48a",
       "coveragePointer": "/aggregates/65",
@@ -50261,7 +50261,7 @@
     },
     {
       "type": "OperationalProcessNameClaim",
-      "path": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs",
+      "path": "src/Compliance.Core/Features/TechnologyInventory/Processes/OperationalProcessNameClaim.cs",
       "line": 13,
       "sha256": "a85dfc08381aa7c8a9237fb75839dd734cecc216298b09eae54aa6a5a83e5e5b",
       "coveragePointer": "/aggregates/72",
@@ -50599,7 +50599,7 @@
     },
     {
       "type": "ProviderNameClaim",
-      "path": "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs",
+      "path": "src/Compliance.Core/Features/Providers/Services/ProviderNameClaim.cs",
       "line": 13,
       "sha256": "1aabbc66ab6108333ffb6e0ba34df379588343b3d8cae36e49927e42a52c789b",
       "coveragePointer": "/aggregates/89",

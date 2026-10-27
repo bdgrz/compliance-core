@@ -74,12 +74,13 @@ public sealed partial class GenerateAuditPopulationExportHandlerTests
         // Assert
         Assert.True(retry.IsSuccess, retry.Error?.Message);
         Assert.Equal(EvidenceArtifactStates.Available, current.State);
-        Assert.Equal(first.Value, retry.Value);
+        Assert.Equal(first.Value.Export, retry.Value.Export);
+        Assert.Equal(EvidenceArtifactStates.Available, retry.Value.ArtifactState);
         Assert.Equal(1, fixture.Inspector.Calls);
     }
 
     [Fact]
-    public async Task ShouldKeepPopulationRevisionIndependentGivenAuditPopulationExportProcessNativeBoundary()
+    public async Task ShouldKeepFrozenPopulationContentIndependentGivenAuditPopulationExportProcessNativeBoundary()
     {
         // Arrange
         await using var fixture = new Fixture(ArtifactInspectionState.Clean);
@@ -93,7 +94,7 @@ public sealed partial class GenerateAuditPopulationExportHandlerTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(before.Revision, after.Revision);
+        Assert.Equal(before.Current!.Current!.Version, after.Current!.Current!.Version);
         Assert.Equal(before.Current!.Current!.ContentSha256, after.Current!.Current!.ContentSha256);
     }
 }
