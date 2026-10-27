@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Models;
 
 /// <summary>
 ///     The immutable candidate frozen when the recovery challenge is claimed: both proofs were verified, only

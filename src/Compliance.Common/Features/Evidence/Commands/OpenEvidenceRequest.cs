@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Commands;
 
 /// <summary>
 ///     Asks a member for one piece of evidence by a due date, optionally for one control. The caller chooses

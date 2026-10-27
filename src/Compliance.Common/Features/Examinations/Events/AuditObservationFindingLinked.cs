@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Events;
 
 /// <summary>Links an exact finding source revision without taking ownership of its remediation.</summary>
 [Discriminator("bdgrz.examinations.audit-observation-finding-linked", 2)]

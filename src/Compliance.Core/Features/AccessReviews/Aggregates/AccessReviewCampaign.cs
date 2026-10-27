@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Events;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Aggregates;
 
 /// <summary>
 ///     One access-review campaign: its launch snapshot (as verified content), the audience and item manifest, and the

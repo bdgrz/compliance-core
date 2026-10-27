@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Events;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Reactors;
 
 /// <summary>
 ///     Starts <c>IndependentChildMaterialization</c> from a committed corrective action admission. The process record

@@ -1,3 +1,11 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Events;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Aggregates;
+using Bdgrz.Compliance.Features.Operations.Commands;
+using Bdgrz.Compliance.Features.Operations.Handlers;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPopulations;

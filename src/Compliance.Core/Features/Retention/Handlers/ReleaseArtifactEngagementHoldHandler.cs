@@ -1,6 +1,12 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Retention.Aggregates;
+using Bdgrz.Compliance.Features.Retention.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Handlers;
 
 sealed class ReleaseArtifactEngagementHoldHandler(IAggregateExecutor executor, TimeProvider clock)
     : IRequestHandler<ReleaseArtifactEngagementHold>

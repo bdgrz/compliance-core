@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Commands;
 
 /// <summary>
 ///     The action owner, or a program manager, records the completed corrective work on the action's own owner.

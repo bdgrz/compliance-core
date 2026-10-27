@@ -1,3 +1,13 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Authorizers;
+using Bdgrz.Compliance.Features.Workforce.Commands;
+using Bdgrz.Compliance.Features.Workforce.Handlers;
+using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Queries;
+using Bdgrz.Compliance.Features.Workforce.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Tests.Testing;
@@ -368,13 +378,14 @@ public sealed class WorkforceSourceHandlerTests
 
     sealed class Fixture : IAsyncDisposable
     {
+        AsyncServiceScope _personScope;
         public ServiceProvider Provider { get; private set; } = null!;
         public SourcePermissions Permissions { get; } = new();
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public Uuid PersonId { get; } = Uuid.CreateVersion4();
         public ActorReference Author => ActorReference.ForMember(RbacIds.Member(TenantId, UserId), "Author");
-        public FitzPersonDirectory People { get; } = new(new InMemoryKvClient());
+        public FitzPersonDirectory People { get; private set; } = null!;
         public FitzWorkRelationshipDirectory Relationships { get; } = new(new InMemoryKvClient());
         public FitzServiceIdentityDirectory Identities { get; } = new(new InMemoryKvClient());
         public FitzWorkforceSourceDirectory Sources { get; } = new(new InMemoryKvClient());
@@ -395,7 +406,7 @@ public sealed class WorkforceSourceHandlerTests
                     var store = new InMemoryEventStore();
                     services.AddSingleton<IEventStore>(store);
                     services.AddSingleton<IDomainEventReader>(store);
-                    services.AddSingleton<IPersonDirectoryReader>(fixture.People);
+                    services.AddSingleton<IPersonDirectoryReader>(_ => fixture.People);
                     services.AddSingleton<IWorkRelationshipDirectoryReader>(fixture.Relationships);
                     services.AddSingleton<IServiceIdentityDirectoryReader>(fixture.Identities);
                     services.AddSingleton<IWorkforceSourceDirectoryReader>(fixture.Sources);
@@ -405,6 +416,9 @@ public sealed class WorkforceSourceHandlerTests
                     services.AddScoped<WorkforceSourceReadConsistency>();
                     services.AddScoped<WorkforceSourceTargets>();
                 });
+            fixture._personScope = fixture.Provider.CreateAsyncScope();
+            fixture.People = new FitzPersonDirectory(new InMemoryKvClient(),
+                fixture._personScope.ServiceProvider.GetRequiredService<PersonReader>());
             await ProgramManagementServices.SeedAsync(fixture.Provider, new PersonRules(fixture.TenantId,
                 fixture.PersonId), person => person.Record("Ada", "ada@example.com", fixture.Author, DateTimeOffset.UtcNow));
             await fixture.ProjectPeopleAsync();
@@ -443,7 +457,11 @@ public sealed class WorkforceSourceHandlerTests
             await batch.CommitAsync(new ProjectionCheckpoint(cursor));
         }
 
-        public ValueTask DisposeAsync() => Provider.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            await _personScope.DisposeAsync();
+            await Provider.DisposeAsync();
+        }
     }
 
     sealed class SourcePermissions : IPermissionAuthorizer

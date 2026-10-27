@@ -1,10 +1,16 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Processes;
 
 /// <summary>
 ///     The ordered location name-change process: claim the names the change needs in canonical key order and hold them

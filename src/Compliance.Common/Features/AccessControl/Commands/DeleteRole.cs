@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>
 ///     Deletes a role from a tenant. Built-in roles cannot be deleted. <paramref name="CommandId" /> is the logical

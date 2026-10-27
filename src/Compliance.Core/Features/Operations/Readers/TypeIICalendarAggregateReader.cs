@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Operations.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Readers;
 
 /// <summary>Finalizes calendar raw transition validation for direct reads and executor-internal hydration alike.</summary>
 public sealed class TypeIICalendarAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

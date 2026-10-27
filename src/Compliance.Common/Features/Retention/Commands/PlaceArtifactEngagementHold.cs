@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Retention;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Commands;
 
 /// <summary>Records the place artifact engagement hold intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.retention.place-artifact-engagement-hold", 1)]

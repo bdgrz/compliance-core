@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Aggregates;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Events;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Queries;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 using System.Text.Json;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;

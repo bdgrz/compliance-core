@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.SourceUse;
@@ -92,7 +96,7 @@ public static class ProfessionalDutyHistory
         owner.ReplayCut.Confirm(owner, digest);
         return new ProfessionalDutyHistorySnapshot(facts, accepted, terminal);
 
-        void Complete(DomainEvent fact, Uuid id, Proofs.ImmutableContentRef intent, ulong next, bool revoking)
+        void Complete(DomainEvent fact, Uuid id, Proofs.Models.ImmutableContentRef intent, ulong next, bool revoking)
         {
             var native = (INativeOperationFact)fact;
             if (pending is null || id != native.Operation.RootOperationId || intent != pending.Intent ||

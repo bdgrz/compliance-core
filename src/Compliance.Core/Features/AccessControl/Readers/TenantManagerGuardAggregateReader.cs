@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>Seeds the exact immutable baseline, then certifies full guard history before any current/read/replay authority escapes.</summary>
 public sealed class TenantManagerGuardAggregateReader(IAggregateReader inner, IDomainEventReader events,

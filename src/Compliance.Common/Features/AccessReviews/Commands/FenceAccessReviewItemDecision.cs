@@ -1,9 +1,14 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Events;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Commands;
 
 /// <summary>
 ///     Fences one item against a canceled batch, including an item the batch never held, so a delayed hold or apply

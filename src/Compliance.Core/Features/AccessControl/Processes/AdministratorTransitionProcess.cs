@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Processes;
 
 /// <summary>
 ///     The ordered administrator transition process. Its roots are the three guard facts that admit a transition;

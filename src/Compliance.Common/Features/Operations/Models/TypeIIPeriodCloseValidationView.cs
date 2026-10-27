@@ -1,9 +1,11 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Immutable period-close reconciliation and validator attribution.</summary>
 public sealed record TypeIIPeriodCloseValidationView(

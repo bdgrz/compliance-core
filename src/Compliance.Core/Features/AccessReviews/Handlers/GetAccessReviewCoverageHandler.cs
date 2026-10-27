@@ -1,7 +1,17 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Projections;
+using Bdgrz.Compliance.Features.AccessReviews.Queries;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Readers;
 using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Handlers;
 
 /// <summary>
 ///     Reconciles every instance of an application to its effective scope and either an accepted

@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.Policies.Aggregates;
+using Bdgrz.Compliance.Features.Retention;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Retention.Events;
+using Bdgrz.Compliance.Features.Retention.Models;
 using System.Collections.ObjectModel;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Aggregates;
 
 /// <summary>One approved disposal intent and its durable, retryable storage execution history.</summary>
 public sealed class ArtifactDisposition : Aggregate

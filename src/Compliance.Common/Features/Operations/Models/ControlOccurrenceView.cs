@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>
 ///     One control occurrence: an expected period from the approved cadence or an event-driven or

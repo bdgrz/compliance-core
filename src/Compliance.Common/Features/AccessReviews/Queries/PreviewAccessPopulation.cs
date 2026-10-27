@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Queries;
 
 /// <summary>Shows invalid, duplicate, incomplete, and ambiguous facts and the derived effective access before acceptance.</summary>
 [Discriminator("bdgrz.access_population.preview", 1)]

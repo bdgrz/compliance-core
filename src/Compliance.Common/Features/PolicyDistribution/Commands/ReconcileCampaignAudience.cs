@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Commands;
 
 /// <summary>
 ///     Compares a later frozen roster snapshot with the campaign population and records joiner,

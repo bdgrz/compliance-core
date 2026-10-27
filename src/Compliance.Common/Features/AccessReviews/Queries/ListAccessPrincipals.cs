@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Queries;
 
 /// <summary>Lists an accepted population's principals with classification, proposals, and open gaps.</summary>
 [Discriminator("bdgrz.access_population.principals.list", 1)]

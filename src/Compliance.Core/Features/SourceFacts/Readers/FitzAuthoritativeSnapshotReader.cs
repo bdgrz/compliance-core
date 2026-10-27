@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SourceFacts;
+namespace Bdgrz.Compliance.Features.SourceFacts.Readers;
 
 /// <summary>
 /// Fixed-cut reads over <see cref="IStreamClient"/>. Fitz continuation tokens apply only to global selectors, so

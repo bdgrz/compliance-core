@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Commands;
 
 /// <summary>Records an attributed source snapshot and its complete, individually inspectable rows.</summary>
 [Discriminator("bdgrz.audit-populations.record-audit-population-facts", 3)]

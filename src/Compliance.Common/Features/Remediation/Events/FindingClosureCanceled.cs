@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Events;
 
 /// <summary>
 ///     A pending closure ended before it closed the finding. The fact is the local receiver fence: a delayed

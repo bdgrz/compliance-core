@@ -1,6 +1,13 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Readers;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Queries;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Handlers;
 
 public sealed class ListAccessExpectationsHandler(AccessExpectationsReader expectations,
     IApplicationDirectoryReader applications, RestrictedApplicationVisibility visibility)

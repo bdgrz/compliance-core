@@ -1,9 +1,14 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Aggregates;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Handlers;
 
 /// <summary>
 ///     Creates one attributed draft handoff for a program's compliance lead. The handoff identity is the logical

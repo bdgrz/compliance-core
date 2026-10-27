@@ -1,10 +1,18 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Operations.Commands;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Handlers;
 
 /// <summary>
 ///     Records the reviewer's own independent decision; HTTP-only. Only the plan's reviewer or a

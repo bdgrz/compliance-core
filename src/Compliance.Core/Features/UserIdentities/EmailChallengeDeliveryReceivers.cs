@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
 /// <summary>The receiver names of the email challenge delivery process, as the process catalog spells them.</summary>

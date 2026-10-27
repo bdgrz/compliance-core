@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Responsibilities;
+namespace Bdgrz.Compliance.Features.Responsibilities.Queries;
 
 [Discriminator("bdgrz.responsibilities.conflicts.preview", 1)]
 public sealed record PreviewResponsibilityConflicts(Uuid TenantId, Uuid MemberUserId,

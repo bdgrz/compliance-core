@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Events;
 
 /// <summary>Records the GovernanceReviewScheduled domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.operations.governance-review-scheduled", 1)]

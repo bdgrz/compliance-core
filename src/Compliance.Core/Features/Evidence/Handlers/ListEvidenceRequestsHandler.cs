@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Queries;
+using Bdgrz.Compliance.Features.Evidence.Readers;
 using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Handlers;
 
 /// <summary>Lists the program's evidence requests in the order opened, composed from their own owner streams.</summary>
 public sealed class ListEvidenceRequestsHandler(EvidenceRequestReader requests)

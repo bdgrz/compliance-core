@@ -1,6 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Projectors;
 
 /// <summary>Projects each applied designation change into the catalog read model.</summary>
 sealed partial class FirmProfessionalDutyDirectoryProjector(IFirmProfessionalDutyDirectoryProjection projection,

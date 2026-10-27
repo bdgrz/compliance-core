@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Readers;
 
 /// <summary>Finalizes the same complete lineage/source cut before explicit reads and executor-internal hydration.</summary>
 public sealed class EvidenceRedactionAggregateReader(IAggregateReader inner, IDomainEventReader events,

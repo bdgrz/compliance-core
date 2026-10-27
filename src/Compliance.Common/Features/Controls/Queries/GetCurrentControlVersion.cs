@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Queries;
 
 [Discriminator("bdgrz.control.version.current.get", 1)]
 public sealed record GetCurrentControlVersion(Uuid TenantId, Uuid ProgramId, Uuid ControlId)

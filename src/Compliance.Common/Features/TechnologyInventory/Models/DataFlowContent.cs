@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>
 ///     A flow from a component or system instance to a data store component or an external

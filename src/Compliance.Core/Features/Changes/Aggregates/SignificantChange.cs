@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Events;
+using Bdgrz.Compliance.Features.Changes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Aggregates;
 
 /// <summary>Compact native change authority. Governed references, assessments and history remain immutable content.</summary>
 public sealed class SignificantChange : Aggregate

@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 
-namespace Bdgrz.Compliance.Features.SourceFacts;
+namespace Bdgrz.Compliance.Features.SourceFacts.Readers;
 
 /// <summary>
 /// Backend-internal reader that captures one committed global cut and then reads required native facts at or below

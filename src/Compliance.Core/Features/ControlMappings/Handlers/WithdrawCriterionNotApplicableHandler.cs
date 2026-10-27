@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.ControlMappings;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
+using Bdgrz.Compliance.Features.ControlMappings.Commands;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
@@ -6,7 +13,7 @@ using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Handlers;
 
 /// <summary>
 ///     Restores an accepted not-applicable criterion to coverage while keeping its history. The withdrawal names the

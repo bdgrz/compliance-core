@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>A causal lifecycle receipt that supplies no refreshed professional authority.</summary>
 public sealed record AssignmentIndependenceReevaluationView(Uuid ReevaluationId, Uuid TenantId,

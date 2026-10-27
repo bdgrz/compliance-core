@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Commitments.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Commands;
 
 [Discriminator("bdgrz.commitment.draft.create", 2)]
 public sealed record CreateCommitmentDraft(Uuid DraftId, Uuid TenantId, Uuid ProgramId, Uuid ServiceId,

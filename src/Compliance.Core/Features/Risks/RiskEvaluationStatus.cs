@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Models;
 namespace Bdgrz.Compliance.Features.Risks;
 
 /// <summary>Evaluates time-dependent status: acceptance expiry and annual reassessment.</summary>

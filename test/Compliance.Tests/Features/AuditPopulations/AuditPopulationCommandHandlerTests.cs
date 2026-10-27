@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
+using Bdgrz.Compliance.Features.AuditPopulations.Handlers;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Readers;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPopulations;
@@ -275,7 +280,7 @@ public sealed class AuditPopulationCommandHandlerTests
         public Uuid ProgramId => _canonical.ProgramId;
         public Uuid UserId => _canonical.UserId;
         public Uuid ControlId => _canonical.ControlId;
-        public Bdgrz.Compliance.Features.AuditPopulations.AuditPopulationReader Populations => _canonical.Populations;
+        public Bdgrz.Compliance.Features.AuditPopulations.Readers.AuditPopulationReader Populations => _canonical.Populations;
         public IAggregateReader Reader => _canonical.Reader;
         public IAggregateWriter Writer => _canonical.Writer;
         public IAggregateExecutor Executor => _canonical.Executor;

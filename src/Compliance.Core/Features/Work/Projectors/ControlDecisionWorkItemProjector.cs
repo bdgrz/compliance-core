@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Controls.Events;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
+using Bdgrz.Compliance.Features.Work.Projections;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Projectors;
 
 public sealed partial class ControlDecisionWorkItemProjector(
     IControlDecisionWorkItemProjection projection)

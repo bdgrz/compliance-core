@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>Proposes ending future use of one exact approved control version.</summary>
 public sealed record ControlRetirementProposedContent(Uuid TenantId, Uuid ProgramId, Uuid ControlId,

@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Projectors;
+using Bdgrz.Compliance.Features.Applications.Queries;
+using Bdgrz.Compliance.Features.Applications.Readers;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.SourceFacts;
@@ -106,8 +113,8 @@ public sealed class ApplicationImportCompositionTests
         public IImmutableContentStore Content => _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
 
         /// <summary>Sends a personal HTTP 202 command, as the accepted routes do.</summary>
-        public ValueTask<Result<Bdgrz.Compliance.Features.NativeOperations.OperationAcceptedResponse>> SendPersonalAcceptedAsync(
-            IRequest<Bdgrz.Compliance.Features.NativeOperations.OperationAcceptedResponse> request) =>
+        public ValueTask<Result<Bdgrz.Compliance.Features.NativeOperations.Models.OperationAcceptedResponse>> SendPersonalAcceptedAsync(
+            IRequest<Bdgrz.Compliance.Features.NativeOperations.Models.OperationAcceptedResponse> request) =>
             Bus.DispatchAsync(request, new RequestDispatchContext(Actor, new HttpInvocation("PUT", "/synthetic/import",
                 "/synthetic/import", "synthetic")), CancellationToken.None);
 

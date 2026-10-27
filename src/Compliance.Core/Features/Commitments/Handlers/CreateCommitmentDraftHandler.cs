@@ -1,7 +1,12 @@
+using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Commands;
+using Bdgrz.Compliance.Features.Commitments.Models;
 using Bdgrz.Compliance.Features.Providers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Handlers;
 
 public sealed class CreateCommitmentDraftHandler(CommitmentOperations operations, ProviderSource providers)
     : IRequestHandler<CreateCommitmentDraft, CommitmentDraftRegistration>

@@ -1,3 +1,13 @@
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.SourceUse.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Independence;
@@ -9,7 +19,7 @@ using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Handlers;
 
 /// <summary>
 ///     Records the acting member's own verification and closure decision; HTTP-only. Admission seals action admission

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Events;
 
 /// <summary>Retains a received auditor correction while preserving its predecessor in source history.</summary>
 [Discriminator("bdgrz.examinations.audit-observation-corrected", 1)]

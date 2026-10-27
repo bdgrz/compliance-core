@@ -1,9 +1,14 @@
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Events;
 
 [Discriminator("bdgrz.policy.draft.created", 2)]
 public sealed record PolicyDraftCreated(Uuid TenantId, Uuid ProgramId, Uuid PolicyId,

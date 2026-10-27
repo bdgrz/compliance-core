@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Events;
+using Bdgrz.Compliance.Features.Remediation.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -5,7 +12,7 @@ using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Handlers;
 
 /// <summary>
 ///     Materializes one admitted corrective action on its own owner at revision one. The frozen admission intent is read

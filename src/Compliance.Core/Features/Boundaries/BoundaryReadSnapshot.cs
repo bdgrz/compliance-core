@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Boundaries.Aggregates;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Cntryl.Portia;
 

@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Projections;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Readers;
 
 /// <summary>
 ///     Serves the "TenantMembership" projector: writes join its batch transaction, and query-side

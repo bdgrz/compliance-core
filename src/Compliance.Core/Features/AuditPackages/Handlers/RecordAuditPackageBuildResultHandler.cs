@@ -1,3 +1,11 @@
+using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.AuditPackages.Aggregates;
+using Bdgrz.Compliance.Features.AuditPackages.Commands;
+using Bdgrz.Compliance.Features.AuditPackages.Events;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Kernel;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Artifacts;
@@ -8,7 +16,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Handlers;
 
 /// <summary>Records only a durable successful output whose actual ZIP verifies against the original admission.</summary>
 public sealed class RecordAuditPackageBuildResultHandler(AuditPackageSourceVerifier verifier,

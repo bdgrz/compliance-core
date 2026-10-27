@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Policies.Queries;
+using Bdgrz.Compliance.Features.Policies.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Handlers;
 
 /// <summary>
 ///     Lists a program's policies from the projection after proving it reached the source, and

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Models;
 
 /// <summary>
 ///     A linked, time-bounded acceptance owned elsewhere: a risk_acceptance (R1-07) or a

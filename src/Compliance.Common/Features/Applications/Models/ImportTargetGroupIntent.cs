@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>
 ///     One canonical target group: every frozen row of one application in original row order, the baseline revision

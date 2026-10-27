@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Commands;
+using Bdgrz.Compliance.Features.Commitments.Handlers;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Commitments.Queries;
+using Bdgrz.Compliance.Features.Commitments.Readers;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Commitments;
 using Cntryl.Fitz;

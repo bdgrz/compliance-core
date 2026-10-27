@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Events;
 
 [Discriminator("bdgrz.rbac.member.suspended", 1)]
 public sealed record MemberSuspended(Uuid TenantId, Uuid MemberId, Uuid UserId,

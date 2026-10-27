@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Snapshots.Aggregates;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Snapshots;

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>A created review-work identity linked to one assessed change version.</summary>
 public sealed record SignificantChangeWorkLinkView(

@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Events;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>Registers the replacement identity for the account, or returns the proof of its existing same-account registration.</summary>
 [Discriminator("bdgrz.identity-recovery.register-recovered-identity", 1)]

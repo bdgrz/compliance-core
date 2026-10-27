@@ -1,9 +1,14 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
 
 /// <summary>Compact authority for one proposal, its independent review and its immutable platform acceptance.</summary>
 public sealed class MethodologyTemplateContribution : Aggregate

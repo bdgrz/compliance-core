@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -5,7 +12,7 @@ using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Reactors;
 
 /// <summary>
 ///     Carries an accepted cancellation to its end. The batch's own cancellation fact already blocks a later commit;

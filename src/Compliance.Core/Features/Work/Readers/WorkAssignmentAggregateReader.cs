@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Work.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Readers;
 
 /// <summary>Checks the full native prefix before reads, original receipt resolution and writes.</summary>
 public sealed class WorkAssignmentAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

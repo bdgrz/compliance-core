@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AuditPackages.Aggregates;
+using Bdgrz.Compliance.Features.AuditPackages.Events;
+using Bdgrz.Compliance.Features.AuditPackages.Handlers;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Queries;
+using Bdgrz.Compliance.Features.AuditPackages.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Proofs;

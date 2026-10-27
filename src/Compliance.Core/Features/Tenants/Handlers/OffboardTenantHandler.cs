@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Tenants.Commands;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Handlers;
 
 public sealed class OffboardTenantHandler(TenantLifecycleOperations operations) : IRequestHandler<OffboardTenant, UnitResult>
 {

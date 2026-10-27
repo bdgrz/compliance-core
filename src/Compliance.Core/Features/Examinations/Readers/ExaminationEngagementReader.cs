@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Readers;
 
 /// <summary>Composes exact native and immutable engagement/baseline history without retaining it on an owner.</summary>
 public sealed class ExaminationEngagementReader(IAggregateReader reader, IDomainEventReader events,

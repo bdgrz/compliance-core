@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -51,7 +53,7 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                 break;
             }
 
-            IRequest<Features.Processes.ReceiverOutcome>? command;
+            IRequest<Features.Processes.Models.ReceiverOutcome>? command;
             try
             {
                 command = await definition.CreateReceiver(step, services, ct).ConfigureAwait(false);
@@ -103,7 +105,7 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
 
             // An already fenced or settled receiver completes only its cleanup step; every remaining cleanup
             // target still needs its exact fence/settlement before the process can become terminal.
-            if (result.Value is Features.Processes.ReceiverOutcome.Superseded superseded &&
+            if (result.Value is Features.Processes.Models.ReceiverOutcome.Superseded superseded &&
                 record.State != ProcessState.Aborting && step.Stage is not ("settle" or "release"))
             {
                 record = await store.ReplaceAsync(record with
@@ -115,7 +117,7 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                 break;
             }
 
-            if (result.Value is Features.Processes.ReceiverOutcome.Rejected rejected)
+            if (result.Value is Features.Processes.Models.ReceiverOutcome.Rejected rejected)
             {
                 // The operation can never proceed: fence through the abort receivers, then settle what was held.
                 record = await store.ReplaceAsync(record with
@@ -134,8 +136,8 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
 
             record = await Advance(record, step, definition, result.Value switch
             {
-                Features.Processes.ReceiverOutcome.Applied applied => applied.Fact,
-                Features.Processes.ReceiverOutcome.Replayed replayed => replayed.Fact,
+                Features.Processes.Models.ReceiverOutcome.Applied applied => applied.Fact,
+                Features.Processes.Models.ReceiverOutcome.Replayed replayed => replayed.Fact,
                 _ => null,
             }, ct).ConfigureAwait(false);
         }

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.ControlMappings.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Readers;
 
 public interface IControlMappingDirectoryReader
 {

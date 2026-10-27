@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>
 ///     One accepted principal with its current classification, decision history, proposal, and

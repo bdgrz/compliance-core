@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
@@ -6,7 +10,7 @@ using Bdgrz.Compliance.Features.SystemDescription;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
-using DescriptionOwner = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using DescriptionOwner = Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription;
 
 namespace Bdgrz.Compliance.Tests.Features.SystemDescription;
 

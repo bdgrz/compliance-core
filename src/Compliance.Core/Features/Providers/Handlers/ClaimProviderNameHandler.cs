@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Providers.Commands;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Handlers;
 
 /// <summary>Acquires or re-pins the provider name claim a pending change needs; another holder is a definite refusal.</summary>
 public sealed class ClaimProviderNameHandler(NamedRecordReceivers receivers)

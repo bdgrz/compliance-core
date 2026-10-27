@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.FirmPortfolio.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 using Cntryl.Fitz.Extensions;
 
-namespace Bdgrz.Compliance.Features.FirmPortfolio;
+namespace Bdgrz.Compliance.Features.FirmPortfolio.Queries;
 
 /// <summary>Reads the feature state required by the linked product workflow.</summary>
 [Discriminator("bdgrz.firm-portfolio.list-authorized-client-portfolio", 1)]

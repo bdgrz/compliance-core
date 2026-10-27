@@ -1,3 +1,13 @@
+using Bdgrz.Compliance.Features.AuditPopulations;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Readers;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Retention.Aggregates;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.Retention.Readers;
 using System.Security.Cryptography;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -9,7 +19,7 @@ using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Handlers;
 
 public sealed class GenerateAuditPopulationExportHandler(AuditPopulationMutations mutations,
     AuditPopulationReader populations,

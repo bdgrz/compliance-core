@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Handlers;
 
 sealed class ReviseExaminationEngagementHandler(ExaminationEngagementOperations operations, IAggregateReader reader)
     : IRequestHandler<ReviseExaminationEngagement>

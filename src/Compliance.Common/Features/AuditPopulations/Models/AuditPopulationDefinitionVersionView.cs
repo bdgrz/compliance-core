@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>An immutable, attributed version of a population definition.</summary>
 public sealed record AuditPopulationDefinitionVersionView(

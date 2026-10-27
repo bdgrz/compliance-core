@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Commands;
 
 /// <summary>Records the approve management assertion intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.examinations.approve-management-assertion", 1)]

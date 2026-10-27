@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AuditorRequests.Commands;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Handlers;
 
 /// <summary>
 ///     Admits an exact-version sample selection linked to the prior admitted selection it supersedes. The earlier

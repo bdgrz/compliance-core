@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>
 ///     Downstream effects of one pending successor or retirement. The digest binds a decision to

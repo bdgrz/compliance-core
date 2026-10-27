@@ -1,3 +1,22 @@
+using Bdgrz.Compliance.Features.Boundaries.Commands;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Projections;
+using Bdgrz.Compliance.Features.Boundaries.Queries;
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Commands;
+using Bdgrz.Compliance.Features.ControlMappings.Commands;
+using Bdgrz.Compliance.Features.Criteria.Commands;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Evaluations.Commands;
+using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
+using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Readiness.Commands;
+using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.ControlMappings;
@@ -62,7 +81,7 @@ public sealed class AttestProgramManagementWriteWallTests
                 "Client service purpose", "Client owner"), context, CancellationToken.None)).Error,
             "boundary" => (await bus.DispatchAsync(new CreateBoundary(Uuid.CreateVersion4(), Tenant, Program,
                 new BoundaryContent("Client boundary", "readiness", ["security"], [])), context, CancellationToken.None)).Error,
-            "commitment" => (await bus.DispatchAsync(new CreateCommitmentDraft(Bdgrz.Compliance.Features.Commitments.CommitmentDraft.IdFor(Tenant, Program, "commitment", "COM-1"), Tenant, Program,
+            "commitment" => (await bus.DispatchAsync(new CreateCommitmentDraft(Bdgrz.Compliance.Features.Commitments.Aggregates.CommitmentDraft.IdFor(Tenant, Program, "commitment", "COM-1"), Tenant, Program,
                 Uuid.CreateVersion4(), "commitment", "COM-1", "Commitment statement", "Context", "Source"), context, CancellationToken.None)).Error,
             "mapping" => (await bus.DispatchAsync(new ProposeCriterionNotApplicable(Uuid.CreateVersion4(), Tenant, Program,
                 Uuid.CreateVersion4(), "CC1.1", 0, "Client applicability decision"), context, CancellationToken.None)).Error,

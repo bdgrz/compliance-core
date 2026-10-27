@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
 
 /// <summary>A retained version of the auditor's requested wording and assignment terms.</summary>
 public sealed record AuditorRequestTermsVersion(

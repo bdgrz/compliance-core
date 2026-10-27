@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Versioned authored content, review, and independent approval provenance.</summary>
 public sealed record MethodologyTemplateVersionView(

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Commands;
 
 /// <summary>Uploads and registers one evidence artifact for governed inspection and storage.</summary>
 [Discriminator("bdgrz.evidence.artifact.capture", 1)]

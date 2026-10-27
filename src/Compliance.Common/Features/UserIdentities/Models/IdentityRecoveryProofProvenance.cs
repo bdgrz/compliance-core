@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Models;
 
 /// <summary>
 ///     Non-bearer provenance of one recovery proof: how it was verified and for what, never the token itself.

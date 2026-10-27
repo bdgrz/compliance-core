@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>
 ///     Appends one nonattest service to the complete history of a client. <paramref name="ServiceRecordId" /> is the

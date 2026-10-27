@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.AuditPackages.Aggregates;
+using Bdgrz.Compliance.Features.AuditPackages.Commands;
+using Bdgrz.Compliance.Features.AuditPackages.Events;
+using Bdgrz.Compliance.Features.AuditPackages.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Kernel;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Artifacts;
@@ -8,7 +15,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Handlers;
 
 /// <summary>Materializes the exact admitted personal handoff even after a later manifest version exists.</summary>
 public sealed class MaterializeRecordedAuditPackageDeliveryHandler(AuditPackageSourceVerifier verifier,

@@ -1,6 +1,11 @@
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.Snapshots.Models;
+using Bdgrz.Compliance.Features.Snapshots.Queries;
+using Bdgrz.Compliance.Features.Snapshots.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Handlers;
 
 public sealed class ListProgramSnapshotsHandler(ISnapshotDirectoryReader directory,
     IAggregateReader reader) : IRequestHandler<ListProgramSnapshots, Page<SnapshotView>>

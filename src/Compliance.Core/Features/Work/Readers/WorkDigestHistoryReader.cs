@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Work.Aggregates;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.SourceFacts;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Readers;
 
 /// <summary>Explicit complete technical history and exact current/selected authority.</summary>
 public sealed class WorkDigestHistoryReader(IAggregateReader reader, IDomainEventReader events, ISourceFactResolver sources)

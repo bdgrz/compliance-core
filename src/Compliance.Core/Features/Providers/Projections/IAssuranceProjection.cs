@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Providers.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Projections;
 
 /// <summary>
 ///     The write side of the assurance directory. The projector resolves each fact's immutable content and applies

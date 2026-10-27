@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
+using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -5,7 +11,7 @@ using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Handlers;
 
 /// <summary>
 ///     Defines an immutable successor version at the expected version, the sole logical concurrency counter. The

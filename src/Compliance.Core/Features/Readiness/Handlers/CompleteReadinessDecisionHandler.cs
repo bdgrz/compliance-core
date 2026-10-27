@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Readiness.Commands;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Handlers;
 
 /// <summary>Records the pending readiness decision through <see cref="ReadinessDecisionCompleter" />.</summary>
 sealed class CompleteReadinessDecisionHandler(ReadinessDecisionCompleter completer)

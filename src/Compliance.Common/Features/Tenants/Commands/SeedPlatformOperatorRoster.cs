@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 public sealed record SeedPlatformOperatorRoster(Uuid RosterId, Uuid[] UserIds) : IRequest, IIdentifiedRequest
 {

@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Retention;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Evidence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Readers;
 
 static class ArtifactRetentionSourceReader
 {

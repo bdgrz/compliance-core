@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Models;
 
 /// <summary>
 ///     A security-awareness training requirement (M0-D12). <c>AudienceKind</c> uses the policy

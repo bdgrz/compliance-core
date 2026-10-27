@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Criteria;
+namespace Bdgrz.Compliance.Features.Criteria.Commands;
 
 /// <summary>
 ///     Creates or revises one tenant-supplied licensed criteria entry. <paramref name="CommandId" /> is the logical

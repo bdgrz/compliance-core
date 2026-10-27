@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Commands;
 
 /// <summary>
 ///     The approver's personal decision to put a pending operating plan into effect; HTTP-only.

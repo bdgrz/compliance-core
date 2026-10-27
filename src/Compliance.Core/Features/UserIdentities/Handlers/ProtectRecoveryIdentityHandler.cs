@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Handlers;
 
 /// <summary>
 ///     Protects one identity slot of a prepared recovery. A competing association that is already definite rejects

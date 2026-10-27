@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.ControlMappings.Events;
+using Bdgrz.Compliance.Features.Work.Projections;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Projectors;
 
 public sealed partial class CriterionApplicabilityWorkItemProjector(
     ICriterionApplicabilityWorkItemProjection projection)

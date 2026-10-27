@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Remediation;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Projections;
 
 static class FindingClosureWorkItemDirectorySchema
 {

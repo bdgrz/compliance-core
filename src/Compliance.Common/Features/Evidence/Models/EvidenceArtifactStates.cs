@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Models;
 
 /// <summary>M0-D16 artifact states and the reasons attached to quarantine and rejection.</summary>
 public static class EvidenceArtifactStates

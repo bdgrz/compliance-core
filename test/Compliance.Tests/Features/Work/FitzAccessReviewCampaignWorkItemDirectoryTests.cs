@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.AccessReviews.Commands;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Tests.Features.AccessReviews;
@@ -283,7 +285,7 @@ public sealed class FitzAccessReviewCampaignWorkItemDirectoryTests
     }
 
     sealed class ProgramScopedQueueRead(Uuid permittedProgramId)
-        : Bdgrz.Compliance.Features.AccessControl.IAccessGrantPermissionAuthorizer
+        : Bdgrz.Compliance.Features.AccessControl.Authorizers.IAccessGrantPermissionAuthorizer
     {
         public ValueTask<bool> IsAllowedAsync(Uuid tenantId, Uuid userId, Uuid memberId,
             Uuid programId, string permission, CancellationToken ct = default) =>

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>A component revision as recorded in the governed manual inventory.</summary>
 public sealed record TechnologyComponentView(Uuid TenantId, Uuid ComponentId, long Revision,

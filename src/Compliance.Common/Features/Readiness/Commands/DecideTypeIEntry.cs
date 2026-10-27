@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Commands;
 
 /// <summary>
 ///     The acting member's personal Type I entry sign-off on the latest readiness assessment: approve,

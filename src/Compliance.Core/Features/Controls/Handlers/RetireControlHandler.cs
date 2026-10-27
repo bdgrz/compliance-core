@@ -1,6 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Controls.Commands;
+using Bdgrz.Compliance.Features.Controls.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Handlers;
 
 public sealed class RetireControlHandler(ControlOperations operations, ControlImpactService impact,
     ControlLifecycleReleaseGate releaseGate) : IRequestHandler<RetireControl>

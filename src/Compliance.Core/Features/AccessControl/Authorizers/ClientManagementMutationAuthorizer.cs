@@ -1,8 +1,14 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.Evidence.Commands;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Evidence;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 /// <summary>Adds the permanent Attest write wall; existing membership and resource authorizers still apply.</summary>
 sealed class ClientManagementMutationAuthorizer(ClientManagementIndependenceGuard independence,

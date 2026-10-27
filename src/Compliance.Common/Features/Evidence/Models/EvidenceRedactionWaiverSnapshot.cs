@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Models;
 
 /// <summary>Exact bounded SoD exception provenance, without the administrative rationale.</summary>
 public sealed record EvidenceRedactionWaiverSnapshot(Uuid TenantId, Uuid WaiverId,

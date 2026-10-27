@@ -1,10 +1,14 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Events;
 
 [Discriminator("bdgrz.boundary.draft.revised", 2)]
 public sealed record BoundaryDraftRevised(Uuid TenantId, Uuid BoundaryId, Uuid DraftVersionId, long Revision, ImmutableContentRef Content, Uuid AuthorMemberId, string AuthorDisplay, DateTimeOffset ChangedAt) : DomainEvent, IBoundaryFact

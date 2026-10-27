@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Risks.Commands;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Events;
 
 /// <summary>
 ///     A pending completion review ended before it recorded its decision. The fact is the local receiver fence: a

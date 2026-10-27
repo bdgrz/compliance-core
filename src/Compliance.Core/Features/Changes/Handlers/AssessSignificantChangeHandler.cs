@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Handlers;
 
 public sealed class AssessSignificantChangeHandler(SignificantChangeOperations operations)
     : IRequestHandler<AssessSignificantChange, UnitResult>

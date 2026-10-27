@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Models;
 
 /// <summary>The complete authored name and dated plan of one program revision, retained as verified immutable content.</summary>
 public sealed record ProgramContent(string Name, ProgramPlan Plan)

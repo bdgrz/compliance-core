@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 
 namespace Bdgrz.Compliance.Features.Operations;

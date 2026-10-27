@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Models;
 
 /// <summary>
 ///     The attributed closure of one workforce observation. <c>Resolution</c> is <c>resolved</c>

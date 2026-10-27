@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Readers;
 
 /// <summary>Finalizes the exact native program prefix for explicit reads, accepted retries and executor hydration.</summary>
 public sealed class ProgramAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

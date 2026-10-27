@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>Frozen source scope and explicit exact-version package selection supplied by a handler.</summary>
 public sealed record AuditPackageContent(

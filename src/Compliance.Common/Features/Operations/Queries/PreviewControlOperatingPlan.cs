@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Queries;
 
 /// <summary>Previews a proposed operating plan without recording it.</summary>
 [Discriminator("bdgrz.control.operating_plan.preview", 1)]

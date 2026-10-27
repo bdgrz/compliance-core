@@ -1,3 +1,12 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Evidence;
@@ -7,7 +16,7 @@ using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Handlers;
 
 /// <summary>
 ///     Records that treatment work reached its target state, citing fulfilled evidence requests. The action stays

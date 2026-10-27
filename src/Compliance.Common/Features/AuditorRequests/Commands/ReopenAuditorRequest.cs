@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Commands;
 
 /// <summary>
 ///     Reopens a resolved request. The request generation advances; every historical response stays part of the

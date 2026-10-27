@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Projections;
 
 public interface IComplianceIncidentDirectoryProjection : IProjectionStore
 {

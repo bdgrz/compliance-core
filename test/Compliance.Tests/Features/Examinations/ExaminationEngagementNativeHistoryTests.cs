@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Events;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Examinations.Readers;
 using System.Runtime.CompilerServices;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Examinations;
@@ -162,7 +166,7 @@ public sealed class ExaminationEngagementNativeHistoryTests
     static ExaminationEngagementContent Terms(ExaminationEngagementView view) => new(view.EngagementType, view.AuditFirm,
         view.PeriodStart, view.PeriodEnd, view.TrustServicesCategories, view.BoundaryId, view.ManagementContactMemberIds);
     static ExaminationEngagementRevised Changed(ExaminationEngagementRevised original,
-        Bdgrz.Compliance.Features.Proofs.ImmutableContentRef content)
+        Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef content)
     {
         var changed = original with { Change = content };
         changed.AttachMetadata(original.Metadata);

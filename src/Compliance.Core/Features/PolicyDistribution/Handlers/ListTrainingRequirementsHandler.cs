@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Handlers;
 
 /// <summary>Lists the program's requirements from the catalog projection once it has reached the requirement owners.</summary>
 public sealed class ListTrainingRequirementsHandler(ITrainingRequirementDirectoryReader directory,

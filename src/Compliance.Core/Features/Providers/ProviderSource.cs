@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Models;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NamedRecords;
@@ -37,7 +41,7 @@ public sealed class ProviderSource(IAggregateReader reader, IImmutableContentSto
 
     /// <summary>The projected view of a provider revision.</summary>
     public static ProviderView View(Uuid tenantId, Uuid providerId, long revision, ProviderContent declared,
-        Bdgrz.Compliance.Features.AccessControl.ActorReference actor, DateTimeOffset recordedAt)
+        Bdgrz.Compliance.Features.AccessControl.Models.ActorReference actor, DateTimeOffset recordedAt)
     {
         var normalized = ProviderRules.Normalize(declared);
         return new ProviderView(tenantId, providerId, revision, normalized, "manual", "active",

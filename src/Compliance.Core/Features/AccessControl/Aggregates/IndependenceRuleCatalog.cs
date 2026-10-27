@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -6,7 +12,7 @@ using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Aggregates;
 
 /// <summary>Current catalog business authority and selected native acceptance; immutable history is read composition.</summary>
 public sealed class IndependenceRuleCatalog : Aggregate, ISourceUseOwner

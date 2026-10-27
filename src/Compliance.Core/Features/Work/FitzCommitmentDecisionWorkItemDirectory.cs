@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Commitments.Events;
+using Bdgrz.Compliance.Features.Commitments.Readers;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
+using Bdgrz.Compliance.Features.Work.Projections;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Responsibilities;

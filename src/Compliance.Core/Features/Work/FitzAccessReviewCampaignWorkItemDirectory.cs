@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
+using Bdgrz.Compliance.Features.AccessReviews.Events;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Work.Projections;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;

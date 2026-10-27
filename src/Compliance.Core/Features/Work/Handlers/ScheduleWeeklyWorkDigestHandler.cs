@@ -1,8 +1,15 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.Work.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Handlers;
 
 /// <summary>Schedules a bounded page of active, opted-in members with verified email addresses.</summary>
 public sealed class ScheduleWeeklyWorkDigestHandler(IAggregateExecutor executor,

@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Models;
+using Bdgrz.Compliance.Features.Changes.Queries;
+using Bdgrz.Compliance.Features.Changes.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Handlers;
 
 public sealed class ListSignificantChangesHandler(ISignificantChangeDirectoryReader directory,
     RestrictedComplianceRecordVisibility visibility, SignificantChangeDirectoryReadConsistency consistency)

@@ -1,3 +1,12 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
+using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SourceUse.Handlers;
+using Bdgrz.Compliance.Features.SourceUse.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
@@ -5,7 +14,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Handlers;
 
 /// <summary>
 ///     The participant pair of the generic acquire receiver. Result admission is sealed before the closure is

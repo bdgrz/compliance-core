@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Commands;
 
 [Discriminator("bdgrz.risk.draft.revise", 1)]
 public sealed record ReviseRiskDraft(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid RiskId,

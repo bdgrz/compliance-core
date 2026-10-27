@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Queries;
 
 /// <summary>
 ///     Lists a role's permissions. <c>Limit</c> defaults to 50 and must be between 1 and 200;

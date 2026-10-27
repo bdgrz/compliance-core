@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Aggregates;
 
 /// <summary>
 ///     Owns the attributed closure of one workforce observation, keyed by the observation ID. A

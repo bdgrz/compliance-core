@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
+using Bdgrz.Compliance.Features.AccessReviews.Commands;
+using Bdgrz.Compliance.Features.AccessReviews.Events;
+using Bdgrz.Compliance.Features.AccessReviews.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -5,7 +11,7 @@ using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Reactors;
 
 /// <summary>
 ///     Settles every item use of a canceled completion. The cancellation is committed first, so a delayed acquisition

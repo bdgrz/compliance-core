@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.Snapshots.Commands;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Handlers;
 
 public sealed class AmendProgramScopeSnapshotHandler(ScopeSnapshotFreezer freezer)
     : IRequestHandler<AmendProgramScopeSnapshot, SnapshotRegistration>

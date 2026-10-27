@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -130,8 +137,8 @@ static class FindingSeed
             NativeFactReference.Of(finding.Stream, fact))).ToArray();
         var childManifest = await ImmutableSelectionManifests.WriteAsync<AdmittedChild>(content, tenantId.ToString(),
             Uuid.CreateVersion4(), FindingContent.AdmittedChildSchema, children, SelectionOrder.CanonicalKey);
-        var uses = await ImmutableSelectionManifests.WriteAsync<Bdgrz.Compliance.Features.SourceUse.SourceUseRequirement>(content,
-            tenantId.ToString(), Uuid.CreateVersion4(), Bdgrz.Compliance.Features.SourceUse.SourceUseRequirement.Schema, [],
+        var uses = await ImmutableSelectionManifests.WriteAsync<Bdgrz.Compliance.Features.SourceUse.Models.SourceUseRequirement>(content,
+            tenantId.ToString(), Uuid.CreateVersion4(), Bdgrz.Compliance.Features.SourceUse.Models.SourceUseRequirement.Schema, [],
             SelectionOrder.CanonicalKey);
         var intent = await FindingContent.WriteAsync(content, tenantId, ClosureIntent.Schema, new ClosureIntent(
             FindingContent.Header(operation, at), ClosureParentKind.Finding, findingId, (ulong)finding.Generation,

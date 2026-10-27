@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Handlers;
+using Bdgrz.Compliance.Features.Changes.Models;
+using Bdgrz.Compliance.Features.Changes.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Changes;

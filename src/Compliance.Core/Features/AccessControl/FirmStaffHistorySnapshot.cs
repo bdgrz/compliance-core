@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl.Events;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Verified transient staff decisions; history never lives in the compact owner.</summary>

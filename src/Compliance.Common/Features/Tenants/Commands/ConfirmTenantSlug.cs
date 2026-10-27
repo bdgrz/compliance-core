@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 /// <summary>
 ///     Confirms the tenant's pending slug claim or slug change once the slug owner registered it. <paramref name="CommandId" /> is the logical identity of the

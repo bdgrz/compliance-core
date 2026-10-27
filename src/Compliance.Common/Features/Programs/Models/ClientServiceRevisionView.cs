@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Models;
 
 public sealed record ClientServiceRevisionView(Uuid ServiceId, long Revision,
     string Name, string Purpose, string OwnerReference, string Status,

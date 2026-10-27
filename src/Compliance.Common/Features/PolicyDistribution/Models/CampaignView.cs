@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Models;
 
 /// <summary>
 ///     A campaign evaluated as of a date. <c>Status</c> is <c>open</c>, <c>closing</c> (result admission is sealed

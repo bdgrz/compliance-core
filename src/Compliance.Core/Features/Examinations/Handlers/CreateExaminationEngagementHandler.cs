@@ -1,7 +1,13 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Commands;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Readers;
 using Bdgrz.Compliance.Features.Readiness;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Handlers;
 
 sealed class CreateExaminationEngagementHandler(ExaminationEngagementOperations operations,
     IAggregateReader reader, ReadinessReader readiness) : IRequestHandler<CreateExaminationEngagement>

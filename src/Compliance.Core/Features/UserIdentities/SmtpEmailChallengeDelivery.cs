@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.UserIdentities.Models;
 using System.Net;
 using System.Net.Mail;
 using Cntryl.Portia;

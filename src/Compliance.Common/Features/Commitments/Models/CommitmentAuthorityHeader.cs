@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Models;
 
 public sealed record CommitmentAuthorityHeader(Uuid TenantId, Uuid ProgramId, Uuid DraftId, Uuid ServiceId,
     Uuid? ProviderId, string Kind, string Identifier, long Revision, bool IsCreated, bool IsRetired,

@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>
 ///     Where a control's authored content came from. <c>Origin</c> is

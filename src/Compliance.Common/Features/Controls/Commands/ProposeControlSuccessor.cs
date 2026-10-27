@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Commands;
 
 [Discriminator("bdgrz.control.successor.propose", 2)]
 public sealed record ProposeControlSuccessor(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid ControlId,

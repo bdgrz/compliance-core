@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Programs.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Events;
 
 /// <summary>Records an explicit rejection of a carry-forward proposal version.</summary>
 [Discriminator("bdgrz.programs.program-rollover-decision-recorded", 1)]

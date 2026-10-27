@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using System.Diagnostics;
 using Bdgrz.Compliance.Tests.E2E;

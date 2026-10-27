@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
+using Bdgrz.Compliance.Features.AuditorRequests.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Events;
+using Bdgrz.Compliance.Features.AuditorRequests.Handlers;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Projections;
+using Bdgrz.Compliance.Features.AuditorRequests.Readers;
 using System.Globalization;
 using System.Net;
 using System.Text.Json;

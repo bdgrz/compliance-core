@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Authorizers;
 
 sealed class IdentityRecoveryAuthorizer : IRequestAuthorizer<CompleteIdentityRecovery>
 {

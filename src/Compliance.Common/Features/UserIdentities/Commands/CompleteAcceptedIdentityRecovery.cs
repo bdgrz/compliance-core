@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Events;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>Completes the accepted swap on the recovery owner once the replacement registration and the old revocation are proven.</summary>
 [Discriminator("bdgrz.identity-recovery.complete-accepted", 1)]

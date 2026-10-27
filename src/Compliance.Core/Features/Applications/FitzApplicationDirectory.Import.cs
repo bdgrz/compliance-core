@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Projections;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 

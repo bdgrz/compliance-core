@@ -1,3 +1,18 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Queries;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Queries;
+using Bdgrz.Compliance.Features.Criteria.Commands;
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Queries;
+using Bdgrz.Compliance.Features.Readiness.Queries;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Applications;
@@ -5,7 +20,7 @@ using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.Readiness;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Authorizers;
 
 sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader memberships,
     ITenantActivity tenants,

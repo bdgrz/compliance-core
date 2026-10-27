@@ -1,9 +1,14 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Readers;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Readiness;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Readers;
 
 /// <summary>
 /// Reads known source references from each program's latest readiness assessment. The current

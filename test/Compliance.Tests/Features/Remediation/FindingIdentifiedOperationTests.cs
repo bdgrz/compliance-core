@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Remediation;
@@ -170,7 +173,7 @@ public sealed class FindingIdentifiedOperationTests
         var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
         var stream = new FindingAggregate(fixture.TenantId, fixture.ProgramId, finding.FindingId).Stream;
         var abort = new AbortFindingClosure(Uuid.CreateVersion4(), Uuid.CreateVersion4(), stream, 1, 0,
-            new Bdgrz.Compliance.Features.Proofs.ImmutableContentRef(Uuid.CreateVersion4(), new string("0"[0], 64), 2,
+            new Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef(Uuid.CreateVersion4(), new string("0"[0], 64), 2,
                 "application/json", "failure.v1"));
 
         // Act

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 
 /// <summary>Resolves current source content for a source already selected in a handoff.</summary>
 public interface IAdvisorSharedSourceReader

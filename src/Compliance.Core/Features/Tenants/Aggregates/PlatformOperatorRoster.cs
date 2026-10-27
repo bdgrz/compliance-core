@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Tenants.Commands;
+using Bdgrz.Compliance.Features.Tenants.Events;
+using Bdgrz.Compliance.Features.Tenants.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
@@ -6,7 +12,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Aggregates;
 
 /// <summary>Compact authority on one stream preserves the global nonempty-roster invariant.</summary>
 public sealed class PlatformOperatorRoster : Aggregate

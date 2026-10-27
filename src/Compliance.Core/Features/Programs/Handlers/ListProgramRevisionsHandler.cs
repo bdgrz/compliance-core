@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Queries;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Handlers;
 
 public sealed class ListProgramRevisionsHandler(IProgramDirectoryReader directory,
     ProgramHistoryReadConsistency consistency)

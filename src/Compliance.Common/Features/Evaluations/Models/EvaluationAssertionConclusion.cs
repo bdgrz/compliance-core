@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Models;
 
 /// <summary>
 ///     The conclusion for one assertion (design, implementation, or evidence_sufficiency):

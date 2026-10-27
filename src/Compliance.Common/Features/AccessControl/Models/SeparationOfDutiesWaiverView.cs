@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 public sealed record SeparationOfDutiesWaiverView(
     Uuid TenantId,

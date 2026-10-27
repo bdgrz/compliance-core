@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>Minimal access-population history metadata for one reviewed system.</summary>
 public sealed record ApplicationAccessPopulationReferenceView(Uuid TenantId,

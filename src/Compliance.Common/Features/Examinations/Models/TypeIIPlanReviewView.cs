@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>An independent review decision on one exact immutable operating-plan version.</summary>
 public sealed record TypeIIPlanReviewView(

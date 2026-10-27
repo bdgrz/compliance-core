@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Commands;
 
 /// <summary>
 ///     Cancels unfinished treatment work while retaining its history. <paramref name="ExpectedRevision" /> is the

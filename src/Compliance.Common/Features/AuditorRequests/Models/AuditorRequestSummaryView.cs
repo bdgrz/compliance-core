@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
 
 /// <summary>Engagement-scoped requests and their current work status.</summary>
 public sealed record AuditorRequestSummaryView(Uuid TenantId, Uuid ProgramId, Uuid AuditorRequestId, string Name, string Status, DateTimeOffset UpdatedAt);

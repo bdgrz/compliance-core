@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Handlers;
 
 /// <summary>
 ///     Reads the status of the current verification challenge: the address says whether it is verified, issued or

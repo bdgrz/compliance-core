@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Exact approved successor snapshot proposed to one tenant application.</summary>
 public sealed record TemplateApplicationSuccessorProposalView(

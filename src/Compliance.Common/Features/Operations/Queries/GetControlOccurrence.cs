@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Queries;
 
 [Discriminator("bdgrz.control.occurrence.get", 1)]
 public sealed record GetControlOccurrence(Uuid TenantId, Uuid ProgramId, Uuid ControlId,

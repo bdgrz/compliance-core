@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Boundaries.Events;
+using Bdgrz.Compliance.Features.Applications.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Projectors;
 
 /// <summary>Replays boundary events into a separately versioned, tenant-scoped reverse index.</summary>
 public sealed partial class ApplicationBoundaryReferenceProjector(

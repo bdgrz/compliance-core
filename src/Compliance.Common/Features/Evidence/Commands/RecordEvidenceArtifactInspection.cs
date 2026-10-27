@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Evidence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Commands;
 
 /// <summary>
 ///     Internal infrastructure result from a trusted artifact inspector. This is intentionally not callable by a

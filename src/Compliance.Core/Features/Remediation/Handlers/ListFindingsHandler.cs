@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Queries;
+using Bdgrz.Compliance.Features.Remediation.Readers;
 using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Handlers;
 
 /// <summary>Lists findings with their readiness status evaluated at read time.</summary>
 public sealed class ListFindingsHandler(FindingReader findings, TimeProvider clock)

@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.SourceUse.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -8,7 +15,7 @@ using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Processes;
 
 /// <summary>
 ///     The ordered engagement acceptance and staff assignment process. Acquire walks one global canonical stream key

@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Commands;
 
 /// <summary>
 ///     Trusted process command that atomically cancels the exact pending provider change and fences its local delayed apply.

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch the request resolution and child materialization receivers.</summary>
 sealed class AuditorRequestReceiverAuthorizer : IRequestAuthorizer<IAuditorRequestReceiver>

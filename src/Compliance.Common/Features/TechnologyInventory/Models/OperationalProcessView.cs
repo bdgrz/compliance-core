@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>A operational process revision as recorded in the governed tenant inventory.</summary>
 public sealed record OperationalProcessView(Uuid TenantId, Uuid OperationalProcessId, long Revision,

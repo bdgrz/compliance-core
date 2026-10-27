@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>A data-flow version as recorded in the governed manual inventory.</summary>
 public sealed record DataFlowView(Uuid TenantId, Uuid DataFlowId, long Revision,

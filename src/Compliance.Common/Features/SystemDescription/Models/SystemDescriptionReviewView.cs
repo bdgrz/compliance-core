@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>A review decision and comments bound to one immutable description version.</summary>
 public sealed record SystemDescriptionReviewView(Uuid ReviewId, Uuid VersionId, long Version,

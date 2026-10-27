@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Retention;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Retention.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Handlers;
 
 sealed class GetArtifactRetentionHandler(ArtifactRetentionRead read) : IRequestHandler<GetArtifactRetention, ArtifactRetentionView>
 {

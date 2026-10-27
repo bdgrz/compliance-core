@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
 
 /// <summary>
 ///     Admits the creation of an operational process as the first native fact on its own record owner. The process

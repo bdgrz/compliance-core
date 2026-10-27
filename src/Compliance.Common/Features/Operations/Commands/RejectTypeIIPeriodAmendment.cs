@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Commands;
 
 /// <summary>
 ///     Rejects an exact pending amendment that the calendar proved can never hold its new range. The rejection fences

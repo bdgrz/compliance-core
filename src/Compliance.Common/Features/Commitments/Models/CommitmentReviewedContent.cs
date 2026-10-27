@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Commitments.Events;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Models;
 
 /// <summary>
 ///     An independent review decision. Legacy accepted reviews carry a version; newer accepted

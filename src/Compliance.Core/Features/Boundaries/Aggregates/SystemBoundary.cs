@@ -1,3 +1,12 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Boundaries.Commands;
+using Bdgrz.Compliance.Features.Boundaries.Events;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json;
@@ -10,7 +19,7 @@ using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Aggregates;
 
 /// <summary>Compact current boundary authority. Historical content and responsibility scopes are verified outside the owner.</summary>
 public sealed class SystemBoundary : Aggregate

@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Readers;
 
 public sealed class RiskDraftReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)
 {

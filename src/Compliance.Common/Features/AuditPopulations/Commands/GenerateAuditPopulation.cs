@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Commands;
 
 /// <summary>Records the generate audit population intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.audit-populations.generate-audit-population", 1)]

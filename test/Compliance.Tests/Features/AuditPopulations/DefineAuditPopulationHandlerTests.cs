@@ -1,3 +1,13 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AuditPopulations.Aggregates;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
+using Bdgrz.Compliance.Features.AuditPopulations.Handlers;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Readers;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.SourceFacts;
@@ -10,8 +20,8 @@ using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using AuditPopulationAggregate = Bdgrz.Compliance.Features.AuditPopulations.AuditPopulation;
-using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
+using AuditPopulationAggregate = Bdgrz.Compliance.Features.AuditPopulations.Aggregates.AuditPopulation;
+using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.Aggregates.TypeIIPlan;
 using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriodRules;
 using Bdgrz.Compliance.Tests.Testing;
 

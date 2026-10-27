@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>Finalizes full designation receipts before current reads, native retries or appends.</summary>
 public sealed class ProfessionalDutyAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

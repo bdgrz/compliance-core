@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Commands;
 
 /// <summary>
 ///     Cancels the exact pending resolution when a permanent proof mismatch makes it impossible and no final decision

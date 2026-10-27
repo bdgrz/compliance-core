@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Projections;
 
 static class CampaignDirectorySchema
 {

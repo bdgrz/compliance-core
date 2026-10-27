@@ -1,3 +1,11 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
@@ -8,7 +16,7 @@ using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Processes;
 
 /// <summary>
 ///     The ordered application import process. The root is the sealed plan; the targets are the canonical stream keys

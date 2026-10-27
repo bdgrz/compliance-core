@@ -1,9 +1,12 @@
+using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Commands;
 
 /// <summary>
 ///     Settles the readiness decision use of one gap plan. <paramref name="Source" /> is the terminal program fact: the

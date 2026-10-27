@@ -1,3 +1,13 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Controls.Commands;
+using Bdgrz.Compliance.Features.Controls.Events;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
@@ -10,7 +20,7 @@ using Bdgrz.Compliance.Features.Versioning;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Aggregates;
 
 /// <summary>One deterministic control identity and compact current authority; full bodies/history never enter command state.</summary>
 public sealed class ControlDraft : Aggregate, ISourceUseOwner

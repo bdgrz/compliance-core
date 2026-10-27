@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Commands;
 
 /// <summary>Deletes a never-approved, never-reviewed draft with no retained relationships.</summary>
 [Discriminator("bdgrz.policy.draft.discard", 2)]

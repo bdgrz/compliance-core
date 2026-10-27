@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>One immutable Type II plan version and its proposer attribution.</summary>
 public sealed record TypeIIPlanVersionView(

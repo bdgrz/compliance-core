@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Workforce.Authorizers;
+using Bdgrz.Compliance.Features.Workforce.Commands;
+using Bdgrz.Compliance.Features.Workforce.Queries;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Tests.Features.AccessControl;

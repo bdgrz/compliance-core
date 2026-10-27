@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.Incidents.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Events;
+using Bdgrz.Compliance.Features.Incidents.Models;
+using Bdgrz.Compliance.Features.Incidents.Projections;
+using Bdgrz.Compliance.Features.Incidents.Projectors;
+using Bdgrz.Compliance.Features.Incidents.Readers;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 

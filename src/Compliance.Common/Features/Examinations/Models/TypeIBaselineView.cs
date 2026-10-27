@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Immutable Type I baseline manifest and attributable amendment lineage.</summary>
 public sealed record TypeIBaselineView(

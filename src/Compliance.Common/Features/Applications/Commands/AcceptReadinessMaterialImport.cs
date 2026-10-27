@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 /// <summary>Records the accept readiness material import intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.imports.accept-readiness-material-import", 1)]

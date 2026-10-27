@@ -1,3 +1,12 @@
+using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
+using Bdgrz.Compliance.Features.AccessReviews.Commands;
+using Bdgrz.Compliance.Features.AccessReviews.Events;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Handlers;
+using Bdgrz.Compliance.Features.Applications.Queries;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Tests.Testing;

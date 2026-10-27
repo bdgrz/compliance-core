@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.Evaluations.Aggregates;
+using Bdgrz.Compliance.Features.Evaluations.Commands;
+using Bdgrz.Compliance.Features.Evaluations.Events;
+using Bdgrz.Compliance.Features.Evaluations.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Reactors;
 
 /// <summary>
 ///     Routes every submitted material evaluation deviation into the shared finding path. It watches the evaluation

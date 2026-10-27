@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Programs.Models;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Projections;
 
 static class ProgramDirectorySchema
 {

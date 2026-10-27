@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Tests.Testing;
@@ -73,12 +75,12 @@ public sealed class ClientServiceIndependenceTests
     sealed class PreviewReadStore(Bdgrz.Compliance.Features.Content.IImmutableContentStore inner)
         : Bdgrz.Compliance.Features.Content.IImmutableContentStore
     {
-        public Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? Blocked { get; set; }
+        public Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef? Blocked { get; set; }
         public bool Corrupt { get; set; }
-        public Task<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id,
+        public Task<Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id,
             string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
             inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
-        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference,
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference,
             CancellationToken ct = default)
         {
             if (reference == Blocked)
@@ -104,7 +106,7 @@ public sealed class ClientServiceIndependenceTests
             host.Content, host.Tenant.ToString(), owner.AdmissionOf(evaluation)!.Intent);
 
         // Act
-        var cuts = await Bdgrz.Compliance.Features.Content.ImmutableSelectionManifests.ReadSelectionAsync<Bdgrz.Compliance.Features.Proofs.AuthoritativeReadCut>(
+        var cuts = await Bdgrz.Compliance.Features.Content.ImmutableSelectionManifests.ReadSelectionAsync<Bdgrz.Compliance.Features.Proofs.Models.AuthoritativeReadCut>(
             host.Content, host.Tenant.ToString(), intent.SourceCuts);
 
         // Assert
@@ -159,7 +161,7 @@ public sealed class ClientServiceIndependenceTests
         Func<Task>? _admit;
         public bool Failed { get; private set; }
         public void Arm(Func<Task> admit) => _admit = admit;
-        public async Task<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id,
+        public async Task<Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id,
             string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
         {
             if (!Failed && _admit is { } admit && schema == losingSchema)
@@ -170,7 +172,7 @@ public sealed class ClientServiceIndependenceTests
             }
             return await inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
         }
-        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference,
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference,
             CancellationToken ct = default) => inner.ReadVerifiedAsync(realm, reference, ct);
     }
 
@@ -604,7 +606,7 @@ public sealed class ClientServiceIndependenceTests
         var provenance = new OperationProvenance(Uuid.CreateVersion4(), Uuid.CreateVersion4(), null,
             "RecordNonattestService", ActorReference.ForMember(Uuid.CreateVersion4(), "Synthetic"), owner.Stream,
             "initial", 0, new string('a', 64), IndependenceHost.At, owner.Stream, owner.Stream);
-        var content = new Bdgrz.Compliance.Features.Proofs.ImmutableContentRef(Uuid.CreateVersion4(),
+        var content = new Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef(Uuid.CreateVersion4(),
             new string('b', 64), 2, "application/json", "NonattestServiceRecorded.ServiceContent.v1");
         var logical = provenance with { RootOperationId = provenance.LogicalId };
         var valid = new NonattestServiceRecorded(tenant, logical.LogicalId, content, logical, 1, content, content);

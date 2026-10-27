@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 /// <summary>
 ///     Declares a system instance. <paramref name="SystemInstanceId" /> is the immutable creation identity and the

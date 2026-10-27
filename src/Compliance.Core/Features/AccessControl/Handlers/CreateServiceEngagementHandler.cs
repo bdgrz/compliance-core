@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 /// <summary>Creates the draft of one service engagement on its own owner at revision zero.</summary>
 sealed class CreateServiceEngagementHandler(ServiceEngagementCommands commands)

@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>Authored narrative content and its exact source and period-change references.</summary>
 public sealed record SystemDescriptionDraftContent(string Title,

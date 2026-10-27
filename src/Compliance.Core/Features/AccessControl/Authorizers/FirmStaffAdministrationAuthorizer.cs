@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 /// <summary>Platform staff metadata only; operator status cannot supply professional duties or client access.</summary>
 sealed class FirmStaffAdministrationAuthorizer(IPlatformOperatorAccess operators)

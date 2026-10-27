@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Commands;
 
 [Discriminator("bdgrz.risk.assessment.record", 1)]
 public sealed record RecordRiskAssessment(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid RiskId,

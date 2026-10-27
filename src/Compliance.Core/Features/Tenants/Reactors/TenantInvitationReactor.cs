@@ -1,8 +1,14 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Events;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 using Microsoft.Extensions.Logging;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Reactors;
 
 public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus,
     IImmutableContentStore content, ILogger<TenantInvitationReactor> logger, TenantActivationPolicy? policy = null)

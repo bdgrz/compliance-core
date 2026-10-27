@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.NativeOperations;
+namespace Bdgrz.Compliance.Features.NativeOperations.Models;
 
 /// <summary>The frozen result content of an operation whose declared result is Unit.</summary>
 public sealed record UnitResult

@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.AuditPopulations;
+using Bdgrz.Compliance.Features.AuditPopulations.Aggregates;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Readers;
 
 /// <summary>Composes verified complete views at their exact physical/native owner cut.</summary>
 public sealed class AuditPopulationReader(IAggregateReader reader, IDomainEventReader events,

@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Commands;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Handlers;
 
 /// <summary>
 ///     Admits a revision of a provider at its expected revision as the first native fact on the provider's own owner.

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Projections;
 
 public interface IAdvisorHandoffDirectoryProjection : IProjectionStore
 {

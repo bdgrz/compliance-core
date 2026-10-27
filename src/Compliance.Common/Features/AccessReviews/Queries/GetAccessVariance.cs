@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Queries;
 
 /// <summary>Explains an accepted population against approved expectations without deciding any item.</summary>
 [Discriminator("bdgrz.access_population.variance.get", 1)]

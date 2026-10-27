@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Models;
 
 public sealed record ProductClientServiceContent(string Name, string Purpose, string OwnerReference)
 {

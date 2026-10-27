@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Projections;
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications.Commands;

@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Queries;
+using Bdgrz.Compliance.Features.Readiness.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Handlers;
 
 /// <summary>Reads one adopted assessment composed from its own owner streams.</summary>
 public sealed class GetReadinessAssessmentHandler(ReadinessReader readiness)

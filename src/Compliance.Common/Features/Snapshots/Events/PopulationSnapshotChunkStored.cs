@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Events;
 
 /// <summary>
 ///     One ordered storage chunk of a population snapshot's rows. Chunks are written before the

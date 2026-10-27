@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Queries;
 
 /// <summary>Reads the acting member's weekly email digest preference.</summary>
 [Discriminator("bdgrz.work.digest_preference.get", 1)]

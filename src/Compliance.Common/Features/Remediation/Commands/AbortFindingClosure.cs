@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Commands;
 
 /// <summary>
 ///     Cancels the exact pending closure when a permanent proof mismatch makes it impossible and no final decision was

@@ -1,9 +1,15 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Aggregates;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Events;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 
 /// <summary>Reads the exact admitted contribution and full immutable thread history at a native owner cut.</summary>
 public sealed class AdvisorFeedbackReader(IAggregateReader reader, IDomainEventReader events,

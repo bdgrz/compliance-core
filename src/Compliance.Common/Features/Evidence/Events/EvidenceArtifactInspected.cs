@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Events;
 
 /// <summary>Records the inspection result that moves an artifact out of pending inspection.</summary>
 [Discriminator("bdgrz.evidence.artifact.inspected", 1)]

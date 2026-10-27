@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
+using Bdgrz.Compliance.Features.UserIdentities.Events;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Processes;
 
 /// <summary>
 ///     The ordered identity recovery process. Its root is the claim of the recovery challenge on the email address.

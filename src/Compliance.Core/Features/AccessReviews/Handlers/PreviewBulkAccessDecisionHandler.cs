@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Queries;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Applications;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Handlers;
 
 public sealed class PreviewBulkAccessDecisionHandler(AccessReviewReader reader,
     RestrictedApplicationVisibility visibility, AccessReviewQueueEligibility eligibility)

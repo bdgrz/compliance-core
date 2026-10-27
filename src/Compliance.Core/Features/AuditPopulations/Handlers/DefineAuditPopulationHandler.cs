@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.AuditPopulations;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
+using Bdgrz.Compliance.Features.Operations.Readers;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Handlers;
 
 public sealed class DefineAuditPopulationHandler(AuditPopulationMutations mutations,
     TypeIIPeriodReader periods, TimeProvider clock) : IRequestHandler<DefineAuditPopulation>

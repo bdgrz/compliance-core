@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Controls.Queries;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Handlers;
 
 public sealed class ListControlVersionsHandler(ControlActivationSource source)
     : IRequestHandler<ListControlVersions, Page<ControlVersionView>>

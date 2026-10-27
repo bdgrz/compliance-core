@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>
 ///     Defines a built-in role within a tenant. <paramref name="RoleId" /> is the immutable creation identity: an exact

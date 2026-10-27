@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Models;
 
 /// <summary>Permitted identity summary without original registration or event-envelope proof.</summary>
 public sealed record EvidenceRedactionArtifactView(Uuid ArtifactId, string ContentSha256,

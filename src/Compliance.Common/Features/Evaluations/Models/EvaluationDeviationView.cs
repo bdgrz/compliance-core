@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Models;
 
 /// <summary>
 ///     A not_met step. A material deviation routes to the finding <c>FindingId</c> and requires a

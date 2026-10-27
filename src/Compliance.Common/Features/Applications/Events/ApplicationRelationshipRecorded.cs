@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Events;
 
 [Discriminator("bdgrz.application.relationship.recorded", 1)]
 public sealed record ApplicationRelationshipRecorded(Uuid TenantId, Uuid RelationshipId,

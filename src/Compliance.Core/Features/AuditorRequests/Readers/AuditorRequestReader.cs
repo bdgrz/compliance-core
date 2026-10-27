@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
+using Bdgrz.Compliance.Features.AuditorRequests.Events;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Readers;
 
 /// <summary>Composes full request, independent response and frozen selection views from verified native histories.</summary>
 public sealed class AuditorRequestReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content,
@@ -158,7 +163,7 @@ public sealed class AuditorRequestReader(IAggregateReader reader, IDomainEventRe
             admitted.Intent, ct).ConfigureAwait(false);
         var rows = await ImmutableSelectionManifests.ReadAsync<Uuid>(content, owner.Stream.Realm,
             intent.PopulationRowIds, ct).ConfigureAwait(false);
-        var population = await AuditorContent.ReadAsync<AuditPopulations.AuditPopulationVersionView>(content, owner.TenantId,
+        var population = await AuditorContent.ReadAsync<AuditPopulations.Models.AuditPopulationVersionView>(content, owner.TenantId,
             intent.PopulationContent, ct).ConfigureAwait(false);
         var included = population.Rows.Where(static row => row.Classification == "included")
             .Select(static row => row.RowId).ToHashSet();

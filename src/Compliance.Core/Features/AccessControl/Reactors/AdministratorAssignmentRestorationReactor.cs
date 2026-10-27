@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
 
 /// <summary>Starts the transition when the restoration assigns the administrators team (ApplyAdministratorAssignmentRestoration).</summary>
 public sealed partial class AdministratorAssignmentRestorationReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process,

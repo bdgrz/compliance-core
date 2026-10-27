@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Workforce;
 
 /// <summary>Derives an observation's status from its closure: open until resolved or dismissed.</summary>

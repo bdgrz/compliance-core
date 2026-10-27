@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Commands;
 
 /// <summary>
 ///     Rejects an exact pending opening that the calendar proved can never hold its range. The rejection fences a

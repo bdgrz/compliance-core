@@ -1,10 +1,17 @@
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AuditPackages.Readers;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Commands;
+using Bdgrz.Compliance.Features.Examinations.Readers;
+using Bdgrz.Compliance.Features.Operations.Readers;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Handlers;
 
 /// <summary>Records an immutable management decision after resolving its exact examination sources.</summary>
 public sealed class RecordManagementExaminationReviewHandler(IAggregateExecutor executor,

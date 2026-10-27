@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.SystemDescription;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Handlers;
 
 public sealed class RecordSystemDescriptionNoChangeDecisionHandler(SystemDescriptionOperations operations) : IRequestHandler<RecordSystemDescriptionNoChangeDecision>
 {

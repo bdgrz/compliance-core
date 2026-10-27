@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>
 ///     One hop of an effective-access path: <c>group_member</c> or <c>role_assumption</c> from a

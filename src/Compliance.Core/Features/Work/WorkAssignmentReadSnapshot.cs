@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Work.Aggregates;
 namespace Bdgrz.Compliance.Features.Work;
 
 /// <summary>Current native header joined with its complete verified external chronology.</summary>

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Projections;
 
 interface IActualStaffEngagementLocatorProjection : IProjectionStore
 {

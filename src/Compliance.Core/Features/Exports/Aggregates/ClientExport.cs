@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Exports.Events;
+using Bdgrz.Compliance.Features.Exports.Models;
 using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
@@ -6,7 +9,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Aggregates;
 
 /// <summary>
 /// Owns one tenant export job, its exact included/withheld source inventory,

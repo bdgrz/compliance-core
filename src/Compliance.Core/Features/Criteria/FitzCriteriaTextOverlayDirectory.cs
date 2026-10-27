@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Criteria.Aggregates;
+using Bdgrz.Compliance.Features.Criteria.Events;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Criteria.Projections;
+using Bdgrz.Compliance.Features.Criteria.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Portia;

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>
 ///     One delivery attempt of an email challenge did not end in an accepted message.

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Tests.Testing;

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>Continues with a deterministic development identity derived from an email address.</summary>
 [Discriminator("bdgrz.developer-identity.continue", 1)]

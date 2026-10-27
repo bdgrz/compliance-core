@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.NamedRecords;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.NamedRecords;
+namespace Bdgrz.Compliance.Features.NamedRecords.Authorizers;
 
 /// <summary>
 ///     The receivers of the name-change processes run as the trusted process principal only; the tenant they act for is

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Models;
 
 /// <summary>
 ///     A tenant directory entry. <paramref name="Revision" /> is the tenant revision a slug change must expect; only the

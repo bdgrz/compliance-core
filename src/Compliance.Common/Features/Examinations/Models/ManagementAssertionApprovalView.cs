@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>An attributed decision on one immutable management assertion version.</summary>
 public sealed record ManagementAssertionApprovalView(

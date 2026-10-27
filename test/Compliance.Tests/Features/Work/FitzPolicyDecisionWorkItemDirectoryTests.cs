@@ -1,3 +1,13 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Policies.Aggregates;
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.Work.Projections;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -121,14 +131,14 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var directory = new FitzPolicyDecisionWorkItemDirectory(client, services.GetRequiredService<PolicyReader>(), TimeProvider.System);
         var authority = services.GetRequiredService<OperatingAuthority>();
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId, "Approver");
-        WorkQueueReader Queue(FitzPolicyDecisionWorkItemDirectory source) => new(reader, services.GetRequiredService<WorkAssignmentReader>(), services.GetRequiredService<Bdgrz.Compliance.Features.Controls.ControlReader>(), services.GetRequiredService<PolicyReader>(), authority, TimeProvider.System,
+        WorkQueueReader Queue(FitzPolicyDecisionWorkItemDirectory source) => new(reader, services.GetRequiredService<WorkAssignmentReader>(), services.GetRequiredService<Bdgrz.Compliance.Features.Controls.Readers.ControlReader>(), services.GetRequiredService<PolicyReader>(), authority, TimeProvider.System,
             new WorkQueueReadConsistency(events, [source]), accountableWorkItems: [source],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
             evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
-            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
-            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.Readers.EvidenceRequestReader>());
 
         // Act
         var before = await Queue(directory).ReadAsync(fixture.TenantId, fixture.ProgramId, actor, 30,

@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Criteria;
+namespace Bdgrz.Compliance.Features.Criteria.Models;
 
 /// <summary>
 /// An immutable platform edition. ContentRights states what the platform ships

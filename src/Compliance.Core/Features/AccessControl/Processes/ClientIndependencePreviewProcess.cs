@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Processes.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Processes;
 
 /// <summary>
 ///     The unordered client independence preview process: one receiver materializes the immutable preview on the

@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Commands;
 
 [Discriminator("bdgrz.evidence.redaction.prepare", 2)]
 public sealed record PrepareEvidenceRedaction(Uuid CommandId, Uuid TenantId, Uuid RedactionId, long ExpectedRevision,

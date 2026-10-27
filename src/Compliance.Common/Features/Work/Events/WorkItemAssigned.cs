@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Events;
 
 /// <summary>Accountability for a work item moved by claim, assign, reassign, or delegate.</summary>
 [Discriminator("bdgrz.work.assigned", 1)]

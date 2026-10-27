@@ -1,9 +1,12 @@
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Artifacts;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Readers;
 
 /// <summary>Publishes every complete canonical source body before a production baseline can freeze its references.</summary>
 public sealed class PublishedTypeIBaselinePreviewReader(TypeIBaselinePreviewReader sources,

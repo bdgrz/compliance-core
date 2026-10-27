@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Aggregates;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Events;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
@@ -22,7 +26,7 @@ public sealed class AdvisorHandoffSnapshot(AdvisorHandoff handoff, IReadOnlyList
     public Uuid TenantId => Handoff.TenantId;
     public EventStreamAddress Stream => Handoff.Stream;
     public ulong Version => Handoff.Version;
-    public Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? SelectionManifest => Handoff.SelectionManifest;
+    public Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef? SelectionManifest => Handoff.SelectionManifest;
 
     /// <summary>True once the handoff was created.</summary>
     public bool IsCreated => Handoff.IsCreated;

@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Commands;
 
 /// <summary>Manually records one immutable source revision, explicitly correlated to a governed record.</summary>
 [Discriminator("bdgrz.workforce.source.record", 1)]

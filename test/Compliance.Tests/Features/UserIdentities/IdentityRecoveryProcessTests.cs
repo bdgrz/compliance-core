@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Content;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
@@ -661,7 +663,7 @@ public sealed class IdentityRecoveryProcessTests
 
     static OperationProvenance EmailAddressFactsOperation(EventStreamAddress owner, Uuid challenge) =>
         new(Uuid.CreateVersion4(), challenge, null, "RejectIdentityRecoveryPreparation",
-            new Bdgrz.Compliance.Features.AccessControl.ActorReference("user", "tester", "tester"), owner,
+            new Bdgrz.Compliance.Features.AccessControl.Models.ActorReference("user", "tester", "tester"), owner,
             challenge.ToString(), null, new string('b', 64), DateTimeOffset.UtcNow, owner, owner);
 
     static void AssertExactlyOnce(IEnumerable<DomainEvent> facts, params string[] expected)

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Providers.Models;
 using Bdgrz.Compliance.Features.Providers;
 using Cntryl.Portia;
 using static Bdgrz.Compliance.Tests.Features.Providers.AssuranceSamples;

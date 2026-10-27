@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Handlers;
 
 /// <summary>
 ///     Records that the relay accepted one delivery attempt. An outcome of an attempt that a newer attempt replaced is

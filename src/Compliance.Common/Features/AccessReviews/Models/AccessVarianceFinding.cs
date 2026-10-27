@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>Why a variance item has its category, with the expectation or exception that explains it.</summary>
 public sealed record AccessVarianceFinding(string Kind, Uuid? ExpectationId, Uuid? ExceptionId,

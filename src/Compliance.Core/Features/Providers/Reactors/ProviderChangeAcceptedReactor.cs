@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Events;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Reactors;
 
 /// <summary>Starts the provider name-change process from each accepted provider change.</summary>
 public sealed partial class ProviderChangeAcceptedReactor(IProjectionCheckpointStore checkpoints,

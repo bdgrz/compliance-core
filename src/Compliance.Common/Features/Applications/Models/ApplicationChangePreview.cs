@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>
 /// A bounded observation, not an approval or complete retirement clearance. Boundary, control,

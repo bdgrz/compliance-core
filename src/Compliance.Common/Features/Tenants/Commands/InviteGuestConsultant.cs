@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 /// <summary>
 ///     Invites a guest consultant to a fixed set of programs until <paramref name="ExpiresOn" />.

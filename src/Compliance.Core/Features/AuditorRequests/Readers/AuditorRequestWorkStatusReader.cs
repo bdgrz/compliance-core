@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Readers;
 
 /// <summary>Derives status from verified request content and independent response owners.</summary>
 sealed class AuditorRequestWorkStatusReader(AuditorRequestReader requests)

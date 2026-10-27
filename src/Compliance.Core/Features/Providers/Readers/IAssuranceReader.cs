@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Providers.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Readers;
 
 public interface IAssuranceReader
 {

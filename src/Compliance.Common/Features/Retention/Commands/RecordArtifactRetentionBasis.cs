@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Retention;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Commands;
 
 [Discriminator("bdgrz.artifact_retention.basis.record", 1)]
 public sealed record RecordArtifactRetentionBasis(Uuid CommandId, Uuid TenantId, string SourceKind, Uuid SourceId,

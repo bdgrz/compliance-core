@@ -1,10 +1,12 @@
+using Bdgrz.Compliance.Features.Examinations.Events;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Hosting.Persistence;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Aggregates;
 
 /// <summary>
 /// Retains one externally supplied auditor conclusion and report reference. This root never

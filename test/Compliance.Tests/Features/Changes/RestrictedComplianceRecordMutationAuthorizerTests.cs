@@ -1,3 +1,13 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Authorizers;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Models;
+using Bdgrz.Compliance.Features.Changes.Readers;
+using Bdgrz.Compliance.Features.Incidents.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.Incidents.Models;
 using Bdgrz.Compliance.Tests.Features.Incidents;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;

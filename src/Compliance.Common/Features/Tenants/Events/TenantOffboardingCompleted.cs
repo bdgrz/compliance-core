@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Events;
 
 /// <summary>Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.tenants.tenant-offboarding-completed", 1)]

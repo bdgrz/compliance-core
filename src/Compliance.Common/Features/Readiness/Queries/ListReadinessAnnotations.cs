@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Queries;
 
 /// <summary>Lists advisor feedback recorded on one assessment's gaps, oldest first.</summary>
 [Discriminator("bdgrz.readiness.annotations.list", 1)]

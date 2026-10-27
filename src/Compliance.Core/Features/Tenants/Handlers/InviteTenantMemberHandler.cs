@@ -1,7 +1,12 @@
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Commands;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Handlers;
 
 public sealed class InviteTenantMemberHandler(TenantInvitationAdmission admission, IAggregateReader reader)
     : IRequestHandler<InviteTenantMember>

@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.ControlMappings.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Queries;
 
 /// <summary>Lists a program's criterion applicability decisions, optionally by edition or status.</summary>
 [Discriminator("bdgrz.criterion_applicability.list", 1)]

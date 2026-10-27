@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Current complete-close readiness at one verified period and source receipt cut; this report is not an admission.</summary>
 public sealed record ObservationPeriodClosePreview(Uuid TenantId, Uuid ProgramId, Uuid ObservationPeriodId,

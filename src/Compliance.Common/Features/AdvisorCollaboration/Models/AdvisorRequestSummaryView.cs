@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 
 /// <summary>Scoped handoff directory with status and review readiness.</summary>
 public sealed record AdvisorRequestSummaryView(Uuid TenantId, Uuid ProgramId, Uuid AdvisorRequestId,

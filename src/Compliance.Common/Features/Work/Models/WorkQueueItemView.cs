@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Models;
 
 /// <summary>
 ///     An accountable work item linked to its exact source record: control_occurrence,

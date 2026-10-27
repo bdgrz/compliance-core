@@ -1,3 +1,27 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Aggregates;
+using Bdgrz.Compliance.Features.AuditPackages.Commands;
+using Bdgrz.Compliance.Features.AuditPackages.Events;
+using Bdgrz.Compliance.Features.AuditPackages.Handlers;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Readers;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.Examinations.Commands;
+using Bdgrz.Compliance.Features.Examinations.Handlers;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Examinations.Queries;
+using Bdgrz.Compliance.Features.Examinations.Readers;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Snapshots.Aggregates;
+using Bdgrz.Compliance.Features.Snapshots.Models;
+using Bdgrz.Compliance.Features.Snapshots.Readers;
 using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Operations;
 using System.IO.Compression;
@@ -391,69 +415,69 @@ public sealed class SnapshotSourcePublicationTests
             string? cursor, CancellationToken ct = default) => ValueTask.FromResult(new Page<PopulationSnapshotSummary>([summary], null));
     }
 
-    sealed class ProgramReader : Bdgrz.Compliance.Features.Programs.IProgramDirectoryReader
+    sealed class ProgramReader : Bdgrz.Compliance.Features.Programs.Readers.IProgramDirectoryReader
     {
-        public ValueTask<Bdgrz.Compliance.Features.Programs.ProgramView?> GetAsync(Uuid tenantId,
+        public ValueTask<Bdgrz.Compliance.Features.Programs.Models.ProgramView?> GetAsync(Uuid tenantId,
             Uuid programId, CancellationToken ct = default) => ValueTask.FromResult<
-            Bdgrz.Compliance.Features.Programs.ProgramView?>(null);
+            Bdgrz.Compliance.Features.Programs.Models.ProgramView?>(null);
 
-        public ValueTask<Page<Bdgrz.Compliance.Features.Programs.ProgramView>> ListAsync(
+        public ValueTask<Page<Bdgrz.Compliance.Features.Programs.Models.ProgramView>> ListAsync(
             Uuid tenantId, int limit, string? cursor, CancellationToken ct = default) =>
-            ValueTask.FromResult(new Page<Bdgrz.Compliance.Features.Programs.ProgramView>([], null));
+            ValueTask.FromResult(new Page<Bdgrz.Compliance.Features.Programs.Models.ProgramView>([], null));
 
-        public ValueTask<Page<Bdgrz.Compliance.Features.Programs.ProgramRevisionView>?>
+        public ValueTask<Page<Bdgrz.Compliance.Features.Programs.Models.ProgramRevisionView>?>
             ListRevisionsAsync(Uuid tenantId, Uuid programId, int limit, string? cursor,
                 CancellationToken ct = default) => ValueTask.FromResult<
-                Page<Bdgrz.Compliance.Features.Programs.ProgramRevisionView>?>(null);
+                Page<Bdgrz.Compliance.Features.Programs.Models.ProgramRevisionView>?>(null);
 
-        public ValueTask<Bdgrz.Compliance.Features.Programs.ProgramRevisionView?> GetRevisionAsync(
+        public ValueTask<Bdgrz.Compliance.Features.Programs.Models.ProgramRevisionView?> GetRevisionAsync(
             Uuid tenantId, Uuid programId, long revision, CancellationToken ct = default) =>
-            ValueTask.FromResult<Bdgrz.Compliance.Features.Programs.ProgramRevisionView?>(null);
+            ValueTask.FromResult<Bdgrz.Compliance.Features.Programs.Models.ProgramRevisionView?>(null);
 
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
             CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
     }
 
-    sealed class BoundaryReader(Bdgrz.Compliance.Features.Boundaries.BoundaryView boundary,
-            Bdgrz.Compliance.Features.Boundaries.BoundaryVersionView effectiveVersion)
-            : Bdgrz.Compliance.Features.Boundaries.IBoundaryDirectoryReader
+    sealed class BoundaryReader(Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView boundary,
+            Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView effectiveVersion)
+            : Bdgrz.Compliance.Features.Boundaries.Readers.IBoundaryDirectoryReader
     {
-        public ValueTask<Bdgrz.Compliance.Features.Boundaries.BoundaryView?> GetAsync(
+        public ValueTask<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView?> GetAsync(
             Uuid tenantId, Uuid boundaryId, CancellationToken ct = default) =>
-            ValueTask.FromResult<Bdgrz.Compliance.Features.Boundaries.BoundaryView?>(
+            ValueTask.FromResult<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView?>(
                 tenantId == boundary.TenantId && boundaryId == boundary.BoundaryId ? boundary : null);
 
-        public ValueTask<Page<Bdgrz.Compliance.Features.Boundaries.BoundaryView>> ListProgramAsync(
+        public ValueTask<Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView>> ListProgramAsync(
             Uuid tenantId, Uuid programId, int limit, string? cursor,
             CancellationToken ct = default) => ValueTask.FromResult(
-            new Page<Bdgrz.Compliance.Features.Boundaries.BoundaryView>([], null));
+            new Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView>([], null));
 
-        public ValueTask<Bdgrz.Compliance.Features.Boundaries.BoundaryVersionView?> GetVersionAsync(
+        public ValueTask<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView?> GetVersionAsync(
             Uuid tenantId, Uuid boundaryId, Uuid versionId, CancellationToken ct = default) =>
-            ValueTask.FromResult<Bdgrz.Compliance.Features.Boundaries.BoundaryVersionView?>(
+            ValueTask.FromResult<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView?>(
                 tenantId == effectiveVersion.TenantId && boundaryId == effectiveVersion.BoundaryId &&
                 versionId == effectiveVersion.VersionId ? effectiveVersion : null);
 
-        public ValueTask<Page<Bdgrz.Compliance.Features.Boundaries.BoundaryVersionView>?>
+        public ValueTask<Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView>?>
             ListVersionsAsync(Uuid tenantId, Uuid boundaryId, int limit, string? cursor,
                 CancellationToken ct = default) => ValueTask.FromResult<
-                Page<Bdgrz.Compliance.Features.Boundaries.BoundaryVersionView>?>(null);
+                Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView>?>(null);
 
-        public ValueTask<Bdgrz.Compliance.Features.Boundaries.BoundaryVersionView?>
+        public ValueTask<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView?>
             GetEffectiveVersionAsync(Uuid tenantId, Uuid boundaryId, DateOnly effectiveOn,
                 CancellationToken ct = default) => ValueTask.FromResult<
-                Bdgrz.Compliance.Features.Boundaries.BoundaryVersionView?>(
+                Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView?>(
                 tenantId == effectiveVersion.TenantId && boundaryId == effectiveVersion.BoundaryId &&
                 effectiveOn >= effectiveVersion.EffectiveFrom ? effectiveVersion : null);
 
-        public ValueTask<Bdgrz.Compliance.Features.Boundaries.BoundaryDecisionView?> GetDecisionAsync(
+        public ValueTask<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryDecisionView?> GetDecisionAsync(
             Uuid tenantId, Uuid boundaryId, Uuid decisionId, CancellationToken ct = default) =>
-            ValueTask.FromResult<Bdgrz.Compliance.Features.Boundaries.BoundaryDecisionView?>(null);
+            ValueTask.FromResult<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryDecisionView?>(null);
 
-        public ValueTask<Page<Bdgrz.Compliance.Features.Boundaries.BoundaryDecisionView>?>
+        public ValueTask<Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryDecisionView>?>
             ListDecisionsAsync(Uuid tenantId, Uuid boundaryId, int limit, string? cursor,
                 CancellationToken ct = default) => ValueTask.FromResult<
-                Page<Bdgrz.Compliance.Features.Boundaries.BoundaryDecisionView>?>(null);
+                Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryDecisionView>?>(null);
 
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
             CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);

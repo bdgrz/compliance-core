@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Queries;
 
 [Discriminator("bdgrz.readiness.assessments.list", 1)]
 public sealed record ListReadinessAssessments(Uuid TenantId, Uuid ProgramId,

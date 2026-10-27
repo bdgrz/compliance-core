@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Handlers;
+using Bdgrz.Compliance.Features.Programs.Models;
 using System.Reflection;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Programs;

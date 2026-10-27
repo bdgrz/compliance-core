@@ -2,7 +2,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-internal static class ApplicationRelationshipIdentity
+static class ApplicationRelationshipIdentity
 {
     public const string DependsOn = "depends_on";
     public const string Replaces = "replaces";

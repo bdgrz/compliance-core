@@ -1,3 +1,13 @@
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Projections;
+using Bdgrz.Compliance.Features.Applications.Queries;
+using Bdgrz.Compliance.Features.Applications.Readers;
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
+using Bdgrz.Compliance.Features.TechnologyInventory.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Queries;
 using System.Security.Claims;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Applications;

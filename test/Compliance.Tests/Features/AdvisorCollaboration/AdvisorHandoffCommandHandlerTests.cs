@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Aggregates;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Events;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Tests.Testing;

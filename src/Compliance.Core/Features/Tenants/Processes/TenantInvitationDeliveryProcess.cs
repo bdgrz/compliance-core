@@ -1,10 +1,14 @@
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Tenants.Commands;
+using Bdgrz.Compliance.Features.Tenants.Events;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Processes;
 
 /// <summary>
 ///     The delivery process of one invitation, keyed by the invitation's root operation. Its root is the invitation

@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>An immutable tenant-authored application state after one aggregate event.</summary>
 public sealed record ApplicationRevisionView(Uuid TenantId, Uuid ApplicationId, long Revision,

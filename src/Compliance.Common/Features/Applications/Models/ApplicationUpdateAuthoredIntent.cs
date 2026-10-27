@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Applications.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>
 ///     The canonical authored intent of an application revision, shared by the HTTP binder, the MCP adapter and the

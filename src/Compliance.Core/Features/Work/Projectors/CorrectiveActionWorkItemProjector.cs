@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Work.Projections;
 using Bdgrz.Compliance.Features.Remediation;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Projectors;
 
 public sealed class CorrectiveActionWorkItemProjector(
     ICorrectiveActionWorkItemProjection projection)

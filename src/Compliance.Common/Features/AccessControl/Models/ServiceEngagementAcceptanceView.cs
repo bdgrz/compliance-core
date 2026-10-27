@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 public sealed record ServiceEngagementAcceptanceView(Uuid TenantId, Uuid EngagementId,
     long ReviewedDraftRevision, long Revision, Uuid ReviewTaskId, Uuid PartnerStaffMemberId,

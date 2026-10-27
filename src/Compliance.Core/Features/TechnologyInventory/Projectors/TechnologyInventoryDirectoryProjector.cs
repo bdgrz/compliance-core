@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
+using Bdgrz.Compliance.Features.TechnologyInventory.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Projectors;
 
 public sealed partial class TechnologyInventoryDirectoryProjector(
     ITechnologyInventoryProjection projection)

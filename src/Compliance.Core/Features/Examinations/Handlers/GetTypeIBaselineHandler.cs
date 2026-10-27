@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Examinations.Queries;
+using Bdgrz.Compliance.Features.Examinations.Readers;
+using Bdgrz.Compliance.Features.Snapshots.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Handlers;
 
 public sealed class GetTypeIBaselineHandler(IExaminationEngagementDirectoryReader directory, IDomainEventReader events,
     ExaminationEngagementReader examinations, IImmutableContentStore? content = null)

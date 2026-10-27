@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
+using Bdgrz.Compliance.Features.UserIdentities.Events;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Reactors;
 
 public sealed partial class EmailReservationReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus)
     : Reactor(checkpoints, EventStreamPattern.ForPattern("bdgrz", "user-identities")),

@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Events;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Commitments.Projections;
+using Bdgrz.Compliance.Features.Commitments.Readers;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;

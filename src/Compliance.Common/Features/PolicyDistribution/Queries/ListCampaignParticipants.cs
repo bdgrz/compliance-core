@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 
 /// <summary>
 ///     Lists individually inspectable people and results. Person-level workforce and training

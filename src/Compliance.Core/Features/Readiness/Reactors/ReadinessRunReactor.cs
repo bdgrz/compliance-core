@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Events;
+using Bdgrz.Compliance.Features.Readiness.Processes;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Reactors;
 
 /// <summary>
 ///     Starts <c>ReadinessRunProcess</c> from a committed run admission. The process record exists before the source

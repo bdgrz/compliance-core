@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>An immutable significance and impact decision tied to one exact incident version.</summary>
 public sealed record ComplianceIncidentImpactAssessmentView(

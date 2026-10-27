@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.Incidents;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.Incidents.Events;
+using Bdgrz.Compliance.Features.Incidents.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Aggregates;
 
 /// <summary>Compact native incident authority. Immutable history, sources and required completion proofs never become retained Aggregate state.</summary>
 public sealed class ComplianceIncident : Aggregate

@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Boundaries.Aggregates;
+using Bdgrz.Compliance.Features.Boundaries.Commands;
+using Bdgrz.Compliance.Features.Boundaries.Events;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Queries;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Snapshots;
 using Bdgrz.Compliance.Tests.Testing;

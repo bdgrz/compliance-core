@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>A provider-specific uncovered assertion, distinct from any readiness gap it informs.</summary>
 public sealed record ProviderCoverageGapView(Uuid TenantId, Uuid GapId, Uuid ProviderId,

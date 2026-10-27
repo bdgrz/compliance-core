@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Queries;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 /// <summary>Reads the current accepted snapshot of an engagement from its own owner.</summary>
 public sealed class GetServiceEngagementAcceptanceHandler(IAggregateReader reader, IImmutableContentStore content)

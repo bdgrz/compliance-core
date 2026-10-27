@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Commands;
 
 /// <summary>Records the execute artifact disposition intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.retention.execute-artifact-disposition", 1)]

@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Providers.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Readers;
 
 /// <summary>
 ///     Reads every assurance report and review of one provider from the assurance directory. The read is bracketed by

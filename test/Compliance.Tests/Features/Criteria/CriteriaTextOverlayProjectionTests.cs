@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Criteria.Aggregates;
+using Bdgrz.Compliance.Features.Criteria.Commands;
+using Bdgrz.Compliance.Features.Criteria.Events;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Criteria.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Criteria;

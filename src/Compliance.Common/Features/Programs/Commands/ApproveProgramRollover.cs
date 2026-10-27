@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Commands;
 
 /// <summary>Records the approve program rollover intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.programs.approve-program-rollover", 1)]

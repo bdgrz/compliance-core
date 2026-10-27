@@ -1,5 +1,5 @@
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Models;
 
 /// <summary>
 ///     One source family considered by a run. Status is assessed or not_assessed; a family that

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Type I engagement terms and the exact baseline lifecycle revision.</summary>
 public sealed record ExaminationEngagementView(

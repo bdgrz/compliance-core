@@ -1,9 +1,19 @@
+using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Snapshots.Aggregates;
+using Bdgrz.Compliance.Features.Snapshots.Models;
+using Bdgrz.Compliance.Features.Snapshots.Queries;
+using Bdgrz.Compliance.Features.Snapshots.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Handlers;
 
 public sealed class VerifyProgramScopeSnapshotHandler(ISnapshotDirectoryReader snapshots,
     IProgramDirectoryReader programs, IBoundaryDirectoryReader boundaries,

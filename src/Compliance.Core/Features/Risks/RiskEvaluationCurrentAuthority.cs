@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 namespace Bdgrz.Compliance.Features.Risks;
 /// <summary>Three current assessment slots and the current decisions, stored as immutable content.</summary>

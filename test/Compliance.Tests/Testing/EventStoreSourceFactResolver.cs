@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>Privacy-safe identity of an exact retained operator-owned directory decision.</summary>
 public sealed record DirectoryStatusSourceView(Uuid EventId, Uuid RequestId, long SourceSequence,

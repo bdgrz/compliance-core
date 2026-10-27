@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>
 ///     A governed system activity or data-handling process (M0-D22). It is distinct from a

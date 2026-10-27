@@ -1,3 +1,23 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Events;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Queries;
+using Bdgrz.Compliance.Features.AuditPopulations.Readers;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Commands;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Operations.Aggregates;
+using Bdgrz.Compliance.Features.Operations.Events;
+using Bdgrz.Compliance.Features.Operations.Handlers;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Queries;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Snapshots.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Tests.Features.SystemDescription;
 using Bdgrz.Compliance.Features.SystemDescription;
@@ -14,7 +34,7 @@ using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
+using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.Aggregates.TypeIIPlan;
 
 namespace Bdgrz.Compliance.Tests.Features.Operations;
 

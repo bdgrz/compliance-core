@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Events;
 
 /// <summary>Creates a versioned assertion and records its exact input bindings and wording.</summary>
 [Discriminator("bdgrz.examinations.management-assertion-recorded", 2)]

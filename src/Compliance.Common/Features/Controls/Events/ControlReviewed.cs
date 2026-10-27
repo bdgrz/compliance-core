@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.NativeOperations;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Events;
 
 [Discriminator("bdgrz.control.reviewed", 2)]
 public sealed record ControlReviewed(Uuid TenantId, Uuid ProgramId, Uuid ControlId,

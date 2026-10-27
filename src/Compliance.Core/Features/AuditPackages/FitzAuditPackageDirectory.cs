@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AuditPackages.Aggregates;
+using Bdgrz.Compliance.Features.AuditPackages.Events;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Projections;
+using Bdgrz.Compliance.Features.AuditPackages.Readers;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 

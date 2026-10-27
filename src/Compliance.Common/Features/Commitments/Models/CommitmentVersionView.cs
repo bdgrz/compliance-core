@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Models;
 
 /// <summary>
 /// An immutable effective version. <c>PerformedBy</c> names the party that performs the

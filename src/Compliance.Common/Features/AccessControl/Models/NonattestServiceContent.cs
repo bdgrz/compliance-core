@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 public sealed record NonattestServiceContent(Uuid ServiceEngagementId, string ServiceType,
     DateOnly StartedOn, DateOnly? EndedOn, IReadOnlyList<Uuid> FirmStaffMemberIds,

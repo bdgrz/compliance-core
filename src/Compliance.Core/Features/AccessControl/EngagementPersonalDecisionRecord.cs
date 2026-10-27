@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl.Events;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>

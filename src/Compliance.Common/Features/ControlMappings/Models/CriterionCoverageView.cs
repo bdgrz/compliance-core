@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Criteria;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Models;
 
 /// <summary>
 ///     Mapping coverage for one catalog entry: not_applicable when an independently reviewed

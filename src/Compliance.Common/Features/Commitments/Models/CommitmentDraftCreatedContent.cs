@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Models;
 
 public sealed record CommitmentDraftCreatedContent(Uuid TenantId, Uuid ProgramId, Uuid DraftId,
     Uuid CreateRequestId, Uuid ServiceId, string Kind, string Identifier,

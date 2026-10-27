@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SourceUse.Models;
 using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.NativeOperations;

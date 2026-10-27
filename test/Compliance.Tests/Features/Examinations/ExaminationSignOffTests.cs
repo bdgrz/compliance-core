@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using ExaminationSignOffAggregate = Bdgrz.Compliance.Features.Examinations.ExaminationSignOff;
+using ExaminationSignOffAggregate = Bdgrz.Compliance.Features.Examinations.Aggregates.ExaminationSignOff;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 

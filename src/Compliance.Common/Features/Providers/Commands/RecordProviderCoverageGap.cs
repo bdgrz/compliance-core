@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Providers.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Commands;
 
 /// <summary>Records a provider coverage gap. <paramref name="GapId" /> is the logical identity of the creation.</summary>
 [Discriminator("bdgrz.provider.coverage_gap.record", 1)]

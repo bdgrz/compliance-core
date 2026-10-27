@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Events;
 
 /// <summary>Registers uploaded content as evidence awaiting inspection; the content is not yet available.</summary>
 [Discriminator("bdgrz.evidence.artifact.registered", 1)]

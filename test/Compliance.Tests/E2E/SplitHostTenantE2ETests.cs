@@ -83,9 +83,9 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             {
                 await using var scope = factory.Services.CreateAsyncScope();
                 var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-                var first = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Tenant(firstId));
-                var second = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Tenant(secondId));
-                var later = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Tenant(laterId));
+                var first = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(firstId));
+                var second = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(secondId));
+                var later = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(laterId));
                 firstActive = first.IsActive;
                 firstRejected = !first.IsRegistered;
                 secondActive = second.IsActive;
@@ -155,7 +155,7 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var source = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-                .HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Tenant(tenantId));
+                .HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(tenantId));
             Assert.False(source.IsActive);
         }
 
@@ -359,7 +359,7 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             Uuid memberEpisodeId;
             await using (var episodeScope = worker.Services.CreateAsyncScope())
                 memberEpisodeId = (await episodeScope.ServiceProvider.GetRequiredService<IAggregateReader>()
-                    .HydrateAsync(Bdgrz.Compliance.Features.AccessControl.Member.ForVerification(tenantId, memberId)))
+                    .HydrateAsync(Bdgrz.Compliance.Features.AccessControl.Aggregates.Member.ForVerification(tenantId, memberId)))
                     .MembershipEpisodeId;
             using var assigned = await creator.PutAsJsonAsync(
                 $"/api/v1/tenants/{tenantId}/teams/{administratorsTeamId}/members/{memberId}/{Uuid.CreateVersion4()}",
@@ -989,7 +989,7 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             var projectionServices = checkpointScope.ServiceProvider;
             var projectionGate = new BrokerProjectionGate(
                 projectionServices.GetRequiredService<IDomainEventReader>(),
-                projectionServices.GetRequiredService<Bdgrz.Compliance.Features.AccessControl.IPermissionProjection>(),
+                projectionServices.GetRequiredService<Bdgrz.Compliance.Features.AccessControl.Projections.IPermissionProjection>(),
                 permissionProjectionIdentity);
             var requiredGrantEvents = new Dictionary<string, DomainEventRecord>(StringComparer.Ordinal);
             var requiredPermissions = new HashSet<string>(StringComparer.Ordinal)
@@ -1014,7 +1014,7 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             {
                 foreach (var record in await projectionGate.ReadNewEventsAsync())
                 {
-                    if (record.Event is Bdgrz.Compliance.Features.AccessControl.RolePermissionAssigned grant &&
+                    if (record.Event is Bdgrz.Compliance.Features.AccessControl.Events.RolePermissionAssigned grant &&
                         grant.RoleId == administratorRoleId && requiredPermissions.Contains(grant.Permission))
                         requiredGrantEvents[grant.Permission] = record;
                 }
@@ -1023,13 +1023,13 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
                 (permissionCheckpoint, requiredEventsCheckpointed) =
                     await projectionGate.ObserveAsync(requiredEventIds);
                 membershipProjected = await projectionServices.GetRequiredService<
-                    Bdgrz.Compliance.Features.Tenants.ITenantMembershipDirectoryReader>()
+                    Bdgrz.Compliance.Features.Tenants.Readers.ITenantMembershipDirectoryReader>()
                     .IsMemberAsync(tenantId.ToString(), parsedAdministratorId);
                 projectedAccessEdges = await projectionServices.GetRequiredService<
-                        Bdgrz.Compliance.Features.AccessControl.IMemberAccessReader>()
+                        Bdgrz.Compliance.Features.AccessControl.Readers.IMemberAccessReader>()
                     .ReadAsync(tenantId, memberId);
                 var underlyingPermissions = projectionServices.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.FitzPermissionAuthorizer>();
+                    Bdgrz.Compliance.Features.AccessControl.Authorizers.FitzPermissionAuthorizer>();
                 underlyingTenantAccess = await underlyingPermissions.IsAllowedAsync(tenantId,
                     parsedAdministratorId, memberId,
                     Bdgrz.Compliance.Features.AccessControl.RbacPermissions.TenantAccess);
@@ -1124,17 +1124,17 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
                 var services = diagnostics.ServiceProvider;
                 var reader = services.GetRequiredService<IAggregateReader>();
                 var tenant = await reader.HydrateAsync(
-                    new Bdgrz.Compliance.Features.Tenants.Tenant(tenantId));
+                    new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(tenantId));
                 var member = await reader.HydrateAsync(
-                    new Bdgrz.Compliance.Features.AccessControl.Member(tenantId, parsedAdministratorId));
+                    new Bdgrz.Compliance.Features.AccessControl.Aggregates.Member(tenantId, parsedAdministratorId));
                 var assignment = await reader.HydrateAsync(
-                    new Bdgrz.Compliance.Features.AccessControl.TeamMember(tenantId,
+                    new Bdgrz.Compliance.Features.AccessControl.Aggregates.TeamMember(tenantId,
                         administratorsTeamId, memberId));
                 var memberships = services.GetRequiredService<
-                    Bdgrz.Compliance.Features.Tenants.ITenantMembershipDirectoryReader>();
+                    Bdgrz.Compliance.Features.Tenants.Readers.ITenantMembershipDirectoryReader>();
                 var isMember = await memberships.IsMemberAsync(tenantId.ToString(), parsedAdministratorId);
                 var permissions = services.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.IPermissionAuthorizer>();
+                    Bdgrz.Compliance.Features.AccessControl.Authorizers.IPermissionAuthorizer>();
                 var tenantAccess = await permissions.IsAllowedAsync(tenantId, parsedAdministratorId,
                     memberId, Bdgrz.Compliance.Features.AccessControl.RbacPermissions.TenantAccess);
                 var rbacManage = await permissions.IsAllowedAsync(tenantId, parsedAdministratorId,
@@ -1142,16 +1142,16 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
                 var programManage = await permissions.IsAllowedAsync(tenantId, parsedAdministratorId,
                     memberId, Bdgrz.Compliance.Features.AccessControl.RbacPermissions.ProgramManage);
                 var accessEdges = await services.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.IMemberAccessReader>()
+                    Bdgrz.Compliance.Features.AccessControl.Readers.IMemberAccessReader>()
                     .ReadAsync(tenantId, memberId);
                 var rolePermissionPage = await services.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.IRolePermissionDirectoryReader>()
+                    Bdgrz.Compliance.Features.AccessControl.Readers.IRolePermissionDirectoryReader>()
                     .ListAsync(tenantId, administratorRoleId, 200, null, null, descending: false);
                 var administratorRoleTeams = await services.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.IRoleTeamDirectoryReader>()
+                    Bdgrz.Compliance.Features.AccessControl.Readers.IRoleTeamDirectoryReader>()
                     .ListAsync(tenantId, administratorRoleId, 200, null, null, descending: false);
                 var permissionCheckpointAfterRecovery = await services.GetRequiredService<
-                        Bdgrz.Compliance.Features.AccessControl.IPermissionProjection>()
+                        Bdgrz.Compliance.Features.AccessControl.Projections.IPermissionProjection>()
                     .LoadCheckpointAsync(new CheckpointIdentity("PermissionProjection",
                         EventStreamPattern.ForPattern(tenantId.ToString())));
                 var pendingPermissionEventTypes = new List<string>();

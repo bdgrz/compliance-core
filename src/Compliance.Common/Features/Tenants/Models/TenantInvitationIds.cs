@@ -1,7 +1,7 @@
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Models;
 
 /// <summary>Deterministic identities derived from an invitation id.</summary>
 public static class TenantInvitationIds

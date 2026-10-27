@@ -1,6 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Handlers;
 
 /// <summary>
 ///     Lists one scope of the actor's work in M0-D15 order: due date (undated last), materiality,

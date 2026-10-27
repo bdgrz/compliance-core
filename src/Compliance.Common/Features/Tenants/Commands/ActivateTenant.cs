@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 [Discriminator("bdgrz.tenant.activate", 1)]
 public sealed record ActivateTenant(Uuid CommandId, Uuid TenantId, Uuid FirstAdministratorUserId,

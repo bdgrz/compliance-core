@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Queries;
 
 /// <summary>
 ///     Lists missing, duplicate, conflicting, stale, and access-only roster observations, ordered by

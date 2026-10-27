@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Models;
 using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
@@ -83,7 +85,7 @@ public sealed class SignificantChangeTests
         Assert.Equal(1000, change.Current.Current.Content.EvidenceArtifactIds.Count);
         await using var fixture = new SignificantChangeNativeFixture();
         await ChangeSeeds.WriteAsync(fixture.Writer, fixture.Content, change);
-        var owner = await fixture.Reader.HydrateAsync(new Bdgrz.Compliance.Features.Changes.SignificantChange(TenantId, ProgramId, ChangeId));
+        var owner = await fixture.Reader.HydrateAsync(new Bdgrz.Compliance.Features.Changes.Aggregates.SignificantChange(TenantId, ProgramId, ChangeId));
         Assert.Equal(1, owner.NativeSequence);
         await foreach (var source in fixture.Events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(), "significant-changes", ChangeId.ToString()), EventCursor.Start, CancellationToken.None))
             if (!source.Event.Metadata.IsAudit)

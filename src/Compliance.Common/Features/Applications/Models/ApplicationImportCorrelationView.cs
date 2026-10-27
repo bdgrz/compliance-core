@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 public sealed record ApplicationImportCorrelationView(string Decision, Uuid ApplicationId,
     long? ExpectedApplicationRevision, string Reason, Uuid ActorMemberId,

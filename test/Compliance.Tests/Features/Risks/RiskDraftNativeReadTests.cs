@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Handlers;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Queries;
+using Bdgrz.Compliance.Features.Risks.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Risks;

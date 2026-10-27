@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Commands;
 
 /// <summary>
 ///     Accepts or rejects the pending not-applicable proposal named by <paramref name="DecisionId" /> at the exact

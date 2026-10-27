@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Commands;
 
 /// <summary>
 ///     Runs the manual readiness rules for a program as of a time (now by default). <paramref name="AssessmentId" /> is

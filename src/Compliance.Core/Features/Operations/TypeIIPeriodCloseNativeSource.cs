@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.NativeOperations;

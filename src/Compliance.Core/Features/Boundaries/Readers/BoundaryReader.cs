@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Boundaries.Aggregates;
+using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Readers;
 
 /// <summary>Verified current and historical read composition at the hydrated native owner cut.</summary>
 public sealed class BoundaryReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)

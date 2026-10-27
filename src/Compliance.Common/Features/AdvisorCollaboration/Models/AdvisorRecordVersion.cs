@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 
 /// <summary>
 ///     An exact selected source version. Legacy UUID pairs remain readable for previously

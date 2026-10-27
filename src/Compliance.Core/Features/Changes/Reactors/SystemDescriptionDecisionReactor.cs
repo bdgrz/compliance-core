@@ -1,12 +1,22 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Readers;
+using Bdgrz.Compliance.Features.Incidents.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Events;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
 using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Reactors;
 
 public sealed partial class SystemDescriptionDecisionReactor(
     IProjectionCheckpointStore checkpoints, IRequestBus bus, IAggregateReader reader,

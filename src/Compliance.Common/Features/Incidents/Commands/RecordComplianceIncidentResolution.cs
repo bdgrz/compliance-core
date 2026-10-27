@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Incidents.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Commands;
 
 /// <summary>
 ///     Resolves the incident. <paramref name="CommandId" /> is the logical identity of the operation; completion of

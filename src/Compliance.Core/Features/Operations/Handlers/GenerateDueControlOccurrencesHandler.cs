@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Aggregates;
+using Bdgrz.Compliance.Features.Operations.Commands;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Kernel;
@@ -6,7 +12,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Handlers;
 
 /// <summary>
 ///     Selects the due recurring occurrences of one active Type II period for a generation key. Each selected

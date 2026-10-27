@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Evaluations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Commands;
 
 /// <summary>
 ///     Records the evaluator's result for one step. A not_met result needs a deviation classification of minor or

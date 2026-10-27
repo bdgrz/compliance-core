@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Examinations.Events;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
@@ -5,7 +8,7 @@ using System.Text.Json;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Aggregates;
 
 /// <summary>
 /// Owns the pre-period Type II operating plan and its review and executive approval.
@@ -330,7 +333,7 @@ public sealed class TypeIIPlan : Aggregate
                 item.ExpectedEvidenceDescriptions is null && requireExpectedEvidence ||
                 item.ExpectedEvidenceDescriptions is { } evidence && !ValidExpectedEvidence(evidence) ||
                 item.DueWithinDays is < 0 or >
-                    Bdgrz.Compliance.Features.Operations.ControlCadence.MaximumDueWithinDays ||
+                    Bdgrz.Compliance.Features.Operations.Models.ControlCadence.MaximumDueWithinDays ||
                 item.EffectiveFrom < content.PeriodStart || item.EffectiveFrom > content.PeriodEnd ||
                 item.EffectiveThrough is { } through && (through < item.EffectiveFrom || through > content.PeriodEnd)) ||
             content.Controls.Select(item => (item.ControlId, item.ControlVersionId)).Distinct().Count() != content.Controls.Count ||

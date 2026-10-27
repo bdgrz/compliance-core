@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Tenants.Events;
+using Bdgrz.Compliance.Features.Tenants.Models;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;

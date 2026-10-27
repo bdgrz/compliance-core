@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Readiness.Events;
+using Bdgrz.Compliance.Features.Readiness.Handlers;
+using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
@@ -111,7 +117,7 @@ static class ReadinessContent
 
     /// <summary>The provenance of a root operation on a readiness owner.</summary>
     public static OperationProvenance Provenance(Uuid logicalId, string commandKind, EventStreamAddress owner,
-        AccessControl.ActorReference actor, ulong? expectedRevision, string intentDigest, DateTimeOffset acceptedAt) =>
+        AccessControl.Models.ActorReference actor, ulong? expectedRevision, string intentDigest, DateTimeOffset acceptedAt) =>
         new(logicalId, logicalId, null, commandKind, actor, owner, "initial", expectedRevision, intentDigest,
             acceptedAt, owner, owner);
 

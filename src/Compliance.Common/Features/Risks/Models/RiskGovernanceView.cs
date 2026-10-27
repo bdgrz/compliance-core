@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Models;
 
 /// <summary>
 ///     A risk's owner, control treatment assertions, treatment actions, and reassessment

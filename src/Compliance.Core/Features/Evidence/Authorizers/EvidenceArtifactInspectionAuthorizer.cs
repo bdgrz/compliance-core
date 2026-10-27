@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Evidence.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Authorizers;
 
 sealed class EvidenceArtifactInspectionAuthorizer
     : IRequestAuthorizer<RecordEvidenceArtifactInspection>

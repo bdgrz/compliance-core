@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>A denial-only receipt; it supplies no partner evidence or new professional authority.</summary>
 public sealed record DirectoryIndependenceReevaluationView(Uuid ReevaluationId, Uuid TenantId,

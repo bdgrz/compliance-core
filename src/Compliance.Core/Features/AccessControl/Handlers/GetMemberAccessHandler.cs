@@ -1,8 +1,16 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Queries;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.TechnologyInventory;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 public sealed class GetMemberAccessHandler(ITenantMembershipDirectoryReader memberships,
     IMemberAccessReader access, ITeamDirectoryReader teams, IRoleDirectoryReader roles,

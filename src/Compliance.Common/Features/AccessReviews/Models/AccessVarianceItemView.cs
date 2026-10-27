@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>
 ///     One explained observation. <c>Category</c> is <c>expected</c>, <c>unexpected</c>,

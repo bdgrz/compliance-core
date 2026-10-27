@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Models;
 
 /// <summary>
 ///     A control design and implementation evaluation against one exact control version. State is

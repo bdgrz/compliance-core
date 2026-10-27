@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>
 ///     Reserves an email address for a user. <paramref name="CommandId" /> is the logical identity and

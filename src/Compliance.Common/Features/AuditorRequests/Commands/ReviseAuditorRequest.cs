@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Commands;
 
 /// <summary>Revises the wording, scope, priority and due date of an open request at its owner revision.</summary>
 [Discriminator("bdgrz.auditor-requests.revise-auditor-request", 2)]

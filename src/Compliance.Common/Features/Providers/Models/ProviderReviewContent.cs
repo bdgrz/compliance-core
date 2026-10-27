@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>
 ///     A reviewer's personal due-diligence conclusion (M0-D11 <c>ProviderReview</c>). Evidence is a

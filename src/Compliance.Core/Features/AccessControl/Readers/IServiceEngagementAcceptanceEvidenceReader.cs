@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>
 ///     Resolves current, authoritative acceptance evidence for one exact client draft. Implementations must fail

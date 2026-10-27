@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Events;
+using Bdgrz.Compliance.Features.Operations.Aggregates;
 using System.Collections;
 using System.Reflection;
 using Bdgrz.Compliance.Features.AuditPopulations;

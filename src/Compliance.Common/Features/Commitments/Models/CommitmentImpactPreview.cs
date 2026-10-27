@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Models;
 
 /// <summary>
 /// Changes between the latest effective version and the draft revision, plus dependents

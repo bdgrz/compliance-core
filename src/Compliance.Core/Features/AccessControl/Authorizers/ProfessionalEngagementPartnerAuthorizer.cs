@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.Tenants;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 /// <summary>Restricts partner workflow requests to personal HTTP calls by the current designated client partner.</summary>
 sealed class ProfessionalEngagementPartnerAuthorizer(ProfessionalDutyAuthorityReader duties,

@@ -1,10 +1,14 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Risks.Events;
+using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Aggregates;
 
 /// <summary>Current compact risk identity and one selected native acceptance; narrative and history are read composition.</summary>
 public sealed class RiskDraft : Aggregate

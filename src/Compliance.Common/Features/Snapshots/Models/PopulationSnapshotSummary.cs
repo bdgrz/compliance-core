@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Models;
 
 /// <summary>A frozen population snapshot's identity and lineage, without its rows.</summary>
 public sealed record PopulationSnapshotSummary(Uuid TenantId, Uuid SnapshotId, Uuid RootSnapshotId,

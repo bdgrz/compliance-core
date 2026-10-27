@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Responsibilities.Events;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Projections;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 

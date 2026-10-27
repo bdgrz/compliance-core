@@ -1,10 +1,17 @@
+using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Commands;
+using Bdgrz.Compliance.Features.Evidence.Events;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Aggregates;
 
 /// <summary>Owns the current exact preparation and independent approval; complete history lives outside the command owner.</summary>
 public sealed class EvidenceRedaction : Aggregate

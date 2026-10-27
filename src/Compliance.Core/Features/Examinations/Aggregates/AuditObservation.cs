@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Examinations.Events;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -5,7 +7,7 @@ using System.Text.Json.Serialization.Metadata;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Aggregates;
 
 /// <summary>
 /// Owns one received auditor observation or exception. History remains in its stream; only the

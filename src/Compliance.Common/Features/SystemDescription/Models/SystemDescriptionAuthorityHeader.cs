@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>Bounded current description authority; narrative arrays and history are verified immutable content.</summary>
 public sealed record SystemDescriptionAuthorityHeader(Uuid TenantId, Uuid ProgramId, Uuid SystemDescriptionId,

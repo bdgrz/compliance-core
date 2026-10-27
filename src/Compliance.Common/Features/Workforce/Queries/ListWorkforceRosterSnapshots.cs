@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Queries;
 
 /// <summary>Lists roster snapshot identities and lineage, newest first, without roster rows.</summary>
 [Discriminator("bdgrz.snapshot.workforce_roster.list", 1)]

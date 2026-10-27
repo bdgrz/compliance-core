@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>
 ///     A calculated reading of recorded facts, never an approval or readiness gap (#489 owns

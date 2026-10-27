@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Criteria.Handlers;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Criteria.Queries;
+using Bdgrz.Compliance.Features.Criteria.Readers;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Criteria;

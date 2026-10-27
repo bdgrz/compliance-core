@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Reviewed content safe to transfer into platform methodology; omits tenant and source-record identities.</summary>
 public sealed record MethodologyTemplateContributionShareView(

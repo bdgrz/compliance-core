@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
+using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
+using Bdgrz.Compliance.Features.PolicyDistribution.Events;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
 using System.Runtime.CompilerServices;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
@@ -158,7 +163,7 @@ public sealed class PolicyCampaignNativeHistoryTests
 
         // Assert
         Assert.True(retry.IsSuccess, retry.Error?.Message);
-        var known = Assert.IsType<Bdgrz.Compliance.Features.Processes.ReceiverOutcome.Superseded>(retry.Value);
+        var known = Assert.IsType<Bdgrz.Compliance.Features.Processes.Models.ReceiverOutcome.Superseded>(retry.Value);
         Assert.Equal(before.CanceledFor(first.CommandId)!.Metadata.EventId, known.Evidence!.EventId);
         Assert.Equal(before.PendingClosure, after.PendingClosure);
         Assert.Equal(2, after.Generation);

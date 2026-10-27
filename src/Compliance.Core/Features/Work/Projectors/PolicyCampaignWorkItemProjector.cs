@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.PolicyDistribution.Events;
+using Bdgrz.Compliance.Features.Work.Projections;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Projectors;
 
 public sealed partial class PolicyCampaignWorkItemProjector(
     IPolicyCampaignWorkItemProjection projection)

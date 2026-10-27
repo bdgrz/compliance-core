@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Commands;
 
 /// <summary>Records the retire commitment intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.commitments.retire-commitment", 2)]

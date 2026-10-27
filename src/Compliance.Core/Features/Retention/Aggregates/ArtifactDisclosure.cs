@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Retention;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Retention.Events;
+using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Aggregates;
 
 /// <summary>One explicitly approved, delivered, and revocable disclosure record.</summary>
 public sealed class ArtifactDisclosure : Aggregate

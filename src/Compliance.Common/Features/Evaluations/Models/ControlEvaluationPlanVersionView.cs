@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Models;
 
 public sealed record ControlEvaluationPlanVersionView(Uuid TenantId, Uuid ProgramId,
     Uuid ControlId, Uuid ControlVersionId, Uuid PlanVersionId, long Version, string Objective,

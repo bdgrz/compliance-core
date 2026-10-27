@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Tenants.Events;
+using Bdgrz.Compliance.Features.Tenants.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Projectors;
 
 public sealed partial class TenantDirectoryProjector(ITenantDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForPattern("bdgrz", "tenants"), "TenantDirectory"),

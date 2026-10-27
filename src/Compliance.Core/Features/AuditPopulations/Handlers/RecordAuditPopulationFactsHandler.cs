@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AuditPopulations;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Handlers;
 
 public sealed class RecordAuditPopulationFactsHandler(AuditPopulationMutations mutations) : IRequestHandler<RecordAuditPopulationFacts>
 {

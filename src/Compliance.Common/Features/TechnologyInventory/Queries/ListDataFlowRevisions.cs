@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Queries;
 
 [Discriminator("bdgrz.inventory.data_flow.revision.list", 1)]
 public sealed record ListDataFlowRevisions(Uuid TenantId, Uuid DataFlowId, int? Limit = null,

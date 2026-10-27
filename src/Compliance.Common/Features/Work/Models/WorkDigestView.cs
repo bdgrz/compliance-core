@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Models;
 
 /// <summary>
 ///     One member's digest for the week starting <c>WeekOf</c> (Monday). The identifier is stable for

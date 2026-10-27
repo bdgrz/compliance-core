@@ -1,10 +1,13 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Commands;
 
 /// <summary>
 ///     Settles the report use after the recorded review (irreversible decision) or after the cancellation fence

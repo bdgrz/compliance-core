@@ -1,3 +1,12 @@
+using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Commitments.Commands;
+using Bdgrz.Compliance.Features.Commitments.Events;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json;
@@ -10,7 +19,7 @@ using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Aggregates;
 
 /// <summary>One deterministic commitment identity and compact authority; immutable bodies and historical scope sets are read separately.</summary>
 public sealed class CommitmentDraft : Aggregate

@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Evaluations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Commands;
 
 /// <summary>
 ///     The independent reviewer's personal decision on the submitted round; HTTP-only. Only a program manager who is

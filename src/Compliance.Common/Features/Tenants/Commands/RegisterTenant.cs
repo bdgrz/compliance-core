@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 /// <summary>
 ///     Creates an organization. FirstAdministratorEmail is retained for local developer

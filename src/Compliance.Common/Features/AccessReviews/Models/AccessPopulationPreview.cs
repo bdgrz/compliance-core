@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>
 ///     The issues and derived effective access of the current draft. <c>CanAccept</c> is true

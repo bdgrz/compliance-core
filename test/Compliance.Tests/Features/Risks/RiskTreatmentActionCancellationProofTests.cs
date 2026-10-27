@@ -1,3 +1,11 @@
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Commands;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Events;
+using Bdgrz.Compliance.Features.Risks.Processes;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.NativeOperations;

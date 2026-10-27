@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Tenant-scoped proposal and review record; its source identity never leaves this tenant stream.</summary>
 public sealed record MethodologyTemplateContributionView(

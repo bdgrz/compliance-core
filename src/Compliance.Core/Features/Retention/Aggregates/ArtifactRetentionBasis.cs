@@ -1,9 +1,16 @@
+using Bdgrz.Compliance.Features.Policies.Aggregates;
+using Bdgrz.Compliance.Features.Retention;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.Retention.Events;
+using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Aggregates;
 
 /// <summary>One immutable seven-year basis for one exact tenant artifact content identity.</summary>
 public sealed class ArtifactRetentionBasis : Aggregate

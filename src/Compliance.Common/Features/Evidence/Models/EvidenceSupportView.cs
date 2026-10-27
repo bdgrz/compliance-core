@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Models;
 
 /// <summary>Exact program link between one available artifact and the record revision it supports.</summary>
 public sealed record EvidenceSupportView(Uuid TenantId, Uuid ProgramId, Uuid EvidenceSupportId,

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>Authored supplier facts; registration is not an assurance or scope approval.</summary>
 public sealed record ProviderContent(string Name, string ProviderKind,

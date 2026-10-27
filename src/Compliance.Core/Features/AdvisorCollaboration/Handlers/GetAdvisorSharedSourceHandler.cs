@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Queries;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Handlers;
 
 /// <summary>Returns one source's current content only through an unexpired open handoff.</summary>
 public sealed class GetAdvisorSharedSourceHandler(AdvisorHandoffReader aggregates,

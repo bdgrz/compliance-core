@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Models;
 
 public sealed record BoundaryDecisionView(Uuid TenantId, Uuid BoundaryId,
     Uuid DecisionId, Uuid VersionId, long Revision, string Outcome,

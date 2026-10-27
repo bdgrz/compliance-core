@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Events;
 
 [Discriminator("bdgrz.sod-waiver.recorded", 1)]
 public sealed record SeparationOfDutiesWaiverRecorded(

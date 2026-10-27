@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Queries;
 
 /// <summary>
 ///     Lists the acting member's visible work in one program, derived from source workflows.

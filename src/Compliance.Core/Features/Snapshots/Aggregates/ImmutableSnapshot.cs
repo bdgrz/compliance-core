@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.Snapshots.Events;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Aggregates;
 
 public sealed class ImmutableSnapshot : Aggregate
 {

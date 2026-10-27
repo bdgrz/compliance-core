@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Applications.Events;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>
 ///     The complete content of a sealed omission proposal: the exact source snapshot it was prepared against, the

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 /// <summary>
 ///     Requests a tenant slug change. <paramref name="CommandId" /> is the logical identity of the change and an exact

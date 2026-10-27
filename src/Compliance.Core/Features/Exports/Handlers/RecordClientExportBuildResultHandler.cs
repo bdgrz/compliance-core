@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Exports.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Authorizers;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Exports.Events;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Handlers;
 
 public sealed class RecordClientExportBuildResultHandler(IAggregateExecutor executor,
     IDomainEventReader events, TimeProvider clock)

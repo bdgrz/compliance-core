@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;

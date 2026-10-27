@@ -1,3 +1,12 @@
+using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Commands;
+using Bdgrz.Compliance.Features.Readiness.Events;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.SourceUse.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
@@ -7,7 +16,7 @@ using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Processes;
 
 /// <summary>
 ///     The ordered readiness decision process: hold every frozen gap plan in canonical stream-key order, record the

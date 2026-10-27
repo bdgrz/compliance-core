@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>One exact immutable content-revision discovery identity.</summary>
 public sealed record ControlRevisionIdentity(Uuid TenantId, Uuid ProgramId, Uuid ControlId,

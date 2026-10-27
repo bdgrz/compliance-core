@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Commands;
 
 /// <summary>Submits the exact current draft version of a response; <paramref name="Version" /> is business content.</summary>
 [Discriminator("bdgrz.auditor-requests.submit-audit-response", 2)]

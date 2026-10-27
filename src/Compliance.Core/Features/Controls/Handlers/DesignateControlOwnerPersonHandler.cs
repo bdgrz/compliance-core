@@ -1,7 +1,13 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Controls.Commands;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Handlers;
 
 public sealed class DesignateControlOwnerPersonHandler(ControlOperations operations, IAggregateReader reader,
     ControlLifecycleReleaseGate releaseGate) : IRequestHandler<DesignateControlOwnerPerson>

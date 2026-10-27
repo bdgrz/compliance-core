@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Handlers;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Queries;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Providers;
 using Cntryl.Fitz.Testing;

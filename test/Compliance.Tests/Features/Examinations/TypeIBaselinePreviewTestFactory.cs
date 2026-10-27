@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Examinations;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;

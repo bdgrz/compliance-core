@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.AuditPackages.Commands;
+using Bdgrz.Compliance.Features.AuditPackages.Events;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Artifacts;
 using Bdgrz.Compliance.Features.Content;
@@ -6,7 +13,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Handlers;
 
 /// <summary>Admits a personal historical handoff and freezes its version before the child is materialized.</summary>
 public sealed class RecordAuditPackageDeliveryHandler(AuditPackageRootOperation operations,

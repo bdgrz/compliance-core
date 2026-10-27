@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 
 /// <summary>
 ///     Revises an information asset. <paramref name="CommandId" /> is the logical identity of the operation, so an

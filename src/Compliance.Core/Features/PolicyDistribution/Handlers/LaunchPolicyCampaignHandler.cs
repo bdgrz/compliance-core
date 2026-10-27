@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Bdgrz.Compliance.Features.Policies;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Handlers;
 
 /// <summary>Launches acknowledgement of the exact current approved policy version.</summary>
 sealed class LaunchPolicyCampaignHandler(CampaignLaunch launch, IAggregateReader reader, PolicyReader policySources)

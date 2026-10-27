@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Commands;
 
 /// <summary>
 ///     Cancels the exact pending completion review when a permanent proof mismatch makes it impossible and no final

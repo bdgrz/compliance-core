@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>One immutable package selection and its build, validation, disclosure, and delivery history.</summary>
 public sealed record AuditPackageVersionView(

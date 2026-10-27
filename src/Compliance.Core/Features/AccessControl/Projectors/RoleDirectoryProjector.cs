@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Projectors;
 
 public sealed partial class RoleDirectoryProjector(IRoleDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant(), "RoleDirectory"),

@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Controls.Events;
 using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Projectors;
 
 /// <summary>Projects approved Control versions and lifecycle changes into impact references.</summary>
 public sealed partial class ApplicationControlVersionReferenceProjector(

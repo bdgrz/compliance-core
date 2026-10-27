@@ -1,9 +1,12 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Handlers;
 
 public sealed class RecordClientExportDeliveryHandler(IAggregateExecutor executor,
     TimeProvider clock) : IRequestHandler<RecordClientExportDelivery>

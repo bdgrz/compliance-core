@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Events;
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Aggregates;
 
 /// <summary>
 ///     Owns one evidence artifact through the M0-D16 lifecycle. Content stays unavailable until a clean inspection;

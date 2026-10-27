@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Events;
 
 /// <summary>Appends a new immutable wording and input binding to a management assertion.</summary>
 [Discriminator("bdgrz.examinations.management-assertion-revised", 1)]

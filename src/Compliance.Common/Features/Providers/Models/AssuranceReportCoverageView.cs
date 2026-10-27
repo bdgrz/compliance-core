@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>
 ///     <c>Currency</c> is <c>current</c> or <c>stale</c>; <c>PeriodCoverage</c> is

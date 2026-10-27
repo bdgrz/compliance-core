@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Models;
 
 /// <summary>
 ///     A policy record. <c>Status</c> is <c>draft</c> (never approved), <c>approved</c>, or

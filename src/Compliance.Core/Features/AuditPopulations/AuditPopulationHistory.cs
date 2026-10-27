@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Aggregates;
+using Bdgrz.Compliance.Features.AuditPopulations.Events;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
@@ -16,7 +20,7 @@ static class AuditPopulationHistory
         var facts = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, owner, ct).ConfigureAwait(false);
         var rules = new AuditPopulationRules(owner.TenantId, owner.ProgramId, owner.Id);
         var sources = new AuditPopulationSources(events, resolver, content);
-        IReadOnlyList<DomainEventRecord> records = owner.CommittedStreamPosition == 0 ? Array.Empty<DomainEventRecord>() :
+        var records = owner.CommittedStreamPosition == 0 ? Array.Empty<DomainEventRecord>() :
             await sources.RecordsAsync(owner.Stream, owner.CommittedStreamPosition, ct).ConfigureAwait(false);
         var positions = records.Where(record => !record.Event.Metadata.IsAudit)
             .ToDictionary(record => record.Event.Metadata.EventId, record => record.ResourceOffset);

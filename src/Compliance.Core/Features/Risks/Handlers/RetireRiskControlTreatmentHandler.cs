@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Handlers;
 
 /// <summary>Retires only the exact accepted assertion; retries retain the original native result after succession.</summary>
 public sealed class RetireRiskControlTreatmentHandler(NativeOperationExecutor operations, IAggregateReader reader,

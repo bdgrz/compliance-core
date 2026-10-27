@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
 
 sealed class GetTenantProvisioningStatusAuthorizer(IAggregateReader reader)
     : IRequestAuthorizer<GetTenantProvisioningStatus>

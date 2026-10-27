@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.Policies.Events;
+using Bdgrz.Compliance.Features.Policies.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Projectors;
 
 public sealed partial class PolicyDirectoryProjector(IPolicyDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant("policies"),

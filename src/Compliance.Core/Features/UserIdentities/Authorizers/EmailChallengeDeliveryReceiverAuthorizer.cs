@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Authorizers;
 
 /// <summary>The receivers of the email challenge delivery process run as the trusted process principal only.</summary>
 public sealed class EmailChallengeDeliveryReceiverAuthorizer : IRequestAuthorizer<IEmailChallengeDeliveryReceiver>

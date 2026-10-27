@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Proofs;
@@ -7,7 +14,7 @@ using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Responsibilities;
+namespace Bdgrz.Compliance.Features.Responsibilities.Events;
 
 [Discriminator("bdgrz.responsibility.revoked", 1)]
 public sealed record ResponsibilityRevoked(Uuid TenantId, Uuid AssignmentId,

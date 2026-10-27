@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
 namespace Bdgrz.Compliance.Features.Artifacts;
 
 /// <summary>

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>A report-ready export identity tied to one approved description version.</summary>
 public sealed record SystemDescriptionExportView(Uuid ExportId, Uuid VersionId, long Version,

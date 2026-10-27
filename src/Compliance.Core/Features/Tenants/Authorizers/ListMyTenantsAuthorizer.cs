@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Tenants.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
 
 /// <summary>Listing the caller's own tenants requires an actor carrying a Bdgrz user identity.</summary>
 sealed class ListMyTenantsAuthorizer : IRequestAuthorizer<ListMyTenants>

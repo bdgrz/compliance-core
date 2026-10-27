@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 
 /// <summary>
 ///     Records a new data-flow version effective no earlier than its predecessor. <paramref name="CommandId" /> is

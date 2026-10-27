@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Handlers;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Queries;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Tests.Testing;

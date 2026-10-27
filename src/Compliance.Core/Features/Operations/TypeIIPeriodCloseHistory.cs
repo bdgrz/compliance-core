@@ -1,3 +1,12 @@
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Readers;
+using Bdgrz.Compliance.Features.Incidents.Models;
+using Bdgrz.Compliance.Features.Incidents.Readers;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Events;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using System.Security.Claims;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Changes;
@@ -117,7 +126,7 @@ public sealed class TypeIIPeriodCloseHistory(IDomainEventReader events,
                 var authority = await content.ReadJsonAsync<ComplianceIncidentCurrentAuthority>(tenant.ToString(), incident.CurrentContent, ct).ConfigureAwait(false);
                 var mutation = await content.ReadJsonAsync<ComplianceIncidentMutation>(tenant.ToString(), incident.Change, ct).ConfigureAwait(false);
                 var references = new[] { incident.CurrentContent,incident.Change,authority.VersionContent,authority.AssessmentContent,
-                    authority.DecisionContent,authority.ResolutionContent,mutation.Payload }.OfType<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef>().ToList();
+                    authority.DecisionContent,authority.ResolutionContent,mutation.Payload }.OfType<Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef>().ToList();
                 if (authority.ResolutionContent is { } resolutionRef)
                 {
                     var resolution = await content.ReadJsonAsync<ComplianceIncidentResolutionView>(tenant.ToString(), resolutionRef, ct).ConfigureAwait(false);

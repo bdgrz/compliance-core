@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Security.Claims;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Content;

@@ -1,9 +1,16 @@
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.AuditPackages.Readers;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Commands;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Handlers;
 
 /// <summary>Records a management letter against its approved assertion and exact delivered package.</summary>
 public sealed class RecordManagementRepresentationLetterHandler(IAggregateExecutor executor,

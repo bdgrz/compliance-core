@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>
 ///     Designates, or clears with a null <c>PersonId</c>, the governed workforce person who owns

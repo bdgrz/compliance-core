@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.Boundaries.Aggregates;
+using Bdgrz.Compliance.Features.Boundaries.Events;
+using Bdgrz.Compliance.Features.Risks.Readers;
 using Bdgrz.Compliance.Features.Boundaries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Reactors;
 
 /// <summary>
 ///     Raises M0-D10 boundary-change reassessment triggers when a successor boundary version is approved, one command

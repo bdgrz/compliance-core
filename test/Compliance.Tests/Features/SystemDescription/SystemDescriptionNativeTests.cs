@@ -1,3 +1,11 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Events;
+using Bdgrz.Compliance.Features.SystemDescription.Handlers;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Queries;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
@@ -55,7 +63,7 @@ public sealed class SystemDescriptionNativeTests
         Assert.True(result.IsSuccess, result.Error?.Message);
         var facts = await fixture.FactsAsync();
         Assert.Equal(2, facts.Count);
-        Assert.All(facts, value => Assert.Equal(new Bdgrz.Compliance.Features.SystemDescription.SystemDescription(fixture.Tenant, fixture.Program, fixture.Description).Stream,
+        Assert.All(facts, value => Assert.Equal(new Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription(fixture.Tenant, fixture.Program, fixture.Description).Stream,
             ((ISystemDescriptionFact)value).Operation.FirstOwner));
     }
 

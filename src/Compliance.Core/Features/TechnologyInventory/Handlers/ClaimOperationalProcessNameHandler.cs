@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
 
 /// <summary>Acquires or re-pins the operational process name claim a pending change needs; another holder is a definite refusal.</summary>
 public sealed class ClaimOperationalProcessNameHandler(NamedRecordReceivers receivers)

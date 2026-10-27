@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Models;
 using Bdgrz.Compliance.Features.Evidence;
 using Cntryl.Portia;
 

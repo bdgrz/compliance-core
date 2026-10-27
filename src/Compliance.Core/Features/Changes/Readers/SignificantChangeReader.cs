@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Readers;
 
 /// <summary>Reconstructs exact verified business content at a native owner cut or recorded-through receipt cut.</summary>
 public sealed class SignificantChangeReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content, INativeEventReceiptReader? receipts = null)

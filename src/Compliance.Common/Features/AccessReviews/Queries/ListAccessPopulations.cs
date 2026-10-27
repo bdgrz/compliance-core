@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Queries;
 
 /// <summary>Lists one system instance's populations, newest observation first.</summary>
 [Discriminator("bdgrz.access_population.list", 1)]

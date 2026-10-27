@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>Verifies full client service/use history before current reads, accepted retries and appends.</summary>
 public sealed class ClientServiceAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

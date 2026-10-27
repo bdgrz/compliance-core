@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.Criteria.Commands;
+using Bdgrz.Compliance.Features.Criteria.Events;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Criteria;
+namespace Bdgrz.Compliance.Features.Criteria.Aggregates;
 
 /// <summary>
 ///     The licensed text overlay of one criterion of one edition in one tenant: a sequential revision line. Its

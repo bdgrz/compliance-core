@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Boundaries;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Projections;
 
 static class BoundaryDirectorySchema
 {

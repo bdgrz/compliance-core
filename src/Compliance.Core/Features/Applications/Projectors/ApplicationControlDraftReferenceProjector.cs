@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Applications.Projections;
+using Bdgrz.Compliance.Features.Controls.Events;
 using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Projectors;
 
 /// <summary>Replays current Control draft applicability into a tenant-scoped reverse index.</summary>
 public sealed partial class ApplicationControlDraftReferenceProjector(

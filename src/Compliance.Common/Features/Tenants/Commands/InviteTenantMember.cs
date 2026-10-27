@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 /// <summary>
 ///     Invites a person to a tenant as a platform operator. <paramref name="InvitationId" /> is the client-chosen

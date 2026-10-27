@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Current scoped period status and dates; discovery ordering is held separately by immutable opening identity.</summary>
 public sealed record ObservationPeriodSummaryView(Uuid TenantId, Uuid ProgramId, Uuid ObservationPeriodId,

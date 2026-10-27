@@ -1,6 +1,15 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Authorizers;
 
 /// <summary>Tenant register operations require current business authority covering the organization.</summary>
 sealed class ProviderAuthorizer(ITenantMembershipDirectoryReader memberships,

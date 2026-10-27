@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Evidence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch the risk action completion review receivers on evidence requests.</summary>
 sealed class EvidenceRequestReceiverAuthorizer : IRequestAuthorizer<IEvidenceRequestReceiver>

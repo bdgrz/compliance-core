@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Handlers;
 
 public sealed class PreviewBoundaryImpactHandler(BoundaryImpactService service)
     : IRequestHandler<PreviewBoundaryImpact, BoundaryImpactPreview>

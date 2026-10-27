@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Applications.Models;
 using System.Text.Json.Serialization;
 using Cntryl.Portia;
 

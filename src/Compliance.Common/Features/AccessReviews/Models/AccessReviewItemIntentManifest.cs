@@ -1,4 +1,5 @@
-namespace Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Events;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>
 ///     The complete, immutable selection of one launch: every item in canonical item order with the reference to its

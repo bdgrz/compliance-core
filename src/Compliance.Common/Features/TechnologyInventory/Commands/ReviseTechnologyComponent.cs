@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 
 /// <summary>
 ///     Revises a component. Category and system instance identity are immutable. <paramref name="CommandId" /> is the

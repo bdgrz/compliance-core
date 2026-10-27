@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Aggregates;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Events;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Projections;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Extensions;

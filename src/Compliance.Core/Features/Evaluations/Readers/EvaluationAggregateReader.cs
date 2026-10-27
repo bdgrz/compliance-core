@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.Evaluations.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Readers;
 
 /// <summary>Finalizes the full native evaluation prefix before explicit or executor-internal hydration returns.</summary>
 public sealed class EvaluationAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

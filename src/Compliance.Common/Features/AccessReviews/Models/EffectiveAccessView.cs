@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>
 ///     Derived access of one review subject to one entitlement with every path that conveys it.

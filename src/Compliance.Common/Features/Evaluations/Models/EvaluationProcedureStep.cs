@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Models;
 
 /// <summary>
 ///     A planned procedure step. Assertion is design, implementation, or evidence_sufficiency;

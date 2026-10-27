@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
 
 /// <summary>Reevaluates accepted engagements when one staff record's status changes.</summary>
 sealed partial class FirmStaffStatusReevaluationReactor(IProjectionCheckpointStore checkpoints,

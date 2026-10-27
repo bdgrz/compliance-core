@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Applications.Models;
 using System.Security.Cryptography;
 using System.Text.Json;
 

@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Boundaries.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Queries;
 
 [Discriminator("bdgrz.boundary.version.effective.get", 1)]
 public sealed record GetEffectiveBoundaryVersion(Uuid TenantId, Uuid BoundaryId,

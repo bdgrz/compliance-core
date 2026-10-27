@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 /// <summary>
 ///     Asks the tenant to surrender its confirmed slug. <paramref name="CommandId" /> is the logical identity of the

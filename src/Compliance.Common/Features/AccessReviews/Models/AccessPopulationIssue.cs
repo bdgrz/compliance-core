@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>
 ///     A problem that blocks acceptance. <c>Category</c> is <c>invalid</c>, <c>duplicate</c>,

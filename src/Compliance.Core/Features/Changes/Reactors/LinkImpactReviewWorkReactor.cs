@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Events;
+using Bdgrz.Compliance.Features.Changes.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Reactors;
 
 public sealed partial class LinkImpactReviewWorkReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus, IImmutableContentStore content)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(SignificantChange.Area), WorkloadName), IReactorHandler<SignificantChangeImpactAssessed>

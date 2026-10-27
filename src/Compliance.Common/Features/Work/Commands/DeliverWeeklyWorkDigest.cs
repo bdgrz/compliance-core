@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Commands;
 
 /// <summary>Records the deliver weekly work digest intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.work.deliver-weekly-work-digest", 3)]

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>A retained preview, never a production engagement acceptance or personal sign-off.</summary>
 public sealed record IndependenceEvaluationView(Uuid EvaluationId, Uuid ClientTenantId,

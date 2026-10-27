@@ -1,4 +1,6 @@
-namespace Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+namespace Bdgrz.Compliance.Features.AccessControl.Projections;
 
 static class IndependenceRuleVersionProjection
 {

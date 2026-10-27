@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Exports.Commands;
 using System.Security.Claims;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Authorizers;
 
 sealed class RecordClientExportBuildResultAuthorizer
     : IRequestAuthorizer<RecordClientExportBuildResult>

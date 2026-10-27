@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.ControlMappings;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Events;
 
 [Discriminator("bdgrz.control_mapping.proposed", 3)]
 public sealed record ControlCriterionMappingProposed(Uuid TenantId, Uuid ProgramId, Uuid MappingId, long Revision,

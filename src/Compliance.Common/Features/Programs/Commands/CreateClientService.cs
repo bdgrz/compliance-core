@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Commands;
 
 [Discriminator("bdgrz.client-service.create", 2)]
 public sealed record CreateClientService(Uuid ServiceId, Uuid TenantId, Uuid ProgramId, string Name, string Purpose,

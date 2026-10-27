@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 
 /// <summary>Records a platform review of one tenant-scoped de-identified contribution.</summary>
 [Discriminator("bdgrz.methodology-templates.review-template-contribution", 2)]

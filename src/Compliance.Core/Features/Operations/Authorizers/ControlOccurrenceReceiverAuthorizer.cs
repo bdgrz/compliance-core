@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch control occurrence receivers.</summary>
 sealed class ControlOccurrenceReceiverAuthorizer : IRequestAuthorizer<IControlOccurrenceReceiver>

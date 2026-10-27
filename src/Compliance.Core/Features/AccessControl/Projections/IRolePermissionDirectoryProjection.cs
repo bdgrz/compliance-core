@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Projections;
 
 /// <summary>Materializes role-permission events into the queryable role-permission directory.</summary>
 public interface IRolePermissionDirectoryProjection : IProjectionStore

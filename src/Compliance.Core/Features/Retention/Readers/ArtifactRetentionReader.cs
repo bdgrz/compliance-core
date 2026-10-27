@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Retention;
+using Bdgrz.Compliance.Features.Retention.Aggregates;
+using Bdgrz.Compliance.Features.Retention.Events;
+using Bdgrz.Compliance.Features.Retention.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Readers;
 
 /// <summary>Discovers holds from native placement facts and composes each independent authoritative owner.</summary>
 public sealed class ArtifactRetentionReader(IAggregateReader aggregates, IDomainEventReader events)

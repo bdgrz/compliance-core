@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Examinations.Commands;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Handlers;
 
 /// <summary>Native close approval over an exact ready reconciliation, with current executive authorization before replay.</summary>
 public sealed class ApproveTypeIIPeriodCloseHandler(TypeIIPeriodOperations operations,

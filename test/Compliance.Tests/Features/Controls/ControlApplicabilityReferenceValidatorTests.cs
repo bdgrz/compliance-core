@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Portia;
@@ -91,7 +92,7 @@ public sealed class ControlApplicabilityReferenceValidatorTests
     }
 
     sealed class CommitmentActivity(Uuid tenantId, Uuid commitmentId)
-        : Bdgrz.Compliance.Features.Commitments.ICommitmentReferenceReader
+        : Bdgrz.Compliance.Features.Commitments.Readers.ICommitmentReferenceReader
     {
         public ValueTask<bool> IsRecordedAsync(Uuid requestedTenantId, Uuid requestedId,
             CancellationToken ct = default) =>

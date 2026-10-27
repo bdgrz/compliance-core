@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Commands;
 
 /// <summary>Proposes a reviewed carry-forward plan from an exact completed Type II period.</summary>
 [Discriminator("bdgrz.programs.propose-program-rollover", 2)]

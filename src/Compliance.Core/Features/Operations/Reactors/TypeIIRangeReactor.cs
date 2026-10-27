@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Operations.Aggregates;
+using Bdgrz.Compliance.Features.Operations.Events;
+using Bdgrz.Compliance.Features.Operations.Processes;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Reactors;
 
 /// <summary>
 ///     Starts <c>TypeIIRangeProcess</c> from a committed opening or amendment acceptance. The process record exists

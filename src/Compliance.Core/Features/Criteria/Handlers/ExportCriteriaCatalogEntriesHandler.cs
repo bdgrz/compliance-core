@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.Criteria.Commands;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Criteria.Readers;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Criteria;
+namespace Bdgrz.Compliance.Features.Criteria.Handlers;
 
 public sealed class ExportCriteriaCatalogEntriesHandler(ICriteriaCatalog catalog,
     ICriteriaTextOverlayReader overlays)

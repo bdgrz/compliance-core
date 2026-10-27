@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 
 /// <summary>
 ///     Revises a location. Its kind is immutable. <paramref name="CommandId" /> is the logical identity of the

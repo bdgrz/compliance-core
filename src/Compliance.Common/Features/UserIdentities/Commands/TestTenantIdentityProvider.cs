@@ -2,7 +2,7 @@ using System.Text;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>
 ///     Requests a test of the current credential of one connection. <paramref name="TestKey" /> is the caller's key

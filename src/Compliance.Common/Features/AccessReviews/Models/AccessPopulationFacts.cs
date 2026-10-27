@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>The complete set of manually attested facts for one population draft.</summary>
 public sealed record AccessPopulationFacts(IReadOnlyList<AccessPrincipalFact> Principals,

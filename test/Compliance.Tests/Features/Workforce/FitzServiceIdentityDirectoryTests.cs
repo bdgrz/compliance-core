@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Handlers;
+using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Queries;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Workforce;
 using Cntryl.Fitz.Testing;

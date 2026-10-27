@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.UserIdentities.Events;
+using Bdgrz.Compliance.Features.UserIdentities.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Projectors;
 
 public sealed partial class PlatformUserDirectoryProjector(IPlatformUserDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForPattern("bdgrz", "user-identities"),

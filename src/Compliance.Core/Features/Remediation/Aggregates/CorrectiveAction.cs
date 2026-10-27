@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Remediation.Events;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
@@ -5,7 +10,7 @@ using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Aggregates;
 
 /// <summary>
 ///     One corrective action of a finding, identified by its finding and action. It is materialized from the
@@ -139,7 +144,7 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
 
     /// <summary>Records the completion as the root native fact of its operation.</summary>
     public Result Complete(OperationProvenance operation, string resolutionNotes, ImmutableContentRef evidenceManifest,
-        Uuid completedByMemberId, AccessControl.ActorReference completedBy, DateTimeOffset completedAt,
+        Uuid completedByMemberId, AccessControl.Models.ActorReference completedBy, DateTimeOffset completedAt,
         ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);

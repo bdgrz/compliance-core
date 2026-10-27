@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using System.Security.Claims;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 sealed class RecordDirectoryIndependenceReevaluationAuthorizer : IRequestAuthorizer<RecordDirectoryIndependenceReevaluation>
 {

@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Commands;
 
 /// <summary>Records the request client export intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.exports.request-client-export", 1)]

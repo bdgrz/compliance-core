@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.ControlMappings;
+using Bdgrz.Compliance.Features.ControlMappings.Events;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.Versioning;
@@ -5,7 +9,7 @@ using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Aggregates;
 
 /// <summary>A bounded native line owner; full history is composed explicitly by its verified reader.</summary>
 public sealed class CriterionApplicability : Aggregate

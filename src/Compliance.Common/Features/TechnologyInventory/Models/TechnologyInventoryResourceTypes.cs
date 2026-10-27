@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>Stable access-grant resource type names for technology inventory records.</summary>
 public static class TechnologyInventoryResourceTypes

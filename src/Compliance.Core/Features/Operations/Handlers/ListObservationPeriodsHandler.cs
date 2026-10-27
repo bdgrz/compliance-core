@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Queries;
+using Bdgrz.Compliance.Features.Operations.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Handlers;
 
 public sealed class ListObservationPeriodsHandler(IObservationPeriodDirectoryReader directory,
     ObservationPeriodDirectoryReadConsistency consistency, IAggregateReader reader)

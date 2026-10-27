@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Commands;
 
 /// <summary>Reopens a closed finding; the finding advances to a new generation and keeps its action history.</summary>
 [Discriminator("bdgrz.finding.reopen", 2)]

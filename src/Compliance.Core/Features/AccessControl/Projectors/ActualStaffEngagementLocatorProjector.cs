@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Projectors;
 
 sealed class ActualStaffEngagementLocatorProjector(IActualStaffEngagementLocatorProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant(ServiceEngagementIndependence.Area), WorkloadName)

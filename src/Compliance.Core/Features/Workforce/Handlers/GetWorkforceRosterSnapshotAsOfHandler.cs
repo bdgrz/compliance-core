@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Snapshots.Readers;
+using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Queries;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 /// <summary>
 ///     Finds the latest roster snapshot frozen at or before the instant through the snapshot

@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Readers;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Readers;
 
 /// <summary>Resolves a sample against one immutable, eligible population version.</summary>
 static class SampleSelectionPopulationSourceReader

@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 
 /// <summary>Releases the location name claim the record's proven fact no longer needs.</summary>
 [Discriminator("bdgrz.location-name-claim.release-location-name", 1)]

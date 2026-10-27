@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Events;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Processes;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Reactors;
 
 /// <summary>
 ///     Starts <c>ReadinessDecisionProcess</c> from a committed readiness or Type I entry decision acceptance. The
@@ -23,7 +28,7 @@ sealed partial class ReadinessDecisionReactor(IProjectionCheckpointStore checkpo
     public ValueTask HandleAsync(IReactorContext<TypeIEntryDecisionAccepted> context, CancellationToken ct) =>
         StartAsync(context, context.Trigger.Intent, ct);
 
-    async ValueTask StartAsync(IReactorContext context, Proofs.ImmutableContentRef intentReference, CancellationToken ct)
+    async ValueTask StartAsync(IReactorContext context, Proofs.Models.ImmutableContentRef intentReference, CancellationToken ct)
     {
         var tenant = Uuid.Parse(context.Source.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
         IReadOnlyList<string> targets;

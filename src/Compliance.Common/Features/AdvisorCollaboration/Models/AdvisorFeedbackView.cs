@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 
 /// <summary>Complete attributed feedback history on one exact record version.</summary>
 public sealed record AdvisorFeedbackView(Uuid TenantId, Uuid ProgramId, Uuid AdvisorFeedbackId,

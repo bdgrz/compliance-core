@@ -1,9 +1,11 @@
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Tests.Features.Examinations;
-using ManagementAssertionAggregate = Bdgrz.Compliance.Features.Examinations.ManagementAssertion;
+using ManagementAssertionAggregate = Bdgrz.Compliance.Features.Examinations.Aggregates.ManagementAssertion;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 

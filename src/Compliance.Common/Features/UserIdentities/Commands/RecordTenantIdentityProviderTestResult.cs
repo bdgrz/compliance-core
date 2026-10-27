@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>
 ///     Records a safe provider-test result from the exact named worker and request event. The command id is

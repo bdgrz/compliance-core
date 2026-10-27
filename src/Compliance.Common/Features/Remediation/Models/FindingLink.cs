@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Models;
 
 /// <summary>
 ///     A related record: control, criterion, evidence, access_decision, risk, vendor,

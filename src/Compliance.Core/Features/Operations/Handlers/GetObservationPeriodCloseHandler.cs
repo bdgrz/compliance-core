@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Queries;
+using Bdgrz.Compliance.Features.Operations.Readers;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Handlers;
 
 /// <summary>Resolves one unambiguous scoped historical close from native identity discovery and exact source-backed period lineage.</summary>
 public sealed class GetObservationPeriodCloseHandler(IObservationPeriodCloseDirectoryReader directory,

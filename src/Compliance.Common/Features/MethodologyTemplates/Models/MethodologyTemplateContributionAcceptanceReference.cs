@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Platform-safe provenance for accepted content, excluding the contributing tenant and source record.</summary>
 public sealed record MethodologyTemplateContributionAcceptanceReference(

@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Readers;
 
 /// <summary>Validates the entire exact native prefix on every installed hydration, before accepted retry or fresh work.</summary>
 public sealed class AuditorRequestAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

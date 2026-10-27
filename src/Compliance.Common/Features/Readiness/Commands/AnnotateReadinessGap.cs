@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Commands;
 
 /// <summary>
 ///     Records attributed advisor feedback on a gap of the latest assessment; HTTP-only.

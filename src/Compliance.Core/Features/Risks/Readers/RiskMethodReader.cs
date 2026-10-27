@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Events;
+using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Readers;
 
 /// <summary>Authoritative current and immutable history reads at the owner's exact physical cut.</summary>
 public sealed class RiskMethodReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)

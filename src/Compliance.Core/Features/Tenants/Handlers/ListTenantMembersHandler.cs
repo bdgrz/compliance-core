@@ -1,9 +1,15 @@
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Queries;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
+using Bdgrz.Compliance.Features.Workforce.Readers;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Bdgrz.Compliance.Features.Workforce;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Handlers;
 
 public sealed class ListTenantMembersHandler(ITenantMembershipDirectoryReader directory,
     IEmailAddressDirectoryReader? emails = null, IUserDisplayNameReader? profiles = null,

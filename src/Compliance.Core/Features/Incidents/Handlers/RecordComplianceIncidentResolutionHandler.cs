@@ -1,9 +1,12 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Incidents;
+using Bdgrz.Compliance.Features.Incidents.Commands;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Handlers;
 
 public sealed class RecordComplianceIncidentResolutionHandler(IncidentOperations operations, FollowUpCompletionVerifier completions)
     : IRequestHandler<RecordComplianceIncidentResolution>

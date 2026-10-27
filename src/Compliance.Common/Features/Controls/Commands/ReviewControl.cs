@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Commands;
 
 [Discriminator("bdgrz.control.review", 2)]
 public sealed record ReviewControl(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid ControlId,

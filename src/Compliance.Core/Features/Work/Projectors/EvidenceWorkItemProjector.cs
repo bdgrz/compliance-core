@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Evidence.Events;
+using Bdgrz.Compliance.Features.Work.Projections;
 using Bdgrz.Compliance.Features.Evidence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Projectors;
 
 public sealed partial class EvidenceWorkItemProjector(IEvidenceWorkItemProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant("evidence-requests"),

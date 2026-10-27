@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Commands;
 
 /// <summary>Approves the reviewed pending retirement. HTTP-only personal approval.</summary>
 [Discriminator("bdgrz.policy.retire", 2)]

@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using System.Globalization;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Projections;
 
 static class PopulationSnapshotDirectorySchema
 {

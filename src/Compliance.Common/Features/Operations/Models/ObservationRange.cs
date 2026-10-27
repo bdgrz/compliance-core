@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>
 ///     An inclusive Type II calendar date range. Both endpoints belong to the range, so two ranges overlap when each

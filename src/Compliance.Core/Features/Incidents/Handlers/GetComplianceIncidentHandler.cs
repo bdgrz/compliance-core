@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.Incidents;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Models;
+using Bdgrz.Compliance.Features.Incidents.Queries;
+using Bdgrz.Compliance.Features.Incidents.Readers;
 using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Handlers;
 
 public sealed class GetComplianceIncidentHandler(ComplianceIncidentReader changes,
     RestrictedComplianceRecordVisibility visibility, ComplianceIncidentReadConsistency consistency)

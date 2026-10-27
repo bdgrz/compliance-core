@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 
 /// <summary>Records the review methodology template intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.methodology-templates.review-methodology-template", 2)]

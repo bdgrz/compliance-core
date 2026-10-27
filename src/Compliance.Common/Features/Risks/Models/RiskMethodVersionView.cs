@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Models;
 
 /// <summary>One immutable version of a program's M0-D10 risk assessment method.</summary>
 public sealed record RiskMethodVersionView(Uuid TenantId, Uuid ProgramId, Uuid MethodVersionId,

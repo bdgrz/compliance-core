@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Events;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Aggregates;
 
 /// <summary>
 ///     The single pending invitation of one tenant mailbox, keyed by tenant and normalized email. The holding

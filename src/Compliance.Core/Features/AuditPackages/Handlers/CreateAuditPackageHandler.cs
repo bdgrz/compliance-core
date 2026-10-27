@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AuditPackages.Commands;
+using Bdgrz.Compliance.Features.AuditPackages.Events;
 using System.Globalization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Artifacts;
@@ -7,7 +11,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Handlers;
 
 /// <summary>Creates a native manifest only from its exact frozen examination source.</summary>
 public sealed class CreateAuditPackageHandler(AuditPackageRootOperation operations,

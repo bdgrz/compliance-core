@@ -1,10 +1,16 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Aggregates;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.Events;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Aggregates;
 
 /// <summary>
 ///     Owns one provider's content, version and change lifecycle. A governed provider name is unique within the

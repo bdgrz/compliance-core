@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.AuditPopulations.Events;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
@@ -28,8 +33,8 @@ public sealed class AuditPopulationRules
         "csv", "json"
     };
 
-    readonly Dictionary<Type, Action<DomainEvent>> _reducers = new();
-    readonly List<DomainEvent> _pendingChanges = new();
+    readonly Dictionary<Type, Action<DomainEvent>> _reducers = [];
+    readonly List<DomainEvent> _pendingChanges = [];
     public Uuid Id { get; }
     public EventStreamAddress Stream { get; }
     public Uuid TenantId => _tenantId;

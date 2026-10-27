@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Commitments.Queries;
+using Bdgrz.Compliance.Features.Commitments.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Handlers;
 
 public sealed class ListCommitmentDraftRevisionsHandler(
     ICommitmentDraftHistoryDirectoryReader directory,

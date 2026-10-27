@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Exports.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Events;
 
 /// <summary>Records the ClientExportBuilt domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.exports.client-export-built", 2)]

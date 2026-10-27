@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Snapshots.Models;
+using Bdgrz.Compliance.Features.Snapshots.Readers;
+using Bdgrz.Compliance.Features.Workforce.Queries;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class ListWorkforceRosterSnapshotsHandler(IPopulationSnapshotDirectoryReader directory)
     : IRequestHandler<ListWorkforceRosterSnapshots, Page<PopulationSnapshotSummary>>

@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Examinations.Events;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>
 ///     Starts recovery through a separately verified email channel. <paramref name="ChallengeId" /> is chosen by the

@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Commands;
 
 /// <summary>
 ///     Routes a submitted material deviation to a finding with a corrective action. Dispatched

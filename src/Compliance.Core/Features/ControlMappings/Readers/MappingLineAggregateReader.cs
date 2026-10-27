@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.ControlMappings;
+using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Readers;
 
 /// <summary>Finalizes whole raw line history for explicit reads and executor-internal rehydration.</summary>
 public sealed class MappingLineAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

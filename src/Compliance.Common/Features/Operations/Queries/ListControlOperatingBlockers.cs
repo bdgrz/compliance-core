@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Queries;
 
 /// <summary>Lists active controls whose ownership, cadence, or expected work is blocking.</summary>
 [Discriminator("bdgrz.control.operating_blockers.list", 1)]

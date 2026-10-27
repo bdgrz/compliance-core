@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Commands;
 
 /// <summary>Opens a successor draft from the exact current approved version.</summary>
 [Discriminator("bdgrz.policy.successor.propose", 2)]

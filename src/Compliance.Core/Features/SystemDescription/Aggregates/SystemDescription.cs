@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.SystemDescription;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Events;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 
 /// <summary>Bounded native description authority. Narrative content, source manifests and history are immutable references.</summary>
 public sealed class SystemDescription : Aggregate

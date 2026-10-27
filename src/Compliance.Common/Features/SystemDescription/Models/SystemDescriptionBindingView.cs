@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>An immutable link between an approved version and its exact examination snapshot.</summary>
 public sealed record SystemDescriptionBindingView(Uuid VersionId, long Version,

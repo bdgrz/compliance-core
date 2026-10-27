@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Queries;
+using Bdgrz.Compliance.Features.AuditorRequests.Readers;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Handlers;
 
 public sealed class ListAuditorRequestsHandler(IAuditorRequestDirectoryReader directory,
     AuditorRequestDirectoryReadConsistency consistency, AuditorRequestReader requests)

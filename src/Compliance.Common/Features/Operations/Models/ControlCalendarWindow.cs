@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>A calendar business window: <paramref name="From" /> inclusive to <paramref name="UntilExclusive" /> exclusive.</summary>
 public sealed record ControlCalendarWindow(DateOnly From, DateOnly UntilExclusive) : ControlBusinessWindow

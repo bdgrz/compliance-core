@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Providers.Models;
 namespace Bdgrz.Compliance.Features.Providers;
 
 static class ProviderChangeImpactRules

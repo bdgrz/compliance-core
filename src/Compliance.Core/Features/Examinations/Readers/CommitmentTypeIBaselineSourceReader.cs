@@ -1,3 +1,12 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Events;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Commitments.Readers;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
 using Bdgrz.Compliance.Features.SourceFacts;
 using System.Text;
 using System.Text.Json;
@@ -9,7 +18,7 @@ using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Readers;
 
 /// <summary>Shares exact commitment-version capture rules across baseline source families.</summary>
 public sealed class CommitmentTypeIBaselineSourceReader(

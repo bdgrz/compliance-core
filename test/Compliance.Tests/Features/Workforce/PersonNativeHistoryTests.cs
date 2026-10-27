@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Commands;
+using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Queries;
+using Bdgrz.Compliance.Features.Workforce.Readers;
 using Bdgrz.Compliance.Features.NativeOperations;
 using System.Runtime.CompilerServices;
 using Bdgrz.Compliance.Features.Content;
@@ -325,10 +332,10 @@ public sealed class PersonNativeHistoryTests
     sealed class FaultStore(IImmutableContentStore inner) : IImmutableContentStore
     {
         public Func<Task>? Winner { get; set; }
-        public Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? Blocked { get; set; }
+        public Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef? Blocked { get; set; }
         public bool Unavailable { get; set; }
         public bool Failed { get; private set; }
-        public async Task<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id, string schema, string mediaType,
+        public async Task<Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id, string schema, string mediaType,
             ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
         {
             if (schema == PersonContent.ViewSchema && Winner is { } winner)
@@ -340,7 +347,7 @@ public sealed class PersonNativeHistoryTests
             }
             return await inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
         }
-        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference, CancellationToken ct = default) =>
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference, CancellationToken ct = default) =>
             reference != Blocked ? inner.ReadVerifiedAsync(realm, reference, ct) : Task.FromException<ReadOnlyMemory<byte>>(Unavailable
                 ? new ImmutableContentUnavailableException("The selected person body is unavailable.")
                 : new ImmutableContentIntegrityException("The selected person body is corrupt."));

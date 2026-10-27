@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Providers.Commands;
+using Bdgrz.Compliance.Features.Providers.Models;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Handlers;
 
 /// <summary>
 ///     Releases a provider name claim only for the exact holder and generation, after the record's own fact proves the old

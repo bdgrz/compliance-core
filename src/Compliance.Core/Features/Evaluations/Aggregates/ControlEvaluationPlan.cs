@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.Evaluations.Commands;
+using Bdgrz.Compliance.Features.Evaluations.Events;
+using Bdgrz.Compliance.Features.Evaluations.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Aggregates;
 
 /// <summary>Bounded current authority of one control's evaluation-plan line; history is immutable read composition.</summary>
 public sealed class ControlEvaluationPlan : Aggregate

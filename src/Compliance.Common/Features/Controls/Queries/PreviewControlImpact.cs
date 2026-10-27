@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Queries;
 
 /// <summary>Previews the pending successor or retirement at one exact control revision.</summary>
 [Discriminator("bdgrz.control.impact.preview", 1)]

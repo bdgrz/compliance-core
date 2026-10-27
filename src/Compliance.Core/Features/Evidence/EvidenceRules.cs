@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Evidence.Models;
 namespace Bdgrz.Compliance.Features.Evidence;
 
 static class EvidenceRules

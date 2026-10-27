@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Changes.Models;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Projections;
 
 static class SignificantChangeDirectorySchema
 {

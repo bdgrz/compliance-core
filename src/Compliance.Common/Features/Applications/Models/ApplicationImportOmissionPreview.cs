@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 public sealed record ApplicationImportOmissionPreview(Uuid TenantId, Uuid BatchId, string SourceKey,
     string SourceNamespace, string Coverage, long Revision, ulong SourcePosition, string ContentSha256,

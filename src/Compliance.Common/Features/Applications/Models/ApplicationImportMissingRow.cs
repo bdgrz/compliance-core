@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>A source omission proposal, never a staged row or authority to retire its target.</summary>
 public sealed record ApplicationImportMissingRow(Uuid TenantId, Uuid BatchId, Uuid SourceClaimId,

@@ -1,8 +1,14 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Models;
+using Bdgrz.Compliance.Features.Changes.Readers;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Handlers;
 
 public sealed class LinkImpactReviewWorkHandler(SignificantChangeOperations operations,
     IChangeImpactWorkOwnershipReader ownership) : IRequestHandler<LinkImpactReviewWork, UnitResult>

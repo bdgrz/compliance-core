@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Readers;
 
 /// <summary>Reads one tenant's materialized membership directory.</summary>
 public interface ITenantMembershipDirectoryReader

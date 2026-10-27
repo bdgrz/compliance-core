@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 /// <summary>
 ///     Accepts an invitation with its single-use token. <paramref name="InvitationId" /> is route-bound and the token

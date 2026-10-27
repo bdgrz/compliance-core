@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 public sealed record ApplicationImportView(Uuid TenantId, Uuid BatchId, Uuid SubmissionId,
     string SourceKey, string SourceNamespace, string Coverage, string ContentSha256,

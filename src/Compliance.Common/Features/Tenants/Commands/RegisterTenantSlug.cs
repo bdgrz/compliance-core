@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 /// <summary>
 ///     Claims a normalized slug for a tenant on the slug owner. <paramref name="CommandId" /> is the logical identity of the

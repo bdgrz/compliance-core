@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>Compact current authority; full content, assignments and history are immutable verified content.</summary>
 public sealed record ControlAuthorityHeader(Uuid TenantId, Uuid ProgramId, Uuid ControlId, string Identifier,

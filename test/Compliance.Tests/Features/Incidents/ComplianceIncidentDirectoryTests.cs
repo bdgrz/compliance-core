@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Incidents.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Events;
+using Bdgrz.Compliance.Features.Incidents.Handlers;
+using Bdgrz.Compliance.Features.Incidents.Projectors;
+using Bdgrz.Compliance.Features.Incidents.Queries;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Features.Changes;

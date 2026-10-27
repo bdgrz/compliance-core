@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>Finalizes full practice commitments and source uses before reads, replay and append.</summary>
 public sealed class PracticeCommitmentAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

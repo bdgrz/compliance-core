@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Models;
 
 /// <summary>An exact M0-D27 collaboration package required for an attest export.</summary>
 public sealed record ClientExportAttestPackageContent(

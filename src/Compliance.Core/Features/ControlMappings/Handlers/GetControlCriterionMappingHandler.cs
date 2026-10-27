@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.ControlMappings;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Queries;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Handlers;
 
 /// <summary>Reads the mapping line holding one proposal from its own owner stream, its authoritative source.</summary>
 public sealed class GetControlCriterionMappingHandler(ControlMappingReader mappings)

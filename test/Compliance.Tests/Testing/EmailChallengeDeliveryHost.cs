@@ -211,9 +211,9 @@ sealed class EmailChallengeDeliveryHost : IAsyncDisposable
 
     public ValueTask DisposeAsync() => Provider.DisposeAsync();
 
-    static EmailChallengeDeliveryIntent Intent(Bdgrz.Compliance.Features.NativeOperations.OperationProvenance operation,
+    static EmailChallengeDeliveryIntent Intent(Bdgrz.Compliance.Features.NativeOperations.Models.OperationProvenance operation,
         Uuid challengeId, Uuid userId, string purpose, DateTimeOffset expiresAt, string tokenKeyId) =>
-        new(new Bdgrz.Compliance.Features.NativeOperations.DurableIntentHeader(operation.RootOperationId, operation.Owner,
+        new(new Bdgrz.Compliance.Features.NativeOperations.Models.DurableIntentHeader(operation.RootOperationId, operation.Owner,
             operation.AffectedOwner, operation.ExpectedRevisionOwner, operation.Actor, operation.Episode,
             operation.OriginalExpectedRevision, operation.AuthoredIntentSha256, operation.AcceptedAt), challengeId, userId,
             purpose, expiresAt, tokenKeyId);

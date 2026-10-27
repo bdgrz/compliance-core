@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Models;
 
 /// <summary>An attributed export build attempt and its exact source reconciliation.</summary>
 public sealed record ClientExportBuildAttemptView(

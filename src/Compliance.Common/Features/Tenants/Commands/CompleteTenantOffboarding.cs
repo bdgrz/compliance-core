@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 /// <summary>Records the complete tenant offboarding intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.tenants.complete-tenant-offboarding", 1)]

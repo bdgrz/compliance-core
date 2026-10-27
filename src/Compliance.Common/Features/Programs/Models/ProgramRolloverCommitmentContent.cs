@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Models;
 
 /// <summary>An open commitment preserved with its accountable owner and source engagement.</summary>
 public sealed record ProgramRolloverCommitmentContent(

@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Work.Aggregates;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.SourceFacts;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Readers;
 
 /// <summary>Finalizes full actual source prefix before any technical or operator mutation can append.</summary>
 public sealed class WorkDigestAggregateReader(IAggregateReader inner, IDomainEventReader events, ISourceFactResolver sources) : IAggregateReader

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.TechnologyInventory;

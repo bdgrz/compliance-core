@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Models;
 
 /// <summary>
 ///     A tenant membership. <c>VerifiedEmailAddress</c> is the member's first verified platform email,

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch the risk action completion review receivers on actions.</summary>
 sealed class RiskActionReceiverAuthorizer : IRequestAuthorizer<IRiskActionReceiver>

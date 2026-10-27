@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Models;
 
 public sealed record RiskDraftView(Uuid TenantId, Uuid ProgramId, Uuid RiskId,
     string Identifier, long Revision, string Status, string OwnerResolution,

@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Commands;
 
 /// <summary>
 ///     A personal approval of an expiring exception to an approved expectation. HTTP-only; it is

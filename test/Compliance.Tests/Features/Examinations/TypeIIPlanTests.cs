@@ -1,9 +1,11 @@
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
+using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.Aggregates.TypeIIPlan;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 
@@ -56,7 +58,7 @@ public sealed class TypeIIPlanTests
         var failure = plan.Propose(Content() with
         {
             Controls = [Control() with { DueWithinDays =
-                Bdgrz.Compliance.Features.Operations.ControlCadence.MaximumDueWithinDays + 1 }],
+                Bdgrz.Compliance.Features.Operations.Models.ControlCadence.MaximumDueWithinDays + 1 }],
         }, ProposerId, "Compliance lead", Now);
 
         // Assert

@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Queries;
 
 [Discriminator("bdgrz.inventory.information_asset.revision.list", 1)]
 public sealed record ListInformationAssetRevisions(Uuid TenantId, Uuid InformationAssetId,

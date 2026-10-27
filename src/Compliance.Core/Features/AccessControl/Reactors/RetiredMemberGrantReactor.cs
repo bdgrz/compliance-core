@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
 
 public sealed partial class RetiredMemberGrantReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus,
     IAggregateReader reader)

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Models;
 
 /// <summary>A workforce person frozen into a campaign's launch audience.</summary>
 public sealed record CampaignAudienceEntry(Uuid PersonId, string DisplayName,

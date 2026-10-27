@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Retention.Events;
+using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Aggregates;
 
 /// <summary>One engagement preservation hold with a report-issued-plus-one-year expiry.</summary>
 public sealed class ArtifactEngagementHold : Aggregate

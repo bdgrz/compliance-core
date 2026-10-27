@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Projections;
 
 public interface IExaminationEngagementDirectoryProjection : IProjectionStore
 {

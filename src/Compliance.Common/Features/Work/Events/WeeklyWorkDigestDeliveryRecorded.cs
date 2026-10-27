@@ -1,9 +1,14 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Work.Commands;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Events;
 
 /// <summary>Records the durable outcome of one exact weekly digest delivery attempt.</summary>
 [Discriminator("bdgrz.work.weekly-digest.delivery-recorded", 2)]

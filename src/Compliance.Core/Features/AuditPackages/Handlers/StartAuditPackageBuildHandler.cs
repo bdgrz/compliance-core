@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.AuditPackages.Aggregates;
+using Bdgrz.Compliance.Features.AuditPackages.Commands;
+using Bdgrz.Compliance.Features.AuditPackages.Processes;
+using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Kernel;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Artifacts;
@@ -8,7 +13,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Handlers;
 
 /// <summary>Creates verified archive bytes and durably publishes successful output before acknowledging start.</summary>
 public sealed class StartAuditPackageBuildHandler(AuditPackageSourceVerifier verifier,

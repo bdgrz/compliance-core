@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Responsibilities;
+namespace Bdgrz.Compliance.Features.Responsibilities.Projectors;
 
 public sealed partial class MemberResponsibilityProjector(FitzMemberResponsibilityIndex projection)
     : Projector(projection, EventStreamPattern.ForTenant(), FitzMemberResponsibilityIndex.ProjectorName),

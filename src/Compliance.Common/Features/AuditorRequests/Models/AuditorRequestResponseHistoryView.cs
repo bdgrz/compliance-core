@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
 
 /// <summary>The complete response draft, review, delivery, and disposition history for a request.</summary>
 public sealed record AuditorRequestResponseHistoryView(

@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.Incidents;
+using Bdgrz.Compliance.Features.Incidents.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Events;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.Proofs;
@@ -6,7 +13,7 @@ using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Work;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Readers;
 
 /// <summary>Verifies active write gates independently of historical bodies; reconstructs complete chronology for scoped/as-of reads.</summary>
 public sealed class ComplianceIncidentReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content, INativeEventReceiptReader? receipts = null)

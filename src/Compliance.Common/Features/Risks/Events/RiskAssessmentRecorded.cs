@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Events;
 
 [Discriminator("bdgrz.risk.assessment.recorded", 2)]
 public sealed record RiskAssessmentRecorded(Uuid TenantId, Uuid ProgramId, Uuid RiskId, long Revision, long NativeSequence,

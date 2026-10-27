@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Queries;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Handlers;
 
 /// <summary>Builds a compliance-lead preview from an unshared draft and exact source versions.</summary>
 public sealed class PreviewAdvisorHandoffHandler(AdvisorHandoffReader aggregates,

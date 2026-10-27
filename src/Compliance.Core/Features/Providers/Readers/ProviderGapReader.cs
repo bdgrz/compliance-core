@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Events;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Readers;
 
 /// <summary>Composes complete native gap history at the actual hydrated physical and metadata cut.</summary>
 public sealed class ProviderGapReader(IAggregateReader reader, IDomainEventReader events)

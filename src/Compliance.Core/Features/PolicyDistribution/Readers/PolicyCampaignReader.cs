@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Readers;
 
 /// <summary>Reads explicit complete history at a verified native cut, without latest audience or material lookups.</summary>
 public sealed class PolicyCampaignReader(IAggregateReader reader, IDomainEventReader events)

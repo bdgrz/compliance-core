@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Controls.Aggregates;
+using Bdgrz.Compliance.Features.Controls.Events;
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Readers;
 
 /// <summary>Source-backed exact Control reconstruction. Only compact native facts are folded into command state.</summary>
 public sealed class ControlReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)

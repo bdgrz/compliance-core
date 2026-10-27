@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 
 /// <summary>Reads the latest version, or the exact <c>Version</c> when given.</summary>
 [Discriminator("bdgrz.training_requirement.get", 1)]

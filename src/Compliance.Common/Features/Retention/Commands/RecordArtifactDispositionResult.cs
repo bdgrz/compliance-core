@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Commands;
 
 /// <summary>Records an exact, trusted-worker result for a persisted artifact disposition attempt.</summary>
 [Discriminator("bdgrz.retention.record-artifact-disposition-result", 2)]

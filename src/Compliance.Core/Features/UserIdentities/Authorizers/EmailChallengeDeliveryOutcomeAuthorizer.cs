@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Authorizers;
 
 /// <summary>Delivery outcomes are recorded by the trusted process principal only; no actor decides what the relay did.</summary>
 public sealed class EmailChallengeDeliveryOutcomeAuthorizer : IRequestAuthorizer<IEmailChallengeDeliveryOutcome>

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>A bounded reference to an approved control version affecting an application system.</summary>
 public sealed record ApplicationControlVersionReferenceView(Uuid TenantId, string SubjectType,

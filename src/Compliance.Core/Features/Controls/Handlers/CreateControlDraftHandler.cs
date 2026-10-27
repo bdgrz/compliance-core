@@ -1,7 +1,12 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Controls.Aggregates;
+using Bdgrz.Compliance.Features.Controls.Commands;
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Handlers;
 
 public sealed class CreateControlDraftHandler(ControlOperations operations, IAggregateReader reader,
     IControlApplicabilityReferenceValidator applicability) : IRequestHandler<CreateControlDraft, ControlRegistration>

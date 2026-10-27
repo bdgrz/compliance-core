@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>
 ///     Registers a tenant member. <paramref name="CommandId" /> is the logical identity of the registration and

@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Handlers;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Hosting.Persistence;

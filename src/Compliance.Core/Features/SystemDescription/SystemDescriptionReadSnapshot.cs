@@ -1,10 +1,14 @@
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
 /// <summary>Explicit source-verified read composition, never aggregate command state.</summary>
-public sealed record SystemDescriptionReadSnapshot(SystemDescription Owner, SystemDescriptionRules Rules,
+public sealed record SystemDescriptionReadSnapshot(SystemDescriptionAggregate Owner, SystemDescriptionRules Rules,
     IReadOnlyList<DomainEvent> Facts)
 {
     public SystemDescriptionCurrentAuthority? CurrentAuthority { get; init; }

@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Commands;
 
 /// <summary>
 ///     Cancels the exact pending decision when an authoritative permanent proof mismatch makes it impossible and no

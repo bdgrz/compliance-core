@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Boundaries.Events;
 using Bdgrz.Compliance.Features.Content;
 using System.Net;
 using System.Net.Http.Json;

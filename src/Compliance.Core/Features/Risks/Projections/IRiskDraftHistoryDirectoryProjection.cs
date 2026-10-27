@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Projections;
 
 public interface IRiskDraftHistoryDirectoryProjection : IProjectionStore
 {

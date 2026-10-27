@@ -1,9 +1,11 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Commands;
 
 /// <summary>
 ///     Links an existing R1-07 acceptance without resolving or closing the provider gap.

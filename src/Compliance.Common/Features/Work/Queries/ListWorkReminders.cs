@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Queries;
 
 /// <summary>
 ///     The acting member's in-product reminders: one per assigned item due today or overdue, and,

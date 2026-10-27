@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
 
 /// <summary>Applies the accepted operational process change once its needed claims are held; a canceled change is a terminal no-op.</summary>
 public sealed class ApplyOperationalProcessChangeHandler(NamedRecordReceivers receivers)

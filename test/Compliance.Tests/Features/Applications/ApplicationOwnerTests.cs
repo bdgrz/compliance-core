@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Handlers;
 using System.Security.Claims;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Applications;

@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Events;
+using Bdgrz.Compliance.Features.Changes.Reactors;
 using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;

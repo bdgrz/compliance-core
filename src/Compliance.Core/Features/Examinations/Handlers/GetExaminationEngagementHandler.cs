@@ -1,6 +1,11 @@
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Examinations.Queries;
+using Bdgrz.Compliance.Features.Examinations.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Handlers;
 
 public sealed class GetExaminationEngagementHandler(ExaminationEngagementReader examinations)
     : IRequestHandler<GetExaminationEngagement, ExaminationEngagementView>

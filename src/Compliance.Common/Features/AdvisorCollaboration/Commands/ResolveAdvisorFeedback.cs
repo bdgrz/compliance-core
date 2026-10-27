@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
 
 /// <summary>Closes the client-owned work raised from advisor feedback at the expected thread revision.</summary>
 [Discriminator("bdgrz.advisor-collaboration.resolve-advisor-feedback", 2)]

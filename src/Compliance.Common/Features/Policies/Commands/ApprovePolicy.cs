@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Commands;
 
 /// <summary>
 ///     The personal approval that makes the exact reviewed revision an immutable effective

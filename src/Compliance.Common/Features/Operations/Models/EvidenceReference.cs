@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>
 ///     Support offered for an attestation, corrective action, or closure. Kind is artifact,

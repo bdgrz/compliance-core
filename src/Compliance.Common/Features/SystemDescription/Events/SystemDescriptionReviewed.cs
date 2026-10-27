@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.SystemDescription;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Events;
 
 /// <summary>One selected native fact, compact authority and exact immutable structured business payload.</summary>
 [Discriminator("bdgrz.systemdescription.system-description-reviewed", 2)]

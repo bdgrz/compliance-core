@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Queries;
+using Bdgrz.Compliance.Features.Risks.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Handlers;
 
 public sealed class GetRiskDraftRevisionHandler(IRiskDraftDirectoryReader directory,
     RiskDraftReadConsistency consistency)

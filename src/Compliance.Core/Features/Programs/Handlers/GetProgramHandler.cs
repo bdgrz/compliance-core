@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Queries;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Handlers;
 
 public sealed class GetProgramHandler(IProgramDirectoryReader directory, IAggregateReader reader)
     : IRequestHandler<GetProgram, ProgramView>

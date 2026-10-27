@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 public sealed record IndependenceRuleRatificationReadSnapshot(IndependenceRuleRatificationCatalog Owner, IndependenceRatificationContent? Content)

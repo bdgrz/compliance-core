@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Events;
 
 /// <summary>Records the AuditPopulationReconciled domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.auditpopulations.audit-population-reconciled", 2)]

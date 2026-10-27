@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Cntryl.Fitz;

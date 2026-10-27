@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Criteria;
 
 namespace Bdgrz.Compliance.Tests.Features.Criteria;

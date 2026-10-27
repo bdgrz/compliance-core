@@ -1,10 +1,13 @@
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Commands;
 
 /// <summary>
 ///     Holds one completed corrective action for a finding closure. <paramref name="SourceContentEventId" /> and

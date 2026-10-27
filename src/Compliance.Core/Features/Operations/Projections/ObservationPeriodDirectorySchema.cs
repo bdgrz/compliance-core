@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Operations.Models;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Projections;
 
 static class ObservationPeriodDirectorySchema
 {

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Events;
 
 /// <summary>Records the EvidenceArtifactDownloadIssued domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.evidence.evidence-artifact-download-issued", 1)]

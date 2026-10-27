@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Commands;
 
 /// <summary>Revises a draft or rejected response at the revision of that response owner.</summary>
 [Discriminator("bdgrz.auditor-requests.revise-audit-response-draft", 2)]

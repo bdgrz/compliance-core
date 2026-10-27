@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Boundaries.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Queries;
 
 [Discriminator("bdgrz.boundary.decisions.list", 1)]
 public sealed record ListBoundaryDecisions(Uuid TenantId, Uuid BoundaryId,

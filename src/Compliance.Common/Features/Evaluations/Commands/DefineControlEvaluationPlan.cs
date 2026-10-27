@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Evaluations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Commands;
 
 [Discriminator("bdgrz.control.evaluation.plan.define", 1)]
 public sealed record DefineControlEvaluationPlan(Uuid TenantId, Uuid ProgramId, Uuid ControlId,

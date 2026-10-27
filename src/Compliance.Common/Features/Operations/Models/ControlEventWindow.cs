@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>An event-triggered business window named exactly by its source kind and source id.</summary>
 public sealed record ControlEventWindow(string SourceKind, string SourceId) : ControlBusinessWindow

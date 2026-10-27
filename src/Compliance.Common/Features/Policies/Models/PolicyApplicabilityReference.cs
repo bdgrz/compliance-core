@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Models;
 
 /// <summary>
 ///     A version-aware relationship from a policy version to what it governs: an

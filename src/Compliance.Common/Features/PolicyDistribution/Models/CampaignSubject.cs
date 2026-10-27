@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Models;
 
 /// <summary>
 ///     The exact material a campaign distributes: an approved <c>policy</c> version or a

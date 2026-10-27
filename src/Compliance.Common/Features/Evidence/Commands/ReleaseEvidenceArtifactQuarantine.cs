@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Retention;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Commands;
 
 /// <summary>Releases a malware-quarantined artifact after a clean rescan and an attributed admin decision.</summary>
 [Discriminator("bdgrz.evidence.artifact.quarantine.release", 1)]

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -30,7 +31,7 @@ static class AuditPopulationExportDocument
     }
 
     static byte[] BuildCsv(AuditPopulationView population, AuditPopulationVersionView version,
-        IReadOnlyList<string> fields, IReadOnlyList<Bdgrz.Compliance.Features.AuditPopulations.AuditPopulationRowView> rows)
+        IReadOnlyList<string> fields, IReadOnlyList<Bdgrz.Compliance.Features.AuditPopulations.Models.AuditPopulationRowView> rows)
     {
         var columns = BaseColumns.Concat(fields).ToArray();
         var output = new StringBuilder();
@@ -54,7 +55,7 @@ static class AuditPopulationExportDocument
     }
 
     static byte[] BuildJson(AuditPopulationView population, AuditPopulationVersionView version,
-        IReadOnlyList<string> fields, IReadOnlyList<Bdgrz.Compliance.Features.AuditPopulations.AuditPopulationRowView> rows)
+        IReadOnlyList<string> fields, IReadOnlyList<Bdgrz.Compliance.Features.AuditPopulations.Models.AuditPopulationRowView> rows)
     {
         using var output = new MemoryStream();
         using (var writer = new Utf8JsonWriter(output))

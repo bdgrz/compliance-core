@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 /// <summary>Admits a signed active assertion as a 202 root change of the designation owner.</summary>
 sealed class RecordFirmProfessionalDutyDesignationHandler(ProfessionalDutyAdmission admission)

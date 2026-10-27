@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Handlers;
 
 sealed class GetEvidenceRedactionHandler(EvidenceRedactionRead read) : IRequestHandler<GetEvidenceRedaction, EvidenceRedactionView>
 {

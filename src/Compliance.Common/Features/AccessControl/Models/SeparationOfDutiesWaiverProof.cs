@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>
 /// Immutable authority for one exact separation-of-duties exception. A consumer compares <see cref="ToScope"/> for

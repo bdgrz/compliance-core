@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Handlers;
 
 /// <summary>Reads the durable digest dispatch ledger without exposing message or transport data.</summary>
 public sealed class GetWorkDigestDispatchStatusHandler(WorkDigestHistoryReader histories)

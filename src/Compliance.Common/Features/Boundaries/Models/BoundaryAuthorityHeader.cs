@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Models;
 
 public sealed record BoundaryAuthorityHeader(Uuid TenantId, Uuid ProgramId, Uuid BoundaryId,
     long Revision, bool IsCreated, bool IsVisible, Uuid DraftVersionId, long DraftRevision,

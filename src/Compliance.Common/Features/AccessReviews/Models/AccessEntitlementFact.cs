@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>
 ///     An observed provider entitlement. <c>EntitlementKind</c> is <c>membership</c>,

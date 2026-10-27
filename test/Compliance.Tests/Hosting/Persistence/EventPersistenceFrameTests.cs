@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Responsibilities.Events;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Hosting.Persistence;
 using System.Runtime.CompilerServices;
 using System.Text;

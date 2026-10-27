@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Models;
 
 /// <summary>How much a failed delivery attempt proves about whether the relay accepted the message.</summary>
 public static class EmailChallengeFailureCertainty

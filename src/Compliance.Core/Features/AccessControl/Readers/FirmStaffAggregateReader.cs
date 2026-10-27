@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>Finalizes staff native and use history before current reads, retries and appends.</summary>
 public sealed class FirmStaffAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

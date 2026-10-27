@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Controls.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Handlers;
 
 public sealed class DiscardControlDraftHandler(ControlOperations operations, ControlDraftDiscardReleaseGate releaseGate)
     : IRequestHandler<DiscardControlDraft>

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>One examination package stream with immutable package versions and retained delivery history.</summary>
 public sealed record AuditPackageView(

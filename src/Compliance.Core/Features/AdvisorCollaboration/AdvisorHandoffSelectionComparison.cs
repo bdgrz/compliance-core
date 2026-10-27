@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 static class AdvisorHandoffSelectionComparison

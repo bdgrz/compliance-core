@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 /// <summary>Adds the retained Attest wall to human client administration without granting bootstrap authority.</summary>
 sealed class ClientRbacMutationAuthorizer(ClientManagementIndependenceGuard independence,

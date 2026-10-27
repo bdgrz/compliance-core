@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Commands;
 
 /// <summary>
 ///     Raises the reassessment trigger of exactly one assessed risk affected by a changed method or boundary.

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Current application admission and ordering authority, without downstream receipt or successor histories.</summary>
 public sealed record TemplateApplicationHeader(Uuid TenantId, Uuid ProgramId, Uuid TemplateApplicationId,

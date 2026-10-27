@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch engagement personal decision receivers.</summary>
 sealed class EngagementPersonalDecisionReceiverAuthorizer : IRequestAuthorizer<IEngagementPersonalDecisionReceiver>

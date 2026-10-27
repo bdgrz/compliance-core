@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Queries;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Handlers;
 
 public sealed class ListEmailAddressesHandler(IEmailAddressDirectoryReader directory)
     : IRequestHandler<ListEmailAddresses, Page<EmailAddressView>>

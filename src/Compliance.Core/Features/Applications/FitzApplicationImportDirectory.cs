@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Projections;
+using Bdgrz.Compliance.Features.Applications.Readers;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 

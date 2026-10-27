@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Models;
 
 /// <summary>Retained builder result for one deterministic, retryable export attempt.</summary>
 public sealed record ClientExportBuildResultContent(

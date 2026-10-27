@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Events;
 
 [Discriminator("bdgrz.work.digest_dispatch.outcome_recorded", 1)]
 public sealed record WorkDigestDispatchOutcomeRecorded(Uuid TenantId, Uuid MemberId,

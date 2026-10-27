@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 /// <summary>Only a personally acting, explicitly designated rule ratifier may approve an exact rules version.</summary>
 sealed class IndependenceRuleRatificationAuthorizer(ProfessionalDutyAuthorityReader duties)

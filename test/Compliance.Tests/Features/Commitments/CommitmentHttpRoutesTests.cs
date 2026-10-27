@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Projections;
+using Bdgrz.Compliance.Features.Commitments.Readers;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;

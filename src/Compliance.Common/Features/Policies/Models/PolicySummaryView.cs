@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Models;
 
 /// <summary>
 ///     A policy row in the program inventory. Retired policies remain listed with a retired status;

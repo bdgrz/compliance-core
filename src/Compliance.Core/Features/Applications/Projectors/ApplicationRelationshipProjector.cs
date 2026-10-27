@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Applications.Events;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Projectors;
 
 public sealed partial class ApplicationRelationshipProjector(
     IApplicationRelationshipProjection projection)

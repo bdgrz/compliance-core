@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>An attributable planning acknowledgement for one carried-forward gap.</summary>
 public sealed record TypeIIPlanGapAcknowledgement(

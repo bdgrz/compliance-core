@@ -1,7 +1,12 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Events;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Projectors;
 
 /// <summary>
 ///     Projects applied provider facts, reading the complete content each one references. Accepted and canceled
@@ -30,7 +35,7 @@ public sealed partial class ProviderProjector(IProviderProjection projection, II
     public ValueTask HandleAsync(ProviderChangeCanceled ev, IProjectorContext context, CancellationToken ct) =>
         ValueTask.CompletedTask;
 
-    async ValueTask<ProviderContent> ReadAsync(Uuid tenantId, Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference,
+    async ValueTask<ProviderContent> ReadAsync(Uuid tenantId, Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference,
         CancellationToken ct)
     {
         var bytes = await content.ReadVerifiedAsync(tenantId.ToString(), reference, ct).ConfigureAwait(false);

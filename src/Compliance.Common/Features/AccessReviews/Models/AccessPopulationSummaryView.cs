@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>A population's identity and status, without its facts.</summary>
 public sealed record AccessPopulationSummaryView(Uuid TenantId, Uuid PopulationId,

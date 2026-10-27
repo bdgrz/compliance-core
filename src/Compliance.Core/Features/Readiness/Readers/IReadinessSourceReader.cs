@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Readiness;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Readers;
 
 /// <summary>Reads the program-scoped source records the readiness rules evaluate.</summary>
 public interface IReadinessSourceReader

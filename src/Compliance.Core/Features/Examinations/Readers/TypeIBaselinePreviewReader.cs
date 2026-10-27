@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.SourceFacts;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Readers;
 
 /// <summary>Combines feature-owned source reads and reports every uncovered family as a blocker.</summary>
 public sealed class TypeIBaselinePreviewReader : ITypeIBaselinePreviewReader

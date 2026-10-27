@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Models;
 
 /// <summary>
 ///     Reconciling totals: <c>Population</c> = <c>LaunchAudience</c> + <c>Added</c>, and

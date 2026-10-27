@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SourceUse.Models;
 using Bdgrz.Compliance.Features.SourceUse;
 using System.Reflection;
 using Bdgrz.Compliance.Features.Kernel;
@@ -126,7 +129,7 @@ public sealed class PracticeIndependenceCommitmentTests
         Assert.Equal(engagement, committed.EngagementId);
         Assert.Equal(operation, committed.Operation.RootOperationId);
         Assert.False(owner.Uses.HasActiveUse);
-        Assert.True(owner.Uses.Find(new Bdgrz.Compliance.Features.SourceUse.ReservationKey(operation,
+        Assert.True(owner.Uses.Find(new Bdgrz.Compliance.Features.SourceUse.Models.ReservationKey(operation,
             owner.Stream, 1, owner.Stream, "actual_staff_assignment")) is { IsSettled: true, GrantFact: not null });
         Assert.True(owner.Serves("attest"));
         Assert.False(owner.Serves("advisory"));

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>Immutable authority for removing relationships from one terminated membership episode.</summary>
 public sealed record MembershipTerminationProof(Uuid TenantId, Uuid MemberId, Uuid UserId,

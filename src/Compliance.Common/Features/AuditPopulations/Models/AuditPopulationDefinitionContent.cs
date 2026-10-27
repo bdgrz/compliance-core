@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Versioned rules, scope, and authorized fields for one audit population.</summary>
 public sealed record AuditPopulationDefinitionContent(

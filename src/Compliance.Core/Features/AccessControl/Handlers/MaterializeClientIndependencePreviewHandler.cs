@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -6,7 +13,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 /// <summary>Materializes the exact historical preview, resolving native receipt knowledge before frozen payload reads.</summary>
 sealed class MaterializeClientIndependencePreviewHandler(IAggregateReader reader, IAggregateExecutor executor,
@@ -139,5 +146,5 @@ sealed class MaterializeClientIndependencePreviewHandler(IAggregateReader reader
     }
 
     static NativeFactReference Fact(EventStreamAddress stream, DomainEvent fact) => NativeFactReference.Of(stream, fact);
-    sealed record Candidate(Proofs.ImmutableContentRef Content, Proofs.ImmutableContentRef Result);
+    sealed record Candidate(Proofs.Models.ImmutableContentRef Content, Proofs.Models.ImmutableContentRef Result);
 }

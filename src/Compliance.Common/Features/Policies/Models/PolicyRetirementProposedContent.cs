@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Models;
 
 public sealed record PolicyRetirementProposedContent(Uuid TenantId, Uuid ProgramId, Uuid PolicyId,
     long Revision, long Version, DateOnly EffectiveUntil, string Rationale,

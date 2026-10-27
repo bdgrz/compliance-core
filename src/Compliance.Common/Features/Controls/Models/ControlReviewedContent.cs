@@ -1,9 +1,11 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 public sealed record ControlReviewedContent(Uuid TenantId, Uuid ProgramId, Uuid ControlId,
     Uuid VersionId, long Revision, Uuid DecisionId, string Outcome, Uuid ActorMemberId,

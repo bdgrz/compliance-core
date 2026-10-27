@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Programs.Commands;
 using Bdgrz.Compliance.Features.Criteria;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Handlers;
 
 public sealed class SelectProgramCriteriaEditionHandler(ProgramOperations operations, ICriteriaCatalog catalog)
     : IRequestHandler<SelectProgramCriteriaEdition>

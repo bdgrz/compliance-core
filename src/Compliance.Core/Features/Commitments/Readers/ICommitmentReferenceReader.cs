@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Readers;
 
 /// <summary>Lets other contexts verify a commitment reference against the authoritative stream.</summary>
 public interface ICommitmentReferenceReader

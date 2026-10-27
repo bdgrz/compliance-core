@@ -1,3 +1,21 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.Commitments.Readers;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Evidence.Readers;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
+using Bdgrz.Compliance.Features.Remediation.Readers;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.Work.Aggregates;
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
@@ -12,7 +30,7 @@ using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Readers;
 
 /// <summary>
 ///     Joins source-derived work with recorded accountability and answers, for one actor, which
@@ -375,8 +393,17 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
     {
         var key = (holder, memberId);
         if (!_holds.TryGetValue(key, out var holds))
-            _holds[key] = holds = await authority.HoldsAsync(tenantId, holder, memberId, ct)
-                .ConfigureAwait(false);
+        {
+            try
+            {
+                holds = await authority.HoldsAsync(tenantId, holder, memberId, ct).ConfigureAwait(false);
+            }
+            catch (MemberHistoryIntegrityException)
+            {
+                holds = false;
+            }
+            _holds[key] = holds;
+        }
         return holds;
     }
 
@@ -384,11 +411,18 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
     {
         if (_teamOversight.TryGetValue(actor.MemberId, out var allowed))
             return allowed;
-        var member = await reader.HydrateAsync(Member.ForVerification(tenantId, actor.MemberId), ct)
-            .ConfigureAwait(false);
-        allowed = member.IsRegistered && !member.IsSuspended && !member.IsDeprovisioned &&
-                  member.Affiliation != "firm_staff" && member.UserId != Uuid.Empty &&
-                  member.UserId == actor.UserId && RbacIds.Member(tenantId, member.UserId) == actor.MemberId;
+        try
+        {
+            var member = await reader.HydrateAsync(Member.ForVerification(tenantId, actor.MemberId), ct)
+                .ConfigureAwait(false);
+            allowed = member.IsRegistered && !member.IsSuspended && !member.IsDeprovisioned &&
+                      member.Affiliation != "firm_staff" && member.UserId != Uuid.Empty &&
+                      member.UserId == actor.UserId && RbacIds.Member(tenantId, member.UserId) == actor.MemberId;
+        }
+        catch (MemberHistoryIntegrityException)
+        {
+            allowed = false;
+        }
         _teamOversight[actor.MemberId] = allowed;
         return allowed;
     }
@@ -396,9 +430,18 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
     async ValueTask<bool> IsActiveMemberAsync(Uuid tenantId, Uuid memberId, CancellationToken ct)
     {
         if (!_active.TryGetValue(memberId, out var active))
-            _active[memberId] = active = await authority.IsActiveAsync(tenantId,
-                new OperatingHolder(OperatingAuthority.MemberHolder, memberId), ct)
-                .ConfigureAwait(false);
+        {
+            try
+            {
+                active = await authority.IsActiveAsync(tenantId,
+                    new OperatingHolder(OperatingAuthority.MemberHolder, memberId), ct).ConfigureAwait(false);
+            }
+            catch (MemberHistoryIntegrityException)
+            {
+                active = false;
+            }
+            _active[memberId] = active;
+        }
         return active;
     }
 

@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Queries;
 
 /// <summary>Lists campaigns, newest launch first.</summary>
 [Discriminator("bdgrz.access_review.campaign.list", 1)]

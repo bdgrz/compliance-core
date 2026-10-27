@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
 
 /// <summary>
 ///     The receivers of the invitation delivery process run as the trusted process principal only; the tenant they

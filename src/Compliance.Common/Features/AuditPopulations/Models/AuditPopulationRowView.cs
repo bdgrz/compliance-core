@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Stable, attributable row identity and exact source and domain references.</summary>
 public sealed record AuditPopulationRowView(

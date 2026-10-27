@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Changes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Authorizers;
 
 sealed class ComplianceImpactReactionAuthorizer : IRequestAuthorizer<IComplianceImpactReactionRequest>
 {

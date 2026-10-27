@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Tenants.Commands;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 

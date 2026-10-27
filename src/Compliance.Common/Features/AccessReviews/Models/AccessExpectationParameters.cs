@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>
 ///     What an expectation matches. <c>forbidden_principal_kind</c> uses <c>PrincipalKind</c>;

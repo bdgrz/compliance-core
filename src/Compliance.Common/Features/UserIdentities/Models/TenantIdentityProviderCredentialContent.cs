@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Models;
 
 /// <summary>
 ///     The protected content a connection's credential epoch points at: the secret-store pointer the provider test

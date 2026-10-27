@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 
 [Discriminator("bdgrz.training_requirements.list", 1)]
 public sealed record ListTrainingRequirements(Uuid TenantId, Uuid ProgramId,

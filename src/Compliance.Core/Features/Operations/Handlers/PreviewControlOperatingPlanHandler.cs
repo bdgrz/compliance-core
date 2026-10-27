@@ -1,6 +1,12 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Queries;
+using Bdgrz.Compliance.Features.Operations.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Handlers;
 
 /// <summary>Shows what a proposed plan would schedule, conflict with, and reassign; records nothing.</summary>
 public sealed class PreviewControlOperatingPlanHandler(ControlReader controlSources,

@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <param name="Status">
 ///     complete, pending, or unlinked (no owning source that could reference a Control exists

@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.AttestRecords.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 using Cntryl.Fitz.Extensions;
 
-namespace Bdgrz.Compliance.Features.AttestRecords;
+namespace Bdgrz.Compliance.Features.AttestRecords.Queries;
 
 /// <summary>Reads the feature state required by the linked product workflow.</summary>
 [Discriminator("bdgrz.attest-records.list-outstanding-attest-delivery-holds", 1)]

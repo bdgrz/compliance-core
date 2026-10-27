@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Models;
 
 public sealed record RiskEvaluationView(Uuid TenantId, Uuid ProgramId, Uuid RiskId,
     long Revision, string Status, IReadOnlyList<RiskAssessmentView> Assessments,

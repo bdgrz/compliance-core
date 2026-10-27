@@ -1,3 +1,11 @@
+using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Handlers;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Queries;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Tests.Testing;
@@ -111,7 +119,7 @@ public sealed class ApplicationReviewCampaignImpactTests
         var launched = await Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewCampaignFacts.LaunchedAsync(
             Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewCampaignFacts.NewStore(), tenantId, campaignId,
             "Review", DateTimeOffset.UtcNow.AddDays(7), Uuid.CreateVersion4(), new string('a', 64), [], [],
-            Bdgrz.Compliance.Features.AccessControl.ActorReference.ForMember(
+            Bdgrz.Compliance.Features.AccessControl.Models.ActorReference.ForMember(
                 Uuid.CreateVersion4(), "Campaign owner"), DateTimeOffset.UtcNow);
         DomainEvent domainEvent = launched;
         domainEvent.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), campaignId,
@@ -143,7 +151,7 @@ public sealed class ApplicationReviewCampaignImpactTests
         var launched = await Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewCampaignFacts.LaunchedAsync(
             Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewCampaignFacts.NewStore(), tenantId, campaignId,
             "Review", launchedAt.AddDays(7), Uuid.CreateVersion4(), new string('b', 64), [], [],
-            Bdgrz.Compliance.Features.AccessControl.ActorReference.ForMember(
+            Bdgrz.Compliance.Features.AccessControl.Models.ActorReference.ForMember(
                 Uuid.CreateVersion4(), "Campaign owner"), launchedAt);
         DomainEvent domainEvent = launched;
         domainEvent.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), campaignId,

@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Snapshots.Events;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Projectors;
 
 public sealed partial class PopulationSnapshotDirectoryProjector(
     IPopulationSnapshotDirectoryProjection projection)

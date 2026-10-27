@@ -1,7 +1,7 @@
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>Identity of one immutable personal decision on an instance at its original expected decision count.</summary>
 public static class SystemInstanceAccessReviewScopeIdentity

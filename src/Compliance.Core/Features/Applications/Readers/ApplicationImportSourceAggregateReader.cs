@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Readers;
 
 /// <summary>Validates the actual complete source prefix before ordinary reads, accepted retry and selected appends.</summary>
 public sealed class ApplicationImportSourceAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

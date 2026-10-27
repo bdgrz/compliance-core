@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Readers;
 
 public interface ITrainingRequirementDirectoryReader
 {

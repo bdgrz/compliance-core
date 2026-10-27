@@ -1,9 +1,14 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Events;
+using Bdgrz.Compliance.Features.Risks.Readers;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Reactors;
 
 /// <summary>
 ///     Raises M0-D10 method-change reassessment triggers when a later risk method version is published, one command per

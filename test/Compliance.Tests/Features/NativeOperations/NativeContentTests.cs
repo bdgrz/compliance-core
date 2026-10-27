@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -21,7 +24,7 @@ public sealed class NativeContentTests
     {
         // Arrange
         var store = Store();
-        var registration = new Bdgrz.Compliance.Features.Criteria.CriteriaTextOverlayRegistration(
+        var registration = new Bdgrz.Compliance.Features.Criteria.Models.CriteriaTextOverlayRegistration(
             Uuid.CreateVersion4(), "CC6.1", 3);
         var (response, result) = await NativeContent.FreezeAsync(store, TenantId, "test.registration.v1", registration);
         var first = NativeFacts.Ref();
@@ -29,13 +32,13 @@ public sealed class NativeContentTests
             Uuid.CreateVersion4(), 1);
 
         // Act
-        var committed = await NativeContent.ResponseAsync<Bdgrz.Compliance.Features.Criteria.CriteriaTextOverlayRegistration>(
+        var committed = await NativeContent.ResponseAsync<Bdgrz.Compliance.Features.Criteria.Models.CriteriaTextOverlayRegistration>(
             store, TenantId, Result<AcceptedAppendResult>.Success(new AcceptedAppendResult.Committed(fact, 1, first,
                 response)));
-        var replayed = await NativeContent.ResponseAsync<Bdgrz.Compliance.Features.Criteria.CriteriaTextOverlayRegistration>(
+        var replayed = await NativeContent.ResponseAsync<Bdgrz.Compliance.Features.Criteria.Models.CriteriaTextOverlayRegistration>(
             store, TenantId, Result<AcceptedAppendResult>.Success(new AcceptedAppendResult.Replayed(fact, first,
                 response)));
-        var conflict = await NativeContent.ResponseAsync<Bdgrz.Compliance.Features.Criteria.CriteriaTextOverlayRegistration>(
+        var conflict = await NativeContent.ResponseAsync<Bdgrz.Compliance.Features.Criteria.Models.CriteriaTextOverlayRegistration>(
             store, TenantId, Result<AcceptedAppendResult>.Success(AcceptedAppendResult.Conflict.Instance));
 
         // Assert

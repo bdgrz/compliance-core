@@ -1,3 +1,19 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Evidence.Readers;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.Remediation.Readers;
+using Bdgrz.Compliance.Features.Work.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Boundaries;
 using System.Globalization;
@@ -156,7 +172,7 @@ public sealed class WorkAssignmentNativeHttpTests
                     operatingReader: provider.GetRequiredService<ControlOperationsReader>(), findings: provider.GetRequiredService<FindingReader>(),
                     mappingReader: provider.GetRequiredService<ControlMappingReader>(), applicabilityReader: provider.GetRequiredService<ApplicabilityReader>(),
                     evaluationReader: provider.GetRequiredService<ControlEvaluationReader>(),
-                    riskGovernance: provider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+                    riskGovernance: provider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(),
                     evidenceRequests: provider.GetRequiredService<EvidenceRequestReader>(),
                     boundarySources: provider.GetRequiredService<BoundaryReader>()));
             }));

@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Commands;
 
 /// <summary>
 ///     Converts a failed or skipped attestation or a reviewer's requested action into a finding.

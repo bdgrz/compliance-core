@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Queries;
 using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Features.Work;
 using Cntryl.Portia;

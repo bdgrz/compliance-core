@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Readers;
 using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Risks;
@@ -20,7 +25,7 @@ public sealed class RiskAssessmentIdentityTests
         var now = DateTimeOffset.UtcNow;
         var methodOwner = new RiskMethodRules(tenant, program);
         Assert.Null(methodOwner.Publish(program, 0, RiskMethodTests.Scale(), RiskMethodTests.Scale(), 12,
-            Bdgrz.Compliance.Features.AccessControl.ActorReference.ForMember(actor, "Author"), now));
+            Bdgrz.Compliance.Features.AccessControl.Models.ActorReference.ForMember(actor, "Author"), now));
         var method = methodOwner.GetVersion(1)!;
         var request = new RecordRiskAssessment(Uuid.CreateVersion4(), tenant, program, risk, 0, method.Version,
             "inherent", 2, 2, "Original rationale");

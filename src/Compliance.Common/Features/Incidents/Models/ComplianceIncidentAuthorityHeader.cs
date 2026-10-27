@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>Bounded current incident authority; exact version/decision bodies and chronology remain immutable content.</summary>
 public sealed record ComplianceIncidentAuthorityHeader(Uuid TenantId, Uuid ProgramId, Uuid IncidentId, long Revision,

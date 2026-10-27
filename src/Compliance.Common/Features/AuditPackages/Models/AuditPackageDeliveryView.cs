@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>Attributed delivery of the exact retained archive and manifest to one approved recipient.</summary>
 public sealed record AuditPackageDeliveryView(

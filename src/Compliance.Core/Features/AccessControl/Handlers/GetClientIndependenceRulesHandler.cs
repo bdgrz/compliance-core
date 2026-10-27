@@ -1,6 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Features.AccessControl.Queries;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 public sealed class GetClientIndependenceRulesHandler(IndependenceRuleCatalogReader rules, IndependenceRuleRatificationReader ratifications)
     : IRequestHandler<GetClientIndependenceRules, IReadOnlyList<IndependenceRuleVersionView>>

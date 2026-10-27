@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Commands;
+using Bdgrz.Compliance.Features.Tenants.Events;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 using System.Security.Cryptography;
 using System.Text;
 using Bdgrz.Compliance.Features.Content;
@@ -5,7 +12,7 @@ using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Handlers;
 
 /// <summary>
 ///     Performs the external send of the delivery process for one frozen payload. The attempt is begun and stored

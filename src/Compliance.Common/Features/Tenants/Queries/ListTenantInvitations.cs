@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Queries;
 
 [Discriminator("bdgrz.tenant-invitation.list", 1)]
 public sealed record ListTenantInvitations(Uuid TenantId, int? Limit = null,

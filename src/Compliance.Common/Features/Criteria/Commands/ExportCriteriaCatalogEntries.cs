@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Criteria;
+namespace Bdgrz.Compliance.Features.Criteria.Commands;
 
 [Discriminator("bdgrz.criteria.entries.export", 1)]
 public sealed record ExportCriteriaCatalogEntries(Uuid TenantId, Uuid EditionId,

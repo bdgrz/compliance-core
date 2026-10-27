@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Attributable link from a successor population version to changed stable rows.</summary>
 public sealed record AuditPopulationAmendmentView(

@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Snapshots.Models;
+using Bdgrz.Compliance.Features.Workforce.Commands;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class AmendWorkforceRosterSnapshotHandler(WorkforceRosterSnapshotter snapshotter)
     : IRequestHandler<AmendWorkforceRosterSnapshot, SnapshotRegistration>

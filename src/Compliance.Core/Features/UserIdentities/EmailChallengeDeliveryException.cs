@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.UserIdentities.Models;
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
 /// <summary>

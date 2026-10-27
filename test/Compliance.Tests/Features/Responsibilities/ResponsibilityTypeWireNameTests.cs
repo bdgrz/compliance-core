@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Responsibilities;
 
 namespace Bdgrz.Compliance.Tests.Features.Responsibilities;

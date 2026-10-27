@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 /// <summary>
 ///     Seals the complete frozen plan of a batch and starts <c>ApplicationImportExecutionProcess</c>. The command

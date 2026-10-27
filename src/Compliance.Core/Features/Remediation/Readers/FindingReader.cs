@@ -1,10 +1,17 @@
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Events;
+using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Readers;
 
 /// <summary>
 ///     Reads findings from their own owner streams and composes the public <see cref="FindingView" />. The view is
@@ -186,7 +193,7 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
         open = open with { Revision = action.Revision };
         if (action.Completed is not { } completed)
             return (open, null);
-        var evidence = await FindingContent.ReadAsync<IReadOnlyList<Operations.EvidenceReference>>(content,
+        var evidence = await FindingContent.ReadAsync<IReadOnlyList<Operations.Models.EvidenceReference>>(content,
             raised.TenantId, completed.EvidenceManifest, ct).ConfigureAwait(false);
         var done = open with
         {

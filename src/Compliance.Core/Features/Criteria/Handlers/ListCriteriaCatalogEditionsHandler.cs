@@ -1,9 +1,12 @@
+using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Criteria.Queries;
 using System.Globalization;
 using System.Text;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Criteria;
+namespace Bdgrz.Compliance.Features.Criteria.Handlers;
 
 public sealed class ListCriteriaCatalogEditionsHandler(ICriteriaCatalog catalog)
     : IRequestHandler<ListCriteriaCatalogEditions, IReadOnlyList<CriteriaCatalogEdition>>

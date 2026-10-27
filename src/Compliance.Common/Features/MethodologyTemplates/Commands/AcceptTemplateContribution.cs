@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 
 /// <summary>Accepts a reviewed contribution into platform methodology.</summary>
 [Discriminator("bdgrz.methodology-templates.accept-template-contribution", 2)]

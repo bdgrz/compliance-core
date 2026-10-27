@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Claimed source totals; the aggregate verifies these against its exact rows.</summary>
 public sealed record AuditPopulationReconciliationContent(

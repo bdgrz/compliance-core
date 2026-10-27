@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
+using Bdgrz.Compliance.Features.AccessReviews.Authorizers;
+using Bdgrz.Compliance.Features.AccessReviews.Commands;
+using Bdgrz.Compliance.Features.AccessReviews.Events;
+using Bdgrz.Compliance.Features.AccessReviews.Queries;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Tests.Features.AccessControl;

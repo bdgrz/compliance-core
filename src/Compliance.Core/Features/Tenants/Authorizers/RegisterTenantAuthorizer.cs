@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
+using Bdgrz.Compliance.Features.Tenants.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
 
 /// <summary>Verifies the creator before a self-service organization is registered.</summary>
 sealed class RegisterTenantAuthorizer(PlatformOperatorAuthority operators,

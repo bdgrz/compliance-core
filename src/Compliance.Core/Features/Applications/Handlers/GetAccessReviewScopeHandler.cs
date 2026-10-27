@@ -1,7 +1,12 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Queries;
+using Bdgrz.Compliance.Features.Applications.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Handlers;
 
 /// <summary>Reads the effective scope decision and its retained history from the source stream.</summary>
 public sealed class GetAccessReviewScopeHandler(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content,

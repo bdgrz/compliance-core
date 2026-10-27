@@ -1,3 +1,11 @@
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.SystemDescription;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
 using Cntryl.Fitz;
 using Bdgrz.Compliance.Features.Artifacts;
 using Bdgrz.Compliance.Features.Content;
@@ -6,7 +14,7 @@ using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Processes;
 
 /// <summary>Resumable technical export over one frozen approved source. It never mutates description revision or issues delivery tickets.</summary>
 public sealed class SystemDescriptionExportProcess(ISystemDescriptionExportProcesses processes, SystemDescriptionReader descriptions,
@@ -167,7 +175,7 @@ public sealed class SystemDescriptionExportProcess(ISystemDescriptionExportProce
         var intent = await content.ReadJsonAsync<SystemDescriptionExportIntent>(record.TenantId.ToString(), record.Intent, ct).ConfigureAwait(false);
         if (intent.TenantId != record.TenantId || intent.ProgramId != record.ProgramId || intent.DescriptionId != record.DescriptionId || intent.ProcessId != record.ProcessId ||
             AcceptedOperationBinding.Of(intent.Operation) != record.Binding || intent.VersionSource.Stream.Realm != record.TenantId.ToString() ||
-            intent.ApprovalSource.Stream != new EventStreamAddress(record.TenantId.ToString(), SystemDescription.Area, record.DescriptionId.ToString()) ||
+            intent.ApprovalSource.Stream != new EventStreamAddress(record.TenantId.ToString(), SystemDescriptionAggregate.Area, record.DescriptionId.ToString()) ||
             intent.VersionSource.Stream != intent.ApprovalSource.Stream || intent.VersionSource.EventId == Uuid.Empty || intent.ApprovalSource.EventId == Uuid.Empty ||
             intent.VersionSource.AggregateVersion == 0 || intent.ApprovalSource.AggregateVersion == 0)
             throw new ImmutableContentIntegrityException("The technical export intent differs from its exact admitted owner and native source proofs.");

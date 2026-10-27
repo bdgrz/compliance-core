@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Commands;
 
 /// <summary>Defines a population against one exact frozen Type II period close.</summary>
 [Discriminator("bdgrz.audit-populations.define-audit-population", 2)]

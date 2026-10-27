@@ -1,7 +1,7 @@
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Projections;
 
 public interface IEmailAddressDirectoryProjection : IProjectionStore
 {

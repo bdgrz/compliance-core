@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.Risks.Events;
+using Bdgrz.Compliance.Features.Risks.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Projectors;
 
 public sealed partial class RiskDraftDirectoryProjector(IRiskDraftDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant("risks"),

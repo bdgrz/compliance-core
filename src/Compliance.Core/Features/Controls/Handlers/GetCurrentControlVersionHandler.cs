@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Controls.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Handlers;
 
 public sealed class GetCurrentControlVersionHandler(ControlActivationSource source)
     : IRequestHandler<GetCurrentControlVersion, ControlVersionView>

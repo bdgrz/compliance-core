@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Handlers;
 
 /// <summary>Current platform authorization runs before selected native admission and original-result recovery.</summary>
 public sealed class AuthorizeWorkDigestUnknownRetryHandler(WorkDigestRetryOperations operations)

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Events;
 
 [Discriminator("bdgrz.snapshot.frozen", 1)]
 public sealed record SnapshotFrozen(Uuid TenantId, Uuid SnapshotId, Uuid RootSnapshotId,

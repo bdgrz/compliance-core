@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>The retirement evidence one retire row of a target group requires, frozen with the group.</summary>
 public sealed record ApplicationImportRetirementProof(Uuid RowId, Uuid SourceClaimId, string ProposalSha256,

@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SourceFacts;
+namespace Bdgrz.Compliance.Features.SourceFacts.Readers;
 
 /// <summary>Retains Fitz's broker commit timestamp discarded by Portia0.9.1, bound to the complete exact native source tuple and payload.</summary>
 sealed class FitzNativeEventReceiptReader(IStreamClient streams, IDomainEventSerializer serializer) : INativeEventReceiptReader

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch Type II range receivers.</summary>
 sealed class TypeIIRangeReceiverAuthorizer : IRequestAuthorizer<ITypeIIRangeReceiver>

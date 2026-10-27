@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Evidence.Events;
 using Bdgrz.Compliance.Features.Evidence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Projectors;
 
 public sealed partial class ApplicationEvidenceSourceReferenceProjector(
     IApplicationEvidenceSourceReferenceProjection projection)

@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Handlers;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Projections;
+using Bdgrz.Compliance.Features.Programs.Projectors;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Tests.Testing;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;

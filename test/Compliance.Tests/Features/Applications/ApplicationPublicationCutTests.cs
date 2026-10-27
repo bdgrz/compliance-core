@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Readers;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.Processes;

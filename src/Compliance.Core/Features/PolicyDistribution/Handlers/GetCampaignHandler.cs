@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 using Bdgrz.Compliance.Features.Policies;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Handlers;
 
 /// <summary>Reads aggregate campaign evidence; person-level detail needs program management.</summary>
 sealed class GetCampaignHandler(CampaignSource campaigns, TimeProvider clock)

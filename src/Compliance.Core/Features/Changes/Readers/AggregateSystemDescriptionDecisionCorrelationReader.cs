@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Readers;
 using Bdgrz.Compliance.Features.Incidents;
 using Cntryl.Portia;
-using IncidentAggregate = Bdgrz.Compliance.Features.Incidents.ComplianceIncident;
+using IncidentAggregate = Bdgrz.Compliance.Features.Incidents.Aggregates.ComplianceIncident;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Readers;
 
 /// <summary>Reads exact current change and incident assessment facts from their owning aggregates.</summary>
 public sealed class AggregateSystemDescriptionDecisionCorrelationReader(ComplianceIncidentReader incidents, SignificantChangeReader changes)

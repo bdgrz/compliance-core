@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.Evidence.Events;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Reactors;
 
 /// <summary>Recovers verdict storage effects from tenant artifact history without rescanning or changing events.</summary>
 public sealed partial class EvidenceArtifactInspectionEffectsReactor(IProjectionCheckpointStore checkpoints,

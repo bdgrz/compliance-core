@@ -1,9 +1,11 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>Activates an immutable control version from one exact reviewed draft revision.</summary>
 public sealed record ControlApprovedContent(Uuid TenantId, Uuid ProgramId, Uuid ControlId,

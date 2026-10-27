@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Queries;
 
 /// <summary>Reads the feature state required by the linked product workflow.</summary>
 [Discriminator("bdgrz.advisor-collaboration.get-advisor-request", 1)]

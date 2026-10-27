@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Work.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Authorizers;
 
 sealed class RecordWorkDigestDeliveryAuthorizer : IRequestAuthorizer<RecordWorkDigestDelivery>
 {

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Tenants.Events;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Bdgrz.Compliance.Features.Tenants;

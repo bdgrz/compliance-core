@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Readers;
 
 /// <summary>Only public display text from a unique explicit tenant-local correlation.</summary>
 public interface IPersonMemberDisplayReader

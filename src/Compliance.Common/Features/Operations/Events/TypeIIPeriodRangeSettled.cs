@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Events;
 
 /// <summary>
 ///     The calendar settled exactly one reservation, <paramref name="TargetOperationId" />, and for an applied

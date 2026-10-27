@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Commands;
 
 /// <summary>
 ///     Records accepted provenance after canonical facts match, or dismisses conflicting facts with

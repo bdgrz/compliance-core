@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Events;
 
 /// <summary>Records the EvidenceSupportLinked domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.evidence.evidence-support-linked", 1)]

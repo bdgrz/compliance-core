@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Exports.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Models;
 using Bdgrz.Compliance.Features.Exports;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using ClientExportAggregate = Bdgrz.Compliance.Features.Exports.ClientExport;
+using ClientExportAggregate = Bdgrz.Compliance.Features.Exports.Aggregates.ClientExport;
 
 namespace Bdgrz.Compliance.Tests.Features.Exports;
 

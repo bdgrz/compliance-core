@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Queries;
 
 /// <summary>
 ///     Lists an assessment's gaps with their current plan, filtered by plan_state (planned or

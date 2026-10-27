@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Retention.Commands;
 using System.Security.Claims;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Authorizers;
 
 sealed class RecordArtifactDispositionResultAuthorizer
     : IRequestAuthorizer<RecordArtifactDispositionResult>

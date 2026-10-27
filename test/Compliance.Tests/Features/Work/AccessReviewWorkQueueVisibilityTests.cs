@@ -1,3 +1,17 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Handlers;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -237,16 +251,16 @@ public sealed class AccessReviewWorkQueueVisibilityTests
         var eligibility = new AccessReviewQueueEligibility(aggregateReader, permissions,
             permissions, visibility);
         WorkQueueReader CreateQueue() => new(aggregateReader, services.GetRequiredService<WorkAssignmentReader>(),
-            services.GetRequiredService<Bdgrz.Compliance.Features.Controls.ControlReader>(),
-            services.GetRequiredService<Bdgrz.Compliance.Features.Policies.PolicyReader>(),
+            services.GetRequiredService<Bdgrz.Compliance.Features.Controls.Readers.ControlReader>(),
+            services.GetRequiredService<Bdgrz.Compliance.Features.Policies.Readers.PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [source], accessReviewQueueEligibility: eligibility,
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
             evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
-            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
-            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.Readers.EvidenceRequestReader>());
         return new QueueScenario(fixture, scope, CreateQueue, source, grants, permissions,
             systemInstanceId, aggregateReader);
     }

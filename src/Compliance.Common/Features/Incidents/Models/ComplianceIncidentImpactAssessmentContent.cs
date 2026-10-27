@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>Human incident significance decision and reviewed compliance impacts.</summary>
 public sealed record ComplianceIncidentImpactAssessmentContent(

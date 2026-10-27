@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Events;
 
 [Discriminator("bdgrz.workforce.person.revised", 1)]
 public sealed record PersonRevised(Uuid TenantId, Uuid PersonId, long Revision,

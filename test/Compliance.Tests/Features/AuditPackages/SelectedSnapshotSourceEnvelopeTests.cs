@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;

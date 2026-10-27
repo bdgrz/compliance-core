@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>The relay accepted the message of one delivery attempt of an email challenge.</summary>
 [Discriminator("bdgrz.email-challenge-delivery.record-sent", 1)]

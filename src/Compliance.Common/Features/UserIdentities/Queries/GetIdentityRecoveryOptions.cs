@@ -1,7 +1,7 @@
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Queries;
 
 [Discriminator("bdgrz.user-identity.recovery-options", 1)]
 public sealed record GetIdentityRecoveryOptions(

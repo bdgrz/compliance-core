@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Models;
 using Cntryl.Portia;
 using System.Text.Json.Serialization;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 /// <summary>
 ///     Revises an application's metadata. <paramref name="CommandId" /> is the logical identity of the operation. The

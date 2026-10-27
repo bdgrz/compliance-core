@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Providers.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Commands;
 
 /// <summary>
 ///     Records authored report facts; this asserts no coverage or approval. <paramref name="ReportId" /> is the

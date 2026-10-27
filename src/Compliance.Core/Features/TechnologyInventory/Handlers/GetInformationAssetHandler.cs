@@ -1,7 +1,12 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Queries;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
 
 public sealed class GetInformationAssetHandler(IAggregateReader aggregates,
     TechnologyInventoryReadConsistency consistency,

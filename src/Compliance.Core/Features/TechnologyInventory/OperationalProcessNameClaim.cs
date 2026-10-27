@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.NamedRecords.Aggregates;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.NativeOperations;

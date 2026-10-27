@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Commands;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Handlers;
 
 /// <summary>Records an exact-version rollover decision using current member and scoped authority.</summary>
 public sealed class ApproveProgramRolloverHandler(IAggregateExecutor executor,

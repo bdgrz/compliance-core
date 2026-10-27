@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Projections;
+using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;

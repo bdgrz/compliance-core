@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>
 ///     An observed provider principal. <c>PrincipalKind</c> is <c>user_account</c>, <c>group</c>,

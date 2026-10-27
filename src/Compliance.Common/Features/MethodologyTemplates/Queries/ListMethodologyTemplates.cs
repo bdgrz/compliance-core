@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 using Cntryl.Fitz.Extensions;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Queries;
 
 /// <summary>Reads the feature state required by the linked product workflow.</summary>
 [Discriminator("bdgrz.methodology-templates.list-methodology-templates", 1)]

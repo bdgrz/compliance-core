@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Commands;
 
 /// <summary>Records an audited source-level replacement for an ineligible campaign responsibility.</summary>
 [Discriminator("bdgrz.access_review.responsibility.reassign", 2)]

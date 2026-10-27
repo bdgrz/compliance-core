@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Queries;
+using Bdgrz.Compliance.Features.AuditorRequests.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Handlers;
 
 public sealed class GetSampleSelectionHandler(IAuditorRequestDirectoryReader directory,
     AuditorRequestDirectoryReadConsistency consistency, AuditorRequestReader requests)

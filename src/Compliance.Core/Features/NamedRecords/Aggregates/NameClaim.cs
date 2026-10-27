@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.NamedRecords;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.NamedRecords;
+namespace Bdgrz.Compliance.Features.NamedRecords.Aggregates;
 
 /// <summary>
 ///     The authoritative unique active-name reservation of one normalized name. It is held by at most one record

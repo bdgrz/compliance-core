@@ -1,9 +1,12 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Responsibilities;
+namespace Bdgrz.Compliance.Features.Responsibilities.Handlers;
 
 public sealed class RevokeResponsibilityHandler(IResponsibilityScopeValidator scopeValidator,
     ControlOperations controls, CommitmentOperations commitments, BoundaryOperations boundaries) : IRequestHandler<RevokeResponsibility>

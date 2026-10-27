@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -244,7 +250,7 @@ public sealed class SystemDescriptionHttpTests
             Assert.Null(engagement.Create(new Bdgrz.Compliance.Features.Examinations.ExaminationEngagementContent("type_i", "Audit LLP",
                 new DateOnly(2026, 10, 18), null, ["security"], boundary, []), Member, "Examiner", Now));
             var preview = Bdgrz.Compliance.Tests.Features.Examinations.TypeIBaselinePreviewTestFactory.Create(Tenant, Program, examination,
-                [new Bdgrz.Compliance.Features.Examinations.TypeIBaselineSourceReference("approved_boundary", boundary, Uuid.CreateVersion4(), 1, new string('a', 64))]);
+                [new Bdgrz.Compliance.Features.Examinations.Models.TypeIBaselineSourceReference("approved_boundary", boundary, Uuid.CreateVersion4(), 1, new string('a', 64))]);
             Assert.Null(engagement.FreezeBaseline(1, Uuid.CreateVersion4(), preview, "Frozen complete source scope", Member, "Examiner", Now));
             await Bdgrz.Compliance.Tests.Testing.ExaminationSeeds.WriteAsync(
                 scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
@@ -271,7 +277,7 @@ public sealed class SystemDescriptionHttpTests
         public async Task<int> CountAsync(Uuid description)
         {
             var count = 0;
-            await foreach (var record in _events.ReadAsync(EventStreamPattern.ForPattern(Tenant.ToString(), Bdgrz.Compliance.Features.SystemDescription.SystemDescription.Area,
+            await foreach (var record in _events.ReadAsync(EventStreamPattern.ForPattern(Tenant.ToString(), Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription.Area,
                 description.ToString()), EventCursor.Start, CancellationToken.None))
                 if (!record.Event.Metadata.IsAudit)
                     count++;

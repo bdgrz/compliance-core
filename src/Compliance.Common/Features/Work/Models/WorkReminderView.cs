@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Models;
 
 /// <summary>
 ///     One in-product reminder: due, overdue, or escalated. The identifier is stable for the item,

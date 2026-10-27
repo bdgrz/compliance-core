@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Projections;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;

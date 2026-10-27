@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Readers;
 
 /// <summary>Discovers created request identities and every scoped owner of a local selection identity.</summary>
 public interface IAuditorRequestDirectoryReader

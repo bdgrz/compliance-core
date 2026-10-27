@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Projections;
+using Bdgrz.Compliance.Features.Readiness.Events;
 using Bdgrz.Compliance.Features.Readiness;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Projectors;
 
 public sealed partial class ProgramDirectoryProjector(IProgramDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant(), "ProgramDirectory"),

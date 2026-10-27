@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.FirmPortfolio;
+namespace Bdgrz.Compliance.Features.FirmPortfolio.Models;
 
 /// <summary>Client summary visible within the actor's authorized portfolio.</summary>
 public sealed record AuthorizedClientSummaryView(Uuid TenantId, Uuid ClientTenantId,

@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Handlers;
 
 public sealed class GetProviderHandler(ProviderReadConsistency consistency) : IRequestHandler<GetProvider, ProviderView>
 {

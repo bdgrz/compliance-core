@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
+using Bdgrz.Compliance.Features.AuditorRequests.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Handlers;
 using System.Collections;
 using System.Reflection;
 using Bdgrz.Compliance.Features.AuditorRequests;

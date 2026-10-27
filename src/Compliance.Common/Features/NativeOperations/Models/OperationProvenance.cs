@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.NativeOperations;
+namespace Bdgrz.Compliance.Features.NativeOperations.Models;
 
 /// <summary>Frozen acceptance provenance of one logical operation on its emitting native owner.</summary>
 public sealed record OperationProvenance(Uuid LogicalId, Uuid RootOperationId, Uuid? CausationEventId,

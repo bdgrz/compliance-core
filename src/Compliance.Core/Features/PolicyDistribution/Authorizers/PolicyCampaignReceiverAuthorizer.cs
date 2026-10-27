@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch participant and campaign closure receivers.</summary>
 sealed class PolicyCampaignReceiverAuthorizer : IRequestAuthorizer<IPolicyCampaignReceiver>

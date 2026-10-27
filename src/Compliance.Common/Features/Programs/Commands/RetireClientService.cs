@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Commands;
 
 [Discriminator("bdgrz.client-service.retire", 1)]
 public sealed record RetireClientService(Uuid CommandId, Uuid TenantId, Uuid ServiceId, long ExpectedRevision,

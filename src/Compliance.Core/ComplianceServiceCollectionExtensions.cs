@@ -1,3 +1,208 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Authorizers;
+using Bdgrz.Compliance.Features.AccessReviews.Handlers;
+using Bdgrz.Compliance.Features.AccessReviews.Processes;
+using Bdgrz.Compliance.Features.AccessReviews.Projections;
+using Bdgrz.Compliance.Features.AccessReviews.Projectors;
+using Bdgrz.Compliance.Features.AccessReviews.Reactors;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Authorizers;
+using Bdgrz.Compliance.Features.Applications.Handlers;
+using Bdgrz.Compliance.Features.Applications.Processes;
+using Bdgrz.Compliance.Features.Applications.Projections;
+using Bdgrz.Compliance.Features.Applications.Projectors;
+using Bdgrz.Compliance.Features.Applications.Reactors;
+using Bdgrz.Compliance.Features.Applications.Readers;
+using Bdgrz.Compliance.Features.Artifacts;
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Boundaries.Handlers;
+using Bdgrz.Compliance.Features.Boundaries.Projections;
+using Bdgrz.Compliance.Features.Boundaries.Projectors;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.Commitments.Handlers;
+using Bdgrz.Compliance.Features.Commitments.Projections;
+using Bdgrz.Compliance.Features.Commitments.Projectors;
+using Bdgrz.Compliance.Features.Commitments.Readers;
+using Bdgrz.Compliance.Features.ControlMappings;
+using Bdgrz.Compliance.Features.ControlMappings.Handlers;
+using Bdgrz.Compliance.Features.ControlMappings.Projections;
+using Bdgrz.Compliance.Features.ControlMappings.Projectors;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Controls.Handlers;
+using Bdgrz.Compliance.Features.Controls.Projections;
+using Bdgrz.Compliance.Features.Controls.Projectors;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Handlers;
+using Bdgrz.Compliance.Features.Evaluations.Reactors;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.Policies.Handlers;
+using Bdgrz.Compliance.Features.Policies.Projections;
+using Bdgrz.Compliance.Features.Policies.Projectors;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.PolicyDistribution.Authorizers;
+using Bdgrz.Compliance.Features.PolicyDistribution.Handlers;
+using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
+using Bdgrz.Compliance.Features.PolicyDistribution.Projections;
+using Bdgrz.Compliance.Features.PolicyDistribution.Projectors;
+using Bdgrz.Compliance.Features.PolicyDistribution.Reactors;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Programs.Authorizers;
+using Bdgrz.Compliance.Features.Programs.Handlers;
+using Bdgrz.Compliance.Features.Programs.Projections;
+using Bdgrz.Compliance.Features.Programs.Projectors;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Providers.Authorizers;
+using Bdgrz.Compliance.Features.Providers.Handlers;
+using Bdgrz.Compliance.Features.Providers.Processes;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Providers.Projectors;
+using Bdgrz.Compliance.Features.Providers.Reactors;
+using Bdgrz.Compliance.Features.Providers.Readers;
+using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.Readiness.Authorizers;
+using Bdgrz.Compliance.Features.Readiness.Handlers;
+using Bdgrz.Compliance.Features.Readiness.Processes;
+using Bdgrz.Compliance.Features.Readiness.Reactors;
+using Bdgrz.Compliance.Features.Readiness.Readers;
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.Remediation.Authorizers;
+using Bdgrz.Compliance.Features.Remediation.Handlers;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Reactors;
+using Bdgrz.Compliance.Features.Remediation.Readers;
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.Risks.Authorizers;
+using Bdgrz.Compliance.Features.Risks.Handlers;
+using Bdgrz.Compliance.Features.Risks.Processes;
+using Bdgrz.Compliance.Features.Risks.Projections;
+using Bdgrz.Compliance.Features.Risks.Projectors;
+using Bdgrz.Compliance.Features.Risks.Reactors;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.Snapshots.Handlers;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
+using Bdgrz.Compliance.Features.Snapshots.Projectors;
+using Bdgrz.Compliance.Features.Snapshots.Readers;
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.TechnologyInventory.Authorizers;
+using Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
+using Bdgrz.Compliance.Features.TechnologyInventory.Processes;
+using Bdgrz.Compliance.Features.TechnologyInventory.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Projectors;
+using Bdgrz.Compliance.Features.TechnologyInventory.Reactors;
+using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.Tenants.Events;
+using Bdgrz.Compliance.Features.Tenants.Handlers;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Tenants.Projections;
+using Bdgrz.Compliance.Features.Tenants.Projectors;
+using Bdgrz.Compliance.Features.Tenants.Reactors;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Workforce.Authorizers;
+using Bdgrz.Compliance.Features.Workforce.Handlers;
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Features.Workforce.Projectors;
+using Bdgrz.Compliance.Features.Workforce.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Features.AccessControl.Projectors;
+using Bdgrz.Compliance.Features.AccessControl.Reactors;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Authorizers;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Handlers;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Projections;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Projectors;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Reactors;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
+using Bdgrz.Compliance.Features.AuditPackages.Authorizers;
+using Bdgrz.Compliance.Features.AuditPackages.Handlers;
+using Bdgrz.Compliance.Features.AuditPackages.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Projections;
+using Bdgrz.Compliance.Features.AuditPackages.Projectors;
+using Bdgrz.Compliance.Features.AuditPackages.Reactors;
+using Bdgrz.Compliance.Features.AuditPackages.Readers;
+using Bdgrz.Compliance.Features.AuditPopulations.Handlers;
+using Bdgrz.Compliance.Features.AuditPopulations.Readers;
+using Bdgrz.Compliance.Features.AuditorRequests.Authorizers;
+using Bdgrz.Compliance.Features.AuditorRequests.Handlers;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditorRequests.Projections;
+using Bdgrz.Compliance.Features.AuditorRequests.Projectors;
+using Bdgrz.Compliance.Features.AuditorRequests.Reactors;
+using Bdgrz.Compliance.Features.AuditorRequests.Readers;
+using Bdgrz.Compliance.Features.Changes.Authorizers;
+using Bdgrz.Compliance.Features.Changes.Handlers;
+using Bdgrz.Compliance.Features.Changes.Projections;
+using Bdgrz.Compliance.Features.Changes.Projectors;
+using Bdgrz.Compliance.Features.Changes.Reactors;
+using Bdgrz.Compliance.Features.Changes.Readers;
+using Bdgrz.Compliance.Features.Criteria.Handlers;
+using Bdgrz.Compliance.Features.Criteria.Projections;
+using Bdgrz.Compliance.Features.Criteria.Projectors;
+using Bdgrz.Compliance.Features.Criteria.Readers;
+using Bdgrz.Compliance.Features.Evidence.Authorizers;
+using Bdgrz.Compliance.Features.Evidence.Handlers;
+using Bdgrz.Compliance.Features.Evidence.Reactors;
+using Bdgrz.Compliance.Features.Evidence.Readers;
+using Bdgrz.Compliance.Features.Examinations.Handlers;
+using Bdgrz.Compliance.Features.Examinations.Projections;
+using Bdgrz.Compliance.Features.Examinations.Projectors;
+using Bdgrz.Compliance.Features.Examinations.Readers;
+using Bdgrz.Compliance.Features.Exports.Authorizers;
+using Bdgrz.Compliance.Features.Exports.Handlers;
+using Bdgrz.Compliance.Features.Incidents.Handlers;
+using Bdgrz.Compliance.Features.Incidents.Projections;
+using Bdgrz.Compliance.Features.Incidents.Projectors;
+using Bdgrz.Compliance.Features.Incidents.Readers;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Handlers;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Projections;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Projectors;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
+using Bdgrz.Compliance.Features.NamedRecords.Authorizers;
+using Bdgrz.Compliance.Features.Operations.Authorizers;
+using Bdgrz.Compliance.Features.Operations.Handlers;
+using Bdgrz.Compliance.Features.Operations.Processes;
+using Bdgrz.Compliance.Features.Operations.Projections;
+using Bdgrz.Compliance.Features.Operations.Projectors;
+using Bdgrz.Compliance.Features.Operations.Reactors;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Responsibilities.Handlers;
+using Bdgrz.Compliance.Features.Responsibilities.Projectors;
+using Bdgrz.Compliance.Features.Retention.Authorizers;
+using Bdgrz.Compliance.Features.Retention.Handlers;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Handlers;
+using Bdgrz.Compliance.Features.SystemDescription.Processes;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
+using Bdgrz.Compliance.Features.UserIdentities.Authorizers;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
+using Bdgrz.Compliance.Features.UserIdentities.Handlers;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Projections;
+using Bdgrz.Compliance.Features.UserIdentities.Projectors;
+using Bdgrz.Compliance.Features.UserIdentities.Reactors;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
+using Bdgrz.Compliance.Features.Work.Authorizers;
+using Bdgrz.Compliance.Features.Work.Handlers;
+using Bdgrz.Compliance.Features.Work.Projections;
+using Bdgrz.Compliance.Features.Work.Projectors;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Applications.Commands;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NamedRecords;
@@ -834,7 +1039,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<RiskActionReviewFences>();
         services.AddScoped<RiskGovernanceReader>();
         services.AddScoped<RiskMethodReader>();
-        services.AddScoped<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>();
+        services.AddScoped<Bdgrz.Compliance.Features.Evidence.Readers.EvidenceRequestReader>();
         services.AddScoped<ControlOperationsReader>();
         services.AddScoped<ControlMappingReader>();
         services.AddScoped<ApplicabilityReader>();
@@ -1434,9 +1639,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<SettleCorrectiveActionFindingClosureUseHandler>()
             .AddRequestHandler<AbortFindingClosureHandler>()
             .AddRequestAuthorizer<FindingReceiverAuthorizer>()
-            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.OpenEvidenceRequestHandler>()
-            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.FulfilEvidenceRequestHandler>()
-            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.CancelEvidenceRequestHandler>()
+            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.OpenEvidenceRequestHandler>()
+            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.FulfilEvidenceRequestHandler>()
+            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.CancelEvidenceRequestHandler>()
             .AddRequestHandler<CaptureEvidenceArtifactHandler>()
             .AddRequestAuthorizer<EvidenceArtifactDownloadAccess>()
             .AddRequestHandler<IssueArtifactDownloadHandler>()
@@ -1451,8 +1656,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<EvidenceRedactionAccess>()
             .AddRequestHandler<GetEvidenceArtifactMetadataHandler>()
             .AddRequestAuthorizer<EvidenceArtifactMetadataAuthorizer>()
-            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.GetEvidenceRequestHandler>()
-            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.ListEvidenceRequestsHandler>()
+            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.GetEvidenceRequestHandler>()
+            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.ListEvidenceRequestsHandler>()
             .AddRequestHandler<ListWorkHandler>()
             .AddRequestHandler<GetWorkItemHandler>()
             .AddRequestHandler<ClaimWorkItemHandler>()
@@ -1608,9 +1813,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<CompleteRiskTreatmentActionReviewHandler>()
             .AddRequestHandler<AbortRiskTreatmentActionReviewHandler>()
             .AddRequestAuthorizer<RiskActionReceiverAuthorizer>()
-            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.AuthorizeEvidenceRequestActionCompletionUseHandler>()
-            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.SettleEvidenceRequestActionCompletionUseHandler>()
-            .AddRequestAuthorizer<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReceiverAuthorizer>()
+            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.AuthorizeEvidenceRequestActionCompletionUseHandler>()
+            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.SettleEvidenceRequestActionCompletionUseHandler>()
+            .AddRequestAuthorizer<Bdgrz.Compliance.Features.Evidence.Authorizers.EvidenceRequestReceiverAuthorizer>()
             .AddRequestHandler<GetMethodologyTemplateVersionHandler>()
             .AddRequestHandler<ListMethodologyTemplatesHandler>()
             .AddRequestHandler<CreateMethodologyTemplateHandler>()

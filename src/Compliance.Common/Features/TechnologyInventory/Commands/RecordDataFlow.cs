@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 
 /// <summary>
 ///     Records a governed, effective-dated data flow in the tenant's manual inventory. <paramref name="DataFlowId" />

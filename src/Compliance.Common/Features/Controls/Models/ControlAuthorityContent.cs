@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Responsibilities;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>Verified current-scope authority content, separate from immutable historical read reconstruction.</summary>
 public sealed record ControlAuthorityContent(ControlAuthorityHeader Header,

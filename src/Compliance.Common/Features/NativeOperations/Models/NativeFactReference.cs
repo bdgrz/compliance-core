@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.NativeOperations;
+namespace Bdgrz.Compliance.Features.NativeOperations.Models;
 
 /// <summary>
 /// Locally known identity of a committed native fact: its owner stream, event id and metadata aggregate version.

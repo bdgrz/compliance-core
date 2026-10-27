@@ -1,3 +1,11 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Aggregates;
+using Bdgrz.Compliance.Features.Operations.Commands;
+using Bdgrz.Compliance.Features.Operations.Events;
+using Bdgrz.Compliance.Features.Operations.Handlers;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
@@ -182,7 +190,7 @@ public sealed class ControlOccurrenceFanOutTests
             new ControlOccurrenceCreationIntent(new DurableIntentHeader(Uuid.CreateVersion4(),
                     new EventStreamAddress(realm, "a", "b"), new EventStreamAddress(realm, "a", "b"),
                     new EventStreamAddress(realm, "a", "b"),
-                    Bdgrz.Compliance.Features.AccessControl.ActorReference.ForMember(Uuid.CreateVersion4(), "x"),
+                    Bdgrz.Compliance.Features.AccessControl.Models.ActorReference.ForMember(Uuid.CreateVersion4(), "x"),
                     "initial", null, new string('a', 64), DateTimeOffset.UtcNow), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, Uuid.CreateVersion4(), new ControlCalendarWindow(fixture.FirstStart, fixture.FirstEnd),
                 Uuid.CreateVersion4(), new NativeFactReference(new EventStreamAddress(realm, "a", "b"),

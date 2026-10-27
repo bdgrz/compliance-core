@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Projections;
 
 public interface ICriterionApplicabilityWorkItemProjection : IProjectionStore
 {

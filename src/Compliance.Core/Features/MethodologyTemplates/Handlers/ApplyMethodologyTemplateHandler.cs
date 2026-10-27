@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Handlers;
 
 public sealed class ApplyMethodologyTemplateHandler(TemplateApplicationOperations operations,
     MethodologyTemplateReader templates) : IRequestHandler<ApplyMethodologyTemplate>

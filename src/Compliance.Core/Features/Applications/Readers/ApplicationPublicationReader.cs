@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.SourceFacts;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Readers;
 
 /// <summary>
 ///     Starts fixed-cut reads of declared applications. A response that can show import or bulk provisional effects

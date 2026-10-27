@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>Internal invitation reaction that applies the inviter-approved guest program scope.</summary>
 [Discriminator("bdgrz.access-grant.guest-invitation.provision", 1)]

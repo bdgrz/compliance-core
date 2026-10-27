@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 public sealed record IndependenceRuleRatificationView(Uuid RatificationId, long RuleVersion,
     long ObservedRuleCatalogSequence, string RuleContentDigest, string SourceReference,

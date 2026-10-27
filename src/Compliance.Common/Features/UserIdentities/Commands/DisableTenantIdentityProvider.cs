@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>Disables one connection without changing any platform-user identity or membership history.</summary>
 [Discriminator("bdgrz.user-identities.disable-tenant-identity-provider", 1)]

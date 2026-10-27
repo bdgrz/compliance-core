@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.SystemDescription.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Commands;
 
 /// <summary>Identified authored intent over its exact selected owner/version scope.</summary>
 [Discriminator("bdgrz.system-description.create-system-description-draft", 2)]

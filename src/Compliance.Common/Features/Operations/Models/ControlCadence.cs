@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>
 ///     How often a control operates. Kind is recurring, event_driven, or ad_hoc. A recurring cadence

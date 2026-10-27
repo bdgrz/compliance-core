@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Models;
 
 /// <summary>
 ///     One submitted round: the separate assertion conclusions, the derived overall result, and

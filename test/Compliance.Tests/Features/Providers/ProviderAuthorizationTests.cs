@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Authorizers;
+using Bdgrz.Compliance.Features.Providers.Commands;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Queries;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Providers;
 using Bdgrz.Compliance.Tests.Testing;

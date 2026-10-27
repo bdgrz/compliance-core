@@ -1,7 +1,12 @@
+using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Commitments.Commands;
+using Bdgrz.Compliance.Features.Commitments.Queries;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Handlers;
 
 public sealed class ApproveCommitmentDraftHandler(CommitmentOperations operations, CommitmentImpactService impact) : IRequestHandler<ApproveCommitmentDraft>
 {

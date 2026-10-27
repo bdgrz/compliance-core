@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Aggregates;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
+using Bdgrz.Compliance.Features.AuditPopulations.Handlers;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Cntryl.Portia;
-using AuditPopulationAggregate = Bdgrz.Compliance.Features.AuditPopulations.AuditPopulation;
+using AuditPopulationAggregate = Bdgrz.Compliance.Features.AuditPopulations.Aggregates.AuditPopulation;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPopulations;
 

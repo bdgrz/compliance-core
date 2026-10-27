@@ -1,3 +1,6 @@
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
@@ -73,7 +76,7 @@ public sealed class SystemDescriptionRules
     public SystemDescriptionRules(Uuid tenantId, Uuid programId, Uuid descriptionId)
     {
         Id = descriptionId;
-        Stream = new EventStreamAddress(tenantId.ToString(), SystemDescription.Area, descriptionId.ToString());
+        Stream = new EventStreamAddress(tenantId.ToString(), SystemDescriptionAggregate.Area, descriptionId.ToString());
         _tenantId = tenantId;
         _programId = programId;
         On<SystemDescriptionDraftCreatedBody>(Apply);

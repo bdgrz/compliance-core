@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Operations.Aggregates;
+using Bdgrz.Compliance.Features.Operations.Events;
+using Bdgrz.Compliance.Features.Work.Projections;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Projectors;
 
 public sealed partial class ControlOperatingPlanWorkItemProjector(
     IControlOperatingPlanWorkItemProjection projection)

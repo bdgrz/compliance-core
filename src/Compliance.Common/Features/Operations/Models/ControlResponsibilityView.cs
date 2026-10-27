@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>One operating responsibility the acting member holds directly or through a team.</summary>
 public sealed record ControlResponsibilityView(Uuid ControlId, Uuid PlanVersionId, string Role,

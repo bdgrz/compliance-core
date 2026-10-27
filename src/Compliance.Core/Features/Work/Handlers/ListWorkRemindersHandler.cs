@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Work.Readers;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Handlers;
 
 /// <summary>
 ///     Derives in-product reminders from the actor's current queue at read time: a due reminder on

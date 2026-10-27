@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.Retention;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Retention.Events;
+using Bdgrz.Compliance.Features.Retention.Models;
 using System.Security.Cryptography;
 using System.Text;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Aggregates;
 
 /// <summary>
 /// One artifact policy stream retains the reviewed classification applied to the

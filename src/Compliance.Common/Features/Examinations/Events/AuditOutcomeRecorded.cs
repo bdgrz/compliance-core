@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Events;
 
 /// <summary>Retains an externally supplied conclusion and exact issued-report provenance.</summary>
 [Discriminator("bdgrz.examinations.audit-outcome-recorded", 2)]

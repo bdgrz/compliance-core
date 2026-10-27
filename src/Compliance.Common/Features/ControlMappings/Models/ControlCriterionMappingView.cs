@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Models;
 
 /// <summary>
 ///     The mapping line of one control and one immutable catalog entry, keyed by

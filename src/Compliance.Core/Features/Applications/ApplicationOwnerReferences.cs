@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce;
 using Cntryl.Portia;
 

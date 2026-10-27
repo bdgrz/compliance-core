@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SourceUse;
+namespace Bdgrz.Compliance.Features.SourceUse.Models;
 
 /// <summary>
 ///     Stable identity of one source use: the root operation, its first owner, the frozen source authorization

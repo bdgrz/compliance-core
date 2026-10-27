@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.Controls.Aggregates;
+using Bdgrz.Compliance.Features.Controls.Events;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Microsoft.Extensions.DependencyInjection;
 using Cntryl.Fitz.Testing;
@@ -293,12 +300,12 @@ public sealed class ControlTypeIBaselineSourceContributorTests
 
     sealed class FailingReads(IImmutableContentStore inner, bool unavailable) : IImmutableContentStore
     {
-        public Task<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId,
+        public Task<Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId,
             string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
             inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
 
         public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm,
-            Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference, CancellationToken ct = default) =>
+            Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference, CancellationToken ct = default) =>
             Task.FromException<ReadOnlyMemory<byte>>(unavailable
                 ? new ImmutableContentUnavailableException("The selected content is not visible yet.")
                 : new ImmutableContentIntegrityException("The selected content does not verify."));

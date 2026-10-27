@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.Versioning;
@@ -614,7 +619,7 @@ public sealed class CommitmentRules
 
     public CommitmentRetiredContent? Retirement => _appliedChanges.OfType<CommitmentRetiredContent>().LastOrDefault();
     internal CommitmentDraftContent? CurrentContent => !IsCreated ? null : new(_statement, _context, _sourceReference!);
-    internal CommitmentAuthorityHeader Header(Bdgrz.Compliance.Features.Proofs.ImmutableContentRef content) => new(TenantId,
+    internal CommitmentAuthorityHeader Header(Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef content) => new(TenantId,
         ProgramId, Id, ServiceId, ProviderId, Kind!, Identifier!, Revision, IsCreated, IsRetired, _sourceReference!,
         EffectiveVersionCount, LatestEffectiveRevision, _versions.LastOrDefault().EffectiveFrom == default ? null : _versions[^1].EffectiveFrom,
         AcceptedReviewDecisionId, AcceptedReviewerMemberId, RetiredEffectiveOn, content);

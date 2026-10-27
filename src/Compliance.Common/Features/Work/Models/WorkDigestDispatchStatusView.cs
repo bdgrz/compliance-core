@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Models;
 
 /// <summary>Redacted delivery state for one tenant member's weekly digest.</summary>
 public sealed record WorkDigestDispatchStatusView(Uuid TenantId, Uuid MemberId,

@@ -9,6 +9,21 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 public sealed class EventSourcedMemberAccessEligibilityTests
 {
     [Fact]
+    public async Task ShouldPropagateReaderFailureGivenUnrelatedInfrastructureError()
+    {
+        // Arrange
+        var source = new EventSourcedMemberAccessEligibility(new FailingReader());
+
+        // Act
+        var error = await Record.ExceptionAsync(async () =>
+            await source.IsEligibleAsync(Uuid.CreateVersion4(), Uuid.CreateVersion4()));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(error);
+        Assert.Equal("Store unavailable.", error.Message);
+    }
+
+    [Fact]
     public async Task ShouldDenyGivenSuspensionSourceEventBeforeMembershipProjection()
     {
         // Arrange
@@ -77,5 +92,12 @@ public sealed class EventSourcedMemberAccessEligibilityTests
         public override DateTimeOffset GetUtcNow() => _utcNow;
 
         public void SetUtcNow(DateTimeOffset utcNow) => _utcNow = utcNow;
+    }
+
+    sealed class FailingReader : IAggregateReader
+    {
+        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
+            CancellationToken ct = default) where TAggregate : Aggregate =>
+            throw new InvalidOperationException("Store unavailable.");
     }
 }

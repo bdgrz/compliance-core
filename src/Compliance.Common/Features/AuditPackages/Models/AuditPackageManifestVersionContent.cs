@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>One complete immutable manifest version, with no builds, decisions, deliveries or unrelated history.</summary>
 public sealed record AuditPackageManifestVersionContent(Uuid ProgramId, AuditPackageContent Content,

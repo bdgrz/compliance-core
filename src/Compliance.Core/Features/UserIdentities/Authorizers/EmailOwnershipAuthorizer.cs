@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Authorizers;
 
 sealed class EmailOwnershipAuthorizer : IRequestAuthorizer<IEmailOwnershipRequest>
 {

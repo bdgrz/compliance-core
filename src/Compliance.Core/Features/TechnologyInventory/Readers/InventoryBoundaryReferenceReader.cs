@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Readers;
 
 /// <summary>
 ///     Reads the boundary reverse index for one inventory record after confirming the record exists

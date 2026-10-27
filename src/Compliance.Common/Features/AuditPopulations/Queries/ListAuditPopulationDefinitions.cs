@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 using Cntryl.Fitz.Extensions;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Queries;
 
 /// <summary>Reads the feature state required by the linked product workflow.</summary>
 [Discriminator("bdgrz.audit-populations.list-audit-population-definitions", 1)]

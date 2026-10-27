@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Commands;
 
 /// <summary>The current assignee hands work to another member the source workflow would accept.</summary>
 [Discriminator("bdgrz.work.delegate", 2)]

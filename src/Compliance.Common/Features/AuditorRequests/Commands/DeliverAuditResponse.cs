@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Commands;
 
 /// <summary>Records the intentional delivery of the exact submitted (and, when required, approved) response version.</summary>
 [Discriminator("bdgrz.auditor-requests.deliver-audit-response", 2)]

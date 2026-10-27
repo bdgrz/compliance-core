@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Reactors;
 
 /// <summary>Starts the location name-change process from each accepted location change.</summary>
 public sealed partial class LocationChangeAcceptedReactor(IProjectionCheckpointStore checkpoints,

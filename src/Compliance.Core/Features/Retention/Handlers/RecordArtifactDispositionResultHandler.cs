@@ -1,6 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Retention.Aggregates;
+using Bdgrz.Compliance.Features.Retention.Authorizers;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.Retention.Events;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Handlers;
 
 public sealed class RecordArtifactDispositionResultHandler(IAggregateExecutor executor,
     IDomainEventReader events)

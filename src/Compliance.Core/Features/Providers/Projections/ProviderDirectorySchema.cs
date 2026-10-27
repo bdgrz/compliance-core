@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Providers.Models;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Projections;
 
 static class ProviderDirectorySchema
 {

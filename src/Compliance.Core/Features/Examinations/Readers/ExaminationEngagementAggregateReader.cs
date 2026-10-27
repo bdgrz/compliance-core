@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Readers;
 
 /// <summary>Finalizes actual complete replay authority for queries, executors and exact accepted retry.</summary>
 public sealed class ExaminationEngagementAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

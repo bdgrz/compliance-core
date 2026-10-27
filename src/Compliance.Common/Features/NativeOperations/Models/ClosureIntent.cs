@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.NativeOperations;
+namespace Bdgrz.Compliance.Features.NativeOperations.Models;
 
 /// <summary>
 ///     The durable intent frozen when a parent admits its closure: the authored decision, the complete drained set of

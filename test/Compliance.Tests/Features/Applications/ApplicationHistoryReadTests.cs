@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Handlers;
+using Bdgrz.Compliance.Features.Applications.Queries;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Tests.Testing;

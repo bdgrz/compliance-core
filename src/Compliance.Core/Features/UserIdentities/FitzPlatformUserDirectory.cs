@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.UserIdentities.Events;
+using Bdgrz.Compliance.Features.UserIdentities.Projections;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;

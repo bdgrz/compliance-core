@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Work.Commands;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Events;
 
 /// <summary>A native operator admission bound to its exact unknown attempt and immutable original result.</summary>
 [Discriminator("bdgrz.work.digest_dispatch.unknown_retry_authorized", 2)]

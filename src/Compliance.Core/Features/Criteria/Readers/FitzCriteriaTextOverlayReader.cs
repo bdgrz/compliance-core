@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Criteria;
+namespace Bdgrz.Compliance.Features.Criteria.Readers;
 
 sealed class FitzCriteriaTextOverlayReader(ICriteriaTextOverlayDirectoryReader directory,
     CriteriaTextOverlayReadConsistency consistency) : ICriteriaTextOverlayReader

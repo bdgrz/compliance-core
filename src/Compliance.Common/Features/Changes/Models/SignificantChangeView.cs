@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>Complete compliance-facing change history and current period-close eligibility.</summary>
 public sealed record SignificantChangeView(

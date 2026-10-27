@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Readers;
 
 /// <summary>Verifies complete batch prefix before a default read, accepted retry or finalized selected append.</summary>
 public sealed class ApplicationImportBatchAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

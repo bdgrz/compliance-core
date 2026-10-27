@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Models;
 
 /// <summary>
 ///     Describes one piece of captured evidence: what it is, where it came from, when it was captured, the period it

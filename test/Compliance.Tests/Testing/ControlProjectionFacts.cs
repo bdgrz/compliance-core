@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Controls.Aggregates;
+using Bdgrz.Compliance.Features.Controls.Commands;
+using Bdgrz.Compliance.Features.Controls.Events;
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Kernel;

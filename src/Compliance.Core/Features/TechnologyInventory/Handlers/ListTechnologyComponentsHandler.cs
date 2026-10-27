@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Queries;
+using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
 
 public sealed class ListTechnologyComponentsHandler(ITechnologyInventoryReader directory,
     TechnologyInventoryReadConsistency consistency) : IRequestHandler<ListTechnologyComponents, Page<TechnologyComponentView>>

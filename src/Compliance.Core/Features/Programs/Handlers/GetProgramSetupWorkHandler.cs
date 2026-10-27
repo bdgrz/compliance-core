@@ -1,9 +1,17 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Boundaries.Aggregates;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Queries;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Boundaries;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Handlers;
 
 public sealed class GetProgramSetupWorkHandler(IProgramDirectoryReader programs,
     IBoundaryDirectoryReader boundaries, IAggregateReader reader,

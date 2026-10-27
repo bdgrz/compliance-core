@@ -1,19 +1,25 @@
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription;
+using Bdgrz.Compliance.Features.SystemDescription;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Events;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Readers;
 
 /// <summary>Exact native-cut reconstruction of immutable narrative versions, decisions and historical bindings.</summary>
 public sealed class SystemDescriptionReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)
 {
     public async ValueTask<SystemDescriptionReadSnapshot> ReadAsync(Uuid tenantId, Uuid programId, Uuid descriptionId, CancellationToken ct = default)
     {
-        var owner = await reader.HydrateAsync(new SystemDescription(tenantId, programId, descriptionId), ct).ConfigureAwait(false);
+        var owner = await reader.HydrateAsync(new SystemDescriptionAggregate(tenantId, programId, descriptionId), ct).ConfigureAwait(false);
         return await ReadAsync(owner, programId, ct).ConfigureAwait(false);
     }
-    internal async ValueTask<SystemDescriptionReadSnapshot> ReadCurrentAsync(SystemDescription owner, Uuid programId, CancellationToken ct)
+    internal async ValueTask<SystemDescriptionReadSnapshot> ReadCurrentAsync(SystemDescriptionAggregate owner, Uuid programId, CancellationToken ct)
     {
         if (owner.Header is not { } header || owner.ProgramId != programId)
             return new(owner, new SystemDescriptionRules(owner.TenantId, programId, owner.Id), []);
@@ -32,7 +38,7 @@ public sealed class SystemDescriptionReader(IAggregateReader reader, IDomainEven
         rules.SourcePhysicalPosition = owner.CommittedStreamPosition;
         return new(owner, rules, []) { CurrentAuthority = authority };
     }
-    internal async ValueTask<SystemDescriptionReadSnapshot> ReadAsync(SystemDescription owner, Uuid programId, CancellationToken ct)
+    internal async ValueTask<SystemDescriptionReadSnapshot> ReadAsync(SystemDescriptionAggregate owner, Uuid programId, CancellationToken ct)
     {
         var rules = new SystemDescriptionRules(owner.TenantId, programId, owner.Id);
         var facts = new List<DomainEvent>();
@@ -41,7 +47,7 @@ public sealed class SystemDescriptionReader(IAggregateReader reader, IDomainEven
         var sequence = 0L;
         ISystemDescriptionFact? last = null;
         SystemDescriptionCurrentAuthority? authority = null;
-        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(owner.TenantId.ToString(), SystemDescription.Area, owner.Id.ToString()), EventCursor.Start, ct).ConfigureAwait(false))
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(owner.TenantId.ToString(), SystemDescriptionAggregate.Area, owner.Id.ToString()), EventCursor.Start, ct).ConfigureAwait(false))
         {
             if (record.Event.Metadata.IsAudit)
                 continue;

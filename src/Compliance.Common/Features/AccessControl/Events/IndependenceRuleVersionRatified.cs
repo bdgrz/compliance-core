@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Events;
 
 /// <summary>Records the IndependenceRuleVersionRatified domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.accesscontrol.independence-rule-version-ratified", 1)]

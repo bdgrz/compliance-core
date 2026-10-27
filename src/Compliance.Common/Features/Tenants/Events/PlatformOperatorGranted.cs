@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Events;
 
 [Discriminator("bdgrz.platform.operator.granted", 1)]
 public sealed record PlatformOperatorGranted(Uuid CommandId, ulong ExpectedRevision,

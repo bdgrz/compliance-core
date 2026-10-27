@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Commands;
 
 /// <summary>
 ///     Links an approved risk acceptance (kind risk_acceptance with the risk ID and acceptance ID)

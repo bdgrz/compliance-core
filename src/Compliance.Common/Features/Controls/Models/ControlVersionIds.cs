@@ -1,7 +1,7 @@
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>Derives the stable identity of a control's exact version line.</summary>
 public static class ControlVersionIds

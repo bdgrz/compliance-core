@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Readiness.Events;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -6,7 +10,7 @@ using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Aggregates;
 
 /// <summary>
 ///     The stable plan and advisor annotations of one gap, identified by its program and gap. The logical revision

@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.Proofs;
 namespace Bdgrz.Compliance.Features.Risks;
 

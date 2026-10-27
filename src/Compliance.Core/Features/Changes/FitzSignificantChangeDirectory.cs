@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Events;
+using Bdgrz.Compliance.Features.Changes.Models;
+using Bdgrz.Compliance.Features.Changes.Projections;
+using Bdgrz.Compliance.Features.Changes.Projectors;
+using Bdgrz.Compliance.Features.Changes.Readers;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 

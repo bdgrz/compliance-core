@@ -1,8 +1,14 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Features.AccessControl.Projectors;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
 using System.Text.Json;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 /// <summary>
 ///     Serves the "PermissionProjection" projector: writes join its batch transaction, and

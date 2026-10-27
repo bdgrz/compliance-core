@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>A compliance-owned change fact; external provenance is retained only when supplied.</summary>
 public sealed record SignificantChangeContent(

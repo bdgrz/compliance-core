@@ -1,7 +1,13 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Queries;
+using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
 
 /// <summary>
 /// Reads the caught-up inventory projection and reports which active flows a reclassification or

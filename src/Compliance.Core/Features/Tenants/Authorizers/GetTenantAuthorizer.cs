@@ -1,6 +1,14 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Queries;
+using Bdgrz.Compliance.Features.Tenants.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
 
 sealed class GetTenantAuthorizer(IPlatformOperatorAccess operators,
     ITenantMembershipDirectoryReader memberships, ITenantActivity tenants,

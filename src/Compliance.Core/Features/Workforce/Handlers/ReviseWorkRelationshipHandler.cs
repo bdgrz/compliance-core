@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Commands;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class ReviseWorkRelationshipHandler(IAggregateExecutor executor,
     IAggregateReader reader, TimeProvider clock) : IRequestHandler<ReviseWorkRelationship>

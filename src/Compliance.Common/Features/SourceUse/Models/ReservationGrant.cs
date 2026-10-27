@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 
-namespace Bdgrz.Compliance.Features.SourceUse;
+namespace Bdgrz.Compliance.Features.SourceUse.Models;
 
 /// <summary>
 ///     The token a receiver issues for one granted use. <paramref name="ReservationGeneration" /> is the receiver's own

@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
 
 /// <summary>Reads the exact verified immutable content selected by the contribution authority.</summary>
 public sealed class MethodologyTemplateContributionReader(IAggregateReader reader, IImmutableContentStore content)

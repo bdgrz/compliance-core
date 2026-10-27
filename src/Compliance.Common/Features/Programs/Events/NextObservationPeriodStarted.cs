@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Events;
 
 /// <summary>Records the NextObservationPeriodStarted domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.programs.next-observation-period-started", 1)]

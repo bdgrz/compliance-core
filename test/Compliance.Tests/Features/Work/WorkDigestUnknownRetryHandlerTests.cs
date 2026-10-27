@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.Work.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Events;
+using Bdgrz.Compliance.Features.Work.Handlers;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Tenants;
 using Bdgrz.Compliance.Features.Content;

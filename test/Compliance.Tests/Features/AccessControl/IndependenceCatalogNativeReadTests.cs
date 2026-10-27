@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Text;
 using Cntryl.Fitz;
 using Bdgrz.Compliance.Features.Content;

@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Commands;
 
 /// <summary>
 ///     A personal acceptance by the acting member; HTTP-only, never an MCP tool. A risk owner

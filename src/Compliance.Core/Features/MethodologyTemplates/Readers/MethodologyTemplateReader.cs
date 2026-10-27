@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
 
 /// <summary>Reconstructs immutable template version history from an exact native source cut, never a directory.</summary>
 public sealed class MethodologyTemplateReader(IAggregateReader reader, IDomainEventReader events,

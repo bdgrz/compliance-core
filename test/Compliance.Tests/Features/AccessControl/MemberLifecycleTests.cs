@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Globalization;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Content;
@@ -62,7 +64,7 @@ public sealed class MemberLifecycleTests
         var error = Record.Exception(() => new AggregateScenario<Member>(member).Given(facts.ToArray()));
 
         // Assert
-        Assert.IsType<InvalidOperationException>(error);
+        Assert.IsType<MemberHistoryIntegrityException>(error);
     }
 
     [Theory]
@@ -86,7 +88,7 @@ public sealed class MemberLifecycleTests
         var error = Record.Exception(() => new AggregateScenario<Member>(member).Given(stored));
 
         // Assert
-        Assert.IsType<InvalidOperationException>(error);
+        Assert.IsType<MemberHistoryIntegrityException>(error);
     }
 
     [Theory]
@@ -112,7 +114,7 @@ public sealed class MemberLifecycleTests
         var error = Record.Exception(() => new AggregateScenario<Member>(member).Given(facts.ToArray()));
 
         // Assert
-        Assert.IsType<InvalidOperationException>(error);
+        Assert.IsType<MemberHistoryIntegrityException>(error);
     }
 
     [Fact]

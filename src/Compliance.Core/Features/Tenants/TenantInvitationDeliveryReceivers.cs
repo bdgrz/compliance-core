@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Tenants.Commands;
 namespace Bdgrz.Compliance.Features.Tenants;
 
 /// <summary>The receiver names of the invitation delivery process, as the process catalog spells them.</summary>

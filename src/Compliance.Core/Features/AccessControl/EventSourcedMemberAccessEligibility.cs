@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
@@ -13,8 +14,15 @@ sealed class EventSourcedMemberAccessEligibility(IAggregateReader reader,
     {
         if (tenantId == Uuid.Empty || userId == Uuid.Empty)
             return false;
-        var member = await reader.HydrateAsync(new Member(tenantId, userId), ct).ConfigureAwait(false);
-        return IsEligible(member);
+        try
+        {
+            var member = await reader.HydrateAsync(new Member(tenantId, userId), ct).ConfigureAwait(false);
+            return IsEligible(member);
+        }
+        catch (MemberHistoryIntegrityException)
+        {
+            return false;
+        }
     }
 
     public async ValueTask<Uuid?> GetMembershipEpisodeIdAsync(Uuid tenantId, Uuid memberId,
@@ -22,11 +30,16 @@ sealed class EventSourcedMemberAccessEligibility(IAggregateReader reader,
     {
         if (tenantId == Uuid.Empty || memberId == Uuid.Empty)
             return null;
-        var member = await reader.HydrateAsync(Member.ForVerification(tenantId, memberId), ct)
-            .ConfigureAwait(false);
-        return IsEligible(member)
-            ? member.MembershipEpisodeId
-            : null;
+        try
+        {
+            var member = await reader.HydrateAsync(Member.ForVerification(tenantId, memberId), ct)
+                .ConfigureAwait(false);
+            return IsEligible(member) ? member.MembershipEpisodeId : null;
+        }
+        catch (MemberHistoryIntegrityException)
+        {
+            return null;
+        }
     }
 
     bool IsEligible(Member member) => member.IsRegistered &&

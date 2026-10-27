@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>A durable identity and display snapshot for a member or named system process.</summary>
 public sealed record ActorReference(string Kind, string Id, string Display)

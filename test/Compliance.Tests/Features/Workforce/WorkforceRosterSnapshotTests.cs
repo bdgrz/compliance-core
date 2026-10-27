@@ -1,3 +1,14 @@
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Snapshots.Aggregates;
+using Bdgrz.Compliance.Features.Snapshots.Models;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Commands;
+using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Handlers;
+using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Queries;
+using Bdgrz.Compliance.Features.Workforce.Readers;
 using Bdgrz.Compliance.Features.Content;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -368,17 +379,18 @@ public sealed class WorkforceRosterSnapshotTests
                     person.LastChangedBy, person.LastChangedAt).IsSuccess);
                 await PersonSeeds.AppendAsync(_provider, rules);
             }
+            var peopleCheckpoint = await _people.LoadCheckpointAsync(TenantId);
             await using (var batch = await _people.BeginAsync(new ProjectionBatchContext(
                              new CheckpointIdentity("PersonDirectoryV2",
                                  EventStreamPattern.ForPattern(TenantId.ToString(), "people")),
-                             ProjectionCheckpoint.Start)))
+                             peopleCheckpoint)))
             {
                 foreach (var person in rows)
                     await _people.ApplyAsync(new PersonRecorded(person.TenantId, person.PersonId,
                         person.DisplayName, person.WorkEmail, Author, Now));
-                var cursor = EventCursor.Start;
+                var cursor = peopleCheckpoint.Cursor;
                 await foreach (var record in _provider.GetRequiredService<IDomainEventReader>().ReadAsync(
-                                   EventStreamPattern.ForPattern(TenantId.ToString(), "people"), EventCursor.Start, CancellationToken.None))
+                                   EventStreamPattern.ForPattern(TenantId.ToString(), "people"), cursor, CancellationToken.None))
                     cursor = record.NextCursor;
                 await batch.CommitAsync(new ProjectionCheckpoint(cursor));
             }

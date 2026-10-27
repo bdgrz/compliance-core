@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Models;
 
 /// <summary>Approval, execution attempts, and retained tombstone for one artifact disposition.</summary>
 public sealed record ArtifactDispositionView(

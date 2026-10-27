@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Commands;
 
 /// <summary>Records a workforce person manually. A person need not be a platform member.</summary>
 [Discriminator("bdgrz.workforce.person.record", 2)]

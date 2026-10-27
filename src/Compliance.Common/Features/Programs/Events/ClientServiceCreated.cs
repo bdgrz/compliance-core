@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Globalization;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -5,7 +9,7 @@ using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Events;
 
 [Discriminator("bdgrz.client-service.created", 2)]
 public sealed record ClientServiceCreated(Uuid TenantId, Uuid ServiceId, Uuid ProgramId, long Revision,

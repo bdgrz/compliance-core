@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Commands;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Snapshots.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Examinations;
@@ -7,7 +13,7 @@ using Bdgrz.Compliance.Features.Snapshots;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Handlers;
 
 /// <summary>Native identified close reconciliation at a verified immutable period cut; exact retries keep their original Unit body.</summary>
 public sealed class RecordTypeIIPeriodCloseValidationHandler(TypeIIPeriodOperations operations,

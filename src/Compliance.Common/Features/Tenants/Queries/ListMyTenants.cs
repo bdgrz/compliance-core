@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Tenants.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Queries;
 
 /// <summary>
 ///     Lists the tenants the calling user belongs to, as owner or member — always scoped to the

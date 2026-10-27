@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Authorizers;
 
 /// <summary>Allows reassessment trigger commands only from Portia's trusted system actor.</summary>
 sealed class RiskReassessmentReactionAuthorizer

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Models;
 
 /// <summary>Source reconciliation, build retries, attest package deliveries, and final receipt.</summary>
 public sealed record ClientExportView(

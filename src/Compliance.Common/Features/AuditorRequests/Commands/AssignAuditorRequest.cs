@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Commands;
 
 /// <summary>Assigns an open request to an active client member with a due date at its owner revision.</summary>
 [Discriminator("bdgrz.auditor-requests.assign-auditor-request", 2)]

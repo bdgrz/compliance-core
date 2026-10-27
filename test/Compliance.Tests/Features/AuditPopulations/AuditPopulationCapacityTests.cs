@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Aggregates;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Cntryl.Portia;
 
@@ -23,7 +25,7 @@ public sealed partial class DefineAuditPopulationHandlerTests
                 "Exclude canceled changes.", $"Retained definition reason {revision}"), RequestMetadata.Create());
             Assert.True(accepted.IsSuccess, $"Definition {revision + 1}: {accepted.Error?.Message}");
         }
-        var owner = await fixture.Reader.HydrateAsync(new Bdgrz.Compliance.Features.AuditPopulations.AuditPopulation(
+        var owner = await fixture.Reader.HydrateAsync(new Bdgrz.Compliance.Features.AuditPopulations.Aggregates.AuditPopulation(
             fixture.TenantId, fixture.ProgramId, fixture.PopulationId));
 
         // Assert

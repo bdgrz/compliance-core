@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Tests.Testing;

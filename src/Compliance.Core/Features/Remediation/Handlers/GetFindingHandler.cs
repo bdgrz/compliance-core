@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Queries;
+using Bdgrz.Compliance.Features.Remediation.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Handlers;
 
 /// <summary>Reads one finding composed from its own owner streams.</summary>
 public sealed class GetFindingHandler(FindingReader findings, TimeProvider clock)

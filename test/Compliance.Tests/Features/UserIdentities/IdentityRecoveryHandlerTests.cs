@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
 using System.Text;

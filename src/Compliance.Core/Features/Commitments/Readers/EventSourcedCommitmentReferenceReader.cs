@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Readers;
 
 sealed class EventSourcedCommitmentReferenceReader(IAggregateReader reader)
     : ICommitmentReferenceReader

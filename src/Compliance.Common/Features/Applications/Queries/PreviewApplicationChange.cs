@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 using System.Text.Json.Serialization;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Queries;
 
 [Discriminator("bdgrz.application.change.preview", 1)]
 public sealed record PreviewApplicationChange(Uuid TenantId, Uuid ApplicationId,

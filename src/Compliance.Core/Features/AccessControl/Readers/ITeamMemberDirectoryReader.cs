@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>Reads the materialized team-member directory for one team.</summary>
 public interface ITeamMemberDirectoryReader

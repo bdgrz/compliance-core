@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Commands;
 
 /// <summary>Changes severity, owner, due date, affected scope, or root cause with a reason.</summary>
 [Discriminator("bdgrz.finding.revise", 2)]

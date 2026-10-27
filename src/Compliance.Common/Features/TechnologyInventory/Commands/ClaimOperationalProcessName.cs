@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 
 /// <summary>Acquires the operational process name claim a change needs, or re-pins the claim the record already holds.</summary>
 [Discriminator("bdgrz.operational-process-name-claim.claim-operational-process-name", 1)]

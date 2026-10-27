@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Programs.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Events;
 
 /// <summary>Records the ProgramRolloverApproved domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.programs.program-rollover-approved", 2)]

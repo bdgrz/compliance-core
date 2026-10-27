@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Commands;
 
 /// <summary>Records an auditor-supplied result against one exact delivered package version.</summary>
 [Discriminator("bdgrz.examinations.record-examination-outcome", 2)]

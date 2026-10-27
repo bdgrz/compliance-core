@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>One signer’s exact, attributed signed-letter artifact.</summary>
 public sealed record ManagementRepresentationLetterSignatureView(

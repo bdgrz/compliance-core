@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Handlers;
+using Bdgrz.Compliance.Features.Commitments.Queries;
+using Bdgrz.Compliance.Features.Commitments.Readers;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Content;

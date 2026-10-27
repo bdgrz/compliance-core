@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
 
 sealed class SeedPlatformOperatorRosterAuthorizer : IRequestAuthorizer<SeedPlatformOperatorRoster>
 {

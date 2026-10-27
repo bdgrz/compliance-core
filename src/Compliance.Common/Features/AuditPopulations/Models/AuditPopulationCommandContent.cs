@@ -1,4 +1,5 @@
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>The complete selected authored command; exactly one typed alternative is present.</summary>
 public sealed record AuditPopulationCommandContent(ReviseAuditPopulationDefinition? ReviseDefinition,

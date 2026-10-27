@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Events;
 
 [Discriminator("bdgrz.independence.rules.revised", 2)]
 public sealed record IndependenceRulesRevised(IndependenceRuleCatalogHeader Header, ImmutableContentRef RuleContent,

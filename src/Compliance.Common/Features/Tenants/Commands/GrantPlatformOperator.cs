@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 [Discriminator("bdgrz.platform.operator.grant", 1)]
 public sealed record GrantPlatformOperator(Uuid UserId, string Reason, Uuid CommandId,

@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Models;
 
 /// <summary>Progress through a bounded page of tenant members during weekly scheduling.</summary>
 public sealed record WorkDigestSchedulePageView(

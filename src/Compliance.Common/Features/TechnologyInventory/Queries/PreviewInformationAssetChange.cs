@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Queries;
 
 /// <summary>
 /// Previews the data-flow impact of reclassifying or retiring an information asset. It records

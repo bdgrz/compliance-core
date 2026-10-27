@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Criteria.Models;
 namespace Bdgrz.Compliance.Features.Criteria;
 
 static class CriteriaTextOverlayPolicy

@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Models;
 
 /// <summary>Safe provider-check result, excluding tokens and response bodies.</summary>
 public sealed record TenantIdentityProviderTestResultContent(

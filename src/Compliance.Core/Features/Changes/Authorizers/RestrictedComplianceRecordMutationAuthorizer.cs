@@ -1,9 +1,16 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Models;
+using Bdgrz.Compliance.Features.Changes.Readers;
+using Bdgrz.Compliance.Features.Incidents.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Commands;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Incidents;
 using Cntryl.Portia;
-using IncidentAggregate = Bdgrz.Compliance.Features.Incidents.ComplianceIncident;
+using IncidentAggregate = Bdgrz.Compliance.Features.Incidents.Aggregates.ComplianceIncident;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Authorizers;
 
 /// <summary>Applies the T2-07 restricted handling rule to change and incident mutations.</summary>
 sealed class RestrictedComplianceRecordMutationAuthorizer(

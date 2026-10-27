@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Risks.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Readers;
 
 public interface IRiskDraftHistoryDirectoryReader
 {

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Models;
 
 /// <summary>Immutable source identity only; it never copies original content metadata or bytes.</summary>
 public sealed record EvidenceRedactionSourceCapsule(Uuid TenantId, Uuid ArtifactId,

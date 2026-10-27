@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Models;
 namespace Bdgrz.Compliance.Features.Changes;
 
 /// <summary>Explicit verified read composition, separate from the compact command owner.</summary>

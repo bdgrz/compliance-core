@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Projections;
 
 /// <summary>Materializes tenant-registration events into the queryable tenant directory.</summary>
 public interface ITenantDirectoryProjection : IProjectionStore

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.UserIdentities.Events;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Projections;
 
 public interface IUserIdentityDirectoryProjection : IProjectionStore
 {

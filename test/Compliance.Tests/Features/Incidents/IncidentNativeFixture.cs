@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Incidents.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Models;
+using Bdgrz.Compliance.Features.Incidents.Readers;
 using System.Security.Claims;
 using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Content;

@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>
 ///     A provider-management statement about the interval after a report period. It is not an

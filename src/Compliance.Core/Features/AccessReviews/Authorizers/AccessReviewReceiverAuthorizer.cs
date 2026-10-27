@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessReviews;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch the access review launch and completion receivers.</summary>
 sealed class AccessReviewReceiverAuthorizer : IRequestAuthorizer<IAccessReviewReceiver>

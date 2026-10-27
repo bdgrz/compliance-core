@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AuditPackages.Models;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using Bdgrz.Compliance.Features.Artifacts;

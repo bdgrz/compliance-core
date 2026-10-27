@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Responsibilities;
@@ -917,7 +922,7 @@ public sealed class ControlRules
     internal string Identifier => _identifier ?? string.Empty;
     internal bool EverReviewed => _everReviewed;
     internal bool ResponsibilityEverAssigned => _responsibilityEverAssigned;
-    internal ControlAuthorityHeader Header(Bdgrz.Compliance.Features.Proofs.ImmutableContentRef content) => new(
+    internal ControlAuthorityHeader Header(Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef content) => new(
         _tenantId, ProgramId, Id, Identifier, Revision, IsCreated, IsVisible, IsApproved, IsRetired, HasOpenDraft,
         DraftVersionId, PendingTargetId, PendingRetirementId, PendingRetirementEffectiveUntil, PendingAuthorMemberId,
         AcceptedReviewDecisionId, AcceptedReviewerMemberId, LatestReviewDecisionId, PendingDecisionChangedAt,

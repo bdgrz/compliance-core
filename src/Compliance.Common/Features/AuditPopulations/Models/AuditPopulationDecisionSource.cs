@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Actual predecessor locator and complete captured target commitments; manual row fields remain declarations.</summary>
 public sealed record AuditPopulationDecisionSource(SourceFactLocator Predecessor, string PredecessorMetadataSha256, SourceFactLocator CloseFact, string CloseMetadataSha256,

@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Handlers;
 
 public sealed class RetireMethodologyTemplateHandler(MethodologyTemplateOperations operations) : IRequestHandler<RetireMethodologyTemplate>
 {

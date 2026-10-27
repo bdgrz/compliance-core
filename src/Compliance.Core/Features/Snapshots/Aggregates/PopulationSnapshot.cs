@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Snapshots.Events;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Aggregates;
 
 /// <summary>
 ///     The reusable immutable population snapshot (EN-03). A snapshot is frozen once with

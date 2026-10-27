@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Events;
 
 /// <summary>
 ///     One invitation holds the tenant mailbox as its single pending invitation. The generation increases with

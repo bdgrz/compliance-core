@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Models;
 
 /// <summary>
 ///     The outcome of capturing content as evidence. <see cref="Duplicate" /> is true when the tenant already holds

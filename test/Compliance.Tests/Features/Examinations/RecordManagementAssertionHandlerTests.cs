@@ -1,3 +1,19 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Readers;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Commands;
+using Bdgrz.Compliance.Features.Examinations.Handlers;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Examinations.Readers;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Tests.Features.SystemDescription;
 using Bdgrz.Compliance.Features.Operations;
@@ -16,7 +32,7 @@ using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackageRules;
-using ManagementAssertionAggregate = Bdgrz.Compliance.Features.Examinations.ManagementAssertion;
+using ManagementAssertionAggregate = Bdgrz.Compliance.Features.Examinations.Aggregates.ManagementAssertion;
 using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionRules;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;

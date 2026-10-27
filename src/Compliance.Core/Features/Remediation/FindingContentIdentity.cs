@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Remediation.Models;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -43,6 +45,6 @@ public static class FindingContentIdentityFactory
         IReadOnlyList<CorrectiveActionView> CorrectiveActions,
         IReadOnlyList<FindingAcceptanceView> Acceptances,
         IReadOnlyList<FindingClosureView> Closures,
-        IReadOnlyList<FindingHistoryEntryView> History, AccessControl.ActorReference RaisedBy,
+        IReadOnlyList<FindingHistoryEntryView> History, AccessControl.Models.ActorReference RaisedBy,
         DateTimeOffset RaisedAt);
 }

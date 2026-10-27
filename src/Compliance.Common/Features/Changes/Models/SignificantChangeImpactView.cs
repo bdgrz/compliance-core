@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>An immutable significance and impact decision for one exact change version.</summary>
 public sealed record SignificantChangeImpactView(

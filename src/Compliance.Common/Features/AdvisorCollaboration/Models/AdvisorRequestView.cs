@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 
 /// <summary>One advisor handoff with its immutable selection and attributable lifecycle state.</summary>
 public sealed record AdvisorRequestView(Uuid TenantId, Uuid ProgramId, Uuid AdvisorRequestId,

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Queries;
 
 /// <summary>The approved version whose effective interval contains the date.</summary>
 [Discriminator("bdgrz.policy.version.effective.get", 1)]

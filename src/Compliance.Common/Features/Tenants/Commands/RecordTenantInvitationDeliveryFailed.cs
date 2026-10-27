@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Tenants.Events;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 /// <summary>Records that the delivery attempt definitely failed; a callback of another attempt is stale.</summary>
 [Discriminator("bdgrz.tenant-invitation.delivery.record-failed", 1)]

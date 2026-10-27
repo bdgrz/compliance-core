@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.Proofs;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>
 ///     Closed union of the facts that can carry an applied operational process change: a held name claim, or the accepted change itself

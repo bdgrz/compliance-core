@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Models;
 
 /// <summary>
 ///     The M0-D06 minimum worker attributes other than identity. <c>ManagerPersonId</c> is a

@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>Applies the original suspend, deprovision or reinstate of a member episode the guard admitted as neutral.</summary>
 [Discriminator("bdgrz.tenant-manager-guard.apply-neutral-member-source-mutation", 1)]

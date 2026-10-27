@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 using System.Diagnostics.CodeAnalysis;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Aggregates;
 
 [SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix",
     Justification = "RolePermission is the canonical RBAC relationship term.")]

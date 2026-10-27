@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Models;
 
 public sealed record ProgramView(Uuid TenantId, Uuid ProgramId, string Name, string Stage,
     string? NextStage, long Revision, ProgramPlan Plan, Uuid LastChangedByMemberId,

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Queries;
 
 /// <summary>The acting member's weekly digest: their overdue items and items due in the next 7 days.</summary>
 [Discriminator("bdgrz.work.digest.get", 1)]

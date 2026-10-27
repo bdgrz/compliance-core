@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Responsibilities;
+namespace Bdgrz.Compliance.Features.Responsibilities.Commands;
 
 [Discriminator("bdgrz.responsibility.assign", 2)]
 public sealed record AssignResponsibility(Uuid CommandId, Uuid TenantId, Uuid MemberUserId,

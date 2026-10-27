@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Commands;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;

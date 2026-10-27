@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Criteria.Aggregates;
+using Bdgrz.Compliance.Features.Criteria.Commands;
+using Bdgrz.Compliance.Features.Criteria.Events;
+using Bdgrz.Compliance.Features.Criteria.Handlers;
+using Bdgrz.Compliance.Features.Criteria.Models;
 using System.Collections;
 using System.Reflection;
 using System.Security.Claims;
@@ -269,7 +274,7 @@ public sealed class SetCriteriaTextOverlayHandlerTests
             return records;
         }
 
-        public Task<CriteriaTextOverlayContent> ReadContentAsync(Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference) =>
+        public Task<CriteriaTextOverlayContent> ReadContentAsync(Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference) =>
             NativeContent.ReadAsync<CriteriaTextOverlayContent>(_provider.GetRequiredService<IImmutableContentStore>(),
                 TenantId, reference);
 

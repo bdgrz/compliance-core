@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Work.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -181,8 +188,8 @@ public sealed class WorkAssignmentNativeTests
         var currentAuthority = new OperatingAuthority(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
             new PermissionBackedAccessGrantPermissionAuthorizer(new ProgramOnlyPermissions()));
         var queue = new WorkQueueReader(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
-            scope.ServiceProvider.GetRequiredService<WorkAssignmentReader>(), scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Controls.ControlReader>(),
-            scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Policies.PolicyReader>(), currentAuthority, TimeProvider.System,
+            scope.ServiceProvider.GetRequiredService<WorkAssignmentReader>(), scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Controls.Readers.ControlReader>(),
+            scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Policies.Readers.PolicyReader>(), currentAuthority, TimeProvider.System,
             new WorkQueueReadConsistency(scope.ServiceProvider.GetRequiredService<IDomainEventReader>()));
 
         // Act
@@ -207,11 +214,11 @@ public sealed class WorkAssignmentNativeTests
     {
         Func<Task>? _winner;
         public bool Failed { get; private set; }
-        public Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? Blocked { get; set; }
+        public Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef? Blocked { get; set; }
         public bool Corrupt { get; set; }
         public int BlockedReads { get; private set; }
         public void Arm(Func<Task> winner) => _winner = winner;
-        public async Task<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id,
+        public async Task<Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id,
             string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
         {
             if (!Failed && _winner is { } winner && schema == WorkAssignmentChangeContent.Schema)
@@ -222,7 +229,7 @@ public sealed class WorkAssignmentNativeTests
             }
             return await inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
         }
-        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference,
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference,
             CancellationToken ct = default)
         {
             if (reference == Blocked)

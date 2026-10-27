@@ -1,3 +1,18 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Handlers;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Handlers;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Independence;
@@ -273,7 +288,7 @@ public sealed class RiskAcceptanceWorkAuthorityTests
                 {
                     services.AddScoped<FitzRiskEvaluationDirectory>(provider => new(client, provider.GetRequiredService<RiskEvaluationReader>()));
                     services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                        new RiskAcceptanceWorkItemDirectory(provider.GetRequiredService<IAggregateReader>(), provider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), operations.Risks, null, provider.GetRequiredService<FitzRiskEvaluationDirectory>(), provider.GetRequiredService<RiskEvaluationReader>(), provider.GetRequiredService<RiskMethodReader>()));
+                        new RiskAcceptanceWorkItemDirectory(provider.GetRequiredService<IAggregateReader>(), provider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(), operations.Risks, null, provider.GetRequiredService<FitzRiskEvaluationDirectory>(), provider.GetRequiredService<RiskEvaluationReader>(), provider.GetRequiredService<RiskMethodReader>()));
                 }
             }
             ServiceProvider provider;

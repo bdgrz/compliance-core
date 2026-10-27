@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 
 /// <summary>Creates the first authored draft of a platform methodology template.</summary>
 [Discriminator("bdgrz.methodology-templates.create-methodology-template", 2)]

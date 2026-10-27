@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>Reads the materialized role-permission directory for one role.</summary>
 public interface IRolePermissionDirectoryReader

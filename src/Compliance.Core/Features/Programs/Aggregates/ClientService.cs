@@ -1,9 +1,13 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Aggregates;
 
 /// <summary>Current service authority and selected native receipt; authored values and history compose explicitly.</summary>
 public sealed class ClientService : Aggregate

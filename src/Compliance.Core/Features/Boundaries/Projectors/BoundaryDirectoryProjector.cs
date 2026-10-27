@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Boundaries.Events;
+using Bdgrz.Compliance.Features.Boundaries.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Projectors;
 
 public sealed partial class BoundaryDirectoryProjector(IBoundaryDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant(), FitzBoundaryDirectory.ProjectorName),

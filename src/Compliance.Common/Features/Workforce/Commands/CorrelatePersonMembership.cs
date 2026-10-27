@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Commands;
 
 /// <summary>
 ///     Correlates a roster person with the tenant platform member identified by <c>UserId</c>, or

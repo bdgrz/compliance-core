@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Events;
 
 /// <summary>Schedules one member's stable weekly digest identity for delivery processing.</summary>
 [Discriminator("bdgrz.work.weekly-digest.scheduled", 1)]

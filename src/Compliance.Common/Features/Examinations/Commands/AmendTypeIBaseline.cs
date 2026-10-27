@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Commands;
 
 /// <summary>Records an attributable amendment to a frozen Type I baseline.</summary>
 [Discriminator("bdgrz.examinations.amend-type-i-baseline", 1)]

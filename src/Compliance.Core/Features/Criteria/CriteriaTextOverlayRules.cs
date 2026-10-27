@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Criteria.Models;
 namespace Bdgrz.Compliance.Features.Criteria;
 
 /// <summary>The bounds of supplied overlay content, unchanged from the product rule.</summary>

@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 sealed class CurrentRatifiedIndependenceRulesReader(IndependenceRuleCatalogReader rules,
     IndependenceRuleRatificationReader ratifications, ProfessionalDutyAuthorityReader duties)

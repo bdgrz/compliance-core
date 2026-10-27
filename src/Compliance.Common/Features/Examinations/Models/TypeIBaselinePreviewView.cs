@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Exact source manifest and blockers shown before Type I baseline confirmation.</summary>
 public sealed record TypeIBaselinePreviewView(Uuid TenantId, Uuid ProgramId,

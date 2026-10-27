@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.Proofs;
 
-namespace Bdgrz.Compliance.Features.NativeOperations;
+namespace Bdgrz.Compliance.Features.NativeOperations.Models;
 
 /// <summary>Closed union of verified standard or protected response content; never caller-selected.</summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "kind", UnknownDerivedTypeHandling =

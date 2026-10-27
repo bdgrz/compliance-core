@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 using System.Collections.Concurrent;
 using Cntryl.Portia;
 

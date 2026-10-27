@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Commands;
 
 /// <summary>Cancels an open request with a rationale. <paramref name="ExpectedRevision" /> is the request's revision.</summary>
 [Discriminator("bdgrz.evidence.request.cancel", 2)]

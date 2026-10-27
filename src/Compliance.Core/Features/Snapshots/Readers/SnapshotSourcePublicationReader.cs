@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Readers;
 
 /// <summary>Reads one complete publication proof; a physical pointer never replaces its logical source identity.</summary>
 static class SnapshotSourcePublicationReader

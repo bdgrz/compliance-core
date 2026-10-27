@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Projections;
 
 public interface IAccessReviewCampaignImpactProjection : IProjectionStore
 {

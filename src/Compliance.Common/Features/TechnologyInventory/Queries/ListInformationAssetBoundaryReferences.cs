@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Queries;
 
 [Discriminator("bdgrz.inventory.asset.boundary_references.list", 1)]
 /// <summary>Lists current draft and current or historical approved boundary references, after source catchup.</summary>

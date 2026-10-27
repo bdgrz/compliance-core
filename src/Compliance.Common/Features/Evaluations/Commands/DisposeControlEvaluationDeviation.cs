@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Evaluations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Commands;
 
 /// <summary>
 ///     Records a minor deviation's disposition: corrected, or accepted_with_waiver naming an approved waiver.

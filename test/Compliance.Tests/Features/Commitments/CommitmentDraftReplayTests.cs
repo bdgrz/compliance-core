@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Commands;
+using Bdgrz.Compliance.Features.Commitments.Handlers;
+using Bdgrz.Compliance.Features.Commitments.Models;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Versioning;
@@ -47,7 +51,7 @@ public sealed class CommitmentDraftReplayTests
         await ProgramManagementServices.SeedAsync(provider, new ProductClientServiceRules(tenantId, serviceId),
             service => service.Create(programId, "Client service", "Purpose", "Operations",
                 actorId, "Author", DateTimeOffset.UtcNow));
-        var original = new CreateCommitmentDraft(Bdgrz.Compliance.Features.Commitments.CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-01"), tenantId, programId, serviceId,
+        var original = new CreateCommitmentDraft(Bdgrz.Compliance.Features.Commitments.Aggregates.CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-01"), tenantId, programId, serviceId,
             "service_commitment", "SC-01", "Statement", "Context", "Source A");
         var registration = new CommitmentDraftRegistration(CommitmentDraft.IdFor(tenantId,
             programId, "service_commitment", "SC-01"), "service_commitment", "SC-01", 1);

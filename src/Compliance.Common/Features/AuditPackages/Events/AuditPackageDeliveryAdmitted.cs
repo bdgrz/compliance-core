@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Events;
 
 /// <summary>Freezes an exact personal external-handoff attestation before independent historical materialization.</summary>
 [Discriminator("bdgrz.audit-package-manifest.audit-package-delivery-admitted", 1)]

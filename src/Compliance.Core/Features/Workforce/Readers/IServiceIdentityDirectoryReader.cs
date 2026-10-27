@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Readers;
 
 public interface IServiceIdentityDirectoryReader
 {

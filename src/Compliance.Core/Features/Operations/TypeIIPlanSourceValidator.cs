@@ -1,3 +1,14 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Examinations.Readers;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Remediation.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Controls;
@@ -5,7 +16,7 @@ using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
-using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.AuditOutcome;
+using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.Aggregates.AuditOutcome;
 
 namespace Bdgrz.Compliance.Features.Operations;
 

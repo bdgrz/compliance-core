@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>A campaign's identity and status, without its items.</summary>
 public sealed record AccessReviewCampaignSummaryView(Uuid TenantId, Uuid CampaignId,

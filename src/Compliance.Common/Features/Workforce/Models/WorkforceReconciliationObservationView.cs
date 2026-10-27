@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Models;
 
 /// <summary>
 ///     A roster reconciliation finding evaluated from the governed manual roster and tenant

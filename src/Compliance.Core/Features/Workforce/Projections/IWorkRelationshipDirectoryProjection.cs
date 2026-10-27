@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Projections;
 
 public interface IWorkRelationshipDirectoryProjection : IProjectionStore
 {

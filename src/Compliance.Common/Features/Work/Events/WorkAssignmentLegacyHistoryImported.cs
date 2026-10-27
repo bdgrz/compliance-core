@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Events;
 
 /// <summary>An existing read-only program ledger prefix was sealed into immutable per-item history before its first native write.</summary>
 [Discriminator("bdgrz.work.assignment-history-imported", 2)]

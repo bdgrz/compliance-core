@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Models;
 
 /// <summary>
 ///     One rule's result for one criterion: rule_met or gap. A met rule states only that the

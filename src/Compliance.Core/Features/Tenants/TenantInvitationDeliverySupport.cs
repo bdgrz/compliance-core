@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Tenants.Events;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceFacts;
@@ -30,7 +33,7 @@ public sealed class TenantInvitationDeliverySupport(ISourceFactResolver resolver
 
     /// <summary>Re-reads the exact invitation fact; every part of the command must agree with it.</summary>
     public async Task<Result<VerifiedSourceProof<TenantMemberInvited>>> VerifyAsync(
-        Bdgrz.Compliance.Features.Proofs.SourceFactProof<TenantMemberInvited> proof,
+        Bdgrz.Compliance.Features.Proofs.Models.SourceFactProof<TenantMemberInvited> proof,
         ITenantInvitationDeliveryReceiver request, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(proof);

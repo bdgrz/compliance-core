@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
+using Bdgrz.Compliance.Features.AuditorRequests.Events;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.SourceFacts;
@@ -5,7 +10,7 @@ using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.NativeOperations;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Reactors;
 
 /// <summary>
 ///     Starts <c>AuditorRequestResolutionProcess</c> from a committed resolution acceptance. The process record, with the

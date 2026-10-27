@@ -1,4 +1,5 @@
-namespace Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>Reads the professional-duty catalog read model; it has no size cap.</summary>
 public interface IFirmProfessionalDutyDirectoryReader

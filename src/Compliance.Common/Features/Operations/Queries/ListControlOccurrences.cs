@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Queries;
 
 /// <summary>Lists a control's recorded occurrences and its expected occurrences through a horizon.</summary>
 [Discriminator("bdgrz.control.occurrences.list", 1)]

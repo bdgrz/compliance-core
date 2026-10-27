@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.SourceUse;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SourceUse;
+namespace Bdgrz.Compliance.Features.SourceUse.Models;
 
 /// <summary>
 ///     The exact business fact a use pins on its source owner. The pinned content event and revision stay the held

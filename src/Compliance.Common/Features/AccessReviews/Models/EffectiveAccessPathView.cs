@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>An ordered path from a review subject to an entitlement; <c>ExpiresAt</c> is the assignment expiry.</summary>
 public sealed record EffectiveAccessPathView(IReadOnlyList<EffectiveAccessHop> Hops,

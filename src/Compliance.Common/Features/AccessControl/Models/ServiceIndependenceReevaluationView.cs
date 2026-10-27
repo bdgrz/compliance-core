@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>A retained source-change assessment; it can never refresh accepted professional authority.</summary>
 public sealed record ServiceIndependenceReevaluationView(Uuid ReevaluationId, Uuid TenantId,

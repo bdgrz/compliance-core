@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Exports;
+namespace Bdgrz.Compliance.Features.Exports.Models;
 
 /// <summary>A reconciled export source record or a withheld record with its reason.</summary>
 public sealed record ClientExportRecordContent(

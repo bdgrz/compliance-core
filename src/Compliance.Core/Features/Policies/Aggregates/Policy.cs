@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Policies.Commands;
+using Bdgrz.Compliance.Features.Policies.Events;
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json;
@@ -9,7 +15,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Aggregates;
 
 /// <summary>Deterministic Policy identity and compact native authority. Full content/history belongs to verified immutable readers.</summary>
 public sealed class Policy : Aggregate

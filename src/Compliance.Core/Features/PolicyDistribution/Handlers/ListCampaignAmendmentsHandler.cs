@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Handlers;
 
 sealed class ListCampaignAmendmentsHandler(CampaignSource campaigns)
     : IRequestHandler<ListCampaignAmendments, Page<CampaignAmendmentView>>

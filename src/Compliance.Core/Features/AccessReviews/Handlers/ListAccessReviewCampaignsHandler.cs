@@ -1,9 +1,16 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Projections;
+using Bdgrz.Compliance.Features.AccessReviews.Queries;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz.Extensions;
 using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Handlers;
 
 /// <summary>Lists from the Fitz campaign directory once it has reached the source.</summary>
 public sealed class ListAccessReviewCampaignsHandler(IAccessReviewCampaignDirectoryReader directory,

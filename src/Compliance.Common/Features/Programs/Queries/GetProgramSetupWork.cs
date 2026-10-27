@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Queries;
 
 [Discriminator("bdgrz.program.setup-work.get", 1)]
 public sealed record GetProgramSetupWork(Uuid TenantId, Uuid ProgramId,

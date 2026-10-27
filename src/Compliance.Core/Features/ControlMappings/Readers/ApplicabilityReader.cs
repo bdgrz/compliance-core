@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.ControlMappings;
+using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
+using Bdgrz.Compliance.Features.ControlMappings.Events;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Readers;
 
 /// <summary>
 ///     Reads criterion applicability lines from their own owner streams. A program's lines and the criterion a

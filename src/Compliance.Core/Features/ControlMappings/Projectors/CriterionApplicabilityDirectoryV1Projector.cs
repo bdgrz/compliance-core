@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.ControlMappings.Events;
+using Bdgrz.Compliance.Features.ControlMappings.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Projectors;
 
 public sealed partial class CriterionApplicabilityDirectoryV1Projector(
     ICriterionApplicabilityDirectoryProjection projection)

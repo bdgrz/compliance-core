@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>A tenant-authored declaration. References do not establish a verified owner or classification.</summary>
 public sealed record ApplicationView(Uuid TenantId, Uuid ApplicationId, long Revision,

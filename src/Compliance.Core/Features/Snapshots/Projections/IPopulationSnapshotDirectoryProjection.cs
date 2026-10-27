@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Projections;
 
 public interface IPopulationSnapshotDirectoryProjection : IProjectionStore
 {

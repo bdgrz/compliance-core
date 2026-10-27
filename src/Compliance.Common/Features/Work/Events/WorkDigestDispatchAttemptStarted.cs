@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Events;
 
 [Discriminator("bdgrz.work.digest_dispatch.attempt_started", 1)]
 public sealed record WorkDigestDispatchAttemptStarted(Uuid TenantId, Uuid MemberId,

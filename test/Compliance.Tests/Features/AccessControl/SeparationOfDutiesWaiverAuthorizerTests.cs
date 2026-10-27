@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Queries;
 using System.Globalization;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;

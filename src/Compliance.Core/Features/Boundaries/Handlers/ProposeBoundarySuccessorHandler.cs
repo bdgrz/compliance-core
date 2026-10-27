@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Boundaries.Commands;
+using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Handlers;
 
 public sealed class ProposeBoundarySuccessorHandler(BoundaryOperations operations, IBoundaryReferenceValidator references)
     : IRequestHandler<ProposeBoundarySuccessor, BoundaryRegistration>

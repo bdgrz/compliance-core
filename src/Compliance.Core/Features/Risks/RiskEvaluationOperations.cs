@@ -1,3 +1,11 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Independence;
@@ -105,7 +113,7 @@ public sealed class RiskEvaluationOperations(IAggregateReader reader, RiskEvalua
         try
         {
             FrozenRiskEvaluationMutation? frozen = null;
-            Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? result = null;
+            Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef? result = null;
             long sequence = 0;
             ulong physical = 0;
             var accepted = await operations.ExecuteAsync(new NativeOperation<RiskEvaluation>(AcceptedOperationBinding.Of(provenance),

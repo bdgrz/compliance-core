@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Tests.Testing;
 using RiskEvaluation = Bdgrz.Compliance.Features.Risks.RiskEvaluationRules;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -368,7 +372,7 @@ public sealed class RiskEvaluationTests
         var scope = waiver.Scope!;
         return new(waiver.TenantId, waiver.Id, waiver.BeneficiaryMemberId, waiver.BeneficiaryMemberId,
             scope.Action, scope.RecordType, scope.RecordId, scope.VersionId, scope.Revision,
-            new Bdgrz.Compliance.Features.Proofs.SourceFactLocator(waiver.Stream, Uuid.CreateVersion4(), 1, 10001,
+            new Bdgrz.Compliance.Features.Proofs.Models.SourceFactLocator(waiver.Stream, Uuid.CreateVersion4(), 1, 10001,
                 1000001, 2, new string('a', 64)), waiver.ApprovedAt!.Value, waiver.ExpiresAt);
     }
 

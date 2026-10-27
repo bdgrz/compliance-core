@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Authorizers;
 
 /// <summary>Allows operations reaction commands only from Portia's trusted system actor.</summary>
 sealed class OperationsReactionAuthorizer : IRequestAuthorizer<IOperationsReactionRequest>

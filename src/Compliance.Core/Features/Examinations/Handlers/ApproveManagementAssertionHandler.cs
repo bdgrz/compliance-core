@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Commands;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Handlers;
 
 /// <summary>Records an exact-version CEO/CISO decision using current member and RBAC authority.</summary>
 public sealed class ApproveManagementAssertionHandler(IAggregateExecutor executor,

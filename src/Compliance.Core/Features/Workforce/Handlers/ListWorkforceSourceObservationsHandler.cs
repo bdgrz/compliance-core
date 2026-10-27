@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Queries;
+using Bdgrz.Compliance.Features.Workforce.Readers;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class ListWorkforceSourceObservationsHandler(IWorkforceSourceDirectoryReader directory,
     WorkforceSourceReadConsistency consistency)

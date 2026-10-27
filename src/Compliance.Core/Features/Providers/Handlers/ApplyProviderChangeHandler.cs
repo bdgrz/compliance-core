@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Commands;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Handlers;
 
 /// <summary>Applies the accepted provider change once its needed claims are held; a canceled change is a terminal no-op.</summary>
 public sealed class ApplyProviderChangeHandler(NamedRecordReceivers receivers)

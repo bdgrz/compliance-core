@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Models;
 
 public sealed record CampaignAcknowledgementView(Uuid AcknowledgementId, Uuid PersonId,
     long PolicyVersion, string ContentSha256, string AcknowledgementText,

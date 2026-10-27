@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.Boundaries;
 using Cntryl.Portia;
 

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>Progress and exact output identity for one retryable package build.</summary>
 public sealed record AuditPackageBuildAttemptView(

@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 
 /// <summary>A compact native MethodologyTemplateCreated delta; authored bodies and historical versions are immutable content.</summary>
 [Discriminator("bdgrz.methodologytemplates.methodology-template-created", 3)]

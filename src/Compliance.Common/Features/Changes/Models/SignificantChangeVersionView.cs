@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>An immutable significant-change content version and its recorder attribution.</summary>
 public sealed record SignificantChangeVersionView(

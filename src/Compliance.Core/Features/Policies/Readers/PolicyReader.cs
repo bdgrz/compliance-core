@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.Policies.Aggregates;
+using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Readers;
 
 /// <summary>Verified full read composition over native source facts and their immutable bodies, outside command state.</summary>
 public sealed class PolicyReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)

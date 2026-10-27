@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Commands;
 
 [Discriminator("bdgrz.program.criteria.select", 1)]
 public sealed record SelectProgramCriteriaEdition(Uuid CommandId, Uuid TenantId, Uuid ProgramId,

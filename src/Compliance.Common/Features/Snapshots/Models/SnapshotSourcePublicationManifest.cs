@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Models;
 
 /// <summary>Complete source-body publication proof, stored outside the bounded baseline fact and sealed by its digest.</summary>
 public sealed record SnapshotSourcePublicationManifest(Uuid TenantId, Uuid ProgramId, Uuid ExaminationId,

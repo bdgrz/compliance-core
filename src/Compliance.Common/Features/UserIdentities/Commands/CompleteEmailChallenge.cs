@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>Completes the verification challenge named by <paramref name="ChallengeId" />, which is also the logical identity.</summary>
 [Discriminator("bdgrz.email-address.complete-challenge", 1)]

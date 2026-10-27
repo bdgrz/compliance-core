@@ -1,7 +1,12 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Providers.Events;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Reactors;
 
 /// <summary>
 ///     Starts <c>IndependentChildMaterialization</c> from a committed link admission. The process record, with its

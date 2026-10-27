@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Applications.Models;
 namespace Bdgrz.Compliance.Features.Applications;
 
 /// <summary>Evaluates an ordered, effective-dated scope history at one instant.</summary>

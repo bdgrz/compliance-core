@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Commands;
 
 /// <summary>Records the create examination engagement intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.examinations.create-examination-engagement", 1)]

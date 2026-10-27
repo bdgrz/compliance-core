@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.AccessControl;

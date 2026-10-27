@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Queries;
+using Bdgrz.Compliance.Features.Tenants.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Responsibilities;
+namespace Bdgrz.Compliance.Features.Responsibilities.Handlers;
 
 public sealed class PreviewResponsibilityConflictsHandler(IResponsibilitySetDirectory directory,
     ITenantMembershipDirectoryReader memberships, IResponsibilityScopeValidator scopeValidator,

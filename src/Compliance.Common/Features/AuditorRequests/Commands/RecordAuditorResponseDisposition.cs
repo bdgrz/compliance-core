@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Commands;
 
 /// <summary>Records the external disposition of the exact delivered response version; it is immutable once recorded.</summary>
 [Discriminator("bdgrz.auditor-requests.record-auditor-response-disposition", 2)]

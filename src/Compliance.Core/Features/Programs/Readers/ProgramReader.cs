@@ -1,9 +1,14 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Kernel;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Readers;
 
 public sealed class ProgramReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)
 {
@@ -60,7 +65,7 @@ public sealed class ProgramReader(IAggregateReader reader, IDomainEventReader ev
     }
 
     public static async Task<ProgramContent> ReadContentAsync(IImmutableContentStore content, Uuid tenantId,
-        Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference, CancellationToken ct = default)
+        Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference, CancellationToken ct = default)
     {
         if (reference.Schema != ProgramContent.Schema || reference.MediaType != ImmutableContentStoreExtensions.JsonMediaType)
             throw new ImmutableContentIntegrityException("The program authored value has another schema or media type.");

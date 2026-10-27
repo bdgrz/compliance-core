@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.Risks;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Events;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Reactors;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Remediation;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Readers;
 
 /// <summary>
 ///     Reads a risk's governance from its own owner streams and composes the public views. A risk's owner and triggers

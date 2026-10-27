@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Operations.Models;
 namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>The performer-supplied content of one attestation version.</summary>

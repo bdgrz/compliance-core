@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.Applications.Commands;
 using Bdgrz.Compliance.Features.Applications.Events;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -50,7 +53,8 @@ public sealed class ApplicationRelationshipTests
         var source = NewApplication(tenantId, sourceId, actorId, changedAt);
 
         // Act
-        var result = source.AddApplicationRelationship(0, Uuid.CreateVersion4(), targetId,
+        var result = source.AddApplicationRelationship(0,
+            ApplicationRelationshipIdentity.Id(sourceId, "depends_on", targetId), targetId,
             "depends_on", actorId, "Inventory manager", changedAt);
 
         // Assert
@@ -90,7 +94,7 @@ public sealed class ApplicationRelationshipTests
         var sourceId = Uuid.CreateVersion4();
         var targetId = Uuid.CreateVersion4();
         var actorId = Uuid.CreateVersion4();
-        var relationshipId = Uuid.CreateVersion4();
+        var relationshipId = ApplicationRelationshipIdentity.Id(sourceId, "depends_on", targetId);
         var changedAt = DateTimeOffset.UtcNow;
         var source = NewApplication(tenantId, sourceId, actorId, changedAt);
         await writer.SaveAsync(source, new RequestDispatchContext(RequestActor.System),
@@ -128,8 +132,9 @@ public sealed class ApplicationRelationshipTests
         var sourceId = Uuid.CreateVersion4();
         var targetId = Uuid.CreateVersion4();
         var actorId = Uuid.CreateVersion4();
-        var oldRelationshipId = Uuid.CreateVersion4();
-        var replacementRelationshipId = Uuid.CreateVersion4();
+        var replacementTargetId = Uuid.CreateVersion4();
+        var oldRelationshipId = ApplicationRelationshipIdentity.Id(sourceId, "replaces", targetId);
+        var replacementRelationshipId = ApplicationRelationshipIdentity.Id(sourceId, "replaces", replacementTargetId);
         var now = DateTimeOffset.UtcNow;
         var source = NewApplication(tenantId, sourceId, actorId, now);
         Assert.True(source.AddApplicationRelationship(0, oldRelationshipId, targetId,
@@ -143,7 +148,7 @@ public sealed class ApplicationRelationshipTests
         var oldRemoveReplay = source.RemoveApplicationRelationship(0, oldRelationshipId,
             actorId, "Changed display", now.AddMinutes(3));
         var replacement = source.AddApplicationRelationship(2, replacementRelationshipId,
-            targetId, "replaces", actorId, "Manager", now.AddMinutes(4));
+            replacementTargetId, "replaces", actorId, "Manager", now.AddMinutes(4));
         var oldRemoveAfterReplacement = source.RemoveApplicationRelationship(0,
             oldRelationshipId, actorId, "Manager", now.AddMinutes(5));
         var replay = new AggregateScenario<DeclaredApplication>(
@@ -165,7 +170,7 @@ public sealed class ApplicationRelationshipTests
         Assert.Equal(3, replay.SourceRelationshipRevision);
         var active = Assert.Single(replay.ReadApplicationRelationships());
         Assert.Equal(replacementRelationshipId, active.RelationshipId);
-        Assert.Equal(targetId, active.TargetApplicationId);
+        Assert.Equal(replacementTargetId, active.TargetApplicationId);
         Assert.Equal("replaces", active.RelationshipType);
     }
 
@@ -178,7 +183,8 @@ public sealed class ApplicationRelationshipTests
         var targetId = Uuid.CreateVersion4();
         var source = NewApplication(tenantId, sourceId, Uuid.CreateVersion4(),
             DateTimeOffset.UtcNow);
-        var firstId = Uuid.CreateVersion4();
+        var firstId = ApplicationRelationshipIdentity.Id(sourceId, "depends_on", targetId);
+        var staleTarget = Uuid.CreateVersion4();
         Assert.True(source.AddApplicationRelationship(0, firstId, targetId,
             "depends_on", Uuid.CreateVersion4(), "Manager", DateTimeOffset.UtcNow).IsSuccess);
         var pendingBefore = new AggregateScenario<DeclaredApplication>(source)
@@ -187,10 +193,12 @@ public sealed class ApplicationRelationshipTests
         // Act
         var duplicateTuple = source.AddApplicationRelationship(1, Uuid.CreateVersion4(),
             targetId, "depends_on", Uuid.CreateVersion4(), "Manager", DateTimeOffset.UtcNow);
-        var otherType = source.AddApplicationRelationship(1, Uuid.CreateVersion4(),
+        var otherType = source.AddApplicationRelationship(1,
+            ApplicationRelationshipIdentity.Id(sourceId, "replaces", targetId),
             targetId, "replaces", Uuid.CreateVersion4(), "Manager", DateTimeOffset.UtcNow);
-        var stale = source.AddApplicationRelationship(0, Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), "depends_on", Uuid.CreateVersion4(), "Manager",
+        var stale = source.AddApplicationRelationship(0,
+            ApplicationRelationshipIdentity.Id(sourceId, "depends_on", staleTarget),
+            staleTarget, "depends_on", Uuid.CreateVersion4(), "Manager",
             DateTimeOffset.UtcNow);
         var unsupported = source.AddApplicationRelationship(source.SourceRelationshipRevision,
             Uuid.CreateVersion4(), Uuid.CreateVersion4(), "DEPENDS_ON",
@@ -200,7 +208,7 @@ public sealed class ApplicationRelationshipTests
             "Manager", DateTimeOffset.UtcNow);
 
         // Assert
-        Assert.Equal(RequestErrorKind.Conflict,
+        Assert.Equal(RequestErrorKind.Validation,
             Assert.IsType<RequestError>(duplicateTuple.Error).Kind);
         Assert.True(otherType.IsSuccess);
         var staleError = Assert.IsType<RequestError>(stale.Error);
@@ -257,7 +265,7 @@ public sealed class ApplicationRelationshipTests
         var tenantId = Uuid.CreateVersion4();
         var sourceId = Uuid.CreateVersion4();
         var targetId = Uuid.CreateVersion4();
-        var relationshipId = Uuid.CreateVersion4();
+        var relationshipId = ApplicationRelationshipIdentity.Id(sourceId, "depends_on", targetId);
         var source = NewApplication(tenantId, sourceId, Uuid.CreateVersion4(),
             DateTimeOffset.UtcNow);
         Assert.True(source.AddApplicationRelationship(0, relationshipId, targetId,
@@ -274,7 +282,7 @@ public sealed class ApplicationRelationshipTests
             Uuid.Empty, "depends_on", Uuid.CreateVersion4(), "Manager", DateTimeOffset.UtcNow);
 
         // Assert
-        Assert.Equal(RequestErrorKind.Conflict,
+        Assert.Equal(RequestErrorKind.Validation,
             Assert.IsType<RequestError>(payloadConflict.Error).Kind);
         Assert.Equal(RequestErrorKind.Validation,
             Assert.IsType<RequestError>(emptyRelationshipId.Error).Kind);

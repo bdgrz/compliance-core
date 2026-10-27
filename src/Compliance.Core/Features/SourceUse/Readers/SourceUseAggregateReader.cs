@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SourceUse;
+namespace Bdgrz.Compliance.Features.SourceUse.Readers;
 
 /// <summary>
 /// Finalizes source-use owners at the exact hydrated cut. Full transient validation protects unselected historical

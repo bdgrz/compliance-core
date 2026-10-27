@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
+using Bdgrz.Compliance.Features.AuditorRequests.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Events;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -5,7 +12,7 @@ using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Handlers;
 
 /// <summary>
 ///     Materializes one admitted sample selection on its own owner at revision one, after the request closed if need be
@@ -43,14 +50,14 @@ sealed class MaterializeAuditorSampleSelectionHandler(IAggregateReader reader, I
 
         AuditorSampleSelectionIntent intent;
         IReadOnlyList<Uuid> rows;
-        AuditPopulations.AuditPopulationVersionView population;
+        AuditPopulations.Models.AuditPopulationVersionView population;
         try
         {
             intent = await AuditorContent.ReadAsync<AuditorSampleSelectionIntent>(content, tenant, command.Intent, ct)
                 .ConfigureAwait(false);
             rows = await ImmutableSelectionManifests.ReadAsync<Uuid>(content, command.Target.Realm,
                 intent.PopulationRowIds, ct).ConfigureAwait(false);
-            population = await AuditorContent.ReadAsync<AuditPopulations.AuditPopulationVersionView>(content, tenant,
+            population = await AuditorContent.ReadAsync<AuditPopulations.Models.AuditPopulationVersionView>(content, tenant,
                 intent.PopulationContent, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentUnavailableException exception)

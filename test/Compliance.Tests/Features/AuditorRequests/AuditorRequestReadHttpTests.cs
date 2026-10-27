@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Tests.Testing;
 using System.Net;
 using System.Text.Json;

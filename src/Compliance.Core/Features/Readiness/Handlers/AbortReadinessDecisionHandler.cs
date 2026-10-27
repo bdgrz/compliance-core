@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Commands;
+using Bdgrz.Compliance.Features.Readiness.Events;
+using Bdgrz.Compliance.Features.Readiness.Models;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -5,7 +12,7 @@ using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Handlers;
 
 /// <summary>
 ///     Cancels the exact pending decision after an authoritative permanent proof mismatch and fences its delayed
@@ -114,7 +121,7 @@ sealed class AbortReadinessDecisionHandler(IAggregateReader reader, IAggregateEx
 
     /// <summary>An exact replay, a decision that was already recorded, or a decision canceled by another operation.</summary>
     static Result<ReceiverOutcome>? Decide(ProgramReadiness program, AcceptedOperationBinding binding, Uuid operationId,
-        Proofs.ImmutableContentRef failureProof)
+        Proofs.Models.ImmutableContentRef failureProof)
     {
         switch (program.Acceptance.Decide(binding))
         {

@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;

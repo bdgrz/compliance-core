@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>Recovers cleanup of the exact episode identified by a committed retirement fact.</summary>
 [Discriminator("bdgrz.rbac.member.retirement.complete", 1)]

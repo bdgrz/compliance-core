@@ -1,6 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Responsibilities;
+namespace Bdgrz.Compliance.Features.Responsibilities.Handlers;
 
 public sealed class ListMemberResponsibilitiesHandler(IMemberResponsibilityIndex index,
     TimeProvider clock) : IRequestHandler<ListMemberResponsibilities,

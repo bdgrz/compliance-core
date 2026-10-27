@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
 
 /// <summary>Only a current platform operator may use platform-scoped operations.</summary>
 sealed class PlatformOperatorAuthorizer(IPlatformOperatorAccess operators) : IRequestAuthorizer<IPlatformOperatorRequest>

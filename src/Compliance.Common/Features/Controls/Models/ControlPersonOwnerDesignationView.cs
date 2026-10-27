@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>A workforce-person owner and the actor snapshot that recorded the designation.</summary>
 public sealed record ControlPersonOwnerDesignationView(Uuid PersonId, Uuid DesignationId,

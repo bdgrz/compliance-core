@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Applications.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Authorizers;
 
 sealed class ExecuteApplicationImportAuthorizer : IRequestAuthorizer<ExecuteApplicationImport>
 {

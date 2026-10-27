@@ -1,3 +1,15 @@
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Commands;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Commands;
+using Bdgrz.Compliance.Features.Readiness.Events;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Events;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Evidence;
@@ -194,7 +206,7 @@ public sealed class SourceUseCancellationRecoveryTests
         var program = Uuid.CreateVersion4();
         var operation = Uuid.CreateVersion4();
         var source = new NativeFactReference(new ProgramReadiness(tenant, program).Stream, Uuid.CreateVersion4(), 1);
-        var reference = new Bdgrz.Compliance.Features.Proofs.ImmutableContentRef(Uuid.CreateVersion4(),
+        var reference = new Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef(Uuid.CreateVersion4(),
             new string('a', 64), 0, "application/json", "test-content.v1");
         var content = new UnreadableContent(unavailable);
 
@@ -217,12 +229,12 @@ public sealed class SourceUseCancellationRecoveryTests
 
     sealed class UnreadableContent(bool unavailable) : IImmutableContentStore
     {
-        public Task<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId,
+        public Task<Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId,
             string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
             throw new NotSupportedException();
 
         public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm,
-            Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference, CancellationToken ct = default) =>
+            Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference, CancellationToken ct = default) =>
             Task.FromException<ReadOnlyMemory<byte>>(unavailable
                 ? new ImmutableContentUnavailableException("Not readable yet.")
                 : new ImmutableContentIntegrityException("The stored digest is invalid."));

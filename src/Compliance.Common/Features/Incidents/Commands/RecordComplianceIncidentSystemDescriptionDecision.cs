@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.Changes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Commands;
 
 /// <summary>
 ///     Copies an exact period no-change decision into its incident record. <paramref name="CommandId" /> is the

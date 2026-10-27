@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.SourceUse;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SourceUse.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SourceUse;
+namespace Bdgrz.Compliance.Features.SourceUse.Handlers;
 
 /// <summary>
 ///     The generic receiver that settles one use of a source owner by its exact key. A concrete pair declares how to

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Events;
 
 /// <summary>Records independent executive approval of the reviewed Type II plan version.</summary>
 [Discriminator("bdgrz.examinations.type-i-i-plan-approved", 2)]

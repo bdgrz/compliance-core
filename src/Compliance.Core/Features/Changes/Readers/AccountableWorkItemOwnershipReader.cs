@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Work;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Readers;
 
 sealed class AccountableWorkItemOwnershipReader(
     IEnumerable<IAccountableWorkItemDirectoryReader> directories,

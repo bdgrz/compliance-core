@@ -1,3 +1,11 @@
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Commands;
+using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -6,7 +14,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Handlers;
 
 /// <summary>
 ///     Computes the assessment of an admitted run on its own owner at the assessment's revision one. The frozen run
@@ -101,16 +109,16 @@ sealed class ComputeReadinessAssessmentHandler(IAggregateReader reader, IAggrega
             .ConfigureAwait(false);
         if (snapshot.ProgramId != intent.ProgramId || snapshot.AsOf != intent.AsOf)
             throw new ImmutableContentIntegrityException("The input snapshot is not the one this run froze.");
-        var criteria = await ReadinessContent.ReadAsync<IReadOnlyList<Criteria.Criterion>>(content, tenant,
+        var criteria = await ReadinessContent.ReadAsync<IReadOnlyList<Criteria.Models.Criterion>>(content, tenant,
             snapshot.Criteria, ct).ConfigureAwait(false);
-        var mappings = await ReadinessContent.ReadAsync<IReadOnlyList<ControlMappings.ControlCriterionMappingView>>(
+        var mappings = await ReadinessContent.ReadAsync<IReadOnlyList<ControlMappings.Models.ControlCriterionMappingView>>(
             content, tenant, snapshot.Mappings, ct).ConfigureAwait(false);
         var effective = await ReadinessContent.ReadAsync<IReadOnlyList<ReadinessEffectiveControl>>(content, tenant,
             snapshot.EffectiveControls, ct).ConfigureAwait(false);
         var sources = await ReadinessContent.ReadAsync<ReadinessSourceSet>(content, tenant, snapshot.Sources, ct)
             .ConfigureAwait(false);
         var catalogEdition = snapshot.CatalogEdition is { } reference
-            ? await ReadinessContent.ReadAsync<Criteria.CriteriaCatalogEdition>(content, tenant, reference, ct)
+            ? await ReadinessContent.ReadAsync<Criteria.Models.CriteriaCatalogEdition>(content, tenant, reference, ct)
                 .ConfigureAwait(false)
             : null;
         var controls = effective.ToDictionary(static item => item.ControlId, static item => item.Version);

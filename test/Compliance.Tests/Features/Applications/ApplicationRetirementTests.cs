@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Events;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;

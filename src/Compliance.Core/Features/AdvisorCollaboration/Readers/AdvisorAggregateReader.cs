@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 
 /// <summary>Finalizes the same complete native authority for public reads and executor-internal rehydration.</summary>
 public sealed class AdvisorAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

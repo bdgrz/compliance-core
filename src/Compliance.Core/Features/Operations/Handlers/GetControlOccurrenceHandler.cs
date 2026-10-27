@@ -1,6 +1,12 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Queries;
+using Bdgrz.Compliance.Features.Operations.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Handlers;
 
 /// <summary>Reads one occurrence with every attestation version and review decision.</summary>
 public sealed class GetControlOccurrenceHandler(ControlReader controlSources, ControlOperationsReader operations,

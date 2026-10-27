@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Queries;
 
 /// <summary>Lists the program's evidence requests in the order opened; status filters open, fulfilled, or cancelled.</summary>
 [Discriminator("bdgrz.evidence.requests.list", 1)]

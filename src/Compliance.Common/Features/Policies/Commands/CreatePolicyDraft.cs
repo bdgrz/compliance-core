@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Commands;
 
 [Discriminator("bdgrz.policy.draft.create", 2)]
 public sealed record CreatePolicyDraft(Uuid PolicyId, Uuid TenantId, Uuid ProgramId, string Identifier,

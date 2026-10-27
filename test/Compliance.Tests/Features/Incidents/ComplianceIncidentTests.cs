@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Incidents.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.Incidents.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Features.Versioning;
@@ -76,11 +79,11 @@ public sealed class ComplianceIncidentTests
         await using var fixture = new IncidentNativeFixture();
         var incident = NewIncident();
         Assert.Null(incident.Record(Content(), RecorderId, "Compliance lead", Now));
-        var owner = new Bdgrz.Compliance.Features.Incidents.ComplianceIncident(TenantId, ProgramId, IncidentId);
+        var owner = new Bdgrz.Compliance.Features.Incidents.Aggregates.ComplianceIncident(TenantId, ProgramId, IncidentId);
         var frozen = await Bdgrz.Compliance.Features.Incidents.ComplianceIncidentContentStore.FreezeAsync(fixture.Content, null, null, null, incident,
             nameof(RecordComplianceIncident), CancellationToken.None);
         var op = Bdgrz.Compliance.Features.NativeOperations.OwnerProvenance.For(owner, IncidentId, nameof(RecordComplianceIncident),
-            Bdgrz.Compliance.Features.AccessControl.ActorReference.ForMember(RecorderId, new string('x', 500000)), IncidentId.ToString(), null,
+            Bdgrz.Compliance.Features.AccessControl.Models.ActorReference.ForMember(RecorderId, new string('x', 500000)), IncidentId.ToString(), null,
             new string('a', 64), Now) with
         { FirstOwner = owner.Stream };
         var response = await Bdgrz.Compliance.Features.NativeOperations.NativeContent.FreezeUnitAsync(fixture.Content, TenantId);
@@ -94,7 +97,7 @@ public sealed class ComplianceIncidentTests
         Assert.True(Bdgrz.Compliance.Hosting.Persistence.DomainEventPayload.Size(fact) > Bdgrz.Compliance.Hosting.Persistence.DomainEventPayload.MaximumBytes);
         Assert.False(result.IsSuccess);
         Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
-        Assert.Empty(new AggregateScenario<Bdgrz.Compliance.Features.Incidents.ComplianceIncident>(owner).PendingEvents);
+        Assert.Empty(new AggregateScenario<Bdgrz.Compliance.Features.Incidents.Aggregates.ComplianceIncident>(owner).PendingEvents);
     }
 
     [Fact]

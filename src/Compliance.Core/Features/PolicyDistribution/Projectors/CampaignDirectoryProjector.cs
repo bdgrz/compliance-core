@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.PolicyDistribution.Events;
+using Bdgrz.Compliance.Features.PolicyDistribution.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Projectors;
 
 public sealed partial class CampaignDirectoryProjector(ICampaignDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant("policy-distribution-campaigns"),

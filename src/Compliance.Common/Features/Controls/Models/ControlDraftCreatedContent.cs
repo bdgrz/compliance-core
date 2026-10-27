@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 public sealed record ControlDraftCreatedContent(Uuid TenantId, Uuid ProgramId, Uuid ControlId,
     Uuid CreateRequestId, string Identifier, ControlDraftContent Content, Uuid ActorMemberId,

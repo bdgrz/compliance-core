@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.Commitments.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Handlers;
 
 public sealed class ReviseCommitmentDraftHandler(CommitmentOperations operations) : IRequestHandler<ReviseCommitmentDraft>
 {

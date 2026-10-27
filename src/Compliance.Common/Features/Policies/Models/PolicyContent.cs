@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Models;
 
 /// <summary>
 ///     The governed content of one policy draft or version. <c>Body</c> holds the policy text

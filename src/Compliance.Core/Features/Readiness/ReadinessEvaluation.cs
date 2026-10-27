@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Readiness.Models;
 namespace Bdgrz.Compliance.Features.Readiness;
 
 /// <summary>The deterministic output of <see cref="ReadinessRules" /> for one set of inputs.</summary>

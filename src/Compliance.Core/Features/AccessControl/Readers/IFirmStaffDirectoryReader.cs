@@ -1,4 +1,5 @@
-namespace Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>Reads the staff directory read model; it has no size cap.</summary>
 public interface IFirmStaffDirectoryReader

@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Readers;
 
 /// <summary>Verified current and historical read composition at the hydrated native owner cut.</summary>
 public sealed class CommitmentReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)

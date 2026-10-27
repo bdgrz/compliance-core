@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Events;
 
 /// <summary>Retains management's response separately from the externally authored wording.</summary>
 [Discriminator("bdgrz.examinations.audit-observation-management-response-recorded", 1)]

@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Models;
 
 /// <summary>
 ///     One exact item an evaluation inspects: a boundary, commitment, risk, criterion, control,

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Commitments;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Projections;
 
 static class CommitmentDraftDirectorySchema
 {

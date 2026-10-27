@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Models;
 
 /// <summary>An unmet readiness rule with a stable identity across reassessments.</summary>
 public sealed record ReadinessGapView(Uuid GapId, string Kind, string Subject, string RuleId,

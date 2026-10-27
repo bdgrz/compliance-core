@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Commands;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.SourceUse.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -16,7 +23,7 @@ namespace Bdgrz.Compliance.Tests.Testing;
 static class ReadinessSeed
 {
     public static ReadinessEvaluation Evaluation(Uuid programId, DateTimeOffset asOf) =>
-        ReadinessRules.Evaluate(programId, asOf, null, [], [], new Dictionary<Uuid, Bdgrz.Compliance.Features.Controls.ControlVersionView?>());
+        ReadinessRules.Evaluate(programId, asOf, null, [], [], new Dictionary<Uuid, Bdgrz.Compliance.Features.Controls.Models.ControlVersionView?>());
 
     /// <summary>Admits, computes and adopts an assessment; returns the program readiness revision afterwards.</summary>
     public static async Task<long> AdoptAsync(IAggregateReader reader, IAggregateExecutor executor,

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Snapshots;
 using Bdgrz.Compliance.Features.Workforce;

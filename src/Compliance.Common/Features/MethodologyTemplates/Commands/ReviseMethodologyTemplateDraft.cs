@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 
 /// <summary>Revises the current methodology-template draft with an explicit content revision.</summary>
 [Discriminator("bdgrz.methodology-templates.revise-methodology-template-draft", 2)]

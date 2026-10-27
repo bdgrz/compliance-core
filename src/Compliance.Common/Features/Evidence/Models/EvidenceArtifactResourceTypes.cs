@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Models;
 
 public static class EvidenceArtifactResourceTypes
 {

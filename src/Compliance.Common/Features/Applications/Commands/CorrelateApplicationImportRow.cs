@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 /// <summary>
 ///     Records one personal link-existing or create-new decision for a staged row. <paramref name="CommandId" /> is the

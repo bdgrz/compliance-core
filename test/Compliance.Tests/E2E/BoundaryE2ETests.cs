@@ -1,3 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Boundaries.Aggregates;
+using Bdgrz.Compliance.Features.Boundaries.Handlers;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Queries;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
 using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Content;
 using System.Globalization;

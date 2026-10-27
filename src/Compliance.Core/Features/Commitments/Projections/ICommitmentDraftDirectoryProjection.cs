@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Projections;
 
 public interface ICommitmentDraftDirectoryProjection : IProjectionStore
 {

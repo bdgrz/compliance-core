@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Incidents.Aggregates;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Incidents;

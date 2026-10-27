@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>Reconciles one exact native relationship fact against authoritative membership retirement.</summary>
 [Discriminator("bdgrz.rbac.member.retired-relationship.cleanup", 1)]

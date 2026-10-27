@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.ControlMappings.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Commands;
 
 /// <summary>
 ///     Proposes that an exact approved control version addresses one criterion or point of focus in the program's

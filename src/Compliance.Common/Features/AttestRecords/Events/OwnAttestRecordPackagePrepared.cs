@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AttestRecords;
+namespace Bdgrz.Compliance.Features.AttestRecords.Events;
 
 /// <summary>Records the OwnAttestRecordPackagePrepared domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.attestrecords.own-attest-record-package-prepared", 1)]

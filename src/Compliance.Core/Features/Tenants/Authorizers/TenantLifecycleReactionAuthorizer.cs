@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
 
 /// <summary>Allows tenant lifecycle commands only from Portia's trusted system actor.</summary>
 sealed class TenantLifecycleReactionAuthorizer : IRequestAuthorizer<ITenantLifecycleReactionRequest>

@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Events;
+using Bdgrz.Compliance.Features.Risks.Handlers;
 using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;

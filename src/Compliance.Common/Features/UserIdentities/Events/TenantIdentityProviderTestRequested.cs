@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Events;
 
 /// <summary>The native acceptance of <see cref="TestTenantIdentityProvider" />: a request to test one exact credential epoch.</summary>
 [Discriminator("bdgrz.user-identities.tenant-identity-provider-test-requested", 1)]

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Models;
 
 /// <summary>Exact source engagement and selected, reviewable inputs for the next period.</summary>
 public sealed record ProgramRolloverContent(

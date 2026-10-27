@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>
 ///     What approving a proposed plan would do: its cadence in user language, the next expected

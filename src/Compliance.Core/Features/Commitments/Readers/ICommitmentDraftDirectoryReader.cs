@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Commitments.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Commitments;
+namespace Bdgrz.Compliance.Features.Commitments.Readers;
 
 public interface ICommitmentDraftDirectoryReader
 {

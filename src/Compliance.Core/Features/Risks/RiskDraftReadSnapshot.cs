@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Models;
 namespace Bdgrz.Compliance.Features.Risks;
 
 public sealed record RiskDraftReadSnapshot(RiskDraft Owner, RiskDraftRules Rules, RiskDraftRevisionView? Current)

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Models;
 
 /// <summary>
 ///     A population snapshot's canonical v1 package manifest, recomputed from its retained rows.

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>One immutable narrative version with its authorship and exact source context.</summary>
 public sealed record SystemDescriptionVersionView(Uuid TenantId, Uuid ProgramId,

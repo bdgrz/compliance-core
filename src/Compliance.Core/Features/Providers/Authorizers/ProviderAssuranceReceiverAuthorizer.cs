@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Providers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch provider assurance receivers.</summary>
 sealed class ProviderAssuranceReceiverAuthorizer : IRequestAuthorizer<IProviderAssuranceReceiver>

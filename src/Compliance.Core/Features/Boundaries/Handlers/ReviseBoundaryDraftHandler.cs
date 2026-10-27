@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Boundaries.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Handlers;
 
 public sealed class ReviseBoundaryDraftHandler(BoundaryOperations operations, IBoundaryReferenceValidator references)
     : IRequestHandler<ReviseBoundaryDraft>

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Programs.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Readers;
 
 public interface IProgramDirectoryReader
 {

@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Tenants;
 using Bdgrz.Compliance.Features.Workforce;
 using Cntryl.Portia;

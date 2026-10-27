@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.ControlMappings.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 
 namespace Bdgrz.Compliance.Features.ControlMappings;

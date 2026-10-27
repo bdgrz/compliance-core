@@ -1,8 +1,14 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Features.TechnologyInventory.Queries;
+using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
 
 public sealed class ListInformationAssetBoundaryReferencesHandler(
     IAggregateReader aggregates, IApplicationBoundaryReferenceDirectory directory,

@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 
 /// <summary>Records the approve methodology template version intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.methodology-templates.approve-methodology-template-version", 2)]

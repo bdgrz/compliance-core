@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Commands;
+using Bdgrz.Compliance.Features.Providers.Events;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Processes;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Cntryl.Portia;

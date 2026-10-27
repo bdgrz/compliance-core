@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Queries;
 
 /// <summary>Lists the program's Type I entry decisions, newest first.</summary>
 [Discriminator("bdgrz.readiness.type_i_entry.list", 1)]

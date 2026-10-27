@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Events;
 
 /// <summary>A definite competing association rejected the preparation before acceptance. It fences delayed protection and acceptance.</summary>
 [Discriminator("bdgrz.identity-recovery.identity-recovery-preparation-rejected", 1)]

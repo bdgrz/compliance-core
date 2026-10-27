@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.FirmPortfolio;
+namespace Bdgrz.Compliance.Features.FirmPortfolio.Models;
 
 /// <summary>The current actor's eligible work item, with its owning client scope explicit.</summary>
 public sealed record CrossClientWorkItemView(Uuid TenantId, Uuid ClientTenantId,

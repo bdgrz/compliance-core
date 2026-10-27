@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>Identifies the exact conflict a separation-of-duties waiver may cover.</summary>
 public sealed record SeparationOfDutiesWaiverScope(

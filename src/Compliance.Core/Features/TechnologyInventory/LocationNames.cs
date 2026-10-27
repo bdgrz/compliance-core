@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Processes;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Cntryl.Portia;
@@ -44,6 +49,6 @@ public static class LocationNames
     static (string Schema, byte[] Bytes) ResultOf(bool create, Uuid locationId, long revision) => create
         ? ("location-registration.v1", JsonSerializer.SerializeToUtf8Bytes(new LocationRegistration(locationId),
             ComplianceCoreJsonContext.Default.LocationRegistration))
-        : (Bdgrz.Compliance.Features.NativeOperations.UnitResult.Schema, JsonSerializer.SerializeToUtf8Bytes(
-            new Bdgrz.Compliance.Features.NativeOperations.UnitResult(), ComplianceCoreJsonContext.Default.UnitResult));
+        : (Bdgrz.Compliance.Features.NativeOperations.Models.UnitResult.Schema, JsonSerializer.SerializeToUtf8Bytes(
+            new Bdgrz.Compliance.Features.NativeOperations.Models.UnitResult(), ComplianceCoreJsonContext.Default.UnitResult));
 }

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.NativeOperations;
 
-namespace Bdgrz.Compliance.Features.Processes;
+namespace Bdgrz.Compliance.Features.Processes.Models;
 
 /// <summary>
 /// Closed result of every receiver command. A receiver either applied its fact, replayed an exact earlier

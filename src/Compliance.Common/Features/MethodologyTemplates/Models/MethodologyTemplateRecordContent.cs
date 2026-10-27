@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.MethodologyTemplates;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Reusable firm-authored draft content, without tenant records or evidence.</summary>
 public sealed record MethodologyTemplateRecordContent(

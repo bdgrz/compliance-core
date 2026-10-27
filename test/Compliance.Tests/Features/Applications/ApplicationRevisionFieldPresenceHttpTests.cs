@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Projectors;
+using Bdgrz.Compliance.Features.Applications.Queries;
 using System.Net;
 using System.Security.Claims;
 using System.Text;

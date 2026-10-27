@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Models;
 
 /// <summary>The projected list row of a campaign.</summary>
 public sealed record CampaignSummaryView(Uuid TenantId, Uuid ProgramId, Uuid CampaignId,

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Controls.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Readers;
 
 public interface IControlDraftDirectoryReader
 {

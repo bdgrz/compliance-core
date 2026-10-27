@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Queries;
+using Bdgrz.Compliance.Features.Tenants.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Handlers;
 
 /// <summary>
 ///     Reads one tenant from the directory and stamps the tenant's current revision from its owner stream, so a

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Providers.Aggregates;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;

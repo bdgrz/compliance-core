@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Applications.Models;
 namespace Bdgrz.Compliance.Features.Applications;
 
 static class ApplicationImportSourceClaimExtensions

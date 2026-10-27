@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>A deterministic expected control performance derived from the approved plan.</summary>
 public sealed record TypeIIPeriodOccurrenceView(

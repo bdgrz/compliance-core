@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
 using System.Collections.Concurrent;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Content;

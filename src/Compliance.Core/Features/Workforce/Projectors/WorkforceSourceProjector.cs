@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Projectors;
 
 public sealed partial class WorkforceSourceProjector(IWorkforceSourceProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant("workforce-source-observations"), "WorkforceSourcesV1"),

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Readiness;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch readiness run and readiness decision receivers.</summary>
 sealed class ReadinessReceiverAuthorizer : IRequestAuthorizer<IReadinessReceiver>

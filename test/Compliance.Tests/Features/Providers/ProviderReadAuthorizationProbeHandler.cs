@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Queries;
 using Bdgrz.Compliance.Features.Providers;
 using Cntryl.Portia;
 

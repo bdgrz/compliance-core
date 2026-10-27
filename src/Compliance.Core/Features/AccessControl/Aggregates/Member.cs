@@ -1,10 +1,15 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Aggregates;
 
 public sealed class Member : Aggregate
 {
@@ -76,20 +81,20 @@ public sealed class Member : Aggregate
         On<MemberRegistered>(registered =>
         {
             if (_isRegistered || _isDeprovisioned && !_isDeprovisionCleanupComplete)
-                throw new InvalidOperationException("A new membership episode requires the previous episode's authority cleanup to be complete.");
+                throw new MemberHistoryIntegrityException("A new membership episode requires the previous episode's authority cleanup to be complete.");
             if (registered.TenantId != _tenantId || registered.MemberId != Id || registered.UserId == Uuid.Empty ||
                 RbacIds.Member(_tenantId, registered.UserId) != Id || _userId != Uuid.Empty && registered.UserId != _userId)
-                throw new InvalidOperationException("The member registration must retain the exact tenant and user identity.");
+                throw new MemberHistoryIntegrityException("The member registration must retain the exact tenant and user identity.");
             if (registered.CommandId == Uuid.Empty || registered.MembershipEpisodeId != registered.CommandId ||
                 registered.Operation.LogicalId != registered.CommandId || registered.Operation.Owner != Stream)
-                throw new InvalidOperationException(
+                throw new MemberHistoryIntegrityException(
                     "The member registration event must accept its own logical operation as the membership episode.");
             var hasFiniteExpiry = registered.MembershipExpiresOn is { } expiresOn &&
                                   expiresOn != DateOnly.MinValue && expiresOn != DateOnly.MaxValue;
             if (registered.Affiliation is not ("client_personnel" or "firm_staff" or "guest") ||
                 registered.Affiliation == "guest" && !hasFiniteExpiry ||
                 registered.Affiliation != "guest" && registered.MembershipExpiresOn is not null)
-                throw new InvalidOperationException("The member registration event has invalid affiliation or expiry terms.");
+                throw new MemberHistoryIntegrityException("The member registration event has invalid affiliation or expiry terms.");
             Acceptance.Observe(registered);
             _isRegistered = true;
             _affiliation = registered.Affiliation;
@@ -132,7 +137,7 @@ public sealed class Member : Aggregate
                 deprovisioned.UserId != _userId || !_isRegistered ||
                 deprovisioned.MembershipEpisodeId == Uuid.Empty ||
                 deprovisioned.MembershipEpisodeId != _membershipEpisodeId)
-                throw new InvalidOperationException("Membership retirement must identify its exact registered episode.");
+                throw new MemberHistoryIntegrityException("Membership retirement must identify its exact registered episode.");
             _isRegistered = false;
             _isSuspended = false;
             _isDeprovisioned = true;
@@ -153,7 +158,7 @@ public sealed class Member : Aggregate
                 completed.TerminationEventId != _currentTermination.Metadata.EventId ||
                 completed.CommandId != MemberRetirementEffects.CompletionId(completed.TerminationEventId,
                     Id, completed.MembershipEpisodeId))
-                throw new InvalidOperationException("Cleanup completion must prove the exact membership retirement.");
+                throw new MemberHistoryIntegrityException("Cleanup completion must prove the exact membership retirement.");
             _isDeprovisionCleanupComplete = true;
             if (_selectedTermination?.Metadata.EventId == completed.TerminationEventId)
                 _selectedCleanupCompleted = true;
@@ -387,13 +392,13 @@ public sealed class Member : Aggregate
     void RequireOwnOperation(OperationProvenance operation)
     {
         if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
-            throw new InvalidOperationException("A member lifecycle fact must accept its own logical operation on this owner.");
+            throw new MemberHistoryIntegrityException("A member lifecycle fact must accept its own logical operation on this owner.");
     }
 
     void RequireMemberIdentity(Uuid tenantId, Uuid memberId, Uuid userId)
     {
         if (tenantId != _tenantId || memberId != Id || userId == Uuid.Empty || userId != _userId)
-            throw new InvalidOperationException("The member lifecycle fact must retain the exact tenant and user identity.");
+            throw new MemberHistoryIntegrityException("The member lifecycle fact must retain the exact tenant and user identity.");
     }
 
     void EnsureUserIdentity()

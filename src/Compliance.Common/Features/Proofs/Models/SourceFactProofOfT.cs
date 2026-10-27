@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Proofs;
+namespace Bdgrz.Compliance.Features.Proofs.Models;
 
 /// <summary>Source fact proof for one native source event type.</summary>
 /// <typeparam name="TSourceEvent">The native event type the proof was verified against.</typeparam>

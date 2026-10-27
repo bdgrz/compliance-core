@@ -1,7 +1,14 @@
+using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Authorizers;
 
 /// <summary>Verifies only the additive redaction waiver scope; ordinary waiver authority remains mandatory.</summary>
 sealed class EvidenceRedactionWaiverScopeAuthorizer(SeparationOfDutiesWaiverAuthorizer ordinary,

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Bdgrz.Compliance.Features.Proofs;

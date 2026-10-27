@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>An independent disposition of incident-related system-description review.</summary>
 public sealed record ComplianceIncidentSystemDescriptionDecisionView(

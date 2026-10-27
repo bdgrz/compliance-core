@@ -1,6 +1,11 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Commands;
+using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Workforce;
@@ -13,7 +18,7 @@ public static class PersonHistory
     {
         var facts = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, owner, ct).ConfigureAwait(false);
         PersonHeader? header = null;
-        Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? current = null;
+        Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef? current = null;
         var logical = new HashSet<Uuid>();
         var digest = NativeReplayCommitment.Empty;
         var metadata = NativeReplayCommitment.Empty;

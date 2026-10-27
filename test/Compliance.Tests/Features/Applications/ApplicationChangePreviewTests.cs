@@ -1,3 +1,13 @@
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Handlers;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Projectors;
+using Bdgrz.Compliance.Features.Applications.Queries;
+using Bdgrz.Compliance.Features.Applications.Readers;
+using Bdgrz.Compliance.Features.Boundaries.Aggregates;
+using Bdgrz.Compliance.Features.Boundaries.Commands;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Applications.Commands;
 using Bdgrz.Compliance.Features.Applications.Events;
 using System.Security.Claims;
@@ -68,13 +78,14 @@ public sealed class ApplicationChangePreviewTests
         var restrictedTarget = new DeclaredApplication(tenantId, restrictedTargetId);
         Assert.True(restrictedTarget.Declare("Restricted target", "Restricted", null,
             actorId, "Manager", now, isRestricted: true).IsSuccess);
-        var dependsOnId = Uuid.CreateVersion4();
-        var removedId = Uuid.CreateVersion4();
-        var hiddenTargetRelationshipId = Uuid.CreateVersion4();
-        var replacesId = Uuid.CreateVersion4();
+        var removedTargetId = Uuid.CreateVersion4();
+        var dependsOnId = ApplicationRelationshipIdentity.Id(applicationId, "depends_on", visibleTargetId);
+        var removedId = ApplicationRelationshipIdentity.Id(applicationId, "replaces", removedTargetId);
+        var hiddenTargetRelationshipId = ApplicationRelationshipIdentity.Id(applicationId, "depends_on", restrictedTargetId);
+        var replacesId = ApplicationRelationshipIdentity.Id(applicationId, "replaces", visibleTargetId);
         Assert.True(source.AddApplicationRelationship(0, dependsOnId, visibleTargetId,
             "depends_on", actorId, "Manager", now).IsSuccess);
-        Assert.True(source.AddApplicationRelationship(1, removedId, visibleTargetId,
+        Assert.True(source.AddApplicationRelationship(1, removedId, removedTargetId,
             "replaces", actorId, "Manager", now).IsSuccess);
         Assert.True(source.AddApplicationRelationship(2, hiddenTargetRelationshipId,
             restrictedTargetId, "depends_on", actorId, "Manager", now).IsSuccess);
@@ -508,7 +519,7 @@ public sealed class ApplicationChangePreviewTests
             Assert.True(target.Declare($"Target {index}", "Purpose", null, actorId,
                 "Manager", now).IsSuccess);
             targets.Add(target);
-            var relationshipId = Uuid.CreateVersion4();
+            var relationshipId = ApplicationRelationshipIdentity.Id(applicationId, "depends_on", targetId);
             relationshipIds.Add(relationshipId);
             Assert.True(source.AddApplicationRelationship(index, relationshipId, targetId,
                 "depends_on", actorId, "Manager", now).IsSuccess);
@@ -567,7 +578,8 @@ public sealed class ApplicationChangePreviewTests
         {
             OnListAsync = _ =>
             {
-                Assert.True(source.AddApplicationRelationship(0, Uuid.CreateVersion4(),
+                Assert.True(source.AddApplicationRelationship(0,
+                    ApplicationRelationshipIdentity.Id(applicationId, "depends_on", targetApplicationId),
                     targetApplicationId, "depends_on", actorId, "Manager", now)
                     .IsSuccess);
                 return ValueTask.CompletedTask;

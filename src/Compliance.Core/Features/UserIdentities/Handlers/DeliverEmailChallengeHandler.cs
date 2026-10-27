@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Handlers;
 
 /// <summary>Delivers a verification challenge; the worker records every attempt as a typed outcome.</summary>
 public sealed class DeliverEmailChallengeHandler(EmailChallengeDeliveryWorker worker)

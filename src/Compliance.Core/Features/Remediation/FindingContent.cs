@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Events;
+using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
@@ -91,7 +98,7 @@ static class FindingContent
 
     /// <summary>The provenance of a root operation on a finding or action owner.</summary>
     public static OperationProvenance Provenance(Uuid logicalId, string commandKind, EventStreamAddress owner,
-        AccessControl.ActorReference actor, ulong? expectedRevision, string intentDigest, DateTimeOffset acceptedAt) =>
+        AccessControl.Models.ActorReference actor, ulong? expectedRevision, string intentDigest, DateTimeOffset acceptedAt) =>
         new(logicalId, logicalId, null, commandKind, actor, owner, "initial", expectedRevision, intentDigest,
             acceptedAt, owner, owner);
 

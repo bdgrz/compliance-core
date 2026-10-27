@@ -1,10 +1,17 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Authorizers;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Exports.Events;
+using Bdgrz.Compliance.Features.Exports.Handlers;
+using Bdgrz.Compliance.Features.Exports.Models;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Exports;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using ClientExportAggregate = Bdgrz.Compliance.Features.Exports.ClientExport;
+using ClientExportAggregate = Bdgrz.Compliance.Features.Exports.Aggregates.ClientExport;
 
 namespace Bdgrz.Compliance.Tests.Features.Exports;
 

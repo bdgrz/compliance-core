@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Commands;
 
 /// <summary>Identifies one same-week retry authorization after relay evidence confirms non-acceptance.</summary>
 [Discriminator("bdgrz.work.digest.dispatch.unknown_retry.authorize", 2)]

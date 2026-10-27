@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Projections;
 
 static class AccessReviewScopeDirectorySchema
 {

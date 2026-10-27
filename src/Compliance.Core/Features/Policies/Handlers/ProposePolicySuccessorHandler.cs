@@ -1,8 +1,11 @@
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.Policies.Commands;
+using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Handlers;
 
 public sealed class ProposePolicySuccessorHandler(PolicyOperations operations) : IRequestHandler<ProposePolicySuccessor, PolicyRegistration>
 {

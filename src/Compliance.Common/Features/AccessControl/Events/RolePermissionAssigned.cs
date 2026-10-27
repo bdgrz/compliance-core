@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Events;
 
 [Discriminator("bdgrz.rbac.role-permission.assigned", 1)]
 public sealed record RolePermissionAssigned(Uuid TenantId, Uuid RoleId, string Permission,

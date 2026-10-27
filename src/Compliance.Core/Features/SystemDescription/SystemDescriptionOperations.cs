@@ -1,3 +1,10 @@
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -23,7 +30,7 @@ public sealed class SystemDescriptionOperations(NativeOperationExecutor operatio
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "A description operation requires exact identities and its positive original revision when required."));
         if (expected is <= 0)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The description requires its current positive original logical revision."));
-        var target = new SystemDescription(tenant, program, description);
+        var target = new SystemDescriptionAggregate(tenant, program, description);
         var operation = OwnerProvenance.For(target, command, kind,
             ActorReference.ForMember(member, display), description.ToString(), expected is { } revision ? unchecked((ulong)revision) : null,
             AuthoredIntentDigest.Compute(context.Request), clock.GetUtcNow()) with
@@ -34,8 +41,8 @@ public sealed class SystemDescriptionOperations(NativeOperationExecutor operatio
         var position = 0UL;
         try
         {
-            var accepted = await operations.ExecuteAsync(new NativeOperation<SystemDescription>(AcceptedOperationBinding.Of(operation),
-                () => new SystemDescription(tenant, program, description, command), owner => owner.Acceptance,
+            var accepted = await operations.ExecuteAsync(new NativeOperation<SystemDescriptionAggregate>(AcceptedOperationBinding.Of(operation),
+                () => new SystemDescriptionAggregate(tenant, program, description, command), owner => owner.Acceptance,
                 async (owner, token) =>
                 {
                     try

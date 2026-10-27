@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Work.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Events;
+using Bdgrz.Compliance.Features.Work.Queries;
 using Bdgrz.Compliance.Features.Operations;
 using System.Runtime.CompilerServices;
 using Bdgrz.Compliance.Features.Content;

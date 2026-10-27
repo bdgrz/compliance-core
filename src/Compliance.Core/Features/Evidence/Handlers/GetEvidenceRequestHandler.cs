@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Queries;
+using Bdgrz.Compliance.Features.Evidence.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evidence;
+namespace Bdgrz.Compliance.Features.Evidence.Handlers;
 
 /// <summary>Reads one evidence request from its own owner stream.</summary>
 public sealed class GetEvidenceRequestHandler(EvidenceRequestReader requests)

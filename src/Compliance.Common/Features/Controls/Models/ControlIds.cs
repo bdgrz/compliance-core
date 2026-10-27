@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>The existing identifier claim identity; a caller cannot choose a second ID for the same identifier.</summary>
 public static class ControlIds

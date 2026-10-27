@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Events;
 
 /// <summary>Retains received auditor wording and its exact source provenance.</summary>
 [Discriminator("bdgrz.examinations.audit-observation-recorded", 2)]

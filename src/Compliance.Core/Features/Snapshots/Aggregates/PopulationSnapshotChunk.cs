@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Features.Snapshots.Events;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Snapshots;
+namespace Bdgrz.Compliance.Features.Snapshots.Aggregates;
 
 /// <summary>
 ///     One immutable storage chunk of a population snapshot. Storing the same rows again replays;

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>An immutable, attributable source boundary used by a population version.</summary>
 public sealed record AuditPopulationSourceSnapshotView(

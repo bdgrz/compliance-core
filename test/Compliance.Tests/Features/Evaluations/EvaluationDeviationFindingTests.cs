@@ -1,3 +1,12 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evaluations.Aggregates;
+using Bdgrz.Compliance.Features.Evaluations.Commands;
+using Bdgrz.Compliance.Features.Evaluations.Events;
+using Bdgrz.Compliance.Features.Evaluations.Models;
+using Bdgrz.Compliance.Features.Evaluations.Queries;
+using Bdgrz.Compliance.Features.Evaluations.Reactors;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Queries;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
@@ -112,7 +121,7 @@ public sealed class EvaluationDeviationFindingTests
         return new EventStoreSourceFactResolver(store);
     }
 
-    static ControlEvaluationSubmitted Submitted(ControlEvaluation owner, Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference) =>
+    static ControlEvaluationSubmitted Submitted(ControlEvaluation owner, Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference) =>
         new(TenantId, ProgramId, ControlId, EvaluationId, 5, reference,
             NativeFacts.Root(owner, Uuid.CreateVersion4(), "SubmitControlEvaluation", 4), NativeFacts.Ref(),
             NativeFacts.Ref());

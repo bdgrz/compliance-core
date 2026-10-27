@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using System.Diagnostics.CodeAnalysis;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>Removes a permission from a role.</summary>
 [SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix",

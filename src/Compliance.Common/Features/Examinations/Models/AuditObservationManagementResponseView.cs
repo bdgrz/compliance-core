@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>The latest management response, explicitly bound to the received source version it answered.</summary>
 public sealed record AuditObservationManagementResponseView(Uuid RequestId, int SourceVersion,

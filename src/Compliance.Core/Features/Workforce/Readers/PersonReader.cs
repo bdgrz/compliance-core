@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Readers;
 
 /// <summary>Verified current or exact historical producing values; never a projection or live replacement for a source version.</summary>
 public sealed class PersonReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)
@@ -39,7 +42,7 @@ public sealed class PersonReader(IAggregateReader reader, IDomainEventReader eve
         var mutation = await content.ReadJsonAsync<PersonChangeContent>(realm, native.Change, ct).ConfigureAwait(false);
         var index = facts.ToList().IndexOf(fact);
         PersonHeader? before = null;
-        Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? prior = null;
+        Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef? prior = null;
         foreach (var value in facts.Take(index))
         {
             if (value is IPersonNativeFact previous)

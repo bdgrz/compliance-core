@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Models;
 
 /// <summary>An immutable, attributed handling-class decision.</summary>
 public sealed record EvidenceHandlingPolicyHistoryEntry(

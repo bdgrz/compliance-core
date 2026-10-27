@@ -1,7 +1,12 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Cntryl.Portia;
 using Microsoft.Extensions.Logging;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Reactors;
 
 public sealed partial class TenantSelfServiceActivationReactor(IProjectionCheckpointStore checkpoints,
     IAggregateReader reader, IRequestBus bus, ILogger<TenantSelfServiceActivationReactor> logger,

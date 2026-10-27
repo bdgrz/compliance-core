@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Projections;
 
 /// <summary>
 ///     The shared role-team-directory schema — the same <see cref="TeamRoleAssigned" />/

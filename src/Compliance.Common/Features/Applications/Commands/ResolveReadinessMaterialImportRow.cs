@@ -1,7 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 /// <summary>Records the resolve readiness material import row intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.imports.resolve-readiness-material-import-row", 1)]

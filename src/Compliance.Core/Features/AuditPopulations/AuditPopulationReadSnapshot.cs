@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.AuditPopulations.Aggregates;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPopulations;

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Work;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Projections;
 
 static class ControlCriterionMappingWorkItemDirectorySchema
 {

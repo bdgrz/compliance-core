@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Models;
 
 /// <summary>
 ///     A durable M0-D10 reassessment trigger. <c>TriggerKind</c> is <c>method_changed</c> or

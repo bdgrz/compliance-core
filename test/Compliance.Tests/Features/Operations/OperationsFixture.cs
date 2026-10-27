@@ -1,3 +1,41 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Commitments.Readers;
+using Bdgrz.Compliance.Features.Controls.Aggregates;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Commands;
+using Bdgrz.Compliance.Features.Evaluations.Handlers;
+using Bdgrz.Compliance.Features.Evaluations.Models;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Operations.Commands;
+using Bdgrz.Compliance.Features.Operations.Handlers;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Queries;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Policies.Aggregates;
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Authorizers;
+using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Handlers;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Queries;
+using Bdgrz.Compliance.Features.Remediation.Readers;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.Work.Handlers;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
@@ -102,11 +140,11 @@ sealed class OperationsFixture
                 .AddRequestHandler<SettleCorrectiveActionFindingClosureUseHandler>()
                 .AddRequestHandler<AbortFindingClosureHandler>()
                 .AddRequestAuthorizer<FindingReceiverAuthorizer>()
-                .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.OpenEvidenceRequestHandler>()
-                .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.FulfilEvidenceRequestHandler>()
-                .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.CancelEvidenceRequestHandler>()
-                .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.GetEvidenceRequestHandler>()
-                .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.ListEvidenceRequestsHandler>()
+                .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.OpenEvidenceRequestHandler>()
+                .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.FulfilEvidenceRequestHandler>()
+                .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.CancelEvidenceRequestHandler>()
+                .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.GetEvidenceRequestHandler>()
+                .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.Handlers.ListEvidenceRequestsHandler>()
                 .AddRequestHandler<ListWorkHandler>()
                 .AddRequestHandler<GetWorkItemHandler>()
                 .AddRequestHandler<ClaimWorkItemHandler>()
@@ -135,8 +173,8 @@ sealed class OperationsFixture
                 services.AddScoped<OperatingAuthority>();
                 services.AddScoped<ControlOperationsReader>();
                 services.AddScoped<RiskGovernanceReader>();
-                services.AddScoped<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>();
-                services.AddScoped<Bdgrz.Compliance.Features.Readiness.ReadinessReader>();
+                services.AddScoped<Bdgrz.Compliance.Features.Evidence.Readers.EvidenceRequestReader>();
+                services.AddScoped<Bdgrz.Compliance.Features.Readiness.Readers.ReadinessReader>();
                 services.AddScoped<FindingReader>();
                 services.AddScoped<FindingClosureVerifier>();
                 services.AddScoped<FindingClosureFences>();

@@ -1,3 +1,14 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Evaluations;
@@ -173,7 +184,7 @@ public sealed class RiskAcceptanceWorkTests
 
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var source = await RiskAcceptanceWork.LoadAsync(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, fixture.TenantId, fixture.ProgramId, now, null, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>(), CancellationToken.None);
+        var source = await RiskAcceptanceWork.LoadAsync(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(), fixture.Risks, null, fixture.TenantId, fixture.ProgramId, now, null, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>(), CancellationToken.None);
         var candidate = Assert.Single(source.Value);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var projected = new ProjectedRiskAcceptanceWorkItems(candidate,
@@ -186,8 +197,8 @@ public sealed class RiskAcceptanceWorkTests
             mappingReader: scope.ServiceProvider.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: scope.ServiceProvider.GetRequiredService<ApplicabilityReader>(),
             evaluationReader: scope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(),
-            riskGovernance: scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
-            evidenceRequests: scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
+            riskGovernance: scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(),
+            evidenceRequests: scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.Readers.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 
@@ -220,7 +231,7 @@ public sealed class RiskAcceptanceWorkTests
         await ProjectRiskEvaluationsAsync(evaluations, events, fixture.TenantId);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var workItems = new RiskAcceptanceWorkItemDirectory(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, evaluations, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>());
+        var workItems = new RiskAcceptanceWorkItemDirectory(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(), fixture.Risks, null, evaluations, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>());
         Assert.Equal(await ReadRiskEvaluationCheckpointAsync(events, fixture.TenantId),
             await workItems.LoadCheckpointAsync(fixture.TenantId));
 
@@ -256,7 +267,7 @@ public sealed class RiskAcceptanceWorkTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var evaluations = new FitzRiskEvaluationDirectory(new InMemoryKvClient(), sourceScope.ServiceProvider.GetRequiredService<RiskEvaluationReader>());
         await using var scope = fixture.Provider.CreateAsyncScope();
-        var workItems = new RiskAcceptanceWorkItemDirectory(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, evaluations, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>());
+        var workItems = new RiskAcceptanceWorkItemDirectory(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(), fixture.Risks, null, evaluations, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>());
         var consistency = new WorkQueueReadConsistency(events, [workItems]);
 
         // Act

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Models;
 
 /// <summary>
 ///     Where a finding came from, with the source wording preserved verbatim. Kind is manual,

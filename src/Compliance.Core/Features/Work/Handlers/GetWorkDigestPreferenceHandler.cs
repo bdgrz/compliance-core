@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Work.Aggregates;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Handlers;
 
 /// <summary>Reads the acting member's own weekly email digest preference.</summary>
 public sealed class GetWorkDigestPreferenceHandler(IAggregateReader reader)

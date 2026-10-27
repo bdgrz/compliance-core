@@ -1,3 +1,18 @@
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Readers;
+using Bdgrz.Compliance.Features.Operations.Aggregates;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Readers;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Readers;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.ControlMappings;
@@ -198,7 +213,7 @@ static class WorkSource
                 "Evidence work requires the evidence request reader.")).ReadAsync(tenantId, programId, ct)
                 .ConfigureAwait(false);
             foreach (var request in evidence.ReadAll().Where(request =>
-                         request.Status == Bdgrz.Compliance.Features.Evidence.EvidenceRequest.Open &&
+                         request.Status == Bdgrz.Compliance.Features.Evidence.Aggregates.EvidenceRequest.Open &&
                          Wanted(request.EvidenceRequestId, EvidenceRequest)))
                 candidates.Add(new WorkCandidate(
                     WorkCandidate.IdFor(request.EvidenceRequestId, EvidenceRequest), EvidenceRequest,

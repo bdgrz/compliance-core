@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
+using Bdgrz.Compliance.Features.AuditorRequests.Events;
+using Bdgrz.Compliance.Features.AuditorRequests.Projections;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditorRequests;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Projectors;
 
 public sealed partial class AuditorRequestDirectoryProjector(IAuditorRequestDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant(AuditorRequest.Area), FitzAuditorRequestDirectory.ProjectorName),

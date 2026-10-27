@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.SourceFacts;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;

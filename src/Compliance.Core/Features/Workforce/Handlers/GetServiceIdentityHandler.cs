@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Workforce;
+namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class GetServiceIdentityHandler(ServiceIdentityReadConsistency consistency,
     ServiceIdentityOwnership ownership) : IRequestHandler<GetServiceIdentity, ServiceIdentityView>

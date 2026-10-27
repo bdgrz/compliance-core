@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Tenants.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Projections;
 
 /// <summary>The shared tenant directory schema, used by both the read and write sides.</summary>
 static class TenantDirectorySchema

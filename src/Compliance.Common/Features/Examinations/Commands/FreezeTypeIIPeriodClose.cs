@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Commands;
 
 /// <summary>Records the freeze type iiperiod close intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.examinations.freeze-type-iiperiod-close", 2)]

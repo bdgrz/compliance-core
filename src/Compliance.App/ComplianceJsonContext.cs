@@ -1,3 +1,13 @@
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Queries;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Queries;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Applications.Commands;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -71,7 +81,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(BrowserSession))]
 [JsonSerializable(typeof(ProblemDetails))]
 [JsonSerializable(typeof(PersonalContactDetails))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.CriteriaTextOverlayContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.CriteriaTextOverlayContent))]
 [JsonSerializable(typeof(EvidenceArtifactContent))]
 [JsonSerializable(typeof(EvidenceCapture))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkDigestRetryHttpBody))]

@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Commands;
 
 /// <summary>Claims unassigned team work for the acting team member, who must be eligible under the source workflow.</summary>
 [Discriminator("bdgrz.work.claim", 2)]

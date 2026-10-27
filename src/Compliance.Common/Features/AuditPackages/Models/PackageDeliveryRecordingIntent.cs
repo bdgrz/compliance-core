@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>One personal handoff, pinned to its exact archive, disclosure and complete validation proofs.</summary>
 public sealed record PackageDeliveryRecordingIntent(DurableIntentHeader Header, Uuid DeliveryId, Uuid PackageId,

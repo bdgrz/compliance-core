@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Models;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;

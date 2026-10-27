@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Retention.Aggregates;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Retention.Queries;
+using Bdgrz.Compliance.Features.Retention.Readers;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Handlers;
 
 sealed class ListArtifactLegalHoldsHandler(IAggregateReader reader, IDomainEventReader events)
     : IRequestHandler<ListArtifactLegalHolds, Page<ArtifactLegalHoldView>>

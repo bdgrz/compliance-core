@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>Exact-recipient approval for one package version and manifest.</summary>
 public sealed record AuditPackageDisclosureApprovalView(

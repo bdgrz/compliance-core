@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AuditPopulations;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Handlers;
 
 public sealed class GenerateAuditPopulationHandler(AuditPopulationMutations mutations,
     TimeProvider clock) : IRequestHandler<GenerateAuditPopulation>

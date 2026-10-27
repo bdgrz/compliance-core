@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Models;
 
 /// <summary>One attributable, immutable change to a risk's evaluation.</summary>
 public sealed record RiskEvaluationHistoryEntryView(Uuid TenantId, Uuid ProgramId, Uuid RiskId,

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Remediation;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch finding closure and child materialization receivers.</summary>
 sealed class FindingReceiverAuthorizer : IRequestAuthorizer<IFindingReceiver>

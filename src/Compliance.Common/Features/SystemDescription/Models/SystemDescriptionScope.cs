@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>Exact point-in-time context that this narrative describes.</summary>
 public sealed record SystemDescriptionScope(string Stage, Uuid ExaminationId,

@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch import receivers.</summary>
 sealed class ApplicationImportReceiverAuthorizer : IRequestAuthorizer<IApplicationImportReceiver>

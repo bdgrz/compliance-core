@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Models;
 
 /// <summary>Engagement hold scope, report-based expiry, and attributable release history.</summary>
 public sealed record ArtifactEngagementHoldView(

@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Commands;
 
 /// <summary>Copies one exact approved description or no-change decision into a change record.</summary>
 [Discriminator("bdgrz.changes.record-system-description-decision", 3)]

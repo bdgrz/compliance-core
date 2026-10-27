@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>
 ///     Authored facts about one assurance report or questionnaire (M0-D11). Point-in-time records

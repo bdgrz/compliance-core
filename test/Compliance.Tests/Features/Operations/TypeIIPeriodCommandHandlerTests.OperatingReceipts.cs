@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Changes.Readers;
+using Bdgrz.Compliance.Features.Examinations.Readers;
+using Bdgrz.Compliance.Features.Operations.Commands;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Remediation.Readers;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Artifacts;
 using Bdgrz.Compliance.Features.Content;
@@ -51,7 +58,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
                 new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true)),
                 new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content,
                     fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content,
-                new Bdgrz.Compliance.Features.Incidents.ComplianceIncidentReader(fixture.Reader, fixture.Events, fixture.Host.Content,
+                new Bdgrz.Compliance.Features.Incidents.Readers.ComplianceIncidentReader(fixture.Reader, fixture.Events, fixture.Host.Content,
                     fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()),
                 fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>());
             var source = new TypeIIPeriodCloseReconciliation(fixture.Reader, fixture.Events, fixture.Host.Content,

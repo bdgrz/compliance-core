@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 
 /// <summary>Reads a campaign's aggregate result as of a date (default today).</summary>
 [Discriminator("bdgrz.campaign.get", 1)]

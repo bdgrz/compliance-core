@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
+using Bdgrz.Compliance.Features.Tenants.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
 
 sealed class AcceptTenantInvitationAuthorizer(IEmailAddressDirectoryReader emails)
     : IRequestAuthorizer<AcceptTenantInvitation>

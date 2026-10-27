@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Commands;
 
 /// <summary>Proposes a complete Type II plan tied to one examination and exact source versions.</summary>
 [Discriminator("bdgrz.operations.propose-type-iioperating-plan", 2)]

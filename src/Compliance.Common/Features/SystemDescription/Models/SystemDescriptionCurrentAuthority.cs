@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>Immutable current decision authority and history commitments, without historical narrative or decision bodies.</summary>
 public sealed record SystemDescriptionCurrentAuthority(ImmutableContentRef CurrentVersionContent,

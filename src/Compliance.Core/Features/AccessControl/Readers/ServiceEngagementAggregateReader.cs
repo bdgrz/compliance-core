@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>Finalizes the exact engagement prefix before reads, accepted retries and writes.</summary>
 public sealed class ServiceEngagementAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

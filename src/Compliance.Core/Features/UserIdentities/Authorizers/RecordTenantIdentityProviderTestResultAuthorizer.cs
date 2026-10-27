@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
 using System.Security.Claims;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Authorizers;
 
 sealed class RecordTenantIdentityProviderTestResultAuthorizer
     : IRequestAuthorizer<RecordTenantIdentityProviderTestResult>

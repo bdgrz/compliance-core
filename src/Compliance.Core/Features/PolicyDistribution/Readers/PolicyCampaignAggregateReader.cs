@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.PolicyDistribution;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Readers;
 
 /// <summary>Finalizes the same complete native authority for explicit reads and executor-internal hydration.</summary>
 public sealed class PolicyCampaignAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

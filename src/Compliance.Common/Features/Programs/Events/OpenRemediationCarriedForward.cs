@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Events;
 
 /// <summary>Records the OpenRemediationCarriedForward domain fact for one tenant-owned subject revision.</summary>
 [Discriminator("bdgrz.programs.open-remediation-carried-forward", 1)]

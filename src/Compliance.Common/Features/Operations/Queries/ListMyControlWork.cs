@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Queries;
 
 /// <summary>Lists the acting member's operating responsibilities and due or upcoming work.</summary>
 [Discriminator("bdgrz.control.work.mine", 1)]

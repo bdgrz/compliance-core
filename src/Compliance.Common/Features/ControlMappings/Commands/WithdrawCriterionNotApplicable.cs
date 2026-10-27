@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Commands;
 
 /// <summary>
 ///     Restores the accepted not-applicable criterion named by <paramref name="DecisionId" /> to coverage, keeping

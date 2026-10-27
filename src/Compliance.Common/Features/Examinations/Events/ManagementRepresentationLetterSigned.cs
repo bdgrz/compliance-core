@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Events;
 
 /// <summary>Retains one named executive's exact signed representation-letter artifact.</summary>
 [Discriminator("bdgrz.examinations.management-representation-letter-signed", 1)]

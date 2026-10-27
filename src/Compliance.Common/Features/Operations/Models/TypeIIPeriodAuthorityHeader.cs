@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Bounded current period authority; source bodies, populations and decision history remain immutable content.</summary>
 public sealed record TypeIIPeriodAuthorityHeader(

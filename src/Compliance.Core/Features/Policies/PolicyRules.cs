@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Policies.Aggregates;
+using Bdgrz.Compliance.Features.Policies.Models;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
@@ -635,7 +638,7 @@ public sealed class PolicyRules
     }
     internal PolicyContent? CurrentContent => _draft;
     internal bool IsCreated => _created;
-    internal PolicyAuthorityHeader Header(Bdgrz.Compliance.Features.Proofs.ImmutableContentRef content) => new(
+    internal PolicyAuthorityHeader Header(Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef content) => new(
         TenantId, ProgramId, Id, _identifier ?? string.Empty, Revision, IsCreated, IsVisible, IsRetired,
         IsVisible && !_retired && _draftOpen, DraftPredecessorVersion, _acceptedReview?.DecisionId,
         _acceptedReview?.ReviewerMemberId, _latestReviewOutcome, CurrentVersion?.Version, CurrentVersion?.EffectiveFrom,

@@ -1,3 +1,11 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Commands;
+using Bdgrz.Compliance.Features.Examinations.Handlers;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Evidence;
@@ -5,7 +13,7 @@ using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using LetterAggregate = Bdgrz.Compliance.Features.Examinations.ManagementRepresentationLetter;
+using LetterAggregate = Bdgrz.Compliance.Features.Examinations.Aggregates.ManagementRepresentationLetter;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 

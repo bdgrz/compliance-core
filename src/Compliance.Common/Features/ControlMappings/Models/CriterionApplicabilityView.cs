@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Models;
 
 /// <summary>
 ///     A program's reviewed decision that one criterion of an edition does not apply, keyed by

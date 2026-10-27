@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Aggregates;
 
 /// <summary>Owns the independently approved, exact-scope exception to a SoD conflict.</summary>
 public sealed class SeparationOfDutiesWaiver : Aggregate

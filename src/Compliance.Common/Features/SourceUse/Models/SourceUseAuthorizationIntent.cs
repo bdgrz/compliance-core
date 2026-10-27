@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.SourceUse;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 
-namespace Bdgrz.Compliance.Features.SourceUse;
+namespace Bdgrz.Compliance.Features.SourceUse.Models;
 
 /// <summary>
 ///     What a use fact points to: the immutable original workflow intent, the exact reservation and requirement, and

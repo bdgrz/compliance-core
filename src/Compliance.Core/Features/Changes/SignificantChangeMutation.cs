@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Changes.Models;
 namespace Bdgrz.Compliance.Features.Changes;
 
 /// <summary>Immutable proof of the exact before body and one verified business transition.</summary>

@@ -1,3 +1,15 @@
+using Bdgrz.Compliance.Features.Boundaries.Events;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Evaluations;
@@ -131,8 +143,8 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
             mappingReader: queueScope.ServiceProvider.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: queueScope.ServiceProvider.GetRequiredService<ApplicabilityReader>(),
             evaluationReader: queueScope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(),
-            riskGovernance: queueScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
-            evidenceRequests: queueScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
+            riskGovernance: queueScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(),
+            evidenceRequests: queueScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.Readers.EvidenceRequestReader>());
         var queueResult = await queueReader.ReadAsync(fixture.TenantId, fixture.ProgramId,
             new OperationsActor(fixture.ReviewerUserId, fixture.ReviewerMemberId, "Reviewer"), 30,
             CancellationToken.None);

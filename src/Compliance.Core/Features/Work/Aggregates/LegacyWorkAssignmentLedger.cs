@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Work.Events;
+using Bdgrz.Compliance.Features.Work.Models;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Aggregates;
 
 /// <summary>Rehydrates the old program-wide stream while active writes use per-item streams.</summary>
 sealed class LegacyWorkAssignmentLedger : Aggregate

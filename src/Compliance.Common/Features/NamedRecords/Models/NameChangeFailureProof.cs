@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.NamedRecords;
+namespace Bdgrz.Compliance.Features.NamedRecords.Models;
 
 /// <summary>
 ///     The definite failure that cancels a pending name change: the claim a receiver proved unavailable and the reason.

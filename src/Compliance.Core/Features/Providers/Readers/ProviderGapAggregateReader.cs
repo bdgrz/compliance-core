@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Readers;
 
 /// <summary>Finalizes identical complete gap authority for explicit reads and executor-internal hydration.</summary>
 public sealed class ProviderGapAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

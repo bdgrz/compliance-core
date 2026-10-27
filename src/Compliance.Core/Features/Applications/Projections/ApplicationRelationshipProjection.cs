@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Models;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -5,7 +8,7 @@ using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Projections;
 
 sealed record ActorVisibleApplicationRelationships(long Revision,
     IReadOnlyList<ApplicationRelationshipView> ActiveItems, string Fingerprint);

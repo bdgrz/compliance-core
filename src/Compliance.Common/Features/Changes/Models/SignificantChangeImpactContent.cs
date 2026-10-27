@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>Human significance decision and exact compliance impact references.</summary>
 public sealed record SignificantChangeImpactContent(

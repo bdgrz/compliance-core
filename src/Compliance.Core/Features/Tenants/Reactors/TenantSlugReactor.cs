@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Tenants.Events;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Reactors;
 
 /// <summary>
 ///     Carries each answer of the slug owner back to the tenant it answers. Every answer is the exact logical

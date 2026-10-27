@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
 
 /// <summary>Opens the exact selected versions of a draft handoff to the assigned advisor at the expected handoff revision.</summary>
 [Discriminator("bdgrz.advisor-collaboration.mark-advisor-handoff-ready-for-review", 2)]

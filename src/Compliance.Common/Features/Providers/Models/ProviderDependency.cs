@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>A declared relationship, not an approval of downstream scope.</summary>
 public sealed record ProviderDependency(string SubjectKind, Uuid? SubjectId,

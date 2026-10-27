@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Models;
 
 /// <summary>Administrative view of invitations; tokens and token hashes never leave the aggregate.</summary>
 public sealed record TenantInvitationView(Uuid TenantId, string EmailAddress,

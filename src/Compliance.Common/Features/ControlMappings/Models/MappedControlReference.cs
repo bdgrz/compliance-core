@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.ControlMappings;
+namespace Bdgrz.Compliance.Features.ControlMappings.Models;
 
 /// <summary>
 ///     An accepted mapping from an exact control version to one catalog entry.

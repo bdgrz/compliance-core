@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;

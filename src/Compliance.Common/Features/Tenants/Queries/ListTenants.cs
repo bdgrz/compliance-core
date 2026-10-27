@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Tenants;
+namespace Bdgrz.Compliance.Features.Tenants.Queries;
 
 /// <summary>
 ///     Lists projected organization metadata for a platform operator, including provisioning and

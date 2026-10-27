@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Retention;
+namespace Bdgrz.Compliance.Features.Retention.Models;
 
 /// <summary>A reviewed classification bound to one exact, immutable artifact identity.</summary>
 public sealed record EvidenceHandlingPolicyView(

@@ -1,3 +1,12 @@
+using Bdgrz.Compliance.Features.Readiness.Readers;
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -6,7 +15,7 @@ using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Remediation;
+namespace Bdgrz.Compliance.Features.Remediation.Handlers;
 
 /// <summary>
 ///     Records a finding. A governed source must exist in this program: a readiness gap names its assessment as the
@@ -14,7 +23,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     operation, so an exact retry replays the original registration even after the finding changed.
 /// </summary>
 public sealed class RaiseFindingHandler(NativeOperationExecutor operations, IAggregateReader reader,
-    ControlOperationsReader operatingReader, Readiness.ReadinessReader readiness, IImmutableContentStore content,
+    ControlOperationsReader operatingReader, Readiness.Readers.ReadinessReader readiness, IImmutableContentStore content,
     TimeProvider clock)
     : IRequestHandler<RaiseFinding, FindingRegistration>
 {

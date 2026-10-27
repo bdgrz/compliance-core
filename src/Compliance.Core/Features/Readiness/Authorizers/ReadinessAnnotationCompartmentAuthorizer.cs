@@ -1,7 +1,10 @@
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Readiness.Queries;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Readiness;
+namespace Bdgrz.Compliance.Features.Readiness.Authorizers;
 
 /// <summary>Protects existing advisor feedback while leaving shared management readiness reads under ordinary grants.</summary>
 sealed class ReadinessAnnotationCompartmentAuthorizer(ITenantMembershipDirectoryReader memberships,

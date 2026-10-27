@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
 /// <summary>The M0-D07 access-review vocabulary.</summary>

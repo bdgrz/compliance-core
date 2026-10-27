@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Current period lifecycle authority and its exact approved-plan, date and close bindings.</summary>
 public sealed record ObservationPeriodView(Uuid TenantId, Uuid ProgramId, Uuid ObservationPeriodId,

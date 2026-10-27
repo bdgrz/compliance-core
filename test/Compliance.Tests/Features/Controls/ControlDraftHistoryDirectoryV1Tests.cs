@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Controls.Aggregates;
+using Bdgrz.Compliance.Features.Controls.Events;
+using Bdgrz.Compliance.Features.Controls.Handlers;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Controls.Queries;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Tests.Testing;

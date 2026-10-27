@@ -1,3 +1,7 @@
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Processes;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Artifacts;
 using Bdgrz.Compliance.Features.Content;
@@ -7,7 +11,7 @@ using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using DescriptionOwner = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using DescriptionOwner = Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription;
 
 namespace Bdgrz.Compliance.Tests.Features.SystemDescription;
 

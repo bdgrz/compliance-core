@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessControl;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>Everything a waiver must match exactly before it authorizes an action; no field is optional.</summary>
 public sealed record SeparationOfDutiesWaiverProofScope(

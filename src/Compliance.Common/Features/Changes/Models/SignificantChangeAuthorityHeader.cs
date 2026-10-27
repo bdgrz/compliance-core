@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Changes;
+namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>Bounded current authority; full versions, assessments and governed references remain immutable content.</summary>
 public sealed record SignificantChangeAuthorityHeader(Uuid TenantId, Uuid ProgramId, Uuid SignificantChangeId,

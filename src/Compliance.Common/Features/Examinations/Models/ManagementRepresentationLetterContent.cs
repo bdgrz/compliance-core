@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Letter provenance, original artifact identity, and required executive signers.</summary>
 public sealed record ManagementRepresentationLetterContent(

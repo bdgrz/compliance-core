@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Projections;
 
 static class InventoryRegisterDirectorySchema
 {

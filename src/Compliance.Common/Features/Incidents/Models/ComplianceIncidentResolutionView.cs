@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>An immutable incident resolution with exact evidence and proven completed follow-up work.</summary>
 public sealed record ComplianceIncidentResolutionView(

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;

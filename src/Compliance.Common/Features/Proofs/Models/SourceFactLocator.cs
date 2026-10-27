@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Proofs;
+namespace Bdgrz.Compliance.Features.Proofs.Models;
 
 /// <summary>
 /// Locates one concrete native event. The three positions are distinct broker offsets and AggregateVersion is the

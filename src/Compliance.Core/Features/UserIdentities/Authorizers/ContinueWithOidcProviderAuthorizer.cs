@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Authorizers;
 
 /// <summary>Requires an authenticated external provider identity before continuing an OIDC session.</summary>
 sealed class ContinueWithOidcProviderAuthorizer : IRequestAuthorizer<ContinueWithOidcProvider>

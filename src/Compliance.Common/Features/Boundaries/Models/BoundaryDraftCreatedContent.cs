@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.Boundaries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Boundaries;
+namespace Bdgrz.Compliance.Features.Boundaries.Models;
 
 public sealed record BoundaryDraftCreatedContent(Uuid TenantId, Uuid BoundaryId, Uuid ProgramId,
     Uuid DraftVersionId, BoundaryContent Content, Uuid AuthorMemberId,

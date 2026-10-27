@@ -1,7 +1,12 @@
+using Bdgrz.Compliance.Features.SystemDescription;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Queries;
+using Bdgrz.Compliance.Features.SystemDescription.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.SystemDescription;
+namespace Bdgrz.Compliance.Features.SystemDescription.Handlers;
 
 public sealed class GetSystemDescriptionHandler(SystemDescriptionReader descriptions, SystemDescriptionReadConsistency consistency)
     : IRequestHandler<GetSystemDescription, SystemDescriptionView>

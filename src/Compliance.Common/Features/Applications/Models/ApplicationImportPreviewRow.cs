@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>Read-only source reconciliation; no preview row grants acceptance authority.</summary>
 public sealed record ApplicationImportPreviewRow(Uuid TenantId, Uuid BatchId, Uuid RowId,

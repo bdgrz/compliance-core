@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.UserIdentities;
+namespace Bdgrz.Compliance.Features.UserIdentities.Authorizers;
 
 /// <summary>Allows developer identity continuation only while developer authentication is enabled.</summary>
 sealed class ContinueWithDeveloperIdentityAuthorizer(DeveloperUserRegistration developerRegistration)

@@ -1,4 +1,6 @@
-namespace Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+namespace Bdgrz.Compliance.Features.Tenants.Projections;
 
 static class TenantInvitationDirectorySchema
 {

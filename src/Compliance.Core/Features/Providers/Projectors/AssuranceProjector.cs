@@ -1,8 +1,14 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.Events;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Providers;
+namespace Bdgrz.Compliance.Features.Providers.Projectors;
 
 /// <summary>
 ///     Projects every provider assurance record into the assurance directory. Each fact carries a reference to its
@@ -80,7 +86,7 @@ public sealed partial class AssuranceProjector(IAssuranceProjection projection, 
 
     static AssuranceReportView ReportView(Uuid tenantId, Uuid reportId, Uuid providerId, long revision,
         AssuranceReportContent reportContent, long providerRevision,
-        Bdgrz.Compliance.Features.AccessControl.ActorReference actor, DateTimeOffset recordedAt)
+        Bdgrz.Compliance.Features.AccessControl.Models.ActorReference actor, DateTimeOffset recordedAt)
     {
         reportContent = AssuranceRules.Normalize(reportContent);
         return new AssuranceReportView(tenantId, reportId, providerId, revision, reportContent, providerRevision,

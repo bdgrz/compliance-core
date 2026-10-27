@@ -1,6 +1,10 @@
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Policies.Queries;
+using Bdgrz.Compliance.Features.Policies.Readers;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Handlers;
 
 /// <summary>Reads the authoritative policy stream, so the record never lags its commands.</summary>
 public sealed class GetPolicyHandler(PolicyReader reader, TimeProvider clock)

@@ -1,3 +1,10 @@
+using Bdgrz.Compliance.Features.Evaluations.Aggregates;
+using Bdgrz.Compliance.Features.Evaluations.Commands;
+using Bdgrz.Compliance.Features.Evaluations.Events;
+using Bdgrz.Compliance.Features.Evaluations.Models;
+using Bdgrz.Compliance.Features.Evaluations.Queries;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -23,7 +30,7 @@ public sealed class ControlEvaluationProtocolTests
         new("evidence_sufficiency", "effective", "Evidence is sufficient."),
     ];
 
-    static StartControlEvaluation StartRequest(OperationsFixture fixture, Bdgrz.Compliance.Features.Evaluations.ControlEvaluationPlanVersionView plan,
+    static StartControlEvaluation StartRequest(OperationsFixture fixture, Bdgrz.Compliance.Features.Evaluations.Models.ControlEvaluationPlanVersionView plan,
         Uuid? retestOf = null, Uuid? evaluationId = null) => new(evaluationId ?? Uuid.CreateVersion4(), fixture.TenantId,
         fixture.ProgramId, fixture.ControlId, plan.PlanVersionId, retestOf);
 

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Policies;
+namespace Bdgrz.Compliance.Features.Policies.Projections;
 
 public interface IPolicyDirectoryProjection : IProjectionStore
 {

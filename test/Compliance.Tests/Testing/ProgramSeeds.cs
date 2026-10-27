@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -61,7 +66,7 @@ static class ProgramSeeds
     public static async Task<IReadOnlyList<DomainEvent>> FactsAsync(IImmutableContentStore content, ProgramRules rules)
     {
         var result = new List<DomainEvent>();
-        Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? current = null;
+        Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef? current = null;
         foreach (var change in rules.AppliedChanges)
         {
             var fact = await FreezeAsync(content, rules.TenantId, rules.Id, change, (ulong)result.Count + 1, current);
@@ -72,7 +77,7 @@ static class ProgramSeeds
     }
 
     public static async Task<DomainEvent> FreezeAsync(IImmutableContentStore content, Uuid tenantId, Uuid programId,
-        ProgramRuleChange change, ulong sequence, Bdgrz.Compliance.Features.Proofs.ImmutableContentRef? current = null,
+        ProgramRuleChange change, ulong sequence, Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef? current = null,
         Uuid logicalId = default)
     {
         var logical = logicalId != Uuid.Empty ? logicalId : change.Kind == nameof(CreateProgram) ? programId : Uuid.CreateVersion4();

@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Work;
+namespace Bdgrz.Compliance.Features.Work.Queries;
 
 /// <summary>Reads a member's durable weekly digest delivery status for one tenant-local record.</summary>
 [Discriminator("bdgrz.work.digest.dispatch.status.get", 1)]

@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Commands;
 
 /// <summary>Records an exact auditor-source letter against an approved assertion and delivered package.</summary>
 [Discriminator("bdgrz.examinations.record-management-representation-letter", 2)]

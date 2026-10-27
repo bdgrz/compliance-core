@@ -1,4 +1,4 @@
-namespace Bdgrz.Compliance.Features.Controls;
+namespace Bdgrz.Compliance.Features.Controls.Models;
 
 public sealed record ControlDraftContent(string Title, string Objective, string Description,
     string ImplementationNarrative, IReadOnlyList<string> ExpectedEvidenceDescriptions,

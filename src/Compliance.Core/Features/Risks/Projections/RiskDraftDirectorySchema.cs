@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.Risks;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Risks;
+namespace Bdgrz.Compliance.Features.Risks.Projections;
 
 static class RiskDraftDirectorySchema
 {

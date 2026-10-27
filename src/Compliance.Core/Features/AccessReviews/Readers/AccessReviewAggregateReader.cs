@@ -1,6 +1,8 @@
+using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AccessReviews;
+namespace Bdgrz.Compliance.Features.AccessReviews.Readers;
 
 /// <summary>Verifies the complete native Access owner prefix before an installed read or append.</summary>
 public sealed class AccessReviewAggregateReader(IAggregateReader inner, IDomainEventReader events) : IAggregateReader

@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Examinations;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Proposed or approved period plan, immutable versions, and independent decisions.</summary>
 public sealed record TypeIIPlanView(

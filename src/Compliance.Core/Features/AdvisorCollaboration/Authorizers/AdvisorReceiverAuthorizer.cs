@@ -1,6 +1,7 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch the advisor feedback materialization receiver.</summary>
 sealed class AdvisorReceiverAuthorizer : IRequestAuthorizer<IAdvisorReceiver>

@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
 
 /// <summary>
 ///     Opens one draft advisor handoff. <paramref name="HandoffId" /> is the logical operation identity and the

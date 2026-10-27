@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 public sealed record ApplicationRelationshipView(Uuid RelationshipId,
     Uuid TargetApplicationId, string RelationshipType, Uuid ActorMemberId,

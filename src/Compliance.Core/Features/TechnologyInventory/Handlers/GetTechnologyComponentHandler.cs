@@ -1,6 +1,9 @@
+using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.TechnologyInventory;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
 
 public sealed class GetTechnologyComponentHandler(TechnologyInventoryReadConsistency consistency)
     : IRequestHandler<GetTechnologyComponent, TechnologyComponentView>

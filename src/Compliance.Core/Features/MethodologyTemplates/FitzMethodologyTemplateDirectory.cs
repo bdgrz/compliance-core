@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Projections;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 

@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Work.Aggregates;
+using Bdgrz.Compliance.Features.Work.Events;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.SourceFacts;
 using System.Runtime.CompilerServices;
 using Bdgrz.Compliance.Features.AccessControl;

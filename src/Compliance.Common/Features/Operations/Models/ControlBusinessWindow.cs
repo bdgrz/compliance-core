@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>
 ///     The business performance window of one control occurrence: a calendar window <c>[From, UntilExclusive)</c> or

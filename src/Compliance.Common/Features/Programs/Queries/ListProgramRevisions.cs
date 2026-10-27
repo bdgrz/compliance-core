@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Programs;
+namespace Bdgrz.Compliance.Features.Programs.Queries;
 
 [Discriminator("bdgrz.program.revisions.list", 1)]
 public sealed record ListProgramRevisions(Uuid TenantId, Uuid ProgramId,

@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Features.Incidents;
+using Bdgrz.Compliance.Features.Incidents.Models;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Incidents;
+namespace Bdgrz.Compliance.Features.Incidents.Projections;
 
 static class ComplianceIncidentDirectorySchema
 {

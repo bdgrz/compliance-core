@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Workforce;
 
 static class WorkforceSourceRedaction

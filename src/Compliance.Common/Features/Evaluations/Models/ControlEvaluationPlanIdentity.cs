@@ -1,7 +1,7 @@
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Evaluations;
+namespace Bdgrz.Compliance.Features.Evaluations.Models;
 
 /// <summary>Identity of one immutable publication on a scoped plan line at its original expected version.</summary>
 public static class ControlEvaluationPlanIdentity

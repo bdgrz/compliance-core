@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPopulations;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Commands;
 
 /// <summary>Records the revise audit population definition intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.audit-populations.revise-audit-population-definition", 2)]

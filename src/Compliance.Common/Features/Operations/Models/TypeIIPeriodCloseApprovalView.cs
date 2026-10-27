@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Operations;
+namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>An executive's immutable decision over one exact close validation.</summary>
 public sealed record TypeIIPeriodCloseApprovalView(

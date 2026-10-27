@@ -1,6 +1,6 @@
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Applications;
+namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>A bounded policy relationship and lifecycle fact affecting an application system.</summary>
 public sealed record ApplicationPolicyReferenceView(Uuid TenantId, string SubjectType,

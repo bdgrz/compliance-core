@@ -1,7 +1,8 @@
+using Bdgrz.Compliance.Features.AuditPackages.Models;
 using System.Globalization;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.AuditPackages;
+namespace Bdgrz.Compliance.Features.AuditPackages.Projections;
 
 static class AuditPackageDirectorySchema
 {
