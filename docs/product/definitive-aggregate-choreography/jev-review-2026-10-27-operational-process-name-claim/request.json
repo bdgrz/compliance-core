@@ -1,0 +1,17 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "OperationalProcessNameClaim",
+    "identity": "TenantId plus normalized operational process name",
+    "selected_invariant": "One normalized active process name is held by at most one operational process in a tenant.",
+    "holder_rule": "A holder is an operational process stream in the same tenant, in the inventory-registers area, with an operational-process resource and non-empty process UUID.",
+    "implementation": "Claim and release validate holder identity before raising events. Both claim and release reducers validate the holder identity during replay. NameClaim keeps shared name occupancy and exact holder-generation checks; this feature owner adds operational-process-specific stream identity checks.",
+    "exclusions": "This review does not infer a policy for which names may be reused or authorize changes to process lifecycle."
+  },
+  "questions": {
+    "type_specific_holder_guard": {
+      "type": "noul",
+      "instructions": "Does the selected invariant justify keeping the operational-process tenant, area, and resource identity check in OperationalProcessNameClaim, including both command-time checks and replay checks, rather than moving it into the generic NameClaim base? Answer true when the guard is specific to this owner and protects its selected identity."
+    }
+  }
+}
