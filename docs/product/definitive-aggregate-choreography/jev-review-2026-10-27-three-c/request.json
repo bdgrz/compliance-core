@@ -1,0 +1,43 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "policy": {
+      "invariant": "A policy has one pending revision or retirement; approved versions form immutable successor intervals; activation requires the latest accepted independent review and independent approval; approved or retired content cannot be edited.",
+      "implementation": "Policy owns a tenant/policy stream and its revision, review, approval, retirement lifecycle. Existing tests cover independent review/approval, effective successor, retirement, stale edits and exact retry."
+    },
+    "artifact_download_grant": {
+      "invariant": "One exact receiving grant owns the authenticated encrypted original artifact ticket/result after EvidenceArtifact admits and pins availability; it binds tenant, artifact, command and original actor; expiry does not renew under the same root, and cancellation fences delayed issuance.",
+      "implementation": "Aggregate status reports no exact ArtifactDownloadGrant type declaration. Existing download behavior is handled by EvidenceArtifact and IssueArtifactDownloadHandler; the choreography defines a separate receiving identity and issued-v2/canceled lifecycle."
+    },
+    "evidence_artifact": {
+      "invariant": "An artifact is immutable registered content, unavailable before clean inspection; malware quarantine can be released only after an attributed clean rescan; secret/invalid rejection is final. Download grant issuance has its own receiving identity.",
+      "implementation": "EvidenceArtifact owns registration, inspection, quarantine release and legacy artifact download facts. Tests cover registration, inspection, quarantine release boundaries and issuance handler."
+    }
+  },
+  "questions": {
+    "policy_lifecycle": {
+      "type": "noul",
+      "instructions": "Do the stated immutable-version, independent-review/approval, and retirement rules justify Policy as one business aggregate with its own lifecycle?",
+      "criteria": {
+        "true": "One policy version line owns these linked transitions and prevents editing approved or retired content.",
+        "false": "The transitions have independent authority and do not require a shared policy lifecycle."
+      }
+    },
+    "download_grant_boundary": {
+      "type": "noul",
+      "instructions": "Do the stated receiving-ticket, exact actor/artifact/command binding, expiry, and cancellation-fence rules require an ArtifactDownloadGrant owner separate from EvidenceArtifact content and inspection?",
+      "criteria": {
+        "true": "The receiving grant has its own identity and terminal lifecycle, separate from the artifact content and inspection state.",
+        "false": "The grant has no independent receiving identity or lifecycle and is fully owned by the artifact record."
+      }
+    },
+    "evidence_artifact_boundary": {
+      "type": "noul",
+      "instructions": "Does immutable content registration with inspection and quarantine-release lifecycle justify EvidenceArtifact as a distinct owner from the per-download receiving grant?",
+      "criteria": {
+        "true": "Content identity and inspection lifecycle are independent from issuance of a particular download ticket.",
+        "false": "Artifact content and each individual receiving ticket must be decided atomically by one owner."
+      }
+    }
+  }
+}

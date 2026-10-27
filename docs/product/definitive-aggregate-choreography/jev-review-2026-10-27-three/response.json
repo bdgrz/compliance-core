@@ -1,0 +1,1 @@
+{"model":"jev-1.14.0","answers":{"provider_name_claim_holder":{"type":"noul","noul":0.11},"control_criterion_mapping_boundary":{"type":"noul","noul":0.94},"program_readiness_boundary":{"type":"noul","noul":0.88}},"usage":{"input_tokens":832,"output_tokens":64}}

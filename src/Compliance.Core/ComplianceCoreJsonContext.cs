@@ -602,6 +602,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Events.DueControlOccurrencesGenerated))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Retention.Events.EngagementReportIssued))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Evidence.Events.EvidenceArtifactDownloadIssued))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Evidence.Events.EvidenceArtifactDownloadIssuedV2))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Evidence.Events.ArtifactDownloadGrantCanceled))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Evidence.Models.EvidenceArtifactDownloadLink))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Evidence.Events.EvidenceSupportLinked))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Evidence.Models.EvidenceSupportView))]

@@ -23,7 +23,7 @@ Priority is mapped only when an aggregate is named in a backlog story's body; Co
 | `ApplicationRelationship` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Applications/Aggregates/ApplicationRelationship.cs` |
 | `ArtifactDisclosure` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Retention/Aggregates/ArtifactDisclosure.cs` |
 | `ArtifactDisposition` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Retention/Aggregates/ArtifactDisposition.cs` |
-| `ArtifactDownloadGrant` | No exact type declaration found; implementation mapping needed | No direct story mapping | — |
+| `ArtifactDownloadGrant` | Core aggregate and terminal event contracts implemented; request/process/read flow and full qualification pending | No direct story mapping | `src/Compliance.Core/Features/Evidence/Aggregates/ArtifactDownloadGrant.cs` |
 | `ArtifactEngagementHold` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Retention/Aggregates/ArtifactEngagementHold.cs` |
 | `ArtifactLegalHold` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Retention/Aggregates/ArtifactLegalHold.cs` |
 | `ArtifactRetentionBasis` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Retention/Aggregates/ArtifactRetentionBasis.cs` |

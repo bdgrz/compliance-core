@@ -1,0 +1,43 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "readiness_assessment": {
+      "owner_invariant": "One immutable assessment identity retains its exact rule revision, as-of input snapshot, and findings.",
+      "implementation": "ReadinessAssessment records one ReadinessAssessmentRecorded fact, validates tenant/program/assessment identity and revision 1, and retains immutable snapshot references. ProgramReadiness separately owns the latest-assessment pointer and decision admission."
+    },
+    "data_flow": {
+      "owner_invariant": "One tenant inventory identity has one record kind; each flow revision validates endpoints, carried asset scope, encryption or approved exception for the highest carried classification, and nondecreasing effective date.",
+      "implementation": "DataFlow uses tenant plus caller ID through TechnologyInventoryStreams.Address, tracks foreign-kind sentinels, validates normalized business content, and appends revision facts with expected revision. InventoryRetryTests exercise exact retry across revisions."
+    },
+    "information_asset": {
+      "owner_invariant": "One tenant inventory identity has one record kind and one revisioned classification, retention, owner, and lifecycle record.",
+      "implementation": "InformationAsset uses the shared technology-inventory address with foreign-kind sentinels, validates normalized content, and appends expected-revision facts. InventoryRetryTests exercise original registration retry after later revision; impact tests cover classification changes."
+    }
+  },
+  "questions": {
+    "assessment_boundary": {
+      "type": "noul",
+      "instructions": "Does an immutable assessment with its own assessment identity and exact input/rule snapshot justify a separate ReadinessAssessment owner from the ProgramReadiness governor that tracks only latest adoption and decision admission?",
+      "criteria": {
+        "true": "The assessment snapshot and findings are an immutable result with their own identity; ProgramReadiness has a separate compact coordination invariant.",
+        "false": "Assessment content and latest-adoption coordination must be mutated atomically by the same owner."
+      }
+    },
+    "data_flow_boundary": {
+      "type": "noul",
+      "instructions": "Do the tenant-scoped flow identity and flow-specific endpoint, carried-asset, encryption and effective-date rules justify DataFlow as a distinct business owner?",
+      "criteria": {
+        "true": "A flow is independently identified and revised under its own content rules.",
+        "false": "The flow has no independent lifecycle and must be owned atomically with another inventory record."
+      }
+    },
+    "information_asset_boundary": {
+      "type": "noul",
+      "instructions": "Do the tenant-scoped identity and revisioned classification, retention, owner and lifecycle rules justify InformationAsset as a distinct business owner?",
+      "criteria": {
+        "true": "An asset is independently identified and revised under its own content rules.",
+        "false": "An asset has no independent lifecycle and must be owned atomically with another inventory record."
+      }
+    }
+  }
+}
