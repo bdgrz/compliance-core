@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Immutable assertion wording and exact package/source bindings for one version.</summary>

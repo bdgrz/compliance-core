@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 namespace Bdgrz.Compliance.Features.Policies.Models;
 
 /// <summary>

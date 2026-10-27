@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>One evaluated change inside a Type II period.</summary>

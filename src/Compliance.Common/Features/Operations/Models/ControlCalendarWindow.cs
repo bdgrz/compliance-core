@@ -1,5 +1,4 @@
 using System.Globalization;
-
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>A calendar business window: <paramref name="From" /> inclusive to <paramref name="UntilExclusive" /> exclusive.</summary>

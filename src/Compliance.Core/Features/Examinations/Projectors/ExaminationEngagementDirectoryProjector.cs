@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Examinations;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Examinations.Readers;
 using Bdgrz.Compliance.Features.Examinations.Events;
 using Bdgrz.Compliance.Features.Examinations.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Examinations.Projectors;
 
 public sealed partial class ExaminationEngagementDirectoryProjector(

@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.Work.Events;
 
 [Discriminator("bdgrz.work.digest_dispatch.scheduled", 1)]

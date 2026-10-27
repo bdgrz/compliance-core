@@ -1,8 +1,9 @@
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
-using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
 
 /// <summary>Replaces the exact selected versions of an open handoff at the expected handoff revision.</summary>

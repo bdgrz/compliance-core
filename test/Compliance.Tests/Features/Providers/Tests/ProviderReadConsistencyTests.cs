@@ -1,0 +1,169 @@
+using System.Security.Claims;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Providers.Readers;
+using Bdgrz.Compliance.Features.Providers.Services;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Handlers;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Providers.Queries;
+namespace Bdgrz.Compliance.Tests.Features.Providers.Tests;
+
+public sealed class ProviderReadConsistencyTests
+{
+    [Theory]
+    [InlineData(0, RequestErrorKind.Validation)]
+    [InlineData(1, RequestErrorKind.Conflict)]
+    [InlineData(2, RequestErrorKind.Conflict)]
+    public async Task ShouldDistinguishInvalidRevisionAndLagGivenRecordedUnprojectedProvider(long minimum, RequestErrorKind expected)
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var id = Uuid.CreateVersion4();
+        var source = Source(tenant, id);
+        var consistency = new ProviderReadConsistency(new FitzProviderDirectory(new InMemoryKvClient()),
+            new SourceReader(source), new InMemoryEventStore());
+
+        // Act
+        var result = await consistency.GetAsync(tenant, id, minimum, CancellationToken.None);
+        var historical = await consistency.GetRevisionAsync(tenant, id, minimum, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(expected, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Equal(minimum == 2 ? RequestErrorKind.NotFound : expected, Assert.IsType<RequestError>(historical.Error).Kind);
+    }
+
+    [Fact]
+    public async Task ShouldReturnNotFoundGivenUnknownProviderEvenWithProjectedOtherProvider()
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var consistency = new ProviderReadConsistency(new FitzProviderDirectory(new InMemoryKvClient()),
+            new SourceReader(new Provider(tenant, Uuid.CreateVersion4())), new InMemoryEventStore());
+
+        // Act
+        var result = await consistency.GetAsync(tenant, Uuid.CreateVersion4(), null, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, Assert.IsType<RequestError>(result.Error).Kind);
+    }
+
+    [Theory]
+    [InlineData(0, RequestErrorKind.Validation)]
+    [InlineData(201, RequestErrorKind.Validation)]
+    [InlineData(1, RequestErrorKind.Conflict)]
+    public async Task ShouldRejectInvalidLimitsOrEmptyStalePageGivenUnprojectedSource(int limit, RequestErrorKind expected)
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var id = Uuid.CreateVersion4();
+        var ev = NamedRecordFacts.ProviderRecordedFact(tenant, id);
+        var events = new InMemoryEventStore();
+        await events.AppendAsync(new Provider(tenant, id).Stream, 0, [DomainEventSeed.Attach(ev, id, 1)]);
+        var directory = new FitzProviderDirectory(new InMemoryKvClient());
+        var consistency = new ProviderReadConsistency(directory, new SourceReader(Source(tenant, id)), events);
+
+        // Act
+        var result = await new ListProvidersHandler(directory, consistency).HandleAsync(
+            new RequestContext<ListProviders>(new ListProviders(tenant, limit), new ClaimsPrincipal()), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(expected, Assert.IsType<RequestError>(result.Error).Kind);
+    }
+
+    [Fact]
+    public async Task ShouldReadRetainedRevisionGivenNewerCanonicalRevisionAndProjectionLag()
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var id = Uuid.CreateVersion4();
+        var author = ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder");
+        var now = DateTimeOffset.UtcNow;
+        var source = NamedRecordFacts.RecordedProvider(tenant, id, author, now).Revise(author, now.AddMinutes(1));
+        var directory = new FitzProviderDirectory(new InMemoryKvClient());
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
+            new CheckpointIdentity(FitzProviderDirectory.ProjectorName,
+                EventStreamPattern.ForPattern(tenant.ToString(), Provider.Area)), ProjectionCheckpoint.Start)))
+        {
+            await directory.ApplyAsync(NamedRecordFacts.ProviderRecordedFact(tenant, id, author, now),
+                new ProviderContent("Original", "Supplier"));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var consistency = new ProviderReadConsistency(directory, new SourceReader(source), new InMemoryEventStore());
+
+        // Act
+        var historical = await new GetProviderRevisionHandler(consistency).HandleAsync(
+            new RequestContext<GetProviderRevision>(new GetProviderRevision(tenant, id, 1), new ClaimsPrincipal()), CancellationToken.None);
+        var current = await new GetProviderHandler(consistency).HandleAsync(
+            new RequestContext<GetProvider>(new GetProvider(tenant, id), new ClaimsPrincipal()), CancellationToken.None);
+        var missing = await consistency.GetRevisionAsync(tenant, id, 3, CancellationToken.None);
+        var history = await new ListProviderRevisionsHandler(directory, consistency).HandleAsync(
+            new RequestContext<ListProviderRevisions>(new ListProviderRevisions(tenant, id), new ClaimsPrincipal()), CancellationToken.None);
+
+        // Assert
+        Assert.True(historical.IsSuccess);
+        Assert.Equal("Original", historical.Value.Content.Name);
+        Assert.Equal(author, historical.Value.RecordedBy);
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(current.Error).Kind);
+        Assert.Equal(RequestErrorKind.NotFound, Assert.IsType<RequestError>(missing.Error).Kind);
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(history.Error).Kind);
+    }
+
+    [Fact]
+    public async Task ShouldTranslateScopedCursorAndPageHistoryGivenCaughtUpProjection()
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var id = Uuid.CreateVersion4();
+        var directory = new FitzProviderDirectory(new InMemoryKvClient());
+        var source = Source(tenant, id);
+        var author = ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder");
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
+            new CheckpointIdentity(FitzProviderDirectory.ProjectorName,
+                EventStreamPattern.ForPattern(tenant.ToString(), Provider.Area)), ProjectionCheckpoint.Start)))
+        {
+            await directory.ApplyAsync(NamedRecordFacts.ProviderRecordedFact(tenant, id, author), new ProviderContent("Provider", "Supplier"));
+            await directory.ApplyAsync(NamedRecordFacts.ProviderRecordedFact(tenant, Uuid.CreateVersion4(), author), new ProviderContent("Second", "Supplier"));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var consistency = new ProviderReadConsistency(directory, new SourceReader(source), new InMemoryEventStore());
+        var first = await new ListProvidersHandler(directory, consistency).HandleAsync(
+            new RequestContext<ListProviders>(new ListProviders(tenant, 1), new ClaimsPrincipal()), CancellationToken.None);
+
+        // Act
+        var foreign = await new ListProvidersHandler(directory, consistency).HandleAsync(
+            new RequestContext<ListProviders>(new ListProviders(Uuid.CreateVersion4(), 1, first.Value.NextCursor), new ClaimsPrincipal()), CancellationToken.None);
+        var history = await new ListProviderRevisionsHandler(directory, consistency).HandleAsync(
+            new RequestContext<ListProviderRevisions>(new ListProviderRevisions(tenant, id, 1), new ClaimsPrincipal()), CancellationToken.None);
+        var invalidHistory = await new ListProviderRevisionsHandler(directory, consistency).HandleAsync(
+            new RequestContext<ListProviderRevisions>(new ListProviderRevisions(tenant, id, 1, first.Value.NextCursor), new ClaimsPrincipal()), CancellationToken.None);
+
+        // Assert
+        Assert.True(first.IsSuccess);
+        Assert.NotNull(first.Value.NextCursor);
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(foreign.Error).Kind);
+        Assert.True(history.IsSuccess);
+        Assert.Equal(id, Assert.Single(history.Value.Items).ProviderId);
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(invalidHistory.Error).Kind);
+    }
+
+    static Provider Source(Uuid tenant, Uuid id) => NamedRecordFacts.RecordedProvider(tenant, id,
+        ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder"), DateTimeOffset.UtcNow);
+
+    sealed class SourceReader(Provider source) : IAggregateReader
+    {
+        public ValueTask<T> HydrateAsync<T>(T aggregate, CancellationToken ct = default) where T : Aggregate =>
+            ValueTask.FromResult((T)(Aggregate)source);
+    }
+}

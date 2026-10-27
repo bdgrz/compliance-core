@@ -1,5 +1,8 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Work.Models;
 
 /// <summary>Redacted delivery state for one tenant member's weekly digest.</summary>

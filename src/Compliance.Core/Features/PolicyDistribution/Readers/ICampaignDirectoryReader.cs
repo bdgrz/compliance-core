@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Readers;
 
 public interface ICampaignDirectoryReader

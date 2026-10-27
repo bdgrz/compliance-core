@@ -1,11 +1,33 @@
-using Bdgrz.Compliance.Features.AccessControl;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceUse.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.Processes.Models;
-using Bdgrz.Compliance.Features.Processes;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Processes;
 
 /// <summary>
@@ -61,8 +83,8 @@ static class ProfessionalDutyChangeProcess
                     ProfessionalDutyEffects.Generation, null, record.Intent, target.StaffMemberId,
                     target.DesignationId,
                     record.State == ProcessState.Aborting
-                        ? SourceUse.SourceUseSettlementDisposition.Canceled
-                        : SourceUse.SourceUseSettlementDisposition.IrreversibleDecision),
+                        ? Bdgrz.Compliance.Features.SourceUse.Models.SourceUseSettlementDisposition.Canceled
+                        : Bdgrz.Compliance.Features.SourceUse.Models.SourceUseSettlementDisposition.IrreversibleDecision),
             nameof(RejectProfessionalDutyChange) => new RejectProfessionalDutyChange(step.CommandId, root,
                 designation, ProfessionalDutyEffects.Generation, 0, record.Intent),
             _ => throw new InvalidOperationException($"{step.Receiver} is not a professional-duty receiver."),

@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
 
 /// <summary>A retained immutable draft or submitted response version.</summary>

@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Workforce;
-using Bdgrz.Compliance.Features.Workforce.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Workforce.Contracts;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Workforce.Queries;
 
 /// <summary>Reads a frozen roster; the manager chain is returned only with its field permission.</summary>

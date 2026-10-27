@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>An authored historical fact, not an approved ProviderVersion.</summary>

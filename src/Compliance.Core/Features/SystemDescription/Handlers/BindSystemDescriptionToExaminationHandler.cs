@@ -1,8 +1,12 @@
-using Bdgrz.Compliance.Features.SystemDescription;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Services;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Commands;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 namespace Bdgrz.Compliance.Features.SystemDescription.Handlers;
 
 public sealed class BindSystemDescriptionToExaminationHandler(SystemDescriptionOperations operations) : IRequestHandler<BindSystemDescriptionToExamination>

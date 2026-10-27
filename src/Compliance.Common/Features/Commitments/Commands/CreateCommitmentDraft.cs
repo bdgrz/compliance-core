@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Commitments.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Commitments.Commands;
 
 [Discriminator("bdgrz.commitment.draft.create", 2)]

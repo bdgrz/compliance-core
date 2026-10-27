@@ -1,4 +1,3 @@
-using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Json;
@@ -6,7 +5,6 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance;
-using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
@@ -15,7 +13,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.E2E;
 
 [Collection(BrokerCollectionDefinition.Name)]

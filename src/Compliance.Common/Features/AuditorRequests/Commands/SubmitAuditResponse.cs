@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.AuditorRequests.Commands;
 
 /// <summary>Submits the exact current draft version of a response; <paramref name="Version" /> is business content.</summary>

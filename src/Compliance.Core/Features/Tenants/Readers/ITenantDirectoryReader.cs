@@ -1,7 +1,7 @@
-using Bdgrz.Compliance.Features.Tenants.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Tenants.Models;
 namespace Bdgrz.Compliance.Features.Tenants.Readers;
 
 /// <summary>Reads the materialized tenant directory.</summary>

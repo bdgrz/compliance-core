@@ -1,0 +1,421 @@
+using System.Globalization;
+using System.Security.Claims;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
+using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
+using Bdgrz.Compliance.Tests.Features.Changes.Tests;
+using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
+using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
+using Bdgrz.Compliance.Tests.Features.Controls.Tests;
+using Bdgrz.Compliance.Tests.Features.Criteria.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Exports.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.Policies.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Retention.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.Snapshots.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceUse.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Features.UserIdentities.Authorizers;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
+using Bdgrz.Compliance.Features.UserIdentities.Events;
+using Bdgrz.Compliance.Features.UserIdentities.Handlers;
+using Bdgrz.Compliance.Features.Work.Authorizers;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Tests;
+namespace Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+
+public sealed class UserIdentityContinuationTests
+{
+    [Fact]
+    public async Task ShouldKeepAuthorityReplayConstantGivenRepeatedProfileObservations()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var identity = new UserIdentity("issuer", "busy-profile");
+        Assert.True(identity.Register(Uuid.CreateVersion4(), null).IsSuccess);
+        var context = Context(new ContinueWithOidcProvider(), AuthenticatedActor(
+            new Claim("iss", "issuer"), new Claim("sub", "busy-profile")));
+        await fixture.Repository.SaveAsync(identity, context);
+
+        // Act
+        for (var index = 0; index < 128; index++)
+        {
+            identity = await fixture.Repository.HydrateAsync(new UserIdentity(identity.Id));
+            Assert.True(identity.ObserveAuthenticatedProfile("Observed name", DateTimeOffset.UtcNow).IsSuccess);
+            await fixture.Repository.SaveAsync(identity, context);
+        }
+        var authority = new List<DomainEventRecord>();
+        await foreach (var record in fixture.Store.ReadAsync(identity.Stream, 0))
+            authority.Add(record);
+        identity = await fixture.Repository.HydrateAsync(new UserIdentity(identity.Id));
+
+        // Assert
+        Assert.Single(authority);
+        Assert.IsType<UserIdentityRegistered>(authority[0].Event);
+        Assert.Equal(1UL, identity.Version);
+        Assert.Equal(1UL, identity.CommittedStreamPosition);
+    }
+
+    [Fact]
+    public async Task ShouldRetainProfileChangesGivenAuthenticatedOidcNameChangesOrDisappears()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var handler = new ContinueWithOidcProviderHandler(new UserIdentityContinuation(fixture.Repository));
+        var names = new string?[] { "  Ada Lovelace  ", "Ada Byron", null };
+
+        // Act
+        foreach (var name in names)
+        {
+            var claims = new List<Claim>
+            {
+                new("iss", "https://issuer.example/"), new("sub", "profile-subject"),
+            };
+            if (name is not null)
+                claims.Add(new Claim("name", name));
+            var result = await handler.HandleAsync(Context(new ContinueWithOidcProvider(),
+                AuthenticatedActor(claims.ToArray())), CancellationToken.None);
+            Assert.True(result.IsSuccess);
+        }
+        var profileEvents = new List<UserIdentityProfileObserved>();
+        await foreach (var record in fixture.Store.ReadAsync(
+                           EventStreamPattern.ForPattern("bdgrz", "user-identities"),
+                           EventCursor.Start, CancellationToken.None))
+            if (record.Event is UserIdentityProfileObserved observed)
+                profileEvents.Add(observed);
+
+        // Assert
+        Assert.Equal(3, profileEvents.Count);
+        Assert.Equal(new string?[] { "Ada Lovelace", "Ada Byron", null },
+            profileEvents.Select(ev => ev.DisplayName));
+    }
+
+    [Fact]
+    public async Task ShouldProduceSameIdentityShapeGivenDeveloperAndOidcRegistration()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var continuation = new UserIdentityContinuation(fixture.Repository);
+        var developerHandler = new ContinueWithDeveloperIdentityHandler(
+            continuation,
+            new DeveloperUserRegistration(true));
+        var oidcHandler = new ContinueWithOidcProviderHandler(continuation);
+        var developerContext = Context(
+            new ContinueWithDeveloperIdentity("Person@Example.com"),
+            new ClaimsPrincipal(new ClaimsIdentity()));
+        var oidcContext = Context(
+            new ContinueWithOidcProvider(),
+            AuthenticatedActor(
+                new Claim("iss", "https://issuer.example/"),
+                new Claim("sub", "provider-subject"),
+                new Claim("email", "Person@Example.com")));
+
+        // Act
+        var developer = await developerHandler.HandleAsync(developerContext, CancellationToken.None);
+        var oidc = await oidcHandler.HandleAsync(oidcContext, CancellationToken.None);
+        var developerIdentity = await fixture.Repository.HydrateAsync(
+            new UserIdentity(
+                DeveloperUserRegistration.Provider,
+                Uuid.CreateVersion5(
+                    DeveloperUserRegistration.IdentifierNamespaceId,
+                    "person@example.com").ToString()),
+            CancellationToken.None);
+        var oidcIdentity = await fixture.Repository.HydrateAsync(
+            new UserIdentity("https://issuer.example/", "provider-subject"),
+            CancellationToken.None);
+        var developerEventType = await ReadEventType(fixture.Store, developerIdentity.Stream);
+        var oidcEventType = await ReadEventType(fixture.Store, oidcIdentity.Stream);
+
+        // Assert
+        Assert.True(developer.IsSuccess);
+        Assert.True(oidc.IsSuccess);
+        Assert.Equal("person@example.com", developer.Value.EmailAddress);
+        Assert.Equal("person@example.com", oidc.Value.EmailAddress);
+        Assert.NotEqual(Uuid.Empty, developer.Value.UserId);
+        Assert.NotEqual(Uuid.Empty, oidc.Value.UserId);
+        Assert.Equal(developerIdentity.Id, developer.Value.UserIdentityId);
+        Assert.Equal(oidcIdentity.Id, oidc.Value.UserIdentityId);
+        Assert.Equal(typeof(UserIdentityRegistered), developerEventType);
+        Assert.Equal(developerEventType, oidcEventType);
+    }
+
+    [Fact]
+    public async Task ShouldRegisterWithoutEmailGivenOidcProviderOmitsClaim()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var handler = new ContinueWithOidcProviderHandler(new UserIdentityContinuation(fixture.Repository));
+        var context = Context(
+            new ContinueWithOidcProvider(),
+            AuthenticatedActor(
+                new Claim("iss", "https://issuer.example/"),
+                new Claim("sub", "no-email-subject")));
+
+        // Act
+        var result = await handler.HandleAsync(context, CancellationToken.None);
+        var identity = await fixture.Repository.HydrateAsync(
+            new UserIdentity("https://issuer.example/", "no-email-subject"),
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value.EmailAddress);
+        Assert.Equal(identity.Id, result.Value.UserIdentityId);
+    }
+
+    [Fact]
+    public async Task ShouldKeepIdentitySeparateGivenExistingSessionAndNewIssuer()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var handler = new ContinueWithOidcProviderHandler(new UserIdentityContinuation(fixture.Repository));
+        var existingUserId = Uuid.Parse(
+            "a85d59b8-2f35-42b0-bc02-03085ad7d20f",
+            CultureInfo.InvariantCulture);
+        var externalIdentity = new ClaimsIdentity(
+            new[]
+            {
+                new Claim("iss", "https://another-issuer.example/"),
+                new Claim("sub", "linked-subject"),
+            },
+            "oidc");
+        var sessionIdentity = new ClaimsIdentity(
+            new[]
+            {
+                new Claim("iss", "bdgrz"),
+                new Claim("sub", existingUserId.ToString()),
+            },
+            "BdgrzSession");
+        var context = Context(
+            new ContinueWithOidcProvider(),
+            new ClaimsPrincipal(new[] { externalIdentity, sessionIdentity }));
+
+        // Act
+        var result = await handler.HandleAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(existingUserId, result.Value.UserId);
+    }
+
+    [Fact]
+    public async Task ShouldRegisterThenAuthenticateGivenSameOidcProviderIdentity()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var handler = new ContinueWithOidcProviderHandler(new UserIdentityContinuation(fixture.Repository));
+        var actor = AuthenticatedActor(
+            new Claim("iss", "https://issuer.example/"),
+            new Claim("sub", "returning-subject"),
+            new Claim("email", "person@example.com"));
+
+        // Act
+        var registration = await handler.HandleAsync(
+            Context(new ContinueWithOidcProvider(), actor),
+            CancellationToken.None);
+        var authentication = await handler.HandleAsync(
+            Context(new ContinueWithOidcProvider(), actor),
+            CancellationToken.None);
+        var records = new List<DomainEventRecord>();
+        await foreach (var record in fixture.Store.ReadAsync(
+                           EventStreamPattern.ForPattern("bdgrz", "user-identities"),
+                           EventCursor.Start,
+                           CancellationToken.None))
+        {
+            records.Add(record);
+        }
+
+        // Assert
+        Assert.True(registration.IsSuccess);
+        Assert.True(authentication.IsSuccess);
+        Assert.Equal(registration.Value.UserId, authentication.Value.UserId);
+        Assert.Equal(
+            ["UserIdentityRegistered", "UserIdentityProfileObserved", "UserIdentityAuthenticated",
+                "UserIdentityProfileObserved"],
+            records.Select(record => record.Event.GetType().Name));
+        Assert.False(records[0].Event.Metadata.IsAudit);
+        Assert.All(records.Skip(1), record => Assert.True(record.Event.Metadata.IsAudit));
+    }
+
+    [Fact]
+    public async Task ShouldPreservePlatformUserGivenExplicitProviderLinkAndReplay()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var userId = Uuid.CreateVersion4();
+        var handler = new LinkOidcProviderIdentityHandler(fixture.Repository);
+        var actor = DualProofActor(userId, "https://second-issuer.example/", "subject-2");
+        var context = Context(new LinkOidcProviderIdentity(), actor);
+
+        // Act
+        var first = await handler.HandleAsync(context, CancellationToken.None);
+        var replayed = await handler.HandleAsync(context, CancellationToken.None);
+        var identity = await fixture.Repository.HydrateAsync(
+            new UserIdentity("https://second-issuer.example/", "subject-2"),
+            CancellationToken.None);
+        var events = new List<DomainEvent>();
+        await foreach (var record in fixture.Store.ReadAsync(identity.Stream, 0,
+                           CancellationToken.None))
+            events.Add(record.Event);
+
+        // Assert
+        Assert.True(first.IsSuccess);
+        Assert.True(replayed.IsSuccess);
+        Assert.Equal(userId, first.Value.UserId);
+        Assert.Equal(first.Value, replayed.Value);
+        Assert.Single(events);
+        Assert.IsType<UserIdentityRegistered>(events[0]);
+    }
+
+    [Fact]
+    public async Task ShouldRejectProviderLinkGivenIdentityOwnedByAnotherUser()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var continuation = new UserIdentityContinuation(fixture.Repository);
+        var providerActor = AuthenticatedActor(
+            new Claim("iss", "https://issuer.example/"),
+            new Claim("sub", "claimed-subject"));
+        var existing = await new ContinueWithOidcProviderHandler(continuation).HandleAsync(
+            Context(new ContinueWithOidcProvider(), providerActor), CancellationToken.None);
+        Assert.True(existing.IsSuccess);
+        var otherUserId = Uuid.CreateVersion4();
+        var handler = new LinkOidcProviderIdentityHandler(fixture.Repository);
+
+        // Act
+        var result = await handler.HandleAsync(Context(new LinkOidcProviderIdentity(),
+            DualProofActor(otherUserId, "https://issuer.example/", "claimed-subject")),
+            CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        var identity = await fixture.Repository.HydrateAsync(
+            new UserIdentity("https://issuer.example/", "claimed-subject"),
+            CancellationToken.None);
+        var authenticated = identity.Authenticate();
+        Assert.Equal(existing.Value.UserId, authenticated.Value.UserId);
+    }
+
+    [Fact]
+    public async Task ShouldRejectProviderLinkGivenMissingAuthenticatedProof()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var handler = new LinkOidcProviderIdentityHandler(fixture.Repository);
+        var authorizer = new LinkOidcProviderIdentityAuthorizer();
+        var userId = Uuid.CreateVersion4();
+        var oidcOnly = AuthenticatedActor(
+            new Claim("iss", "https://issuer.example/"),
+            new Claim("sub", "subject"));
+        var sessionOnly = AuthenticatedActor(
+            new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString()));
+        var untrustedSession = new ClaimsPrincipal(new[]
+        {
+            new ClaimsIdentity(new[] { new Claim("iss", "bdgrz"),
+                new Claim("sub", userId.ToString()) }),
+            new ClaimsIdentity(new[] { new Claim("iss", "https://issuer.example/"),
+                new Claim("sub", "subject") }, "oidc"),
+        });
+
+        // Act
+        var actors = new[] { oidcOnly, sessionOnly, untrustedSession };
+        foreach (var actor in actors)
+        {
+            var context = Context(new LinkOidcProviderIdentity(), actor);
+            var authorization = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+            var result = await handler.HandleAsync(context, CancellationToken.None);
+
+            // Assert
+            Assert.False(authorization.IsSuccess);
+            Assert.Equal(RequestErrorKind.Unauthorized, authorization.Error.Kind);
+            Assert.False(result.IsSuccess);
+            Assert.Equal(RequestErrorKind.Unauthorized, result.Error.Kind);
+        }
+    }
+
+    static RequestContext<TRequest> Context<TRequest>(TRequest request, ClaimsPrincipal actor) =>
+        new(request, actor);
+
+    static ClaimsPrincipal AuthenticatedActor(params Claim[] claims) =>
+        new(new ClaimsIdentity(claims, "oidc"));
+
+    static ClaimsPrincipal DualProofActor(Uuid userId, string issuer, string subject) =>
+        new(new[]
+        {
+            new ClaimsIdentity(new[] { new Claim("iss", issuer), new Claim("sub", subject) }, "oidc"),
+            new ClaimsIdentity(new[] { new Claim("iss", "bdgrz"),
+                new Claim("sub", userId.ToString()) }, "BdgrzSession"),
+        });
+
+    static async Task<Type> ReadEventType(
+        IEventStore store,
+        EventStreamAddress stream)
+    {
+        await foreach (var record in store.ReadAsync(stream, 0, CancellationToken.None))
+        {
+            return record.Event.GetType();
+        }
+
+        throw new Xunit.Sdk.XunitException("The identity registration event was not persisted.");
+    }
+}

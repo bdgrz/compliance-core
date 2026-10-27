@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 public sealed record EngagementManagementAcknowledgementView(Uuid TenantId, Uuid EngagementId,

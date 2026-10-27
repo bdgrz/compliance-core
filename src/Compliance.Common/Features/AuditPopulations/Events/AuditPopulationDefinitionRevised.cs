@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
 namespace Bdgrz.Compliance.Features.AuditPopulations.Events;
 
 /// <summary>Records an attributable population-definition revision before population collection.</summary>

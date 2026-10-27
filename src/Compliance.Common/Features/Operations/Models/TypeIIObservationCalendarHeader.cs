@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Bounded current authority of one program's range guard.</summary>

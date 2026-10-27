@@ -1,9 +1,8 @@
-using Bdgrz.Compliance.Features.Commitments;
-using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Commitments.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 namespace Bdgrz.Compliance.Features.Commitments.Models;
 
 /// <summary>A separate approval of an accepted review; it creates an immutable effective version.</summary>

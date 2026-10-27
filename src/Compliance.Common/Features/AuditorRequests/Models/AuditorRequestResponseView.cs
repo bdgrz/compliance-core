@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
 
 /// <summary>Submitted responses and governed delivery/disposition receipts.</summary>

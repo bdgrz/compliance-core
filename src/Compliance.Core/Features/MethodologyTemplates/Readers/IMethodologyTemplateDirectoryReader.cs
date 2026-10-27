@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.MethodologyTemplates;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
 
 public interface IMethodologyTemplateDirectoryReader

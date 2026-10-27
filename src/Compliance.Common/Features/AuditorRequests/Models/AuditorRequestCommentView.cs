@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
 
 /// <summary>A compartment-labeled request discussion entry.</summary>

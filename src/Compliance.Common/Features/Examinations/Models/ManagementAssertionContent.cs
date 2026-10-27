@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Assertion wording and the exact examination inputs management reviewed.</summary>

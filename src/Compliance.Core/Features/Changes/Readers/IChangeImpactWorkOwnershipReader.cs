@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Changes.Readers;
 
 public interface IChangeImpactWorkOwnershipReader

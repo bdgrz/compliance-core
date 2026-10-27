@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Readiness.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Readiness.Models;
 namespace Bdgrz.Compliance.Features.Readiness.Queries;
 
 [Discriminator("bdgrz.readiness.assessment.get", 1)]

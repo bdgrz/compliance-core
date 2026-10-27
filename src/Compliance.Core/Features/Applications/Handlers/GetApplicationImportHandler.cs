@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Applications;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Applications.Services;
 using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.Applications.Queries;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Applications.Handlers;
 
 public sealed class GetApplicationImportHandler(ApplicationImportReadConsistency consistency)

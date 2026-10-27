@@ -1,7 +1,6 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Events;
-using Bdgrz.Compliance.Features.Proofs;
-
 namespace Bdgrz.Compliance.Features.UserIdentities.Models;
 
 /// <summary>The exact protection facts of the old and the replacement slot that precede the acceptance of a swap.</summary>

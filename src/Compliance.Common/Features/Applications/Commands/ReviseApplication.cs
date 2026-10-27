@@ -1,8 +1,8 @@
-using Bdgrz.Compliance.Features.Applications;
-using Bdgrz.Compliance.Features.Applications.Models;
 using Cntryl.Portia;
 using System.Text.Json.Serialization;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Applications.Contracts;
+using Bdgrz.Compliance.Features.Applications.Models;
 namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 /// <summary>

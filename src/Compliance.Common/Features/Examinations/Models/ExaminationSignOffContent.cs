@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Exact source identities and acknowledged open items for management sign-off.</summary>

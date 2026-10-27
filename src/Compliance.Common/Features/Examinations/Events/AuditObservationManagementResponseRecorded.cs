@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Examinations.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Examinations.Models;
 namespace Bdgrz.Compliance.Features.Examinations.Events;
 
 /// <summary>Retains management's response separately from the externally authored wording.</summary>

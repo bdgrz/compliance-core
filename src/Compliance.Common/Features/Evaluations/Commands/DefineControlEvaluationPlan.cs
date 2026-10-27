@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Evaluations.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Evaluations.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Evaluations.Commands;
 
 [Discriminator("bdgrz.control.evaluation.plan.define", 1)]

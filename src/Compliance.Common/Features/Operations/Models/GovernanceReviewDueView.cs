@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Reviews due in the selected period, with source and owner.</summary>

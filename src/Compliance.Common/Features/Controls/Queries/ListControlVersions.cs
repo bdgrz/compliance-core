@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Controls.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Controls.Queries;
 
 [Discriminator("bdgrz.control.versions.list", 1)]

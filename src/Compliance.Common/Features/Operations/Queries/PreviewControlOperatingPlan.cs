@@ -1,7 +1,7 @@
-using Bdgrz.Compliance.Features.Operations.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Operations.Queries;
 
 /// <summary>Previews a proposed operating plan without recording it.</summary>

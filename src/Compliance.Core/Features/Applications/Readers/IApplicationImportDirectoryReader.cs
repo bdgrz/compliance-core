@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Applications.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Applications.Models;
 namespace Bdgrz.Compliance.Features.Applications.Readers;
 
 public interface IApplicationImportDirectoryReader

@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Proofs.Models;
 
 /// <summary>Source fact proof for one native source event type.</summary>

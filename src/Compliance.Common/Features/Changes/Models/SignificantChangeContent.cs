@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Incidents.Commands;
 namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>A compliance-owned change fact; external provenance is retained only when supplied.</summary>

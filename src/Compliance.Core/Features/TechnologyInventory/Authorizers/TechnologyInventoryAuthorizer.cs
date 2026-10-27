@@ -1,12 +1,35 @@
-using Bdgrz.Compliance.Features.TechnologyInventory;
-using Bdgrz.Compliance.Features.Tenants;
-using Bdgrz.Compliance.Features.Tenants.Readers;
-using Bdgrz.Compliance.Features.UserIdentities;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Authorizers;
-using Bdgrz.Compliance.Features.AccessControl;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Authorizers;
 
 sealed class TechnologyInventoryAuthorizer(ITenantMembershipDirectoryReader memberships,

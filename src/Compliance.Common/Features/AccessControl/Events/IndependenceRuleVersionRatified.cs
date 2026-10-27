@@ -1,5 +1,7 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.Evidence.Models;
 namespace Bdgrz.Compliance.Features.AccessControl.Events;
 
 /// <summary>Records the IndependenceRuleVersionRatified domain fact for one tenant-owned subject revision.</summary>

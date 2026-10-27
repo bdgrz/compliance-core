@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
 
 /// <summary>Complete request state and retained response, discussion, and sample history.</summary>

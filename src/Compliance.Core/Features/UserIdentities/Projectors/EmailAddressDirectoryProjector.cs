@@ -1,7 +1,7 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.UserIdentities.Events;
 using Bdgrz.Compliance.Features.UserIdentities.Projections;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Authorizers;
 namespace Bdgrz.Compliance.Features.UserIdentities.Projectors;
 
 public sealed partial class EmailAddressDirectoryProjector(IEmailAddressDirectoryProjection projection)

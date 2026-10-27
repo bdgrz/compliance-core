@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Workforce.Models;
 
 /// <summary>Field names only; restricted conflicts reveal neither their values nor their field names.</summary>

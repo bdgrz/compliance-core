@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.AuditPopulations.Commands;
 
 /// <summary>Builds a deterministic export of one frozen population version into governed evidence storage.</summary>

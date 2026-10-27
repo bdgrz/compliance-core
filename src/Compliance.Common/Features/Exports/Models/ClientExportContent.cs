@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Exports.Models;
 
 /// <summary>A frozen, tenant-scoped inventory of exportable and withheld records.</summary>

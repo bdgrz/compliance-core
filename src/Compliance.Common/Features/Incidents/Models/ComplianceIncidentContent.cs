@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Incidents.Commands;
 namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>A compliance-owned incident fact, with optional external or earlier risk provenance.</summary>

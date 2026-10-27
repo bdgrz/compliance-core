@@ -1,11 +1,8 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Risks.Events;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.Risks;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>

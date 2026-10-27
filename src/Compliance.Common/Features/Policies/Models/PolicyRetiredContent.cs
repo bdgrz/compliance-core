@@ -1,8 +1,6 @@
-using Bdgrz.Compliance.Features.Policies;
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Policies.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Policies.Models;
 
 public sealed record PolicyRetiredContent(Uuid TenantId, Uuid ProgramId, Uuid PolicyId,

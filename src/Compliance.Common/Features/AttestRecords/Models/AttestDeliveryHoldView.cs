@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 namespace Bdgrz.Compliance.Features.AttestRecords.Models;
 
 /// <summary>Engagement holds still requiring governed delivery or release.</summary>

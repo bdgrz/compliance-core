@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>Incidents within authorized program/period scope.</summary>

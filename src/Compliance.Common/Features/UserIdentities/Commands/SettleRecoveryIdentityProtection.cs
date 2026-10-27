@@ -1,10 +1,9 @@
-using Bdgrz.Compliance.Features.UserIdentities;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
 namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>Settles the protection of one identity slot after the recovery completed or its preparation was rejected.</summary>

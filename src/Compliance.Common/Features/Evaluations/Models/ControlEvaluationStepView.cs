@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Evaluations.Models;
 
 /// <summary>A frozen procedure step and its result in the current round, if recorded.</summary>

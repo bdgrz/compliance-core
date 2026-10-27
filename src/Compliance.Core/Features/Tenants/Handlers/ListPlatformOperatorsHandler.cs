@@ -1,10 +1,9 @@
-using Bdgrz.Compliance.Features.Tenants;
-using Bdgrz.Compliance.Features.Tenants.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Models;
-using Bdgrz.Compliance.Features.Tenants.Queries;
-using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Queries;
 namespace Bdgrz.Compliance.Features.Tenants.Handlers;
 
 public sealed class ListPlatformOperatorsHandler(IAggregateReader reader, IImmutableContentStore content)

@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>A declared relationship, not an approval of downstream scope.</summary>

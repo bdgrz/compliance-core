@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>Deterministic manifest binding every delivered path to exact source content.</summary>

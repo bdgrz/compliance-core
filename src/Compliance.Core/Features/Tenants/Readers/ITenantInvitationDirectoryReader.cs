@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Tenants.Models;
 namespace Bdgrz.Compliance.Features.Tenants.Readers;
 
 public interface ITenantInvitationDirectoryReader

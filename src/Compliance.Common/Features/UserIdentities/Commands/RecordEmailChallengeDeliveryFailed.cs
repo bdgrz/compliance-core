@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
 namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>

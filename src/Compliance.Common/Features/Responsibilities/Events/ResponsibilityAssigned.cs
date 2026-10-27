@@ -1,20 +1,15 @@
-using Bdgrz.Compliance.Features.Responsibilities;
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Commitments.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Boundaries.Contracts;
 using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.Commitments;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Controls;
-using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.AccessControl;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Responsibilities.Events;
 
 [Discriminator("bdgrz.responsibility.assigned", 1)]

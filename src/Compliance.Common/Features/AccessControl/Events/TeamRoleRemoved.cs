@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Events;
 
 [Discriminator("bdgrz.rbac.team-role.removed", 1)]

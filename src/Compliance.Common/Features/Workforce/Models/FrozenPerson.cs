@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Workforce.Models;
 
 /// <summary>A person exactly as accepted when a roster snapshot was frozen.</summary>

@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Providers;
-using Bdgrz.Compliance.Features.Providers.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Providers.Contracts;
+using Bdgrz.Compliance.Features.Providers.Models;
 namespace Bdgrz.Compliance.Features.Providers.Queries;
 
 [Discriminator("bdgrz.provider.get", 1)]

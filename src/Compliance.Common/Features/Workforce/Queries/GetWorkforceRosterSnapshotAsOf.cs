@@ -1,7 +1,7 @@
-using Bdgrz.Compliance.Features.Workforce;
-using Bdgrz.Compliance.Features.Workforce.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Workforce.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Workforce.Queries;
 
 /// <summary>Reads the latest roster snapshot frozen at or before an instant.</summary>

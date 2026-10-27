@@ -1,7 +1,7 @@
-using Bdgrz.Compliance.Features.MethodologyTemplates;
 using System.Globalization;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Projections;
 
 static class MethodologyTemplateDirectorySchema

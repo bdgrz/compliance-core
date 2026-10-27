@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Engagement/period observations, evidence references, and linked findings.</summary>

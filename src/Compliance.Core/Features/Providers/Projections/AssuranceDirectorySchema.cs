@@ -1,7 +1,12 @@
-using Bdgrz.Compliance.Features.Providers.Models;
 using System.Globalization;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Providers.Models;
 namespace Bdgrz.Compliance.Features.Providers.Projections;
 
 static class AssuranceDirectorySchema

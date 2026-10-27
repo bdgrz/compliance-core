@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Responsibilities.Models;
 using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 namespace Bdgrz.Compliance.Features.Responsibilities.Commands;
 
 [Discriminator("bdgrz.responsibility.revoke", 2)]

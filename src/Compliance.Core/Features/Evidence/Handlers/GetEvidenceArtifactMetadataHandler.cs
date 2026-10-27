@@ -1,8 +1,9 @@
-using Bdgrz.Compliance.Features.Evidence;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.Evidence.Queries;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Services;
+using Bdgrz.Compliance.Features.Evidence.Queries;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
 namespace Bdgrz.Compliance.Features.Evidence.Handlers;
 
 sealed class GetEvidenceArtifactMetadataHandler(EvidenceArtifactReadAccess access, EvidenceArtifactMetadataRead read)

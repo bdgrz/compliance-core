@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Boundaries.Models;
 
 public sealed record BoundaryImpactPreview(Uuid TenantId, Uuid BoundaryId,

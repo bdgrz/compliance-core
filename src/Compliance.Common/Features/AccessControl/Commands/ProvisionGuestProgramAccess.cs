@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Events;
 namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>Internal invitation reaction that applies the inviter-approved guest program scope.</summary>

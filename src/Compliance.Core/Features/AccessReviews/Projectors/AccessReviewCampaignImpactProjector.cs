@@ -1,9 +1,8 @@
-using Bdgrz.Compliance.Features.AccessReviews;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessReviews.Services;
 using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
 using Bdgrz.Compliance.Features.AccessReviews.Events;
 using Bdgrz.Compliance.Features.AccessReviews.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessReviews.Projectors;
 
 public sealed partial class AccessReviewCampaignImpactProjector(

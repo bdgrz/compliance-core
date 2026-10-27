@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Remediation.Models;
 namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>The existing identifier claim identity; a caller cannot choose a second ID for the same identifier.</summary>

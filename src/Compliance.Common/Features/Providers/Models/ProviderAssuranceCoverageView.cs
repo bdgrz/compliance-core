@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>

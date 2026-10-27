@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <param name="Status">

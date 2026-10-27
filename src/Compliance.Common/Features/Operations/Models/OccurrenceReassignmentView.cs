@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>An explicit reassignment of open work when ownership changed.</summary>

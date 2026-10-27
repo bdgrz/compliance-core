@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Policies;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Policies.Rules;
 namespace Bdgrz.Compliance.Features.Policies.Projections;
 
 static class PolicyDirectorySchema

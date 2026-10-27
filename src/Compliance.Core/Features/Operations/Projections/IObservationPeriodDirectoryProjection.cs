@@ -1,8 +1,7 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.AuditPopulations.Events;
 using Bdgrz.Compliance.Features.Operations.Events;
-using Bdgrz.Compliance.Features.AuditPopulations;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Operations.Projections;
 
 public interface IObservationPeriodDirectoryProjection : IProjectionStore

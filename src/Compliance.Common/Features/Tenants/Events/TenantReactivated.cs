@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Tenants.Events;
 
 [Discriminator("bdgrz.tenant.reactivated", 1)]

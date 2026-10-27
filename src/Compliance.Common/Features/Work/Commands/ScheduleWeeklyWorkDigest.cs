@@ -1,7 +1,5 @@
-using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Models;
 namespace Bdgrz.Compliance.Features.Work.Commands;
 
 /// <summary>Records the schedule weekly work digest intent required by the owning feature workflow.</summary>

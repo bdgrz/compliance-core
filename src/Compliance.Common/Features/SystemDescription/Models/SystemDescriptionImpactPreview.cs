@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>Records and baseline references affected by a proposed successor.</summary>

@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Remediation.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Remediation.Models;
 namespace Bdgrz.Compliance.Features.Remediation.Queries;
 
 /// <summary>Lists findings; readiness_status filters closed, remediated, accepted, overdue, or unresolved.</summary>

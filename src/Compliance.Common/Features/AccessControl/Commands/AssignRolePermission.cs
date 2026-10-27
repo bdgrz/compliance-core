@@ -1,7 +1,7 @@
-using Bdgrz.Compliance.Features.AccessControl;
 using System.Diagnostics.CodeAnalysis;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 [SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix",

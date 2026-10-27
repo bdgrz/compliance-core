@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Retention;
-using Bdgrz.Compliance.Features.Retention.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Retention.Contracts;
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.Retention.Queries;
 
 [Discriminator("bdgrz.artifact_retention.legal_holds.list", 1)]

@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>Current narrative and its immutable versions, decisions, bindings, and snapshot bindings.</summary>

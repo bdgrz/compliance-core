@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Policies.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Policies.Queries;
 
 [Discriminator("bdgrz.policy.decisions.list", 1)]

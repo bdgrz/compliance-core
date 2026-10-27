@@ -1,8 +1,8 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AuditPopulations.Contracts;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPopulations.Events;
 
 /// <summary>Records a population definition with its original command and response receipt.</summary>

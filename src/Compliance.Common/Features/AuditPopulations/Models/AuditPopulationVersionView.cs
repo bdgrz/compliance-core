@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>An immutable, sample-bindable population snapshot.</summary>

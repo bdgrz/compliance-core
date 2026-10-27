@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Programs.Models;
 
 /// <summary>Carry-forward candidates and unresolved dependencies before proposal.</summary>

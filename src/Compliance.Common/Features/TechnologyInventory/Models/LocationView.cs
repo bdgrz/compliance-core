@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>A location revision as recorded in the governed tenant inventory.</summary>

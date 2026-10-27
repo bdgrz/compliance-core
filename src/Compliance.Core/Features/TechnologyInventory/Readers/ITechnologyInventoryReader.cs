@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Readers;
 
 public interface ITechnologyInventoryReader

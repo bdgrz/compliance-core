@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
 namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>Bounded current authority; full versions, assessments and governed references remain immutable content.</summary>

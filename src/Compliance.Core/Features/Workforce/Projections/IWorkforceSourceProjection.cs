@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Workforce.Projections;
 
 public interface IWorkforceSourceProjection : IProjectionStore

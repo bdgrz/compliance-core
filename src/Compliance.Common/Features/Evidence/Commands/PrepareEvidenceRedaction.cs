@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Evidence;
-using Bdgrz.Compliance.Features.Evidence.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Evidence.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
 namespace Bdgrz.Compliance.Features.Evidence.Commands;
 
 [Discriminator("bdgrz.evidence.redaction.prepare", 2)]

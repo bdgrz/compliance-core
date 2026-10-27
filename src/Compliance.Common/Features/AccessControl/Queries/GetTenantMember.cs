@@ -1,8 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Tenants.Models;
-using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Models;
 namespace Bdgrz.Compliance.Features.AccessControl.Queries;
 
 [Discriminator("bdgrz.tenant.member.get", 1)]

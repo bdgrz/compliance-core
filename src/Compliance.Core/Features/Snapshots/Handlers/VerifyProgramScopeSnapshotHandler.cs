@@ -1,4 +1,15 @@
-using Bdgrz.Compliance.Features.Snapshots;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Boundaries.Projections;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Boundaries.Services;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
+using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.Boundaries.Readers;
 using Bdgrz.Compliance.Features.Programs.Aggregates;
@@ -8,11 +19,6 @@ using Bdgrz.Compliance.Features.Snapshots.Aggregates;
 using Bdgrz.Compliance.Features.Snapshots.Models;
 using Bdgrz.Compliance.Features.Snapshots.Queries;
 using Bdgrz.Compliance.Features.Snapshots.Readers;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.Programs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Snapshots.Handlers;
 
 public sealed class VerifyProgramScopeSnapshotHandler(ISnapshotDirectoryReader snapshots,

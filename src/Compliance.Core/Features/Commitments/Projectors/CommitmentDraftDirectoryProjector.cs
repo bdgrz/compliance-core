@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Commitments;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Commitments.Readers;
 using Bdgrz.Compliance.Features.Commitments.Events;
 using Bdgrz.Compliance.Features.Commitments.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Commitments.Projectors;
 
 public sealed partial class CommitmentDraftDirectoryProjector(

@@ -1,17 +1,30 @@
+using Cntryl.Portia;
+using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Services;
+using Bdgrz.Compliance.Features.PolicyDistribution.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Work.Rules;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
 using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
 using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.PolicyDistribution;
-using Cntryl.Portia;
-using Microsoft.Extensions.DependencyInjection;
-
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Testing;
 
 /// <summary>Seeds training requirement versions as the root native facts of their owner, without the request guards.</summary>

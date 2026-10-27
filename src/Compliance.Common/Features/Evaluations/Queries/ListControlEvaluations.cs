@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Evaluations.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Evaluations.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Evaluations.Queries;
 
 /// <summary>Lists a control's evaluations, newest first, optionally filtered by state.</summary>

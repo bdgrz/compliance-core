@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
 
 /// <summary>An attributable lifecycle transition retained with the request.</summary>

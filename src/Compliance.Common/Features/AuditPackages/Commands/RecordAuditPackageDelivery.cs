@@ -1,9 +1,9 @@
-using Bdgrz.Compliance.Features.NativeOperations.Models;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.AuditPackages.Commands;
 
 /// <summary>Authored package intent whose exact first-owner acceptance is replayed on every identical retry.</summary>

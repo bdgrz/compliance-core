@@ -1,8 +1,7 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Queries;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Tenants.Handlers;
 
 public sealed class GetTenantProvisioningStatusHandler(IAggregateReader reader)

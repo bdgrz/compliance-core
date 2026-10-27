@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.Providers;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Contracts;
 namespace Bdgrz.Compliance.Features.Providers.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch provider assurance receivers.</summary>

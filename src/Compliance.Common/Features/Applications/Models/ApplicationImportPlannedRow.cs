@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Applications.Models;
 
 public sealed record ApplicationImportPlannedRow(Uuid RowId, string SourceRecordId,

@@ -1,6 +1,7 @@
 using System.Globalization;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>Identity of one immutable personal decision on an instance at its original expected decision count.</summary>

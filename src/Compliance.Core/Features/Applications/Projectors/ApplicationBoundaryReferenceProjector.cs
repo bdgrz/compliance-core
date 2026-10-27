@@ -1,7 +1,11 @@
-using Bdgrz.Compliance.Features.Boundaries.Events;
-using Bdgrz.Compliance.Features.Applications.Projections;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Applications.Projections;
+using Bdgrz.Compliance.Features.Boundaries.Events;
 namespace Bdgrz.Compliance.Features.Applications.Projectors;
 
 /// <summary>Replays boundary events into a separately versioned, tenant-scoped reverse index.</summary>

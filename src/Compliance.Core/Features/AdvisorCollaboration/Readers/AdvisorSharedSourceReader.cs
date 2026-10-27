@@ -1,21 +1,47 @@
-using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Contracts;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Controls.Services;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Services;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Policies.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.Boundaries.Readers;
 using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Controls.Readers;
-using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.Policies.Readers;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Readers;
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.Controls;
-using Bdgrz.Compliance.Features.Evidence;
-using Bdgrz.Compliance.Features.Policies;
-using Bdgrz.Compliance.Features.Readiness;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 
 sealed class AdvisorSharedSourceReader(ControlReader controlSources, PolicyReader policySources,
@@ -140,7 +166,7 @@ sealed class AdvisorSharedSourceReader(ControlReader controlSources, PolicyReade
             assessment = await readiness.ReadViewAsync(tenantId, programId, selected.AssessmentId!.Value, ct)
                 .ConfigureAwait(false);
         }
-        catch (Content.ImmutableContentIntegrityException exception)
+        catch (Bdgrz.Compliance.Features.Content.Services.ImmutableContentIntegrityException exception)
         {
             return Result<AdvisorSharedSourceView>.Failure(new RequestError(RequestErrorKind.Conflict,
                 $"The readiness content cannot be verified yet: {exception.Message}", true));

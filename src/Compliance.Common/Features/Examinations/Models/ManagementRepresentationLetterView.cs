@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Externally sourced management representation letter and its retained signatures.</summary>

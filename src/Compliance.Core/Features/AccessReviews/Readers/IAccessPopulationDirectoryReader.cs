@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 namespace Bdgrz.Compliance.Features.AccessReviews.Readers;
 
 public interface IAccessPopulationDirectoryReader

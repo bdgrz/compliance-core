@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Risks.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Risks.Models;
 namespace Bdgrz.Compliance.Features.Risks.Queries;
 
 [Discriminator("bdgrz.risk.draft.revisions.list", 1)]

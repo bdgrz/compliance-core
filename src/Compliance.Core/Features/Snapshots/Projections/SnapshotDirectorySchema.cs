@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Snapshots.Models;
 using System.Globalization;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Snapshots.Models;
 namespace Bdgrz.Compliance.Features.Snapshots.Projections;
 
 static class SnapshotDirectorySchema

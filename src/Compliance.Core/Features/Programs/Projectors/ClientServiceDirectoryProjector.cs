@@ -1,7 +1,6 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Programs.Events;
 using Bdgrz.Compliance.Features.Programs.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Programs.Projectors;
 
 public sealed partial class ClientServiceDirectoryProjector(IClientServiceDirectoryProjection projection)

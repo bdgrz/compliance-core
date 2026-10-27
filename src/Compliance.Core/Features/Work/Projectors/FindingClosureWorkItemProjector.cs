@@ -1,9 +1,12 @@
-using Bdgrz.Compliance.Features.Work;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Remediation.Aggregates;
 using Bdgrz.Compliance.Features.Work.Projections;
-using Bdgrz.Compliance.Features.Remediation;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Work.Projectors;
 
 public sealed class FindingClosureWorkItemProjector(

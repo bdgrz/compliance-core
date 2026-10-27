@@ -1,10 +1,57 @@
-using Bdgrz.Compliance.Features.AccessReviews;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.AccessReviews.History;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Projections;
+using Bdgrz.Compliance.Features.AccessReviews.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
 using Bdgrz.Compliance.Features.AccessReviews.Events;
-using Bdgrz.Compliance.Features.AccessReviews.Models;
-using Bdgrz.Compliance.Features.Content;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.AccessReviews.Readers;
 
 /// <summary>
@@ -96,7 +143,7 @@ public sealed class AccessReviewReader(IAggregateReader reader, IImmutableConten
         if (owner.Opened is not null)
         {
             var actual = await AccessReviewItemFold.FrozenItemAsync(owner, content, tenantId, ct).ConfigureAwait(false);
-            if (Kernel.ContentDigest.OfJson(actual) != Kernel.ContentDigest.OfJson(frozen))
+            if (Bdgrz.Compliance.Features.Kernel.Services.ContentDigest.OfJson(actual) != Bdgrz.Compliance.Features.Kernel.Services.ContentDigest.OfJson(frozen))
                 throw new ImmutableContentIntegrityException("The frozen authorization identity differs from the prepared item's actual creation.");
         }
         var history = await AccessReviewItemHistory.ReadAsync(events, owner, ct).ConfigureAwait(false);

@@ -6,7 +6,28 @@ using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Tenants.Services;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
 namespace Bdgrz.Compliance.Tests.E2E;
 
 [Collection(BrokerCollectionDefinition.Name)]

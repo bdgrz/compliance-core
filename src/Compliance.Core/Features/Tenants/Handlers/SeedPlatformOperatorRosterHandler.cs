@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Tenants;
-using Bdgrz.Compliance.Features.Tenants.Commands;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Tenants.Services;
+using Bdgrz.Compliance.Features.Tenants.Commands;
 namespace Bdgrz.Compliance.Features.Tenants.Handlers;
 
 public sealed class SeedPlatformOperatorRosterHandler(PlatformOperatorRosterOperations operations) : IRequestHandler<SeedPlatformOperatorRoster>

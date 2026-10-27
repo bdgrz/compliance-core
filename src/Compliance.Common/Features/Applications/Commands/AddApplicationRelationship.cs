@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Applications;
-using Bdgrz.Compliance.Features.Applications.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Applications.Contracts;
+using Bdgrz.Compliance.Features.Applications.Models;
 namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 [Discriminator("bdgrz.application.relationship.add", 1)]

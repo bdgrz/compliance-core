@@ -1,7 +1,7 @@
-using Bdgrz.Compliance.Features.Operations.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.Operations.Queries;
 
 /// <summary>Lists the acting member's operating responsibilities and due or upcoming work.</summary>

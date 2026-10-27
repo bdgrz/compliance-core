@@ -1,13 +1,9 @@
-using Bdgrz.Compliance.Features.ControlMappings;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.ControlMappings.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.ControlMappings.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.ControlMappings.Events;
 
 [Discriminator("bdgrz.criterion_applicability.reviewed", 3)]

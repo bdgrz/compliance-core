@@ -1,9 +1,7 @@
-using Bdgrz.Compliance.Features.Work;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Evidence.Events;
 using Bdgrz.Compliance.Features.Work.Projections;
-using Bdgrz.Compliance.Features.Evidence;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Work.Projectors;
 
 public sealed partial class EvidenceWorkItemProjector(IEvidenceWorkItemProjection projection)

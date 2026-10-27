@@ -1,0 +1,217 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Readers;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.NamedRecords.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Processes.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Operations.Aggregates;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
+
+public sealed class FitzControlOperatingPlanWorkItemDirectoryTests
+{
+    [Fact]
+    public async Task ShouldProjectPendingApprovalAndRemoveAfterApprovalGivenProposedPlan()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var plan = await fixture.ProposeAsync(0);
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var directory = new FitzControlOperatingPlanWorkItemDirectory(new InMemoryKvClient(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
+                sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var identity = new CheckpointIdentity(FitzControlOperatingPlanWorkItemDirectory.ProjectorName,
+            EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ControlOperatingPlan.Area));
+        var proposedCheckpoint = new ProjectionCheckpoint(new EventCursor("plan-proposed"));
+        var approvedCheckpoint = new ProjectionCheckpoint(new EventCursor("plan-approved"));
+
+        // Act
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                         ProjectionCheckpoint.Start)))
+        {
+            await directory.ApplyAsync(await ControlOperatingEvents.ProposedAsync(fixture.Content, plan));
+            await batch.CommitAsync(proposedCheckpoint);
+        }
+        var pending = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
+            CancellationToken.None);
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                         proposedCheckpoint)))
+        {
+            await directory.ApplyAsync(await ControlOperatingEvents.ApprovedAsync(fixture.Content, plan, plan.Revision + 1,
+                fixture.ApproverMemberId, plan.ProposedAt.AddMinutes(1), []));
+            await batch.CommitAsync(approvedCheckpoint);
+        }
+        var approved = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(pending.IsSuccess);
+        var item = Assert.Single(pending.Value);
+        Assert.Equal(WorkSource.ControlOperatingPlanApproval, item.Kind);
+        Assert.Equal(plan.PlanVersionId, item.SourceId);
+        Assert.Equal(fixture.ControlId, item.ControlId);
+        Assert.Equal("Approve operating plan for AC-OPS", item.Summary);
+        Assert.Equal("A control operating plan is awaiting independent approval.", item.Reason);
+        Assert.Equal("approve", item.NextAction);
+        Assert.Equal($"/api/v1/tenants/{fixture.TenantId}/programs/{fixture.ProgramId}/" +
+            $"controls/{fixture.ControlId}/operating-plan/proposals/{plan.PlanVersionId}/approvals",
+            item.ActionPath);
+        Assert.Equal(new OperatingHolder(OperatingAuthority.ProgramManagerHolder,
+            fixture.ProgramId), item.Responsible);
+        Assert.Contains(fixture.LeadMemberId, item.Excluded);
+        Assert.Equal(plan.ProposedAt, item.CreatedAt);
+        Assert.Equal(WorkSource.ControlOperatingPlanApprovalWorkItemId(fixture.TenantId, fixture.ProgramId,
+            fixture.ControlId, plan.PlanVersionId), item.WorkItemId);
+        Assert.True(approved.IsSuccess);
+        Assert.Empty(approved.Value);
+        Assert.Equal(2, await directory.LoadRevisionAsync(fixture.TenantId));
+        Assert.Equal(approvedCheckpoint,
+            await directory.LoadCheckpointAsync(fixture.TenantId));
+    }
+
+    [Fact]
+    public async Task ShouldHideStaleApprovalGivenControlRetired()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var plan = await fixture.ProposeAsync(0);
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var directory = new FitzControlOperatingPlanWorkItemDirectory(new InMemoryKvClient(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
+                sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var identity = new CheckpointIdentity(FitzControlOperatingPlanWorkItemDirectory.ProjectorName,
+            EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ControlOperatingPlan.Area));
+        var checkpoint = new ProjectionCheckpoint(new EventCursor("plan-proposed"));
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                         ProjectionCheckpoint.Start)))
+        {
+            await directory.ApplyAsync(await ControlOperatingEvents.ProposedAsync(fixture.Content, plan));
+            await batch.CommitAsync(checkpoint);
+        }
+        await fixture.RetireControlAsync(fixture.Today);
+
+        // Act
+        var work = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(work.IsSuccess);
+        Assert.Empty(work.Value);
+    }
+
+    [Fact]
+    public async Task ShouldHideStaleApprovalGivenControlVersionChanged()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var plan = await fixture.ProposeAsync(0);
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var directory = new FitzControlOperatingPlanWorkItemDirectory(new InMemoryKvClient(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
+                sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var identity = new CheckpointIdentity(FitzControlOperatingPlanWorkItemDirectory.ProjectorName,
+            EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ControlOperatingPlan.Area));
+        var stalePlan = plan with { ControlVersionId = Uuid.CreateVersion4() };
+
+        // Act
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                         ProjectionCheckpoint.Start)))
+        {
+            await directory.ApplyAsync(await ControlOperatingEvents.ProposedAsync(fixture.Content, stalePlan));
+            await batch.CommitAsync(new ProjectionCheckpoint(new EventCursor("stale-plan")));
+        }
+        var work = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(work.IsSuccess);
+        Assert.Empty(work.Value);
+    }
+
+    [Fact]
+    public async Task ShouldIsolatePendingApprovalToItsTenantAndProgramGivenProposal()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var plan = await fixture.ProposeAsync(0);
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var directory = new FitzControlOperatingPlanWorkItemDirectory(new InMemoryKvClient(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
+                sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var identity = new CheckpointIdentity(FitzControlOperatingPlanWorkItemDirectory.ProjectorName,
+            EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ControlOperatingPlan.Area));
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                         ProjectionCheckpoint.Start)))
+        {
+            await directory.ApplyAsync(await ControlOperatingEvents.ProposedAsync(fixture.Content, plan));
+            await batch.CommitAsync(new ProjectionCheckpoint(new EventCursor("plan-proposed")));
+        }
+
+        // Act
+        var otherProgram = await directory.LoadProgramAsync(fixture.TenantId,
+            Uuid.CreateVersion4(), CancellationToken.None);
+        var otherTenant = await directory.LoadProgramAsync(Uuid.CreateVersion4(), fixture.ProgramId,
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(otherProgram.IsSuccess);
+        Assert.Empty(otherProgram.Value);
+        Assert.True(otherTenant.IsSuccess);
+        Assert.Empty(otherTenant.Value);
+    }
+
+    [Fact]
+    public async Task ShouldRejectNoninitialPlanRevisionGivenFirstProposal()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var plan = await fixture.ProposeAsync(0);
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var directory = new FitzControlOperatingPlanWorkItemDirectory(new InMemoryKvClient(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
+                sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var identity = new CheckpointIdentity(FitzControlOperatingPlanWorkItemDirectory.ProjectorName,
+            EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ControlOperatingPlan.Area));
+
+        // Act
+        await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+            ProjectionCheckpoint.Start));
+
+        // Assert
+        var skipped = plan with { Revision = 2 };
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await directory.ApplyAsync(await ControlOperatingEvents.ProposedAsync(fixture.Content, skipped)));
+    }
+}

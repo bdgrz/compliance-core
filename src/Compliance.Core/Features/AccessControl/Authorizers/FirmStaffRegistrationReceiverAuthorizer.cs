@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Programs.Readers;
 namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 /// <summary>Only the trusted process worker may dispatch registration receivers.</summary>

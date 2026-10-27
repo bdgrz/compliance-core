@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AttestRecords.Models;
 namespace Bdgrz.Compliance.Features.AttestRecords.Commands;
 
 /// <summary>Records the record own attest record package result intent required by the owning feature workflow.</summary>

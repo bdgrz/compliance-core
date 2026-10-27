@@ -2,7 +2,6 @@ using System.Net;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
-
 namespace Bdgrz.Compliance.Tests.E2E;
 
 [Collection(BrokerCollectionDefinition.Name)]

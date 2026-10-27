@@ -1,7 +1,7 @@
-using Bdgrz.Compliance.Features.Applications;
-using Bdgrz.Compliance.Features.Applications.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Applications.Contracts;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Applications.Queries;
 
 /// <summary>Reads only the still-current durable proposal; no unrestricted historical read is implied.</summary>

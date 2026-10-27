@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Snapshots;
-using Bdgrz.Compliance.Features.Snapshots.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Snapshots.Contracts;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 namespace Bdgrz.Compliance.Features.Snapshots.Queries;
 
 [Discriminator("bdgrz.snapshot.program_scope.verify", 1)]

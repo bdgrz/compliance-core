@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Applications.Models;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Reviewed content safe to transfer into platform methodology; omits tenant and source-record identities.</summary>

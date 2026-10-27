@@ -1,11 +1,9 @@
-using Bdgrz.Compliance.Features.Controls;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Controls.History;
 using Bdgrz.Compliance.Features.Controls.Aggregates;
 using Bdgrz.Compliance.Features.Controls.Events;
 using Bdgrz.Compliance.Features.Controls.Projections;
 using Bdgrz.Compliance.Features.Responsibilities.Events;
-using Bdgrz.Compliance.Features.Responsibilities;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Controls.Projectors;
 
 public sealed partial class ControlDraftHistoryDirectoryV1Projector(IControlDraftHistoryDirectoryProjection projection)

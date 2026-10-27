@@ -1,9 +1,7 @@
-using Bdgrz.Compliance.Features.Applications;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Applications.Processes;
 using Bdgrz.Compliance.Features.Applications.Commands;
 using Bdgrz.Compliance.Features.Processes.Models;
-using Bdgrz.Compliance.Features.Processes;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Applications.Handlers;
 
 sealed class CommitApplicationImportBatchHandler(ApplicationImportReceivers receivers)

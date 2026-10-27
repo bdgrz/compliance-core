@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>An attributed decision on one immutable management assertion version.</summary>

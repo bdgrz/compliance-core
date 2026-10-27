@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>An exact governed source version and reconciliation state used by a narrative.</summary>

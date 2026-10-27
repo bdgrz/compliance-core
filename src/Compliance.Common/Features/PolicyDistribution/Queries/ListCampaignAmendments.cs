@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.PolicyDistribution.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 
 [Discriminator("bdgrz.campaign.amendments.list", 1)]

@@ -1,10 +1,34 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Providers.Aggregates;
-using Bdgrz.Compliance.Features.UserIdentities;
 using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 using Bdgrz.Compliance.Features.UserIdentities.Queries;
 using Bdgrz.Compliance.Features.UserIdentities.Readers;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Authorizers;
 namespace Bdgrz.Compliance.Features.UserIdentities.Handlers;
 
 public sealed class GetIdentityRecoveryOptionsHandler(

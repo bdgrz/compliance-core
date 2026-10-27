@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Stable, attributable row identity and exact source and domain references.</summary>

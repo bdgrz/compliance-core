@@ -1,9 +1,9 @@
-using Bdgrz.Compliance.Features.Examinations.Models;
-using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Readiness.Models;
 namespace Bdgrz.Compliance.Features.Operations.Commands;
 
 /// <summary>Proposes a complete Type II plan tied to one examination and exact source versions.</summary>

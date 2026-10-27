@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Retention;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Retention.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
 namespace Bdgrz.Compliance.Features.Retention.Commands;
 
 [Discriminator("bdgrz.artifact_retention.legal_hold.release", 1)]

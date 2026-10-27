@@ -1,8 +1,8 @@
-using Bdgrz.Compliance.Features.PolicyDistribution.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 
 /// <summary>

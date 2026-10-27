@@ -1,10 +1,9 @@
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Cntryl.Portia;
 using System.Text.Json.Serialization;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Retention.Commands;
 namespace Bdgrz.Compliance.Features.Evidence.Commands;
 
 /// <summary>Authorizes and records an attributable download of one available artifact.</summary>

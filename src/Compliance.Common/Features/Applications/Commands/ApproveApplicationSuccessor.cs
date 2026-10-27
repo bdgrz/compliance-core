@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Applications.Contracts;
 namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 [Discriminator("bdgrz.application.successor.approve", 1)]

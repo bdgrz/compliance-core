@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Changes;
-using Bdgrz.Compliance.Features.NativeOperations.Models;
-using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Changes.Contracts;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.Changes.Commands;
 
 /// <summary>Copies one exact approved description or no-change decision into a change record.</summary>

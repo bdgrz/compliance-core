@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.AccessControl.Events;
 
 [Discriminator("bdgrz.sod-waiver.approved", 1)]

@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 public sealed record IndependenceHistoryView(Uuid TenantId, long Sequence,

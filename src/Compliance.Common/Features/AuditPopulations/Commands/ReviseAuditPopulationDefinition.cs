@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.AuditPopulations.Commands;
 
 /// <summary>Records the revise audit population definition intent required by the owning feature workflow.</summary>

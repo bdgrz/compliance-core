@@ -1,0 +1,79 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Projections;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+namespace Bdgrz.Compliance.Features.Evidence.Services;
+
+sealed class EvidenceRedactionSources(EvidenceArtifactReadAccess access, EvidenceArtifactMetadataRead read)
+{
+    public async ValueTask<Result<EvidenceRedactionSourcePair>> CaptureAsync(IRequestContext context, Uuid tenantId,
+        Uuid originalId, Uuid derivedId, CancellationToken ct)
+    {
+        var allowed = await RequireAccessAsync(context, tenantId, originalId, derivedId, ct).ConfigureAwait(false);
+        if (!allowed.IsSuccess)
+            return Result<EvidenceRedactionSourcePair>.Failure(allowed.Error!);
+        var original = await read.GetCapturedAsync(tenantId, originalId, ct).ConfigureAwait(false);
+        if (!original.IsSuccess)
+            return Result<EvidenceRedactionSourcePair>.Failure(original.Error);
+        var derived = await read.GetCapturedAsync(tenantId, derivedId, ct).ConfigureAwait(false);
+        return derived.IsSuccess ? Result<EvidenceRedactionSourcePair>.Success(new(original.Value, derived.Value)) :
+            Result<EvidenceRedactionSourcePair>.Failure(derived.Error);
+    }
+
+    public async ValueTask<Result> RequireAccessAsync(IRequestContext context, Uuid tenantId,
+        Uuid originalId, Uuid derivedId, CancellationToken ct)
+    {
+        foreach (var id in new[] { originalId, derivedId })
+        {
+            var allowed = await access.RequireAsync(context, tenantId, id, ct).ConfigureAwait(false);
+            if (!allowed.IsSuccess)
+                return allowed;
+        }
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> CheckAsync(IRequestContext context, EvidenceRedactionSourcePair pair, CancellationToken ct)
+    {
+        foreach (var snapshot in new[] { pair.Original, pair.Derived })
+        {
+            var metadata = snapshot.Metadata;
+            var allowed = await access.RequireAsync(context, metadata.TenantId, metadata.ArtifactId, ct).ConfigureAwait(false);
+            if (!allowed.IsSuccess)
+                return allowed;
+            var current = await read.CheckAsync(metadata, ct).ConfigureAwait(false);
+            if (!current.IsSuccess)
+                return current;
+        }
+        return Result.Success;
+    }
+
+    internal static EvidenceRedactionSourceCapsule Identity(EvidenceArtifactMetadataSnapshot source)
+    {
+        var view = source.Metadata;
+        var identity = new EvidenceRedactionSourceCapsule(view.TenantId, view.ArtifactId, source.RegistrationEventId,
+            source.RegistrationPayloadSha256, view.ContentSha256, view.ContentLength, view.RegisteredAt, "");
+        return identity with { IdentitySha256 = EvidenceRedaction.IdentityDigest(identity) };
+    }
+}

@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.AuditorRequests.Events;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AuditorRequests.Events;
 namespace Bdgrz.Compliance.Features.AuditorRequests.Projections;
 
 public interface IAuditorRequestDirectoryProjection : IProjectionStore

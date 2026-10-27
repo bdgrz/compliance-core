@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Operations.Models;
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Models;
 
 public sealed record CampaignCompletionView(Uuid CompletionId, Uuid PersonId,

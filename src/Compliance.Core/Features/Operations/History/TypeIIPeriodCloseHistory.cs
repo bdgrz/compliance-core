@@ -1,0 +1,258 @@
+using System.Security.Claims;
+using System.Text.Json;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessReviews.Contracts;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Changes.Contracts;
+using Bdgrz.Compliance.Features.Changes.Services;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Contracts;
+using Bdgrz.Compliance.Features.Incidents.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
+using Bdgrz.Compliance.Features.SourceFacts.History;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceFacts.Services;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Readers;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.Incidents.Readers;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Events;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Readiness.Readers;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Content.Persistence;
+namespace Bdgrz.Compliance.Features.Operations.History;
+
+/// <summary>Authoritative change/incident histories with exact scope, current restricted visibility and receipt cutoff.</summary>
+public sealed class TypeIIPeriodCloseHistory(IDomainEventReader events,
+    RestrictedComplianceRecordVisibility visibility, SignificantChangeReader changes, IImmutableContentStore content, ComplianceIncidentReader incidents, INativeEventReceiptReader receipts)
+{
+    const int MaximumRecords = 100_000;
+
+    public async Task<(IReadOnlyList<TypeIIPeriodCloseNativeSource> Records, IReadOnlyList<Uuid> Unresolved,
+        IReadOnlyList<string> Blockers)> ReadAsync(TypeIIPeriodView period, ClaimsPrincipal actor,
+        DateTimeOffset recordedThrough, CancellationToken ct)
+    {
+        var records = new List<TypeIIPeriodCloseNativeSource>();
+        var unresolved = new SortedSet<Uuid>();
+        var blockers = new List<string>();
+        foreach (var area in new[] { "significant-changes", "compliance-incidents" })
+        {
+            var first = await ReadAreaAsync(period.TenantId, area, period.ProgramId, recordedThrough, ct).ConfigureAwait(false);
+            var groups = first.GroupBy(item => item.Fact.Stream.Resource).OrderBy(group => group.Key, StringComparer.Ordinal);
+            foreach (var group in groups)
+            {
+                var id = Uuid.Parse(group.Key, System.Globalization.CultureInfo.InvariantCulture);
+                if (area == "significant-changes")
+                {
+                    var latest = (await changes.ReadAsync(period.TenantId, period.ProgramId, id, ct).ConfigureAwait(false)).View
+                        ?? throw new ImmutableContentUnavailableException("A discovered native change is not readable yet.");
+                    var past = (await changes.ReadThroughAsync(period.TenantId, period.ProgramId, id, recordedThrough, ct).ConfigureAwait(false)).View
+                        ?? throw new ImmutableContentIntegrityException("A scoped change history has no complete final immutable state.");
+                    if (past.Current is null || past.Current.Content.EffectiveOn > period.PeriodEnd ||
+                        past.Current.Content.EffectiveThrough is { } end && end < period.PeriodStart)
+                        continue;
+                    if (!await visibility.CanReadAsync(period.TenantId, actor, latest.Current!.Content.HandlingClass,
+                            latest.Assessments.Select(item => item.AssessedByMemberId).ToArray(), ct).ConfigureAwait(false))
+                        throw new CloseSourceAccessException();
+                    if (!past.PeriodCloseEligible)
+                        blockers.Add($"Significant change {id} lacks its exact required impact/description disposition or review-work links.");
+                    records.AddRange(group);
+                }
+                else
+                {
+                    var current = await incidents.ReadAuthorityAsync(period.TenantId, period.ProgramId, id, ct).ConfigureAwait(false)
+                        ?? throw new ImmutableContentUnavailableException("A discovered native incident is not readable yet.");
+                    var latest = current.Owner.Header!;
+                    var past = (await incidents.ReadThroughAsync(period.TenantId, period.ProgramId, id, recordedThrough, ct).ConfigureAwait(false)).View
+                        ?? throw new ImmutableContentIntegrityException("A scoped incident history has no complete verified final immutable state.");
+                    if (past.Current is null || DateOnly.FromDateTime(past.Current.Content.OccurredAt.UtcDateTime) > period.PeriodEnd ||
+                        past.Resolution is { } resolution && DateOnly.FromDateTime(resolution.ResolvedAt.UtcDateTime) < period.PeriodStart)
+                        continue;
+                    if (!await visibility.CanReadAsync(period.TenantId, actor, latest.HandlingClass,
+                            current.Authority.Assessments.Select(item => item.AssessorMemberId).ToArray(), ct).ConfigureAwait(false))
+                        throw new CloseSourceAccessException();
+                    if (!past.PeriodCloseEligible)
+                        blockers.Add($"Compliance incident {id} lacks its exact resolved follow-up and description disposition.");
+                    if (past.Status != "resolved")
+                        unresolved.Add(id);
+                    records.AddRange(group);
+                }
+            }
+            var confirmed = await ReadAreaAsync(period.TenantId, area, period.ProgramId, recordedThrough, ct).ConfigureAwait(false);
+            if (!Same(first, confirmed))
+                throw new ImmutableContentUnavailableException("The native close source population changed while captured.");
+        }
+        return (records.OrderBy(item => item.Fact.Stream.ToString(), StreamKeyOrder.Instance)
+            .ThenBy(item => item.Fact.AggregateVersion).ToArray(), unresolved.ToArray(), blockers);
+    }
+
+    async Task<IReadOnlyList<TypeIIPeriodCloseNativeSource>> ReadAreaAsync(Uuid tenant, string area, Uuid program,
+        DateTimeOffset through, CancellationToken ct)
+    {
+        var result = new List<TypeIIPeriodCloseNativeSource>();
+        var receiptCut = new RecordedSourceReceiptCutFactory(events, receipts).Create(tenant, through);
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(tenant.ToString(), area), EventCursor.Start, ct).ConfigureAwait(false))
+        {
+            if (record.Event.Metadata.IsAudit)
+                continue;
+            if (record.Stream.Realm != tenant.ToString() || record.Stream.Area != area || record.Event.Metadata.EventId == Uuid.Empty ||
+                record.Event.Metadata.AggregateVersion == 0)
+                throw new ImmutableContentIntegrityException("A close source scan returned a foreign or unbound native record.");
+            var state = State(record.Event);
+            if (state is null)
+                throw new ImmutableContentIntegrityException("A close source scan returned an unrecognized native record.");
+            if (state.Value.Program != program)
+                continue;
+            var receiptStream = await receiptCut.ReadAsync(record.Stream, ct).ConfigureAwait(false);
+            if (!receiptStream.Includes(record.Event))
+                continue;
+            var recordedAt = receiptStream.RecordedAt(record.Event);
+            if (state.Value.Tenant != tenant || state.Value.Record.ToString() != record.Stream.Resource)
+                throw new ImmutableContentIntegrityException("A close source payload differs from its native tenant or record identity.");
+            if (result.Count >= MaximumRecords)
+                throw new ImmutableContentIntegrityException("The complete native close source population exceeds the supported capture bound.");
+            var captured = Capture(record.Stream, record.Event) with { RecordedAt = recordedAt };
+            if (record.Event is ISignificantChangeFact change)
+            {
+                var body = await content.ReadVerifiedAsync(tenant.ToString(), change.CurrentContent, ct).ConfigureAwait(false);
+                var mutation = await content.ReadVerifiedAsync(tenant.ToString(), change.Change, ct).ConfigureAwait(false);
+                captured = captured with
+                {
+                    ContentBlobs = [new(change.CurrentContent,Convert.ToBase64String(body.Span)),
+                    new(change.Change,Convert.ToBase64String(mutation.Span))]
+                };
+            }
+            if (record.Event is IComplianceIncidentFact incident)
+            {
+                var authority = await content.ReadJsonAsync<ComplianceIncidentCurrentAuthority>(tenant.ToString(), incident.CurrentContent, ct).ConfigureAwait(false);
+                var mutation = await content.ReadJsonAsync<ComplianceIncidentMutation>(tenant.ToString(), incident.Change, ct).ConfigureAwait(false);
+                var references = new[] { incident.CurrentContent,incident.Change,authority.VersionContent,authority.AssessmentContent,
+                    authority.DecisionContent,authority.ResolutionContent,mutation.Payload }.OfType<Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef>().ToList();
+                if (authority.ResolutionContent is { } resolutionRef)
+                {
+                    var resolution = await content.ReadJsonAsync<ComplianceIncidentResolutionView>(tenant.ToString(), resolutionRef, ct).ConfigureAwait(false);
+                    references.AddRange(resolution.FollowUpCompletions.Select(item => item.Proof.RequiredFacts));
+                }
+                var blobs = new List<TypeIIPeriodCloseContentBlob>();
+                foreach (var reference in references.Distinct().OrderBy(item => item.Schema, StringComparer.Ordinal).ThenBy(item => item.ContentId.ToString(), StringComparer.Ordinal))
+                {
+                    var bytes = await content.ReadVerifiedAsync(tenant.ToString(), reference, ct).ConfigureAwait(false);
+                    blobs.Add(new(reference, Convert.ToBase64String(bytes.Span)));
+                }
+                captured = captured with { ContentBlobs = blobs.ToArray() };
+            }
+            result.Add(captured);
+        }
+        return result.OrderBy(item => item.Fact.Stream.ToString(), StreamKeyOrder.Instance)
+            .ThenBy(item => item.Fact.AggregateVersion).ToArray();
+    }
+
+    /// <summary>Retains only the business bodies referenced by this exact selected operating source fact.</summary>
+    public async ValueTask<TypeIIPeriodCloseNativeSource> CaptureOperatingAsync(EventStreamAddress stream,
+        DomainEvent fact, CancellationToken ct)
+    {
+        var references = new List<ImmutableContentRef>();
+        var tenant = Uuid.Parse(stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
+        switch (fact)
+        {
+            case ControlOperatingPlanProposed value:
+                references.Add(value.PlanContent);
+                break;
+            case ControlOperatingPlanApproved value:
+                references.Add(value.ReassignmentsManifest);
+                break;
+            case ControlOccurrenceOpened value:
+                references.Add(value.CreationIntent);
+                references.Add(value.Intent);
+                break;
+            case ControlOccurrenceAttested value:
+                references.Add(value.AttestationContent);
+                break;
+            case ControlOccurrenceReviewed value:
+                references.Add(value.ReviewContent);
+                break;
+            case DueControlOccurrencesGenerated value:
+                references.Add(value.OccurrenceIdsManifest);
+                references.Add(value.CreationIntentManifest);
+                references.Add(value.CurrentContent);
+                var selection = await content.ReadJsonAsync<ControlOccurrenceSelectionManifest>(tenant.ToString(),
+                    value.CreationIntentManifest, ct).ConfigureAwait(false);
+                if (selection.Selections is null || selection.Selections.Any(item => item is null || item.Intent is null))
+                    throw new ImmutableContentIntegrityException("The selected occurrence generation has no complete immutable creation intent selection.");
+                references.AddRange(selection.Selections.Select(item => item.Intent));
+                break;
+        }
+        var blobs = new List<SnapshotSourceContentBlob>();
+        foreach (var reference in references.Distinct())
+        {
+            if (reference is null)
+                throw new ImmutableContentIntegrityException("The selected operating source has no exact required business content reference.");
+            blobs.Add(new(reference, (await content.ReadVerifiedAsync(tenant.ToString(), reference, ct)
+                .ConfigureAwait(false)).ToArray()));
+        }
+        return Capture(stream, fact) with { PhysicalContentBlobs = blobs };
+    }
+
+    public static TypeIIPeriodCloseNativeSource Capture(EventStreamAddress stream, DomainEvent fact) =>
+        new(NativeFactReference.Of(stream, fact), EventKind.Of(fact), ContentDigest.Sha256(fact, fact.GetType()),
+            JsonSerializer.SerializeToElement(fact, fact.GetType(), ComplianceCoreJsonContext.Default));
+
+    static (Uuid Tenant, Uuid Program, Uuid Record, DateTimeOffset At)? State(DomainEvent fact) => fact switch
+    {
+        ISignificantChangeFact e => (e.TenantId, e.Header.ProgramId, e.SubjectId, e.Operation.AcceptedAt),
+        IComplianceIncidentFact e => (e.TenantId, e.Header.ProgramId, e.SubjectId, e.Operation.AcceptedAt),
+        _ => null,
+    };
+
+    static bool Same(IReadOnlyList<TypeIIPeriodCloseNativeSource> left, IReadOnlyList<TypeIIPeriodCloseNativeSource> right) =>
+        left.Count == right.Count && left.Zip(right).All(pair => pair.First.Fact == pair.Second.Fact &&
+            pair.First.EventKind == pair.Second.EventKind && pair.First.RecordedAt == pair.Second.RecordedAt && pair.First.PayloadSha256 == pair.Second.PayloadSha256 &&
+            AuthoredIntentDigest.Compute(pair.First.ContentBlobs ?? []) == AuthoredIntentDigest.Compute(pair.Second.ContentBlobs ?? []));
+}

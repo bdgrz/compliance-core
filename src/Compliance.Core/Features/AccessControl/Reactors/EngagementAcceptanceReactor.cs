@@ -1,16 +1,36 @@
-using Bdgrz.Compliance.Features.AccessControl;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Contracts;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.SourceFacts.Contracts;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Events;
-using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.SourceUse.Models;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.SourceFacts;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.SourceUse;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Content.Persistence;
 namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
 
 /// <summary>
@@ -33,7 +53,7 @@ sealed partial class EngagementAcceptanceReactor(IProjectionCheckpointStore chec
         CancellationToken ct) => StartAsync(context, context.Trigger.Intent, ct);
 
     async ValueTask VerifyAndStartAsync<T>(IReactorContext context, T trigger, ImmutableContentRef intent, CancellationToken ct)
-        where T : DomainEvent, Bdgrz.Compliance.Features.NativeOperations.INativeOperationFact
+        where T : DomainEvent, Bdgrz.Compliance.Features.NativeOperations.Contracts.INativeOperationFact
     {
         await EngagementNativeSource.VerifyAsync(sources, content, context.Source.Stream,
             context.Source.ResourceOffset, trigger, ct).ConfigureAwait(false);

@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using System.Globalization;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Projections;
 
 static class AdvisorHandoffDirectorySchema

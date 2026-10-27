@@ -1,10 +1,7 @@
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.Examinations;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Immutable opening evidence and exact plan-gap acknowledgements for one Type II period.</summary>

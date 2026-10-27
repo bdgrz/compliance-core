@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Proposed additions/changes and conflicts before applying a template.</summary>

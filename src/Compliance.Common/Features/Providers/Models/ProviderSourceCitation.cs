@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>Reference metadata only; no source content or assurance assertion.</summary>

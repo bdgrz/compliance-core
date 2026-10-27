@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
 namespace Bdgrz.Compliance.Features.AttestRecords.Commands;
 
 /// <summary>Records the record own attest record delivery intent required by the owning feature workflow.</summary>

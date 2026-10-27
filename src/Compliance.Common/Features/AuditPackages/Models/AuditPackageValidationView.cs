@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>Validation findings and their separately attributed, rationale-backed overrides.</summary>

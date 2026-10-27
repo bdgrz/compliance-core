@@ -1,10 +1,42 @@
 using System.Net;
-using Bdgrz.Compliance.Features.Artifacts;
 using Cntryl.Portia;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Artifacts.Contracts;
+using Bdgrz.Compliance.Features.Artifacts.Models;
+using Bdgrz.Compliance.Features.Artifacts.Persistence;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.NamedRecords.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Processes.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.E2E;
 
 [Collection(BrokerCollectionDefinition.Name)]

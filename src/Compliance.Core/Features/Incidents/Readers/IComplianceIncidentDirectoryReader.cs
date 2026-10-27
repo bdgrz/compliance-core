@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Incidents.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Incidents.Models;
 namespace Bdgrz.Compliance.Features.Incidents.Readers;
 
 public interface IComplianceIncidentDirectoryReader

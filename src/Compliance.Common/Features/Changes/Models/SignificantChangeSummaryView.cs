@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>Changes within the authorized program/period scope.</summary>

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Workforce.Models;
 
 /// <summary>Public canonical person fields observed in an HRIS or identity-provider source.</summary>

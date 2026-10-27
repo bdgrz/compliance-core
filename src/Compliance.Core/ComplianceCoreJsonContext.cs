@@ -1,32 +1,92 @@
-using Bdgrz.Compliance.Features.AccessControl;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Projections;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Rules;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.Boundaries.Contracts;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Changes.Models;
+using Bdgrz.Compliance.Features.Commitments.Contracts;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Content.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Examinations.History;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Examinations.Rules;
+using Bdgrz.Compliance.Features.Incidents.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Policies.Contracts;
+using Bdgrz.Compliance.Features.Policies.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Projections;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Projections;
+using Bdgrz.Compliance.Features.SystemDescription.Processes;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Projections;
+using Bdgrz.Compliance.Features.Work.Rules;
+using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Projections;
 using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.AccessControl.Events;
-using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Queries;
-using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.AccessReviews.Commands;
 using Bdgrz.Compliance.Features.AccessReviews.Events;
-using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Bdgrz.Compliance.Features.AccessReviews.Queries;
-using Bdgrz.Compliance.Features.Applications;
-using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Events;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Queries;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Events;
 using Bdgrz.Compliance.Features.Applications.Queries;
-using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.AttestRecords.Events;
+using Bdgrz.Compliance.Features.AttestRecords.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Queries;
+using Bdgrz.Compliance.Features.AuditPackages.Commands;
+using Bdgrz.Compliance.Features.AuditPackages.Events;
+using Bdgrz.Compliance.Features.AuditPackages.Queries;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
+using Bdgrz.Compliance.Features.AuditPopulations.Events;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Queries;
+using Bdgrz.Compliance.Features.AuditorRequests.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Events;
+using Bdgrz.Compliance.Features.AuditorRequests.Queries;
 using Bdgrz.Compliance.Features.Boundaries.Commands;
 using Bdgrz.Compliance.Features.Boundaries.Events;
-using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.Boundaries.Queries;
-using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Events;
+using Bdgrz.Compliance.Features.Changes.Queries;
 using Bdgrz.Compliance.Features.Commitments.Commands;
 using Bdgrz.Compliance.Features.Commitments.Events;
-using Bdgrz.Compliance.Features.Commitments.Models;
 using Bdgrz.Compliance.Features.Commitments.Queries;
-using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.ControlMappings.Commands;
 using Bdgrz.Compliance.Features.ControlMappings.Events;
-using Bdgrz.Compliance.Features.ControlMappings.Models;
 using Bdgrz.Compliance.Features.ControlMappings.Queries;
-using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Controls.Commands;
 using Bdgrz.Compliance.Features.Controls.Events;
 using Bdgrz.Compliance.Features.Controls.Models;
@@ -39,21 +99,35 @@ using Bdgrz.Compliance.Features.Evaluations.Commands;
 using Bdgrz.Compliance.Features.Evaluations.Events;
 using Bdgrz.Compliance.Features.Evaluations.Models;
 using Bdgrz.Compliance.Features.Evaluations.Queries;
-using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Evidence.Commands;
+using Bdgrz.Compliance.Features.Evidence.Events;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Queries;
+using Bdgrz.Compliance.Features.Examinations.Commands;
+using Bdgrz.Compliance.Features.Examinations.Events;
+using Bdgrz.Compliance.Features.Examinations.Queries;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Exports.Events;
+using Bdgrz.Compliance.Features.Exports.Models;
+using Bdgrz.Compliance.Features.FirmPortfolio.Models;
+using Bdgrz.Compliance.Features.FirmPortfolio.Queries;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.Incidents.Events;
+using Bdgrz.Compliance.Features.Incidents.Queries;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Queries;
 using Bdgrz.Compliance.Features.Operations.Commands;
 using Bdgrz.Compliance.Features.Operations.Events;
-using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Queries;
-using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Policies.Commands;
 using Bdgrz.Compliance.Features.Policies.Events;
 using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.Policies.Queries;
-using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
 using Bdgrz.Compliance.Features.PolicyDistribution.Events;
-using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Programs.Commands;
 using Bdgrz.Compliance.Features.Programs.Events;
 using Bdgrz.Compliance.Features.Programs.Models;
@@ -62,109 +136,92 @@ using Bdgrz.Compliance.Features.Providers.Commands;
 using Bdgrz.Compliance.Features.Providers.Events;
 using Bdgrz.Compliance.Features.Providers.Models;
 using Bdgrz.Compliance.Features.Providers.Queries;
-using Bdgrz.Compliance.Features.Readiness;
 using Bdgrz.Compliance.Features.Readiness.Commands;
 using Bdgrz.Compliance.Features.Readiness.Events;
-using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Queries;
-using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Features.Remediation.Events;
-using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Queries;
-using Bdgrz.Compliance.Features.Risks;
-using Bdgrz.Compliance.Features.Risks.Commands;
-using Bdgrz.Compliance.Features.Risks.Events;
-using Bdgrz.Compliance.Features.Risks.Models;
-using Bdgrz.Compliance.Features.Risks.Queries;
-using Bdgrz.Compliance.Features.Snapshots.Commands;
-using Bdgrz.Compliance.Features.Snapshots.Events;
-using Bdgrz.Compliance.Features.Snapshots.Models;
-using Bdgrz.Compliance.Features.Snapshots.Queries;
-using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
-using Bdgrz.Compliance.Features.TechnologyInventory.Events;
-using Bdgrz.Compliance.Features.TechnologyInventory.Models;
-using Bdgrz.Compliance.Features.TechnologyInventory.Queries;
-using Bdgrz.Compliance.Features.Tenants;
-using Bdgrz.Compliance.Features.Tenants.Commands;
-using Bdgrz.Compliance.Features.Tenants.Events;
-using Bdgrz.Compliance.Features.Tenants.Models;
-using Bdgrz.Compliance.Features.Tenants.Queries;
-using Bdgrz.Compliance.Features.UserIdentities;
-using Bdgrz.Compliance.Features.UserIdentities.Commands;
-using Bdgrz.Compliance.Features.UserIdentities.Events;
-using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.UserIdentities.Queries;
-using Bdgrz.Compliance.Features.Work;
-using Bdgrz.Compliance.Features.Work.Commands;
-using Bdgrz.Compliance.Features.Work.Events;
-using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.Work.Queries;
-using Bdgrz.Compliance.Features.Workforce;
-using Bdgrz.Compliance.Features.Workforce.Commands;
-using Bdgrz.Compliance.Features.Workforce.Events;
-using Bdgrz.Compliance.Features.Workforce.Models;
-using Bdgrz.Compliance.Features.Workforce.Queries;
 using Bdgrz.Compliance.Features.Responsibilities.Commands;
 using Bdgrz.Compliance.Features.Responsibilities.Events;
-using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Responsibilities.Queries;
 using Bdgrz.Compliance.Features.Retention.Commands;
 using Bdgrz.Compliance.Features.Retention.Events;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Retention.Queries;
-using Bdgrz.Compliance.Features.Applications.Commands;
-using Bdgrz.Compliance.Features.Applications.Events;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.Responsibilities;
-using Bdgrz.Compliance.Features.Retention;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Events;
+using Bdgrz.Compliance.Features.Risks.Queries;
+using Bdgrz.Compliance.Features.Snapshots.Commands;
+using Bdgrz.Compliance.Features.Snapshots.Events;
+using Bdgrz.Compliance.Features.Snapshots.Models;
+using Bdgrz.Compliance.Features.Snapshots.Queries;
+using Bdgrz.Compliance.Features.SourceUse.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Events;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Queries;
+using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Queries;
+using Bdgrz.Compliance.Features.Tenants.Commands;
+using Bdgrz.Compliance.Features.Tenants.Events;
+using Bdgrz.Compliance.Features.Tenants.Queries;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
+using Bdgrz.Compliance.Features.UserIdentities.Events;
+using Bdgrz.Compliance.Features.UserIdentities.Queries;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Events;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Workforce.Commands;
+using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Queries;
 namespace Bdgrz.Compliance;
 
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ExaminationEngagementState))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ExaminationEngagementState))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.Models.ComplianceIncidentAuthorityHeader))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.Models.ComplianceIncidentAssessmentToken))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.Models.ComplianceIncidentCurrentAuthority))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.ComplianceIncidentDirectoryEntry))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.ComplianceIncidentMutation))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.Models.ComplianceIncidentDirectoryEntry))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.Models.ComplianceIncidentMutation))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Incidents.Models.ComplianceIncidentAssessmentToken>))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.Models.SystemDescriptionAuthorityHeader))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.Models.SystemDescriptionCurrentAuthority))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.Models.SystemDescriptionVersionToken))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.SystemDescription.Models.SystemDescriptionVersionToken>))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionSnapshotSourceProof))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionSnapshotSourceFact))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionExportIntent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionExportProcessRecord))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionExportOutput))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.Projections.SystemDescriptionSnapshotSourceProof))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.Projections.SystemDescriptionSnapshotSourceFact))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.Processes.SystemDescriptionExportIntent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.Processes.SystemDescriptionExportProcessRecord))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.SystemDescription.Processes.SystemDescriptionExportOutput))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.SystemDescription.Models.SystemDescriptionVersionView>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.SystemDescription.Models.SystemDescriptionReviewView>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.SystemDescription.Models.SystemDescriptionApprovalView>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.SystemDescription.Models.SystemDescriptionNoChangeDecisionView>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.SystemDescription.Models.SystemDescriptionBindingView>))]
-[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.SystemDescription.SystemDescriptionSnapshotSourceFact>))]
+[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.SystemDescription.Projections.SystemDescriptionSnapshotSourceFact>))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Changes.Models.SignificantChangeAuthorityHeader))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Changes.SignificantChangeDirectoryEntry))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Changes.SignificantChangeMutation))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodCloseContentBlob))]
-[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Operations.TypeIIPeriodCloseContentBlob>))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Changes.Models.SignificantChangeDirectoryEntry))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Changes.Models.SignificantChangeMutation))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIPeriodCloseContentBlob))]
+[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Operations.Models.TypeIIPeriodCloseContentBlob>))]
 
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIPeriodAuthorityHeader))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodMutationContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodCloseMaterialProof))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIPeriodMutationContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIPeriodCloseMaterialProof))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.ObservationPeriodIdentity))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.ObservationPeriodCloseIdentity))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.ObservationPeriodCloseIdentity))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorRecordVersion))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorFeedbackView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorFeedbackCorrectionView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorFeedbackResponseView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorRequestSummaryView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorRequestView))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorHandoffDirectoryEntry))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorFeedbackWorkItemEntry))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorFeedbackWorkItemProjectionState))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorHandoffDirectoryEntry))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorFeedbackWorkItemEntry))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Projections.AdvisorFeedbackWorkItemProjectionState))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorSharedSourceView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorHandoffPreviewItemView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.Models.AdvisorHandoffPreviewView))]
@@ -195,7 +252,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.Models.AuditPackageValidationOverrideChange))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.Commands.StartAuditPackageBuild))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.Commands.MaterializeRecordedAuditPackageDelivery))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.AuditPackageBuildOutputRecord))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.Models.AuditPackageBuildOutputRecord))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.AuditPackages.Models.AuditPackageSelectionEntry>))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.Models.AuditPackageContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.Commands.CreateAuditPackage))]
@@ -268,21 +325,21 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Commands.CompleteAuditorRequestResolution))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Commands.AbortAuditorRequestResolution))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AuditorSampleSelectionIntent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AuditorRequestTermsContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AuditorRequestReopenContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AuditorResponseDraftContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AuditorCommentContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AuditorResponseSubmissionView))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AuditorResolutionDecision))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AdmittedRequestChild))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AdmittedRequestChildKind))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.ResponseResolutionFacts))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.ResponseDispositionProof))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AuditorRequestFailureProof))]
-[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.AuditorRequests.AdmittedRequestChild>))]
-[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.AuditorRequests.ResponseDispositionProof>))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AuditorRequestTermsContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AuditorRequestReopenContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AuditorResponseDraftContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AuditorCommentContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AuditorResponseSubmissionView))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AuditorResolutionDecision))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AdmittedRequestChild))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AdmittedRequestChildKind))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.ResponseResolutionFacts))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.ResponseDispositionProof))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AuditorRequestFailureProof))]
+[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.AuditorRequests.Models.AdmittedRequestChild>))]
+[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.AuditorRequests.Models.ResponseDispositionProof>))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AuditorSampleSelectionView))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.AuditorSampleSelectionLocator))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Models.AuditorSampleSelectionLocator))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Queries.GetAuditorRequest))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Queries.GetSampleSelection))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditorRequests.Queries.ListAuditorRequests))]
@@ -310,20 +367,20 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Events.AuditObservationManagementResponseRecorded))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AuditOutcomeView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AuditOutcomeContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ApplicationRevisionSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ApplicationRetirementSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ReviewedSystemRevisionSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ReviewedSystemRetirementSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ControlVersionSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ApplicationRevisionSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ApplicationRetirementSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ReviewedSystemRevisionSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ReviewedSystemRetirementSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ControlVersionSourceContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ExaminationContentReference))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ExaminationEngagementView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.TypeIBaselineSourceReference))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.TypeIBaselineSourceCoverage))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.EvidenceGovernanceTypeIBaselineSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.EvidenceGovernanceHoldSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.EvidenceGovernanceSourceEvent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.FindingTypeIBaselineSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.FindingTypeIBaselineSourceEvent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.EvidenceGovernanceTypeIBaselineSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.EvidenceGovernanceHoldSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.History.EvidenceGovernanceSourceEvent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.FindingTypeIBaselineSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.History.FindingTypeIBaselineSourceEvent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ExaminationSignOffView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ExaminationSignOffContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ExaminationCommitment))]
@@ -384,8 +441,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Models.MethodologyTemplateReviewView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Models.MethodologyTemplateSummaryView))]
 [JsonSerializable(typeof(Cntryl.Fitz.Extensions.Page<Bdgrz.Compliance.Features.MethodologyTemplates.Models.MethodologyTemplateSummaryView>))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.MethodologyTemplateCatalogIdentity))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.MethodologyTemplatePublishedIdentity))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Models.MethodologyTemplateCatalogIdentity))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Models.MethodologyTemplatePublishedIdentity))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Models.MethodologyTemplateView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Models.MethodologyTemplateVersionView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Queries.PreviewMethodologyTemplateApplication))]
@@ -619,8 +676,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.UserIdentities.Events.TenantIdentityProviderTestRequested))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.UserIdentities.Models.TenantIdentityProviderTestResultContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.UserIdentities.Models.TenantIdentityProviderCredentialContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.UserIdentities.ConfigureTenantIdentityProviderAuthoredIntent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.UserIdentities.RotateTenantIdentityProviderCredentialsAuthoredIntent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.UserIdentities.Models.ConfigureTenantIdentityProviderAuthoredIntent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.UserIdentities.Models.RotateTenantIdentityProviderCredentialsAuthoredIntent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Tenants.Events.TenantOffboardingCompleted))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Events.TypeIBaselineAmended))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Events.TypeIBaselineFrozen))]
@@ -733,12 +790,12 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Commands.ReviewTypeIIOperatingPlan))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Commands.StartTypeIIObservationPeriod))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.ObservationRange))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIRangeOperationKind))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIRangeSettlementKind))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIRangeIntent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodOpeningChange))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodAmendmentChange))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIRangeFailureProof))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIRangeOperationKind))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIRangeSettlementKind))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIRangeIntent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIPeriodOpeningChange))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIPeriodAmendmentChange))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIRangeFailureProof))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Events.TypeIIPeriodOpeningAccepted))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Events.TypeIIPeriodAmendmentAccepted))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Events.TypeIIPeriodAmendmentCanceled))]
@@ -747,17 +804,17 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.ControlCalendarWindow))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.ControlEventWindow))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Commands.MaterializeControlOccurrence))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.ControlOccurrenceCreationIntent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.ControlOccurrenceSelection))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.ControlOccurrenceSelectionManifest))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.ControlOccurrenceCreationIntent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.ControlOccurrenceSelection))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.ControlOccurrenceSelectionManifest))]
 [JsonSerializable(typeof(IReadOnlyList<OccurrenceReassignmentView>))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIObservationCalendarHeader))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIICalendarAuthorizationChange))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIICalendarSettlementChange))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIICalendarReservationContent[]))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIICalendarAuthority))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIICalendarHistoryNode))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIICalendarReservationContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIICalendarAuthorizationChange))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIICalendarSettlementChange))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIICalendarReservationContent[]))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIICalendarAuthority))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.History.TypeIICalendarHistoryNode))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIICalendarReservationContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Events.TypeIIPeriodRangeAuthorized))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Events.TypeIIPeriodRangeSettled))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Commands.AcquireTypeIIPeriodRange))]
@@ -848,8 +905,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(GetClientIndependenceHistory))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.Models.IndependenceRuleCatalogHeader))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.Models.IndependenceRuleRatificationHeader))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.IndependenceRuleVersionContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.IndependenceRatificationContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.Rules.IndependenceRuleVersionContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.Models.IndependenceRatificationContent))]
 [JsonSerializable(typeof(IndependenceRulesRevised))]
 [JsonSerializable(typeof(NonattestServiceRecorded))]
 [JsonSerializable(typeof(ServiceIndependenceReevaluated))]
@@ -1291,7 +1348,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Controls.Models.ControlReviewedContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Controls.Models.ControlRevisionIdentity))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Controls.Models.ControlSuccessorProposedContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Controls.IControlMutationContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Controls.Contracts.IControlMutationContent))]
 [JsonSerializable(typeof(ControlDraftContent))]
 [JsonSerializable(typeof(ControlApplicabilityReference))]
 [JsonSerializable(typeof(ControlRegistration))]
@@ -1388,20 +1445,20 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.Commands.AbortReadinessDecision))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.Models.ReadinessRunIntent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.Models.ReadinessDecisionIntent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.ReadinessInputSnapshot))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.ReadinessEffectiveControl))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.ReadinessPlanProof))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.ReadinessDecisionFailureProof))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.ReadinessPlanFacts))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.ReadinessSourceSet))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.Projections.ReadinessInputSnapshot))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.Models.ReadinessEffectiveControl))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.Models.ReadinessPlanProof))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.Models.ReadinessDecisionFailureProof))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.Models.ReadinessPlanFacts))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.Models.ReadinessSourceSet))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Criteria.Models.Criterion>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.ControlMappings.Models.ControlCriterionMappingView>))]
-[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Readiness.ReadinessEffectiveControl>))]
+[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Readiness.Models.ReadinessEffectiveControl>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Readiness.Models.ReadinessInputView>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Readiness.Models.ReadinessFindingView>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Readiness.Models.ReadinessGapView>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Readiness.Models.ReadinessAccessReviewScopeView>))]
-[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Readiness.ReadinessPlanProof>))]
+[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Readiness.Models.ReadinessPlanProof>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Proofs.Models.AuthoritativeReadCut>))]
 [JsonSerializable(typeof(IReadOnlyList<EvidenceReference>))]
 [JsonSerializable(typeof(IReadOnlyList<FindingLink>))]
@@ -1464,13 +1521,13 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.Commands.CompleteRiskTreatmentActionReview))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.Commands.AbortRiskTreatmentActionReview))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.Models.RiskActionCompletionReviewIntent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.RiskActionReviewDecision))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.ReviewedEvidenceRequest))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.ReviewEvidenceFacts))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.EvidenceUseProof))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.RiskActionReviewFailureProof))]
-[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Risks.ReviewedEvidenceRequest>))]
-[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Risks.EvidenceUseProof>))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.Models.RiskActionReviewDecision))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.Models.ReviewedEvidenceRequest))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.Models.ReviewEvidenceFacts))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.Models.EvidenceUseProof))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Risks.Models.RiskActionReviewFailureProof))]
+[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Risks.Models.ReviewedEvidenceRequest>))]
+[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Risks.Models.EvidenceUseProof>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.SourceUse.Models.SourceUseRequirement>))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.NativeOperations.Models.NativeFactReference>))]
 [JsonSerializable(typeof(AddCorrectiveAction))]
@@ -1591,13 +1648,13 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(IReadOnlyList<AccessReviewItemView>))]
 [JsonSerializable(typeof(IReadOnlyList<AccessDecisionView>))]
 [JsonSerializable(typeof(IReadOnlyList<AccessReviewItemCompletionProof>))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.ClosureParentKind))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewCampaignCompletionSource))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewItemDecisionsSource))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewItemChangeSource))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewItemVerificationSource))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewItemExceptionSource))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewItemReassignmentSource))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.ClosureParentKind))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AccessReviewCampaignCompletionSource))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AccessReviewItemDecisionsSource))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AccessReviewItemChangeSource))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AccessReviewItemVerificationSource))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AccessReviewItemExceptionSource))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AccessReviewItemReassignmentSource))]
 [JsonSerializable(typeof(AccessReviewCampaignRegistration))]
 [JsonSerializable(typeof(AccessReviewCampaignSummaryView))]
 [JsonSerializable(typeof(AccessReviewCampaignView))]
@@ -1852,17 +1909,17 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(PolicyView))]
 [JsonSerializable(typeof(PolicyRetirementProposalView))]
 [JsonSerializable(typeof(PolicyVersionView))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.PolicyVersionSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.PolicyRetirementSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.PolicyCommunicationCampaignSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.TrainingRequirementSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessExpectationLedgerSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewCampaignSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewCampaignSourceEvent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.RiskSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.RiskSourceEvent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ProviderSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ProviderSourceEvent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Rules.PolicyVersionSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Rules.PolicyRetirementSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Rules.PolicyCommunicationCampaignSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.TrainingRequirementSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AccessExpectationLedgerSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AccessReviewCampaignSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.AccessReviewCampaignSourceEvent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.RiskSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.History.RiskSourceEvent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.ProviderSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.History.ProviderSourceEvent))]
 [JsonSerializable(typeof(Page<PolicyVersionView>))]
 [JsonSerializable(typeof(PolicyDecisionView))]
 [JsonSerializable(typeof(Page<PolicyDecisionView>))]
@@ -1932,7 +1989,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(IReadOnlyList<PolicyParticipantAdmissionProof>))]
 [JsonSerializable(typeof(IReadOnlyList<CampaignAdmittedResult>))]
 [JsonSerializable(typeof(IReadOnlyList<CampaignParticipantProof>))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.AdmittedChildKind))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.AdmittedChildKind))]
 [JsonSerializable(typeof(CreateRiskDraft))]
 [JsonSerializable(typeof(ReviseRiskDraft))]
 [JsonSerializable(typeof(RecordTechnologyComponent))]
@@ -1945,9 +2002,9 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(TechnologyComponentView))]
 [JsonSerializable(typeof(Page<TechnologyComponentView>))]
 [JsonSerializable(typeof(TechnologyComponentRevisionRecorded))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.TechnologyComponentSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.InformationAssetSourceContent))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.DataFlowSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.TechnologyComponentSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.InformationAssetSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.Models.DataFlowSourceContent))]
 [JsonSerializable(typeof(RecordInformationAsset))]
 [JsonSerializable(typeof(ReviseInformationAsset))]
 [JsonSerializable(typeof(GetInformationAsset))]
@@ -2553,11 +2610,11 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.Models.ImmutableSelectionManifest))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.Models.ProtectedResponseContentRef))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.ReadCutScope))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.SelectionOrder))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.Models.ReadCutScope))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.Models.SelectionOrder))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.Models.SourceFactLocator))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.SourceFacts.SnapshotCursor))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.SourceFacts.SnapshotCapture))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.SourceFacts.Projections.SnapshotCursor))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.SourceFacts.Projections.SnapshotCapture))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.DurableIntentHeader))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.AcceptedOperationBinding))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.NativeFactReference))]
@@ -2566,17 +2623,17 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.Models.ReceiverOutcome.Replayed))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.Models.ReceiverOutcome.Superseded))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.Models.ReceiverOutcome.Performed))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ProcessRecord))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ProcessRecordManifest))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ProcessKey))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ProcessLease))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ProcessState))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.Processes.ProcessRecord))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.Processes.ProcessRecordManifest))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.Processes.ProcessKey))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.Processes.ProcessLease))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.Processes.ProcessState))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.EntityConcurrency))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.FirstResponseDescriptor))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.MutationResultContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.UnitResult))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.OperationAcceptedResponse))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.NamedRecords.NamedRecordKind))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.NamedRecords.Models.NamedRecordKind))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NamedRecords.Models.RecordNameChangeIntent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NamedRecords.Models.NameChangeFailureProof))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Providers.Events.ProviderChangeAccepted))]
@@ -2635,20 +2692,20 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.OperationAccessScope))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.OperationProvenance))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.OperationResultDescriptor))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.OperationStatus))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.OperationStatus))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.OperationStatusResponse))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.OperationSubject))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.ResponseBodyReference))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.StandardResponseBody))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.Models.ProtectedResponseBody))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Content.ImmutableContentManifest))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Content.Models.ImmutableContentManifest))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Snapshots.Models.SnapshotSourceBlob))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Snapshots.Models.SnapshotSourcePublicationEntry))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Snapshots.Models.SnapshotSourcePublicationManifest))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Commands.RecordTypeIIPeriodCloseValidation))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodCloseValidationChange))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodCloseSourceEnvelope))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIPeriodCloseValidationChange))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.Models.TypeIIPeriodCloseSourceEnvelope))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.Models.AuditPopulationHeader))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.Models.AuditPopulationCommandContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.Models.AuditPopulationDecisionSource))]

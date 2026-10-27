@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>A bounded current provider dependency on an application's reviewed system.</summary>

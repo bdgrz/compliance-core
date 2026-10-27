@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
 namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 sealed class MembershipRetirementAuthorizer : IRequestAuthorizer<CompleteMemberRetirement>,

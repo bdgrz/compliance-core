@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.AccessControl.Events;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 namespace Bdgrz.Compliance.Features.AccessControl.Projectors;
 
 public sealed partial class AccessGrantProjector(IAccessGrantProjection projection)

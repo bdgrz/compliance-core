@@ -1,8 +1,8 @@
-using Bdgrz.Compliance.Features.AccessControl;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.AccessControl.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Projectors;
 
 public sealed partial class PermissionProjector(IPermissionProjection projection)

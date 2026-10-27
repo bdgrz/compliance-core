@@ -1,0 +1,424 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using RiskEvaluation = Bdgrz.Compliance.Features.Risks.Rules.RiskEvaluationRules;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Rules;
+using Bdgrz.Compliance.Features.Risks.Services;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Versioning.Models;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.NamedRecords.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Processes.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.SourceUse.Handlers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Tests;
+namespace Bdgrz.Compliance.Tests.Features.Risks.Tests;
+
+public sealed class RiskEvaluationTests
+{
+    static readonly Uuid TenantId = Uuid.CreateVersion4();
+    static readonly Uuid ProgramId = Uuid.CreateVersion4();
+    static readonly Uuid AssessorId = Uuid.CreateVersion4();
+    static readonly Uuid ApproverId = Uuid.CreateVersion4();
+    static readonly DateTimeOffset Now = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
+
+    [Theory]
+    [InlineData("rationale")]
+    [InlineData("actor")]
+    [InlineData("revision")]
+    public void ShouldConflictGivenAssessmentRetryWithChangedOriginalAuthoredBinding(string change)
+    {
+        // Arrange
+        var evaluation = new RiskEvaluation(TenantId, Uuid.CreateVersion4());
+        var method = Method(12);
+        var id = Uuid.CreateVersion4();
+        var actor = Uuid.CreateVersion4();
+        Assert.Null(evaluation.RecordAssessment(ProgramId, 0, id, method, "inherent", 2, 2,
+            "Original assessment", actor, "Assessor", Now));
+
+        // Act
+        var result = evaluation.RecordAssessment(ProgramId, change == "revision" ? 1 : 0, id, method,
+            "inherent", 2, 2, change == "rationale" ? "Changed assessment" : "Original assessment",
+            change == "actor" ? Uuid.CreateVersion4() : actor, "Assessor", Now.AddMinutes(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, result?.Code);
+        Assert.Equal(1, evaluation.Revision);
+    }
+
+    [Fact]
+    public void ShouldDeriveScoreAndKeepAttributableHistoryGivenInherentAndTarget()
+    {
+        // Arrange
+        var method = Method(12);
+        var evaluation = New();
+        var inherentId = Uuid.CreateVersion4();
+
+        // Act
+        var inherent = evaluation.RecordAssessment(ProgramId, 0, inherentId, method, "inherent",
+            4, 5, "Provider outage is likely", AssessorId, "Assessor", Now);
+        var replay = evaluation.RecordAssessment(ProgramId, 0, inherentId, method, "inherent",
+            4, 5, "Provider outage is likely", AssessorId, "Assessor", Now);
+        var target = evaluation.RecordAssessment(ProgramId, 1, Uuid.CreateVersion4(), method,
+            "target", 2, 3, "After failover", AssessorId, "Assessor", Now.AddMinutes(1));
+
+        // Assert
+        Assert.Null(inherent);
+        Assert.Null(replay);
+        Assert.Null(target);
+        Assert.Equal(2, evaluation.Revision);
+        var recorded = Assert.IsType<RiskAssessmentRecordedBody>(
+            new RiskEvaluationRulesScenario(evaluation).PendingEvents[0]);
+        Assert.Equal(20, recorded.Assessment.Score);
+        Assert.Equal(ActorReference.ForMember(AssessorId, "Assessor"), recorded.Assessment.Assessor);
+        Assert.Equal(method.MethodVersionId, recorded.Assessment.MethodVersionId);
+        Assert.Equal(6, evaluation.Latest("target")!.Score);
+    }
+
+    [Fact]
+    public void ShouldRejectAssessmentGivenInvalidPhaseScaleOrOrdering()
+    {
+        // Arrange
+        var method = Method(12);
+        var evaluation = New();
+
+        // Act
+        var residualFirst = evaluation.RecordAssessment(ProgramId, 0, Uuid.CreateVersion4(),
+            method, "residual", 2, 2, "Too early", AssessorId, "Assessor", Now);
+        var badPhase = evaluation.RecordAssessment(ProgramId, 0, Uuid.CreateVersion4(),
+            method, "gross", 2, 2, "Unknown", AssessorId, "Assessor", Now);
+        var badScale = evaluation.RecordAssessment(ProgramId, 0, Uuid.CreateVersion4(),
+            method, "inherent", 6, 2, "Off scale", AssessorId, "Assessor", Now);
+        var otherProgram = evaluation.RecordAssessment(ProgramId, 0, Uuid.CreateVersion4(),
+            method with { ProgramId = Uuid.CreateVersion4() }, "inherent", 2, 2, "Wrong",
+            AssessorId, "Assessor", Now);
+        var stale = evaluation.RecordAssessment(ProgramId, 3, Uuid.CreateVersion4(),
+            method, "inherent", 2, 2, "Stale", AssessorId, "Assessor", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, residualFirst!.Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, badPhase!.Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, badScale!.Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, otherProgram!.Code);
+        Assert.Equal(CommandFailureCode.VersionConflict, stale!.Code);
+        Assert.Equal(0, evaluation.Revision);
+    }
+
+    [Fact]
+    public void ShouldRequireNonMitigateTreatmentGivenResidualWithoutControlTreatment()
+    {
+        // Arrange
+        var method = Method(12);
+        var evaluation = New();
+        Assert.Null(Inherent(evaluation, method));
+        Assert.Null(evaluation.ChooseTreatment(ProgramId, 1, "mitigate", "Add failover",
+            AssessorId, "Assessor", Now));
+
+        // Act
+        var residual = evaluation.RecordAssessment(ProgramId, 2, Uuid.CreateVersion4(),
+            method, "residual", 2, 2, "After failover", AssessorId, "Assessor", Now);
+        var badKind = evaluation.ChooseTreatment(ProgramId, 2, "ignore", "No",
+            AssessorId, "Assessor", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, residual!.Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, badKind!.Code);
+        Assert.Equal("mitigate", evaluation.Treatment!.Kind);
+    }
+
+    [Fact]
+    public void ShouldRecordResidualUnderMitigateGivenAcceptedControlTreatment()
+    {
+        // Arrange
+        var method = Method(12);
+        var evaluation = New();
+        Assert.Null(Inherent(evaluation, method));
+        Assert.Null(evaluation.ChooseTreatment(ProgramId, 1, "mitigate", "Add failover",
+            AssessorId, "Assessor", Now));
+
+        // Act
+        var residual = evaluation.RecordAssessment(ProgramId, 2, Uuid.CreateVersion4(),
+            method, "residual", 2, 2, "After failover", AssessorId, "Assessor", Now,
+            hasAcceptedControlTreatment: true);
+
+        // Assert
+        Assert.Null(residual);
+        Assert.Equal(4, evaluation.Latest("residual")!.Score);
+    }
+
+    [Fact]
+    public void ShouldDenyOwnerAcceptanceGivenNoWaiverThenAllowGivenExactWaiver()
+    {
+        // Arrange
+        var method = Method(12);
+        var (evaluation, residualId) = ReadyForAcceptance(method, 1, 1);
+        var waiver = new SeparationOfDutiesWaiver(TenantId, Uuid.CreateVersion4());
+        Assert.Null(waiver.Record(new SeparationOfDutiesWaiverScope("risk", evaluation.Id,
+                residualId, 3, "approve"), ApproverId, Uuid.CreateVersion4(), "Admin",
+            "Sole executive owns the risk.", Now.AddMinutes(-10), Now.AddDays(1)));
+        Assert.Null(waiver.Approve(Uuid.CreateVersion4(), "Other admin", Now.AddMinutes(-5)));
+        var otherScope = new SeparationOfDutiesWaiver(TenantId, Uuid.CreateVersion4());
+        Assert.Null(otherScope.Record(new SeparationOfDutiesWaiverScope("risk", evaluation.Id,
+                Uuid.CreateVersion4(), 3, "approve"), ApproverId, Uuid.CreateVersion4(),
+            "Admin", "Wrong assessment.", Now.AddMinutes(-10), Now.AddDays(1)));
+        Assert.Null(otherScope.Approve(Uuid.CreateVersion4(), "Other admin", Now.AddMinutes(-5)));
+
+        // Act
+        var unwaived = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId, method,
+            "executive", true, Now.AddMonths(3), "Owner accepts", ApproverId, "CEO", Now,
+            ApproverId);
+        var mismatched = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId,
+            method, "executive", true, Now.AddMonths(3), "Owner accepts", ApproverId, "CEO",
+            Now, ApproverId, Proof(otherScope));
+        var waived = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId, method,
+            "executive", true, Now.AddMonths(3), "Owner accepts", ApproverId, "CEO", Now,
+            ApproverId, Proof(waiver));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.ActorProhibited, unwaived!.Code);
+        Assert.Equal(CommandFailureCode.ActorProhibited, mismatched!.Code);
+        Assert.Null(waived);
+        Assert.Equal(waiver.Id, Assert.Single(evaluation.ToView().Acceptances)
+            .SeparationOfDutiesWaiverId);
+    }
+
+    [Fact]
+    public void ShouldReportReassessmentDueGivenOpenTrigger()
+    {
+        // Arrange
+        var method = Method(12);
+        var evaluation = New();
+        Assert.Null(Inherent(evaluation, method));
+        var trigger = new RiskReassessmentTriggerView(Uuid.CreateVersion4(), evaluation.Id,
+            "boundary_changed", Uuid.CreateVersion4().ToString(), Now.AddMinutes(1));
+
+        // Act
+        var view = RiskEvaluationStatus.AsOf(evaluation.ToView() with
+        {
+            OpenReassessmentTriggers = [trigger],
+        }, Now.AddMinutes(2));
+
+        // Assert
+        Assert.Equal("reassessment_due", view.Status);
+    }
+
+    [Fact]
+    public void ShouldAcceptWithinAppetiteGivenComplianceLeadAndTwelveMonthExpiry()
+    {
+        // Arrange
+        var method = Method(12);
+        var (evaluation, residualId) = ReadyForAcceptance(method, likelihood: 3, impact: 4);
+
+        // Act
+        var accepted = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId,
+            method, "compliance_lead", true, Now.AddMonths(12), "Within appetite",
+            ApproverId, "Lead", Now);
+
+        // Assert
+        Assert.Null(accepted);
+        var acceptance = Assert.IsType<RiskAcceptedBody>(
+            new RiskEvaluationRulesScenario(evaluation).PendingEvents[^1]).Acceptance;
+        Assert.Equal("compliance_lead", acceptance.ApproverAuthority);
+        Assert.Equal(ApproverId, acceptance.ApproverMemberId);
+        Assert.Equal(Now.AddMonths(12), acceptance.ExpiresAt);
+        Assert.Equal(12, acceptance.ResidualScore);
+    }
+
+    [Theory]
+    [InlineData(12, 4, 4, "compliance_lead", true, CommandFailureCode.ActorProhibited)]
+    [InlineData(null, 1, 1, "compliance_lead", true, CommandFailureCode.ActorProhibited)]
+    [InlineData(12, 1, 1, "compliance_lead", false, CommandFailureCode.ActorProhibited)]
+    [InlineData(12, 4, 4, "executive", false, CommandFailureCode.ActorProhibited)]
+    [InlineData(12, 1, 1, "owner", true, CommandFailureCode.InvalidContent)]
+    public void ShouldDenyAcceptanceGivenMissingAuthority(int? appetite, int likelihood,
+        int impact, string authority, bool held, CommandFailureCode expected)
+    {
+        // Arrange
+        var method = Method(appetite);
+        var (evaluation, residualId) = ReadyForAcceptance(method, likelihood, impact);
+
+        // Act
+        var failure = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId, method,
+            authority, held, Now.AddMonths(6), "Accept", ApproverId, "Approver", Now);
+
+        // Assert
+        Assert.Equal(expected, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Equal(3, evaluation.Revision);
+    }
+
+    [Fact]
+    public void ShouldAcceptAboveAppetiteGivenExecutiveAuthority()
+    {
+        // Arrange
+        var method = Method(null);
+        var (evaluation, residualId) = ReadyForAcceptance(method, 5, 5);
+
+        // Act
+        var failure = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId, method,
+            "executive", true, Now.AddMonths(3), "Board accepts", ApproverId, "CEO", Now);
+
+        // Assert
+        Assert.Null(failure);
+        Assert.Equal(4, evaluation.Revision);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(366)]
+    public void ShouldDenyAcceptanceGivenExpiryOutsideTwelveMonths(int days)
+    {
+        // Arrange
+        var method = Method(12);
+        var (evaluation, residualId) = ReadyForAcceptance(method, 1, 1);
+
+        // Act
+        var failure = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId, method,
+            "executive", true, Now.AddDays(days), "Accept", ApproverId, "CEO", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+    }
+
+    [Fact]
+    public void ShouldDenyAcceptanceGivenApproverAssessedResidualOrTreatmentNotAccept()
+    {
+        // Arrange
+        var method = Method(12);
+        var (evaluation, residualId) = ReadyForAcceptance(method, 1, 1);
+        var transfer = New();
+        Assert.Null(Inherent(transfer, method));
+        Assert.Null(transfer.ChooseTreatment(ProgramId, 1, "transfer", "Insured",
+            AssessorId, "Assessor", Now));
+        var transferResidual = Uuid.CreateVersion4();
+        Assert.Null(transfer.RecordAssessment(ProgramId, 2, transferResidual, method,
+            "residual", 1, 1, "Insured", AssessorId, "Assessor", Now));
+
+        // Act
+        var selfApproval = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId,
+            method, "executive", true, Now.AddMonths(1), "Mine", AssessorId, "Assessor", Now);
+        var notAccept = transfer.Accept(ProgramId, 3, Uuid.CreateVersion4(), transferResidual,
+            method, "executive", true, Now.AddMonths(1), "Accept", ApproverId, "CEO", Now);
+        var unknownResidual = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), method, "executive", true, Now.AddMonths(1), "Accept",
+            ApproverId, "CEO", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.ActorProhibited, selfApproval!.Code);
+        Assert.Equal(CommandFailureCode.StateConflict, notAccept!.Code);
+        Assert.Equal(CommandFailureCode.StateConflict, unknownResidual!.Code);
+    }
+
+    [Fact]
+    public void ShouldReportReassessmentDueGivenExpiredAcceptance()
+    {
+        // Arrange
+        var method = Method(12);
+        var (evaluation, residualId) = ReadyForAcceptance(method, 1, 1);
+        Assert.Null(evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId, method,
+            "compliance_lead", true, Now.AddMonths(1), "Accept", ApproverId, "Lead", Now));
+        var view = evaluation.ToView();
+
+        // Act
+        var active = RiskEvaluationStatus.AsOf(view, Now.AddDays(1));
+        var expired = RiskEvaluationStatus.AsOf(view, Now.AddMonths(1));
+        var unassessed = RiskEvaluationStatus.AsOf(New().ToView(), Now);
+
+        // Assert
+        Assert.Equal("accepted", active.Status);
+        Assert.Equal("active", Assert.Single(active.Acceptances).Status);
+        Assert.Equal("reassessment_due", expired.Status);
+        Assert.Equal("expired", Assert.Single(expired.Acceptances).Status);
+        Assert.Equal("unassessed", unassessed.Status);
+        Assert.Equal(Now.AddYears(1), active.ReassessmentDueAt);
+    }
+
+    [Theory]
+    [InlineData("compliance_lead", "risk.accept.compliance_lead")]
+    [InlineData("executive", "risk.accept.executive")]
+    [InlineData("owner", null)]
+    public void ShouldRequireDistinctGrantGivenClaimedAcceptanceAuthority(string authority,
+        string? expected)
+    {
+        // Arrange
+        var claimed = authority;
+
+        // Act
+        var permission = RbacPermissions.RiskAcceptanceFor(claimed);
+
+        // Assert
+        Assert.Equal(expected, permission);
+    }
+
+    static RiskEvaluation New() => new(TenantId, Uuid.CreateVersion4());
+
+    static CommandFailure? Inherent(RiskEvaluation evaluation, RiskMethodVersionView method) =>
+        evaluation.RecordAssessment(ProgramId, 0, Uuid.CreateVersion4(), method, "inherent",
+            5, 5, "Severe", AssessorId, "Assessor", Now);
+
+    static (RiskEvaluation Evaluation, Uuid ResidualId) ReadyForAcceptance(
+        RiskMethodVersionView method, int likelihood, int impact)
+    {
+        var evaluation = New();
+        Assert.Null(Inherent(evaluation, method));
+        Assert.Null(evaluation.ChooseTreatment(ProgramId, 1, "accept", "Cost exceeds benefit",
+            AssessorId, "Assessor", Now));
+        var residualId = Uuid.CreateVersion4();
+        Assert.Null(evaluation.RecordAssessment(ProgramId, 2, residualId, method, "residual",
+            likelihood, impact, "As accepted", AssessorId, "Assessor", Now));
+        return (evaluation, residualId);
+    }
+
+    static SeparationOfDutiesWaiverProof Proof(SeparationOfDutiesWaiver waiver)
+    {
+        var scope = waiver.Scope!;
+        return new(waiver.TenantId, waiver.Id, waiver.BeneficiaryMemberId, waiver.BeneficiaryMemberId,
+            scope.Action, scope.RecordType, scope.RecordId, scope.VersionId, scope.Revision,
+            new Bdgrz.Compliance.Features.Proofs.Models.SourceFactLocator(waiver.Stream, Uuid.CreateVersion4(), 1, 10001,
+                1000001, 2, new string('a', 64)), waiver.ApprovedAt!.Value, waiver.ExpiresAt);
+    }
+
+    static RiskMethodVersionView Method(int? appetite)
+    {
+        var method = new RiskMethodRules(TenantId, ProgramId);
+        Assert.Null(method.Publish(ProgramId, 0, RiskMethodTests.Scale(),
+            RiskMethodTests.Scale(), appetite, ActorReference.ForMember(ApproverId, "Lead"),
+            Now));
+        return method.Current!;
+    }
+}

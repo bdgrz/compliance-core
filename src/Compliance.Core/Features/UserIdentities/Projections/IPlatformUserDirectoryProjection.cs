@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.UserIdentities.Events;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.UserIdentities.Events;
 namespace Bdgrz.Compliance.Features.UserIdentities.Projections;
 
 public interface IPlatformUserDirectoryProjection : IProjectionStore

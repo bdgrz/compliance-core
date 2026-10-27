@@ -1,6 +1,6 @@
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.UserIdentities.Queries;
 
 [Discriminator("bdgrz.user-identity.recovery-options", 1)]

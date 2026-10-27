@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>A control's current, pending, and historical operating plan versions.</summary>

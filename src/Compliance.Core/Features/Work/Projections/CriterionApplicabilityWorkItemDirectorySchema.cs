@@ -1,6 +1,7 @@
-using Bdgrz.Compliance.Features.Work;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
 namespace Bdgrz.Compliance.Features.Work.Projections;
 
 static class CriterionApplicabilityWorkItemDirectorySchema

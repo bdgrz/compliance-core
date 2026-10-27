@@ -1,10 +1,8 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NativeOperations.Contracts;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Remediation.Models;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Remediation.Events;
 
 /// <summary>A risk acceptance or waiver linked to the finding; the complete <see cref="FindingAcceptanceView" /> is verified content.</summary>

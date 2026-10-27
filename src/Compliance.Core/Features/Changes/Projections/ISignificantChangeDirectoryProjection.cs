@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Changes.Projections;
 
 public interface ISignificantChangeDirectoryProjection : IProjectionStore

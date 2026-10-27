@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>

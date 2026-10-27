@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Approved Type II period intent bound to exact Type I inputs and shared source versions.</summary>

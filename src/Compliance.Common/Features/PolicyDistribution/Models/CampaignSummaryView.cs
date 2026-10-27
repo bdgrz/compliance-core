@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Models;
 
 /// <summary>The projected list row of a campaign.</summary>

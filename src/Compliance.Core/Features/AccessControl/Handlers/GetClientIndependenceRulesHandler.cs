@@ -1,10 +1,10 @@
-using Bdgrz.Compliance.Features.AccessControl;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Content.Services;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Projections;
 using Bdgrz.Compliance.Features.AccessControl.Queries;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 public sealed class GetClientIndependenceRulesHandler(IndependenceRuleCatalogReader rules, IndependenceRuleRatificationReader ratifications)
@@ -20,7 +20,7 @@ public sealed class GetClientIndependenceRulesHandler(IndependenceRuleCatalogRea
             return Result<IReadOnlyList<IndependenceRuleVersionView>>.Success(
                 IndependenceRuleVersionProjection.ApplyRatifications(versions, decisions));
         }
-        catch (Bdgrz.Compliance.Features.Content.ImmutableContentIntegrityException error)
+        catch (Bdgrz.Compliance.Features.Content.Services.ImmutableContentIntegrityException error)
         {
             return Result<IReadOnlyList<IndependenceRuleVersionView>>.Failure(IndependenceCatalogContent.Failure(error));
         }

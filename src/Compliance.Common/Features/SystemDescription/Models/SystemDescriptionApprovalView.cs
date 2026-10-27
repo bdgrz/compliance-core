@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>An approval of one exact version and its examination snapshot.</summary>

@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>One immutable package selection and its build, validation, disclosure, and delivery history.</summary>

@@ -1,7 +1,5 @@
-using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-
+using Bdgrz.Compliance.Features.Controls.Contracts;
 namespace Bdgrz.Compliance.Features.Controls.Models;
 
 /// <summary>All business changes of one accepted command; successor/withdrawal changes publish atomically.</summary>

@@ -1,7 +1,7 @@
-using Bdgrz.Compliance.Features.Snapshots.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 namespace Bdgrz.Compliance.Features.Snapshots.Readers;
 
 public interface IPopulationSnapshotDirectoryReader

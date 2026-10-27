@@ -1,6 +1,4 @@
-using Bdgrz.Compliance.Features.Responsibilities;
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Responsibilities.Models;
 
 public sealed record ResponsibilityConflictView(ResponsibilityConflictKind Kind,

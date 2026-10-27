@@ -1,7 +1,6 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.AccessControl.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Projectors;
 
 public sealed partial class TeamMemberDirectoryProjector(ITeamMemberDirectoryProjection projection)

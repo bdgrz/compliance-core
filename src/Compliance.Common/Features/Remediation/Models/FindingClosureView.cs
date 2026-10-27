@@ -1,9 +1,7 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Operations.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Operations;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.Remediation.Models;
 
 /// <summary>The verification and closure review decision for a finding.</summary>

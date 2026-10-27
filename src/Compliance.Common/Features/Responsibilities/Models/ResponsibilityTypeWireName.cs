@@ -1,4 +1,4 @@
-using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Responsibilities.Models;
 
 public static class ResponsibilityTypeWireName

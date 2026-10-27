@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Retention.Models;
 
 public sealed record ArtifactRetentionView(ArtifactRetentionSource Source, long Revision, string? Policy,

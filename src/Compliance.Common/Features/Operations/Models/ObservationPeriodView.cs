@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Current period lifecycle authority and its exact approved-plan, date and close bindings.</summary>

@@ -1,7 +1,8 @@
-using Bdgrz.Compliance.Features.Workforce;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Workforce.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.Workforce.Commands;
 
 /// <summary>Replaces a work relationship's terms; the person and source worker ID never change.</summary>

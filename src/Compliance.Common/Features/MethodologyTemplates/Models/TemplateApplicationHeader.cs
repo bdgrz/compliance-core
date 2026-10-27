@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Current application admission and ordering authority, without downstream receipt or successor histories.</summary>

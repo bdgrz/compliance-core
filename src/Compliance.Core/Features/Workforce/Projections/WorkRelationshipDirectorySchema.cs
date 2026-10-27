@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.Workforce.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Workforce.Projections;
 
 static class WorkRelationshipDirectorySchema

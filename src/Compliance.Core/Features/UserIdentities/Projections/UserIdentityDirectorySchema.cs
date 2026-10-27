@@ -1,7 +1,11 @@
-using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
 namespace Bdgrz.Compliance.Features.UserIdentities.Projections;
 
 static class UserIdentityDirectorySchema

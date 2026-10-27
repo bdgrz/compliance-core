@@ -1,10 +1,8 @@
-using Bdgrz.Compliance.Features.Providers;
-using Bdgrz.Compliance.Features.UserIdentities;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Providers.Services;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
 using Bdgrz.Compliance.Features.Providers.Models;
 using Bdgrz.Compliance.Features.Providers.Queries;
-using Cntryl.Portia;
-using Bdgrz.Compliance.Features.AccessControl;
-
 namespace Bdgrz.Compliance.Features.Providers.Handlers;
 
 public sealed class PreviewProviderChangeHandler(ProviderChangeImpactService impact)

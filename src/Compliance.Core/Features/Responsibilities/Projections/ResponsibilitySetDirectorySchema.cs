@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 namespace Bdgrz.Compliance.Features.Responsibilities.Projections;
 
 static class ResponsibilitySetDirectorySchema

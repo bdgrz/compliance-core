@@ -1,10 +1,8 @@
-using Bdgrz.Compliance.Features.UserIdentities;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
 namespace Bdgrz.Compliance.Features.UserIdentities.Events;
 
 /// <summary>A definite competing association rejected the preparation before acceptance. It fences delayed protection and acceptance.</summary>

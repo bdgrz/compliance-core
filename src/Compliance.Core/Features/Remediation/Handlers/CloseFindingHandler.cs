@@ -1,24 +1,65 @@
-using Bdgrz.Compliance.Features.Remediation;
-using Bdgrz.Compliance.Features.UserIdentities;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Independence.Contracts;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Processes;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.History;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Remediation.Services;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceUse.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
+using Bdgrz.Compliance.Features.Versioning.Services;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Remediation.Aggregates;
 using Bdgrz.Compliance.Features.Remediation.Commands;
-using Bdgrz.Compliance.Features.Remediation.Processes;
-using Bdgrz.Compliance.Features.SourceUse.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.Independence;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Operations;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.SourceUse;
-using Bdgrz.Compliance.Features.Versioning;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.Remediation.Handlers;
 
 /// <summary>
@@ -131,7 +172,7 @@ public sealed class CloseFindingHandler(NativeOperationExecutor operations, IDom
             FindingContent.DecisionSchema, decision, ct).ConfigureAwait(false);
         var children = source.Admitted.Select(fact => new AdmittedChild(fact.Operation.LogicalId,
             NativeFactReference.Of(finding.Stream, fact))).OrderBy(child => FindingClosureEffects.ActionKey(tenant,
-            request.ProgramId, request.FindingId, child.ChildId), Kernel.StreamKeyOrder.Instance).ToArray();
+            request.ProgramId, request.FindingId, child.ChildId), Bdgrz.Compliance.Features.Kernel.Services.StreamKeyOrder.Instance).ToArray();
         var uses = children.Select(child => new SourceUseRequirement(
             new CorrectiveAction(tenant, request.ProgramId, request.FindingId, child.ChildId).Stream, child.Admission, 0,
             SourceUsePurpose.FindingClosure, source.Admitted.First(fact => fact.Operation.LogicalId == child.ChildId).Intent))

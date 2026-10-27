@@ -1,9 +1,7 @@
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.AccessControl.Models;
 using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Boundaries.Contracts;
 namespace Bdgrz.Compliance.Features.Boundaries.Models;
 
 public sealed record BoundaryDraftDiscardedContent(Uuid TenantId, Uuid BoundaryId,

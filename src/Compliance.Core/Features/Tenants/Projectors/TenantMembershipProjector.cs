@@ -1,7 +1,6 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.Tenants.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Tenants.Projectors;
 
 public sealed partial class TenantMembershipProjector(ITenantMembershipDirectoryProjection projection)

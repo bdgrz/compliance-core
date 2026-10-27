@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Boundaries;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
 using Bdgrz.Compliance.Features.Boundaries.Events;
 using Bdgrz.Compliance.Features.Boundaries.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Boundaries.Projectors;
 
 public sealed partial class BoundaryDirectoryProjector(IBoundaryDirectoryProjection projection)

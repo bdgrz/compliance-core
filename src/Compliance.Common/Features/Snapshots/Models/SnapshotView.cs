@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Snapshots.Models;
 
 public sealed record SnapshotView(Uuid TenantId, Uuid SnapshotId, Uuid RootSnapshotId,

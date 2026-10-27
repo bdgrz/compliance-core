@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>A denial-only receipt; it supplies no partner evidence or new professional authority.</summary>

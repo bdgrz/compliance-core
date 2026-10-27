@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Projections;
 
 static class TrainingRequirementDirectorySchema

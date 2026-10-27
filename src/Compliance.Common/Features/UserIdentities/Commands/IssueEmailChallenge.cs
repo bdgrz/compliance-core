@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
 namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>Issues a verification challenge; <paramref name="ChallengeId" /> is the caller-chosen challenge and logical identity.</summary>

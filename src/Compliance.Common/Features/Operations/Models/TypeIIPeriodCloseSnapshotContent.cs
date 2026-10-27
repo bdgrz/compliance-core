@@ -1,10 +1,8 @@
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.Examinations;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Close snapshot identity, exact source versions, reconciled population, and acknowledgements.</summary>

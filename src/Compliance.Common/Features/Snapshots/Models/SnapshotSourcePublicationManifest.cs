@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Examinations.Models;
 using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Examinations.Models;
 namespace Bdgrz.Compliance.Features.Snapshots.Models;
 
 /// <summary>Complete source-body publication proof, stored outside the bounded baseline fact and sealed by its digest.</summary>

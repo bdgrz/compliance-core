@@ -1,8 +1,8 @@
-using Bdgrz.Compliance.Features.Remediation.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Remediation.Models;
 namespace Bdgrz.Compliance.Features.Remediation.Commands;
 
 /// <summary>

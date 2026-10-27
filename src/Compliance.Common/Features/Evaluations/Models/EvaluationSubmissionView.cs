@@ -1,6 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 namespace Bdgrz.Compliance.Features.Evaluations.Models;
 
 /// <summary>

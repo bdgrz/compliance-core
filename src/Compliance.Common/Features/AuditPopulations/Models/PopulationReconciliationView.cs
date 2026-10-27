@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Reconciliation totals, exceptions, and resolution state.</summary>

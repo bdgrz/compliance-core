@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.Programs.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Programs.Models;
 namespace Bdgrz.Compliance.Features.Programs.Readers;
 
 public interface IClientServiceDirectoryReader

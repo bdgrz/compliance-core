@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.FirmPortfolio.Models;
 
 /// <summary>Client summary visible within the actor's authorized portfolio.</summary>

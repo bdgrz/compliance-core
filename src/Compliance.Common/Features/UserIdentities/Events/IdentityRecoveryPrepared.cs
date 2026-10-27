@@ -1,10 +1,8 @@
-using Bdgrz.Compliance.Features.UserIdentities;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
 namespace Bdgrz.Compliance.Features.UserIdentities.Events;
 
 /// <summary>The recovery owner froze the exact both-proof-verified candidate from the claimed challenge. This is a preparation, not an accepted swap.</summary>

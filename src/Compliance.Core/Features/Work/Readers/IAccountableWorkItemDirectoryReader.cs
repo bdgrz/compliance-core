@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Work;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Models;
 namespace Bdgrz.Compliance.Features.Work.Readers;
 
 public interface IAccountableWorkItemDirectoryReader

@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Snapshots;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.Snapshots.Commands;
 using Bdgrz.Compliance.Features.Snapshots.Models;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Snapshots.Handlers;
 
 public sealed class FreezeProgramScopeSnapshotHandler(ScopeSnapshotFreezer freezer)

@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
 namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>Bounded current description authority; narrative arrays and history are verified immutable content.</summary>

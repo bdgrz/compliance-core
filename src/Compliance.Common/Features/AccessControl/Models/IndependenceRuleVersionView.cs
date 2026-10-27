@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 /// <summary>An authored, retained rule version. Authorship does not ratify production rules.</summary>

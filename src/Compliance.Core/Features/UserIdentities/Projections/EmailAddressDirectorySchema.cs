@@ -1,8 +1,8 @@
-using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
-using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Work.Authorizers;
 namespace Bdgrz.Compliance.Features.UserIdentities.Projections;
 
 static class EmailAddressDirectorySchema

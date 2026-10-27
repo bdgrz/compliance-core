@@ -1,7 +1,5 @@
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Risks.Models;
 
 /// <summary>One attributable, immutable change to a risk's evaluation.</summary>

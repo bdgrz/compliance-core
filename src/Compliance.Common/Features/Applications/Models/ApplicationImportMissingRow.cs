@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
 namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>A source omission proposal, never a staged row or authority to retire its target.</summary>

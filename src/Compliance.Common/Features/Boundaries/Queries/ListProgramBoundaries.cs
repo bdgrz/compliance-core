@@ -1,9 +1,7 @@
-using Bdgrz.Compliance.Features.Boundaries.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Boundaries.Queries;
 
 [Discriminator("bdgrz.boundary.program.list", 1)]

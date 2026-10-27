@@ -1,7 +1,5 @@
-using Bdgrz.Compliance.Features.Readiness.Models;
-using Bdgrz.Compliance.Features.Readiness;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Readiness.Models;
 namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>An exact source captured by a current program readiness assessment.</summary>

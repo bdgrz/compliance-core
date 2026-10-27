@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>An exact control version, accountable owner, cadence, and expected occurrence count.</summary>

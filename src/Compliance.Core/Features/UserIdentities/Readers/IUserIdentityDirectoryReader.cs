@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.UserIdentities.Models;
 namespace Bdgrz.Compliance.Features.UserIdentities.Readers;
 
 public interface IUserIdentityDirectoryReader

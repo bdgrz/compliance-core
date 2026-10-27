@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Snapshots.Models;
 using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>An explicitly selected, immutable source version and its authored content identity.</summary>

@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
 namespace Bdgrz.Compliance.Features.Tenants.Events;
 
 /// <summary>Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision.</summary>

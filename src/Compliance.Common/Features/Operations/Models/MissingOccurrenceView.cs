@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Expected control occurrences with no accepted performance record.</summary>

@@ -1,9 +1,8 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.Events;
-using Bdgrz.Compliance.Features.NamedRecords;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Providers.Commands;
 
 /// <summary>Applies the accepted provider change once the names it needs are claimed.</summary>

@@ -1,20 +1,56 @@
-using Bdgrz.Compliance.Features.AccessControl;
+using System.Globalization;
+using Cntryl.Portia;
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceFacts.Services;
+using Bdgrz.Compliance.Features.SourceUse.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Processes.Models;
-using Bdgrz.Compliance.Features.SourceUse.Models;
-using System.Globalization;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.SourceFacts;
-using Bdgrz.Compliance.Features.SourceUse;
-using Cntryl.Portia;
-using Microsoft.Extensions.DependencyInjection;
-
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Content.Persistence;
 namespace Bdgrz.Compliance.Features.AccessControl.Processes;
 
 /// <summary>
@@ -88,7 +124,7 @@ static class EngagementAcceptanceProcess
         IEnumerable<PracticeSubjectIntent> subjects) => requirements
         .Select(requirement => EngagementAcceptanceEffects.StreamKey(requirement.SourceOwner))
         .Concat(subjects.Select(subject => subject.Key)).Distinct(StringComparer.Ordinal)
-        .Order(Kernel.StreamKeyOrder.Instance).ToArray();
+        .Order(Bdgrz.Compliance.Features.Kernel.Services.StreamKeyOrder.Instance).ToArray();
 
     static async ValueTask<IRequest<ReceiverOutcome>?> CreateReceiverAsync(ProcessStep step, IServiceProvider services,
         CancellationToken ct)

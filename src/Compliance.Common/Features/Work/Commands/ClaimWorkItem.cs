@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Work;
-using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Contracts;
+using Bdgrz.Compliance.Features.Operations.Contracts;
+using Bdgrz.Compliance.Features.Work.Models;
 namespace Bdgrz.Compliance.Features.Work.Commands;
 
 /// <summary>Claims unassigned team work for the acting team member, who must be eligible under the source workflow.</summary>

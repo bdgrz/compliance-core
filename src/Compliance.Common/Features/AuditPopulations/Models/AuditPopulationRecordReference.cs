@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>A row's exact reference to an independently owned domain record.</summary>

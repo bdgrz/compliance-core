@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 
 public interface IAdvisorHandoffDirectoryReader

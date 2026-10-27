@@ -1,7 +1,5 @@
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Snapshots.Models;
 
 /// <summary>A frozen population snapshot's identity and lineage, without its rows.</summary>

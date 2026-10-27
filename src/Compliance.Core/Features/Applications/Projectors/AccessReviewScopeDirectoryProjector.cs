@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Applications;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Applications.Services;
 using Bdgrz.Compliance.Features.Applications.Events;
 using Bdgrz.Compliance.Features.Applications.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Applications.Projectors;
 
 public sealed partial class AccessReviewScopeDirectoryProjector(

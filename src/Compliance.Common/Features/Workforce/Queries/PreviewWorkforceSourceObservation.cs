@@ -1,7 +1,7 @@
-using Bdgrz.Compliance.Features.Workforce;
-using Bdgrz.Compliance.Features.Workforce.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Workforce.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Workforce.Queries;
 
 /// <summary>Previews source authority and conflicts; never applies facts or reveals restricted values.</summary>

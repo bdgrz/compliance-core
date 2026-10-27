@@ -1,29 +1,67 @@
-using Bdgrz.Compliance.Features.Risks;
-using Bdgrz.Compliance.Features.UserIdentities;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Independence.Contracts;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Risks.Aggregates;
-using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Remediation.Services;
+using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.Risks.Processes;
-using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.Risks.Services;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.SourceUse.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Work.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.Evidence;
-using Bdgrz.Compliance.Features.Independence;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.Remediation;
-using Bdgrz.Compliance.Features.SourceUse;
-using Bdgrz.Compliance.Features.Versioning;
-using Bdgrz.Compliance.Features.Work;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Risks.Handlers;
 
 /// <summary>
@@ -147,7 +185,7 @@ public sealed class ReviewRiskTreatmentActionCompletionHandler(NativeOperationEx
         var uses = new List<SourceUseRequirement>();
         if (request.Outcome == RiskStates.Accept)
             foreach (var id in view.Completions[^1].EvidenceRequestIds.OrderBy(id => RiskActionReviewEffects.EvidenceKey(
-                         tenant, request.ProgramId, id), Kernel.StreamKeyOrder.Instance))
+                         tenant, request.ProgramId, id), Bdgrz.Compliance.Features.Kernel.Services.StreamKeyOrder.Instance))
             {
                 var evidence = await reader.HydrateAsync(new EvidenceRequest(tenant, request.ProgramId, id), ct)
                     .ConfigureAwait(false);

@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 /// <summary>Internal command: authorizes execution of a sealed, source-claimed batch. Its deterministic id is a source-event effect.</summary>

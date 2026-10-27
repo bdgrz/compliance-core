@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
 
 /// <summary>Frozen selection method, exact population reference, selected rows, and manifest.</summary>

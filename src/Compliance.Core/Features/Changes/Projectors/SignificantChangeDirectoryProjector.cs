@@ -1,8 +1,7 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Changes.Aggregates;
 using Bdgrz.Compliance.Features.Changes.Events;
 using Bdgrz.Compliance.Features.Changes.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Changes.Projectors;
 
 public sealed partial class SignificantChangeDirectoryProjector(

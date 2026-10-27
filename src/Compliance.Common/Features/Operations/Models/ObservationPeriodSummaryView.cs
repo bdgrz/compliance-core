@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>Current scoped period status and dates; discovery ordering is held separately by immutable opening identity.</summary>

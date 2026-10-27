@@ -1,7 +1,8 @@
-using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Models;
 namespace Bdgrz.Compliance.Features.Work.Events;
 
 /// <summary>One work item's legacy assignment history was carried into its own stream.</summary>

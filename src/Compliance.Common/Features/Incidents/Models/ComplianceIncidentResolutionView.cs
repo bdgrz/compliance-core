@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>An immutable incident resolution with exact evidence and proven completed follow-up work.</summary>

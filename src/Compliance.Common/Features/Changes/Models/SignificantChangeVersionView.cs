@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Changes.Commands;
 namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>An immutable significant-change content version and its recorder attribution.</summary>

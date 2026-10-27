@@ -1,10 +1,7 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.NamedRecords;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Events;
 
 /// <summary>The name claim is held by the operational process record and change generation named by this fact.</summary>

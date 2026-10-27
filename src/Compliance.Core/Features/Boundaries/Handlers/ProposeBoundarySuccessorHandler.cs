@@ -1,9 +1,16 @@
-using Bdgrz.Compliance.Features.Boundaries;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Boundaries.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Versioning.Models;
+using Bdgrz.Compliance.Features.Versioning.Rules;
+using Bdgrz.Compliance.Features.Versioning.Services;
 using Bdgrz.Compliance.Features.Boundaries.Commands;
 using Bdgrz.Compliance.Features.Boundaries.Models;
-using Bdgrz.Compliance.Features.Versioning;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Boundaries.Handlers;
 
 public sealed class ProposeBoundarySuccessorHandler(BoundaryOperations operations, IBoundaryReferenceValidator references)

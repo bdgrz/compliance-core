@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.ControlMappings.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.ControlMappings.Queries;
 
 /// <summary>Lists mappings in a program, optionally for one control, edition, or status.</summary>

@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>Minimal status metadata for one campaign linked to a reviewed system.</summary>

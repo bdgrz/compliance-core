@@ -1,0 +1,342 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Examinations.Contracts;
+using Bdgrz.Compliance.Features.Examinations.Models;
+using Bdgrz.Compliance.Features.Examinations.Services;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Programs.Services;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Readers;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Retention.Commands;
+namespace Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+
+public sealed class TypeIBaselinePreviewReaderTests
+{
+    static readonly DateTimeOffset Now = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task ShouldReportEveryUncoveredSourceFamilyGivenPreview()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var reader = new TypeIBaselinePreviewReader([]);
+
+        // Act
+        var result = await reader.ReadAsync(engagement, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Empty(result.Value.Sources);
+        Assert.Equal(TypeIBaselineSourceFamilies.Required.Count + 1, result.Value.Blockers.Count);
+        Assert.All(TypeIBaselineSourceFamilies.Required, family =>
+            Assert.Contains(result.Value.Blockers, blocker => blocker.Contains(family,
+                StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task ShouldBuildManifestOnlyAfterEverySourceFamilyIsCoveredGivenPreview()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var boundary = new TypeIBaselineSourceReference("approved_boundary",
+            engagement.BoundaryId, Uuid.CreateVersion4(), 2, new string('a', 64));
+        var contributors = TypeIBaselineSourceFamilies.Required.Select(family =>
+            (ITypeIBaselineSourceContributor)new StubContributor(family,
+                family == "approved_boundary" ? [boundary] : []));
+        var reader = new TypeIBaselinePreviewReader(contributors);
+
+        // Act
+        var result = await reader.ReadAsync(engagement, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Empty(result.Value.Blockers);
+        Assert.Equal([boundary], result.Value.Sources);
+        Assert.Equal(TypeIBaselineSourceFamilies.Required.Count, result.Value.SourceCoverage.Count);
+        Assert.Equal(64, result.Value.ContentSha256.Length);
+    }
+
+    [Fact]
+    public async Task ShouldPassRequesterAndApprovedBoundaryToApplicationReaderGivenPreview()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var requesterUserId = Uuid.CreateVersion4();
+        var boundary = new TypeIBaselineSourceReference("approved_boundary",
+            engagement.BoundaryId, Uuid.CreateVersion4(), 2, new string('a', 64));
+        var applications = new ContextContributor("applications");
+        var contributors = TypeIBaselineSourceFamilies.Required.Select(family =>
+            family == "approved_boundary"
+                ? (ITypeIBaselineSourceContributor)new StubContributor(family, [boundary])
+                : family == "applications"
+                    ? applications
+                    : new StubContributor(family, []));
+        var reader = new TypeIBaselinePreviewReader(contributors);
+
+        // Act
+        var result = await reader.ReadAsync(engagement, requesterUserId, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.NotNull(applications.Context);
+        Assert.Equal(requesterUserId, applications.Context.RequesterUserId);
+        Assert.Equal(boundary, Assert.Single(applications.Context.PreviouslyCapturedSources));
+    }
+
+    [Fact]
+    public void ShouldBindCompletedEmptyFamiliesIntoManifestGivenSourceCoverage()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var boundary = new TypeIBaselineSourceReference("approved_boundary",
+            engagement.BoundaryId, Uuid.CreateVersion4(), 2, new string('a', 64));
+        var missingCoverage = TypeIBaselinePreview.Create(engagement.TenantId,
+            engagement.ProgramId, engagement.ExaminationEngagementId, [boundary]);
+        var coverage = TypeIBaselineSourceFamilies.Required.Select(family =>
+            TypeIBaselineContentIdentity.Coverage(family,
+                family == "approved_boundary" ? [boundary] : [])).ToArray();
+        var completeEmptyFamilies = TypeIBaselinePreview.Create(engagement.TenantId,
+            engagement.ProgramId, engagement.ExaminationEngagementId, [boundary], [], [], coverage);
+
+        // Act
+        var missingDigest = missingCoverage.ContentSha256;
+        var coveredDigest = completeEmptyFamilies.ContentSha256;
+
+        // Assert
+        Assert.NotEqual(missingDigest, coveredDigest);
+    }
+
+    [Fact]
+    public void ShouldBindPreviewBlockersIntoManifestGivenSameSources()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var boundary = new TypeIBaselineSourceReference("approved_boundary",
+            engagement.BoundaryId, Uuid.CreateVersion4(), 2, new string('a', 64));
+        var coverage = TypeIBaselineSourceFamilies.Required.Select(family =>
+            TypeIBaselineContentIdentity.Coverage(family,
+                family == "approved_boundary" ? [boundary] : [])).ToArray();
+        var clear = TypeIBaselinePreview.Create(engagement.TenantId, engagement.ProgramId,
+            engagement.ExaminationEngagementId, [boundary], [], [], coverage);
+        var blocked = TypeIBaselinePreview.Create(engagement.TenantId, engagement.ProgramId,
+            engagement.ExaminationEngagementId, [boundary], ["The scope requires review."], [],
+            coverage);
+
+        // Act
+        var clearDigest = clear.ContentSha256;
+        var blockedDigest = blocked.ContentSha256;
+
+        // Assert
+        Assert.NotEqual(clearDigest, blockedDigest);
+    }
+
+    [Fact]
+    public void ShouldCountArtifactAndEngagementHoldSourcesGivenEvidenceGovernanceCoverage()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var artifact = new TypeIBaselineSourceReference("evidence_artifact",
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), 2, new string('a', 64));
+        var hold = new TypeIBaselineSourceReference("artifact_engagement_hold",
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, new string('b', 64));
+
+        // Act
+        var preview = TypeIBaselinePreviewTestFactory.Create(engagement.TenantId,
+            engagement.ProgramId, engagement.ExaminationEngagementId, [artifact, hold]);
+
+        // Assert
+        var evidenceGovernance = Assert.Single(preview.SourceCoverage, static coverage =>
+            coverage.Family == "evidence_governance");
+        Assert.Equal(2, evidenceGovernance.RecordCount);
+    }
+
+    [Fact]
+    public async Task ShouldResolveBoundaryVersionEffectiveOnTypeIDateGivenBoundaryContribution()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var content = new Bdgrz.Compliance.Features.Boundaries.Models.BoundaryContent(
+            "In-scope system", "type_i", engagement.TrustServicesCategories, []);
+        var boundaryVersion = new Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView(
+            engagement.TenantId, engagement.BoundaryId, engagement.ProgramId,
+            Uuid.CreateVersion4(), 3, content, "approved", engagement.PeriodStart,
+            Uuid.CreateVersion4(), "Boundary approver", Now);
+        var boundary = new Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView(
+            engagement.TenantId, engagement.BoundaryId, engagement.ProgramId, null,
+            boundaryVersion, null, 4);
+        var boundaryReader = new BoundaryReader(boundary, boundaryVersion);
+        var consistency = new Bdgrz.Compliance.Features.Programs.Services.ProgramSetupWorkReadConsistency(
+            new ProgramReader(), boundaryReader,
+            new Cntryl.Portia.Testing.InMemoryEventStore());
+        var contributor = new BoundaryTypeIBaselineSourceContributor(boundaryReader, consistency);
+
+        // Act
+        var result = await contributor.ReadAsync(engagement, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var source = Assert.Single(result.Value.Sources);
+        Assert.Equal("approved_boundary", source.Kind);
+        Assert.Equal(engagement.BoundaryId, source.RecordId);
+        Assert.Equal(boundaryVersion.VersionId, source.VersionId);
+        Assert.Equal(boundaryVersion.Revision, source.Revision);
+        Assert.Equal(Bdgrz.Compliance.Features.Snapshots.Projections.SnapshotContentIdentity
+                .ApprovedBoundaryVersion(boundaryVersion),
+            source.ContentSha256);
+        Assert.Empty(result.Value.Blockers);
+        Assert.Empty(result.Value.ScopeDifferences);
+    }
+
+    [Fact]
+    public async Task ShouldBlockUnresolvedBoundaryEntryGivenBoundaryContribution()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var entry = new Bdgrz.Compliance.Features.Boundaries.Models.BoundaryScopeEntry(
+            Uuid.CreateVersion4(), "service", "service", "Unresolved service", null,
+            string.Empty, "Needs mapping", true);
+        var content = new Bdgrz.Compliance.Features.Boundaries.Models.BoundaryContent(
+            "In-scope system", "type_i", engagement.TrustServicesCategories, [entry]);
+        var boundaryVersion = new Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView(
+            engagement.TenantId, engagement.BoundaryId, engagement.ProgramId,
+            Uuid.CreateVersion4(), 3, content, "approved", engagement.PeriodStart,
+            Uuid.CreateVersion4(), "Boundary approver", Now);
+        var boundary = new Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView(
+            engagement.TenantId, engagement.BoundaryId, engagement.ProgramId, null,
+            boundaryVersion, null, 4);
+        var boundaryReader = new BoundaryReader(boundary, boundaryVersion);
+        var consistency = new Bdgrz.Compliance.Features.Programs.Services.ProgramSetupWorkReadConsistency(
+            new ProgramReader(), boundaryReader,
+            new Cntryl.Portia.Testing.InMemoryEventStore());
+        var contributor = new BoundaryTypeIBaselineSourceContributor(boundaryReader, consistency);
+
+        // Act
+        var result = await contributor.ReadAsync(engagement, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Contains(result.Value.Blockers, blocker => blocker.Contains(entry.EntryId.ToString(),
+            StringComparison.Ordinal));
+        Assert.Contains(result.Value.ScopeDifferences, difference =>
+            difference.Contains(entry.EntryId.ToString(), StringComparison.Ordinal));
+    }
+
+    static ExaminationEngagementView Engagement() => new(Uuid.CreateVersion4(),
+        Uuid.CreateVersion4(), Uuid.CreateVersion4(), "type_i", "Audit Firm",
+        new DateOnly(2026, 9, 30), null,
+        ["security", "availability", "confidentiality", "processing_integrity", "privacy"],
+        Uuid.CreateVersion4(), [], "draft", 1, Now, Uuid.CreateVersion4(), "Examiner");
+
+    sealed class StubContributor(string family,
+        IReadOnlyList<TypeIBaselineSourceReference> sources) : ITypeIBaselineSourceContributor
+    {
+        public string Family => family;
+
+        public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+            ExaminationEngagementView engagement, CancellationToken ct) =>
+            ValueTask.FromResult(Result<TypeIBaselineSourceContribution>.Success(
+                new TypeIBaselineSourceContribution(family, sources, [], [])));
+    }
+
+    sealed class ContextContributor(string family) : ITypeIBaselineSourceContributor
+    {
+        public string Family => family;
+        public TypeIBaselineSourceReadContext? Context { get; private set; }
+
+        public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+            ExaminationEngagementView engagement, CancellationToken ct) =>
+            ValueTask.FromResult(Result<TypeIBaselineSourceContribution>.Success(
+                new TypeIBaselineSourceContribution(family, [], [], [])));
+
+        public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+            ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context,
+            CancellationToken ct)
+        {
+            Context = context;
+            return ReadAsync(engagement, ct);
+        }
+    }
+
+    sealed class ProgramReader : Bdgrz.Compliance.Features.Programs.Readers.IProgramDirectoryReader
+    {
+        public ValueTask<Bdgrz.Compliance.Features.Programs.Models.ProgramView?> GetAsync(Uuid tenantId,
+            Uuid programId, CancellationToken ct = default) => ValueTask.FromResult<
+            Bdgrz.Compliance.Features.Programs.Models.ProgramView?>(null);
+
+        public ValueTask<Page<Bdgrz.Compliance.Features.Programs.Models.ProgramView>> ListAsync(
+            Uuid tenantId, int limit, string? cursor, CancellationToken ct = default) =>
+            ValueTask.FromResult(new Page<Bdgrz.Compliance.Features.Programs.Models.ProgramView>([], null));
+
+        public ValueTask<Page<Bdgrz.Compliance.Features.Programs.Models.ProgramRevisionView>?>
+            ListRevisionsAsync(Uuid tenantId, Uuid programId, int limit, string? cursor,
+                CancellationToken ct = default) => ValueTask.FromResult<
+                Page<Bdgrz.Compliance.Features.Programs.Models.ProgramRevisionView>?>(null);
+
+        public ValueTask<Bdgrz.Compliance.Features.Programs.Models.ProgramRevisionView?> GetRevisionAsync(
+            Uuid tenantId, Uuid programId, long revision, CancellationToken ct = default) =>
+            ValueTask.FromResult<Bdgrz.Compliance.Features.Programs.Models.ProgramRevisionView?>(null);
+
+        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+    }
+
+    sealed class BoundaryReader(Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView boundary,
+        Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView effectiveVersion)
+        : Bdgrz.Compliance.Features.Boundaries.Readers.IBoundaryDirectoryReader
+    {
+        public ValueTask<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView?> GetAsync(
+            Uuid tenantId, Uuid boundaryId, CancellationToken ct = default) =>
+            ValueTask.FromResult<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView?>(
+                tenantId == boundary.TenantId && boundaryId == boundary.BoundaryId ? boundary : null);
+
+        public ValueTask<Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView>> ListProgramAsync(
+            Uuid tenantId, Uuid programId, int limit, string? cursor,
+            CancellationToken ct = default) => ValueTask.FromResult(
+            new Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryView>([], null));
+
+        public ValueTask<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView?> GetVersionAsync(
+            Uuid tenantId, Uuid boundaryId, Uuid versionId, CancellationToken ct = default) =>
+            ValueTask.FromResult<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView?>(
+                tenantId == effectiveVersion.TenantId && boundaryId == effectiveVersion.BoundaryId &&
+                versionId == effectiveVersion.VersionId ? effectiveVersion : null);
+
+        public ValueTask<Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView>?>
+            ListVersionsAsync(Uuid tenantId, Uuid boundaryId, int limit, string? cursor,
+                CancellationToken ct = default) => ValueTask.FromResult<
+                Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView>?>(null);
+
+        public ValueTask<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView?>
+            GetEffectiveVersionAsync(Uuid tenantId, Uuid boundaryId, DateOnly effectiveOn,
+                CancellationToken ct = default) => ValueTask.FromResult<
+                Bdgrz.Compliance.Features.Boundaries.Models.BoundaryVersionView?>(
+                tenantId == effectiveVersion.TenantId && boundaryId == effectiveVersion.BoundaryId &&
+                effectiveOn >= effectiveVersion.EffectiveFrom ? effectiveVersion : null);
+
+        public ValueTask<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryDecisionView?> GetDecisionAsync(
+            Uuid tenantId, Uuid boundaryId, Uuid decisionId, CancellationToken ct = default) =>
+            ValueTask.FromResult<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryDecisionView?>(null);
+
+        public ValueTask<Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryDecisionView>?>
+            ListDecisionsAsync(Uuid tenantId, Uuid boundaryId, int limit, string? cursor,
+                CancellationToken ct = default) => ValueTask.FromResult<
+                Page<Bdgrz.Compliance.Features.Boundaries.Models.BoundaryDecisionView>?>(null);
+
+        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+    }
+}

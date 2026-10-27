@@ -1,10 +1,8 @@
-using Bdgrz.Compliance.Features.UserIdentities;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.UserIdentities.Events;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
+using Bdgrz.Compliance.Features.UserIdentities.Events;
 namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>Completes the original email challenge of a finished recovery without clearing a newer challenge slot.</summary>

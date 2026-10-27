@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Workforce;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Workforce.Services;
 using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Workforce.Queries;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class GetServiceIdentityHandler(ServiceIdentityReadConsistency consistency,

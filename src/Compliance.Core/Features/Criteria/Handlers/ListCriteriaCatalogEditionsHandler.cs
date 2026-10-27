@@ -1,11 +1,10 @@
-using Bdgrz.Compliance.Features.Criteria;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Criteria.Queries;
 using System.Globalization;
 using System.Text;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Criteria.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Criteria.Queries;
 namespace Bdgrz.Compliance.Features.Criteria.Handlers;
 
 public sealed class ListCriteriaCatalogEditionsHandler(ICriteriaCatalog catalog)

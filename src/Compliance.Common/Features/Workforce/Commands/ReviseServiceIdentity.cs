@@ -1,7 +1,7 @@
-using Bdgrz.Compliance.Features.Workforce;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Workforce.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Workforce.Commands;
 
 /// <summary>Replaces a non-human identity's terms, including its owner, review date, and

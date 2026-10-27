@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Controls.Models;
 
 public sealed record ControlAffectedRecord(Uuid TenantId, string Context, string RecordType,

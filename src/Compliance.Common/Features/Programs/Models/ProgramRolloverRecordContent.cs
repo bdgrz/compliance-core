@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Programs.Models;
 
 /// <summary>One exact source record's reviewed carry-forward disposition.</summary>

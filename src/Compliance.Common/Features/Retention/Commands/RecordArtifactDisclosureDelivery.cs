@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Retention;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Retention.Contracts;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 namespace Bdgrz.Compliance.Features.Retention.Commands;
 
 /// <summary>Records the record artifact disclosure delivery intent required by the owning feature workflow.</summary>

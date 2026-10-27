@@ -1,10 +1,7 @@
-using Bdgrz.Compliance.Features.Tenants;
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Tenants.Contracts;
 namespace Bdgrz.Compliance.Features.Tenants.Events;
 
 [Discriminator("bdgrz.platform.operator.granted", 1)]

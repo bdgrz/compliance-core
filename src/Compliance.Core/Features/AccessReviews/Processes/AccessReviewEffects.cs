@@ -1,0 +1,98 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceUse.Models;
+using Bdgrz.Compliance.Features.SourceUse.Services;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
+using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+namespace Bdgrz.Compliance.Features.AccessReviews.Processes;
+
+/// <summary>Deterministic identities, generations and provenance of the access review launch and completion processes.</summary>
+static class AccessReviewEffects
+{
+    /// <summary>The unordered launch fan-out that materializes every item of a launched campaign.</summary>
+    public const string LaunchFanOutName = "AccessReviewLaunchFanOut";
+
+    /// <summary>The ordered process that holds every item, closes the campaign and settles the holds.</summary>
+    public const string CompletionProcessName = "AccessReviewCampaignCompletionProcess";
+
+    /// <summary>The ordered process that materializes a bulk decision batch, holds its items, applies and publishes.</summary>
+    public const string BulkProcessName = "BulkAccessDecisionProcess";
+
+    /// <summary>The only episode of a campaign and of each of its items.</summary>
+    public const string InitialEpisode = "initial";
+
+    /// <summary>The only source generation of a launch or completion; a canceled completion is admitted again as a new operation.</summary>
+    public const long Generation = 1;
+
+    /// <summary>The identity of an item: derived from the tenant, campaign and item ids so a mismatched pair is simply absent.</summary>
+    public static Uuid ItemStreamId(Uuid tenantId, Uuid campaignId, Uuid itemId) =>
+        AggregateIdentity.Create(nameof(AccessReviewItem), tenantId, campaignId, itemId);
+
+    /// <summary>The stream of one item.</summary>
+    public static EventStreamAddress ItemStream(Uuid tenantId, Uuid campaignId, Uuid itemId) =>
+        new(tenantId.ToString(), AccessReviewItem.Area, ItemStreamId(tenantId, campaignId, itemId).ToString());
+
+    /// <summary>The stream of one campaign.</summary>
+    public static EventStreamAddress CampaignStream(Uuid tenantId, Uuid campaignId) =>
+        new(tenantId.ToString(), AccessReviewCampaign.Area, campaignId.ToString());
+
+    /// <summary>The identity of a decision batch: derived from the tenant, campaign and batch ids.</summary>
+    public static Uuid BatchStreamId(Uuid tenantId, Uuid campaignId, Uuid decisionBatchId) =>
+        AggregateIdentity.Create(nameof(AccessReviewDecisionBatch), tenantId, campaignId, decisionBatchId);
+
+    /// <summary>The stream of one decision batch.</summary>
+    public static EventStreamAddress BatchStream(Uuid tenantId, Uuid campaignId, Uuid decisionBatchId) =>
+        new(tenantId.ToString(), AccessReviewDecisionBatch.Area,
+            BatchStreamId(tenantId, campaignId, decisionBatchId).ToString());
+
+    /// <summary>The key of an item's bulk decision use: one per batch (its root operation), campaign owner and item.</summary>
+    public static ReservationKey BulkUseKey(Uuid decisionBatchId, EventStreamAddress campaign, EventStreamAddress item) =>
+        new(decisionBatchId, campaign, (ulong)Generation, item,
+            SourceUseReservations.PurposeName(SourceUsePurpose.BulkDecision));
+
+    /// <summary>The reviewer responsibility episode an item opens with.</summary>
+    public static Uuid ReviewerEpisode(Uuid campaignId, Uuid itemId) =>
+        Uuid.CreateVersion5(campaignId, $"reviewer-episode:{itemId}:0");
+
+    /// <summary>The command id the process driver derives for the receiver of one target of a launch or completion.</summary>
+    public static Uuid ReceiverCommandId(string processName, Uuid rootSourceEventId, string receiver, string? target,
+        string episode) => EffectIdentity.CommandId(rootSourceEventId, $"{processName}:{receiver}", target ?? "-",
+        episode);
+
+    /// <summary>The provenance of a root operation on its own owner stream.</summary>
+    public static OperationProvenance Root(Uuid logicalId, string commandKind, EventStreamAddress owner,
+        ActorReference actor, long? expectedRevision, string intentDigest, DateTimeOffset acceptedAt) => new(logicalId,
+        logicalId, null, commandKind, actor, owner, InitialEpisode, expectedRevision is { } expected ? (ulong)expected : null,
+        intentDigest, acceptedAt, owner, owner, owner);
+}

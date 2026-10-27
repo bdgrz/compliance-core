@@ -1,8 +1,6 @@
-using Bdgrz.Compliance.Features.Tenants;
-using Bdgrz.Compliance.Features.NativeOperations.Models;
-using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
 namespace Bdgrz.Compliance.Features.Tenants.Commands;
 
 [Discriminator("bdgrz.tenant.offboard", 2)]

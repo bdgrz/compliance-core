@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Current complete-close readiness at one verified period and source receipt cut; this report is not an admission.</summary>

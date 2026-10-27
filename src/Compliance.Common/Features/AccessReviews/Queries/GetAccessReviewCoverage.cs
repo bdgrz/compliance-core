@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AccessReviews;
-using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessReviews.Contracts;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 namespace Bdgrz.Compliance.Features.AccessReviews.Queries;
 
 /// <summary>Reconciles each in-scope system instance to an accepted population or an approved exception.</summary>

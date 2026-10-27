@@ -1,8 +1,8 @@
-using Bdgrz.Compliance.Features.Commitments.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Commitments.Queries;
 
 [Discriminator("bdgrz.commitment.draft.revision.list", 1)]

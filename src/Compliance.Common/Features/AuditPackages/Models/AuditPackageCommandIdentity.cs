@@ -1,6 +1,5 @@
 using System.Globalization;
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>Stable logical identities retain the accepted build and personal-handoff algorithms.</summary>

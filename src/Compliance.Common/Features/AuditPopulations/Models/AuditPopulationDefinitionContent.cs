@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Controls.Models;
 namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Versioned rules, scope, and authorized fields for one audit population.</summary>

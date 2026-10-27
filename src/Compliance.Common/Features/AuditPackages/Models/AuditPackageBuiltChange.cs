@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>Only the successful verified output of one admitted build; attempts and failures are technical state.</summary>

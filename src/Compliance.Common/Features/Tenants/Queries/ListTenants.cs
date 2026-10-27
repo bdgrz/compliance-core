@@ -1,8 +1,8 @@
-using Bdgrz.Compliance.Features.Tenants.Models;
-using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Models;
 namespace Bdgrz.Compliance.Features.Tenants.Queries;
 
 /// <summary>

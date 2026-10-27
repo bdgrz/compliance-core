@@ -1,8 +1,6 @@
-using Bdgrz.Compliance.Features.Applications;
-using Bdgrz.Compliance.Features.Policies.Events;
-using Bdgrz.Compliance.Features.Policies;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Applications.Readers;
+using Bdgrz.Compliance.Features.Policies.Events;
 namespace Bdgrz.Compliance.Features.Applications.Projectors;
 
 public sealed partial class ApplicationPolicyReferenceProjector(

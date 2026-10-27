@@ -1,7 +1,6 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Incidents.Events;
 using Bdgrz.Compliance.Features.Incidents.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Incidents.Projectors;
 
 public sealed partial class ComplianceIncidentDirectoryProjector(

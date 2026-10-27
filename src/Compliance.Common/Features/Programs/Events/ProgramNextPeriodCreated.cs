@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Programs.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Programs.Models;
 namespace Bdgrz.Compliance.Features.Programs.Events;
 
 /// <summary>Records the exact next period and approved plan created from a rollover.</summary>

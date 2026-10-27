@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPackages.Models;
 
 /// <summary>Worker output for a successful build or a bounded, retryable failure.</summary>

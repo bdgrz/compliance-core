@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>A frozen reviewer assignment; <c>Delegated</c> is true when the reviewer is not the access owner.</summary>

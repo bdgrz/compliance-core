@@ -1,7 +1,5 @@
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Risks.Models;
 
 /// <summary>One immutable version of a program's M0-D10 risk assessment method.</summary>

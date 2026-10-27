@@ -1,11 +1,9 @@
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.NativeOperations.Models;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Contracts;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+using Bdgrz.Compliance.Features.Proofs.Models;
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Events;
 
 /// <summary>A bounded exception that counts the person as excepted until it expires, applied to the participant owner.</summary>

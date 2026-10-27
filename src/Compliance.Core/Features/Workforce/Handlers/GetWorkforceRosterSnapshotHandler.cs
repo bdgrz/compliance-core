@@ -1,10 +1,8 @@
-using Bdgrz.Compliance.Features.Workforce;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Workforce.Projections;
 using Bdgrz.Compliance.Features.AccessControl.Authorizers;
 using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Workforce.Queries;
-using Bdgrz.Compliance.Features.AccessControl;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class GetWorkforceRosterSnapshotHandler(IAggregateReader reader,

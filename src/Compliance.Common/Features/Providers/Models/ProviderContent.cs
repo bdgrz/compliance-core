@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>Authored supplier facts; registration is not an assurance or scope approval.</summary>

@@ -1,0 +1,274 @@
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Tenants.Services;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.Artifacts.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.Controls.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+namespace Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+
+public sealed class FitzTenantMembershipDirectoryReaderTests
+{
+    static readonly Uuid TenantId = Uuid.CreateVersion4();
+    static readonly Uuid UserId = Uuid.CreateVersion4();
+
+    [Fact]
+    public async Task ShouldReturnTrueGivenStoredMembership()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        await SeedAsync(client, TenantId, UserId);
+        var reader = new FitzTenantMembershipDirectoryReader(client);
+
+        // Act
+        var isMember = await reader.IsMemberAsync(TenantId.ToString(), UserId, CancellationToken.None);
+
+        // Assert
+        Assert.True(isMember);
+    }
+
+    [Fact]
+    public async Task ShouldReturnFalseGivenNoStoredMembership()
+    {
+        // Arrange
+        var reader = new FitzTenantMembershipDirectoryReader(new InMemoryKvClient());
+
+        // Act
+        var isMember = await reader.IsMemberAsync(TenantId.ToString(), UserId, CancellationToken.None);
+
+        // Assert
+        Assert.False(isMember);
+    }
+
+    [Fact]
+    public async Task ShouldExpireGuestMembershipAfterItsEndDateGivenProjectedRegistration()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        var clock = new MutableTimeProvider(new DateTimeOffset(2026, 10, 18, 23, 59, 0,
+            TimeSpan.Zero));
+        var expiresOn = new DateOnly(2026, 10, 18);
+        var reader = new FitzTenantMembershipDirectoryReader(client, clock);
+        var identity = new CheckpointIdentity("TenantMembership",
+            EventStreamPattern.ForPattern(TenantId.ToString()));
+        await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
+                         identity, ProjectionCheckpoint.Start)))
+        {
+            await reader.ApplyAsync(MemberFacts.Registered(TenantId, Uuid.CreateVersion4(), UserId,
+                "guest", Uuid.CreateVersion4(), expiresOn));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+
+        // Act
+        var activeOnEndDate = await reader.IsMemberAsync(TenantId.ToString(), UserId);
+        clock.UtcNow = new DateTimeOffset(2026, 10, 19, 0, 0, 0, TimeSpan.Zero);
+        var activeAfterEndDate = await reader.IsMemberAsync(TenantId.ToString(), UserId);
+        var membership = await reader.GetAsync(TenantId.ToString(), UserId);
+
+        // Assert
+        Assert.True(activeOnEndDate);
+        Assert.False(activeAfterEndDate);
+        Assert.Equal(expiresOn, membership?.MembershipExpiresOn);
+    }
+
+    [Fact]
+    public async Task ShouldRetainSuspensionHistoryButNotCountSuspendedMemberGivenSuspension()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        var reader = new FitzTenantMembershipDirectoryReader(client);
+        var memberId = Uuid.CreateVersion4();
+        var actorMemberId = Uuid.CreateVersion4();
+        var suspendedAt = DateTimeOffset.UtcNow;
+        var identity = new CheckpointIdentity("TenantMembership",
+            EventStreamPattern.ForPattern(TenantId.ToString()));
+        await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
+                         identity, ProjectionCheckpoint.Start)))
+        {
+            await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId));
+            await reader.ApplyAsync(MemberFacts.Suspended(TenantId, memberId, UserId, actorMemberId,
+                "Alex Admin", suspendedAt, "Employment ended."));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+
+        // Act
+        var isMember = await reader.IsMemberAsync(TenantId.ToString(), UserId);
+        var membership = await reader.GetAsync(TenantId.ToString(), UserId);
+
+        // Assert
+        Assert.False(isMember);
+        Assert.NotNull(membership);
+        Assert.True(membership.IsSuspended);
+        Assert.Equal(suspendedAt, membership.SuspendedAt);
+        Assert.Equal(actorMemberId, membership.SuspendedByMemberId);
+        Assert.Equal("Alex Admin", membership.SuspendedByDisplay);
+        Assert.Equal("Employment ended.", membership.SuspensionReason);
+    }
+
+    [Fact]
+    public async Task ShouldRetainDeprovisionHistoryButNotCountDeprovisionedMemberGivenTermination()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        var reader = new FitzTenantMembershipDirectoryReader(client);
+        var memberId = Uuid.CreateVersion4();
+        var actorMemberId = Uuid.CreateVersion4();
+        var deprovisionedAt = DateTimeOffset.UtcNow;
+        var membershipEpisodeId = Uuid.CreateVersion4();
+        var identity = new CheckpointIdentity("TenantMembership",
+            EventStreamPattern.ForPattern(TenantId.ToString()));
+        await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
+                         identity, ProjectionCheckpoint.Start)))
+        {
+            await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId,
+                membershipEpisodeId: membershipEpisodeId));
+            await reader.ApplyAsync(MemberFacts.Deprovisioned(TenantId, memberId, UserId, actorMemberId,
+                "Alex Admin", deprovisionedAt, "Access is no longer required.", membershipEpisodeId));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+
+        // Act
+        var isMember = await reader.IsMemberAsync(TenantId.ToString(), UserId);
+        var membership = await reader.GetAsync(TenantId.ToString(), UserId);
+
+        // Assert
+        Assert.False(isMember);
+        Assert.NotNull(membership);
+        Assert.True(membership.IsDeprovisioned);
+        Assert.Equal(deprovisionedAt, membership.DeprovisionedAt);
+        Assert.Equal(actorMemberId, membership.DeprovisionedByMemberId);
+        Assert.Equal("Alex Admin", membership.DeprovisionedByDisplay);
+        Assert.Equal("Access is no longer required.", membership.DeprovisionReason);
+    }
+
+    [Fact]
+    public async Task ShouldRetainDeprovisionHistoryGivenFreshMembershipEpisode()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        var reader = new FitzTenantMembershipDirectoryReader(client);
+        var memberId = Uuid.CreateVersion4();
+        var actorMemberId = Uuid.CreateVersion4();
+        var deprovisionedAt = DateTimeOffset.UtcNow;
+        var membershipEpisodeId = Uuid.CreateVersion4();
+        var identity = new CheckpointIdentity("TenantMembership",
+            EventStreamPattern.ForPattern(TenantId.ToString()));
+        await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
+                         identity, ProjectionCheckpoint.Start)))
+        {
+            await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId,
+                membershipEpisodeId: membershipEpisodeId));
+            await reader.ApplyAsync(MemberFacts.Deprovisioned(TenantId, memberId, UserId, actorMemberId,
+                "Alex Admin", deprovisionedAt, "Access is no longer required.", membershipEpisodeId));
+            await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId, "firm_staff"));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+
+        // Act
+        var isMember = await reader.IsMemberAsync(TenantId.ToString(), UserId);
+        var membership = await reader.GetAsync(TenantId.ToString(), UserId);
+
+        // Assert
+        Assert.True(isMember);
+        Assert.NotNull(membership);
+        Assert.False(membership.IsDeprovisioned);
+        Assert.Equal("firm_staff", membership.Affiliation);
+        Assert.Equal(deprovisionedAt, membership.DeprovisionedAt);
+        Assert.Equal(actorMemberId, membership.DeprovisionedByMemberId);
+        Assert.Equal("Access is no longer required.", membership.DeprovisionReason);
+    }
+
+    [Fact]
+    public async Task ShouldHideMembershipGivenDifferentTenant()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        var otherTenantId = Uuid.CreateVersion4();
+        await SeedAsync(client, otherTenantId, UserId);
+        var reader = new FitzTenantMembershipDirectoryReader(client);
+
+        // Act
+        var isMember = await reader.IsMemberAsync(TenantId.ToString(), UserId, CancellationToken.None);
+
+        // Assert
+        Assert.False(isMember);
+    }
+
+    [Fact]
+    public async Task ShouldBackfillMembershipsGivenPreIndexEvents()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var legacy = new KvDirectory<TenantMembershipView, Uuid>(
+            "tenant-memberships", Bdgrz.Compliance.ComplianceCoreJsonContext.Default.TenantMembershipView,
+            static view => view.UserId, static id => [id.ToString()], []);
+        var route = await new TenantMembershipRouteReader(client).GetRouteAsync(tenantId);
+        await using (var tx = await client.BeginAsync(route, KvMode.ReadWrite))
+        {
+            await legacy.InsertAsync(tx, new TenantMembershipView(userId, tenantId));
+            await tx.CommitAsync(KvDurability.Sync);
+        }
+
+        // Act
+        var reader = new FitzTenantMembershipDirectoryReader(client);
+
+        // Assert
+        Assert.True(await reader.IsMemberAsync(tenantId.ToString(), userId));
+        var page = await reader.ListAsync(tenantId, 50, null);
+
+        var member = Assert.Single(page.Items);
+        Assert.Equal(userId, member.UserId);
+        Assert.Equal("client_personnel", member.Affiliation);
+    }
+
+    static async Task SeedAsync(InMemoryKvClient client, Uuid tenantId, Uuid userId)
+    {
+        var repository = new FitzTenantMembershipDirectoryReader(client);
+        var identity = new CheckpointIdentity("TenantMembership", EventStreamPattern.ForPattern(tenantId.ToString()));
+        await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
+        await repository.ApplyAsync(MemberFacts.Registered(tenantId, Uuid.CreateVersion4(), userId));
+        await batch.CommitAsync(ProjectionCheckpoint.Start);
+    }
+
+    sealed class TenantMembershipRouteReader(IKvClient client)
+        : FitzKvProjectionStore(client, TenantMembershipDirectoryKeys.Route, "TenantMembership")
+    {
+        public async Task<string> GetRouteAsync(Uuid tenantId)
+        {
+            await using var tx = await BeginReadAsync(tenantId.ToString());
+            return tx.Route;
+        }
+    }
+
+    sealed class MutableTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public DateTimeOffset UtcNow { get; set; } = utcNow;
+
+        public override DateTimeOffset GetUtcNow() => UtcNow;
+    }
+}

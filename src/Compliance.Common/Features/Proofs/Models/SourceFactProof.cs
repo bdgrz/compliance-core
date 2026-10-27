@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Proofs.Models;
 
 /// <summary>Server-created proof that a concrete native event and its exact required facts were verified.</summary>

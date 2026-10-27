@@ -1,8 +1,8 @@
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.TechnologyInventory.Events;
 using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.Proofs;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>

@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>A gap retained by exact source record version for Type II planning.</summary>

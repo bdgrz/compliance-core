@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
 namespace Bdgrz.Compliance.Features.Applications.Commands;
 
 /// <summary>Records the stage readiness material import intent required by the owning feature workflow.</summary>

@@ -1,9 +1,8 @@
-using Bdgrz.Compliance.Features.Applications;
-using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 using System.Text.Json.Serialization;
-
+using Bdgrz.Compliance.Features.Applications.Contracts;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Applications.Queries;
 
 [Discriminator("bdgrz.application.change.preview", 1)]

@@ -1,10 +1,7 @@
-using Bdgrz.Compliance.Features.AuditPackages;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AuditPackages.Contracts;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPackages.Events;
 
 /// <summary>One accepted manifest delta; complete business content remains immutable and verified.</summary>

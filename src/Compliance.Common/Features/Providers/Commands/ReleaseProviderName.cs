@@ -1,9 +1,7 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.Models;
-using Bdgrz.Compliance.Features.NamedRecords;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Providers.Commands;
 
 /// <summary>Releases the provider name claim the record's proven fact no longer needs.</summary>

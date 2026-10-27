@@ -1,11 +1,8 @@
-using Bdgrz.Compliance.Features.Work;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Boundaries.Events;
 using Bdgrz.Compliance.Features.Responsibilities.Events;
 using Bdgrz.Compliance.Features.Work.Projections;
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.Responsibilities;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Work.Projectors;
 
 public sealed partial class BoundaryDecisionWorkItemProjector(

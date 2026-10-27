@@ -1,18 +1,76 @@
-using Bdgrz.Compliance.Features.AccessReviews;
+using System.Globalization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AccessReviews.Contracts;
+using Bdgrz.Compliance.Features.AccessReviews.Processes;
+using Bdgrz.Compliance.Features.AccessReviews.Rules;
+using Bdgrz.Compliance.Features.AccessReviews.Services;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Processes;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Processes;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Processes;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceUse.Processes;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.Content.Persistence;
+using Bdgrz.Compliance.Features.SourceUse.Services;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
 using Bdgrz.Compliance.Features.AccessReviews.Commands;
 using Bdgrz.Compliance.Features.AccessReviews.Models;
-using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using System.Globalization;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.SourceUse;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Providers.Handlers;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.AccessReviews.Handlers;
 
 /// <summary>
@@ -130,7 +188,7 @@ sealed class PublishAccessReviewDecisionBatchHandler(IAggregateReader reader, IA
             return Verified.Fail(SourceUseReceiverSupport.Permanent("The proof set repeats an item."));
         var byItem = proofs.ToDictionary(static proof => proof.ItemId);
         var decisions = new List<AccessDecisionView>(items.Count);
-        foreach (var (resource, selected) in items.OrderBy(static pair => pair.Key, Kernel.StreamKeyOrder.Instance))
+        foreach (var (resource, selected) in items.OrderBy(static pair => pair.Key, Bdgrz.Compliance.Features.Kernel.Services.StreamKeyOrder.Instance))
         {
             if (!byItem.TryGetValue(selected.ItemId, out var proof))
                 return Verified.Fail(SourceUseReceiverSupport.Permanent("The proof set omits a selected item."));

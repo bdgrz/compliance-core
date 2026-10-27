@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.Programs.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.Programs.Events;
 
 /// <summary>Records an explicit rejection of a carry-forward proposal version.</summary>

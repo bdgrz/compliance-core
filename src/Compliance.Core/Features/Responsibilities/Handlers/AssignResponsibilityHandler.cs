@@ -1,12 +1,15 @@
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.Responsibilities;
-using Bdgrz.Compliance.Features.Tenants.Readers;
-using Bdgrz.Compliance.Features.Responsibilities.Commands;
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.Commitments;
-using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Boundaries.Services;
+using Bdgrz.Compliance.Features.Commitments.Services;
+using Bdgrz.Compliance.Features.Controls.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Responsibilities.Rules;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Tenants.Readers;
 namespace Bdgrz.Compliance.Features.Responsibilities.Handlers;
 
 public sealed class AssignResponsibilityHandler(ITenantMembershipDirectoryReader memberships,

@@ -1,10 +1,9 @@
-using Bdgrz.Compliance.Features.UserIdentities;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.UserIdentities.Events;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
+using Bdgrz.Compliance.Features.UserIdentities.Events;
 namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
 
 /// <summary>Sends the completion notice independently of the finished recovery under the at-least-once notice policy.</summary>

@@ -1,10 +1,9 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Contracts;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Commands;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.UserIdentities.Events;
 
 /// <summary>Starts recovery using a separately verified email channel; the native acceptance of StartIdentityRecovery.</summary>

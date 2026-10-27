@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
 namespace Bdgrz.Compliance.Features.Workforce.Models;
 
 /// <summary>Bounded identity, revision and current correlation; private values remain verified immutable content.</summary>

@@ -1,9 +1,7 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
-using Bdgrz.Compliance.Features.NamedRecords;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 
 /// <summary>Releases the operational process name claim the record's proven fact no longer needs.</summary>

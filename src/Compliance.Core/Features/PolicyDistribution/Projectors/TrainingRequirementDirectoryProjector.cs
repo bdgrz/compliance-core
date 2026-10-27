@@ -1,9 +1,8 @@
-using Bdgrz.Compliance.Features.PolicyDistribution;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
 using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
 using Bdgrz.Compliance.Features.PolicyDistribution.Events;
 using Bdgrz.Compliance.Features.PolicyDistribution.Projections;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Projectors;
 
 public sealed partial class TrainingRequirementDirectoryProjector(ITrainingRequirementDirectoryProjection projection)

@@ -1,10 +1,8 @@
-using Bdgrz.Compliance.Features.PolicyDistribution;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.PolicyDistribution.Contracts;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Commands;
 
 /// <summary>

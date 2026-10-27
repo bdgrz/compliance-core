@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Changes.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Changes.Models;
 namespace Bdgrz.Compliance.Features.Changes.Readers;
 
 public interface ISignificantChangeDirectoryReader

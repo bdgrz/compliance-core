@@ -1,5 +1,4 @@
 using Bdgrz.Compliance;
-
 namespace Bdgrz.Compliance.Tests;
 
 public sealed class AssemblyLayoutTests

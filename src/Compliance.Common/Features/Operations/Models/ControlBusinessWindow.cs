@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Operations.Models;
 
 /// <summary>

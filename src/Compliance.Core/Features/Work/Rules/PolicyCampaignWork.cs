@@ -1,0 +1,181 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Services;
+using Bdgrz.Compliance.Features.PolicyDistribution.Projections;
+using Bdgrz.Compliance.Features.PolicyDistribution.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+namespace Bdgrz.Compliance.Features.Work.Rules;
+
+/// <summary>
+///     Turns an open policy or training campaign's unsatisfied people into work (M0-D15, M0-D12). A person with a
+///     platform membership acknowledges personally. Campaign owners with current program-management authority
+///     record training evidence and acknowledgements for people without platform membership.
+/// </summary>
+static class PolicyCampaignWork
+{
+    public const string Acknowledgement = "policy_acknowledgement";
+    public const string TrainingCompletion = "training_completion";
+
+    public static IReadOnlyCollection<string> ProjectedKinds => [Acknowledgement, TrainingCompletion];
+
+    public static bool RequiresProgramManagement(WorkCandidate candidate) =>
+        candidate.Kind == TrainingCompletion ||
+        candidate.Kind == Acknowledgement && candidate.NextAction == "record_acknowledgement";
+
+    public static bool IsFullyProjected(IReadOnlySet<string> projectedKinds) =>
+        ProjectedKinds.All(projectedKinds.Contains);
+
+    /// <summary>
+    ///     Loads work for the program's open campaigns. The directory only enumerates campaign identities; each
+    ///     campaign and each person's membership link are read from their source ledgers.
+    /// </summary>
+    internal static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
+        IAggregateReader reader, CampaignSource campaignSource, ICampaignDirectoryReader directory,
+        CampaignDirectoryReadConsistency consistency, Uuid tenantId, Uuid programId,
+        DateOnly today, CancellationToken ct)
+    {
+        var fence = await consistency.CaptureAsync(tenantId, ct).ConfigureAwait(false);
+        if (!fence.IsSuccess)
+            return Result<IReadOnlyList<WorkCandidate>>.Failure(fence.Error);
+
+        var candidates = new List<WorkCandidate>();
+        var members = new Dictionary<Uuid, Uuid>();
+        var people = new Dictionary<Uuid, PolicyAcknowledgementPersonSnapshot>();
+        var resolved = new HashSet<Uuid>();
+        string? cursor = null;
+        do
+        {
+            var page = await directory.ListProgramAsync(tenantId, programId, 200, cursor, ct).ConfigureAwait(false);
+            foreach (var summary in page.Items.Where(summary => summary.TenantId == tenantId &&
+                                                               summary.ProgramId == programId &&
+                                                               summary.Status == "open"))
+            {
+                var loaded = await campaignSource.ReadAsync(tenantId, programId, summary.CampaignId, ct)
+                    .ConfigureAwait(false);
+                if (!loaded.IsSuccess)
+                {
+                    if (loaded.Error.Kind == RequestErrorKind.NotFound)
+                        continue;
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(loaded.Error);
+                }
+
+                var campaign = loaded.Value;
+                foreach (var person in campaign.ParticipantViews(today, null)
+                             .Where(person => person.State is "pending" or "overdue" && resolved.Add(person.PersonId)))
+                {
+                    var record = await reader.HydrateAsync(new Person(tenantId, person.PersonId), ct)
+                        .ConfigureAwait(false);
+                    people[person.PersonId] = PolicyAcknowledgementPersonSnapshot.Capture(record);
+                    if (record.IsCreated && record.CorrelatedUserId is { } userId)
+                        members[person.PersonId] = RbacIds.Member(tenantId, userId);
+                }
+                candidates.AddRange(Candidates(campaign, today, members, people));
+            }
+            cursor = page.NextCursor;
+        } while (cursor is not null);
+
+        var confirmed = await consistency.ConfirmUnchangedAndCaughtUpAsync(tenantId,
+            fence.Value, ct).ConfigureAwait(false);
+        return confirmed.IsSuccess
+            ? Result<IReadOnlyList<WorkCandidate>>.Success(candidates)
+            : Result<IReadOnlyList<WorkCandidate>>.Failure(confirmed.Error);
+    }
+
+    internal static IReadOnlyList<WorkCandidate> Candidates(CampaignState state, DateOnly today,
+        IReadOnlyDictionary<Uuid, Uuid> memberByPerson,
+        IReadOnlyDictionary<Uuid, PolicyAcknowledgementPersonSnapshot>? people = null)
+    {
+        var campaign = state.Campaign;
+        if (!campaign.IsLaunched || campaign.IsSealed || campaign.Subject is not { } subject)
+            return [];
+        var candidates = new List<WorkCandidate>();
+        foreach (var person in state.ParticipantViews(today, null)
+                     .Where(static person => person.State is "pending" or "overdue"))
+        {
+            var member = memberByPerson.TryGetValue(person.PersonId, out var memberId) ? memberId : (Uuid?)null;
+            candidates.Add(CreateCandidate(campaign.TenantId, campaign.ProgramId, campaign.Id,
+                subject, campaign.OwnerMemberId, campaign.LaunchedAt, person.PersonId,
+                person.DisplayName, person.DueOn, member) with
+            {
+                AcknowledgementPerson = people is not null && people.TryGetValue(person.PersonId, out var captured)
+                    ? captured : null,
+            });
+        }
+        return candidates;
+    }
+
+    public static WorkCandidate CreateCandidate(Uuid tenantId, Uuid programId, Uuid campaignId,
+        CampaignSubject subject, Uuid ownerMemberId, DateTimeOffset launchedAt, Uuid personId,
+        string displayName, DateOnly dueOn, Uuid? memberId)
+    {
+        var training = subject.Kind == "training";
+        var kind = training ? TrainingCompletion : Acknowledgement;
+        var sourceId = Uuid.CreateVersion5(campaignId, "participant:" + personId);
+        var path = $"/api/v1/tenants/{tenantId}/programs/{programId}/campaigns/{campaignId}/" +
+                   (training ? "completions" : "acknowledgements");
+        var label = $"{subject.Identifier} v{subject.Version} {subject.Title}";
+        var owner = new OperatingHolder(OperatingAuthority.MemberHolder, ownerMemberId);
+        if (training)
+            return new WorkCandidate(WorkCandidate.IdFor(sourceId, kind), kind, sourceId, null, null,
+                $"Record {label} completion for {displayName}",
+                $"{displayName}'s training completion requires reviewed manual or LMS-export evidence.",
+                dueOn, null, "record_completion", path, owner,
+                new OperatingHolder(OperatingAuthority.ProgramRecorderHolder, programId),
+                new HashSet<Uuid>(), launchedAt);
+        return memberId is { } member
+            ? new WorkCandidate(WorkCandidate.IdFor(sourceId, kind), kind, sourceId, null, null,
+                $"Acknowledge {label}", "You are in this policy campaign's audience.",
+                dueOn, null, "acknowledge", path,
+                new OperatingHolder(OperatingAuthority.MemberHolder, member), null,
+                new HashSet<Uuid>(), launchedAt)
+            : new WorkCandidate(WorkCandidate.IdFor(sourceId, kind), kind, sourceId, null, null,
+                $"Collect {label} acknowledgement from {displayName}",
+                $"{displayName} has no platform membership, so the campaign owner records the result.",
+                dueOn, null, "record_acknowledgement", path, owner,
+                new OperatingHolder(OperatingAuthority.ProgramRecorderHolder, programId),
+                new HashSet<Uuid>(), launchedAt);
+    }
+}

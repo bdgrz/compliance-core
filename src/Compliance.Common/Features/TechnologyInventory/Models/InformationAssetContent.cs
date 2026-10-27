@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Exports.Models;
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>A governed information asset or data class with exactly one classification (M0-D08).</summary>

@@ -1,0 +1,23 @@
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Models;
+namespace Bdgrz.Compliance.Features.Workforce.Services;
+
+static class WorkforceSourceRedaction
+{
+    public static WorkforceSourceView Apply(WorkforceSourceView view, bool canReadManager, bool canReadReason) =>
+        view.Facts.WorkRelationship is { } relationship ? view with
+        {
+            Facts = view.Facts with
+            {
+                WorkRelationship = relationship with
+                {
+                    ManagerPersonId = canReadManager ? relationship.ManagerPersonId : null,
+                    EmploymentStatusReason = canReadReason ? relationship.EmploymentStatusReason : null,
+                },
+            },
+            RestrictedFieldsRedacted = !canReadManager || !canReadReason,
+        } : view;
+}

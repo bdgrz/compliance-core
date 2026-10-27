@@ -1,8 +1,8 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Events;
-using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.Proofs;
-
 namespace Bdgrz.Compliance.Features.UserIdentities.Models;
 
 /// <summary>Closed union of the source facts that settle the protection of a recovery identity slot.</summary>

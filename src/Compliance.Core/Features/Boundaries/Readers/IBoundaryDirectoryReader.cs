@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Boundaries.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Boundaries.Models;
 namespace Bdgrz.Compliance.Features.Boundaries.Readers;
 
 public interface IBoundaryDirectoryReader

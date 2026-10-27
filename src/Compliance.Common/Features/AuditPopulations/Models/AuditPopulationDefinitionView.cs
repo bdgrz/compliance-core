@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Authorized definition listing with its current source and period boundary.</summary>

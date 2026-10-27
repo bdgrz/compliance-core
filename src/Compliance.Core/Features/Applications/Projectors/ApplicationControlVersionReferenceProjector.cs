@@ -1,8 +1,15 @@
-using Bdgrz.Compliance.Features.Applications;
-using Bdgrz.Compliance.Features.Controls.Events;
-using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.Applications.Readers;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Controls.Events;
 namespace Bdgrz.Compliance.Features.Applications.Projectors;
 
 /// <summary>Projects approved Control versions and lifecycle changes into impact references.</summary>

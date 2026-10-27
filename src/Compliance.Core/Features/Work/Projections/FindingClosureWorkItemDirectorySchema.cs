@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Work;
-using Bdgrz.Compliance.Features.Remediation.Aggregates;
 using Cntryl.Portia;
-using Bdgrz.Compliance.Features.Remediation;
-
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
 namespace Bdgrz.Compliance.Features.Work.Projections;
 
 static class FindingClosureWorkItemDirectorySchema

@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 namespace Bdgrz.Compliance.Features.AttestRecords.Models;
 
 /// <summary>Required record package manifest and delivery readiness.</summary>

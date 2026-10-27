@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Work.Models;
 
 /// <summary>One ordered queue scope with counts that reconcile to its items at the same read.</summary>

@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>Complete compliance incident chronology, impact decision, and resolution history.</summary>

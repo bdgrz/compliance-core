@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>

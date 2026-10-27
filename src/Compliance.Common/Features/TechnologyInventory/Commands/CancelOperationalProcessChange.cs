@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.NamedRecords;
-using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.Commands;
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 
 /// <summary>

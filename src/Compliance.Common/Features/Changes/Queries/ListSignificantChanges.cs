@@ -1,9 +1,8 @@
-using Bdgrz.Compliance.Features.Changes.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 using Cntryl.Fitz.Extensions;
-
+using Bdgrz.Compliance.Features.Changes.Commands;
+using Bdgrz.Compliance.Features.Changes.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Changes.Queries;
 
 /// <summary>Reads the feature state required by the linked product workflow.</summary>

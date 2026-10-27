@@ -1,13 +1,9 @@
-using Bdgrz.Compliance.Features.Boundaries;
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Boundaries.Contracts;
 using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Boundaries.Events;
 
 [Discriminator("bdgrz.boundary.draft.created", 2)]

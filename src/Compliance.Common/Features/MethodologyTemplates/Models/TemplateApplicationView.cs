@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Tenant-owned application and provenance, isolated to one organization and program.</summary>

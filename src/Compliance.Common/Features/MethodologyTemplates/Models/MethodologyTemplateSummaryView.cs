@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Published templates visible to authorized tenant administrators.</summary>

@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.Boundaries.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Boundaries.Contracts;
+using Bdgrz.Compliance.Features.Boundaries.Models;
 namespace Bdgrz.Compliance.Features.Boundaries.Commands;
 
 [Discriminator("bdgrz.boundary.successor.propose", 1)]

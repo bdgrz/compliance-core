@@ -1,10 +1,9 @@
-using Bdgrz.Compliance.Features.Commitments;
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Commitments.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Commitments.Events;
-using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.AccessControl;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.Commitments.Models;
 
 /// <summary>

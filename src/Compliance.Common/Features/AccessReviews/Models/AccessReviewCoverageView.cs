@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>The access-population coverage of every system instance of one application.</summary>

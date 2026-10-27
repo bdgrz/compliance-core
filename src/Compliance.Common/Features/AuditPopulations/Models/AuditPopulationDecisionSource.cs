@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Actual predecessor locator and complete captured target commitments; manual row fields remain declarations.</summary>

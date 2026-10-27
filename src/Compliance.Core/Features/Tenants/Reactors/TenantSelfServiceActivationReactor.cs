@@ -1,11 +1,11 @@
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Events;
-using Bdgrz.Compliance.Features.Tenants;
-using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Cntryl.Portia;
 using Microsoft.Extensions.Logging;
-
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Tenants.Rules;
+using Bdgrz.Compliance.Features.Tenants.Services;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
 namespace Bdgrz.Compliance.Features.Tenants.Reactors;
 
 public sealed partial class TenantSelfServiceActivationReactor(IProjectionCheckpointStore checkpoints,

@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>Bounded report derived from retained raw rows and the durable lifecycle; no target fields.</summary>

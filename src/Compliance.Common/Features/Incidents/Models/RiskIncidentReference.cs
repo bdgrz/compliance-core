@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>Attributable reference to an earlier externally sourced R1-07 risk incident.</summary>

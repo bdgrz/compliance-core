@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.SystemDescription.Models;
 
 /// <summary>Identity and exact derived-body digest only; historical narrative stays in its native source content.</summary>

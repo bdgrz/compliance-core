@@ -1,0 +1,456 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.Risks.Rules;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Readers;
+using Bdgrz.Compliance.Features.Work.Services;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
+using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
+using Bdgrz.Compliance.Tests.Features.Changes.Tests;
+using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
+using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
+using Bdgrz.Compliance.Tests.Features.Controls.Tests;
+using Bdgrz.Compliance.Tests.Features.Criteria.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Exports.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.Policies.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Retention.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.Snapshots.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceUse.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Evidence.Readers;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Tests;
+using Bdgrz.Compliance.Features.Operations.Models;
+namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
+
+public sealed class RiskAcceptanceWorkTests
+{
+    [Fact]
+    public async Task ShouldQueueAcceptanceForEligibleIndependentApproverGivenPendingResidualRisk()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var riskId = Uuid.CreateVersion4();
+        var residualAssessmentId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var method = await SeedMethodAsync(fixture, 20, now);
+        fixture.Risks.Add(new RiskDraftView(fixture.TenantId, fixture.ProgramId, riskId,
+            "R-ACCEPT", 1, "assessed", "resolved",
+            new RiskDraftContent("Data exposure", "Customer records could be exposed.",
+                "Loss of customer trust.", null), fixture.LeadMemberId, "Lead", now));
+        await SeedRiskOwnerAsync(fixture, riskId, now);
+        fixture.Permissions.RiskApprovers.Add((fixture.ApproverMemberId,
+            RbacPermissions.RiskAcceptComplianceLead));
+        fixture.Permissions.RiskApprovers.Add((fixture.ApproverMemberId,
+            RbacPermissions.RiskAcceptExecutive));
+        fixture.Permissions.RiskApprovers.Add((fixture.LeadMemberId,
+            RbacPermissions.RiskAcceptComplianceLead));
+        fixture.Permissions.RiskApprovers.Add((fixture.LeadMemberId,
+            RbacPermissions.RiskAcceptExecutive));
+        fixture.Permissions.RiskApprovers.Add((fixture.OwnerMemberId,
+            RbacPermissions.RiskAcceptComplianceLead));
+        fixture.Permissions.RiskApprovers.Add((fixture.OwnerMemberId,
+            RbacPermissions.RiskAcceptExecutive));
+        await SeedPendingAcceptanceAsync(fixture, riskId, residualAssessmentId, method, now);
+
+        // Act
+        var approverQueue = await fixture.AsAsync(fixture.ApproverUserId,
+            new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
+        var assessorQueue = await fixture.AsAsync(fixture.LeadUserId,
+            new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
+        var ownerQueue = await fixture.AsAsync(fixture.OwnerUserId,
+            new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
+
+        // Assert
+        var item = Assert.Single(approverQueue.Items);
+        Assert.Equal("risk_acceptance", item.Kind);
+        Assert.Equal(riskId, item.SourceId);
+        Assert.Equal("accept", item.NextAction);
+        Assert.Equal($"/api/v1/tenants/{fixture.TenantId}/programs/{fixture.ProgramId}/" +
+                     $"risks/{riskId}/acceptances", item.ActionPath);
+        Assert.Empty(assessorQueue.Items);
+        Assert.Empty(ownerQueue.Items);
+    }
+
+    [Fact]
+    public async Task ShouldRequireExecutiveGivenResidualRiskAboveAppetite()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var riskId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var method = await SeedMethodAsync(fixture, 20, now);
+        fixture.Risks.Add(new RiskDraftView(fixture.TenantId, fixture.ProgramId, riskId,
+            "R-EXEC", 1, "assessed", "resolved",
+            new RiskDraftContent("Material data exposure", "Sensitive records are exposed.",
+                "Severe customer impact.", null), fixture.LeadMemberId, "Lead", now));
+        fixture.Permissions.RiskApprovers.Add((fixture.ApproverMemberId,
+            RbacPermissions.RiskAcceptExecutive));
+        fixture.Permissions.RiskApprovers.Add((fixture.ReviewerMemberId,
+            RbacPermissions.RiskAcceptComplianceLead));
+        await SeedPendingAcceptanceAsync(fixture, riskId, Uuid.CreateVersion4(), method, now,
+            likelihood: 5, impact: 5);
+
+        // Act
+        var executiveQueue = await fixture.AsAsync(fixture.ApproverUserId,
+            new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
+        var complianceLeadQueue = await fixture.AsAsync(fixture.ReviewerUserId,
+            new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
+
+        // Assert
+        var item = Assert.Single(executiveQueue.Items);
+        Assert.Equal(OperatingAuthority.RiskExecutiveHolder, item.Responsible.Kind);
+        Assert.Contains("executive", item.Reason, StringComparison.Ordinal);
+        Assert.Empty(complianceLeadQueue.Items);
+    }
+
+    [Fact]
+    public async Task ShouldRemoveAcceptanceWorkGivenCurrentResidualRiskAccepted()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var riskId = Uuid.CreateVersion4();
+        var residualAssessmentId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var method = await SeedMethodAsync(fixture, 20, now);
+        fixture.Risks.Add(new RiskDraftView(fixture.TenantId, fixture.ProgramId, riskId,
+            "R-ACTIVE", 1, "assessed", "resolved",
+            new RiskDraftContent("Contained exposure", "Records are protected.",
+                "Limited customer impact.", null), fixture.LeadMemberId, "Lead", now));
+        fixture.Permissions.RiskApprovers.Add((fixture.ApproverMemberId,
+            RbacPermissions.RiskAcceptComplianceLead));
+        await SeedPendingAcceptanceAsync(fixture, riskId, residualAssessmentId, method, now);
+
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new RiskEvaluationRules(fixture.TenantId, riskId), evaluation =>
+            {
+                Assert.Null(evaluation.Accept(fixture.ProgramId, 3, Uuid.CreateVersion4(),
+                    residualAssessmentId, method, "compliance_lead", true,
+                    now.AddMonths(6), "The residual exposure is accepted.",
+                    fixture.ApproverMemberId, "Approver", now.AddMinutes(3)));
+                return Result.Success;
+            });
+
+        // Act
+        var queue = await fixture.AsAsync(fixture.ApproverUserId,
+            new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
+
+        // Assert
+        Assert.DoesNotContain(queue.Items, item => item.Kind == "risk_acceptance");
+    }
+
+    [Fact]
+    public async Task ShouldNotQueueAcceptanceGivenTreatmentChangedAfterResidualAssessment()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var riskId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var method = await SeedMethodAsync(fixture, 20, now);
+        fixture.Risks.Add(new RiskDraftView(fixture.TenantId, fixture.ProgramId, riskId,
+            "R-STALE", 1, "assessed", "resolved",
+            new RiskDraftContent("Data exposure", "Customer records could be exposed.",
+                "Loss of customer trust.", null), fixture.LeadMemberId, "Lead", now));
+        fixture.Permissions.RiskApprovers.Add((fixture.ApproverMemberId,
+            RbacPermissions.RiskAcceptComplianceLead));
+        await SeedTreatmentChangeAfterResidualAsync(fixture, riskId, method, now);
+
+        // Act
+        var queue = await fixture.AsAsync(fixture.ApproverUserId,
+            new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
+
+        // Assert
+        Assert.DoesNotContain(queue.Items, item => item.Kind == "risk_acceptance");
+    }
+
+    [Fact]
+    public async Task ShouldNotDuplicateRiskAcceptanceGivenProjectionAndLiveSource()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var riskId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var method = await SeedMethodAsync(fixture, 20, now);
+        fixture.Risks.Add(new RiskDraftView(fixture.TenantId, fixture.ProgramId, riskId,
+            "R-PROJECTED", 1, "assessed", "resolved",
+            new RiskDraftContent("Data exposure", "Customer records could be exposed.",
+                "Loss of customer trust.", null), fixture.LeadMemberId, "Lead", now));
+        fixture.Permissions.RiskApprovers.Add((fixture.ApproverMemberId,
+            RbacPermissions.RiskAcceptComplianceLead));
+        await SeedPendingAcceptanceAsync(fixture, riskId, Uuid.CreateVersion4(), method, now);
+        await fixture.CatchUpBoundaryDirectoryAsync();
+
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var source = await RiskAcceptanceWork.LoadAsync(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(), fixture.Risks, null, fixture.TenantId, fixture.ProgramId, now, null, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>(), CancellationToken.None);
+        var candidate = Assert.Single(source.Value);
+        var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
+        var projected = new ProjectedRiskAcceptanceWorkItems(candidate,
+            await ReadRiskEvaluationCheckpointAsync(events, fixture.TenantId));
+        var consistency = new WorkQueueReadConsistency(events, [projected]);
+        var queue = new WorkQueueReader(reader, scope.ServiceProvider.GetRequiredService<WorkAssignmentReader>(), scope.ServiceProvider.GetRequiredService<ControlReader>(), scope.ServiceProvider.GetRequiredService<PolicyReader>(),
+            scope.ServiceProvider.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
+            consistency, risks: fixture.Risks, accountableWorkItems: [projected],
+            operatingReader: scope.ServiceProvider.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: scope.ServiceProvider.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: scope.ServiceProvider.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: scope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(),
+            evidenceRequests: scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.Readers.EvidenceRequestReader>());
+        var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
+            "Approver");
+
+        // Act
+        var result = await queue.ReadAsync(fixture.TenantId, fixture.ProgramId, actor, 30,
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value.Entries, entry => entry.Item.Kind == "risk_acceptance");
+    }
+
+    [Fact]
+    public async Task ShouldBuildRiskAcceptanceWorkFromRiskEvaluationProjectionGivenPendingResidualRisk()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var riskId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var method = await SeedMethodAsync(fixture, 20, now);
+        fixture.Risks.Add(new RiskDraftView(fixture.TenantId, fixture.ProgramId, riskId,
+            "R-PROJECTED", 1, "assessed", "resolved",
+            new RiskDraftContent("Data exposure", "Customer records could be exposed.",
+                "Loss of customer trust.", null), fixture.LeadMemberId, "Lead", now));
+        await SeedPendingAcceptanceAsync(fixture, riskId, Uuid.CreateVersion4(), method, now);
+
+        var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var evaluations = new FitzRiskEvaluationDirectory(new InMemoryKvClient(), sourceScope.ServiceProvider.GetRequiredService<RiskEvaluationReader>());
+        await ProjectRiskEvaluationsAsync(evaluations, events, fixture.TenantId);
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var workItems = new RiskAcceptanceWorkItemDirectory(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(), fixture.Risks, null, evaluations, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>());
+        Assert.Equal(await ReadRiskEvaluationCheckpointAsync(events, fixture.TenantId),
+            await workItems.LoadCheckpointAsync(fixture.TenantId));
+
+        // Act
+        var result = await workItems.LoadProgramAsync(fixture.TenantId, fixture.ProgramId, now,
+            DateOnly.MaxValue, null, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var candidate = Assert.Single(result.Value);
+        Assert.Equal("risk_acceptance", candidate.Kind);
+        Assert.Equal(riskId, candidate.SourceId);
+        Assert.Equal($"/api/v1/tenants/{fixture.TenantId}/programs/{fixture.ProgramId}/" +
+                     $"risks/{riskId}/acceptances", candidate.ActionPath);
+    }
+
+    [Fact]
+    public async Task ShouldRejectLaggingRiskAcceptanceProjectionGivenCurrentEvaluationEvents()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var riskId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var method = await SeedMethodAsync(fixture, 20, now);
+        fixture.Risks.Add(new RiskDraftView(fixture.TenantId, fixture.ProgramId, riskId,
+            "R-LAGGING", 1, "assessed", "resolved",
+            new RiskDraftContent("Data exposure", "Customer records could be exposed.",
+                "Loss of customer trust.", null), fixture.LeadMemberId, "Lead", now));
+        await SeedPendingAcceptanceAsync(fixture, riskId, Uuid.CreateVersion4(), method, now);
+        await fixture.CatchUpBoundaryDirectoryAsync();
+
+        var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var evaluations = new FitzRiskEvaluationDirectory(new InMemoryKvClient(), sourceScope.ServiceProvider.GetRequiredService<RiskEvaluationReader>());
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var workItems = new RiskAcceptanceWorkItemDirectory(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(), fixture.Risks, null, evaluations, scope.ServiceProvider.GetRequiredService<RiskEvaluationReader>(), scope.ServiceProvider.GetRequiredService<RiskMethodReader>());
+        var consistency = new WorkQueueReadConsistency(events, [workItems]);
+
+        // Act
+        var result = await consistency.CaptureAsync(fixture.TenantId, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.True(result.Error.IsTransient);
+    }
+
+    static async Task<RiskMethodVersionView> SeedMethodAsync(OperationsFixture fixture,
+        int? appetiteThreshold, DateTimeOffset now)
+    {
+        RiskMethodVersionView? methodVersion = null;
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new RiskMethodRules(fixture.TenantId, fixture.ProgramId), method =>
+            {
+                Assert.Null(method.Publish(fixture.ProgramId, 0,
+                    ["rare", "unlikely", "possible", "likely", "almost certain"],
+                    ["low", "minor", "moderate", "major", "severe"], appetiteThreshold,
+                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now));
+                methodVersion = method.Current;
+                return Result.Success;
+            });
+        return methodVersion!;
+    }
+
+    static Task SeedRiskOwnerAsync(OperationsFixture fixture, Uuid riskId,
+        DateTimeOffset now) =>
+        RiskSeeds.AssignOwnerAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, fixture.PersonId, fixture.OwnerMemberId, "Owns the service risk.", ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now);
+
+    static Task SeedPendingAcceptanceAsync(OperationsFixture fixture, Uuid riskId,
+        Uuid residualAssessmentId, RiskMethodVersionView method, DateTimeOffset now,
+        int likelihood = 3, int impact = 3) =>
+        ProgramManagementServices.SeedAsync(fixture.Provider,
+            new RiskEvaluationRules(fixture.TenantId, riskId), evaluation =>
+            {
+                Assert.Null(evaluation.RecordAssessment(fixture.ProgramId, 0,
+                    Uuid.CreateVersion4(), method, RiskEvaluation.Inherent, 2, 2,
+                    "The baseline exposure is limited.", fixture.LeadMemberId, "Lead", now));
+                Assert.Null(evaluation.ChooseTreatment(fixture.ProgramId, 1, "accept",
+                    "The residual exposure is within appetite.", fixture.LeadMemberId, "Lead",
+                    now.AddMinutes(1)));
+                Assert.Null(evaluation.RecordAssessment(fixture.ProgramId, 2,
+                    residualAssessmentId, method, RiskEvaluation.Residual, likelihood, impact,
+                    "The residual exposure remains within appetite.", fixture.LeadMemberId,
+                    "Lead", now.AddMinutes(2)));
+                return Result.Success;
+            });
+
+    static Task SeedTreatmentChangeAfterResidualAsync(OperationsFixture fixture, Uuid riskId,
+        RiskMethodVersionView method, DateTimeOffset now) =>
+        ProgramManagementServices.SeedAsync(fixture.Provider,
+            new RiskEvaluationRules(fixture.TenantId, riskId), evaluation =>
+            {
+                Assert.Null(evaluation.RecordAssessment(fixture.ProgramId, 0,
+                    Uuid.CreateVersion4(), method, RiskEvaluation.Inherent, 2, 2,
+                    "The baseline exposure is limited.", fixture.LeadMemberId, "Lead", now));
+                Assert.Null(evaluation.ChooseTreatment(fixture.ProgramId, 1, "accept",
+                    "The residual exposure may be accepted.", fixture.LeadMemberId, "Lead",
+                    now.AddMinutes(1)));
+                Assert.Null(evaluation.RecordAssessment(fixture.ProgramId, 2,
+                    Uuid.CreateVersion4(), method, RiskEvaluation.Residual, 3, 3,
+                    "The residual exposure remains within appetite.", fixture.LeadMemberId,
+                    "Lead", now.AddMinutes(2)));
+                Assert.Null(evaluation.ChooseTreatment(fixture.ProgramId, 3, "transfer",
+                    "The plan changed after the residual assessment.", fixture.LeadMemberId,
+                    "Lead", now.AddMinutes(3)));
+                Assert.Null(evaluation.ChooseTreatment(fixture.ProgramId, 4, "accept",
+                    "Acceptance is considered again after the plan change.",
+                    fixture.LeadMemberId, "Lead", now.AddMinutes(4)));
+                return Result.Success;
+            });
+
+    static async Task<ProjectionCheckpoint> ReadRiskEvaluationCheckpointAsync(
+        IDomainEventReader events, Uuid tenantId)
+    {
+        var cursor = EventCursor.Start;
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(
+                           tenantId.ToString(), "risk-evaluations"), cursor,
+                           CancellationToken.None))
+            cursor = record.NextCursor;
+        return new ProjectionCheckpoint(cursor);
+    }
+
+    static async Task ProjectRiskEvaluationsAsync(FitzRiskEvaluationDirectory directory,
+        IDomainEventReader events, Uuid tenantId)
+    {
+        var pattern = EventStreamPattern.ForPattern(tenantId.ToString(), "risk-evaluations");
+        var identity = new CheckpointIdentity(FitzRiskEvaluationDirectory.ProjectorName, pattern);
+        var checkpoint = await directory.LoadCheckpointAsync(tenantId);
+        await foreach (var record in events.ReadAsync(pattern, checkpoint.Cursor,
+                           CancellationToken.None))
+        {
+            await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                checkpoint));
+            await directory.ApplyAsync(record.Event);
+            checkpoint = new ProjectionCheckpoint(record.NextCursor);
+            await batch.CommitAsync(checkpoint);
+        }
+    }
+
+    sealed class ProjectedRiskAcceptanceWorkItems(WorkCandidate candidate,
+        ProjectionCheckpoint checkpoint) : IAccountableWorkItemDirectoryReader
+    {
+        static readonly string[] Kinds = [RiskAcceptanceWork.Kind];
+
+        public string ProjectorName => "TestRiskEvaluationWorkItems";
+
+        public IReadOnlyCollection<string> ProjectedKinds => Kinds;
+
+        public EventStreamPattern SourcePattern(Uuid tenantId) =>
+            EventStreamPattern.ForPattern(tenantId.ToString(), "risk-evaluations");
+
+        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+            CancellationToken ct = default) => ValueTask.FromResult(checkpoint);
+
+        public ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
+            Uuid programId, CancellationToken ct = default) =>
+            ValueTask.FromResult(Result<IReadOnlyList<WorkCandidate>>.Success([candidate]));
+    }
+}

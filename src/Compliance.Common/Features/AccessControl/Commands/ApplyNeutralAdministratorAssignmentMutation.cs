@@ -1,10 +1,8 @@
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.AccessControl.Events;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessReviews.Contracts;
+using Bdgrz.Compliance.Features.Proofs.Models;
 namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>Applies the original administrators-team removal the guard admitted as neutral.</summary>

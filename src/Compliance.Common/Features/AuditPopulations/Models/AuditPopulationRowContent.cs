@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>A manually supplied or imported population row before attribution.</summary>

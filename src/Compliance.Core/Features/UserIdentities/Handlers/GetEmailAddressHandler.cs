@@ -1,10 +1,19 @@
-using Bdgrz.Compliance.Features.UserIdentities;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
 using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Queries;
 using Bdgrz.Compliance.Features.UserIdentities.Readers;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Authorizers;
 namespace Bdgrz.Compliance.Features.UserIdentities.Handlers;
 
 public sealed class GetEmailAddressHandler(IEmailAddressDirectoryReader directory)

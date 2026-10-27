@@ -1,8 +1,9 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.Events;
-using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.Proofs;
-
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 namespace Bdgrz.Compliance.Features.Providers.Models;
 
 /// <summary>Closed union of the record facts that prove a provider name is no longer needed by its old claim holder.</summary>

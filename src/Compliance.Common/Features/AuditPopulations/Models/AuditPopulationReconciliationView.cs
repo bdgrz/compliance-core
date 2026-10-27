@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AuditPopulations.Models;
 
 /// <summary>Reconciled row totals and completeness, bound to the exact source snapshot set.</summary>

@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Models;
 namespace Bdgrz.Compliance.Features.Criteria.Queries;
 
 [Discriminator("bdgrz.criteria.editions.list", 1)]

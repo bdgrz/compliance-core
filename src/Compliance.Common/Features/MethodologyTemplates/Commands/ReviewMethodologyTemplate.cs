@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Tenants.Contracts;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 
 /// <summary>Records the review methodology template intent required by the owning feature workflow.</summary>

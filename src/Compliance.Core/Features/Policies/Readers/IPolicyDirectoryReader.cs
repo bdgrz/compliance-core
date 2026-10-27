@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Policies.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Policies.Models;
 namespace Bdgrz.Compliance.Features.Policies.Readers;
 
 public interface IPolicyDirectoryReader

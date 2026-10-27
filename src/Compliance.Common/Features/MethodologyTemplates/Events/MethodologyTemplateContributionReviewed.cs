@@ -1,9 +1,8 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NativeOperations.Contracts;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 
 /// <summary>Records the exact reviewed contribution content without copying a retained read snapshot.</summary>

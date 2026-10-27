@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Tenants.Contracts;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 
 /// <summary>Accepts a reviewed contribution into platform methodology.</summary>

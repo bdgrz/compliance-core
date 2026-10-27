@@ -1,13 +1,10 @@
-using Bdgrz.Compliance.Features.Work;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Work.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Work.Commands;
-using Bdgrz.Compliance.Features.AccessControl;
-using Cntryl.Portia;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-
 namespace Bdgrz.Compliance.Features.Work.Events;
 
 /// <summary>Records the durable outcome of one exact weekly digest delivery attempt.</summary>

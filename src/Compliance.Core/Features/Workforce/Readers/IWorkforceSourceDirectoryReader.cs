@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Workforce.Models;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Workforce.Readers;
 
 public interface IWorkforceSourceDirectoryReader

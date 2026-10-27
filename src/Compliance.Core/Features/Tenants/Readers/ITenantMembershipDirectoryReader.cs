@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.Tenants.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Models;
 namespace Bdgrz.Compliance.Features.Tenants.Readers;
 
 /// <summary>Reads one tenant's materialized membership directory.</summary>

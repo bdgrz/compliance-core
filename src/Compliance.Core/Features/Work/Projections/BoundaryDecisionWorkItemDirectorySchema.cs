@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.Work;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
 namespace Bdgrz.Compliance.Features.Work.Projections;
 
 static class BoundaryDecisionWorkItemDirectorySchema

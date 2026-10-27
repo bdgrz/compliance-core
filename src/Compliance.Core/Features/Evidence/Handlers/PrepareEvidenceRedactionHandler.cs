@@ -1,8 +1,6 @@
-using Bdgrz.Compliance.Features.Evidence;
-using Bdgrz.Compliance.Features.Evidence.Commands;
-using Bdgrz.Compliance.Features.Evidence.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Commands;
 namespace Bdgrz.Compliance.Features.Evidence.Handlers;
 
 sealed class PrepareEvidenceRedactionHandler(EvidenceRedactionOperations operations)

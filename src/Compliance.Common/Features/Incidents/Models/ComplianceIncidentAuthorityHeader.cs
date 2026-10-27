@@ -1,5 +1,6 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.Incidents.Models;
 
 /// <summary>Bounded current incident authority; exact version/decision bodies and chronology remain immutable content.</summary>

@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.Changes.Models;
 
 /// <summary>An immutable significance and impact decision for one exact change version.</summary>

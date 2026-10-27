@@ -1,9 +1,8 @@
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.TechnologyInventory.Events;
-using Bdgrz.Compliance.Features.NamedRecords;
-using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.Commands;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 
 /// <summary>Acquires the operational process name claim a change needs, or re-pins the claim the record already holds.</summary>

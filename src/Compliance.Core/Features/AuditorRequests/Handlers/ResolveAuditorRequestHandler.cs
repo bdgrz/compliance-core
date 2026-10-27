@@ -1,19 +1,57 @@
-using Bdgrz.Compliance.Features.AuditorRequests;
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.History;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditorRequests.Projections;
+using Bdgrz.Compliance.Features.AuditorRequests.Rules;
+using Bdgrz.Compliance.Features.AuditorRequests.Services;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceUse.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
 using Bdgrz.Compliance.Features.AuditorRequests.Commands;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
-using Bdgrz.Compliance.Features.NativeOperations.Models;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.SourceUse.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Processes;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.SourceUse;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.AuditorRequests.Handlers;
 
 /// <summary>
@@ -122,7 +160,7 @@ public sealed class ResolveAuditorRequestHandler(NativeOperationExecutor operati
             .Select(fact => new SourceUseRequirement(new AuditorResponse(tenant, request.ProgramId, request.RequestId,
                     fact.Operation.LogicalId).Stream, NativeFactReference.Of(snapshot.Stream, fact), 0,
                 SourceUsePurpose.RequestResolution, fact.Intent))
-            .OrderBy(use => use.SourceOwner.Resource, Kernel.StreamKeyOrder.Instance).ToArray();
+            .OrderBy(use => use.SourceOwner.Resource, Bdgrz.Compliance.Features.Kernel.Services.StreamKeyOrder.Instance).ToArray();
         var decision = new AuditorResolutionDecision(request.CommandId, request.ProgramId, resolution,
             AuditorRequestRules.Frozen(request.ResponseIds), actorMemberId, actor, now);
         var decisionReference = await AuditorContent.WriteAsync(content, tenant, AuditorContent.DecisionSchema, decision,

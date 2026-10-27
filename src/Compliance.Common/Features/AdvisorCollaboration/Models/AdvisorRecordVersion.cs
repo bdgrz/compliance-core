@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 
 /// <summary>

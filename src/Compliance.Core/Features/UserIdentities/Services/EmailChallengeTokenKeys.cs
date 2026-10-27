@@ -1,0 +1,155 @@
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
+using Cntryl.Portia;
+using Microsoft.Extensions.Configuration;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Work.Authorizers;
+namespace Bdgrz.Compliance.Features.UserIdentities.Services;
+
+/// <summary>Derives email proof and invitation tokens without persisting plaintext.</summary>
+public sealed class EmailChallengeTokenKeys
+{
+    const string Section = "Compliance:EmailDelivery";
+    static readonly byte[] DevelopmentKey = SHA256.HashData(
+        Encoding.UTF8.GetBytes("bdgrz-development-email-challenge-key-v1"));
+    readonly Dictionary<string, byte[]> _keys;
+
+    EmailChallengeTokenKeys(string activeKeyId, Dictionary<string, byte[]> keys)
+    {
+        ActiveKeyId = activeKeyId;
+        _keys = keys;
+    }
+
+    public string ActiveKeyId { get; }
+
+    public static EmailChallengeTokenKeys FromConfiguration(IConfiguration configuration,
+        bool allowDevelopmentKey)
+    {
+        var active = configuration[$"{Section}:ActiveTokenKeyId"];
+        var keys = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        foreach (var entry in configuration.GetSection($"{Section}:TokenKeys").GetChildren())
+        {
+            if (entry.Value is null)
+                continue;
+            byte[] decoded;
+            try
+            {
+                decoded = Convert.FromBase64String(entry.Value);
+            }
+            catch (FormatException)
+            {
+                throw new InvalidOperationException("An email delivery token key is invalid.");
+            }
+            if (decoded.Length < 32)
+                throw new InvalidOperationException("Email delivery token keys must contain at least 32 bytes.");
+            keys.Add(entry.Key, decoded);
+        }
+
+        if (keys.Count == 0 && allowDevelopmentKey && active is null)
+        {
+            keys.Add("development", DevelopmentKey);
+            active = "development";
+        }
+        if (string.IsNullOrWhiteSpace(active) || !keys.ContainsKey(active))
+            throw new InvalidOperationException("The active email delivery token key is unavailable.");
+        return new EmailChallengeTokenKeys(active, keys);
+    }
+
+    public string Derive(string keyId, Uuid challengeId, Uuid userId,
+        string emailAddress, DateTimeOffset expiresAt) =>
+        TryDerive(keyId, challengeId, userId, emailAddress, expiresAt, out var token)
+            ? token!
+            : throw new InvalidOperationException("The email delivery token key is unavailable.");
+
+    public string DeriveRecovery(string keyId, Uuid challengeId, Uuid userId,
+        string emailAddress, DateTimeOffset expiresAt) =>
+        TryDeriveRecovery(keyId, challengeId, userId, emailAddress, expiresAt, out var token)
+            ? token!
+            : throw new InvalidOperationException("The email delivery token key is unavailable.");
+
+    public bool TryDerive(string? keyId, Uuid challengeId, Uuid userId,
+        string emailAddress, DateTimeOffset expiresAt, out string? token)
+        => TryDerive(keyId, "bdgrz-email-challenge-v1", challengeId, userId,
+            emailAddress, expiresAt, out token);
+
+    public bool TryDeriveRecovery(string? keyId, Uuid challengeId, Uuid userId,
+        string emailAddress, DateTimeOffset expiresAt, out string? token)
+        => TryDerive(keyId, "bdgrz-identity-recovery-v1", challengeId, userId,
+            emailAddress, expiresAt, out token);
+
+    bool TryDerive(string? keyId, string purpose, Uuid challengeId, Uuid userId,
+        string emailAddress, DateTimeOffset expiresAt, out string? token)
+    {
+        token = null;
+        if (keyId is null || !_keys.TryGetValue(keyId, out var key))
+            return false;
+
+        // The random challenge ID provides unique input. The HMAC key is shared by API and
+        // worker; retaining the previous key for 15 minutes permits in-flight delivery.
+        var input = Encoding.UTF8.GetBytes(string.Join('\n',
+            purpose, challengeId.ToString(), userId.ToString(),
+            emailAddress, expiresAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)));
+        token = Convert.ToHexString(HMACSHA256.HashData(key, input));
+        return true;
+    }
+
+    public string DeriveInvitation(string keyId, Uuid attemptId, Uuid tenantId,
+        string emailAddress, DateTimeOffset expiresAt) =>
+        TryDeriveInvitation(keyId, attemptId, tenantId, emailAddress, expiresAt, out var token)
+            ? token!
+            : throw new InvalidOperationException("The email delivery token key is unavailable.");
+
+    public bool TryDeriveInvitation(string? keyId, Uuid attemptId, Uuid tenantId,
+        string emailAddress, DateTimeOffset expiresAt, out string? token)
+    {
+        token = null;
+        if (keyId is null || !_keys.TryGetValue(keyId, out var key))
+            return false;
+
+        // Keep the invitation derivation separate from verification challenges. Retain
+        // the selected key until every invitation issued under it has expired.
+        var input = Encoding.UTF8.GetBytes(string.Join('\n',
+            "bdgrz-tenant-invitation-v1", attemptId.ToString(), tenantId.ToString(),
+            emailAddress, expiresAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)));
+        token = Convert.ToHexString(HMACSHA256.HashData(key, input));
+        return true;
+    }
+}

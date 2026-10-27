@@ -1,6 +1,4 @@
 using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-
 namespace Bdgrz.Compliance.Features.Remediation.Models;
 
 /// <summary>One attributable change to a finding.</summary>

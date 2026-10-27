@@ -1,3 +1,0 @@
-namespace Bdgrz.Compliance.Features.Evidence;
-
-sealed record EvidenceRedactionSourcePair(EvidenceArtifactMetadataSnapshot Original, EvidenceArtifactMetadataSnapshot Derived);

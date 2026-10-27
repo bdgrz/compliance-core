@@ -1,9 +1,7 @@
-using Bdgrz.Compliance.Features.AccessControl;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.Processes.Models;
-using Bdgrz.Compliance.Features.Processes;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 sealed class ClaimProfessionalAssertionIdentityHandler(ProfessionalDutyChangeReceivers receivers)

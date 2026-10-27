@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Responsibilities.Models;
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
 namespace Bdgrz.Compliance.Features.Responsibilities.Queries;
 
 [Discriminator("bdgrz.member.responsibilities.list", 1)]

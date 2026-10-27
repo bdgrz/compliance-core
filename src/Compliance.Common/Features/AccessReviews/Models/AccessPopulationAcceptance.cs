@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AccessReviews.Models;
 
 /// <summary>The immutable snapshot an accepted population was frozen as, and its effective-access calculation.</summary>

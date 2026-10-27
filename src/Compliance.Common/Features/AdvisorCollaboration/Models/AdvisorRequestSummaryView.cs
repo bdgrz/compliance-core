@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 
 /// <summary>Scoped handoff directory with status and review readiness.</summary>

@@ -1,18 +1,58 @@
-using Bdgrz.Compliance.Features.PolicyDistribution;
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Services;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.History;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Versioning.Rules;
+using Bdgrz.Compliance.Features.Versioning.Services;
+using Bdgrz.Compliance.Features.Work.Rules;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
 using Bdgrz.Compliance.Features.PolicyDistribution.Events;
-using Bdgrz.Compliance.Features.PolicyDistribution.Models;
 using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.Versioning;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.SourceUse.Handlers;
+using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
 
 /// <summary>
@@ -258,7 +298,7 @@ public sealed class PolicyDistributionCampaign : Aggregate
             launchedAt, operation, firstResponse, operationResult));
         // The frozen audience is part of the launch: its own logical id keeps one root fact per logical id.
         RaiseEvent(new PolicyCampaignAudienceFrozen(_tenantId, Id, 1, entries,
-            operation with { LogicalId = Kernel.AggregateIdentity.Create("PolicyCampaignAudienceFrozen", Id) },
+            operation with { LogicalId = Bdgrz.Compliance.Features.Kernel.Services.AggregateIdentity.Create("PolicyCampaignAudienceFrozen", Id) },
             null, null));
         return Result.Success;
     }

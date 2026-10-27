@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.Programs.Models;
 
 /// <summary>An independent approval or rejection of one exact carry-forward plan version.</summary>

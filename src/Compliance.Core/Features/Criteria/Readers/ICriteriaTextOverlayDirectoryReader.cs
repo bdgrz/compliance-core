@@ -1,6 +1,5 @@
-using Bdgrz.Compliance.Features.Criteria.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Criteria.Models;
 namespace Bdgrz.Compliance.Features.Criteria.Readers;
 
 interface ICriteriaTextOverlayDirectoryReader

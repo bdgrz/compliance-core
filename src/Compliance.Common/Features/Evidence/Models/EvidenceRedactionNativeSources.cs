@@ -1,9 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.Evidence.Events;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Proofs;
-
 namespace Bdgrz.Compliance.Features.Evidence.Models;
 
 /// <summary>Exact observed source locators, not a hold, migration or future disclosure guarantee.</summary>

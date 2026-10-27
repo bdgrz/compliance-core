@@ -1,15 +1,9 @@
+using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.Readiness.Models;
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.Controls;
-using Bdgrz.Compliance.Features.Evidence;
-using Bdgrz.Compliance.Features.Policies;
-using Bdgrz.Compliance.Features.Readiness;
-using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
 
 /// <summary>One exact source view returned only through its active advisor handoff.</summary>

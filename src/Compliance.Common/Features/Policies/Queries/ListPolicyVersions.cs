@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.Policies.Models;
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 namespace Bdgrz.Compliance.Features.Policies.Queries;
 
 /// <summary>Lists every retained immutable version, including superseded and retired versions.</summary>

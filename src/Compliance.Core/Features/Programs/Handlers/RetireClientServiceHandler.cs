@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.Programs.Commands;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Commands;
 namespace Bdgrz.Compliance.Features.Programs.Handlers;
 
 public sealed class RetireClientServiceHandler(ProductClientServiceOperations operations) : IRequestHandler<RetireClientService>

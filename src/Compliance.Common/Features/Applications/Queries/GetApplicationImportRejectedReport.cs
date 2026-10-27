@@ -1,7 +1,6 @@
-using Bdgrz.Compliance.Features.Applications;
-using Bdgrz.Compliance.Features.Applications.Models;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.Applications.Contracts;
+using Bdgrz.Compliance.Features.Applications.Models;
 namespace Bdgrz.Compliance.Features.Applications.Queries;
 
 [Discriminator("bdgrz.application_import.rejected_report", 1)]

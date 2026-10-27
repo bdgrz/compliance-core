@@ -1,5 +1,5 @@
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 namespace Bdgrz.Compliance.Features.Applications.Models;
 
 /// <summary>A bounded policy relationship and lifecycle fact affecting an application system.</summary>

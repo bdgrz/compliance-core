@@ -1,10 +1,8 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Proofs;
-using Bdgrz.Compliance.Features.SourceUse;
-using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.SourceUse.Contracts;
 namespace Bdgrz.Compliance.Features.AuditorRequests.Events;
 
 /// <summary>
