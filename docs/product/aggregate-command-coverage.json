@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-27",
-  "sourceCommit": "01d8b937425f1f15fc0a8d0b98b7fa81087b809b",
+  "sourceCommit": "bec909cee6bd21e06886ef4058bdb958f75c2f76",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 528,
-    "factsWithReducer": 503,
-    "factsWithAggregateEmitter": 381,
+    "domainEventContracts": 530,
+    "factsWithReducer": 505,
+    "factsWithAggregateEmitter": 383,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 23,
     "legacyReducerOnlyFacts": 122,
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 742,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 60,
+    "unwiredAggregateProducerOperations": 62,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 2,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 57
+      "no_registered_request_route": 59
     },
     "factReplayGuardRows": 0
   },
@@ -1846,9 +1846,29 @@
         }
       ],
       "emitters": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationRootAdmissionTests.cs"
+      ],
       "disposition": "legacy_replay",
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
+    },
+    {
+      "fact": "AuditPopulationDefinedV4",
+      "contract": "src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationDefinedV4.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditPopulation",
+          "source": "src/Compliance.Core/Features/AuditPopulations/Aggregates/AuditPopulation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditPopulations/Aggregates/AuditPopulation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationRootAdmissionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     },
     {
       "fact": "AuditPopulationDefinitionRevised",
@@ -1988,9 +2008,29 @@
         }
       ],
       "emitters": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationRootAdmissionTests.cs"
+      ],
       "disposition": "legacy_replay",
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
+    },
+    {
+      "fact": "AuditPopulationGeneratedV4",
+      "contract": "src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationGeneratedV4.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditPopulation",
+          "source": "src/Compliance.Core/Features/AuditPopulations/Aggregates/AuditPopulation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditPopulations/Aggregates/AuditPopulation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationRootAdmissionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     },
     {
       "fact": "AuditPopulationReconciled",
@@ -10002,6 +10042,7 @@
         "AuditPopulationAmendedV3",
         "AuditPopulationDefined",
         "AuditPopulationDefinedV3",
+        "AuditPopulationDefinedV4",
         "AuditPopulationDefinitionRevised",
         "AuditPopulationDefinitionRevisedV2",
         "AuditPopulationExportGenerated",
@@ -10012,6 +10053,7 @@
         "AuditPopulationFrozenV3",
         "AuditPopulationGenerated",
         "AuditPopulationGeneratedV3",
+        "AuditPopulationGeneratedV4",
         "AuditPopulationReconciled",
         "AuditPopulationReconciledV3",
         "AuditPopulationRowClassified",
@@ -32054,6 +32096,28 @@
       "callerSources": [],
       "classification": "no_registered_request_route",
       "ownerIssue": 1052,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "AuditPopulationDefinedV4",
+      "aggregate": "AuditPopulation",
+      "method": "AppendDefinition",
+      "methodArgumentCount": 8,
+      "source": "src/Compliance.Core/Features/AuditPopulations/Aggregates/AuditPopulation.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "AuditPopulationGeneratedV4",
+      "aggregate": "AuditPopulation",
+      "method": "AppendGeneration",
+      "methodArgumentCount": 8,
+      "source": "src/Compliance.Core/Features/AuditPopulations/Aggregates/AuditPopulation.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

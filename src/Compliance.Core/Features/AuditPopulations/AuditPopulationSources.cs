@@ -18,6 +18,48 @@ namespace Bdgrz.Compliance.Features.AuditPopulations;
 /// <summary>Actual scoped predecessor and retained frozen Type II close sources; manual source fields remain declarations.</summary>
 public sealed class AuditPopulationSources(IDomainEventReader events, ISourceFactResolver resolver, IImmutableContentStore content)
 {
+    internal async Task<ImmutableContentRef> FreezeDefinitionAsync(AuditPopulation owner, AuditPopulationView state,
+        TypeIIPeriodReadSnapshot period, CancellationToken ct)
+    {
+        if (owner.Revision != 0 || owner.CommittedStreamPosition != 0 || period.View is not { } view ||
+            view.Status != "closed" || view.CloseSnapshots.Count == 0 ||
+            view.CloseSnapshots[^1].CloseSnapshotId != state.CloseSnapshot.CloseSnapshotId)
+            throw Invalid("A population definition requires the exact current closed period and an empty owner.");
+        var records = await RecordsAsync(period.Stream, period.Owner.CommittedStreamPosition, ct).ConfigureAwait(false);
+        var close = records.FirstOrDefault(record => (record.Event is ObservationPeriodCloseFrozen or TypeIIPeriodCloseAmended) &&
+            record.Event is ITypeIIPeriodStateFact fact && fact.Header.LatestCloseSnapshotId == state.CloseSnapshot.CloseSnapshotId)
+            ?? throw new ImmutableContentUnavailableException("The exact frozen period close is not visible yet.");
+        if (period.FactById(close.Event.Metadata.EventId) is not { } verified || verified.GetType() != close.Event.GetType() ||
+            !verified.Equals(close.Event) || verified.Metadata != close.Event.Metadata)
+            throw Invalid("The frozen close differs from the verified period history.");
+        var actual = await ResolveAsync(close.Stream, close.ResourceOffset, ct).ConfigureAwait(false);
+        Require(actual, close.Event, period.Stream);
+        await VerifyCloseAsync(actual, state, ct).ConfigureAwait(false);
+        return await NativeContent.WriteAsync(content, owner.TenantId, AuditPopulationDefinitionSource.Schema,
+            new AuditPopulationDefinitionSource(actual.Locator, Metadata(actual.Event)), ct).ConfigureAwait(false);
+    }
+
+    internal async Task<TypeIIPeriodView> VerifyDefinitionAsync(AuditPopulation owner, AuditPopulationView state,
+        ImmutableContentRef reference, CancellationToken ct)
+    {
+        if (reference is null || reference.Schema != AuditPopulationDefinitionSource.Schema)
+            throw Invalid("The definition has another source proof schema.");
+        var proof = await NativeContent.ReadAsync<AuditPopulationDefinitionSource>(content, owner.TenantId, reference, ct).ConfigureAwait(false);
+        var stream = new EventStreamAddress(owner.TenantId.ToString(), TypeIIPeriod.Area, state.TypeIIPeriodId.ToString());
+        if (proof.CloseFact is null || proof.CloseFact.Source != stream)
+            throw Invalid("The definition close proof belongs to another period.");
+        var actual = await ResolveAsync(proof.CloseFact.Source, proof.CloseFact.ResourcePosition, ct).ConfigureAwait(false);
+        if (actual.Locator != proof.CloseFact || Metadata(actual.Event) != proof.CloseMetadataSha256)
+            throw Invalid("The actual close differs from the retained definition proof.");
+        await VerifyCloseAsync(actual, state, ct).ConfigureAwait(false);
+        var fact = (ITypeIIPeriodStateFact)actual.Event;
+        var period = await NativeContent.ReadAsync<TypeIIPeriodView>(content, owner.TenantId, fact.CurrentContent, ct).ConfigureAwait(false);
+        if (period.Status != "closed" || period.CloseSnapshots.Count == 0 ||
+            period.CloseSnapshots[^1].CloseSnapshotId != state.CloseSnapshot.CloseSnapshotId)
+            throw Invalid("The definition did not bind the close at the frozen source cut.");
+        return period;
+    }
+
     public async Task<ImmutableContentRef> FreezeAsync(AuditPopulation owner, AuditPopulationView before,
         TypeIIPeriodReader periods, CancellationToken ct)
     {

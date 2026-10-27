@@ -19,25 +19,6 @@ public sealed class DefineAuditPopulationHandler(AuditPopulationMutations mutati
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Defining an audit population requires a personal HTTP actor."));
 
-        if (request.PeriodId == Uuid.Empty || request.PeriodCloseId == Uuid.Empty)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "Population definition requires a Type II period and exact close snapshot identity."));
-
-        var periodRead = await periods.TryReadAsync(request.TenantId, request.ProgramId, request.PeriodId, ct).ConfigureAwait(false);
-        if (!periodRead.IsSuccess)
-            return Result.Failure(periodRead.Error!);
-        var period = periodRead.Value;
-        if (period.View is not { } current)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The Type II observation period was not found."));
-        if (current.Status != "closed" || current.CloseSnapshots.Count == 0 ||
-            current.CloseSnapshots[^1].CloseSnapshotId != request.PeriodCloseId)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "Population definition must bind the exact current frozen Type II close snapshot."));
-
-        var appended = await mutations.AppendUnqualifiedAsync(context, request.TenantId, request.ProgramId,
-            request.DefinitionId, rules => rules.Define(request.DefinitionId, request.Definition, current,
-                actorMemberId, actorDisplay, clock.GetUtcNow()), ct).ConfigureAwait(false);
-        return appended.IsSuccess ? Result.Success : Result.Failure(appended.Error!);
+        return await mutations.DefineAsync(context, actorMemberId, actorDisplay, periods, clock, ct).ConfigureAwait(false);
     }
 }

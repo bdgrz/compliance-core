@@ -32,8 +32,10 @@ public sealed class AuditPopulation : Aggregate
         On<AuditPopulationFrozen>(fact => ObserveLegacy(fact, fact.State));
         On<AuditPopulationExportGenerated>(fact => ObserveLegacy(fact, fact.State));
         On<AuditPopulationDefinedV3>(ObserveCurrent);
+        On<AuditPopulationDefinedV4>(ObserveCurrent);
         On<AuditPopulationDefinitionRevisedV2>(ObserveCurrent);
         On<AuditPopulationGeneratedV3>(ObserveCurrent);
+        On<AuditPopulationGeneratedV4>(ObserveCurrent);
         On<AuditPopulationFactRecordedV3>(ObserveCurrent);
         On<AuditPopulationRowClassifiedV3>(ObserveCurrent);
         On<AuditPopulationReconciledV3>(ObserveCurrent);
@@ -49,6 +51,20 @@ public sealed class AuditPopulation : Aggregate
     internal NativeAcceptance Acceptance { get; }
     internal AuditPopulationReplayCut ReplayCut { get; } = new();
 
+    internal Result AppendGeneration(AuditPopulationHeader header, ImmutableContentRef body,
+        ImmutableContentRef command, ImmutableContentRef sources,
+        Bdgrz.Compliance.Features.NativeOperations.Models.OperationProvenance operation,
+        ImmutableContentRef first, ImmutableContentRef result, AuditPopulationPreparedCut cut) =>
+        Append(new AuditPopulationGeneratedV4(_tenantId, _programId, Id, header, body, command,
+            sources, operation, first, result), cut);
+
+    internal Result AppendDefinition(AuditPopulationHeader header, ImmutableContentRef body,
+        ImmutableContentRef command, ImmutableContentRef sources,
+        Bdgrz.Compliance.Features.NativeOperations.Models.OperationProvenance operation,
+        ImmutableContentRef first, ImmutableContentRef result, AuditPopulationPreparedCut cut) =>
+        Append(new AuditPopulationDefinedV4(_tenantId, _programId, Id, header, body, command,
+            sources, operation, first, result), cut);
+
     internal Result Append(DomainEvent fact, AuditPopulationPreparedCut cut)
     {
         var verified = ReplayCut.Require(this);
@@ -63,7 +79,7 @@ public sealed class AuditPopulation : Aggregate
             native.Operation.AuthoredIntentSha256 is not { Length: 64 } ||
             native.Operation.LogicalId != Acceptance.SelectedLogicalId || Acceptance.SelectedFact is not null ||
             !NativeOwnerHistory.IsOwnRoot(this, native.Operation, AuditPopulationContent.CommandKind(fact),
-                fact is AuditPopulationRowClassifiedV3 ? null : (ulong)Revision) ||
+                fact is AuditPopulationRowClassifiedV3 or AuditPopulationGeneratedV4 or AuditPopulationDefinedV4 ? null : (ulong)Revision) ||
             native.FirstResponse is null || native.OperationResult?.Schema != "mutation-result-content.v1"))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The population decision requires its exact selected native operation and original Unit result."));

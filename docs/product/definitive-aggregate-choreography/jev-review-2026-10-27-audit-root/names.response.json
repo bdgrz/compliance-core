@@ -1,0 +1,20 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "defined": {
+        "type": "noul",
+        "noul": 0.87
+      },
+      "generated": {
+        "type": "noul",
+        "noul": 0.73
+      }
+    },
+    "usage": {
+      "input_tokens": 528,
+      "output_tokens": 36
+    }
+  }
+}

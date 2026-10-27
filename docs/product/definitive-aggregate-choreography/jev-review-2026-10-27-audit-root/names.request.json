@@ -1,0 +1,25 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "source": "The approved catalog defines AuditPopulation as the owner of one population's definition, source facts, classifications, reconciliation and freeze. DefineAuditPopulation binds the definition to an exact closed Type II period. GenerateAuditPopulation records intent to collect using an exact generation key; it does not record source facts or complete collection.",
+    "proposal": "New versions of the existing persisted facts AuditPopulationDefined and AuditPopulationGenerated carry the original command and result receipts, while retaining their existing business meanings."
+  },
+  "questions": {
+    "defined": {
+      "type": "noul",
+      "instructions": "Does AuditPopulationDefined precisely name the completed acceptance of a population definition bound to an exact closed Type II period?",
+      "criteria": {
+        "true": "The name denotes the accepted population definition and does not claim that collection completed.",
+        "false": "The name materially misstates what was accepted or claims collection completed."
+      }
+    },
+    "generated": {
+      "type": "noul",
+      "instructions": "Does AuditPopulationGenerated precisely name recording intent to collect, without claiming collection completed?",
+      "criteria": {
+        "true": "The name naturally distinguishes recorded collection intent from completed collection.",
+        "false": "The name suggests generation or collection has completed rather than recording intent."
+      }
+    }
+  }
+}

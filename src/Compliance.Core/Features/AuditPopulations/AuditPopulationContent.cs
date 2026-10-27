@@ -19,6 +19,8 @@ namespace Bdgrz.Compliance.Features.AuditPopulations;
 public static class AuditPopulationContent
 {
     public const string StateSchema = "audit-population-state.v1";
+    internal const string GenerateCommandSchema = "audit-population-generate-command.v1";
+    internal const string DefineCommandSchema = "audit-population-define-command.v1";
     public static AuditPopulationHeader Header(AuditPopulationView state)
     {
         if (state is null || state.DefinitionVersions is null || state.CurrentDefinition is not { } definition ||
@@ -47,8 +49,10 @@ public static class AuditPopulationContent
     public static DomainEvent LegacyFact(DomainEvent fact, AuditPopulationView state) => fact switch
     {
         AuditPopulationDefinedV3 => new AuditPopulationDefined(state.TenantId, state.AuditPopulationId, state.Revision, state.ActorMemberId, state, state.UpdatedAt),
+        AuditPopulationDefinedV4 => new AuditPopulationDefined(state.TenantId, state.AuditPopulationId, state.Revision, state.ActorMemberId, state, state.UpdatedAt),
         AuditPopulationDefinitionRevisedV2 => new AuditPopulationDefinitionRevised(state.TenantId, state.AuditPopulationId, state.Revision, state.ActorMemberId, state, state.UpdatedAt),
         AuditPopulationGeneratedV3 => new AuditPopulationGenerated(state.TenantId, state.AuditPopulationId, state.Revision, state.ActorMemberId, state, state.UpdatedAt),
+        AuditPopulationGeneratedV4 => new AuditPopulationGenerated(state.TenantId, state.AuditPopulationId, state.Revision, state.ActorMemberId, state, state.UpdatedAt),
         AuditPopulationFactRecordedV3 => new AuditPopulationFactRecorded(state.TenantId, state.AuditPopulationId, state.Revision, state.ActorMemberId, state, state.UpdatedAt),
         AuditPopulationRowClassifiedV3 => new AuditPopulationRowClassified(state.TenantId, state.AuditPopulationId, state.Revision, state.ActorMemberId, state, state.UpdatedAt),
         AuditPopulationReconciledV3 => new AuditPopulationReconciled(state.TenantId, state.AuditPopulationId, state.Revision, state.ActorMemberId, state, state.UpdatedAt),
@@ -65,6 +69,8 @@ public static class AuditPopulationContent
         AuditPopulationReconciledV3 => nameof(ReconcileAuditPopulation),
         AuditPopulationFrozenV3 => nameof(FreezeAuditPopulation),
         AuditPopulationAmendedV3 => nameof(AmendAuditPopulation),
+        AuditPopulationGeneratedV4 => nameof(GenerateAuditPopulation),
+        AuditPopulationDefinedV4 => nameof(DefineAuditPopulation),
         _ => throw new ImmutableContentIntegrityException("The selected population fact has another exact native command kind.")
     };
     internal static IRequest Authored(AuditPopulationCommandContent command)
@@ -95,6 +101,9 @@ public static class AuditPopulationContent
                 memberId, actor.Display, at),
             FreezeAuditPopulation value => rules.Freeze(value.ExpectedRevision, value.FreezeRationale, memberId, actor.Display, at),
             AmendAuditPopulation value => rules.Amend(value.ExpectedRevision, value.AmendmentReason, value.SourceSnapshot, value.ChangedRows, memberId, actor.Display, at),
+            GenerateAuditPopulation value when rules.Current is { } current &&
+                current.CloseSnapshot.CloseSnapshotId == value.PeriodCloseId =>
+                rules.Generate(rules.Revision, value.GenerationKey, memberId, actor.Display, at),
             _ => CommandFailure.MissingRecord("The audit population was not found.")
         };
     }

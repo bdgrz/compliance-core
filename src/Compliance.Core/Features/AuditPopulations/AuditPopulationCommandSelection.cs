@@ -11,6 +11,7 @@ sealed record AuditPopulationCommandSelection(Uuid CommandId, Uuid TenantId, Uui
 {
     public static IRequest Snapshot(IRequest request) => request switch
     {
+        DefineAuditPopulation value => Copy(value),
         ReviseAuditPopulationDefinition value => Copy(value),
         RecordAuditPopulationFacts value => Copy(value),
         ClassifyAuditPopulationRow value => Copy(value),

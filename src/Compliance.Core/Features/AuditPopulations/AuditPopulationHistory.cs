@@ -1,7 +1,9 @@
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AuditPopulations.Aggregates;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
 using Bdgrz.Compliance.Features.AuditPopulations.Events;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
@@ -41,18 +43,39 @@ static class AuditPopulationHistory
                 var state = await NativeContent.ReadAsync<AuditPopulationView>(content, owner.TenantId, current.CurrentContent, ct).ConfigureAwait(false);
                 if (AuditPopulationContent.Header(state) != current.Header || ContentDigest.OfJson(state) != current.CurrentContent.Sha256)
                     throw Invalid("The complete population body differs from its compact native authority.");
-                if (fact is IAuditPopulationNativeFact native)
+                if (fact is AuditPopulationDefinedV4 defined)
+                {
+                    await ApplyDefinitionAsync(owner, rules, sources, content, state, defined, ids, ct).ConfigureAwait(false);
+                }
+                else if (fact is IAuditPopulationNativeFact native)
                 {
                     var before = rules.Current ?? throw Invalid("A native mutation has no exact existing population predecessor.");
                     if (native.Operation is null || native.Operation.AuthoredIntentSha256 is not { Length: 64 } ||
                         !ids.Add(native.Operation.LogicalId) || native.FirstResponse is null || native.OperationResult?.Schema != "mutation-result-content.v1" ||
-                        native.Command is null || native.Command.Schema != AuditPopulationCommandContent.Schema ||
+                        native.Command is null || native.Command.Schema != (fact is AuditPopulationGeneratedV4
+                            ? AuditPopulationContent.GenerateCommandSchema : AuditPopulationCommandContent.Schema) ||
                         !NativeOwnerHistory.IsOwnRoot(owner, native.Operation, AuditPopulationContent.CommandKind(fact),
-                            fact is AuditPopulationRowClassifiedV3 ? null : (ulong)rules.Revision))
+                            fact is AuditPopulationRowClassifiedV3 or AuditPopulationGeneratedV4 ? null : (ulong)rules.Revision))
                         throw Invalid("The native population decision differs from its exact root, kind, revision or original result.");
-                    var command = await NativeContent.ReadAsync<AuditPopulationCommandContent>(content, owner.TenantId, native.Command, ct).ConfigureAwait(false);
-                    var authored = AuditPopulationContent.Authored(command);
-                    var selection = AuditPopulationCommandSelection.Of(authored);
+                    IRequest authored;
+                    AuditPopulationCommandSelection selection;
+                    if (fact is AuditPopulationGeneratedV4)
+                    {
+                        var generate = await NativeContent.ReadAsync<GenerateAuditPopulation>(content, owner.TenantId,
+                            native.Command, ct).ConfigureAwait(false);
+                        if (string.IsNullOrWhiteSpace(generate.GenerationKey) || generate.GenerationKey.Trim().Length > 200)
+                            throw Invalid("The original population generation key is invalid.");
+                        authored = generate;
+                        selection = new AuditPopulationCommandSelection(Uuid.CreateVersion5(generate.DefinitionId, generate.GenerationKey),
+                            generate.TenantId, generate.ProgramId, generate.DefinitionId, null, nameof(GenerateAuditPopulation),
+                            AuthoredIntentDigest.Compute(generate), new(null, null, null, null, null, null));
+                    }
+                    else
+                    {
+                        var command = await NativeContent.ReadAsync<AuditPopulationCommandContent>(content, owner.TenantId, native.Command, ct).ConfigureAwait(false);
+                        authored = AuditPopulationContent.Authored(command);
+                        selection = AuditPopulationCommandSelection.Of(authored);
+                    }
                     var actor = ActorReference.ForMember(state.ActorMemberId, state.ActorDisplay);
                     if (selection.CommandId != native.Operation.LogicalId || selection.TenantId != owner.TenantId ||
                         selection.ProgramId != owner.ProgramId || selection.PopulationId != owner.Id || selection.Kind != native.Operation.CommandKind ||
@@ -72,6 +95,9 @@ static class AuditPopulationHistory
                         (owner.Acceptance.SelectedFact is not { } selected || selected.GetType() != fact.GetType() ||
                          !selected.Equals(fact) || selected.Metadata != fact.Metadata))
                         throw Invalid("The selected population receipt differs from its complete actual payload and metadata.");
+                    if (fact is AuditPopulationGeneratedV4 && native.Operation.LogicalId == owner.Acceptance.SelectedLogicalId)
+                        await VerifyUnitReceiptAsync(content, owner.TenantId, native.FirstResponse,
+                            native.OperationResult!, ct).ConfigureAwait(false);
                     rules.ClearPendingChanges();
                 }
                 else
@@ -100,6 +126,50 @@ static class AuditPopulationHistory
             throw Invalid("The complete population history differs from its bounded current authority.");
         owner.ReplayCut.Confirm(owner, payload, metadata, known);
         return new(owner, rules, facts);
+    }
+    static async Task ApplyDefinitionAsync(AuditPopulation owner, AuditPopulationRules rules,
+        AuditPopulationSources sources, IImmutableContentStore content, AuditPopulationView state,
+        AuditPopulationDefinedV4 fact, HashSet<Uuid> ids, CancellationToken ct)
+    {
+        if (rules.Current is not null || fact.Operation is null || fact.Operation.AuthoredIntentSha256 is not { Length: 64 } ||
+            !ids.Add(fact.Operation.LogicalId) ||
+            fact.Operation.LogicalId != owner.Id || fact.FirstResponse is null ||
+            fact.OperationResult?.Schema != "mutation-result-content.v1" || fact.Command is null ||
+            fact.Command.Schema != AuditPopulationContent.DefineCommandSchema ||
+            !NativeOwnerHistory.IsOwnRoot(owner, fact.Operation, nameof(DefineAuditPopulation), null))
+            throw Invalid("The definition differs from its exact original creation operation.");
+        var command = await NativeContent.ReadAsync<DefineAuditPopulation>(content, owner.TenantId, fact.Command, ct).ConfigureAwait(false);
+        var actor = ActorReference.ForMember(state.ActorMemberId, state.ActorDisplay);
+        if (command.TenantId != owner.TenantId || command.ProgramId != owner.ProgramId || command.DefinitionId != owner.Id ||
+            command.PeriodId != state.TypeIIPeriodId || command.PeriodCloseId != state.CloseSnapshot.CloseSnapshotId ||
+            AuthoredIntentDigest.Compute(command) != fact.Operation.AuthoredIntentSha256 || fact.Operation.Actor != actor ||
+            fact.Operation.AcceptedAt != state.UpdatedAt)
+            throw Invalid("The definition differs from its complete authored scope, actor or acceptance time.");
+        var period = await sources.VerifyDefinitionAsync(owner, state, fact.SourceProofs, ct).ConfigureAwait(false);
+        var failure = rules.Define(command.DefinitionId, command.Definition, period,
+            state.ActorMemberId, state.ActorDisplay, fact.Operation.AcceptedAt);
+        if (failure is not null || rules.PendingChanges.Count != 1 || rules.Current is not { } decided ||
+            ContentDigest.OfJson(decided) != fact.CurrentContent.Sha256)
+            throw Invalid("The population definition does not follow its exact frozen source and authored decision.");
+        if (fact.Operation.LogicalId == owner.Acceptance.SelectedLogicalId)
+        {
+            if (owner.Acceptance.SelectedFact is not { } selected || !selected.Equals(fact) || selected.Metadata != fact.Metadata)
+                throw Invalid("The selected definition receipt differs from its actual payload or metadata.");
+            await VerifyUnitReceiptAsync(content, owner.TenantId, fact.FirstResponse, fact.OperationResult!, ct).ConfigureAwait(false);
+        }
+        rules.ClearPendingChanges();
+    }
+    internal static async Task VerifyUnitReceiptAsync(IImmutableContentStore content, Uuid tenantId,
+        Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef first,
+        Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef resultReference, CancellationToken ct)
+    {
+        var response = await FirstResponses.ReplayAsync(content, tenantId.ToString(), first, ct).ConfigureAwait(false);
+        var result = await NativeContent.ReadAsync<MutationResultContent>(content, tenantId, resultReference, ct).ConfigureAwait(false);
+        if (response.HttpStatus != 200 || response.ContentType != ImmutableContentStoreExtensions.JsonMediaType ||
+            response.ResultSchema != UnitResult.Schema || response.Body is not StandardResponseBody body ||
+            body.Content.Schema != UnitResult.Schema || result.Schema != UnitResult.Schema || result.Value != response.Body)
+            throw Invalid("The selected population receipt is not its exact original Unit response.");
+        _ = await NativeContent.ReadAsync<UnitResult>(content, tenantId, body.Content, ct).ConfigureAwait(false);
     }
     static void Apply(AuditPopulationRules rules, DomainEvent fact)
     {

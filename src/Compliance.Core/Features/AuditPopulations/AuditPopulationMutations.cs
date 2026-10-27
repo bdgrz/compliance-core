@@ -1,5 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AuditPopulations.Aggregates;
+using Bdgrz.Compliance.Features.AuditPopulations.Commands;
+using Bdgrz.Compliance.Features.AuditPopulations.Events;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.Readers;
@@ -7,6 +9,7 @@ using Bdgrz.Compliance.Features.Proofs.Models;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Proofs;
@@ -21,6 +24,132 @@ public sealed class AuditPopulationMutations(NativeOperationExecutor operations,
     IAggregateExecutor executor, IDomainEventReader events, IImmutableContentStore content, ISourceFactResolver resolver,
     TypeIIPeriodReader periods, AuditPopulationSources sources, TimeProvider clock)
 {
+    internal async ValueTask<Result> DefineAsync(IRequestContext<DefineAuditPopulation> context,
+        Uuid actorMemberId, string actorDisplay, TypeIIPeriodReader periodReader, TimeProvider operationClock,
+        CancellationToken ct)
+    {
+        var request = (DefineAuditPopulation)AuditPopulationCommandSelection.Snapshot(context.Request);
+        if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty || request.DefinitionId == Uuid.Empty ||
+            request.PeriodId == Uuid.Empty || request.PeriodCloseId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "Population definition requires an exact population, period and close snapshot identity."));
+        var owner = new AuditPopulation(request.TenantId, request.ProgramId, request.DefinitionId, request.DefinitionId);
+        var actor = ActorReference.ForMember(actorMemberId, actorDisplay.Trim());
+        var operation = RootOperation.Provenance(request.DefinitionId, nameof(DefineAuditPopulation), owner.Stream,
+            actor, null, AuthoredIntentDigest.Compute(request), operationClock.GetUtcNow());
+        PreparedDefinition? prepared = null;
+        try
+        {
+            var accepted = await operations.ExecuteAsync(new NativeOperation<AuditPopulation>(AcceptedOperationBinding.Of(operation),
+                () => new AuditPopulation(request.TenantId, request.ProgramId, request.DefinitionId, request.DefinitionId),
+                current => current.Acceptance, async (current, cancel) =>
+                {
+                    var cut = AuditPopulationPreparedCut.Of(current);
+                    var complete = await AuditPopulationHistory.ReadAsync(events, content, resolver, current, cancel).ConfigureAwait(false);
+                    if (complete.View is not null)
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "The population already exists without this definition receipt."));
+                    var periodResult = await periodReader.TryReadAsync(request.TenantId, request.ProgramId, request.PeriodId, cancel).ConfigureAwait(false);
+                    if (!periodResult.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(periodResult.Error!);
+                    var period = periodResult.Value;
+                    if (period.View is not { } view)
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound, "The Type II observation period was not found."));
+                    if (view.Status != "closed" || view.CloseSnapshots.Count == 0 || view.CloseSnapshots[^1].CloseSnapshotId != request.PeriodCloseId)
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "Population definition must bind the exact current frozen Type II close snapshot."));
+                    var at = operationClock.GetUtcNow();
+                    var failure = complete.Rules.Define(request.DefinitionId, request.Definition, view,
+                        actorMemberId, actorDisplay, at);
+                    if (failure is not null)
+                        return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
+                    if (complete.Rules.PendingChanges.Count != 1 || complete.Rules.Current is not { } after)
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "A definition requires one exact population creation decision."));
+                    var proofs = await sources.FreezeDefinitionAsync(current, after, period, cancel).ConfigureAwait(false);
+                    var state = await AuditPopulationContent.FreezeStateAsync(content, after, cancel).ConfigureAwait(false);
+                    if (!state.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(state.Error!);
+                    var command = await NativeContent.WriteAsync(content, request.TenantId,
+                        AuditPopulationContent.DefineCommandSchema, request, cancel).ConfigureAwait(false);
+                    var response = await NativeContent.FreezeUnitAsync(content, request.TenantId, cancel).ConfigureAwait(false);
+                    prepared = new(cut, after, state.Value!, command, proofs, operation with { AcceptedAt = at }, response.Result);
+                    return Result<FirstResponseDescriptor>.Success(response.Response);
+                }, (current, first) =>
+                {
+                    var value = prepared ?? throw new InvalidOperationException("Definition admission has no prepared decision.");
+                    return current.AppendDefinition(AuditPopulationContent.Header(value.State), value.Body, value.Command,
+                        value.Sources, value.Operation, first, value.Result, value.Cut);
+                }), context, ct).ConfigureAwait(false);
+            return NativeContent.UnitOutcome(accepted);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result.Failure(Unverified(error));
+        }
+    }
+
+    internal async ValueTask<Result> GenerateAsync(IRequestContext<GenerateAuditPopulation> context,
+        Uuid actorMemberId, string actorDisplay, TimeProvider operationClock, CancellationToken ct)
+    {
+        var request = context.Request;
+        if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty || request.DefinitionId == Uuid.Empty ||
+            request.PeriodCloseId == Uuid.Empty || string.IsNullOrWhiteSpace(request.GenerationKey) ||
+            request.GenerationKey.Trim().Length > 200)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "Collection requires an exact population, close snapshot and bounded generation key."));
+        var logicalId = Uuid.CreateVersion5(request.DefinitionId, request.GenerationKey);
+        var owner = new AuditPopulation(request.TenantId, request.ProgramId, request.DefinitionId, logicalId);
+        var actor = ActorReference.ForMember(actorMemberId, actorDisplay.Trim());
+        var operation = RootOperation.Provenance(logicalId, nameof(GenerateAuditPopulation), owner.Stream,
+            actor, null, AuthoredIntentDigest.Compute(request), operationClock.GetUtcNow());
+        PreparedGenerate? prepared = null;
+        try
+        {
+            var accepted = await operations.ExecuteAsync(new NativeOperation<AuditPopulation>(AcceptedOperationBinding.Of(operation),
+                () => new AuditPopulation(request.TenantId, request.ProgramId, request.DefinitionId, logicalId),
+                current => current.Acceptance, async (current, cancel) =>
+                {
+                    var cut = AuditPopulationPreparedCut.Of(current);
+                    var complete = await AuditPopulationHistory.ReadAsync(events, content, resolver, current, cancel).ConfigureAwait(false);
+                    if (complete.View is not { } before)
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound, "The audit population was not found."));
+                    if (before.CloseSnapshot.CloseSnapshotId != request.PeriodCloseId)
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "Collection must target the exact period-close snapshot pinned by the population."));
+                    var at = operationClock.GetUtcNow();
+                    var failure = complete.Rules.Generate(complete.Rules.Revision, request.GenerationKey,
+                        actorMemberId, actorDisplay, at);
+                    if (failure is not null)
+                        return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
+                    if (complete.Rules.PendingChanges.Count != 1 || complete.Rules.Current is not { } after)
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "Collection intent already exists without an original operation receipt."));
+                    var proofs = await sources.FreezeAsync(current, before, periods, cancel).ConfigureAwait(false);
+                    var state = await AuditPopulationContent.FreezeStateAsync(content, after, cancel).ConfigureAwait(false);
+                    if (!state.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(state.Error!);
+                    var command = await NativeContent.WriteAsync(content, request.TenantId,
+                        AuditPopulationContent.GenerateCommandSchema, request, cancel).ConfigureAwait(false);
+                    var response = await NativeContent.FreezeUnitAsync(content, request.TenantId, cancel).ConfigureAwait(false);
+                    prepared = new(cut, after, state.Value!, command, proofs, operation with { AcceptedAt = at }, response.Result);
+                    return Result<FirstResponseDescriptor>.Success(response.Response);
+                }, (current, first) =>
+                {
+                    var value = prepared ?? throw new InvalidOperationException("Collection admission has no prepared decision.");
+                    return current.AppendGeneration(AuditPopulationContent.Header(value.State), value.Body, value.Command,
+                        value.Sources, value.Operation, first, value.Result, value.Cut);
+                }), context, ct).ConfigureAwait(false);
+            return NativeContent.UnitOutcome(accepted);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Result.Failure(Unverified(error));
+        }
+    }
+
     public async ValueTask<Result> ExecuteAsync<T>(IRequestContext<T> context, CancellationToken ct) where T : IRequest
     {
         try
@@ -124,5 +253,9 @@ public sealed class AuditPopulationMutations(NativeOperationExecutor operations,
     static RequestError Unverified(ImmutableContentIntegrityException error) => new(RequestErrorKind.Conflict,
         "The exact population body, source or original response cannot be verified.", error is ImmutableContentUnavailableException);
     sealed record Prepared(AuditPopulationPreparedCut Cut, DomainEvent Rule, AuditPopulationView State, ImmutableContentRef Body,
+        ImmutableContentRef Command, ImmutableContentRef Sources, OperationProvenance Operation, ImmutableContentRef Result);
+    sealed record PreparedGenerate(AuditPopulationPreparedCut Cut, AuditPopulationView State, ImmutableContentRef Body,
+        ImmutableContentRef Command, ImmutableContentRef Sources, OperationProvenance Operation, ImmutableContentRef Result);
+    sealed record PreparedDefinition(AuditPopulationPreparedCut Cut, AuditPopulationView State, ImmutableContentRef Body,
         ImmutableContentRef Command, ImmutableContentRef Sources, OperationProvenance Operation, ImmutableContentRef Result);
 }
