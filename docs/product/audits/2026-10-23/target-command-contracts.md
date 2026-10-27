@@ -1418,7 +1418,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `DirectoryIndependenceReevaluated`.
 - **Original response:** `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluation.cs](../../../../src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluation.cs).
+- **Preserved source validation:** [src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluation.cs](../../../../src/Compliance.Core/Features/AccessControl/Models/RecordDirectoryIndependenceReevaluation.cs).
 - **Selected changes:** Add required CommandId. Target one engagement acceptance pair; discovery/fan-out belongs to the reactor, not a tenant-wide mutation.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/DirectoryIndependenceReevaluationTests.cs`.
 
