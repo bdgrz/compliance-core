@@ -1,0 +1,36 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "second_add": {
+        "type": "choice",
+        "choice": "conflict_no_event",
+        "confidence": 1,
+        "probabilities": {
+          "conflict_no_event": 1,
+          "success_no_event_on_identical": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "lifecycle_gap": {
+        "type": "choice",
+        "choice": "leave_partial",
+        "confidence": 0.92,
+        "probabilities": {
+          "leave_partial": 0.95,
+          "implement_now": 0,
+          "needs_source_resolution": 0.05
+        }
+      },
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.93
+      }
+    },
+    "usage": {
+      "input_tokens": 815,
+      "output_tokens": 117
+    }
+  }
+}

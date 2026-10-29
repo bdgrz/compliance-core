@@ -1,0 +1,40 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ApplicationRelationship",
+    "invariant": "One exact directed source/kind/target relationship exists once, with UUIDv5 tuple identity, created at revision 1; no separate claim/release owner.",
+    "code_behavior": {
+      "add": "Add on a stream that already has the relationship returns Conflict with no event, regardless of whether the intent is identical. Add on a new stream with a non-canonical id, self relationship, unsupported kind, empty endpoint or expected revision != 0 is refused with no event. Exact retry acknowledgement is left to the operation layer that resolves the original accepted result by logical identity.",
+      "approve_remove": "ApplicationRelationshipApproved and ApplicationRelationshipRemoved are catalogued for this owner but still folded by DeclaredApplication; the catalog says implementation is halted pending separate verification of source/target revision coordination.",
+      "tests": "Tests: self relationship refused with no event; unsupported kind refused; second add after commit returns Conflict and PrepareAdd with revision 1 returns Conflict, still exactly one pending event; replay of Added restores state and a further add is refused."
+    }
+  },
+  "questions": {
+    "second_add": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.add`, is returning Conflict with no event for a second Add at the aggregate consistent with the invariant when exact-retry acknowledgement is handled by the operation layer?",
+      "criteria": {
+        "conflict_no_event": "Aggregate refuses with Conflict; operation layer acknowledges exact retries.",
+        "success_no_event_on_identical": "Aggregate itself must acknowledge identical retry with success and no event.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "lifecycle_gap": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.approve_remove`, should this aggregate stage move Approve and Remove onto the relationship stream now?",
+      "criteria": {
+        "leave_partial": "Keep partial and record the open item; do not guess coordination design.",
+        "implement_now": "Implement them on this stream now.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.code_behavior.tests` assert behavioral outcomes (refusal kind, no appended fact, restored state) and can fail.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    }
+  }
+}
