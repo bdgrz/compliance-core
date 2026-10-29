@@ -1,0 +1,24 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "unknown_asserts": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "choice": "no_discrepancy",
+      "confidence": 0.93,
+      "probabilities": {
+        "no_discrepancy": 0.95,
+        "add_to_model": 0.02,
+        "remove": 0.01,
+        "needs_source_resolution": 0.02
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 637,
+    "output_tokens": 76
+  }
+}
