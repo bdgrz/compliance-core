@@ -1,0 +1,74 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AuditOutcome",
+    "rule": "One auditor-supplied report conclusion is immutable for its outcome identity and exact delivered package/snapshot provenance. Same normalized content plus canonical recorder no-ops despite later server time; one creation append. Only an issued report and the auditor-authored outcome exactly as received are retained (D27-02); the platform never authors, edits or recalculates the auditor opinion.",
+    "test_invalid_refusals": "For each of nine invalid contents (scope kind type_iii, package version 0, snapshot hash not a hash, empty manifest id, outcome code containing a space, blank summary, artifact id present with null hash, null artifact id with hash present, empty artifact id) a fresh aggregate Record returns InvalidContent, has zero pending events and no current state.",
+    "test_different_recorder": "After a successful record, the same content recorded again by a different recorder member returns StateConflict; pending events stay at one; the recorder stays the original.",
+    "test_equivalent_retry": "After a record, the same content with an upper-case snapshot hash, outcome code padded and upper-case, and summary padded with spaces, recorded by the same recorder at a later time returns success with no new event (one pending event), and the stored code is lower-case.",
+    "normalization_behavior": "Code trims and lower-cases the outcome code and hashes and trims summary and report reference, then retains the trimmed value; retry compares a digest of the normalized content. Only leading and trailing whitespace (and hash/code letter case) can differ from what was received.",
+    "artifact_behavior": "Catalog command field ReportArtifactId is Uuid? with required=true. Code accepts report artifact id and its sha256 either both present or both null; one without the other is refused; an empty artifact id is refused."
+  },
+  "questions": {
+    "invalid_test_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_invalid_refusals prove that invalid provenance or artifact binding is refused with no fact appended?",
+      "criteria": {
+        "true": "Each case asserts failure code and zero pending events, so an accepted invalid content would fail the test.",
+        "false": "The test could pass while an invalid content appended a fact."
+      }
+    },
+    "recorder_retry": {
+      "type": "choice",
+      "instructions": "Given state.rule and state.test_different_recorder, what should a repeat of the same content by a different recorder return?",
+      "criteria": {
+        "conflict": "Refused with a conflict and no new fact, because the canonical recorder is part of the retry identity.",
+        "no_op_success": "Acknowledged as success without a new fact.",
+        "new_fact": "Appends another fact.",
+        "needs_source_resolution": "The rule does not say."
+      }
+    },
+    "equivalent_retry_test": {
+      "type": "noul",
+      "instructions": "Is state.test_equivalent_retry consistent with the rule for an exact retry, given state.normalization_behavior?",
+      "criteria": {
+        "true": "Whitespace and hash/code letter-case differences are not changed intent, so a no-op success is consistent.",
+        "false": "Such differences are changed intent and must be refused."
+      }
+    },
+    "trimming_discrepancy": {
+      "type": "choice",
+      "instructions": "state.rule says the outcome is retained exactly as received, while state.normalization_behavior trims edge whitespace and lower-cases the code. What disposition is correct?",
+      "criteria": {
+        "keep_normalization": "Edge whitespace and letter case are not content of the auditor opinion; canonical trimmed retention is consistent with exact-as-received.",
+        "retain_exact": "Summary and report reference must be stored byte-for-byte, including edge whitespace.",
+        "needs_source_resolution": "The model text cannot decide."
+      }
+    },
+    "trimming_premise": {
+      "type": "noul",
+      "instructions": "Is it true that trimming only edge whitespace of the summary and report reference does not alter or recalculate the auditor-authored opinion?",
+      "criteria": {
+        "true": "Only insignificant padding is removed.",
+        "false": "The opinion text is altered."
+      }
+    },
+    "artifact_discrepancy": {
+      "type": "choice",
+      "instructions": "Given state.artifact_behavior, what disposition is correct for a report artifact id of null with a null hash?",
+      "criteria": {
+        "keep_nullable_pair": "Keep: Uuid? with required=true means the field must be supplied, and an explicit null with null hash is a valid report reference without a stored artifact.",
+        "require_artifact": "Change code to require an artifact id and hash.",
+        "needs_source_resolution": "The model text cannot decide."
+      }
+    },
+    "artifact_premise": {
+      "type": "noul",
+      "instructions": "Is it true that a nullable required field in the catalog means the caller must state it but may state it as null?",
+      "criteria": {
+        "true": "Required with a nullable type means presence is mandatory, null is allowed.",
+        "false": "Required means a non-null value."
+      }
+    }
+  }
+}
