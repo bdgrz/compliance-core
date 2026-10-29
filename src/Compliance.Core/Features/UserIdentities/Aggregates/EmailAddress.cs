@@ -244,7 +244,7 @@ public sealed class EmailAddress : Aggregate
             string.IsNullOrWhiteSpace(tokenKeyId))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A valid future recovery challenge is required."));
-        if (challengeId == _challengeId || ClaimOf(challengeId) is not null)
+        if (challengeId == _challengeId || challengeId == _recoveryChallengeId || ClaimOf(challengeId) is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The challenge identity is already used on this address."));
         return HasOutstandingRecoveryChallenge(now, outstandingDeliveryFailed)
@@ -386,6 +386,8 @@ public sealed class EmailAddress : Aggregate
             return cut;
         if (string.IsNullOrWhiteSpace(token))
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "A verification challenge is required."));
+        if (_isVerified)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The email address is already verified."));
         if (_owner != userId || _challengeId is null || _challengeId != challengeId || _tokenHash is null)
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "No verification challenge is available."));
         if (now >= _expiresAt)
@@ -508,7 +510,7 @@ public sealed class EmailAddress : Aggregate
     {
         Acceptance.Observe(verified);
         Learn(verified.EmailAddress);
-        if (_owner != verified.UserId || _challengeId != verified.ChallengeId)
+        if (_owner != verified.UserId || _challengeId != verified.ChallengeId || _isVerified)
             throw new InvalidOperationException("The email verification does not match its owner and address.");
         _isVerified = true;
     }
