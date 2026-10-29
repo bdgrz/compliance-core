@@ -1,0 +1,57 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ControlOccurrence",
+    "rule": "Catalog invariant: one planned/attested/corrected/reviewed occurrence for a control performance window, one ordered revision-guarded history (materialization, attestation versions, review decisions). The catalog does not say what a review does when the occurrence has no attestation yet.",
+    "code_behavior": {
+      "review_before_attestation": "Review on a materialized occurrence with zero attestations returns Conflict and appends no event. Previously it passed the revision check and then threw InvalidOperationException from the replay guard.",
+      "payload_identity": "Opened, Attested and Reviewed events carry TenantId, ProgramId, ControlId and OccurrenceId, which stream address and derived identity already determine; replay validates they equal the owner values. These events are existing baseline catalog events listing these fields.",
+      "test_scenario_review": "Test: open occurrence (revision 1), review at expected revision 1. Expected: Conflict, no pending event beyond the opening, revision stays 1.",
+      "test_scenario_stale": "Test: open, attest at expected 1 (revision 2), then attest again and review both at expected 1. Expected: both refused, pending event count unchanged, revision stays 2."
+    }
+  },
+  "questions": {
+    "review_before_attestation_outcome": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.review_before_attestation, what should the aggregate return?",
+      "criteria": {
+        "conflict_no_event": "Return a refusal (conflict) and append no event; a review of nothing is an invalid decision.",
+        "throw": "Let the replay guard throw an exception.",
+        "needs_source_resolution": "The catalog must resolve it."
+      }
+    },
+    "review_premise": {
+      "type": "noul",
+      "instructions": "The rule in state.rule is silent about reviewing an occurrence that has no attestation.",
+      "criteria": {
+        "true": "The rule text leaves the outcome unspecified.",
+        "false": "The rule text states the outcome."
+      }
+    },
+    "payload_repeats_identity": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.payload_identity, what should this aggregate stage do?",
+      "criteria": {
+        "keep_as_cataloged": "Keep them; the approved baseline events list these fields and this stage must not change events.",
+        "remove_from_payload": "Remove them because stream identity carries them.",
+        "needs_source_resolution": "Catalog and code disagree or the rule is silent."
+      }
+    },
+    "review_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in state.code_behavior.test_scenario_review proves a review cannot be recorded before any attestation.",
+      "criteria": {
+        "true": "The scenario refuses with no new fact.",
+        "false": "The scenario could pass even if the review were accepted."
+      }
+    },
+    "stale_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in state.code_behavior.test_scenario_stale proves a stale expected revision cannot append an attestation or review.",
+      "criteria": {
+        "true": "The scenario refuses both stale commands with no new fact.",
+        "false": "The scenario could pass even if a stale command were accepted."
+      }
+    }
+  }
+}

@@ -36,6 +36,7 @@ public sealed class AccessGrant : Aggregate
     AccessGrantTerms? _terms;
     Uuid? _membershipEpisodeId;
     bool _isRevoked;
+    ActorReference? _revokedBy;
     Uuid _issuedEventId;
 
     public bool IsRevoked => _isRevoked;
@@ -51,18 +52,25 @@ public sealed class AccessGrant : Aggregate
             _membershipEpisodeId = ev.MembershipEpisodeId;
             _issuedEventId = ev.Metadata.EventId;
         });
-        On<AccessGrantRevoked>(_ => _isRevoked = true);
+        On<AccessGrantRevoked>(ev =>
+        {
+            _isRevoked = true;
+            _revokedBy = ev.RevokedBy;
+        });
     }
 
     public Result Issue(AccessGrantTerms terms, Uuid? membershipEpisodeId = null)
     {
-        var validation = Validate(terms);
+        var validation = Validate(terms, membershipEpisodeId);
         if (validation is not null)
             return Result.Failure(validation);
 
         if (ReplayIssue(new AccessGrantProposal(terms.Principal, terms.RoleId, terms.Scope,
                 terms.Source, terms.EffectiveFrom, terms.EffectiveUntil), terms.GrantedBy) is { } retry)
-            return retry;
+            return retry.IsSuccess && membershipEpisodeId != _membershipEpisodeId
+                ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The grant identity already accepted another membership episode."))
+                : retry;
 
         RaiseEvent(new AccessGrantIssued(_tenantId, Id, terms, membershipEpisodeId));
         return Result.Success;
@@ -88,11 +96,14 @@ public sealed class AccessGrant : Aggregate
     {
         if (_terms is null)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The access grant was not found."));
-        if (_isRevoked)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The access grant is already revoked."));
         if (!IsValidActor(revokedBy) || revokedAt == default)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A grant revocation requires an actor and timestamp."));
+        if (_isRevoked)
+            return _revokedBy is { } original && original.Kind == revokedBy.Kind && original.Id == revokedBy.Id
+                ? Result.Success
+                : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The access grant was already revoked by another actor."));
 
         RaiseEvent(new AccessGrantRevoked(_tenantId, Id, revokedBy, revokedAt));
         return Result.Success;
@@ -113,10 +124,12 @@ public sealed class AccessGrant : Aggregate
         return Revoke(ActorReference.ForMember(proof.ActorMemberId, proof.ActorDisplay), revokedAt);
     }
 
-    RequestError? Validate(AccessGrantTerms terms)
+    RequestError? Validate(AccessGrantTerms terms, Uuid? membershipEpisodeId)
     {
         if (terms is null || terms.Principal is null || terms.Scope is null || terms.Source is null)
             return new RequestError(RequestErrorKind.Validation, "An access grant requires complete terms.");
+        if (membershipEpisodeId == Uuid.Empty)
+            return new RequestError(RequestErrorKind.Validation, "A membership episode id must not be empty.");
         if (terms.Principal.Id == Uuid.Empty || !Enum.IsDefined(terms.Principal.Kind) ||
             terms.RoleId == Uuid.Empty || terms.Scope.Id == Uuid.Empty ||
             !Enum.IsDefined(terms.Scope.Kind) || !IsValidActor(terms.GrantedBy) ||

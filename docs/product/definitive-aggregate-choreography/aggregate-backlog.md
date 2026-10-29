@@ -36,16 +36,16 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 15 | `Policy` | P0 ([R2-02](https://github.com/bdgrz/compliance-core/issues/16))<br>P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53))<br>P1 ([R2-12](https://github.com/bdgrz/compliance-core/issues/55))<br>P1 ([T2-02](https://github.com/bdgrz/compliance-core/issues/32)) | — | Done (focused aggregate scope, 2026-10-29) |
 | 16 | `ArtifactDownloadGrant` | No direct story mapping | — | Partial: Jev jev-1.14.0: cancel after issue gave success_no_event 0.68, needs_source_resolution 0.2 |
 | 16 | `EvidenceArtifact` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | — | Partial: Download-request exact retry after later downloads is owned by ArtifactDownloadGrant |
-| 17 | `EvidenceSupport` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | — | Source present; verify |
-| 18 | `RiskTreatmentAction` | No direct story mapping | — | Source present; verify |
-| 19 | `EvidenceRequest` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | 18: `RiskTreatmentAction` | Source present; verify |
-| 20 | `TypeIIObservationCalendar` | No direct story mapping | — | Source present; verify |
-| 20 | `TypeIIPeriod` | P1 ([T2-01](https://github.com/bdgrz/compliance-core/issues/31))<br>P1 ([T3-01](https://github.com/bdgrz/compliance-core/issues/40)) | — | Source present; verify |
-| 21 | `ControlOccurrence` | P0 ([R2-04](https://github.com/bdgrz/compliance-core/issues/18))<br>P1 ([T2-02](https://github.com/bdgrz/compliance-core/issues/32))<br>P2 ([T2-09](https://github.com/bdgrz/compliance-core/issues/39)) | 20: `TypeIIPeriod` | Source present; verify |
-| 22 | `ControlEvaluation` | P0 ([R2-05](https://github.com/bdgrz/compliance-core/issues/19)) | — | Source present; verify |
-| 23 | `ControlEvaluationPlan` | P0 ([R2-05](https://github.com/bdgrz/compliance-core/issues/19)) | — | Source present; verify |
-| 24 | `AccessExpectation` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | — | Source present; verify |
-| 25 | `AccessGrant` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | 8: `Member`, `TenantInvitation` | Source present; verify |
+| 17 | `EvidenceSupport` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 18 | `RiskTreatmentAction` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 19 | `EvidenceRequest` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | 18: `RiskTreatmentAction` | Done (focused aggregate scope, 2026-10-29) |
+| 20 | `TypeIIObservationCalendar` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 20 | `TypeIIPeriod` | P1 ([T2-01](https://github.com/bdgrz/compliance-core/issues/31))<br>P1 ([T3-01](https://github.com/bdgrz/compliance-core/issues/40)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 21 | `ControlOccurrence` | P0 ([R2-04](https://github.com/bdgrz/compliance-core/issues/18))<br>P1 ([T2-02](https://github.com/bdgrz/compliance-core/issues/32))<br>P2 ([T2-09](https://github.com/bdgrz/compliance-core/issues/39)) | 20: `TypeIIPeriod` | Done (focused aggregate scope, 2026-10-29) |
+| 22 | `ControlEvaluation` | P0 ([R2-05](https://github.com/bdgrz/compliance-core/issues/19)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 23 | `ControlEvaluationPlan` | P0 ([R2-05](https://github.com/bdgrz/compliance-core/issues/19)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 24 | `AccessExpectation` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 25 | `AccessGrant` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | 8: `Member`, `TenantInvitation` | Done (focused aggregate scope, 2026-10-29) |
 | 26 | `AccessPopulation` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Source present; verify |
 | 27 | `AccessReviewCampaign` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Source present; verify |
 | 28 | `AccessReviewDecisionBatch` | No direct story mapping | 27: `AccessReviewCampaign` | Source present; verify |

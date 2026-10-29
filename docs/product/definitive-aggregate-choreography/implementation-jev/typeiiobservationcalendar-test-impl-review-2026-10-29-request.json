@@ -1,0 +1,40 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "TypeIIObservationCalendar",
+    "rule": "One calendar stream per program. Active Type II ranges of the program never overlap. The aggregate appends only the exact prepared decision at the current native sequence; the selected logical id selects one acceptance and never forks the stream.",
+    "code_behavior": {
+      "retry_test": "After one authorization is appended, the same prepared decision is appended again at the now-current native sequence. The aggregate refuses with a non-transient conflict because the prepared before-cut no longer matches the calendar header; pending events stay at 1 and revision stays 1.",
+      "tamper_test": "A prepared decision whose authority content hash was altered is refused with a conflict and no fact is appended.",
+      "catalog": "Code events TypeIIPeriodRangeAuthorized and TypeIIPeriodRangeSettled match the approved catalog; no event added, removed or renamed."
+    }
+  },
+  "questions": {
+    "retry_asserts": {
+      "type": "noul",
+      "instructions": "The test in state.code_behavior.retry_test proves a duplicate append of an already committed range authorization adds no second fact.",
+      "criteria": {
+        "true": "The duplicate is refused and exactly one fact remains.",
+        "false": "The scenario could pass while a second duplicate fact is appended."
+      }
+    },
+    "tamper_asserts": {
+      "type": "noul",
+      "instructions": "The test in state.code_behavior.tamper_test proves a prepared decision that does not match its fact appends nothing.",
+      "criteria": {
+        "true": "The altered preparation is refused and no fact is appended.",
+        "false": "The scenario could pass while a fact is appended."
+      }
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Given state.code_behavior.catalog, is there any discrepancy between code events and the approved catalog needing action?",
+      "criteria": {
+        "no_discrepancy": "Code and catalog agree; nothing to change.",
+        "add_to_model": "Code has an owner-decision event the catalog lacks.",
+        "remove": "Code has an event the catalog does not want.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    }
+  }
+}

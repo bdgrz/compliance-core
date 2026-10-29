@@ -1,0 +1,51 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AccessGrant",
+    "invariant": "One stable grant identity has one immutable set of scope/principal/effective terms and, once revoked, can never be reissued.",
+    "selected_replay_rule": "Exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Expected revision is a concurrency precondition, not a new identity.",
+    "catalog_old_observation": "declaredIdentity: 'Issue compares terms/episode; Revoke exact retry conflicts.' The catalog identityReadingRule says such baseline observations are old replay defects and not target behavior.",
+    "code_behavior": {
+      "revoke": "Aggregate has no CommandId. Revoke on an already revoked grant returns success with no event when the actor kind and id equal the original revoking actor; returns Conflict when the actor differs. Invalid actor or timestamp is refused as validation first.",
+      "issue": "Issue with the same grant id and identical terms but a different or dropped membership episode id returns Conflict. Identical terms and episode returns success with no event, even after revocation. Empty episode id is validation.",
+      "tests": "A test seeds Issued then Revoked(actor A) and calls Revoke(actor A, later time) asserting success, IsRevoked true and zero pending events. Another calls Revoke(actor B) asserting Conflict and zero pending events."
+    }
+  },
+  "questions": {
+    "revoke_retry_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.revoke`, which retry handling is consistent with `state.selected_replay_rule` and the invariant?",
+      "criteria": {
+        "same_actor_success_other_actor_conflict": "Same revoking actor gets success with no new event; a different actor is refused as conflict.",
+        "always_conflict": "Any repeated revoke is a conflict, including by the original actor.",
+        "any_actor_success": "Any repeated revoke succeeds with no event regardless of actor.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "revoke_premise": {
+      "type": "noul",
+      "instructions": "The catalog's 'Revoke exact retry conflicts' text in `state.catalog_old_observation` is a superseded baseline observation and not the target behavior.",
+      "criteria": {
+        "true": "It is a superseded observation.",
+        "false": "It is the target behavior."
+      }
+    },
+    "episode_retry": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.issue`, is conflicting on a changed or dropped membership episode with otherwise identical terms consistent with the invariant and 'Issue compares terms/episode'?",
+      "criteria": {
+        "conflict_is_correct": "A changed or dropped episode is changed intent and must conflict.",
+        "success_is_correct": "Episode is not part of authored intent so a retry should succeed.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.code_behavior.tests` assert the behavioral outcome (success, revoked state, and no new fact) of an exact revoke retry and the refusal of a competing actor.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    }
+  }
+}

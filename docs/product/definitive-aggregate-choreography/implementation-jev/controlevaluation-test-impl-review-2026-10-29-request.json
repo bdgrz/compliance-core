@@ -1,0 +1,32 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ControlEvaluation",
+    "rule": "An evaluation moves in_progress -> submitted -> accepted; a review decides accepted, rejected or changes_requested with a rationale at the exact current revision while submitted. Unknown decisions are refused by the rules before the aggregate runs.",
+    "code_behavior": {
+      "unknown_decision_test": "Evaluation submitted; a review with decision approved_maybe by a non-evaluator reviewer is refused Validation; the stream fact count is identical before and after.",
+      "payload": "Events carry business facts and operation provenance; no field repeats tenant/evaluation id beyond what the catalog lists.",
+      "catalog": "Code events Started, StepRecorded, DeviationDisposed, Submitted, Reviewed all match the approved catalog; no event added, removed or renamed."
+    }
+  },
+  "questions": {
+    "unknown_asserts": {
+      "type": "noul",
+      "instructions": "The test in state.code_behavior.unknown_decision_test proves an invalid review decision appends no fact.",
+      "criteria": {
+        "true": "Invalid decision is refused and no fact is appended, stream unchanged.",
+        "false": "The scenario could pass while an invalid decision appends a fact."
+      }
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Given state.code_behavior.catalog, is there any discrepancy between code events and the approved catalog needing action?",
+      "criteria": {
+        "no_discrepancy": "Code and catalog agree; nothing to change.",
+        "add_to_model": "Code has an owner-decision event the catalog lacks.",
+        "remove": "Code has an event the catalog does not want.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    }
+  }
+}
