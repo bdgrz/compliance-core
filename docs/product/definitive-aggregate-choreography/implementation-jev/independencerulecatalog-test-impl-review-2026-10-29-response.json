@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "root_premise": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "historical_risk": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "revision_event_premise": {
+      "type": "noul",
+      "noul": 0.97
+    },
+    "revision_event_disposition": {
+      "type": "choice",
+      "choice": "include_existing_event",
+      "confidence": 0.95,
+      "probabilities": {
+        "include_existing_event": 0.97,
+        "remove_runtime_event": 0.01,
+        "needs_source_resolution": 0.02
+      }
+    },
+    "payload_disposition": {
+      "type": "choice",
+      "choice": "keep_existing_contract",
+      "confidence": 0.01,
+      "probabilities": {
+        "keep_existing_contract": 0.34,
+        "change_versioned_contract": 0.33,
+        "needs_source_resolution": 0.33
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 975,
+    "output_tokens": 159
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "model":"jev-latest",
+  "state":{
+    "owner":"IndependenceRuleCatalog owns a singleton platform stream and consecutively versions draft independence rules. The ReviseIndependenceRules command binds a command ID, original expected sequence, authored content and actor. The command is handled directly by IndependenceRuleCatalogOperations.ReviseAsync; the actual producer constructs root provenance through OwnerProvenance.For, which sets the root ID equal to the logical ID and causation event ID null.",
+    "test":"The new owner test creates identical valid prepared first rule revisions with null or non-null causation, and checks the former appends one event while the latter is refused without a fact. The coordinator captured RED before adding a null causation guard.",
+    "history":"Validate executes on both append and replay. The sole checked-in production producer and checked-in seed helper use OwnerProvenance.For, which sets null causation. No production historical event data has been inspected, so existing streams with other provenance cannot be excluded.",
+    "catalog":"events.json assigns IndependenceRulesRevised v2 to IndependenceRuleCatalog, and the implementation emits it. aggregates.json's same owner lists IndependenceRulesRevised in baselineEvents, but its selected final events list contains only the engagement-use authorization and settlement events. The owner invariant requires revision of draft rules.",
+    "payload":"IndependenceRulesRevised persists the rule header, immutable content reference and an OperationProvenance whose Owner, FirstOwner, AffectedOwner and ExpectedRevisionOwner all match this stream; it also persists first response and operation result references."
+  },
+  "questions":{
+    "root_premise":{"type":"noul","instructions":"Does the checked-in producer described in owner always set null causation for a ReviseIndependenceRules fact?"},
+    "historical_risk":{"type":"noul","instructions":"Does the evidence in history establish that every already-persisted production rule-revision fact has null causation?"},
+    "revision_event_premise":{"type":"noul","instructions":"Does the owner catalog entry's selected final events list omit IndependenceRulesRevised even though the event catalog and implementation assign it to that owner?"},
+    "revision_event_disposition":{"type":"choice","instructions":"How should the selected owner event list handle IndependenceRulesRevised given catalog?","options":["include_existing_event","remove_runtime_event","needs_source_resolution"],"criteria":{"include_existing_event":"The existing rule revision is the business fact this owner emits and the selected final owner list should include it.","remove_runtime_event":"The existing revision fact should be removed from implementation instead of added to the owner list.","needs_source_resolution":"The supplied source evidence is insufficient to determine which owner emits the rule revision."}},
+    "payload_disposition":{"type":"choice","instructions":"How should the owner addresses repeated within persisted OperationProvenance in payload be treated?","options":["keep_existing_contract","change_versioned_contract","needs_source_resolution"],"criteria":{"keep_existing_contract":"The shared native envelope supports bindings and compatibility and should be retained.","change_versioned_contract":"The redundant address fields should be removed through a versioned contract change.","needs_source_resolution":"The provided context is insufficient to choose a compatible disposition."}}
+  }
+}
