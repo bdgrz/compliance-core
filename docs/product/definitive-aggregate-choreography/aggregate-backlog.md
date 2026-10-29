@@ -46,16 +46,16 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 23 | `ControlEvaluationPlan` | P0 ([R2-05](https://github.com/bdgrz/compliance-core/issues/19)) | — | Done (focused aggregate scope, 2026-10-29) |
 | 24 | `AccessExpectation` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | — | Done (focused aggregate scope, 2026-10-29) |
 | 25 | `AccessGrant` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | 8: `Member`, `TenantInvitation` | Done (focused aggregate scope, 2026-10-29) |
-| 26 | `AccessPopulation` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Source present; verify |
-| 27 | `AccessReviewCampaign` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Source present; verify |
-| 28 | `AccessReviewDecisionBatch` | No direct story mapping | 27: `AccessReviewCampaign` | Source present; verify |
-| 29 | `AccessReviewItem` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | 27: `AccessReviewCampaign`; 28: `AccessReviewDecisionBatch` | Source present; verify |
-| 30 | `PopulationSnapshot` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Source present; verify |
-| 31 | `FindingAggregate` | No direct story mapping | 21: `ControlOccurrence`; 22: `ControlEvaluation` | Source present; verify |
-| 32 | `CorrectiveAction` | P0 ([R2-07](https://github.com/bdgrz/compliance-core/issues/21))<br>P1 ([T1-06](https://github.com/bdgrz/compliance-core/issues/29)) | 31: `FindingAggregate` | Source present; verify |
-| 33 | `AdvisorHandoff` | P0 ([R2-08](https://github.com/bdgrz/compliance-core/issues/22)) | 16: `ArtifactDownloadGrant`, `EvidenceArtifact` | Source present; verify |
-| 34 | `PolicyDistributionCampaign` | P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53)) | — | Source present; verify |
-| 35 | `TrainingRequirement` | P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53)) | — | Source present; verify |
+| 26 | `AccessPopulation` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 27 | `AccessReviewCampaign` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 28 | `AccessReviewDecisionBatch` | No direct story mapping | 27: `AccessReviewCampaign` | Done (focused aggregate scope, 2026-10-29) |
+| 29 | `AccessReviewItem` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | 27: `AccessReviewCampaign`; 28: `AccessReviewDecisionBatch` | Partial: Owner-level coverage of the closed-campaign state and bulk provisional apply/publish, incl |
+| 30 | `PopulationSnapshot` | P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 31 | `FindingAggregate` | No direct story mapping | 21: `ControlOccurrence`; 22: `ControlEvaluation` | Done (focused aggregate scope, 2026-10-29) |
+| 32 | `CorrectiveAction` | P0 ([R2-07](https://github.com/bdgrz/compliance-core/issues/21))<br>P1 ([T1-06](https://github.com/bdgrz/compliance-core/issues/29)) | 31: `FindingAggregate` | Partial: Owner decision: refuse CorrectiveAction materialization once ClosedByGeneration is set (Je |
+| 33 | `AdvisorHandoff` | P0 ([R2-08](https://github.com/bdgrz/compliance-core/issues/22)) | 16: `ArtifactDownloadGrant`, `EvidenceArtifact` | Partial: Selection bound (100) and Compliance Lead authorization belong to handler/validator stage |
+| 34 | `PolicyDistributionCampaign` | P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53)) | — | Partial: eventChangesNeeded: PolicyCampaignLaunched drops ActorMemberId and derives OwnerMemberId f |
+| 35 | `TrainingRequirement` | P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53)) | — | Done (focused aggregate scope, 2026-10-29) |
 | 36 | `EvidenceHandlingPolicy` | P1 ([R2-12](https://github.com/bdgrz/compliance-core/issues/55)) | 16: `ArtifactDownloadGrant`, `EvidenceArtifact` | Source present; verify |
 | 37 | `SystemDescription` | P1 ([T1-02](https://github.com/bdgrz/compliance-core/issues/25)) | — | Source present; verify |
 | 38 | `AuditorRequest` | P1 ([T1-04](https://github.com/bdgrz/compliance-core/issues/27))<br>P1 ([T3-03](https://github.com/bdgrz/compliance-core/issues/42)) | — | Source present; verify |
