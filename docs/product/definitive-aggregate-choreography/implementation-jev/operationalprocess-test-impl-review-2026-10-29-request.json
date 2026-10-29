@@ -1,0 +1,43 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "OperationalProcess owns strictly sequential revisions with at most one pending change; a change is accepted against the exact current revision; apply or cancel only for the exact pending change (root operation and intent); a cancel fences a later apply; a creation is refused when the identity exists.",
+    "decision": "Retirement is a distinct terminal fact (planned OperationalProcessRetired) in the approved catalog. The event is not in code or schemas; the aggregate has no retire command. Today retirement exists only as a Lifecycle value inside revision content.",
+    "tests": "Owner-level tests: replay of two applied revisions; second accept refused with pending; stale revision refused Conflict with no fact; creation on existing identity refused; revision on unrecorded process NotFound; apply with different intent refused and pending kept; second apply after commit refused; cancel then late apply refused; cancel with nothing pending refused; after cancel a new change is accepted at generation 2."
+  },
+  "questions": {
+    "tests_cover_invariant": {
+      "type": "noul",
+      "instructions": "Do the listed owner-level tests together exercise the stated invariant of sequential revisions, single pending change and exact apply/cancel?",
+      "criteria": {
+        "true": "The tests cover stale, pending, exact apply, cancel fence and replay.",
+        "false": "Important parts of the invariant are untested."
+      }
+    },
+    "retire_gap": {
+      "type": "choice",
+      "instructions": "The approved catalog plans a terminal OperationalProcessRetired fact but code has no such event or command. What is the right disposition for this aggregate-stage session that may not edit schemas or shared catalogs?",
+      "criteria": {
+        "add_to_model": "Register and implement the event now in this aggregate.",
+        "report_event_change": "Keep the aggregate unchanged and report the required event and retire decision as a needed shared change for the coordinator.",
+        "remove": "The plan is wrong; drop it from the catalog."
+      }
+    },
+    "retire_premise": {
+      "type": "noul",
+      "instructions": "Premise: the model text says retirement is a distinct terminal fact, while the code records retirement only as a Lifecycle value inside revision content, so a gap exists.",
+      "criteria": {
+        "true": "The code behavior contradicts the model text, so the gap is real.",
+        "false": "There is no gap between model text and code."
+      }
+    },
+    "cancel_then_accept": {
+      "type": "noul",
+      "instructions": "After a pending change is canceled, accepting a new change at the same expected revision with a higher generation is consistent with the rule.",
+      "criteria": {
+        "true": "Consistent: the cancel closed the pending change so a new one may be accepted.",
+        "false": "Inconsistent with the rule."
+      }
+    }
+  }
+}

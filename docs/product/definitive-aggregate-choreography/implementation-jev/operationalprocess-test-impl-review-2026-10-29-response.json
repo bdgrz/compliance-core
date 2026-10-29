@@ -1,0 +1,34 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "tests_cover_invariant": {
+        "type": "noul",
+        "noul": 0.91
+      },
+      "retire_gap": {
+        "type": "choice",
+        "choice": "report_event_change",
+        "confidence": 1,
+        "probabilities": {
+          "add_to_model": 0,
+          "report_event_change": 1,
+          "remove": 0
+        }
+      },
+      "retire_premise": {
+        "type": "noul",
+        "noul": 0.93
+      },
+      "cancel_then_accept": {
+        "type": "noul",
+        "noul": 0.6
+      }
+    },
+    "usage": {
+      "input_tokens": 836,
+      "output_tokens": 105
+    }
+  }
+}
