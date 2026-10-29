@@ -1,0 +1,51 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "ClientServiceIndependence owns a client complete immutable nonattest-service history, current epoch and acceptance admission barrier. D26-03 says an attest engagement is refused if any service is impairing under ratified rules within the lookback. D26-04 assigns the conditional partner evaluation requirement to ClientServiceIndependence; Jev selection was 0.58 (moderate).",
+    "code": "RecordService advances epoch and refuses while active use holds epoch. AdmitEvaluation freezes an intent at exact current epoch without advancing it. AcquireEngagementServiceEpoch verifies current epoch and latest event match the pinned admitted requirement and holds that epoch until terminal settlement; it does not inspect impairment or partner evaluation. EventSourcedServiceEngagementAcceptanceEvidenceReader evaluates complete service history against ratified rules, checks a matching conditional partner evaluation when needed, rereads relevant authorities and epoch, then admission freezes the proof. The acquisition rejects a changed service epoch before it holds it; other sources have separate source-use holds.",
+    "root": "NativeOwnerHistory.IsOwnRoot requires logical/root same nonempty ID, own routing addresses, no causation, initial episode, valid digest, timestamp and expected revision. New RecordService and AdmitEvaluation guards use that contract and PrepareService or PrepareEvaluation separately checks current epoch. Existing production handlers create those root fields.",
+    "events": "NonattestServiceRecorded includes TenantId, OperationId, Operation.Owner and revision. EvaluationAdmitted includes Owner and Operation.Owner, with owner equal to the stream address; these are shared native-operation contracts."
+  },
+  "questions": {
+    "barrier_scope": {
+      "type": "choice",
+      "instructions": "Given the described evidence check followed by an exact epoch hold, does the current code locate the D26-03 and D26-04 decisions on the catalog-designated ClientServiceIndependence owner?",
+      "options": [
+        "owner_directly_decides",
+        "distributed_admission_not_owner_decision",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "owner_directly_decides": "The owner itself validates the decision facts and refuses a noncompliant grant.",
+        "distributed_admission_not_owner_decision": "The decision is checked by the reader and the owner only serializes the service epoch.",
+        "needs_source_resolution": "The evidence does not settle the authority boundary."
+      }
+    },
+    "pin_premise": {
+      "type": "noul",
+      "instructions": "Does the described exact epoch hold reject a service-set change between acceptance admission and acquisition?"
+    },
+    "root_consistency": {
+      "type": "noul",
+      "instructions": "Do the new ClientServiceIndependence root checks prevent appending a root that its native history reader would reject solely for root provenance?"
+    },
+    "duplicated_owner": {
+      "type": "choice",
+      "instructions": "How should the repeated stream owner fields on the described native evaluation admission event be handled?",
+      "options": [
+        "retain_shared_envelope",
+        "versioned_change",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "retain_shared_envelope": "Current native consumer protocol requires both fields.",
+        "versioned_change": "A planned version should remove repeated fields after compatibility review.",
+        "needs_source_resolution": "The described evidence is insufficient to identify consumer requirements."
+      }
+    },
+    "duplicate_premise": {
+      "type": "noul",
+      "instructions": "Does ClientIndependenceEvaluationAdmitted explicitly repeat the same stream address in Owner and Operation.Owner?"
+    }
+  }
+}

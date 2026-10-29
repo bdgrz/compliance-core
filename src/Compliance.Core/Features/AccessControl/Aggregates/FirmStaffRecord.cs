@@ -21,6 +21,7 @@ using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.NativeOperations.Services;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
@@ -44,6 +45,7 @@ using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Proofs.Models;
@@ -181,12 +183,17 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(firstResponse);
-        if (operation.LogicalId != StaffMemberId || operation.Owner != Stream)
+        if (StaffMemberId == Uuid.Empty || operation.LogicalId != StaffMemberId ||
+            operation.RootOperationId != StaffMemberId || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A staff registration is the logical operation of its own staff record."));
         var prepared = PrepareRegistration(operation.OriginalExpectedRevision is { } expected ? (long)expected : -1);
         if (!prepared.IsSuccess)
             return prepared;
+        if (!NativeOwnerHistory.IsOwnRoot(this, operation, nameof(RegisterFirmStaff), 0) ||
+            operation.Actor.Kind != "platform_operator")
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A staff registration requires its exact platform operator root provenance."));
         var cut = ReplayCut.Require(this, Acceptance, operation);
         if (!cut.IsSuccess)
             return cut;
@@ -200,7 +207,7 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (!IsPending)
+        if (!IsPending || !IsRegistrationChild(operation, nameof(CompleteFirmStaffRegistration)))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a pending registration can be completed."));
         var cut = ReplayCut.Require(this, Acceptance, operation);
@@ -215,7 +222,7 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
     public Result RejectRegistration(OperationProvenance operation, ImmutableContentRef failureProof)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (!IsPending)
+        if (!IsPending || !IsRegistrationChild(operation, nameof(RejectFirmStaffRegistration)))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a pending registration can be rejected."));
         var cut = ReplayCut.Require(this, Acceptance, operation);
@@ -224,6 +231,20 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
         RaiseEvent(new FirmStaffRegistrationRejected(Stream, 0, FirmStaffEffects.Generation, _accepted!.Intent,
             failureProof, operation, null, null));
         return Result.Success;
+    }
+
+    bool IsRegistrationChild(OperationProvenance operation, string commandKind)
+    {
+        var accepted = _accepted!;
+        var root = accepted.Operation;
+        return operation.LogicalId != Uuid.Empty && operation.LogicalId != root.LogicalId &&
+               operation.RootOperationId == root.RootOperationId &&
+               operation.CausationEventId == accepted.Metadata.EventId && operation.CommandKind == commandKind &&
+               operation.Owner == Stream && (operation.FirstOwner ?? operation.Owner) == root.Owner &&
+               operation.AffectedOwner == operation.Owner && operation.ExpectedRevisionOwner == operation.Owner &&
+               operation.Actor == root.Actor && operation.Episode == root.Episode &&
+               operation.OriginalExpectedRevision == root.OriginalExpectedRevision &&
+               operation.AuthoredIntentSha256 == root.AuthoredIntentSha256;
     }
 
     /// <summary>Checks the status guards without raising anything.</summary>
