@@ -1,0 +1,51 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "One tenant/program/assertion owns exact authored versions and at most one independent named CEO/CISO decision per version. Creation uses caller AssertionId. An exact authorized retry resolves original accepted result from immutable actor/intent binding before fresh mutable feasibility or clock selection.",
+    "code": "Create stores the first version and later revisions retain its content and original attributed member, display and time. The modified Create retry compares normalized original first version content and member identity but also compares current actor display to stored display. Handler gets member and display from the authenticated session and timestamp from the current clock. Neither display nor timestamp is authored in the creation request. The original recorded version is never rewritten.",
+    "approvals": "Approve checks one prior decision by exact version first. If outcome, rationale, approver member and role match it returns success without appending, even when a later version exists. Changed decision conflicts. The current approval command does not carry the selected CommandId and expected revision.",
+    "event": "ManagementAssertionRecorded/Revised/Approved contain TenantId, SubjectId, Revision, ActorMemberId and full State which repeats tenant, subject, revision and prior versions/approvals. They are existing versioned wire events."
+  },
+  "questions": {
+    "original_version": {
+      "type": "noul",
+      "instructions": "Does checking the first retained version rather than current version allow an exact creation retry after a later revision without appending?"
+    },
+    "display": {
+      "type": "choice",
+      "instructions": "The same member retries identical creation content after session display changes. What outcome follows the described immutable actor and intent retry contract?",
+      "options": [
+        "return_original",
+        "conflict",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "return_original": "Display is a server-observed attribute; actor identity and authored intent remain the same.",
+        "conflict": "Display change is a change to the authored operation.",
+        "needs_source_resolution": "The provided state does not establish whether display is authored."
+      }
+    },
+    "decision": {
+      "type": "noul",
+      "instructions": "Does the described prior-decision comparison preserve one immutable decision per assertion version when a later version exists?"
+    },
+    "payload_premise": {
+      "type": "noul",
+      "instructions": "Do the described assertion state events repeat tenant, subject and revision both in their envelope and full state?"
+    },
+    "payload_disposition": {
+      "type": "choice",
+      "instructions": "Given assertion state events repeat identity and old state, what event contract disposition follows the supplied evidence?",
+      "options": [
+        "versioned_reconciliation",
+        "retain_existing",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "versioned_reconciliation": "Introduce an explicit versioned event redesign after verifying stored history and all consumers.",
+        "retain_existing": "Current wire and consumer requirements demonstrate all repeated fields are essential.",
+        "needs_source_resolution": "Consumer and migration requirements have not been established."
+      }
+    }
+  }
+}
