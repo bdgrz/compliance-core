@@ -414,6 +414,26 @@ public sealed class TenantManagerGuardTests
     }
 
     [Fact]
+    public async Task ShouldAppendNoGuardFactGivenDeprovisioningLastAvailableAdministrator()
+    {
+        // Arrange
+        await using var host = new AdministratorTransitionHost();
+        var (first, second) = (await host.AddAdministratorAsync(), await host.AddAdministratorAsync());
+        var accepted = await host.DeprovisionAsync(first, second);
+        var factsBefore = (await host.GuardFactsAsync()).Count;
+
+        // Act
+        var retaliation = await host.DeprovisionAsync(second, first);
+
+        // Assert
+        Assert.True(accepted.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, retaliation.Error!.Kind);
+        Assert.Same(TenantManagerGuard.LastAdministratorConflict, retaliation.Error);
+        Assert.Equal(factsBefore, (await host.GuardFactsAsync()).Count);
+        Assert.Equal(1, (await host.GuardAsync()).AvailableCount);
+    }
+
+    [Fact]
     public async Task ShouldRejectRemovingLastAdministratorGivenAdministratorsTeam()
     {
         // Arrange
