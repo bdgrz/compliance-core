@@ -1,0 +1,60 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "UserIdentity",
+    "invariant": "An external provider+subject associates to exactly one platform user; a revoked identity cannot authenticate and has one exact replacement.",
+    "code_behavior": {
+      "register_revoked": "Register on an already registered identity: a different non-empty user returns Conflict; otherwise, if the identity is revoked, returns Unauthorized (no event); if not revoked returns success with no event. The OIDC link path uses Register to obtain an authenticated identity.",
+      "revoke": "Revoke on a registered, not yet revoked identity appends UserIdentityRevoked. Revoke on a revoked identity with the same replacement id returns success with no event (and a later revokedAt is ignored); with a different replacement id returns Conflict with no event. Self or empty replacement is a validation refusal. Unregistered identity is NotFound. No fact is appended on any refusal.",
+      "event_payload": "UserIdentityRevoked carries UserIdentityId, UserId, ReplacementIdentityId, RevokedAt. UserIdentityId equals the stream id, and the reducer validates it equals the stream id. It is an existing wire contract.",
+      "tests": "Tests seed Registered then Revoked, then assert: Register by same user or anonymous gives Unauthorized and pending events unchanged; exact revoke retry succeeds with no pending event; changed replacement gives Conflict with no pending event; a replayed Registered+Revoked history refuses Authenticate, acknowledges the retry, conflicts on a changed replacement, and has no pending events."
+    }
+  },
+  "questions": {
+    "register_revoked": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.register_revoked`, which handling of Register on a revoked identity is consistent with `state.invariant`?",
+      "criteria": {
+        "unauthorized_no_fact": "Refuse with Unauthorized and append nothing, because a revoked identity must not yield authority.",
+        "success_no_fact": "Return success with the authenticated identity and append nothing.",
+        "conflict_no_fact": "Refuse with Conflict and append nothing.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "revoke_retry": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.revoke`, is the handling of a repeated Revoke consistent with the invariant that a revoked identity has one exact replacement?",
+      "criteria": {
+        "same_success_changed_conflict": "Same replacement succeeds with no new event; a different replacement conflicts.",
+        "always_conflict": "Any repeated revoke conflicts.",
+        "any_success": "Any repeated revoke succeeds with no event.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_dup": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.event_payload`, what is the right disposition of the UserIdentityId field that repeats the stream identity, given that payloads should carry only business facts not already carried by stream identity or metadata, and that it is an existing wire contract?",
+      "criteria": {
+        "keep_existing_contract": "Keep it for now as an existing contract; any removal is a separate shared event change.",
+        "remove_now": "Remove it from the aggregate and event immediately.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_premise": {
+      "type": "noul",
+      "instructions": "The UserIdentityId field of UserIdentityRevoked in `state.code_behavior.event_payload` repeats the stream identity.",
+      "criteria": {
+        "true": "It repeats the stream identity.",
+        "false": "It carries independent information."
+      }
+    },
+    "tests_assert": {
+      "type": "noul",
+      "instructions": "The tests in `state.code_behavior.tests` assert behavioral outcomes (success or refusal, and whether a fact is appended) and can fail if the rules in `state.code_behavior` regress.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    }
+  }
+}
