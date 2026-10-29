@@ -1,0 +1,38 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AccessReviewItem",
+    "rule": "One frozen review item decides its single materialization, one reviewer decision, reassignment, remediation change/verification/exception under a monotonic item revision. Every change carries an expected revision; a stale revision is refused with a conflict and appends nothing. A batch fence is recorded at most once per item and batch.",
+    "test_fence_repeat": "Item replayed with its opened fact and an already committed fence fact (AccessReviewItemDecisionCanceled) for batch B recorded by logical operation L1; the replay cut is confirmed and the selected logical operation is a different operation L2 whose root operation is B. FenceBulkDecision(L2) returns Conflict, no event is pending, revision is unchanged. Without the guard the reducer would throw after the append instead of returning a result.",
+    "test_stale_after_first": "Item replayed with opened fact at revision 1 and the cut confirmed. RecordDecision at expected revision 1 succeeds and appends AccessDecisionsRecorded at revision 2. A second RecordDecision at expected revision 1 returns Conflict and only the first event is pending; revision stays 2.",
+    "catalog": "Catalog lists AccessReviewItemOpened, AccessDecisionsRecorded, AccessRemediationChangeRecorded, AccessRemediationVerified, AccessRemediationExceptionRecorded, AccessReviewResponsibilityReassigned, AccessReviewItemDecisionAuthorized, AccessReviewItemDecisionCanceled, AccessReviewItemDecisionSettled and the two campaign completion use events. Code declares and uses exactly these. No event is added, removed or renamed."
+  },
+  "questions": {
+    "fence_repeat_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_fence_repeat prove that a second fence of an already fenced batch is refused with a conflict instead of appending a duplicate fact?",
+      "criteria": {
+        "true": "The scenario would fail if a second fence were appended or the command threw.",
+        "false": "The scenario could pass while a duplicate fence were appended."
+      }
+    },
+    "stale_after_first_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_stale_after_first prove that a competing second change at the old expected revision is refused and appends nothing?",
+      "criteria": {
+        "true": "The scenario would fail if the stale second decision were appended.",
+        "false": "The scenario could pass while the stale second decision were appended."
+      }
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Given state.catalog, is there an event-model discrepancy needing action in the aggregate or its events?",
+      "criteria": {
+        "no_discrepancy": "Event names and payloads agree.",
+        "add_to_model": "Code has an owner-decision event the catalog lacks.",
+        "remove": "Code has an event the catalog does not want.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    }
+  }
+}

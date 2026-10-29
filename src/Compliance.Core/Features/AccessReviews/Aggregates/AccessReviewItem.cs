@@ -398,6 +398,9 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         if (_opened is null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The review item has not been materialized yet.", true));
+        if (IsFenced(operation.RootOperationId) || IsPublished(operation.RootOperationId))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The bulk decision was already fenced or published on this item."));
         return Append(operation, new AccessReviewItemDecisionCanceled(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
             intent, null, operation, null, null));
     }
