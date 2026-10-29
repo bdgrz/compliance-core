@@ -1,0 +1,43 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "TemplateApplication",
+    "invariant": "One application pins exact published template provenance and planned drafts; one pending later-version adoption proposal receives one immutable disposition before the next successor.",
+    "code_behavior": {
+      "competing_proposal": "While a proposal is pending, a proposal for a later version with the correct expected revision is refused as Conflict and appends no fact.",
+      "disposition_without_pending": "Recording a disposition when no proposal exists is refused as Conflict and appends no fact.",
+      "stale_revision": "A proposal with an expected revision that differs from the current revision is refused as Conflict and appends no fact."
+    },
+    "tests": "Three tests apply a template, set up the state, run the command, then assert IsSuccess false, error kind Conflict, and the stream fact count unchanged (2, 1, 1)."
+  },
+  "questions": {
+    "competing_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.competing_proposal`, which handling is consistent with `state.invariant`?",
+      "criteria": {
+        "refuse_conflict_no_fact": "Refuse as conflict with no new fact.",
+        "append_second": "Append a second pending proposal.",
+        "supersede": "Replace the pending proposal silently.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "no_pending_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.disposition_without_pending`, which handling is consistent with `state.invariant`?",
+      "criteria": {
+        "refuse_conflict_no_fact": "Refuse as conflict with no fact.",
+        "append_anyway": "Append a disposition fact.",
+        "noop_success": "Succeed with no fact.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.tests` assert behavioral outcomes of the three refusals described in `state.code_behavior` and can fail if the invariant were violated.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    }
+  }
+}
