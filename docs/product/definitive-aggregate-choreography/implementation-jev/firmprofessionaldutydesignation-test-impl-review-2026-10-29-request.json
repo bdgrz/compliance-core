@@ -1,0 +1,60 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "FirmProfessionalDutyDesignation",
+    "invariant": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. Platform scope is explicit, not an empty tenant UUID.",
+    "code_behavior": {
+      "identity": "Stream key is derived from (user, duty, 'platform' or 'tenant:{id}'). An empty tenant UUID yields a different stream than platform.",
+      "accept": "AcceptChange appends ProfessionalDutyChangeAccepted only if no change is pending, no engagement use holds the designation, the assertion id was not accepted before, and expected revision equals the applied-change count. Otherwise it returns a conflict and appends nothing. A second call with the same assertion id while pending returns a permanent conflict; the surrounding process answers exact retries from the recorded acceptance receipt instead.",
+      "apply_reject": "Apply and Reject succeed only for the exact pending root operation; with nothing pending or another root they return conflict and append nothing.",
+      "payload": "ProfessionalDutyChangeAccepted carries Owner (equal to the stream address), Revision, Generation, Intent and the operation provenance whose Owner also equals the stream address."
+    },
+    "tests": {
+      "t1": "Fresh designation, AcceptChange at expected revision 0: one Accepted event, revision 0, pending set.",
+      "t2": "Pending change, second AcceptChange with another assertion: conflict (transient), still one event.",
+      "t3": "Pending change, same assertion again: permanent conflict, still one event.",
+      "t4": "Expected revision 5 on fresh designation: conflict, no event.",
+      "t5": "Operation owned by another stream or with logical id different from root: validation error, no event.",
+      "t6": "Apply/Reject with nothing pending or a stranger root: refused, no event.",
+      "t7": "Engagement use on a designation with nothing recorded: conflict, no event."
+    }
+  },
+  "questions": {
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "Together, do tests t2 through t6 show that the aggregate admits one pending change at a time at the exact predecessor revision and appends nothing when refusing?"
+    },
+    "same_assertion_retry": {
+      "type": "choice",
+      "instructions": "While a change for assertion X is pending, the owner refuses a second AcceptChange for X with a permanent conflict, and the process layer answers the exact retry from the recorded receipt. Is this aggregate-level behavior consistent with the rule that retries of committed facts append no new fact?",
+      "options": [
+        "consistent_no_new_fact",
+        "should_acknowledge_in_aggregate",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "consistent_no_new_fact": "The refusal appends nothing and the receipt is answered elsewhere, so no duplicate fact is possible.",
+        "should_acknowledge_in_aggregate": "The aggregate itself must return success for an exact retry.",
+        "needs_source_resolution": "The model text does not decide it."
+      }
+    },
+    "accepted_owner_field": {
+      "type": "choice",
+      "instructions": "ProfessionalDutyChangeAccepted carries Owner equal to the stream address, and the native-operation provenance also carries Owner. Should the payload Owner be treated as a discrepancy to remove?",
+      "options": [
+        "remove_from_payload",
+        "keep_as_native_operation_envelope",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "remove_from_payload": "Payload fields that repeat stream identity must be removed.",
+        "keep_as_native_operation_envelope": "The field is a required part of the shared native-operation fact contract used by every native owner, not a business fact added by this aggregate.",
+        "needs_source_resolution": "Unclear."
+      }
+    },
+    "premise_ok": {
+      "type": "noul",
+      "instructions": "Is it correct that exclusions such as signature verification, assertion claim uniqueness and staff state are decided outside this aggregate?"
+    }
+  }
+}
