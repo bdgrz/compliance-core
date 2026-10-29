@@ -218,6 +218,9 @@ public sealed class ApplicationImportBatch : Aggregate
         if (operation.Owner != Stream || operation.LogicalId != submissionId)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "Staging is the root operation of its own batch under its submission identity."));
+        if (rowCount < 1 || invalidCount < 0 || invalidCount > rowCount)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A staged observation has at least one row and no more invalid rows than rows."));
         return Append(operation, new ApplicationImportStaged(_tenantId, Id, submissionId, sourceKey, sourceNamespace, coverage,
             contentSha256, rowsManifest, actorMemberId, actorDisplay, submittedAt, operation, firstResponse,
             operationResult, rowCount, invalidCount));
@@ -292,6 +295,9 @@ public sealed class ApplicationImportBatch : Aggregate
         var prepared = PrepareAcceptance((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
+        if (rowCount < 1 || targetGroupCount < 1)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A sealed plan covers at least one row and one target group."));
         return Append(operation, new ApplicationImportPlanSealed(_tenantId, Id, _revision + 1, planSha256, operation, frozenPlan,
             rowCount, targetGroupCount, SourceKey!, SourceNamespace!, firstResponse, null));
     }
@@ -373,6 +379,9 @@ public sealed class ApplicationImportBatch : Aggregate
         var prepared = PrepareCommit();
         if (!prepared.IsSuccess)
             return prepared;
+        if (intent != _plan!.FrozenPlan)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "Publication carries the sealed plan's intent unchanged."));
         return Append(operation, new ApplicationImportCommitted(_tenantId, SourceKey!, SourceNamespace!, Id, _revision + 1,
             _plan!.PlanSha256, effectsManifest, committedAt, operation, frozenRows, sourceGeneration, intent, null,
             operationResult));
