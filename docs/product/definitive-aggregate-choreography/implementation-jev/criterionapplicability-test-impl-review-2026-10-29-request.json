@@ -1,0 +1,41 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "CriterionApplicability",
+    "invariant": "One applicability decision lineage. Only independent accepted review (or exact waiver) makes a criterion not applicable; withdrawal of the exact accepted decision restores coverage.",
+    "rule": "Retries of an already committed command are acknowledged through the selected native operation identity (logical id plus authored-intent digest), not by re-appending. A prepared fact is bound to the exact line cut (before revision, owner version, committed position, replay digest).",
+    "code_behavior": {
+      "apply": "Aggregate.Apply(prepared, firstResponse) returns Conflict and raises no event when prepared.BeforeRevision differs from the current line revision, or the owner version, committed position or replay digest differ. Otherwise it raises the fact once.",
+      "tests": "Test A applies a prepared proposal (success, revision 1) then applies the same prepared fact again: expects Conflict and revision still 1. Test B prepares a review against a line already at revision 1, applies it to a fresh owner at revision 0: expects Conflict, revision 0, no content; the same prepared review then applies on the owner at revision 1 giving revision 2. Test C asserts tuple-derived identity is equal for equal tuples and distinct when program, edition or criterion differs, with the tenant as stream realm.",
+      "identity": "Stream identity is derived from (tenant, program, edition, criterionIdentifier); DecisionId is the logical operation id of a proposal only."
+    }
+  },
+  "questions": {
+    "second_apply": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.apply`, when the identical prepared fact is applied a second time to the same aggregate, which outcome is consistent with `state.rule` and the invariant?",
+      "criteria": {
+        "conflict_no_event": "Conflict with no new event; the acknowledgment of committed retries happens at the native operation level.",
+        "success_no_event": "Aggregate acknowledges success without a new event.",
+        "success_new_event": "Append a second fact.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.code_behavior.tests` assert real behavioral outcomes (event appended or not, revision, state) that protect against a stale or duplicate prepared fact appending a wrong fact, and they can fail.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    },
+    "identity_premise": {
+      "type": "noul",
+      "instructions": "The identity in `state.code_behavior.identity` and test C is consistent with the invariant that one lineage exists per criterion and no caller supplied key forks it.",
+      "criteria": {
+        "true": "It is consistent.",
+        "false": "A caller key could fork the lineage."
+      }
+    }
+  }
+}
