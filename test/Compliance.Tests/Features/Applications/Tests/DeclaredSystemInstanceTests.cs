@@ -114,6 +114,7 @@ public sealed class DeclaredSystemInstanceTests
         Assert.Equal("Boundary v2", instance.AccessBoundaryReference);
         var ev = Assert.IsType<SystemInstanceRevised>(events[^1]);
         Assert.Equal(applicationId, ev.ApplicationId);
+        Assert.Equal("production", ev.Kind);
         Assert.Equal("The production region moved to the east network zone.", ev.Rationale);
         Assert.Equal(ActorReference.ForMember(actorId, "Manager"), ev.Actor);
         Assert.Equal(instance.Name, replay.Name);
@@ -142,5 +143,201 @@ public sealed class DeclaredSystemInstanceTests
         Assert.Equal(1, instance.Revision);
         Assert.Equal("Production", instance.Name);
         Assert.Single(new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseDeclarationWithoutFactGivenUnattributedActor()
+    {
+        // Arrange
+        var instance = new DeclaredSystemInstance(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+
+        // Act
+        var result = instance.Declare(Uuid.CreateVersion4(), "Production", "production", null, null,
+            Uuid.Empty, "Manager", NativeFacts.Now);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind);
+        Assert.False(instance.IsCreated);
+        Assert.Empty(new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseForeignOperationWithoutFactGivenProvenanceOfAnotherOwner()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var instance = new DeclaredSystemInstance(tenantId, Uuid.CreateVersion4());
+        var other = new DeclaredSystemInstance(tenantId, Uuid.CreateVersion4());
+
+        // Act
+        var result = instance.Declare(ApplicationFacts.For(other), NativeFacts.Ref(), Uuid.CreateVersion4(),
+            "Production", "production", null, null, Uuid.CreateVersion4(), "Manager", NativeFacts.Now);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind);
+        Assert.Empty(new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRetireOnceAndRefuseLaterDecisionsGivenCommittedRetirement()
+    {
+        // Arrange
+        var applicationId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var instance = new DeclaredSystemInstance(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        Assert.True(instance.Declare(applicationId, "Production", "production", null, null, actorId, "Manager",
+            NativeFacts.Now).IsSuccess);
+
+        // Act
+        var retired = instance.Retire(1, NativeFacts.Now, " Decommissioned ", actorId, "Manager",
+            NativeFacts.Now.AddMinutes(1));
+        var retry = instance.Retire(1, NativeFacts.Now, "Decommissioned", actorId, "Manager",
+            NativeFacts.Now.AddMinutes(2));
+        var revised = instance.Revise(2, "Production east", null, null, "Moved.", actorId, "Manager",
+            NativeFacts.Now.AddMinutes(3));
+
+        // Assert
+        Assert.Null(retired);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(retry).Code);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(revised).Code);
+        Assert.True(instance.IsRetired);
+        Assert.Equal(2, instance.Revision);
+        var scenario = new AggregateScenario<DeclaredSystemInstance>(instance);
+        Assert.Equal(2, scenario.PendingEvents.Count);
+        var ev = Assert.IsType<SystemInstanceRetired>(scenario.PendingEvents[1]);
+        Assert.Equal("Decommissioned", ev.Reason);
+        Assert.Equal(2, ev.Revision);
+    }
+
+    [Fact]
+    public void ShouldRefuseRetirementWithoutFactGivenWrongParentOrStaleRevisionOrBlankReason()
+    {
+        // Arrange
+        var applicationId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var instance = new DeclaredSystemInstance(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        Assert.True(instance.Declare(applicationId, "Production", "production", null, null, actorId, "Manager",
+            NativeFacts.Now).IsSuccess);
+
+        // Act
+        var wrongParent = instance.PrepareRetire(Uuid.CreateVersion4(), 1, NativeFacts.Now, "Done", actorId,
+            "Manager", NativeFacts.Now);
+        var stale = instance.Retire(0, NativeFacts.Now, "Done", actorId, "Manager", NativeFacts.Now);
+        var blankReason = instance.Retire(1, NativeFacts.Now, "  ", actorId, "Manager", NativeFacts.Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.MissingRecord, Assert.IsType<CommandFailure>(wrongParent).Code);
+        Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(stale).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(blankReason).Code);
+        Assert.False(instance.IsRetired);
+        Assert.Single(new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseRevisionWithoutFactGivenBlankRationaleOrBlankName()
+    {
+        // Arrange
+        var actorId = Uuid.CreateVersion4();
+        var instance = new DeclaredSystemInstance(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        Assert.True(instance.Declare(Uuid.CreateVersion4(), "Production", "production", null, null, actorId,
+            "Manager", NativeFacts.Now).IsSuccess);
+
+        // Act
+        var noRationale = instance.Revise(1, "Production east", null, null, " ", actorId, "Manager",
+            NativeFacts.Now);
+        var noName = instance.Revise(1, " ", null, null, "Renamed.", actorId, "Manager", NativeFacts.Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(noRationale).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(noName).Code);
+        Assert.Equal(1, instance.Revision);
+        Assert.Single(new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRecognizeUnchangedContentGivenRepeatedRevisionIntent()
+    {
+        // Arrange
+        var actorId = Uuid.CreateVersion4();
+        var instance = new DeclaredSystemInstance(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        Assert.True(instance.Declare(Uuid.CreateVersion4(), "Production", "production", "Boundary v1",
+            "payroll-prod", actorId, "Manager", NativeFacts.Now).IsSuccess);
+
+        // Act
+        var same = instance.IsUnchanged(" Production ", "payroll-prod", " Boundary v1 ");
+        var changed = instance.IsUnchanged("Production", "payroll-prod", "Boundary v2");
+
+        // Assert
+        Assert.True(same);
+        Assert.False(changed);
+    }
+
+    [Fact]
+    public void ShouldRestoreStateAndRefuseChangeGivenReplayedHistoryWithRetirement()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var instanceId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var seed = new DeclaredSystemInstance(tenantId, instanceId);
+        Assert.True(seed.Declare(applicationId, "Production", "production", "Boundary v1", "payroll-prod",
+            actorId, "Manager", NativeFacts.Now).IsSuccess);
+        Assert.Null(seed.Revise(1, "Production east", "payroll-prod-east", null, "Moved.", actorId, "Manager",
+            NativeFacts.Now.AddMinutes(1)));
+        Assert.Null(seed.Retire(2, NativeFacts.Now.AddMinutes(2), "Decommissioned", actorId, "Manager",
+            NativeFacts.Now.AddMinutes(2)));
+        var history = NativeFacts.Raised(seed);
+
+        // Act
+        var replayed = NativeFacts.Replay(new DeclaredSystemInstance(tenantId, instanceId), history);
+        var revised = replayed.Revise(3, "Again", null, null, "Retry.", actorId, "Manager", NativeFacts.Now);
+        var retired = replayed.Retire(3, NativeFacts.Now, "Again", actorId, "Manager", NativeFacts.Now);
+
+        // Assert
+        Assert.Equal(3, history.Length);
+        Assert.True(replayed.IsCreated);
+        Assert.True(replayed.IsRetired);
+        Assert.Equal(3, replayed.Revision);
+        Assert.Equal(applicationId, replayed.ApplicationId);
+        Assert.Equal(actorId, replayed.RegisteredByMemberId);
+        Assert.Equal("Production east", replayed.Name);
+        Assert.Equal("payroll-prod-east", replayed.SourceIdentifier);
+        Assert.Null(replayed.AccessBoundaryReference);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(revised).Code);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(retired).Code);
+        Assert.Empty(new AggregateScenario<DeclaredSystemInstance>(replayed).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseDeclarationAndStaleRevisionGivenReplayedHistoryAfterLaterFacts()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var instanceId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var seed = new DeclaredSystemInstance(tenantId, instanceId);
+        Assert.True(seed.Declare(applicationId, "Production", "production", null, null, actorId, "Manager",
+            NativeFacts.Now).IsSuccess);
+        Assert.Null(seed.Revise(1, "Production east", null, null, "Moved.", actorId, "Manager",
+            NativeFacts.Now.AddMinutes(1)));
+        var replayed = NativeFacts.Replay(new DeclaredSystemInstance(tenantId, instanceId), NativeFacts.Raised(seed));
+
+        // Act
+        var retry = replayed.Declare(applicationId, "Production", "production", null, null, actorId, "Manager",
+            NativeFacts.Now);
+        var stale = replayed.Revise(1, "Production west", null, null, "Competing.", actorId, "Manager",
+            NativeFacts.Now.AddMinutes(2));
+
+        // Assert
+        Assert.False(retry.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, retry.Error!.Kind);
+        Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(stale).Code);
+        Assert.Equal("Production east", replayed.Name);
+        Assert.Equal(2, replayed.Revision);
+        Assert.Empty(new AggregateScenario<DeclaredSystemInstance>(replayed).PendingEvents);
     }
 }
