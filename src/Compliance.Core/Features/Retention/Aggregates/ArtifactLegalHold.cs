@@ -88,10 +88,14 @@ public sealed class ArtifactLegalHold : Aggregate
         ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        ArgumentNullException.ThrowIfNull(operationResult);
+        if (operation.LogicalId != Id || operation.LogicalId != Acceptance.SelectedLogicalId)
+            return ArtifactRetentionRules.Invalid("The hold identity is its exact native creation operation.");
         if (ArtifactRetentionRules.Replay(Acceptance, operation) is { } retry)
             return retry;
-        if (operation.LogicalId != Id ||
-            !ArtifactRetentionRules.ValidOperation(operation, Stream, "PlaceArtifactLegalHold", 0))
+        if (!ArtifactRetentionRules.ValidOperation(operation, Stream, "PlaceArtifactLegalHold", 0))
             return ArtifactRetentionRules.Invalid("The hold identity is its exact native creation operation.");
         var prepared = PreparePlace(source, 0, reason);
         if (!prepared.IsSuccess)
@@ -105,6 +109,11 @@ public sealed class ArtifactLegalHold : Aggregate
         ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        ArgumentNullException.ThrowIfNull(operationResult);
+        if (operation.LogicalId != Acceptance.SelectedLogicalId)
+            return ArtifactRetentionRules.Invalid("A hold release is its exact native operation at the original revision.");
         if (ArtifactRetentionRules.Replay(Acceptance, operation) is { } retry)
             return retry;
         if (!ArtifactRetentionRules.ValidOperation(operation, Stream, "ReleaseArtifactLegalHold", 1))
