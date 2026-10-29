@@ -1,0 +1,48 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "TenantInvitation decides: an invitation lives 7 days and is accepted only when the invitee signs in through a trusted issuer with the invited verified email address; affiliation is client_personnel, firm_staff or guest, a guest names at least one distinct program, and the first administrator must be client personnel.",
+    "code": "Creation is refused unless expiresAt equals issue time plus exactly 7 days. Acceptance is refused with no fact when the email differs from the invited email, the token hash differs, the time is at or after expiresAt, or the invitation was already accepted (forbidden). The aggregate receives only an email string and a token; trusted-issuer sign-in and email verification are checked by the calling handler before the aggregate runs. The accepted fact repeats email, affiliation, role, administrator, guest scope and inviter, all derivable from the invited fact in the same stream; the accepted fact adds user id and accepted-at.",
+    "tests": "Creation with expiry 30 days or 1 day after issue is refused with no fact. A second acceptance by a different user after a first is refused with no fact and the first user stays accepted. An exact retry of either operation after both facts is a replay with no new fact; changed intent under the same logical id is a conflict."
+  },
+  "questions": {
+    "lifetime_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "Do the stated creation tests (expiry 30 days and 1 day refused, no fact) assert the rule 'an invitation lives 7 days' at the aggregate level?",
+      "criteria": {
+        "true": "Refusing any expiry other than 7 days enforces the stated lifetime.",
+        "false": "The tests do not assert the stated lifetime."
+      }
+    },
+    "second_accept_consistent": {
+      "type": "noul",
+      "instructions": "Is refusing a second acceptance by a different user with no new fact consistent with 'accepted' at most once by the invited recipient?",
+      "criteria": {
+        "true": "A single accepting user is kept; the refusal appends nothing.",
+        "false": "A second acceptance should append a fact."
+      }
+    },
+    "duplicated_terms_disposition": {
+      "type": "choice",
+      "instructions": "The accepted fact repeats offer terms derivable from the invited fact in the same stream. Per policy payloads carry only business facts not already carried by stream identity or metadata, but changing it is a wire change. Which disposition applies to the aggregate stage?",
+      "options": {
+        "keep_for_now": "Keep the fields and record the duplication for a later wire-change decision.",
+        "remove_now": "Remove the duplicated fields from the event in this stage.",
+        "needs_source_resolution": "A source decision is required."
+      },
+      "criteria": {
+        "keep_for_now": "Consumers read the fact standalone and event payload changes are owned by a shared schema stage.",
+        "remove_now": "The aggregate stage may change the wire contract unilaterally.",
+        "needs_source_resolution": "The model is silent on the duplicated fields."
+      }
+    },
+    "issuer_premise": {
+      "type": "noul",
+      "instructions": "Is it true that the aggregate satisfies the rule's trusted-issuer and verified-email clause by checking the supplied email equals the invited email, given that the handler verifies issuer and verification before calling it?",
+      "criteria": {
+        "true": "The aggregate decides recipient match; issuer trust is established upstream.",
+        "false": "The aggregate itself must receive and check issuer and verification."
+      }
+    }
+  }
+}

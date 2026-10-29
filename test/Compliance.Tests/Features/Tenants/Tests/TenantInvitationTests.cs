@@ -194,7 +194,7 @@ public sealed class TenantInvitationTests
 
         // Act
         var error = Record.Exception(() => new AggregateScenario<TenantInvitation>(replay).Given(
-            DomainEventSeed.Attach(invited, replay.Id, 1),
+            DomainEventSeed.Attach(Fresh(invited), replay.Id, 1),
             DomainEventSeed.Attach(acceptedAfterExpiry, replay.Id, 2)));
 
         // Assert
@@ -330,4 +330,170 @@ public sealed class TenantInvitationTests
         Assert.True(guestAfterEnd);
         Assert.False(new TenantInvitation(tenantId, Uuid.CreateVersion4()).IsExpiredAt(Now.AddYears(1)));
     }
+
+    [Fact]
+    public void ShouldRejectCreationGivenExpiryOtherThanSevenDayLifetime()
+    {
+        // Arrange
+        var invitationId = Uuid.CreateVersion4();
+        var invitation = new TenantInvitation(Uuid.CreateVersion4(), invitationId);
+        var scenario = new AggregateScenario<TenantInvitation>(invitation);
+
+        // Act
+        var longer = invitation.Invite(invitationId, TenantInvitationFacts.Member(), "t", expiresAt: Now.AddDays(30));
+        var shorter = invitation.Invite(invitationId, TenantInvitationFacts.Member(), "t", expiresAt: Now.AddDays(1));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(longer.Error).Kind);
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(shorter.Error).Kind);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectCreationGivenForeignOperationOrMissingMailboxClaimOrScope()
+    {
+        // Arrange
+        var invitationId = Uuid.CreateVersion4();
+        var invitation = new TenantInvitation(Uuid.CreateVersion4(), invitationId);
+        var scenario = new AggregateScenario<TenantInvitation>(invitation);
+        var guestTerms = TenantInvitationFacts.Guest([Uuid.CreateVersion4()],
+            DateOnly.FromDateTime(Now.UtcDateTime).AddDays(5));
+
+        // Act
+        var foreign = invitation.Invite(TenantInvitationFacts.Provenance(invitation, Uuid.CreateVersion4()),
+            TenantInvitationFacts.Response(), TenantInvitationFacts.Member(), TenantInvitationFacts.HashOf("t"),
+            "current", Now.AddDays(7), Now, 1, null);
+        var noClaim = invitation.Invite(invitationId, TenantInvitationFacts.Member(), "t", generation: 0);
+        var guestWithoutScope = invitation.Invite(TenantInvitationFacts.Provenance(invitation, invitationId),
+            TenantInvitationFacts.Response(), guestTerms, TenantInvitationFacts.HashOf("t"), "current",
+            Now.AddDays(7), Now, 1, null);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(foreign.Error).Kind);
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(noClaim.Error).Kind);
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(guestWithoutScope.Error).Kind);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectSecondAcceptanceGivenInvitationAlreadyAcceptedByAnotherUser()
+    {
+        // Arrange
+        var invitationId = Uuid.CreateVersion4();
+        var firstUser = Uuid.CreateVersion4();
+        var invitation = new TenantInvitation(Uuid.CreateVersion4(), invitationId);
+        var scenario = new AggregateScenario<TenantInvitation>(invitation);
+        Assert.True(invitation.Invite(invitationId, TenantInvitationFacts.Member(), "token").IsSuccess);
+        Assert.True(invitation.Accept(invitationId, firstUser, "member@example.com", "token").IsSuccess);
+
+        // Act
+        var competing = invitation.Accept(invitationId, Uuid.CreateVersion4(), "member@example.com", "token");
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(competing.Error).Kind);
+        Assert.Single(scenario.PendingEvents.OfType<TenantInvitationAccepted>());
+        Assert.Equal(firstUser, invitation.AcceptedUserId);
+    }
+
+    [Fact]
+    public void ShouldRejectAcceptanceGivenGuestScopeDiffersFromOffer()
+    {
+        // Arrange
+        var invitationId = Uuid.CreateVersion4();
+        var invitation = new TenantInvitation(Uuid.CreateVersion4(), invitationId);
+        var scenario = new AggregateScenario<TenantInvitation>(invitation);
+        Assert.True(invitation.Invite(invitationId, TenantInvitationFacts.Guest([Uuid.CreateVersion4()],
+            DateOnly.FromDateTime(Now.UtcDateTime).AddDays(5)), "guest-token").IsSuccess);
+        var widened = TenantInvitationFacts.Scope("TenantMemberInvited.GuestProgramIdsManifest.v1", new string('6', 64));
+
+        // Act
+        var result = invitation.Accept(invitationId, Uuid.CreateVersion4(), "guest@example.com", "guest-token",
+            scope: widened);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.DoesNotContain(scenario.PendingEvents, item => item is TenantInvitationAccepted);
+    }
+
+    [Fact]
+    public void ShouldRejectAcceptanceGivenTimeBeforeInvitationWasIssued()
+    {
+        // Arrange
+        var invitationId = Uuid.CreateVersion4();
+        var invitation = new TenantInvitation(Uuid.CreateVersion4(), invitationId);
+        var scenario = new AggregateScenario<TenantInvitation>(invitation);
+        Assert.True(invitation.Invite(invitationId, TenantInvitationFacts.Member(), "token").IsSuccess);
+
+        // Act
+        var result = invitation.Accept(invitationId, Uuid.CreateVersion4(), "member@example.com", "token",
+            Now.AddMinutes(-1));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.DoesNotContain(scenario.PendingEvents, item => item is TenantInvitationAccepted);
+    }
+
+    [Fact]
+    public void ShouldReplayOriginalDecisionGivenExactRetryAfterLaterAcceptanceAndConflictGivenChangedIntent()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var invitationId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var original = new TenantInvitation(tenantId, invitationId);
+        var originalScenario = new AggregateScenario<TenantInvitation>(original);
+        Assert.True(original.Invite(invitationId, TenantInvitationFacts.Member(), "token").IsSuccess);
+        Assert.True(original.Accept(invitationId, userId, "member@example.com", "token").IsSuccess);
+        var invited = Assert.Single(originalScenario.PendingEvents.OfType<TenantMemberInvited>());
+        var accepted = Assert.Single(originalScenario.PendingEvents.OfType<TenantInvitationAccepted>());
+        var creationReplay = new TenantInvitation(tenantId, invitationId, invitationId);
+        var acceptanceReplay = new TenantInvitation(tenantId, invitationId, TenantInvitationIds.AcceptanceOf(invitationId));
+
+        // Act
+        new AggregateScenario<TenantInvitation>(creationReplay).Given(
+            DomainEventSeed.Attach(Fresh(invited), creationReplay.Id, 1),
+            DomainEventSeed.Attach(Fresh(accepted), creationReplay.Id, 2));
+        new AggregateScenario<TenantInvitation>(acceptanceReplay).Given(
+            DomainEventSeed.Attach(Fresh(invited), acceptanceReplay.Id, 1),
+            DomainEventSeed.Attach(Fresh(accepted), acceptanceReplay.Id, 2));
+        var exactCreation = creationReplay.Acceptance.Decide(AcceptedOperationBinding.Of(invited.Operation));
+        var changedCreation = creationReplay.Acceptance.Decide(AcceptedOperationBinding.Of(
+            invited.Operation with { AuthoredIntentSha256 = new string('c', 64) }));
+        var exactAcceptance = acceptanceReplay.Acceptance.Decide(AcceptedOperationBinding.Of(accepted.Operation));
+
+        // Assert
+        Assert.True(creationReplay.IsAccepted);
+        Assert.Equal(userId, creationReplay.AcceptedUserId);
+        Assert.Equal(NativeAcceptanceDecision.Replayed, exactCreation);
+        Assert.Equal(NativeAcceptanceDecision.Conflict, changedCreation);
+        Assert.Equal(NativeAcceptanceDecision.Replayed, exactAcceptance);
+    }
+
+    [Fact]
+    public void ShouldSelectNoDecisionGivenUnacceptedOperationOnValidHistory()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var invitationId = Uuid.CreateVersion4();
+        var original = new TenantInvitation(tenantId, invitationId);
+        var originalScenario = new AggregateScenario<TenantInvitation>(original);
+        Assert.True(original.Invite(invitationId, TenantInvitationFacts.Member(), "token").IsSuccess);
+        var invited = Assert.Single(originalScenario.PendingEvents.OfType<TenantMemberInvited>());
+        var replay = new TenantInvitation(tenantId, invitationId, TenantInvitationIds.AcceptanceOf(invitationId));
+
+        // Act
+        new AggregateScenario<TenantInvitation>(replay).Given(DomainEventSeed.Attach(Fresh(invited), replay.Id, 1));
+        var decision = replay.Acceptance.Decide(AcceptedOperationBinding.Of(TenantInvitationFacts.Provenance(replay,
+            TenantInvitationIds.AcceptanceOf(invitationId), "AcceptTenantInvitation")));
+
+        // Assert
+        Assert.True(replay.IsCreated);
+        Assert.False(replay.IsAccepted);
+        Assert.Equal(NativeAcceptanceDecision.None, decision);
+    }
+
+    static TEvent Fresh<TEvent>(TEvent fact)
+        where TEvent : DomainEvent => (TEvent)System.Text.Json.JsonSerializer.Deserialize(
+            System.Text.Json.JsonSerializer.Serialize(fact, fact.GetType(), ComplianceCoreJsonContext.Default),
+            fact.GetType(), ComplianceCoreJsonContext.Default)!;
 }

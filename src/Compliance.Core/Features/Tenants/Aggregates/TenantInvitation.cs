@@ -162,7 +162,7 @@ public sealed class TenantInvitation : Aggregate
                 "A built-in role requires client personnel and a supported role value.");
         if (_created)
             return Failure(RequestErrorKind.Conflict, "The invitation already exists with different terms.");
-        if (!IsTokenHash(tokenHash) || expiresAt <= now || terms.InvitedBy == Uuid.Empty || now == default)
+        if (!IsTokenHash(tokenHash) || expiresAt != now + Lifetime || terms.InvitedBy == Uuid.Empty || now == default)
             return Failure(RequestErrorKind.Validation, "A valid invitation is required.");
         return Result.Success;
     }

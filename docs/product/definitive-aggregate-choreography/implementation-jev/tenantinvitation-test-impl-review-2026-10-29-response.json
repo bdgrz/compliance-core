@@ -1,0 +1,34 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "lifetime_test_asserts_invariant": {
+        "type": "noul",
+        "noul": 0.95
+      },
+      "second_accept_consistent": {
+        "type": "noul",
+        "noul": 0.95
+      },
+      "duplicated_terms_disposition": {
+        "type": "choice",
+        "choice": "keep_for_now",
+        "confidence": 0.74,
+        "probabilities": {
+          "keep_for_now": 0.83,
+          "remove_now": 0.1,
+          "needs_source_resolution": 0.07
+        }
+      },
+      "issuer_premise": {
+        "type": "noul",
+        "noul": 0.88
+      }
+    },
+    "usage": {
+      "input_tokens": 931,
+      "output_tokens": 114
+    }
+  }
+}
