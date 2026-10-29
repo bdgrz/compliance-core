@@ -168,6 +168,9 @@ public sealed class AccessReviewDecisionBatch : Aggregate
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A materialization is recorded on the batch's own stream."));
+        if (operation.RootOperationId != _decisionBatchId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A materialization is rooted in the batch id."));
         if (_accepted is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The batch is already materialized."));
         RaiseEvent(new AccessReviewDecisionBatchAccepted(Stream, 0, AccessReviewEffects.Generation, intent, null,
@@ -182,6 +185,9 @@ public sealed class AccessReviewDecisionBatch : Aggregate
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(itemProofs);
         ArgumentNullException.ThrowIfNull(operationResult);
+        if (operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A batch fact is recorded on the batch's own stream."));
         if (_accepted is null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The batch has not been materialized yet.", true));
@@ -198,6 +204,9 @@ public sealed class AccessReviewDecisionBatch : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(failureProof);
+        if (operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A batch fact is recorded on the batch's own stream."));
         if (_accepted is null || _published is not null || _cancellation is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a materialized, unpublished batch accepts one cancellation."));
@@ -211,6 +220,9 @@ public sealed class AccessReviewDecisionBatch : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(itemFenceProofs);
+        if (operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A batch fact is recorded on the batch's own stream."));
         if (_cancellation is null || _canceled is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only an accepted, uncompleted cancellation completes."));
