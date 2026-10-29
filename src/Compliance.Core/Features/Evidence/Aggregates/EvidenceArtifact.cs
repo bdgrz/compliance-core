@@ -47,6 +47,7 @@ public sealed class EvidenceArtifact : Aggregate
 {
     readonly Uuid _tenantId;
     EvidenceArtifactRegistered? _registration;
+    EvidenceArtifactInspected? _inspection;
     EvidenceArtifactQuarantineReleased? _quarantineRelease;
     long _revision;
 
@@ -73,6 +74,7 @@ public sealed class EvidenceArtifact : Aggregate
         });
         On<EvidenceArtifactInspected>(ev =>
         {
+            _inspection = ev;
             State = ev.State;
             StateReason = ev.Reason;
             _revision++;
@@ -104,8 +106,6 @@ public sealed class EvidenceArtifact : Aggregate
     {
         if (!IsCreated)
             return CommandFailure.MissingRecord("The evidence artifact was not found.");
-        if (State != EvidenceArtifactStates.PendingInspection)
-            return CommandFailure.StateConflict("The evidence artifact has already been inspected.");
         var (state, reason) = outcome switch
         {
             EvidenceInspectionOutcome.Clean => (EvidenceArtifactStates.Available, (string?)null),
@@ -117,6 +117,14 @@ public sealed class EvidenceArtifact : Aggregate
         };
         if (state is null)
             return CommandFailure.InvalidContent("The inspection outcome is not recognized.");
+        // The same outcome at the same instant is an exact retry of the committed inspection, even after later
+        // facts such as a quarantine release or a download.
+        if (_inspection is { } inspected)
+            return inspected.State == state && inspected.Reason == reason && inspected.InspectedAt == inspectedAt
+                ? null
+                : CommandFailure.StateConflict("The evidence artifact has already been inspected.");
+        if (inspectedAt == default || _registration is null || inspectedAt < _registration.RegisteredAt)
+            return CommandFailure.InvalidContent("An inspection cannot precede the artifact registration.");
         RaiseEvent(new EvidenceArtifactInspected(_tenantId, Id, state, reason, inspectedAt));
         return null;
     }
@@ -169,10 +177,11 @@ public sealed class EvidenceArtifact : Aggregate
             return CommandFailure.MissingRecord("The evidence artifact was not found.");
         if (_quarantineRelease is { } prior)
             return prior.RequestId == requestId && prior.Rationale == rationale?.Trim() &&
-                   prior.DecidedBy == decidedBy && prior.RescanState == "clean"
+                   prior.DecidedBy == decidedBy && prior.RescanState == "clean" && prior.RescannedAt == rescannedAt &&
+                   prior.DecidedAt == decidedAt
                 ? null
                 : CommandFailure.StateConflict("The quarantine release decision is immutable.");
-        if (State != EvidenceArtifactStates.Quarantined)
+        if (State != EvidenceArtifactStates.Quarantined || _inspection is null)
             return CommandFailure.StateConflict("Only a quarantined evidence artifact can be released.");
         if (expectedRevision != _revision)
             return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("evidence artifact",
@@ -181,9 +190,11 @@ public sealed class EvidenceArtifact : Aggregate
         if (requestId == Uuid.Empty || string.IsNullOrWhiteSpace(rationale) ||
             rationale.Length > EvidenceRules.MaximumTextLength || decidedBy is not
             { Kind: "member", Id.Length: > 0, Display.Length: > 0 and <= 200 } ||
-            rescannedAt == default || decidedAt == default || rescannedAt > decidedAt)
+            !Uuid.TryParse(decidedBy.Id, out var memberId) || memberId == Uuid.Empty ||
+            rescannedAt == default || decidedAt == default || rescannedAt > decidedAt ||
+            rescannedAt < _inspection.InspectedAt)
             return CommandFailure.InvalidContent(
-                "A quarantine release requires a clean attributed rescan and a bounded rationale.");
+                "A quarantine release requires a member decision, a clean rescan after the inspection and a bounded rationale.");
         RaiseEvent(new EvidenceArtifactQuarantineReleased(_tenantId, Id, _revision + 1,
             requestId, "clean", rescannedAt, rationale, decidedBy, decidedAt));
         return null;

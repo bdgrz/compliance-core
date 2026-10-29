@@ -1,0 +1,50 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ArtifactDownloadGrant",
+    "rule": "One exact grant owns one terminal outcome for a protected artifact download command: an issued ticket or a cancellation fence, never both. The original ticket never renews. Catalog process A021: a driver abort or definite receiver rejection cancels the grant and fences delayed issuance. Its outcome guards read: issued event 'none_outstanding: Grant not already issued'; canceled event 'none_outstanding: Cancellation not yet recorded (retry no-op)'. The catalog does not say what an abort does when the grant is already issued.",
+    "code_behavior": {
+      "cancel_after_issue": "Cancel on an already issued grant returns Success and appends no event; the grant stays issued. Previously it returned Conflict. A handler cannot distinguish the cancel having been recorded from a no-op.",
+      "cancel_after_cancel": "Exact retry of the same cancel (same generation and refs) returns Success with no event; a cancel with a different generation returns Conflict.",
+      "issue_after_cancel": "Issue on a canceled grant returns Conflict and appends no event.",
+      "payload_identity": "EvidenceArtifactDownloadIssuedV2 carries TenantId, ArtifactId and GrantId, which the stream address and the derived identity already determine. The reducer validates they equal the owner values. The approved catalog lists the event with these fields.",
+      "test_scenario_fence": "Test: cancel valid grant, then issue valid-looking ticket on it. Expected: issue refused (Conflict), grant canceled not issued, exactly one pending event (the cancellation)."
+    }
+  },
+  "questions": {
+    "cancel_after_issue_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.cancel_after_issue`, what should the aggregate return when an abort arrives for a grant already issued?",
+      "criteria": {
+        "success_no_event": "Return success with no event; the abort is moot because the terminal outcome already exists and the aggregate cannot cancel an issued ticket.",
+        "conflict_refusal": "Return a conflict; the abort cannot be honored and the caller must learn the grant was already issued.",
+        "needs_source_resolution": "The rule text does not decide this and the catalog owner must resolve it."
+      }
+    },
+    "cancel_after_issue_premise": {
+      "type": "noul",
+      "instructions": "The rule in `state.rule` guards the cancellation on 'Grant not already issued' but is silent on what the abort returns when the grant is issued.",
+      "criteria": {
+        "true": "The rule text leaves the result of an abort on an issued grant unspecified.",
+        "false": "The rule text explicitly states the result of an abort on an issued grant."
+      }
+    },
+    "payload_repeats_identity": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.payload_identity`, what should the aggregate stage do about TenantId, ArtifactId and GrantId in the issued payload?",
+      "criteria": {
+        "keep_as_cataloged": "Keep them; the approved catalog lists the event with these fields and this stage must not change it.",
+        "remove_from_payload": "Remove them because stream identity carries them.",
+        "needs_source_resolution": "The catalog and code disagree or the rule is silent."
+      }
+    },
+    "fence_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in `state.code_behavior.test_scenario_fence` proves that a canceled grant can never be issued.",
+      "criteria": {
+        "true": "The scenario refuses the issue with no new fact and leaves the grant canceled.",
+        "false": "The scenario could pass even if the issue were accepted after cancellation."
+      }
+    }
+  }
+}

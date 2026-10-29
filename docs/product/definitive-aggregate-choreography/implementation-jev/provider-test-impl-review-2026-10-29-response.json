@@ -1,0 +1,34 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "intent_test": {
+        "type": "noul",
+        "noul": 0.9
+      },
+      "fence_test": {
+        "type": "noul",
+        "noul": 0.8
+      },
+      "canceled_creation": {
+        "type": "choice",
+        "choice": "keep_refuse",
+        "confidence": 0.94,
+        "probabilities": {
+          "keep_refuse": 0.96,
+          "allow_retry": 0.02,
+          "needs_source_resolution": 0.02
+        }
+      },
+      "tenant_guard": {
+        "type": "noul",
+        "noul": 0.89
+      }
+    },
+    "usage": {
+      "input_tokens": 918,
+      "output_tokens": 101
+    }
+  }
+}

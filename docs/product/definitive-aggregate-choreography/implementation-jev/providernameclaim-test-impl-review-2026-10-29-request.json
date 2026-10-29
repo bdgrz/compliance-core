@@ -1,0 +1,43 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "ProviderNameClaim: one normalized active provider name per tenant is held by at most one provider stream, tagged with the pinning generation. A holder may re-pin for a later generation; a different provider is refused; a release only takes effect for the exact holder and generation. Identity is UUIDv5 of (tenantId, normalizedName).",
+    "code": "Claim/Release refuse (Validation, no event) a holder that is not a provider stream of the same tenant with a UUID resource. AddressOf throws for empty or non-normalized names. Refused claims (name taken, superseded generation) and refused releases (free name, stale generation) append nothing. The claimed and released events carry Owner, Revision, Generation, Intent and operation provenance; no event for refusals. Exact retry of a committed operation is answered by NativeAcceptance as Replayed.",
+    "tests": "Taken name refuses a second provider with Conflict and no new pending event. Same holder with lower generation is refused. Delayed release at generation 1 after re-pin to 2 is refused and the holder stays. Exact claim retry after a later release decides Replayed; changed intent decides Conflict. Replay of claim history restores holder and generation."
+  },
+  "questions": {
+    "competing_test": {
+      "type": "noul",
+      "instructions": "Does the test where provider A holds the name and provider B claims it, resulting in Conflict with no new pending event and A unchanged, assert that at most one provider holds a name?",
+      "criteria": {
+        "true": "The second claimant is refused without appending a fact.",
+        "false": "The test does not show single-holder exclusivity."
+      }
+    },
+    "delayed_release_test": {
+      "type": "noul",
+      "instructions": "Does the test where the holder re-pins from generation 1 to 2 and a delayed release at generation 1 is refused with the holder retained assert that a release only takes effect for the exact holder and generation?",
+      "criteria": {
+        "true": "The stale release is refused and the name stays held.",
+        "false": "The test does not show generation-exact release."
+      }
+    },
+    "refusal_event": {
+      "type": "choice",
+      "instructions": "Refused claims and releases on a name claim (name taken, stale generation, free name) currently append no event. Should the model add a rejection event for them?",
+      "criteria": {
+        "keep_no_event": "A negative outcome alone creates no event; the owner decision gates nothing durable.",
+        "add_to_model": "A rejection fact should be registered in the catalog.",
+        "needs_source_resolution": "The sources do not decide it."
+      }
+    },
+    "holder_validation": {
+      "type": "noul",
+      "instructions": "Is refusing a holder that is not a provider stream of the same tenant consistent with the rule that a provider name is held by a provider stream?",
+      "criteria": {
+        "true": "Refusing non-provider or foreign-tenant holders enforces the invariant.",
+        "false": "It adds a rule the invariant does not state."
+      }
+    }
+  }
+}

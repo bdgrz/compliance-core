@@ -1,0 +1,52 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "ReadinessAssessment: one immutable assessment (rule version, as-of, frozen inputs, findings, gaps) is computed at most once per assessment id, at the assessment's own revision one, on its own stream. Another operation after it was recorded is a conflict. Exact retry of the committed operation is acknowledged by acceptance without a new fact; the same logical id with changed intent conflicts. Adoption and the latest pointer belong to ProgramReadiness.",
+    "code": "Record refuses (Conflict) when already recorded, refuses (Validation) an operation whose owner is not this stream, otherwise raises ReadinessAssessmentRecorded at revision 1. The event payload also carries TenantId, ProgramId, Revision and AssessmentId, which repeat the stream identity; the reconciled catalog events.md keeps the event with these fields. Record does not validate the rule version string; the model assigns rule-version support to the run process.",
+    "tests": "Tests: identity differs by assessment and by program; first Record appends exactly one revision-1 event; second Record by another operation -> Conflict and no new event; operation owned by another assessment -> Validation and no event; replay of the recorded fact then exact acceptance -> Replayed, changed intent hash -> Conflict, further Record -> Conflict."
+  },
+  "questions": {
+    "tests_cover_invariant": {
+      "type": "noul",
+      "instructions": "Do the listed tests together exercise the stated invariant: once-only at revision one, own-stream operation, retry and changed intent?",
+      "criteria": {
+        "true": "Once-only, revision one, foreign operation, exact retry and changed intent are all exercised.",
+        "false": "Important parts of the rule are untested."
+      }
+    },
+    "second_conflict": {
+      "type": "noul",
+      "instructions": "A second Record by a different operation after the assessment was recorded returns Conflict and appends nothing. Is this consistent with the rule?",
+      "criteria": {
+        "true": "Consistent with the once-only invariant.",
+        "false": "Inconsistent."
+      }
+    },
+    "duplicate_identity_fields": {
+      "type": "choice",
+      "instructions": "The event payload repeats TenantId, ProgramId, AssessmentId and Revision that stream identity already carries, though the approved catalog keeps them. What should this review do?",
+      "criteria": {
+        "keep_per_catalog": "The approved catalog retains these fields so leave them and do not change code.",
+        "remove": "The fields are redundant and should be removed from the payload.",
+        "needs_source_resolution": "The model text is silent or ambiguous and a source decision is needed."
+      }
+    },
+    "duplicate_premise": {
+      "type": "noul",
+      "instructions": "Premise: the approved catalog event definition for ReadinessAssessmentRecorded retains the identity fields, so retaining them is not a discrepancy for this aggregate review.",
+      "criteria": {
+        "true": "The catalog retains them.",
+        "false": "The catalog does not retain them."
+      }
+    },
+    "rule_version_unvalidated": {
+      "type": "choice",
+      "instructions": "Record does not check the rule version string; the model says rule-version support is judged by the run process before computing. Should the aggregate validate it?",
+      "criteria": {
+        "keep_in_run_process": "The run process owns it; the aggregate stays without the check.",
+        "add_aggregate_guard": "The aggregate must also guard it.",
+        "needs_source_resolution": "Unclear from the sources."
+      }
+    }
+  }
+}

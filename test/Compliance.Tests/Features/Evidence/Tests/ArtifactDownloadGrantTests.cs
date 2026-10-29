@@ -1,7 +1,9 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Events;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Tests;
@@ -52,7 +54,7 @@ public sealed class ArtifactDownloadGrantTests
     }
 
     [Fact]
-    public void ShouldRefuseCancellationAfterIssueGivenOneTerminalGrantOutcome()
+    public void ShouldTreatCancellationAsNoOpGivenIssuedGrantTerminalOutcome()
     {
         // Arrange
         var grant = new ArtifactDownloadGrant(TenantId, ArtifactId, CommandId);
@@ -64,7 +66,7 @@ public sealed class ArtifactDownloadGrantTests
         var canceled = grant.Cancel(1, operation, Ref("intent"), Ref("source-proofs"), Ref("result"));
 
         // Assert
-        Assert.False(canceled.IsSuccess);
+        Assert.True(canceled.IsSuccess);
         Assert.True(grant.IsIssued);
         Assert.False(grant.IsCanceled);
         Assert.Single(new AggregateScenario<ArtifactDownloadGrant>(grant).PendingEvents);
@@ -92,6 +94,98 @@ public sealed class ArtifactDownloadGrantTests
         Assert.False(changed.IsSuccess);
         Assert.Same(result, grant.Issued!.OperationResult);
         Assert.Single(new AggregateScenario<ArtifactDownloadGrant>(grant).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldAppendNothingGivenInvalidIssueOrCancellation()
+    {
+        // Arrange
+        var grant = new ArtifactDownloadGrant(TenantId, ArtifactId, CommandId);
+        var operation = Operation(grant);
+
+        // Act
+        var wrongRequest = grant.Issue(Uuid.CreateVersion4(), new string('a', 64), 10, "Review evidence", Actor,
+            Now, operation, Ref("intent"), Ref("ticket"));
+        var badHash = grant.Issue(CommandId, new string('A', 64), 10, "Review evidence", Actor, Now,
+            operation, Ref("intent"), Ref("ticket"));
+        var emptyLength = grant.Issue(CommandId, new string('a', 64), 0, "Review evidence", Actor, Now,
+            operation, Ref("intent"), Ref("ticket"));
+        var badGeneration = grant.Cancel(0, operation, Ref("intent"), Ref("source-proofs"), Ref("result"));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, wrongRequest.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, badHash.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, emptyLength.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, badGeneration.Error?.Kind);
+        Assert.Empty(new AggregateScenario<ArtifactDownloadGrant>(grant).PendingEvents);
+        Assert.False(grant.IsIssued);
+        Assert.False(grant.IsCanceled);
+    }
+
+    [Fact]
+    public void ShouldReplayCancellationGivenExactRetryAndRefuseChangedGeneration()
+    {
+        // Arrange
+        var grant = new ArtifactDownloadGrant(TenantId, ArtifactId, CommandId);
+        var operation = Operation(grant);
+        var (intent, proofs, result) = (Ref("intent"), Ref("source-proofs"), Ref("result"));
+        Assert.True(grant.Cancel(1, operation, intent, proofs, result).IsSuccess);
+
+        // Act
+        var retry = grant.Cancel(1, operation, intent, proofs, result);
+        var changed = grant.Cancel(2, operation, intent, proofs, result);
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.Single(new AggregateScenario<ArtifactDownloadGrant>(grant).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRestoreIssuedTicketAndAcceptExactRetryGivenValidHistoryReplay()
+    {
+        // Arrange
+        var source = new ArtifactDownloadGrant(TenantId, ArtifactId, CommandId);
+        var operation = Operation(source);
+        var (intent, ticket) = (Ref("intent"), Ref("ticket"));
+        Assert.True(source.Issue(CommandId, new string('a', 64), 10, "Review evidence", Actor, Now, operation,
+            intent, ticket).IsSuccess);
+        var history = NativeFacts.Raised(source);
+        var replayed = new ArtifactDownloadGrant(TenantId, ArtifactId, CommandId);
+        new AggregateScenario<ArtifactDownloadGrant>(replayed).Given(history);
+
+        // Act
+        var retry = replayed.Issue(CommandId, new string('a', 64), 10, "Review evidence", Actor, Now, operation,
+            intent, ticket);
+        var cancel = replayed.Cancel(1, operation, intent, Ref("source-proofs"), Ref("result"));
+
+        // Assert
+        Assert.True(replayed.IsIssued);
+        Assert.False(replayed.IsCanceled);
+        Assert.True(retry.IsSuccess);
+        Assert.True(cancel.IsSuccess);
+        Assert.Equal(ticket, replayed.Issued!.OperationResult);
+    }
+
+    [Fact]
+    public void ShouldRestoreCancellationAndFenceIssueGivenValidHistoryReplay()
+    {
+        // Arrange
+        var source = new ArtifactDownloadGrant(TenantId, ArtifactId, CommandId);
+        var operation = Operation(source);
+        Assert.True(source.Cancel(1, operation, Ref("intent"), Ref("source-proofs"), Ref("result")).IsSuccess);
+        var history = NativeFacts.Raised(source);
+        var replayed = new ArtifactDownloadGrant(TenantId, ArtifactId, CommandId);
+        new AggregateScenario<ArtifactDownloadGrant>(replayed).Given(history);
+
+        // Act
+        var issue = replayed.Issue(CommandId, new string('a', 64), 10, "Review evidence", Actor, Now, operation,
+            Ref("intent"), Ref("ticket"));
+
+        // Assert
+        Assert.True(replayed.IsCanceled);
+        Assert.False(replayed.IsIssued);
+        Assert.Equal(RequestErrorKind.Conflict, issue.Error?.Kind);
     }
 
     static OperationProvenance Operation(ArtifactDownloadGrant grant) => new(CommandId, CommandId, null,

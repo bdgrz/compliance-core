@@ -1,0 +1,41 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "EvidenceArtifact",
+    "rule": "Artifact content is unavailable until a clean inspection. Only a malware quarantine can be released, by an attributed member decision after a clean rescan; secret-detected or invalid rejection is final. Downloads only for available content bound to the registered hash and length.",
+    "code_behavior": {
+      "inspection_retry": "A second RecordInspection with the same outcome and same instant as the committed inspection returns success with no event, even after a later quarantine release or download; a different outcome or instant returns StateConflict.",
+      "release_retry": "ReleaseQuarantine repeated with the same request id, trimmed rationale, decider, rescan instant and decision instant after release returns success with no event, regardless of the revision supplied; any difference returns StateConflict.",
+      "inspection_time": "An inspection instant that is default or earlier than the registration instant is refused with InvalidContent and appends nothing.",
+      "test_scenario": "Test: release quarantine with request R, rationale 'Rescan clean', decider D; then repeat with (a) different rationale, (b) different request, (c) rescan instant one second later, (d) different decider D2. Expected: all four refused as StateConflict and no event appended."
+    }
+  },
+  "questions": {
+    "inspection_retry_outcome": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.inspection_retry, is the retry outcome consistent with the rule and standard exact-retry semantics?",
+      "criteria": {
+        "noop_on_exact_retry": "Exact retry of the committed fact is acknowledged without a new event and changed intent conflicts.",
+        "conflict_always": "Any second inspection should conflict, including exact retry.",
+        "needs_source_resolution": "The rule does not decide this."
+      }
+    },
+    "release_retry_outcome": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.release_retry, is treating a stale revision on an exact committed retry as success with no event correct?",
+      "criteria": {
+        "noop_ignoring_revision": "An exact retry of a committed decision is a no-op regardless of the revision supplied.",
+        "conflict_on_stale_revision": "A stale revision must conflict even for an exact retry.",
+        "needs_source_resolution": "The rule does not decide this."
+      }
+    },
+    "release_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in state.code_behavior.test_scenario proves that a committed quarantine release decision is immutable and that changed intent appends nothing."
+    },
+    "inspection_time_premise": {
+      "type": "noul",
+      "instructions": "Refusing an inspection earlier than the artifact registration (state.code_behavior.inspection_time) is consistent with the rule that content is unavailable until a legitimate clean inspection."
+    }
+  }
+}
