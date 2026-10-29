@@ -112,9 +112,16 @@ public sealed class EvidenceHandlingPolicy : Aggregate
         {
             if (!SameSourceIdentity(current, source))
                 return Conflict("The artifact content identity changed after its handling policy was assigned.");
+            if (expectedRevision < 0)
+                return StaleRevision();
+            if (expectedRevision < Revision)
+                return IsCommittedDecision(current.History[(int)expectedRevision], handlingClass,
+                    policyVersion, rationale, assignedBy)
+                    ? Result.Success
+                    : StaleRevision();
             if (current.HandlingClass == handlingClass && current.PolicyVersion == policyVersion)
-                return current.Rationale == rationale && current.AssignedBy == assignedBy &&
-                       current.AssignedAt == assignedAt && expectedRevision <= Revision
+                return expectedRevision == Revision && current.Rationale == rationale &&
+                       current.AssignedBy == assignedBy
                     ? Result.Success
                     : Conflict("The existing handling classification cannot be reassigned with changed intent.");
             if (expectedRevision != Revision)
@@ -214,6 +221,11 @@ public sealed class EvidenceHandlingPolicy : Aggregate
             ? null
             : new(RequestErrorKind.Validation, "The handling policy does not match its latest decision.");
     }
+
+    static bool IsCommittedDecision(EvidenceHandlingPolicyHistoryEntry entry, string handlingClass,
+        long policyVersion, string rationale, ActorReference assignedBy) =>
+        entry.HandlingClass == handlingClass && entry.PolicyVersion == policyVersion &&
+        entry.Rationale == rationale && entry.AssignedBy == assignedBy;
 
     static bool SameSourceIdentity(EvidenceHandlingPolicyView current,
         EvidenceHandlingPolicySourceSnapshot source) => current.Source == source.Source &&

@@ -1,0 +1,70 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "EvidenceHandlingPolicy",
+    "invariant": "One exact artifact identity has one current reviewed classification (public, internal, confidential, restricted), changed only at expected revision with attributed rationale.",
+    "rule": "Catalog: selected CommandId is bound to the exact artifact/content and policy assignment scope; generated clock values like AssignedAt are not part of intent. Expected revision is a concurrency precondition.",
+    "code_behavior": {
+      "retry_after_later": "Assign at expectedRevision lower than current revision succeeds with no new event when class, policy version, trimmed rationale and actor equal the decision committed at that revision; otherwise returns Conflict (stale revision). A fresh AssignedAt is ignored.",
+      "same_state_at_current": "Assign at expectedRevision equal to current revision with the same class, rationale and actor as the current decision returns success with no event. Same class with a different rationale or actor returns Conflict.",
+      "payload": "Both events (Assigned, Revised) carry a State snapshot repeating TenantId, ArtifactId (also SubjectId), Revision, AssignedBy (also ActorMemberId) and AssignedAt (also OccurredAt) plus the history list.",
+      "catalog_events": "The catalog lists ArtifactHandlingDownloadUseAuthorized and ArtifactHandlingDownloadUseSettled targeting this owner via reactors; the aggregate has neither. Task scope is aggregates only; reactors are a later stage."
+    },
+    "tests": "Tests seed Assigned then Revised, then call Assign with the earlier expected revision and same intent but later clock, asserting success, revision unchanged and pending event count unchanged; changed rationale asserts Conflict and no event."
+  },
+  "questions": {
+    "retry_after_later": {
+      "type": "choice",
+      "instructions": "Is `state.code_behavior.retry_after_later` consistent with `state.rule` and the invariant?",
+      "criteria": {
+        "consistent": "Exact retry of a committed decision is acknowledged without a new fact; changed intent conflicts.",
+        "should_conflict": "Any assign at a stale expected revision must conflict even when it matches the committed decision.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "same_state_at_current": {
+      "type": "choice",
+      "instructions": "Is `state.code_behavior.same_state_at_current` correct for the invariant?",
+      "criteria": {
+        "noop_success_correct": "Re-asserting the identical current decision is an idempotent no-op; a changed rationale/actor conflicts.",
+        "conflict_correct": "Any assign of the same class at current revision must conflict.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.tests` assert behavioral outcomes (success or conflict and whether a new fact was appended) and can fail.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    },
+    "catalog_events_disposition": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.catalog_events`, what is the right disposition for this aggregate-stage round?",
+      "criteria": {
+        "defer_to_reactor_stage": "Not an aggregate gap; record as later-stage reactor/receiver follow-up.",
+        "add_to_aggregate_now": "The aggregate must implement these events now.",
+        "remove_from_model": "The events should not exist.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_duplication": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.payload`, given the policy that payloads carry only business facts not already carried by stream identity or metadata, what is the disposition for this round when the baseline wire shape is retained and events cannot be changed here?",
+      "criteria": {
+        "report_for_versioned_event_change": "Report to the coordinator as an event payload change to consider; do not change in aggregate code.",
+        "keep_without_follow_up": "No follow-up needed.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_premise": {
+      "type": "noul",
+      "instructions": "The State snapshot in `state.code_behavior.payload` repeats fields already carried by the event identity or metadata.",
+      "criteria": {
+        "true": "It repeats them.",
+        "false": "It does not."
+      }
+    }
+  }
+}

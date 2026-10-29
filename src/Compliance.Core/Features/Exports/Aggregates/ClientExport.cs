@@ -163,10 +163,10 @@ public sealed class ClientExport : Aggregate
         if (required is null)
             return CommandFailure.MissingRecord("The attest collaboration package was not required by this export.");
         var prior = current.AttestPackageDeliveries.LastOrDefault(item => item.PackageId == packageId);
-        if (prior is not null && prior.Decision == decision && prior.Rationale == rationale && prior.Recipient == NullIfEmpty(recipient) &&
-                prior.DeliveryReference == NullIfEmpty(deliveryReference) && prior.RecordedByMemberId == actorMemberId &&
-                prior.RecordedByDisplay == Clean(actorDisplay) && prior.RecordedAt == recordedAt
-                )
+        if (current.AttestPackageDeliveries.Any(item => item.PackageId == packageId && item.Decision == decision &&
+                item.Rationale == rationale && item.Recipient == NullIfEmpty(recipient) &&
+                item.DeliveryReference == NullIfEmpty(deliveryReference) && item.RecordedByMemberId == actorMemberId &&
+                item.RecordedByDisplay == Clean(actorDisplay) && item.RecordedAt == recordedAt))
             return null;
         if (prior?.Decision == "delivered")
             return CommandFailure.StateConflict("A successful attest-package delivery decision is immutable.");
@@ -474,8 +474,8 @@ public sealed class ClientExport : Aggregate
     static bool SameBuildAttempt(ClientExportBuildAttemptView prior,
         ClientExportBuildResultContent result, ActorReference actor, DateTimeOffset at) =>
         prior.AttemptNumber == result.AttemptNumber && prior.Outcome == result.Outcome &&
-        prior.ArchiveArtifactId == result.ArchiveArtifactId && prior.ArchiveSha256 == result.ArchiveSha256 &&
-        prior.FailureCode == result.FailureCode && prior.ManifestId == result.ManifestId &&
+        prior.ArchiveArtifactId == result.ArchiveArtifactId && prior.ArchiveSha256 == (result.ArchiveSha256 is null ? null : NormalizeHash(result.ArchiveSha256)) &&
+        prior.FailureCode == result.FailureCode?.Trim().ToLowerInvariant() && prior.ManifestId == result.ManifestId &&
         prior.IncludedRecordCount == result.IncludedRecordCount && prior.WithheldRecordCount == result.WithheldRecordCount &&
         prior.SourceSnapshotId == result.SourceSnapshotId && prior.SourceSnapshotSha256 == NormalizeHash(result.SourceSnapshotSha256) &&
         prior.EffectiveCompletedBy == actor && prior.CompletedAt == at;

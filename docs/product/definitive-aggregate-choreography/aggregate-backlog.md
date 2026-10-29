@@ -56,16 +56,16 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 33 | `AdvisorHandoff` | P0 ([R2-08](https://github.com/bdgrz/compliance-core/issues/22)) | 16: `ArtifactDownloadGrant`, `EvidenceArtifact` | Partial: Selection bound (100) and Compliance Lead authorization belong to handler/validator stage |
 | 34 | `PolicyDistributionCampaign` | P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53)) | — | Partial: eventChangesNeeded: PolicyCampaignLaunched drops ActorMemberId and derives OwnerMemberId f |
 | 35 | `TrainingRequirement` | P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53)) | — | Done (focused aggregate scope, 2026-10-29) |
-| 36 | `EvidenceHandlingPolicy` | P1 ([R2-12](https://github.com/bdgrz/compliance-core/issues/55)) | 16: `ArtifactDownloadGrant`, `EvidenceArtifact` | Source present; verify |
-| 37 | `SystemDescription` | P1 ([T1-02](https://github.com/bdgrz/compliance-core/issues/25)) | — | Source present; verify |
-| 38 | `AuditorRequest` | P1 ([T1-04](https://github.com/bdgrz/compliance-core/issues/27))<br>P1 ([T3-03](https://github.com/bdgrz/compliance-core/issues/42)) | — | Source present; verify |
-| 39 | `ComplianceIncident` | P1 ([T2-07](https://github.com/bdgrz/compliance-core/issues/37)) | 37: `SystemDescription` | Source present; verify |
-| 40 | `SignificantChange` | P1 ([T2-07](https://github.com/bdgrz/compliance-core/issues/37)) | 37: `SystemDescription` | Source present; verify |
-| 41 | `AuditPopulation` | P1 ([T3-02](https://github.com/bdgrz/compliance-core/issues/41)) | — | Source present; verify |
-| 42 | `ClientExport` | P1 ([F1-01](https://github.com/bdgrz/compliance-core/issues/128)) | — | Source present; verify |
-| 43 | `TemplateApplication` | P1 ([F1-04](https://github.com/bdgrz/compliance-core/issues/131)) | — | Source present; verify |
-| 44 | `AccessPopulationException` | No direct story mapping | — | Source present; verify |
-| 45 | `AccessPrincipalClassification` | No direct story mapping | — | Source present; verify |
+| 36 | `EvidenceHandlingPolicy` | P1 ([R2-12](https://github.com/bdgrz/compliance-core/issues/55)) | 16: `ArtifactDownloadGrant`, `EvidenceArtifact` | Partial: Event payload State snapshot repeats TenantId/ArtifactId/Revision/AssignedBy/AssignedAt al |
+| 37 | `SystemDescription` | P1 ([T1-02](https://github.com/bdgrz/compliance-core/issues/25)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 38 | `AuditorRequest` | P1 ([T1-04](https://github.com/bdgrz/compliance-core/issues/27))<br>P1 ([T3-03](https://github.com/bdgrz/compliance-core/issues/42)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 39 | `ComplianceIncident` | P1 ([T2-07](https://github.com/bdgrz/compliance-core/issues/37)) | 37: `SystemDescription` | Partial: Tracker owner: update catalog baselineSourcePath to Features/Incidents/Aggregates/Complian |
+| 40 | `SignificantChange` | P1 ([T2-07](https://github.com/bdgrz/compliance-core/issues/37)) | 37: `SystemDescription` | Done (focused aggregate scope, 2026-10-29) |
+| 41 | `AuditPopulation` | P1 ([T3-02](https://github.com/bdgrz/compliance-core/issues/41)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 42 | `ClientExport` | P1 ([F1-01](https://github.com/bdgrz/compliance-core/issues/128)) | — | Partial: Event payload carries full ClientExportView snapshot duplicating metadata (tenant, export  |
+| 43 | `TemplateApplication` | P1 ([F1-04](https://github.com/bdgrz/compliance-core/issues/131)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 44 | `AccessPopulationException` | No direct story mapping | — | Partial: Catalog owner: set aggregates.json discriminatorVersion for AccessPopulationExceptionRecor |
+| 45 | `AccessPrincipalClassification` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 46 | `AdvisorFeedbackThread` | No direct story mapping | 33: `AdvisorHandoff` | Source present; verify |
 | 47 | `ApplicationImportBatch` | No direct story mapping | — | Source present; verify |
 | 48 | `ApplicationImportSource` | No direct story mapping | 47: `ApplicationImportBatch` | Source present; verify |

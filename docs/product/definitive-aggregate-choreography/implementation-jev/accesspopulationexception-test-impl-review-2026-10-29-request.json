@@ -1,0 +1,59 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AccessPopulationException",
+    "rule": "One expiring exception or missing-population exception decision. Identity is the exception id. The exception is recorded once by its own root operation at expected revision 0 for an exact system instance; the recorded fact is immutable.",
+    "code_behavior": "Record with empty system instance id, other logical id, other stream, or no expected revision is refused as Validation and appends nothing. Record with expected revision other than 0 is refused as Conflict and appends nothing. After a record (live or replayed), another Record returns Conflict and appends nothing.",
+    "test_refusals": "One test issues five refused Records (other logical id, other stream, no expected revision, empty instance, expected revision 3) and asserts each error kind and that zero events are pending and the aggregate is unrecorded.",
+    "test_competing": "An exception is replayed from its single recorded fact (revision 1). A new Record with expected revision 0 and a different instance returns Conflict, no event is pending, and the original instance is kept.",
+    "catalog": "The catalog lists discriminator version 1 for AccessPopulationExceptionRecorded while code declares 2, and a stale baseline source path. No event is added, removed or renamed; payload carries tenant and instance ids, not the exception id."
+  },
+  "questions": {
+    "refusals_assert": {
+      "type": "noul",
+      "instructions": "Does state.test_refusals prove that invalid or stale record decisions are refused without appending a fact?",
+      "criteria": {
+        "true": "The scenario proves each refusal kind and that nothing is appended.",
+        "false": "The scenario could pass while an invalid record is accepted."
+      }
+    },
+    "competing_assert": {
+      "type": "noul",
+      "instructions": "Does state.test_competing prove that a second record after replayed history is refused and the original fact is preserved?",
+      "criteria": {
+        "true": "The scenario proves the competing record is refused and nothing is appended.",
+        "false": "The scenario could pass while a duplicate fact is appended."
+      }
+    },
+    "empty_instance": {
+      "type": "choice",
+      "instructions": "Is refusing Record for an empty system instance id as Validation consistent with state.rule?",
+      "options": [
+        "consistent",
+        "inconsistent",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "consistent": "The rule requires an exact system instance, so an empty id is invalid.",
+        "inconsistent": "The rule permits an empty instance.",
+        "needs_source_resolution": "The rule does not say."
+      }
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Is the discriminator version mismatch in state.catalog a gap in this aggregate's code that must change here, or a shared catalog reconciliation?",
+      "options": [
+        "no_discrepancy",
+        "add_to_model",
+        "remove",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "no_discrepancy": "Nothing needs to change in the aggregate or event set; the catalog version is only stale metadata.",
+        "add_to_model": "An event is missing from the catalog and must be registered.",
+        "remove": "An event in code should be removed.",
+        "needs_source_resolution": "The sources conflict and cannot be resolved."
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "chronology_rule": {
+        "type": "choice",
+        "choice": "add_to_model",
+        "confidence": 0.67,
+        "probabilities": {
+          "add_to_model": 0.78,
+          "remove_from_code": 0.01,
+          "needs_source_resolution": 0.21
+        }
+      },
+      "second_record_refused": {
+        "type": "choice",
+        "choice": "refuse_no_event",
+        "confidence": 1,
+        "probabilities": {
+          "refuse_no_event": 1,
+          "append_duplicate": 0,
+          "ack_no_event": 0
+        }
+      },
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.93
+      }
+    },
+    "usage": {
+      "input_tokens": 870,
+      "output_tokens": 117
+    }
+  }
+}

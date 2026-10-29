@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "legacy_append": {
+      "type": "choice",
+      "choice": "refuse_no_event",
+      "confidence": 1,
+      "probabilities": {
+        "refuse_no_event": 1,
+        "append": 0,
+        "needs_source_resolution": 0
+      }
+    },
+    "identity_premise": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "refusal_premise": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "frozen_edit": {
+      "type": "choice",
+      "choice": "successor",
+      "confidence": 1,
+      "probabilities": {
+        "successor": 1,
+        "edit_in_place": 0,
+        "needs_source_resolution": 0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 778,
+    "output_tokens": 131
+  }
+}

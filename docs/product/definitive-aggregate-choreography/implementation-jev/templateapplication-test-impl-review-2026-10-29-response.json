@@ -1,0 +1,38 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "competing_outcome": {
+        "type": "choice",
+        "choice": "refuse_conflict_no_fact",
+        "confidence": 1,
+        "probabilities": {
+          "refuse_conflict_no_fact": 1,
+          "append_second": 0,
+          "supersede": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "no_pending_outcome": {
+        "type": "choice",
+        "choice": "refuse_conflict_no_fact",
+        "confidence": 1,
+        "probabilities": {
+          "refuse_conflict_no_fact": 1,
+          "append_anyway": 0,
+          "noop_success": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.88
+      }
+    },
+    "usage": {
+      "input_tokens": 767,
+      "output_tokens": 146
+    }
+  }
+}

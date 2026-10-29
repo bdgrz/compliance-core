@@ -383,6 +383,69 @@ public sealed class TemplateApplicationNativeHistoryTests
         Assert.Equal("original@example.com", read.View!.RequestedByDisplay);
     }
 
+    [Fact]
+    public async Task ShouldRefuseSecondProposalWithoutFactGivenPendingSuccessor()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        Assert.True((await fixture.ApplyAsync(fixture.Version(1))).IsSuccess);
+        var first = new ProposeTemplateSuccessorAdoption(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program,
+            fixture.Template, Fixture.Key, 1, 2, "adapt");
+        Assert.True((await fixture.ProposeAsync(first, fixture.Version(2))).IsSuccess);
+        var before = await fixture.FactsAsync();
+        var second = new ProposeTemplateSuccessorAdoption(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program,
+            fixture.Template, Fixture.Key, 2, 3, "adapt");
+
+        // Act
+        var competing = await fixture.ProposeAsync(second, fixture.Version(3));
+        var after = await fixture.FactsAsync();
+
+        // Assert
+        Assert.False(competing.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, competing.Error!.Kind);
+        Assert.Equal(before.Count, after.Count);
+        Assert.Equal(2, after.Count);
+    }
+
+    [Fact]
+    public async Task ShouldRefuseDispositionWithoutFactGivenNoPendingSuccessor()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        Assert.True((await fixture.ApplyAsync(fixture.Version(1))).IsSuccess);
+        var before = await fixture.FactsAsync();
+
+        // Act
+        var decided = await fixture.DecideAsync(new RecordTemplateSuccessorDisposition(Uuid.CreateVersion4(),
+            fixture.Tenant, fixture.Program, fixture.Template, Fixture.Key, 1, 2, "adopt", "Fits our procedure."));
+        var after = await fixture.FactsAsync();
+
+        // Assert
+        Assert.False(decided.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, decided.Error!.Kind);
+        Assert.Equal(before.Count, after.Count);
+        Assert.IsType<MethodologyTemplateApplied>(Assert.Single(after));
+    }
+
+    [Fact]
+    public async Task ShouldRefuseProposalWithoutFactGivenStaleExpectedRevision()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        Assert.True((await fixture.ApplyAsync(fixture.Version(1))).IsSuccess);
+        var stale = new ProposeTemplateSuccessorAdoption(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program,
+            fixture.Template, Fixture.Key, 5, 2, "adapt");
+
+        // Act
+        var proposed = await fixture.ProposeAsync(stale, fixture.Version(2));
+        var after = await fixture.FactsAsync();
+
+        // Assert
+        Assert.False(proposed.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, proposed.Error!.Kind);
+        Assert.IsType<MethodologyTemplateApplied>(Assert.Single(after));
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         public const string Key = "long-lived-application";

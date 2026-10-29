@@ -1,0 +1,61 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "retry_after_later": {
+        "type": "choice",
+        "choice": "consistent",
+        "confidence": 0.98,
+        "probabilities": {
+          "consistent": 0.99,
+          "should_conflict": 0.01,
+          "needs_source_resolution": 0
+        }
+      },
+      "same_state_at_current": {
+        "type": "choice",
+        "choice": "noop_success_correct",
+        "confidence": 0.98,
+        "probabilities": {
+          "noop_success_correct": 0.99,
+          "conflict_correct": 0.01,
+          "needs_source_resolution": 0
+        }
+      },
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.95
+      },
+      "catalog_events_disposition": {
+        "type": "choice",
+        "choice": "defer_to_reactor_stage",
+        "confidence": 1,
+        "probabilities": {
+          "defer_to_reactor_stage": 1,
+          "add_to_aggregate_now": 0,
+          "remove_from_model": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "payload_duplication": {
+        "type": "choice",
+        "choice": "report_for_versioned_event_change",
+        "confidence": 0.67,
+        "probabilities": {
+          "report_for_versioned_event_change": 0.78,
+          "keep_without_follow_up": 0.19,
+          "needs_source_resolution": 0.03
+        }
+      },
+      "payload_premise": {
+        "type": "noul",
+        "noul": 0.88
+      }
+    },
+    "usage": {
+      "input_tokens": 1256,
+      "output_tokens": 253
+    }
+  }
+}

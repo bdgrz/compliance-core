@@ -1,0 +1,47 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "SignificantChange",
+    "rule": "One change version may be assessed once. Assess requires the change to exist, matches a prior identical assessment (same content, assessor and time) as an acknowledged retry with no new fact, otherwise refuses a stale expected revision with a version conflict, and refuses a second assessment of a version that already has one with a state conflict.",
+    "test_second_assessment": "Change recorded (revision 1) and assessed not_significant (revision 2). A second Assess at expected revision 2 with different content (significant, key control, one affected record) and a later time returns StateConflict; revision stays 2, applied change count unchanged, current assessment still not_significant.",
+    "test_retry": "After the first assessment at revision 2, Assess is repeated with identical content, assessor and time but a stale expected revision 1 (lost-response retry). It returns success (null failure) and revision and applied change count are unchanged.",
+    "test_stale": "Change recorded (revision 1) with no assessment. Assess at expected revision 0 returns VersionConflict, nothing is applied and there is no current assessment.",
+    "catalog": "Catalog registers SignificantChangeRecorded, SignificantChangeRevised, SignificantChangeImpactAssessed, ImpactReviewWorkLinked and SignificantChangeSystemDescriptionDecisionRecorded. Code declares exactly these five events. No event is added, removed or renamed."
+  },
+  "questions": {
+    "second_assessment_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_second_assessment prove a second assessment of an already assessed version is refused and appends nothing?",
+      "criteria": {
+        "true": "Conflict with unchanged revision, applied count and assessment proves the second assessment is refused with no fact.",
+        "false": "The scenario could pass while a second assessment fact is appended."
+      }
+    },
+    "retry_asserts": {
+      "type": "noul",
+      "instructions": "Given state.rule, does state.test_retry prove an exact retry of a committed assessment is acknowledged without a new fact?",
+      "criteria": {
+        "true": "Success with unchanged revision and applied count proves the retry adds no fact.",
+        "false": "The scenario could pass while a duplicate fact is appended or the retry is refused."
+      }
+    },
+    "stale_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_stale prove a stale expected revision on assess is refused and appends nothing?",
+      "criteria": {
+        "true": "VersionConflict with no applied fact and no assessment proves nothing was appended.",
+        "false": "The scenario could pass while a fact is appended on a stale revision."
+      }
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Given state.catalog, is there an event-model discrepancy needing action in the aggregate or its events?",
+      "criteria": {
+        "no_discrepancy": "Event names agree with the catalog; nothing needs action.",
+        "add_to_model": "Code has an event the catalog lacks, which should be registered.",
+        "remove": "Code has an event that should be removed.",
+        "needs_source_resolution": "The sources disagree and cannot be resolved from the given state."
+      }
+    }
+  }
+}
