@@ -269,4 +269,104 @@ public sealed class EmailAddressTests
         Assert.False(oversizedToken.IsSuccess);
         Assert.False(nonHexToken.IsSuccess);
     }
+
+    [Fact]
+    public void ShouldRejectReuseOfRecoveryChallengeIdentityGivenExpiredRecoveryChallenge()
+    {
+        // Arrange
+        var userId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var address = new EmailAddress("person@example.com");
+        var scenario = new AggregateScenario<EmailAddress>(address);
+        Assert.True(address.Reserve(userId).IsSuccess);
+        const string verifiedToken = "verified";
+        Assert.True(address.IssueChallenge(userId, Uuid.CreateVersion4(),
+            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verifiedToken))),
+            now.AddMinutes(15), now).IsSuccess);
+        Assert.True(address.CompleteChallenge(userId, verifiedToken, now).IsSuccess);
+        var challengeId = Uuid.CreateVersion4();
+        var recoveryHash = new string('a', 64);
+        Assert.True(address.IssueRecovery(userId, challengeId, recoveryHash, now.AddMinutes(15), now, "key-1")
+            .IsSuccess);
+        var later = now.AddMinutes(16);
+
+        // Act
+        var reuse = address.IssueRecovery(userId, challengeId, new string('b', 64), later.AddMinutes(15), later,
+            "key-1");
+
+        // Assert
+        Assert.False(reuse.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, reuse.Error!.Kind);
+        Assert.Equal(4, scenario.PendingEvents.Count);
+        Assert.Equal(challengeId, address.CurrentRecoveryChallengeId);
+    }
+
+    [Fact]
+    public void ShouldRejectSecondVerificationGivenVerifiedAddress()
+    {
+        // Arrange
+        var userId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var address = new EmailAddress("person@example.com");
+        var scenario = new AggregateScenario<EmailAddress>(address);
+        Assert.True(address.Reserve(userId).IsSuccess);
+        const string token = "verified";
+        Assert.True(address.IssueChallenge(userId, Uuid.CreateVersion4(),
+            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token))), now.AddMinutes(15), now).IsSuccess);
+        Assert.True(address.CompleteChallenge(userId, token, now).IsSuccess);
+
+        // Act
+        var again = address.CompleteChallenge(userId, token, now.AddMinutes(1));
+
+        // Assert
+        Assert.False(again.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, again.Error!.Kind);
+        Assert.Equal(3, scenario.PendingEvents.Count);
+        Assert.True(address.IsVerified);
+    }
+
+    [Fact]
+    public void ShouldRejectStaleRevisionGivenReservationAgainstChangedAddress()
+    {
+        // Arrange
+        var userId = Uuid.CreateVersion4();
+        var address = new EmailAddress("person@example.com");
+        var scenario = new AggregateScenario<EmailAddress>(address);
+
+        // Act
+        var stale = address.PrepareReserve(userId, 3);
+        var current = address.PrepareReserve(userId, 0);
+
+        // Assert
+        Assert.False(stale.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, stale.Error!.Kind);
+        Assert.True(current.IsSuccess);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRestoreOwnerVerificationAndChallengeGivenReplayedHistory()
+    {
+        // Arrange
+        var userId = Uuid.CreateVersion4();
+        var challengeId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        const string token = "verified";
+        var seed = new EmailAddress("Person@Example.com");
+        Assert.True(seed.Reserve(userId).IsSuccess);
+        Assert.True(seed.IssueChallenge(userId, challengeId,
+            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token))), now.AddMinutes(15), now).IsSuccess);
+        Assert.True(seed.CompleteChallenge(userId, token, now).IsSuccess);
+        var history = NativeFacts.Raised(seed);
+
+        // Act
+        var replayed = NativeFacts.Replay(new EmailAddress("person@example.com"), history);
+
+        // Assert
+        Assert.Equal(userId, replayed.Owner);
+        Assert.True(replayed.IsVerified);
+        Assert.Equal(challengeId, replayed.CurrentChallengeId);
+        Assert.Equal("person@example.com", replayed.Address);
+        Assert.Equal("verified", replayed.GetChallengeStatus(now).DeliveryStatus);
+    }
 }
