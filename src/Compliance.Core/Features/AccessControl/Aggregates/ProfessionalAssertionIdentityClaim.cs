@@ -84,7 +84,8 @@ public sealed class ProfessionalAssertionIdentityClaim : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
-        if (operation.Owner != Stream || operation.RootOperationId != AssertionId)
+        if (AssertionId == Uuid.Empty || operation.LogicalId == Uuid.Empty || operation.Owner != Stream ||
+            operation.RootOperationId != AssertionId)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A claim is recorded on its own assertion stream."));
         if (_claimed is not null)
