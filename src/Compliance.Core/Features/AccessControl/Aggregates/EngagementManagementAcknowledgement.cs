@@ -32,6 +32,7 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Proofs.Models;
@@ -62,7 +63,7 @@ public sealed class EngagementManagementAcknowledgement : Aggregate
         {
             Acceptance.Observe(acknowledged);
             if (_acknowledged is not null || acknowledged.TenantId != TenantId ||
-                acknowledged.OperationId != AcknowledgementId || acknowledged.Operation.Owner != Stream ||
+                acknowledged.OperationId != AcknowledgementId || !ValidChild(acknowledged.Operation) ||
                 acknowledged.Revision != 1 || acknowledged.OperationResult is null)
                 throw new InvalidOperationException(
                     "An acknowledgement is materialized exactly once, for its own acknowledgement on its own stream.");
@@ -90,9 +91,9 @@ public sealed class EngagementManagementAcknowledgement : Aggregate
         ArgumentNullException.ThrowIfNull(acknowledgementContent);
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(operationResult);
-        if (operation.Owner != Stream)
+        if (!ValidChild(operation))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "An acknowledgement is recorded on the decision owner of its acknowledgement."));
+                "An acknowledgement is recorded on its own decision owner and root operation."));
         if (_acknowledged is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "This acknowledgement is already immutable."));
@@ -100,4 +101,12 @@ public sealed class EngagementManagementAcknowledgement : Aggregate
             1, intent, null, operationResult));
         return Result.Success;
     }
+
+    bool ValidChild(OperationProvenance operation) =>
+        TenantId != Uuid.Empty && AcknowledgementId != Uuid.Empty && operation.LogicalId != Uuid.Empty &&
+        operation.RootOperationId == AcknowledgementId && operation.CausationEventId is { } cause &&
+        cause != Uuid.Empty && operation.CommandKind == nameof(MaterializeEngagementManagementAcknowledgement) &&
+        operation.Owner == Stream && operation.AffectedOwner == Stream && operation.ExpectedRevisionOwner == Stream &&
+        operation.FirstOwner is { } source && source.Realm == Stream.Realm &&
+        source.Area == ServiceEngagementIndependence.Area;
 }

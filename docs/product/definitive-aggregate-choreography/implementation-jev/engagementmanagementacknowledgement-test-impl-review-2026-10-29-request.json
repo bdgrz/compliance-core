@@ -1,0 +1,16 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "EngagementManagementAcknowledgement is one personal acknowledgement bound to an exact engagement revision and complete service history. A receiver materializes it from EngagementPersonalDecisionAuthorized on ServiceEngagementIndependence; its command ID, source, target, operation ID and intent are required. The tenant/acknowledgement ID selects one immutable decision stream.",
+    "source": "The handler validates nonempty command and acknowledgement IDs, loads and verifies the exact authorization and frozen intent, creates a child operation with owner and affected/revision owner equal to the acknowledgement stream and first owner equal to the originating engagement stream. The settlement receiver validates the committed child's root, first owner, authorization event, actor, digest, episode and original expected revision against the frozen parent.",
+    "owner_limits": "The acknowledgement aggregate knows its tenant, acknowledgement ID and child operation provenance; it does not read the frozen intent, the parent engagement or the authorization fact. Thus it can validate tenant and engagement stream kind, operation kind and structural identity, but cannot confirm the exact parent event, engagement ID or actor against the original intent by itself.",
+    "payload": "EngagementManagementAcknowledged includes TenantId and OperationId matching the stream realm and resource, plus Operation.Owner equal to the stream. It stores a native-operation envelope, immutable intent, acknowledgement content and result receipt."
+  },
+  "questions": {
+    "identity_guards": { "type": "noul", "instructions": "Does requiring nonempty tenant, acknowledgement and receiver logical IDs protect the described immutable acknowledgement identity and selectable receipt?" },
+    "source_kind": { "type": "noul", "instructions": "Can the acknowledgement owner check that its child operation's first owner is an engagement stream of the same tenant without knowing the exact engagement ID?" },
+    "exact_source": { "type": "noul", "instructions": "Can the acknowledgement owner verify that the child operation's causation event is the exact authorized parent fact using only the fields in owner_limits?" },
+    "duplicate_premise": { "type": "noul", "instructions": "Do TenantId and OperationId in EngagementManagementAcknowledged repeat its stream realm and resource as described in payload?" },
+    "duplicate_disposition": { "type": "choice", "instructions": "How should the repeated tenant and operation identity fields in the persisted acknowledgement event be handled?", "options": ["keep_existing_contract", "change_versioned_contract", "needs_source_resolution"], "criteria": { "keep_existing_contract": "The existing shared native operation envelope is retained for compatibility and source verification.", "change_versioned_contract": "The identity duplication should be removed via a versioned event contract change.", "needs_source_resolution": "The available evidence does not establish a safe contract disposition." } }
+  }
+}
