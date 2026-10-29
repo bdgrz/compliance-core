@@ -1,0 +1,39 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ApplicationImportBatch",
+    "invariant": "Frozen source rows, row outcomes, per-batch execution and one terminal disposition at a single logical revision.",
+    "catalog_text": "ApplicationImportFailed is a catalogued event (decisions.json refusal__ApplicationImportFailed = durable_business_fact, 0.96). The choreography lists it as a possible terminal fact of a batch, beside ApplicationImportCommitted and ApplicationImportCanceled.",
+    "code_behavior": {
+      "failed_event": "The aggregate applies ApplicationImportFailed on replay (ends a sealed, open batch) but has no command method that raises it; the selected command contracts name no command that raises it.",
+      "commit_intent": "Commit refuses with Validation and no event when the supplied intent differs from the sealed plan's frozen plan reference. Before this change that case threw in ApplyFact.",
+      "stage_counts": "Stage refuses with Validation and no event when rowCount < 1, invalidCount < 0 or invalidCount > rowCount.",
+      "plan_counts": "SealPlan refuses with Validation and no event when rowCount < 1 or targetGroupCount < 1."
+    },
+    "tests": "Tests: hydrated batch with authorized execution, Commit with a random intent returns Validation, only the authorization event is pending, Committed stays null and batch not ended. Staging with counts (0,0),(1,-1),(2,3) returns Validation with no pending event."
+  },
+  "questions": {
+    "failed_producer": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.failed_event` and `state.catalog_text`, should the aggregate stage add a command that raises ApplicationImportFailed now?",
+      "criteria": {
+        "add_command_now": "Invent a failure command on the batch aggregate in this stage.",
+        "leave_open_for_later_stage": "Keep the event applied on replay, record that its producing handler or reactor is a later-stage decision, and add no command.",
+        "remove_event": "The event is not part of the model and should be deleted.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "failed_premise": {
+      "type": "noul",
+      "instructions": "The approved model catalogs ApplicationImportFailed as a durable business fact, so the event must stay applied on replay even though no command in the aggregate raises it yet."
+    },
+    "commit_intent_refusal": {
+      "type": "noul",
+      "instructions": "Refusing Commit with Validation and no event when the intent differs from the sealed plan, as in `state.code_behavior.commit_intent`, protects the invariant that one terminal disposition is decided for the frozen plan."
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.tests` assert behavioral outcomes (refusal kind, which events are pending, state after the refusal) rather than structure."
+    }
+  }
+}
