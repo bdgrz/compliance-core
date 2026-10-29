@@ -1,0 +1,40 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "EvidenceRedaction",
+    "invariant": "A redaction approval must target the current exact original/derived preparation and be independent of its preparer unless an exact scoped waiver proof authorizes self-approval.",
+    "code_behavior": {
+      "approve": "Refused as Conflict with no fact when expected revision is stale, no preparation exists, preparation id or prepared revision differ from current, an approval already exists for the current preparation, or chronology is violated. A later preparation clears the current approval. If the approver is the preparer and no waiver is supplied, refused as Forbidden.",
+      "waiver_valid_only_if": "waiver tenant, redaction id, preparation id, preparation revision and action Approve match; beneficiary equals the approving actor; approver differs from both beneficiary and requester; requested at or after preparation time; approved at or after requested; decision time within [approved, expires).",
+      "tests": "Each refusal test builds an owner by replaying a valid Prepared (and Approved) history, calls the decision with exactly one violated condition, and asserts failure, the error kind, no pending events and no current approval. A positive test asserts a waived self-approval by the preparer succeeds with the waiver recorded and revision 2."
+    }
+  },
+  "questions": {
+    "waiver_requester_equals_approver": {
+      "type": "choice",
+      "instructions": "In `state.code_behavior.waiver_valid_only_if`, a waiver whose approver equals its requester (but differs from the beneficiary) is rejected. Is this consistent with the invariant's independence requirement?",
+      "criteria": {
+        "reject_is_correct": "A waiver approved by its own requester is not independent and must be rejected.",
+        "accept_is_correct": "Only beneficiary and approver independence matters.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "second_approval_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.approve`, a second approval attempt of the same current preparation by a new request is refused as Conflict with no fact. Is that consistent with the invariant?",
+      "criteria": {
+        "conflict_is_correct": "Approval must target a preparation with no approval yet; a second distinct approval is a conflict.",
+        "silent_success_is_correct": "A second approval should succeed without a new event.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests described in `state.code_behavior.tests` assert behavioral outcomes of the invariant (refusal kind, no fact, accepted waived approval) and can fail if the rule is broken.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    }
+  }
+}
