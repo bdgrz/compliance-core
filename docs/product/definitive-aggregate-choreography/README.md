@@ -4,11 +4,11 @@ This catalog defines the intended backend architecture for the existing product 
 
 ## Read the catalog
 
-- [Aggregates and the events they emit](aggregates.md):129 business/authority boundaries,13 technical labels and the WeeklyScheduling technical role.
-- [Canonical event dictionary](events.md):492 emissions, comprising480 business,9 technical,2 audit and1 migration-import semantic facts.
+- [Aggregates and the events they emit](aggregates.md): 129 business/authority boundaries, 14 technical labels and the WeeklyScheduling technical role.
+- [Canonical event dictionary](events.md): 497 emissions, comprising 436 business, 48 reservation, 10 technical, 2 audit and 1 migration-import semantic facts.
 - [Required choreography](choreography.md):162 reaction/stage rows,22 abort/fence bindings,2 artifact entry/read rows and1 rollover execution row.
 - [Physical registration plan](choreography/physical-plan.json):65 existing +2 planned root reactors;28 existing +2 planned process definitions; no new hosted worker.
-- [Every historical/current/proposed event name](event-reconciliation.json):559 names with explicit emission, compatibility, alias, cutover, externalization or prune disposition. No silent omissions.
+- [Every historical/current/proposed event name](event-reconciliation.json): 570 names with explicit emission, compatibility, alias, cutover, externalization or prune disposition. No silent omissions.
 
 These are selected target definitions, not a claim that every target producer or receiver is delivered. The [selected architecture decisions](decisions.json) resolve contradictory earlier ownership proposals, stale event names, download admission, proof carriers and occupied effect identities. These explicit decisions supersede the cited conflicting candidate/locked rows; historical audit files remain evidence.
 
@@ -48,3 +48,13 @@ The architecture inventory does not authorize deployment, reset, migration or ne
 The rollover execution contract, including its cross-aggregate proof sequence, is specified once in [required choreography](choreography.md).
 
 The conditional tenant bootstrap dependency decision is specified once in [required choreography](choreography.md).
+
+## Polish 2026-10-29
+
+A Jev-assisted review (jev-1.14.0; evidence in `jev-review-2026-10-29-polish/`) re-adopted every declared wire identity from source at `60029b8f`, labelled owner-held holds as a distinct `reservation` emission kind (EV-D06), added `ApplicationNameClaim` and moved `WorkDigestPreference` to technical state, planned `ProviderRetired` and `OperationalProcessRetired` (EV-D07), expanded bare identities with their creation-key rule, extended invariants with the concrete M0-D05/D07/D26/D27 rules they enforce, moved the member, team-member and campaign-participant commands to their actual owners, and added [product rule traceability](product-rule-traceability.md). Open items are listed under `status: OPEN` in `decisions.json` and at the end of [aggregate details](aggregate-details.md).
+
+Round 3 (2026-10-29): every owner with traced product rules carries a `decides` clause stating the concrete values it refuses or guarantees; `CommitmentControlLink` and `ImportedOwnerResolution` were added as planned owners for the two rules with no owner (Jev 0.98, 0.85); D26-04 is decided in two steps (classification on `ClientIndependenceDecision`, acceptance gate on `ClientServiceIndependence`); the campaign and legal-hold natural-key question is recorded OPEN.
+
+Round 4 (2026-10-29, commands and reactors): every owner's command contracts now carry kind (http, creation, command, receiver, abort), a stated exact-retry rule, and a concurrency-guard decision (CMD_ConcurrencyGuards); 78 receiver commands were imported from the October 23 reactor contracts and the inline PopulationSnapshot writers were replaced by a planned FreezePopulationSnapshot receiver. The choreography gained ten planned reactions (X000-X009) for the planned owners and the reactions Jev rated necessary, a concrete prerequisite rule and required stage proof set on every row, and the recovery contract in four named cases. Jev evidence: round4-occ-*.json in jev-review-2026-10-29-polish/; pass D/E/F requests and responses in the session scratchpad.
+
+Open items closed on 2026-10-29: the 27 unresolved concurrency guards were decided (20 ExpectedRevision, 7 operation-bound replies; CMD_ConcurrencyGuards), the Tenant lifecycle is an explicit state machine (TENANT_Lifecycle), X008 is a proof read at sign-off rather than a reactor (CHOREO_X008_ProofRead), AuditObservation has four planned commands (CMD_AuditObservationPlanned), AuditPopulation states that PopulationId equals DefinitionId, and the 29 lowest-scoring original proof sets were re-authored from source. Remaining implementation backlog: `productRulesNotYetInSource` in aggregates.json and `stageProofsNotYetInSource` in choreography.json.

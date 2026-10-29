@@ -69,6 +69,7 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 46 | `AdvisorFeedbackThread` | No direct story mapping | 33: `AdvisorHandoff` | Source present; verify |
 | 47 | `ApplicationImportBatch` | No direct story mapping | — | Source present; verify |
 | 48 | `ApplicationImportSource` | No direct story mapping | 47: `ApplicationImportBatch` | Source present; verify |
+| 49 | `ApplicationNameClaim` | No direct story mapping | 68: `DeclaredApplication` | Planned 2026-10-29; implement with DeclaredApplication name flow |
 | 49 | `ApplicationRelationship` | No direct story mapping | — | Source present; verify |
 | 50 | `ArtifactDisclosure` | No direct story mapping | — | Source present; verify |
 | 51 | `ArtifactDisposition` | No direct story mapping | — | Source present; verify |
@@ -134,7 +135,7 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 105 | `TenantIdentityProvider` | No direct story mapping | — | Source present; verify |
 | 106 | `TenantInvitationMailboxClaim` | No direct story mapping | — | Source present; verify |
 | 107 | `TypeIIPlan` | No direct story mapping | — | Source present; verify |
-| 108 | `WorkDigestPreference` | No direct story mapping | — | Source present; verify |
+| 108 | `WorkDigestPreference` | No direct story mapping | — | Reclassified technical 2026-10-29; not an aggregate slice |
 | 109 | `WorkItemAssignment` | No direct story mapping | — | Source present; verify |
 | 110 | `WorkRelationship` | P0 ([R1-11](https://github.com/bdgrz/compliance-core/issues/49)) | — | Source present; verify |
 | 111 | `WorkforceObservationResolution` | No direct story mapping | — | Source present; verify |

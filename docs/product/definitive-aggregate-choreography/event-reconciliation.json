@@ -270,7 +270,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_review.decisions.recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -421,7 +421,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_expectation.approved",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -558,7 +558,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_expectation.exception_recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -700,7 +700,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_expectation.proposed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -1113,7 +1113,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_population.accepted",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -1250,7 +1250,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_population.exception_recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -1397,7 +1397,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_population.facts_recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -1557,7 +1557,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_population.opened",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -1694,7 +1694,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_population.principal_classified",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -1836,7 +1836,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_review.remediation.change_recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -1978,7 +1978,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_review.remediation.exception_recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -2120,7 +2120,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_review.remediation.verified",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -2370,7 +2370,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_review.campaign.completed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -3002,7 +3002,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_review.campaign.launched",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -4404,7 +4404,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "AccessReviewItem"
       ],
@@ -4606,7 +4606,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "AccessReviewItem"
       ],
@@ -4838,7 +4838,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "AccessReviewItem"
       ],
@@ -5302,7 +5302,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "AccessReviewItem"
       ],
@@ -5633,7 +5633,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.access_review.responsibility.reassigned",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -6059,7 +6059,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "AdvisorHandoff"
       ],
@@ -6249,7 +6249,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "AdvisorHandoff"
       ],
@@ -6587,7 +6587,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.advisor-feedback.corrected",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -6849,7 +6849,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.advisor-feedback.recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -7138,7 +7138,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.advisor-feedback.responded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -7283,7 +7283,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.advisor-handoff.closed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -7445,7 +7445,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.advisor-handoff.created",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -7730,7 +7730,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.advisor-handoff.revoked",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -7887,7 +7887,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.advisor-handoff.selection-revised",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -8389,7 +8389,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.application_import.canceled",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -8686,7 +8686,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.application-import-batch.application-import-cancellation-accepted",
+        "discriminator": "bdgrz.application_import.cancellation_accepted",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -9029,7 +9029,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.application_import.committed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -9244,7 +9244,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.declared-application.application-import-effect-canceled",
+        "discriminator": "bdgrz.declared_application.import_effect_canceled",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -9481,7 +9481,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.application_import.effect_pending",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -9519,7 +9519,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "DeclaredApplication"
       ],
@@ -9778,7 +9778,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.application-import-batch.application-import-execution-authorized",
+        "discriminator": "bdgrz.application_import.execution_authorized",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -9817,7 +9817,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ApplicationImportBatch"
       ],
@@ -9934,7 +9934,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.application_import.failed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Reducer retained for compatibility/replay; there is no current producer.",
@@ -10334,7 +10334,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.application_import.plan_sealed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -10594,7 +10594,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.application_import.retirement_proposal_sealed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -10987,7 +10987,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.application_import.row_correlated",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -11292,7 +11292,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.application-import-source.application-import-source-admission-recorded",
+        "discriminator": "bdgrz.application_import_source.admission_recorded",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -11587,7 +11587,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.application-import-source.application-import-source-settled",
+        "discriminator": "bdgrz.application_import_source.settled",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -11750,7 +11750,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.application_import.staged",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -11964,7 +11964,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.declared-application.application-import-target-authorized",
+        "discriminator": "bdgrz.declared_application.import_target_authorized",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -11999,7 +11999,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "DeclaredApplication"
       ],
@@ -12176,7 +12176,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.declared-application.application-import-target-settled",
+        "discriminator": "bdgrz.declared_application.import_target_settled",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -12211,7 +12211,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "DeclaredApplication"
       ],
@@ -14539,7 +14539,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "EvidenceArtifact"
       ],
@@ -15282,7 +15282,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "EvidenceHandlingPolicy"
       ],
@@ -15474,7 +15474,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "EvidenceHandlingPolicy"
       ],
@@ -19789,9 +19789,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.auditpopulations.audit-population-amended",
-        "version": 2
+        "version": 3
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-amended",
+        "version": 3
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -19943,9 +19946,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.auditpopulations.audit-population-defined",
-        "version": 2
+        "version": 4
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-defined",
+        "version": 4
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -20097,9 +20103,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.auditpopulations.audit-population-definition-revised",
-        "version": 1
+        "version": 2
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-definition-revised",
+        "version": 2
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -20358,9 +20367,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.auditpopulations.audit-population-fact-recorded",
-        "version": 2
+        "version": 3
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-fact-recorded",
+        "version": 3
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -20512,9 +20524,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.auditpopulations.audit-population-frozen",
-        "version": 2
+        "version": 3
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-frozen",
+        "version": 3
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -20666,9 +20681,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.auditpopulations.audit-population-generated",
-        "version": 2
+        "version": 4
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-generated",
+        "version": 4
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -20820,9 +20838,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.auditpopulations.audit-population-reconciled",
-        "version": 2
+        "version": 3
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-reconciled",
+        "version": 3
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -20974,9 +20995,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.auditpopulations.audit-population-row-classified",
-        "version": 2
+        "version": 3
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-row-classified",
+        "version": 3
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -24061,7 +24085,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "AuditorResponse"
       ],
@@ -24263,7 +24287,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "AuditorResponse"
       ],
@@ -26456,7 +26480,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.policy_campaign.waiver.approved",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -27879,9 +27903,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.client-service.created",
-        "version": 1
+        "version": 2
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.client-service.created",
+        "version": 2
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -28173,7 +28200,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ClientServiceIndependence"
       ],
@@ -28375,7 +28402,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ClientServiceIndependence"
       ],
@@ -28462,9 +28489,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.client-service.retired",
-        "version": 1
+        "version": 2
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.client-service.retired",
+        "version": 2
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -28641,9 +28671,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.client-service.revised",
-        "version": 1
+        "version": 2
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.client-service.revised",
+        "version": 2
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -31460,7 +31493,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control_mapping.proposed",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -31613,7 +31646,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control_mapping.retired",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -31781,7 +31814,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control_mapping.reviewed",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -32496,7 +32529,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control.evaluation.deviation_disposed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -32830,7 +32863,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control.evaluation.reviewed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -33013,7 +33046,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control.evaluation.started",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -33176,7 +33209,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control.evaluation.step_recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -33323,7 +33356,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control.evaluation.submitted",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -33470,7 +33503,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control.occurrence.attested",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -33818,7 +33851,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control.occurrence.opened",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -33965,7 +33998,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control.occurrence.reviewed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -34137,7 +34170,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control.operating_plan.approved",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -34279,7 +34312,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.control.operating_plan.proposed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -35969,7 +36002,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.finding.corrective_action.added",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "Materialization of an admitted action on its own owner at revision one.",
@@ -36493,7 +36526,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.finding.corrective_action.completed",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -36733,7 +36766,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "CorrectiveAction"
       ],
@@ -36935,7 +36968,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "CorrectiveAction"
       ],
@@ -37054,7 +37087,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.criteria-overlay.entry-revised",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -37219,7 +37252,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.criterion_applicability.reviewed",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -37382,7 +37415,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.criterion_applicability.not_applicable_proposed",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -37530,7 +37563,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.criterion_applicability.not_applicable_withdrawn",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -38243,7 +38276,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "EmailAddress"
       ],
@@ -39380,7 +39413,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ServiceEngagementIndependence"
       ],
@@ -40132,7 +40165,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ServiceEngagementIndependence"
       ],
@@ -40555,7 +40588,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ClientServiceIndependence"
       ],
@@ -40829,7 +40862,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ClientServiceIndependence"
       ],
@@ -41083,11 +41116,11 @@
       ],
       "currentWire": {
         "discriminator": "bdgrz.evidence.evidence-artifact-download-issued",
-        "version": 1
+        "version": 2
       },
       "selectedWire": {
         "discriminator": "bdgrz.evidence.evidence-artifact-download-issued",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -42613,7 +42646,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "EvidenceRequest"
       ],
@@ -42815,7 +42848,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "EvidenceRequest"
       ],
@@ -42922,7 +42955,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.evidence.request.cancelled",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -43067,7 +43100,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.evidence.request.fulfilled",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -43227,7 +43260,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.evidence.request.opened",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -44336,7 +44369,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.finding.acceptance.linked",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -44696,7 +44729,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.finding.closed",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "Appended by the closure process once every admitted action is held under the closure grant.",
@@ -45956,7 +45989,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.finding.raised",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "Emitted by manual and routed creation; the optional initial routed action is a separate admission fact in the same finding stream.",
@@ -46217,7 +46250,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.finding.reopened",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -46527,7 +46560,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.finding.revised",
-        "version": 1
+        "version": 3
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -46769,7 +46802,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "FirmProfessionalDutyDesignation"
       ],
@@ -46971,7 +47004,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "FirmProfessionalDutyDesignation"
       ],
@@ -48129,7 +48162,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "FirmStaffRecord"
       ],
@@ -48331,7 +48364,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "FirmStaffRecord"
       ],
@@ -48533,7 +48566,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "FirmStaffRecord"
       ],
@@ -48735,7 +48768,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "FirmStaffRecord"
       ],
@@ -51661,7 +51694,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "IndependenceRuleCatalog"
       ],
@@ -51865,7 +51898,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "IndependenceRuleCatalog"
       ],
@@ -52069,7 +52102,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "IndependenceRuleRatificationCatalog"
       ],
@@ -52273,7 +52306,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "IndependenceRuleRatificationCatalog"
       ],
@@ -55276,7 +55309,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.rbac.member.deprovisioned",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -61677,9 +61710,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.workforce.person.membership-correlated",
-        "version": 1
+        "version": 2
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.workforce.person.membership-correlated",
+        "version": 2
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -61831,9 +61867,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.workforce.person.recorded",
-        "version": 1
+        "version": 2
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.workforce.person.recorded",
+        "version": 2
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -61995,9 +62034,12 @@
       "targetContentSchemas": [],
       "currentWire": {
         "discriminator": "bdgrz.workforce.person.revised",
-        "version": 1
+        "version": 2
       },
-      "selectedWire": null,
+      "selectedWire": {
+        "discriminator": "bdgrz.workforce.person.revised",
+        "version": 2
+      },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
       "currentConstructionSites": [
@@ -62992,7 +63034,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.policy.acknowledgement.recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -63483,7 +63525,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.policy_campaign.audience.amended",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -63620,7 +63662,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.policy_campaign.audience.frozen",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -63883,7 +63925,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.policy_campaign.closed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -64524,7 +64566,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.policy_campaign.launched",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -64765,7 +64807,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "PolicyCampaignParticipant"
       ],
@@ -64967,7 +65009,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "PolicyCampaignParticipant"
       ],
@@ -67924,7 +67966,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "PracticeIndependenceCommitment"
       ],
@@ -68198,7 +68240,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "PracticeIndependenceCommitment"
       ],
@@ -70523,7 +70565,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ProviderAssuranceReport"
       ],
@@ -70725,7 +70767,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ProviderAssuranceReport"
       ],
@@ -75697,7 +75739,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ReadinessGapPlan"
       ],
@@ -75899,7 +75941,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "ReadinessGapPlan"
       ],
@@ -76286,7 +76328,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "UserIdentity"
       ],
@@ -76536,7 +76578,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "UserIdentity"
       ],
@@ -77774,7 +77816,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.risk.control_treatment.proposed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -77930,7 +77972,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.risk.control_treatment.retired",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -78101,7 +78143,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.risk.control_treatment.reviewed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -78698,7 +78740,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.risk.owner.assigned",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -78840,7 +78882,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.risk.reassessment.triggered",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -78982,7 +79024,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.risk.treatment_action.added",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -79137,7 +79179,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.risk.treatment_action.cancelled",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -79804,7 +79846,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.risk.treatment_action.completion_reviewed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -79974,7 +80016,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.risk.treatment_action.completion_submitted",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -80166,7 +80208,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.risk.treatment_action.revised",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -85442,7 +85484,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.systemdescription.system-description-approved",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -85587,7 +85629,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.systemdescription.system-description-bound",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -85732,7 +85774,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.systemdescription.system-description-draft-created",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -85877,7 +85919,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.systemdescription.system-description-draft-revised",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -86114,7 +86156,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.systemdescription.system-description-no-change-recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -86259,7 +86301,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.systemdescription.system-description-reviewed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -86404,7 +86446,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.systemdescription.system-description-sources-bound",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -86549,7 +86591,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.systemdescription.system-description-successor-proposed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -88167,7 +88209,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.rbac.team-member.removed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -91145,7 +91187,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-restoration-accepted",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -91395,7 +91437,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-restoration-completed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -91642,7 +91684,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.rbac.manager_guard.restored",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -91893,7 +91935,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -92143,7 +92185,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-withdrawal-accepted",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -92393,7 +92435,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-withdrawal-completed",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -95985,7 +96027,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.training_completion.recorded",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -96150,7 +96192,7 @@
       },
       "selectedWire": {
         "discriminator": "bdgrz.training_requirement.defined",
-        "version": 1
+        "version": 2
       },
       "sourceInventoryDisposition": "aggregate_fact",
       "sourceInventoryNote": "",
@@ -97682,7 +97724,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.type-i-i-period.type-i-i-period-amendment-accepted",
+        "discriminator": "bdgrz.type-ii-period.type-ii-period-amendment-accepted",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -97923,7 +97965,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.type-i-i-period.type-i-i-period-amendment-canceled",
+        "discriminator": "bdgrz.type-ii-period.type-ii-period-amendment-canceled",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -98592,7 +98634,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.type-i-i-period.type-i-i-period-opening-accepted",
+        "discriminator": "bdgrz.type-ii-period.type-ii-period-opening-accepted",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -98833,7 +98875,7 @@
         "version": 1
       },
       "selectedWire": {
-        "discriminator": "bdgrz.type-i-i-period.type-i-i-period-opening-rejected",
+        "discriminator": "bdgrz.type-ii-period.type-ii-period-opening-rejected",
         "version": 1
       },
       "sourceInventoryDisposition": "aggregate_fact",
@@ -99074,8 +99116,8 @@
         "version": 2
       },
       "selectedWire": {
-        "discriminator": "bdgrz.type-i-i-observation-calendar.type-i-i-period-range-authorized",
-        "version": 1
+        "discriminator": "bdgrz.type-ii-observation-calendar.type-ii-period-range-authorized",
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -99107,7 +99149,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "TypeIIObservationCalendar"
       ],
@@ -99302,8 +99344,8 @@
         "version": 2
       },
       "selectedWire": {
-        "discriminator": "bdgrz.type-i-i-observation-calendar.type-i-i-period-range-settled",
-        "version": 1
+        "discriminator": "bdgrz.type-ii-observation-calendar.type-ii-period-range-settled",
+        "version": 2
       },
       "sourceInventoryDisposition": "legacy_replay",
       "sourceInventoryNote": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -99335,7 +99377,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "reservation",
       "canonicalOwners": [
         "TypeIIObservationCalendar"
       ],
@@ -102469,7 +102511,7 @@
       "finalOwnerMappingEvidence": [
         "selected event owner/allocation before generic owner aliases"
       ],
-      "emissionKind": "business",
+      "emissionKind": "technical",
       "canonicalOwners": [
         "WorkDigestPreference"
       ],
@@ -104359,6 +104401,248 @@
       "ownerAliasMapBinding": "ebbc06df8e2d399022d415b9d045a2f1fe2ff41940b132d21f681efb06983847",
       "rawNameDisposition": "selected_new_target",
       "targetStatus": "SELECTED_TARGET_NO_IMPLEMENTATION_AUTHORIZED"
+    },
+    {
+      "event": "AuditPopulationDefinedV4",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "AuditPopulationDefined"
+      ],
+      "canonicalOwners": [
+        "AuditPopulation"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-defined",
+        "version": 4
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-defined",
+        "version": 4
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `AuditPopulationDefined`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationDefinedV4.cs.",
+      "emissionKind": "business"
+    },
+    {
+      "event": "AuditPopulationGeneratedV4",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "AuditPopulationGenerated"
+      ],
+      "canonicalOwners": [
+        "AuditPopulation"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-generated",
+        "version": 4
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-generated",
+        "version": 4
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `AuditPopulationGenerated`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationGeneratedV4.cs.",
+      "emissionKind": "business"
+    },
+    {
+      "event": "AuditPopulationDefinitionRevisedV2",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "AuditPopulationDefinitionRevised"
+      ],
+      "canonicalOwners": [
+        "AuditPopulation"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-definition-revised",
+        "version": 2
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-definition-revised",
+        "version": 2
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `AuditPopulationDefinitionRevised`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationDefinitionRevisedV2.cs.",
+      "emissionKind": "business"
+    },
+    {
+      "event": "AuditPopulationFactRecordedV3",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "AuditPopulationFactRecorded"
+      ],
+      "canonicalOwners": [
+        "AuditPopulation"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-fact-recorded",
+        "version": 3
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-fact-recorded",
+        "version": 3
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `AuditPopulationFactRecorded`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationFactRecordedV3.cs.",
+      "emissionKind": "business"
+    },
+    {
+      "event": "AuditPopulationRowClassifiedV3",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "AuditPopulationRowClassified"
+      ],
+      "canonicalOwners": [
+        "AuditPopulation"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-row-classified",
+        "version": 3
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-row-classified",
+        "version": 3
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `AuditPopulationRowClassified`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationRowClassifiedV3.cs.",
+      "emissionKind": "business"
+    },
+    {
+      "event": "AuditPopulationReconciledV3",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "AuditPopulationReconciled"
+      ],
+      "canonicalOwners": [
+        "AuditPopulation"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-reconciled",
+        "version": 3
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-reconciled",
+        "version": 3
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `AuditPopulationReconciled`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationReconciledV3.cs.",
+      "emissionKind": "business"
+    },
+    {
+      "event": "AuditPopulationAmendedV3",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "AuditPopulationAmended"
+      ],
+      "canonicalOwners": [
+        "AuditPopulation"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-amended",
+        "version": 3
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-amended",
+        "version": 3
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `AuditPopulationAmended`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationAmendedV3.cs.",
+      "emissionKind": "business"
+    },
+    {
+      "event": "AuditPopulationFrozenV3",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "AuditPopulationFrozen"
+      ],
+      "canonicalOwners": [
+        "AuditPopulation"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-frozen",
+        "version": 3
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.auditpopulations.audit-population-frozen",
+        "version": 3
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `AuditPopulationFrozen`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationFrozenV3.cs.",
+      "emissionKind": "business"
+    },
+    {
+      "event": "PersonRegistrationRecorded",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "PersonRecorded"
+      ],
+      "canonicalOwners": [
+        "Person"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.workforce.person.recorded",
+        "version": 2
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.workforce.person.recorded",
+        "version": 2
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `PersonRecorded`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/PersonRegistrationRecorded.cs.",
+      "emissionKind": "business"
+    },
+    {
+      "event": "PersonDetailsRevised",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "PersonRevised"
+      ],
+      "canonicalOwners": [
+        "Person"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.workforce.person.revised",
+        "version": 2
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.workforce.person.revised",
+        "version": 2
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `PersonRevised`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/PersonDetailsRevised.cs.",
+      "emissionKind": "business"
+    },
+    {
+      "event": "PersonMembershipCorrelationRecorded",
+      "membership": "current_concrete_type_alias",
+      "category": "current_concrete_type_of_canonical_event",
+      "canonicalReplacementEvents": [
+        "PersonMembershipCorrelated"
+      ],
+      "canonicalOwners": [
+        "Person"
+      ],
+      "currentWire": {
+        "discriminator": "bdgrz.workforce.person.membership-correlated",
+        "version": 2
+      },
+      "selectedWire": {
+        "discriminator": "bdgrz.workforce.person.membership-correlated",
+        "version": 2
+      },
+      "sourceInventoryDisposition": "aggregate_fact",
+      "sourceInventoryNote": "Concrete record emitted today for canonical `PersonMembershipCorrelated`; folded by the owner reducer. Added 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/PersonMembershipCorrelationRecorded.cs.",
+      "emissionKind": "business"
     }
   ],
   "adjudication": {
@@ -104452,5 +104736,143 @@
       "authority": "ARTIFACT_DOWNLOAD",
       "addsCanonicalSemanticEvent": false
     }
-  ]
+  ],
+  "counts": {},
+  "polish": {
+    "date": "2026-10-29",
+    "rowsAdded": [
+      "AuditPopulationDefinedV4",
+      "AuditPopulationGeneratedV4",
+      "AuditPopulationDefinitionRevisedV2",
+      "AuditPopulationFactRecordedV3",
+      "AuditPopulationRowClassifiedV3",
+      "AuditPopulationReconciledV3",
+      "AuditPopulationAmendedV3",
+      "AuditPopulationFrozenV3",
+      "PersonRegistrationRecorded",
+      "PersonDetailsRevised",
+      "PersonMembershipCorrelationRecorded"
+    ],
+    "wireRowsUpdated": [
+      "AccessDecisionsRecorded",
+      "AccessExpectationApproved",
+      "AccessExpectationExceptionRecorded",
+      "AccessExpectationProposed",
+      "AccessPopulationAccepted",
+      "AccessPopulationExceptionRecorded",
+      "AccessPopulationFactsRecorded",
+      "AccessPopulationOpened",
+      "AccessPrincipalClassified",
+      "AccessRemediationChangeRecorded",
+      "AccessRemediationExceptionRecorded",
+      "AccessRemediationVerified",
+      "AccessReviewCampaignCompleted",
+      "AccessReviewCampaignLaunched",
+      "AccessReviewResponsibilityReassigned",
+      "AdvisorFeedbackCorrected",
+      "AdvisorFeedbackRecorded",
+      "AdvisorFeedbackResponded",
+      "AdvisorHandoffClosed",
+      "AdvisorHandoffCreated",
+      "AdvisorHandoffRevoked",
+      "AdvisorHandoffSelectionRevised",
+      "ApplicationImportCanceled",
+      "ApplicationImportCancellationAccepted",
+      "ApplicationImportCommitted",
+      "ApplicationImportEffectCanceled",
+      "ApplicationImportEffectPending",
+      "ApplicationImportExecutionAuthorized",
+      "ApplicationImportFailed",
+      "ApplicationImportPlanSealed",
+      "ApplicationImportRetirementProposalSealed",
+      "ApplicationImportRowCorrelated",
+      "ApplicationImportSourceAdmissionRecorded",
+      "ApplicationImportSourceSettled",
+      "ApplicationImportStaged",
+      "ApplicationImportTargetAuthorized",
+      "ApplicationImportTargetSettled",
+      "AuditPopulationAmended",
+      "AuditPopulationDefined",
+      "AuditPopulationDefinitionRevised",
+      "AuditPopulationFactRecorded",
+      "AuditPopulationFrozen",
+      "AuditPopulationGenerated",
+      "AuditPopulationReconciled",
+      "AuditPopulationRowClassified",
+      "CampaignWaiverApproved",
+      "ClientServiceCreated",
+      "ClientServiceRetired",
+      "ClientServiceRevised",
+      "ControlCriterionMappingProposed",
+      "ControlCriterionMappingRetired",
+      "ControlCriterionMappingReviewed",
+      "ControlEvaluationDeviationDisposed",
+      "ControlEvaluationReviewed",
+      "ControlEvaluationStarted",
+      "ControlEvaluationStepRecorded",
+      "ControlEvaluationSubmitted",
+      "ControlOccurrenceAttested",
+      "ControlOccurrenceOpened",
+      "ControlOccurrenceReviewed",
+      "ControlOperatingPlanApproved",
+      "ControlOperatingPlanProposed",
+      "CorrectiveActionAddedV2",
+      "CorrectiveActionCompletedV2",
+      "CriteriaTextOverlayEntryRevised",
+      "CriterionApplicabilityReviewed",
+      "CriterionNotApplicableProposed",
+      "CriterionNotApplicableWithdrawn",
+      "EvidenceArtifactDownloadIssued",
+      "EvidenceRequestCancelled",
+      "EvidenceRequestFulfilled",
+      "EvidenceRequestOpened",
+      "FindingAcceptanceLinkedV2",
+      "FindingClosedV2",
+      "FindingRaisedV2",
+      "FindingReopenedV2",
+      "FindingRevisedV2",
+      "MemberDeprovisioned",
+      "PersonMembershipCorrelated",
+      "PersonRecorded",
+      "PersonRevised",
+      "PolicyAcknowledgementRecorded",
+      "PolicyCampaignAudienceAmended",
+      "PolicyCampaignAudienceFrozen",
+      "PolicyCampaignClosed",
+      "PolicyCampaignLaunched",
+      "RiskControlTreatmentProposed",
+      "RiskControlTreatmentRetired",
+      "RiskControlTreatmentReviewed",
+      "RiskOwnerAssigned",
+      "RiskReassessmentTriggered",
+      "RiskTreatmentActionAdded",
+      "RiskTreatmentActionCancelled",
+      "RiskTreatmentActionCompletionReviewed",
+      "RiskTreatmentActionCompletionSubmitted",
+      "RiskTreatmentActionRevised",
+      "SystemDescriptionApproved",
+      "SystemDescriptionBound",
+      "SystemDescriptionDraftCreated",
+      "SystemDescriptionDraftRevised",
+      "SystemDescriptionNoChangeRecorded",
+      "SystemDescriptionReviewed",
+      "SystemDescriptionSourcesBound",
+      "SystemDescriptionSuccessorProposed",
+      "TeamMemberRemoved",
+      "TenantManagerRestorationAccepted",
+      "TenantManagerRestorationCompleted",
+      "TenantManagerRestored",
+      "TenantManagerSourceMutationAdmitted",
+      "TenantManagerWithdrawalAccepted",
+      "TenantManagerWithdrawalCompleted",
+      "TrainingCompletionRecorded",
+      "TrainingRequirementDefined",
+      "TypeIIPeriodAmendmentAccepted",
+      "TypeIIPeriodAmendmentCanceled",
+      "TypeIIPeriodOpeningAccepted",
+      "TypeIIPeriodOpeningRejected",
+      "TypeIIPeriodRangeAuthorized",
+      "TypeIIPeriodRangeSettled"
+    ]
+  }
 }

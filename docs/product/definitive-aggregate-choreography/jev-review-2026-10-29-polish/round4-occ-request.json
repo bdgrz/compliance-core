@@ -1,0 +1,931 @@
+{
+ "model": "jev-latest",
+ "state": {
+  "commands": [
+   {
+    "owner": "AccessGrant",
+    "command": "ProvisionGuestProgramAccess",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "UserId",
+     "ProgramId",
+     "InvitationId",
+     "ExpiresOn",
+     "AcceptedAt",
+     "InvitedBy",
+     "InvitedByDisplay"
+    ],
+    "owner_rule": "One stable grant identity has one immutable set of scope/principal/effective terms and, once revoked, can never be reissued. A grant is issued for exactly one scope level (organization, program, engagement or deliberately shared resource); the scope id is immutable once issued. Coverage of narrower scopes by a wider grant is evaluated by the authorizer from the grant's scope, not stored on or decided by the grant."
+   },
+   {
+    "owner": "AccessGrant",
+    "command": "RevokeAccessGrant",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "GrantId"
+    ],
+    "owner_rule": "One stable grant identity has one immutable set of scope/principal/effective terms and, once revoked, can never be reissued. A grant is issued for exactly one scope level (organization, program, engagement or deliberately shared resource); the scope id is immutable once issued. Coverage of narrower scopes by a wider grant is evaluated by the authorizer from the grant's scope, not stored on or decided by the grant."
+   },
+   {
+    "owner": "ApplicationImportBatch",
+    "command": "ExecuteApplicationImport",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "BatchId"
+    ],
+    "owner_rule": "Frozen source rows, row outcomes, per-batch execution and terminal disposition. "
+   },
+   {
+    "owner": "ArtifactDisclosure",
+    "command": "ApproveArtifactDisclosure",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "DisclosureId",
+     "ArtifactId",
+     "Recipient",
+     "Purpose",
+     "ArtifactRevision",
+     "Rationale"
+    ],
+    "owner_rule": "One disclosure binds immutable artifact content, handling-policy revision, recipient and purpose; delivery requires that approved identity and revocation is final. Disclosure to an auditor is admitted only for an artifact in available state (quarantined or uninspected artifacts are refused) or for its approved redacted derivative, and every disclosure records the recipient, purpose and handling-policy revision."
+   },
+   {
+    "owner": "ArtifactDisposition",
+    "command": "ApproveArtifactDisposition",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "DispositionId",
+     "ArtifactId",
+     "Rationale"
+    ],
+    "owner_rule": "Only an approved exact source with elapsed retention/no active holds or reliance may start execution; one outstanding attempt; disposed result is terminal and yields tombstone. Approval requires an Org Admin actor and a bounded rationale recorded as an immutable decision; approvals may be batched across artifacts, and nothing is disposed of automatically. Disposition leaves a tombstone carrying content hash, size, retention basis and the approving decision. An active hold on a held artifact blocks disposition during client offboarding, and all other artifacts follow the retention schedule once"
+   },
+   {
+    "owner": "ArtifactDisposition",
+    "command": "ExecuteArtifactDisposition",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "DispositionId",
+     "ArtifactId"
+    ],
+    "owner_rule": "Only an approved exact source with elapsed retention/no active holds or reliance may start execution; one outstanding attempt; disposed result is terminal and yields tombstone. Approval requires an Org Admin actor and a bounded rationale recorded as an immutable decision; approvals may be batched across artifacts, and nothing is disposed of automatically. Disposition leaves a tombstone carrying content hash, size, retention basis and the approving decision. An active hold on a held artifact blocks disposition during client offboarding, and all other artifacts follow the retention schedule once"
+   },
+   {
+    "owner": "ArtifactEngagementHold",
+    "command": "RecordEngagementReportIssued",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "HoldId",
+     "EngagementId",
+     "ReportArtifactId",
+     "IssuedAt",
+     "IssuerReference"
+    ],
+    "owner_rule": "One preservation hold cannot release before one year after its exact report issuance; report identity and release decision are immutable. Release also requires the attributed decision that the engagement record package was delivered into the attest team's audit software; until that delivery fact exists the hold blocks disposition and offboarding cannot complete (M0-D27 D27-05) A hold is either engagement kind, applying until the report is issued plus one year, or legal kind, applying until an Org Admin releases it with no end date. An engagement hold stays active until one year after report is"
+   },
+   {
+    "owner": "AuditPopulation",
+    "command": "ClassifyAuditPopulationRow",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "PopulationId",
+     "RowId",
+     "Classification",
+     "Rationale"
+    ],
+    "owner_rule": "One population owns complete current definition/source/row classification, reconciliation invalidation, completeness proof and freeze seal. Immutable row/version bodies are values outside retained command state; no independent AuditPopulationRowDecision root or projected-count freeze authority. A manually recorded population cannot claim audit-ready or freeze until its scope, observation time and completeness are declared. Late or corrected rows never edit a frozen version: they produce a new population version that references the superseded version and each superseded row."
+   },
+   {
+    "owner": "ClientExport",
+    "command": "RecordOwnAttestRecordDelivery",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "EngagementId",
+     "PackageId",
+     "Recipient",
+     "DeliveredAt",
+     "DeliveryReference"
+    ],
+    "owner_rule": "Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package. "
+   },
+   {
+    "owner": "ClientExport",
+    "command": "RecordOwnAttestRecordPackageResult",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "PackageId",
+     "Outcome",
+     "ArtifactId",
+     "FailureCode",
+     "CompletedAt"
+    ],
+    "owner_rule": "Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package. "
+   },
+   {
+    "owner": "ComplianceIncident",
+    "command": "RecordComplianceIncidentSystemDescriptionDecision",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "IncidentId",
+     "ContentVersion",
+     "SystemDescriptionId",
+     "SystemDescriptionVersionId",
+     "DecisionId",
+     "AssessmentSha256"
+    ],
+    "owner_rule": "One incident version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement; incident resolution requires every admitted follow-up work item completed. An incident carries detected_at, resolved_at and boolean customer_data_affected and availability_sla_affected; the recorded time cannot precede detected_at and a revision cannot change detected_at. It may link to an earlier externally sourced IncidentReference; linking never rewrites earlier risk history and the reference keeps its source identity, occurrence time, summary and "
+   },
+   {
+    "owner": "EvidenceArtifact",
+    "command": "RecordEvidenceArtifactInspection",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ArtifactId",
+     "Outcome",
+     "InspectedAt"
+    ],
+    "owner_rule": "Immutable content remains unavailable until clean inspection; malware alone can be released with attributed clean rescan; secret/invalid rejection is final. Rejects an upload with reason secret_detected, purges its content immediately, and keeps only a tombstone (content hash, size, uploader, time, reason); credentials, private keys, access tokens, and session cookies are never stored. A quarantined (malware) artifact cannot be downloaded or shared, and only an Org Admin may release a false positive after rescan or dispose of it. Content hash is verified on restore."
+   },
+   {
+    "owner": "FindingAggregate",
+    "command": "RaiseEvaluationDeviationFinding",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "FindingId",
+     "ControlId",
+     "EvaluationId",
+     "DeviationId"
+    ],
+    "owner_rule": "Finding description, status and closure admission generation. A finding closes only with required closure evidence, verification rationale, program-management permission, and separation of duties; it is the sole authority for these and never infers or grants a separation-of-duties exception or waiver. Gaps, provider coverage gaps, and control evaluation deviations are distinct records: conversion to a Finding preserves source text, provenance, and links, and no record silently becomes or closes another when a linked record changes state."
+   },
+   {
+    "owner": "ManagementAssertion",
+    "command": "ApproveManagementAssertion",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "AssertionId",
+     "Version",
+     "Outcome",
+     "Rationale"
+    ],
+    "owner_rule": "One exact current authored assertion version receives at most one immutable independent named CEO/CISO decision; revision creates changed wording/input bindings. The assertion decision is signed only by the CEO or the CISO as an attributable named decision on an exact package version; the representation letter has the same signer rule, owned by its own aggregate."
+   },
+   {
+    "owner": "ManagementRepresentationLetter",
+    "command": "SignManagementRepresentationLetter",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "LetterId",
+     "SignerMemberId",
+     "SignedArtifactId",
+     "SignedAt"
+    ],
+    "owner_rule": "Letter becomes signed exactly when every fixed named required signer has one immutable distinct signed artifact; no unlisted signer may sign. "
+   },
+   {
+    "owner": "Member",
+    "command": "CompleteMemberRetirement",
+    "fields": [
+     "TenantId",
+     "MemberId",
+     "MembershipEpisodeId",
+     "TerminationEventId",
+     "CommandId"
+    ],
+    "owner_rule": "One tenant-user membership has one affiliation/expiry episode; deprovision closes authority and a fresh episode cannot start until authority cleanup completes. Affiliation is exactly one of client_personnel, firm_staff, or guest; a guest requires a finite end date, persisted on the registration, access stops at the end of that UTC date, and grants cannot extend beyond it (guests are limited to Org Admin-granted programs and hold no approval rights). Deprovision records actor, timestamp, and reason, refuses self-deprovisioning, and removes team assignments and member-scoped grants prospectively"
+   },
+   {
+    "owner": "Member",
+    "command": "RegisterMember",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "UserId",
+     "Affiliation",
+     "MembershipExpiresOn"
+    ],
+    "owner_rule": "One tenant-user membership has one affiliation/expiry episode; deprovision closes authority and a fresh episode cannot start until authority cleanup completes. Affiliation is exactly one of client_personnel, firm_staff, or guest; a guest requires a finite end date, persisted on the registration, access stops at the end of that UTC date, and grants cannot extend beyond it (guests are limited to Org Admin-granted programs and hold no approval rights). Deprovision records actor, timestamp, and reason, refuses self-deprovisioning, and removes team assignments and member-scoped grants prospectively"
+   },
+   {
+    "owner": "MethodologyTemplate",
+    "command": "ApproveMethodologyTemplateVersion",
+    "fields": [
+     "CommandId",
+     "TemplateId",
+     "Version",
+     "ApprovalRationale"
+    ],
+    "owner_rule": "Publish current authored template only after independent review and distinct third-party approver; published content immutable; retirement stops further template revisions. Contributed records require exact accepted deidentified provenance. "
+   },
+   {
+    "owner": "MethodologyTemplate",
+    "command": "ReviewMethodologyTemplate",
+    "fields": [
+     "CommandId",
+     "TemplateId",
+     "Version",
+     "Outcome",
+     "Comments"
+    ],
+    "owner_rule": "Publish current authored template only after independent review and distinct third-party approver; published content immutable; retirement stops further template revisions. Contributed records require exact accepted deidentified provenance. "
+   },
+   {
+    "owner": "MethodologyTemplateContribution",
+    "command": "AcceptTemplateContribution",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ContributionId",
+     "AcceptanceRationale"
+    ],
+    "owner_rule": "Only immutable proposed deidentified record that receives independent approved review then acceptance by a third platform operator becomes shareable; tenant/source lineage stays in tenant-owned stream. No additional write-time refusals beyond the invariant; D25-02 is largely an architectural boundary already stated by the invariant (de-identified, reviewed contribution only)."
+   },
+   {
+    "owner": "MethodologyTemplateContribution",
+    "command": "ReviewTemplateContribution",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ContributionId",
+     "Outcome",
+     "ReviewNotes"
+    ],
+    "owner_rule": "Only immutable proposed deidentified record that receives independent approved review then acceptance by a third platform operator becomes shareable; tenant/source lineage stays in tenant-owned stream. No additional write-time refusals beyond the invariant; D25-02 is largely an architectural boundary already stated by the invariant (de-identified, reviewed contribution only)."
+   },
+   {
+    "owner": "RiskGovernance",
+    "command": "RaiseRiskReassessmentTriggers",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "TriggerKind",
+     "SourceReference",
+     "RaisedAt",
+     "MethodVersionId",
+     "RiskId"
+    ],
+    "owner_rule": "One risk\u2019s governance and reassessment obligations. A reassessment trigger is one of significant change, incident, boundary change, new material vendor or expired acceptance, and a risk with no full reassessment for 12 months is flagged due again."
+   },
+   {
+    "owner": "Role",
+    "command": "DeleteRole",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "RoleId"
+    ],
+    "owner_rule": "One role has one active/deleted lifecycle, normalized display name and built-in protection. The built-in role catalog is fixed to Org Admin, Compliance Lead, Contributor, Viewer, Advisor and Attest, and custom roles are not supported; a built-in role cannot be deleted."
+   },
+   {
+    "owner": "Role",
+    "command": "RenameRole",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "RoleId",
+     "Name"
+    ],
+    "owner_rule": "One role has one active/deleted lifecycle, normalized display name and built-in protection. The built-in role catalog is fixed to Org Admin, Compliance Lead, Contributor, Viewer, Advisor and Attest, and custom roles are not supported; a built-in role cannot be deleted."
+   },
+   {
+    "owner": "ServiceEngagementIndependence",
+    "command": "RecordDirectoryIndependenceReevaluation",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "DirectoryResourceOffset",
+     "DirectoryEventId",
+     "DirectoryPayloadSha256",
+     "AcceptanceResourceOffset",
+     "AcceptanceEventId",
+     "AcceptanceRequestId",
+     "AcceptancePayloadSha256",
+     "StaffMemberId",
+     "UserId",
+     "EngagementId",
+     "AcceptedServiceEpoch"
+    ],
+    "owner_rule": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently. An impaired independence evaluation result blocks acceptance of the attest engagement with no override (M0-D26 D26-07; Jev 0.81) Advisor and Attest access exists only through assignment to an accepted ServiceEngagement for that client, and no person may hold both an Advisor and an Attest assignment for the same client ever, checked over their full assignment history. An "
+   },
+   {
+    "owner": "SignificantChange",
+    "command": "LinkImpactReviewWork",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "ChangeId",
+     "ContentVersion"
+    ],
+    "owner_rule": "One change version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement. A change records a human significance assessment of significant or not_significant with required rationale, assessed_by and assessed_at, and a handling_class from the evidence vocabulary defaulting to confidential. It is significant when it changes the system boundary, a service commitment or system requirement, a key control, or infrastructure hosting in-scope data; the product keeps its own record identity, recorder and dates, and source_system, sourc"
+   },
+   {
+    "owner": "SignificantChange",
+    "command": "RecordSignificantChangeSystemDescriptionDecision",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "ChangeId",
+     "ContentVersion",
+     "SystemDescriptionId",
+     "SystemDescriptionVersionId",
+     "DecisionId",
+     "Decision",
+     "AssessmentSha256"
+    ],
+    "owner_rule": "One change version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement. A change records a human significance assessment of significant or not_significant with required rationale, assessed_by and assessed_at, and a handling_class from the evidence vocabulary defaulting to confidential. It is significant when it changes the system boundary, a service commitment or system requirement, a key control, or infrastructure hosting in-scope data; the product keeps its own record identity, recorder and dates, and source_system, sourc"
+   },
+   {
+    "owner": "Team",
+    "command": "DeleteTeam",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "TeamId"
+    ],
+    "owner_rule": "One team definition has an active/deleted lifecycle and built-in team cannot be deleted. "
+   },
+   {
+    "owner": "TeamMember",
+    "command": "CleanupRetiredMembershipRelationship",
+    "fields": [
+     "TenantId",
+     "MemberId",
+     "MembershipEpisodeId",
+     "Kind",
+     "TargetId",
+     "SourceEventId",
+     "SourcePosition",
+     "TerminationEventId",
+     "CommandId"
+    ],
+    "owner_rule": "One tenant/team/member relationship is active only for one current membership episode. "
+   },
+   {
+    "owner": "Tenant",
+    "command": "ActivateTenant",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "FirstAdministratorUserId",
+     "FirstAdministratorEmail"
+    ],
+    "owner_rule": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension"
+   },
+   {
+    "owner": "Tenant",
+    "command": "ConfirmTenantSlug",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "owner_rule": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension"
+   },
+   {
+    "owner": "Tenant",
+    "command": "ConfirmTenantSlugSurrender",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "owner_rule": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension"
+   },
+   {
+    "owner": "Tenant",
+    "command": "ReactivateTenant",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Reason"
+    ],
+    "owner_rule": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension"
+   },
+   {
+    "owner": "Tenant",
+    "command": "RejectTenantSlug",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "owner_rule": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension"
+   },
+   {
+    "owner": "Tenant",
+    "command": "RejectTenantSlugSurrender",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "owner_rule": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension"
+   },
+   {
+    "owner": "Tenant",
+    "command": "RequestTenantSlugSurrender",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "owner_rule": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension"
+   },
+   {
+    "owner": "TenantSlug",
+    "command": "RegisterTenantSlug",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "owner_rule": "One normalized global slug can belong to one tenant and once surrendered is permanently retired. "
+   },
+   {
+    "owner": "TenantSlug",
+    "command": "SurrenderTenantSlug",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "owner_rule": "One normalized global slug can belong to one tenant and once surrendered is permanently retired. "
+   },
+   {
+    "owner": "TypeIIPlan",
+    "command": "ApproveTypeIIOperatingPlan",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "PlanId",
+     "Version",
+     "Rationale"
+    ],
+    "owner_rule": "Only current proposed content with exact carried-gap acknowledgements receives an independent review; executive approval requires review and three distinct roles, after which plan is immutable. "
+   },
+   {
+    "owner": "TypeIIPlan",
+    "command": "ReviewTypeIIOperatingPlan",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "PlanId",
+     "Version",
+     "Outcome",
+     "Comments"
+    ],
+    "owner_rule": "Only current proposed content with exact carried-gap acknowledgements receives an independent review; executive approval requires review and three distinct roles, after which plan is immutable. "
+   },
+   {
+    "owner": "WorkforceObservationResolution",
+    "command": "ResolveWorkforceObservation",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ObservationId",
+     "Resolution",
+     "Note"
+    ],
+    "owner_rule": "One observation may receive one final attributed resolved/dismissed decision; changed resolution intent conflicts. "
+   }
+  ],
+  "principle": "A command that mutates a record with prior state carries ExpectedRevision (or an admission Generation) so a stale caller cannot overwrite a newer decision; a creation command needs only its creation key; a terminal idempotent transition may omit the guard only when any later state makes it a no-op."
+ },
+ "questions": {
+  "AccessGrant.ProvisionGuestProgramAccess__guard": {
+   "type": "choice",
+   "instructions": "For `AccessGrant.ProvisionGuestProgramAccess` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "AccessGrant.RevokeAccessGrant__guard": {
+   "type": "choice",
+   "instructions": "For `AccessGrant.RevokeAccessGrant` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ApplicationImportBatch.ExecuteApplicationImport__guard": {
+   "type": "choice",
+   "instructions": "For `ApplicationImportBatch.ExecuteApplicationImport` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ArtifactDisclosure.ApproveArtifactDisclosure__guard": {
+   "type": "choice",
+   "instructions": "For `ArtifactDisclosure.ApproveArtifactDisclosure` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ArtifactDisposition.ApproveArtifactDisposition__guard": {
+   "type": "choice",
+   "instructions": "For `ArtifactDisposition.ApproveArtifactDisposition` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ArtifactDisposition.ExecuteArtifactDisposition__guard": {
+   "type": "choice",
+   "instructions": "For `ArtifactDisposition.ExecuteArtifactDisposition` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ArtifactEngagementHold.RecordEngagementReportIssued__guard": {
+   "type": "choice",
+   "instructions": "For `ArtifactEngagementHold.RecordEngagementReportIssued` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "AuditPopulation.ClassifyAuditPopulationRow__guard": {
+   "type": "choice",
+   "instructions": "For `AuditPopulation.ClassifyAuditPopulationRow` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ClientExport.RecordOwnAttestRecordDelivery__guard": {
+   "type": "choice",
+   "instructions": "For `ClientExport.RecordOwnAttestRecordDelivery` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ClientExport.RecordOwnAttestRecordPackageResult__guard": {
+   "type": "choice",
+   "instructions": "For `ClientExport.RecordOwnAttestRecordPackageResult` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ComplianceIncident.RecordComplianceIncidentSystemDescriptionDecision__guard": {
+   "type": "choice",
+   "instructions": "For `ComplianceIncident.RecordComplianceIncidentSystemDescriptionDecision` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "EvidenceArtifact.RecordEvidenceArtifactInspection__guard": {
+   "type": "choice",
+   "instructions": "For `EvidenceArtifact.RecordEvidenceArtifactInspection` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "FindingAggregate.RaiseEvaluationDeviationFinding__guard": {
+   "type": "choice",
+   "instructions": "For `FindingAggregate.RaiseEvaluationDeviationFinding` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ManagementAssertion.ApproveManagementAssertion__guard": {
+   "type": "choice",
+   "instructions": "For `ManagementAssertion.ApproveManagementAssertion` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ManagementRepresentationLetter.SignManagementRepresentationLetter__guard": {
+   "type": "choice",
+   "instructions": "For `ManagementRepresentationLetter.SignManagementRepresentationLetter` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Member.CompleteMemberRetirement__guard": {
+   "type": "choice",
+   "instructions": "For `Member.CompleteMemberRetirement` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Member.RegisterMember__guard": {
+   "type": "choice",
+   "instructions": "For `Member.RegisterMember` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "MethodologyTemplate.ApproveMethodologyTemplateVersion__guard": {
+   "type": "choice",
+   "instructions": "For `MethodologyTemplate.ApproveMethodologyTemplateVersion` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "MethodologyTemplate.ReviewMethodologyTemplate__guard": {
+   "type": "choice",
+   "instructions": "For `MethodologyTemplate.ReviewMethodologyTemplate` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "MethodologyTemplateContribution.AcceptTemplateContribution__guard": {
+   "type": "choice",
+   "instructions": "For `MethodologyTemplateContribution.AcceptTemplateContribution` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "MethodologyTemplateContribution.ReviewTemplateContribution__guard": {
+   "type": "choice",
+   "instructions": "For `MethodologyTemplateContribution.ReviewTemplateContribution` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "RiskGovernance.RaiseRiskReassessmentTriggers__guard": {
+   "type": "choice",
+   "instructions": "For `RiskGovernance.RaiseRiskReassessmentTriggers` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Role.DeleteRole__guard": {
+   "type": "choice",
+   "instructions": "For `Role.DeleteRole` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Role.RenameRole__guard": {
+   "type": "choice",
+   "instructions": "For `Role.RenameRole` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "ServiceEngagementIndependence.RecordDirectoryIndependenceReevaluation__guard": {
+   "type": "choice",
+   "instructions": "For `ServiceEngagementIndependence.RecordDirectoryIndependenceReevaluation` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "SignificantChange.LinkImpactReviewWork__guard": {
+   "type": "choice",
+   "instructions": "For `SignificantChange.LinkImpactReviewWork` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "SignificantChange.RecordSignificantChangeSystemDescriptionDecision__guard": {
+   "type": "choice",
+   "instructions": "For `SignificantChange.RecordSignificantChangeSystemDescriptionDecision` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Team.DeleteTeam__guard": {
+   "type": "choice",
+   "instructions": "For `Team.DeleteTeam` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "TeamMember.CleanupRetiredMembershipRelationship__guard": {
+   "type": "choice",
+   "instructions": "For `TeamMember.CleanupRetiredMembershipRelationship` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Tenant.ActivateTenant__guard": {
+   "type": "choice",
+   "instructions": "For `Tenant.ActivateTenant` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Tenant.ConfirmTenantSlug__guard": {
+   "type": "choice",
+   "instructions": "For `Tenant.ConfirmTenantSlug` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Tenant.ConfirmTenantSlugSurrender__guard": {
+   "type": "choice",
+   "instructions": "For `Tenant.ConfirmTenantSlugSurrender` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Tenant.ReactivateTenant__guard": {
+   "type": "choice",
+   "instructions": "For `Tenant.ReactivateTenant` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Tenant.RejectTenantSlug__guard": {
+   "type": "choice",
+   "instructions": "For `Tenant.RejectTenantSlug` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Tenant.RejectTenantSlugSurrender__guard": {
+   "type": "choice",
+   "instructions": "For `Tenant.RejectTenantSlugSurrender` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "Tenant.RequestTenantSlugSurrender__guard": {
+   "type": "choice",
+   "instructions": "For `Tenant.RequestTenantSlugSurrender` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "TenantSlug.RegisterTenantSlug__guard": {
+   "type": "choice",
+   "instructions": "For `TenantSlug.RegisterTenantSlug` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "TenantSlug.SurrenderTenantSlug__guard": {
+   "type": "choice",
+   "instructions": "For `TenantSlug.SurrenderTenantSlug` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "TypeIIPlan.ApproveTypeIIOperatingPlan__guard": {
+   "type": "choice",
+   "instructions": "For `TypeIIPlan.ApproveTypeIIOperatingPlan` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "TypeIIPlan.ReviewTypeIIOperatingPlan__guard": {
+   "type": "choice",
+   "instructions": "For `TypeIIPlan.ReviewTypeIIOperatingPlan` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  },
+  "WorkforceObservationResolution.ResolveWorkforceObservation__guard": {
+   "type": "choice",
+   "instructions": "For `WorkforceObservationResolution.ResolveWorkforceObservation` in `commands`, which concurrency rule should the definitive contract state?",
+   "criteria": {
+    "require_expected_revision": "The command changes a record whose later decisions could be overwritten by a stale caller, so ExpectedRevision must be a required field.",
+    "terminal_idempotent_no_guard": "The transition is terminal or absorbing (delete, revoke, complete, reject) and a repeat or a stale caller yields a no-op, so no guard is needed and the contract should say so.",
+    "creation_key_only": "The command creates the record and its logical identity is the creation key, so no revision guard applies.",
+    "process_reply_bound_by_operation": "The command is a reply inside a process and is bound by its operation identity and generation, which replace the revision guard."
+   }
+  }
+ }
+}

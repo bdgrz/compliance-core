@@ -20,6 +20,7 @@ Priority is mapped only when an aggregate is named in a backlog story's body; Co
 | `AdvisorHandoff` | Source present; target conformance not verified | P0 (R2-08) | `src/Compliance.Core/Features/AdvisorCollaboration/Aggregates/AdvisorHandoff.cs` |
 | `ApplicationImportBatch` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Applications/Aggregates/ApplicationImportBatch.cs` |
 | `ApplicationImportSource` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Applications/Aggregates/ApplicationImportSource.cs` |
+| `ApplicationNameClaim` | Planned owner added 2026-10-29 (Jev 0.83); no source type yet | No direct story mapping | — |
 | `ApplicationRelationship` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Applications/Aggregates/ApplicationRelationship.cs` |
 | `ArtifactDisclosure` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Retention/Aggregates/ArtifactDisclosure.cs` |
 | `ArtifactDisposition` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Retention/Aggregates/ArtifactDisposition.cs` |
@@ -41,6 +42,7 @@ Priority is mapped only when an aggregate is named in a backlog story's body; Co
 | `ClientService` | Done (aggregate scope): Jev reviewed; 35 focused tests pass | P0 (R1-02) | `src/Compliance.Core/Features/Programs/Aggregates/ClientService.cs` |
 | `ClientServiceIndependence` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/AccessControl/Aggregates/ClientServiceIndependence.cs` |
 | `CommitmentDraft` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Commitments/Aggregates/CommitmentDraft.cs` |
+| `CommitmentControlLink` | Planned owner added 2026-10-29 (round 3); no source type yet | No direct story mapping | — |
 | `ComplianceIncident` | Source present; target conformance not verified | P1 (T2-07) | `src/Compliance.Core/Features/Incidents/Aggregates/ComplianceIncident.cs` |
 | `ComplianceProgram` | Done: Jev reviewed; 116 focused tests pass | P0 (R1-01) | `src/Compliance.Core/Features/Programs/Aggregates/ComplianceProgram.cs` |
 | `ControlCriterionMapping` | Source present; target conformance not verified | P0 (R1-06) | `src/Compliance.Core/Features/ControlMappings/Aggregates/ControlCriterionMapping.cs` |
@@ -70,6 +72,7 @@ Priority is mapped only when an aggregate is named in a backlog story's body; Co
 | `FirmStaffRecord` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/AccessControl/Aggregates/FirmStaffRecord.cs` |
 | `IdentityRecovery` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/UserIdentities/Aggregates/IdentityRecovery.cs` |
 | `ImmutableSnapshot` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Snapshots/Aggregates/ImmutableSnapshot.cs` |
+| `ImportedOwnerResolution` | Planned owner added 2026-10-29 (round 3); no source type yet | No direct story mapping | — |
 | `IndependenceRuleCatalog` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/AccessControl/Aggregates/IndependenceRuleCatalog.cs` |
 | `IndependenceRuleRatificationCatalog` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/AccessControl/Aggregates/IndependenceRuleRatificationCatalog.cs` |
 | `InformationAsset` | Source present; target conformance not verified | P0 (R1-12) | `src/Compliance.Core/Features/TechnologyInventory/Aggregates/InformationAsset.cs` |
@@ -132,7 +135,7 @@ Priority is mapped only when an aggregate is named in a backlog story's body; Co
 | `TypeIIPeriod` | Source present; target conformance not verified | P1 (T2-01)<br>P1 (T3-01) | `src/Compliance.Core/Features/Operations/Aggregates/TypeIIPeriod.cs` |
 | `TypeIIPlan` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Examinations/Aggregates/TypeIIPlan.cs` |
 | `UserIdentity` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/UserIdentities/Aggregates/UserIdentity.cs` |
-| `WorkDigestPreference` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Work/Aggregates/WorkDigestPreference.cs` |
+| `WorkDigestPreference` | Reclassified 2026-10-29 as technical settings state (Jev 1.00); no longer a business owner | No direct story mapping | `src/Compliance.Core/Features/Work/Aggregates/WorkDigestPreference.cs` |
 | `WorkItemAssignment` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Work/Aggregates/WorkItemAssignment.cs` |
 | `WorkRelationship` | Source present; target conformance not verified | P0 (R1-11) | `src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs` |
 | `WorkforceObservationResolution` | Source present; target conformance not verified | No direct story mapping | `src/Compliance.Core/Features/Workforce/Aggregates/WorkforceObservationResolution.cs` |
