@@ -52,6 +52,7 @@ using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.PolicyDistribution.Events;
+using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
@@ -182,6 +183,9 @@ public sealed class PolicyCampaignParticipant : Aggregate, ISourceUseOwner
         var prepared = PrepareApply(operation);
         if (!prepared.IsSuccess)
             return prepared;
+        if (policyId == Uuid.Empty || policyVersion < 1 || !ValidActor(performer) ||
+            !ValidResult(operation, recorder, acknowledgedAt, intent, operationResult))
+            return InvalidResult();
         if (_hasAcknowledgement)
             return Conflict("The person already acknowledged this campaign.");
         RaiseEvent(new PolicyAcknowledgementRecorded(TenantId, CampaignId, operation.RootOperationId, PersonId,
@@ -199,6 +203,9 @@ public sealed class PolicyCampaignParticipant : Aggregate, ISourceUseOwner
         var prepared = PrepareApply(operation);
         if (!prepared.IsSuccess)
             return prepared;
+        if (requirementId == Uuid.Empty || requirementVersion < 1 ||
+            !ValidResult(operation, recorder, recordedAt, intent, operationResult))
+            return InvalidResult();
         if (_hasCompletion)
             return Conflict("A completion is already recorded for this person.");
         RaiseEvent(new TrainingCompletionRecorded(TenantId, CampaignId, operation.RootOperationId, PersonId,
@@ -216,6 +223,10 @@ public sealed class PolicyCampaignParticipant : Aggregate, ISourceUseOwner
         var prepared = PrepareApply(operation);
         if (!prepared.IsSuccess)
             return prepared;
+        if (!ValidResult(operation, approver, approvedAt, intent, operationResult) ||
+            approverMemberId == Uuid.Empty || approver.Kind != "member" ||
+            !Uuid.TryParse(approver.Id, out var memberId) || memberId != approverMemberId)
+            return InvalidResult();
         RaiseEvent(new CampaignWaiverApproved(TenantId, CampaignId, operation.RootOperationId, PersonId, reason,
             expiresOn, approver, approverMemberId, approvedAt, operation, intent, null, operationResult));
         return Result.Success;
@@ -251,9 +262,16 @@ public sealed class PolicyCampaignParticipant : Aggregate, ISourceUseOwner
 
     Result PrepareApply(OperationProvenance operation)
     {
-        if (operation.Owner != Stream)
+        if (TenantId == Uuid.Empty || CampaignId == Uuid.Empty || PersonId == Uuid.Empty ||
+            operation.LogicalId == Uuid.Empty || operation.RootOperationId == Uuid.Empty ||
+            operation.AuthoredIntentSha256 is not { Length: 64 } digest || !digest.All(Uri.IsHexDigit) ||
+            string.IsNullOrWhiteSpace(operation.Episode) || operation.AcceptedAt == default ||
+            operation.CommandKind != nameof(ApplyPolicyParticipantResult) || operation.Owner != Stream ||
+            operation.AffectedOwner != Stream || operation.ExpectedRevisionOwner != Stream ||
+            operation.FirstOwner != new PolicyDistributionCampaign(TenantId, CampaignId).Stream ||
+            operation.CausationEventId is not { } cause || cause == Uuid.Empty)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "An applied result is recorded on the participant's own stream."));
+                "An applied result requires its own participant and campaign admission provenance."));
         if (SelectedResultRootId == operation.RootOperationId && SelectedResult is not null)
             return Conflict("The admitted result was already applied to this participant.");
         if (Uses.HasActiveUse)
@@ -271,6 +289,16 @@ public sealed class PolicyCampaignParticipant : Aggregate, ISourceUseOwner
     bool Owns(Uuid tenantId, Uuid campaignId, Uuid personId, OperationProvenance operation) =>
         tenantId == TenantId && campaignId == CampaignId && personId == PersonId && operation.Owner == Stream;
 
+    static bool ValidResult(OperationProvenance operation, ActorReference? actor, DateTimeOffset at,
+        ImmutableContentRef? intent, ImmutableContentRef? result) =>
+        ValidActor(actor) && operation.Actor == actor && at != default &&
+        PolicyCampaignHistory.Reference(intent, ChildAdmissionIntent.Schema) &&
+        PolicyCampaignHistory.Reference(result, "mutation-result-content.v1");
+
+    static bool ValidActor(ActorReference? actor) => actor is not null &&
+        !string.IsNullOrWhiteSpace(actor.Kind) && !string.IsNullOrWhiteSpace(actor.Id) &&
+        !string.IsNullOrWhiteSpace(actor.Display);
+
     void Add(DomainEvent fact, OperationProvenance operation)
     {
         _revision++;
@@ -279,6 +307,8 @@ public sealed class PolicyCampaignParticipant : Aggregate, ISourceUseOwner
     }
 
     static Result Conflict(string message) => Result.Failure(new RequestError(RequestErrorKind.Conflict, message));
+    static Result InvalidResult() => Result.Failure(new RequestError(RequestErrorKind.Validation,
+        "The participant result requires valid source identity, attribution and immutable references."));
     protected override void Apply(DomainEvent ev)
     {
         _cut.Observe(ev);
