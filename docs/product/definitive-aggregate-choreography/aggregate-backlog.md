@@ -77,17 +77,17 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 53 | `ArtifactLegalHold` | No direct story mapping | — | Partial: Build and run the tests: dotnet test --filter FullyQualifiedName~ArtifactLegalHold/FullyQu |
 | 54 | `ArtifactRetentionBasis` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 55 | `AuditObservation` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
-| 56 | `AuditOutcome` | No direct story mapping | — | Source present; verify |
-| 57 | `AuditPackageManifest` | No direct story mapping | — | Source present; verify |
-| 58 | `AuditPackageDelivery` | No direct story mapping | 57: `AuditPackageManifest` | Source present; verify |
-| 59 | `AuditorFeedbackThread` | No direct story mapping | 38: `AuditorRequest` | Source present; verify |
-| 60 | `AuditorResponse` | No direct story mapping | 38: `AuditorRequest` | Source present; verify |
-| 61 | `AuditorSampleSelection` | No direct story mapping | 38: `AuditorRequest` | Source present; verify |
-| 62 | `CommitmentDraft` | No direct story mapping | — | Source present; verify |
+| 56 | `AuditOutcome` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 57 | `AuditPackageManifest` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 58 | `AuditPackageDelivery` | No direct story mapping | 57: `AuditPackageManifest` | Partial: Jev gave 0.66 that the tests assert the invariant. That is moderate, so it is advisory onl |
+| 59 | `AuditorFeedbackThread` | No direct story mapping | 38: `AuditorRequest` | Partial: Payload redundancy of TenantId/SubjectId/Revision in AuditorRequestCommentRecorded stays u |
+| 60 | `AuditorResponse` | No direct story mapping | 38: `AuditorRequest` | Done (focused aggregate scope, 2026-10-29) |
+| 61 | `AuditorSampleSelection` | No direct story mapping | 38: `AuditorRequest` | Done (focused aggregate scope, 2026-10-29) |
+| 62 | `CommitmentDraft` | No direct story mapping | — | Partial: Catalog owner: D09-01/03/04 fields (typed source citation, owner Person, categories, bound |
 | 63 | `ComplianceProgram` | P0 ([R1-01](https://github.com/bdgrz/compliance-core/issues/7)) | — | Done (focused aggregate scope) |
-| 64 | `ControlDraft` | No direct story mapping | — | Source present; verify |
-| 65 | `ControlOperatingPlan` | No direct story mapping | — | Source present; verify |
-| 66 | `CriteriaTextOverlay` | No direct story mapping | — | Source present; verify |
+| 64 | `ControlDraft` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 65 | `ControlOperatingPlan` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 66 | `CriteriaTextOverlay` | No direct story mapping | — | Partial: Build and run the tests. The source change and the five new owner-level tests are written  |
 | 67 | `CriterionApplicability` | No direct story mapping | — | Source present; verify |
 | 68 | `DeclaredApplication` | No direct story mapping | 47: `ApplicationImportBatch` | Source present; verify |
 | 69 | `DeclaredSystemInstance` | No direct story mapping | — | Source present; verify |
