@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "barrier_scope": {
+      "type": "choice",
+      "choice": "distributed_admission_not_owner_decision",
+      "confidence": 0.7,
+      "probabilities": {
+        "owner_directly_decides": 0.09,
+        "distributed_admission_not_owner_decision": 0.8,
+        "needs_source_resolution": 0.11
+      }
+    },
+    "pin_premise": {
+      "type": "noul",
+      "noul": 0.81
+    },
+    "root_consistency": {
+      "type": "noul",
+      "noul": 0.74
+    },
+    "duplicated_owner": {
+      "type": "choice",
+      "choice": "retain_shared_envelope",
+      "confidence": 0.48,
+      "probabilities": {
+        "retain_shared_envelope": 0.65,
+        "versioned_change": 0.03,
+        "needs_source_resolution": 0.32
+      }
+    },
+    "duplicate_premise": {
+      "type": "noul",
+      "noul": 0.6
+    }
+  },
+  "usage": {
+    "input_tokens": 991,
+    "output_tokens": 172
+  }
+}
