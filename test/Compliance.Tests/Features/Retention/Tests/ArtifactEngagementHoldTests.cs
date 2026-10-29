@@ -14,6 +14,7 @@ using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Retention.Aggregates;
+using Bdgrz.Compliance.Tests.Testing;
 namespace Bdgrz.Compliance.Tests.Features.Retention.Tests;
 
 public sealed class ArtifactEngagementHoldTests
@@ -115,6 +116,172 @@ public sealed class ArtifactEngagementHoldTests
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(changedReport.Error).Kind);
         Assert.Equal(ReportArtifactId, hold.Current!.ReportArtifactId);
     }
+
+    [Fact]
+    public void ShouldAcceptExactPlacementRetryGivenReportIssuedAfterPlacementWithoutArtifact()
+    {
+        // Arrange
+        var hold = NewHold();
+        Assert.True(Place(hold).IsSuccess);
+        Assert.True(hold.RecordReportIssued(EngagementId, ReportArtifactId,
+            "report-serial-36", Admin, Now.AddDays(30)).IsSuccess);
+        var before = NativeFacts.Raised(hold).Length;
+
+        // Act
+        var retry = Place(hold);
+        var changed = hold.Place(EngagementId, ReportArtifactId, "all examination artifacts", "M0-D16",
+            "Preserve evidence through report issuance", Admin, Now);
+        var after = NativeFacts.Raised(hold).Length;
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(before, after);
+        Assert.Equal(2, after);
+    }
+
+    [Fact]
+    public void ShouldAppendNothingGivenInvalidPlacementOrIssuance()
+    {
+        // Arrange
+        var hold = NewHold();
+
+        // Act
+        var missing = hold.RecordReportIssued(0, EngagementId, ReportArtifactId, "ref", Admin, Now);
+        var blankScope = hold.Place(EngagementId, null, "  ", "M0-D16", "reason", Admin, Now);
+        var emptyEngagement = hold.Place(Uuid.Empty, null, "scope", "M0-D16", "reason", Admin, Now);
+        var factsBeforePlacement = NativeFacts.Raised(hold).Length;
+        var placed = Place(hold);
+        var otherEngagement = hold.RecordReportIssued(1, Uuid.CreateVersion4(), ReportArtifactId, "ref", Admin,
+            Now.AddDays(1));
+        var blankReference = hold.RecordReportIssued(1, EngagementId, ReportArtifactId, " ", Admin, Now.AddDays(1));
+        var beforePlacement = hold.RecordReportIssued(1, EngagementId, ReportArtifactId, "ref", Admin,
+            Now.AddDays(-1));
+        var factsAfter = NativeFacts.Raised(hold).Length;
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, missing.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Validation, blankScope.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Validation, emptyEngagement.Error!.Kind);
+        Assert.Equal(0, factsBeforePlacement);
+        Assert.True(placed.IsSuccess);
+        Assert.Equal(RequestErrorKind.Validation, otherEngagement.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Validation, blankReference.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Validation, beforePlacement.Error!.Kind);
+        Assert.Equal(factsBeforePlacement + 1, factsAfter);
+    }
+
+    [Fact]
+    public void ShouldRefuseStaleIssuanceAndAcceptOlderRevisionRetryGivenExpectedRevision()
+    {
+        // Arrange
+        var hold = NewHold();
+        Assert.True(Place(hold).IsSuccess);
+        var issuedAt = Now.AddDays(30);
+        var factsBefore = NativeFacts.Raised(hold).Length;
+
+        // Act
+        var stale = hold.RecordReportIssued(0, EngagementId, ReportArtifactId, "report-serial-37", Admin, issuedAt);
+        var countAfterStale = NativeFacts.Raised(hold).Length;
+        var issued = hold.RecordReportIssued(1, EngagementId, ReportArtifactId, "report-serial-37", Admin, issuedAt);
+        var retry = hold.RecordReportIssued(1, EngagementId, ReportArtifactId, "report-serial-37", Admin, issuedAt);
+        var countAfterRetry = NativeFacts.Raised(hold).Length;
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, stale.Error!.Kind);
+        Assert.Equal(factsBefore, countAfterStale);
+        Assert.True(issued.IsSuccess);
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(factsBefore + 1, countAfterRetry);
+        Assert.Equal(2, hold.Revision);
+    }
+
+    [Fact]
+    public void ShouldRefuseReleaseGivenNoReportIssuedAndRejectInvalidRelease()
+    {
+        // Arrange
+        var hold = NewHold();
+        var missing = hold.Release(1, "Org Admin", "reason", Admin, Now);
+        Assert.True(Place(hold).IsSuccess);
+        var before = NativeFacts.Raised(hold).Length;
+
+        // Act
+        var unissued = hold.Release(1, "Org Admin", "reason", Admin, Now.AddYears(5));
+        var blankRationale = hold.Release(1, "Org Admin", " ", Admin, Now.AddYears(5));
+        var after = NativeFacts.Raised(hold).Length;
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, missing.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, unissued.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Validation, blankRationale.Error!.Kind);
+        Assert.Equal(before, after);
+        Assert.True(hold.IsActive(new DateOnly(2040, 1, 1)));
+    }
+
+    [Fact]
+    public void ShouldRefuseStaleReleaseAndKeepReleaseImmutableGivenReleasedHold()
+    {
+        // Arrange
+        var hold = NewHold();
+        Assert.True(Place(hold).IsSuccess);
+        Assert.True(hold.RecordReportIssued(EngagementId, ReportArtifactId, "report-serial-38", Admin,
+            Now.AddDays(1)).IsSuccess);
+        var releasedAt = Now.AddYears(1).AddDays(2);
+
+        // Act
+        var stale = hold.Release(1, "Org Admin", "Retention window ended", Admin, releasedAt);
+        var factsAfterStale = NativeFacts.Raised(hold).Length;
+        var released = hold.Release(2, "Org Admin", "Retention window ended", Admin, releasedAt);
+        var factsAfterRelease = NativeFacts.Raised(hold).Length;
+        var retry = hold.Release(2, "Org Admin", "Retention window ended", Admin, releasedAt);
+        var changed = hold.Release(2, "Org Admin", "Different rationale", Admin, releasedAt);
+        var reissued = hold.RecordReportIssued(EngagementId, ReportArtifactId, "report-serial-38", Admin,
+            Now.AddDays(1));
+        var factsAfterRetries = NativeFacts.Raised(hold).Length;
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, stale.Error!.Kind);
+        Assert.Equal(2, factsAfterStale);
+        Assert.True(released.IsSuccess);
+        Assert.Equal(3, factsAfterRelease);
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error!.Kind);
+        Assert.True(reissued.IsSuccess);
+        Assert.Equal(factsAfterRelease, factsAfterRetries);
+        Assert.Equal("Retention window ended", hold.Current!.ReleaseRationale);
+    }
+
+    [Fact]
+    public void ShouldRestoreReleasedHoldAndAcceptRetriesGivenValidHistoryReplay()
+    {
+        // Arrange
+        var source = NewHold();
+        Assert.True(Place(source).IsSuccess);
+        Assert.True(source.RecordReportIssued(EngagementId, ReportArtifactId, "report-serial-39", Admin,
+            Now.AddDays(1)).IsSuccess);
+        var releasedAt = Now.AddYears(1).AddDays(2);
+        Assert.True(source.Release(2, "Org Admin", "Retention window ended", Admin, releasedAt).IsSuccess);
+        var history = NativeFacts.Raised(source);
+
+        // Act
+        var replayed = NativeFacts.Replay(NewHold(), history);
+        var revision = replayed.Revision;
+        var status = replayed.Current!.Status;
+        var placeRetry = Place(replayed);
+        var releaseRetry = replayed.Release(2, "Org Admin", "Retention window ended", Admin, releasedAt);
+        var changed = replayed.Release(2, "Org Admin", "Other", Admin, releasedAt);
+
+        // Assert
+        Assert.Equal(3, revision);
+        Assert.Equal("released", status);
+        Assert.True(placeRetry.IsSuccess);
+        Assert.True(releaseRetry.IsSuccess);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(3, history.Length);
+    }
+
+    static Result Place(ArtifactEngagementHold hold) => hold.Place(EngagementId, null, "all examination artifacts",
+        "M0-D16", "Preserve evidence through report issuance", Admin, Now);
 
     static ArtifactEngagementHold NewHold() => new(TenantId, HoldId);
 }
