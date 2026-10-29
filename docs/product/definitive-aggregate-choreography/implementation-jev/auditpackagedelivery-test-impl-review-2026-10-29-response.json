@@ -1,0 +1,36 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "retry_after_materialized": {
+        "type": "choice",
+        "choice": "consistent",
+        "confidence": 1,
+        "probabilities": {
+          "consistent": 1,
+          "should_succeed_noop": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.66
+      },
+      "payload_identity_restatement": {
+        "type": "choice",
+        "choice": "report_as_catalog_followup",
+        "confidence": 0.37,
+        "probabilities": {
+          "report_as_catalog_followup": 0.58,
+          "remove_now": 0.01,
+          "keep_no_action": 0.41
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 966,
+      "output_tokens": 124
+    }
+  }
+}
