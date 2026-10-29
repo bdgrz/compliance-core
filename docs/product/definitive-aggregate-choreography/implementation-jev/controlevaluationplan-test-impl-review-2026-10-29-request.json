@@ -1,0 +1,45 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ControlEvaluationPlan",
+    "rule": "Invariant: A plan version has a stable identity and immutable procedure; only a successor to the current plan version can be appended and exact duplicate identity must have the same content. Selected logical identity rule: PlanVersionId is a caller-supplied immutable creation identity; exact retry with same id and authored intent returns the original result; same id with changed intent is refused. Expected revision is a concurrency precondition, not a new identity.",
+    "code_behavior": {
+      "identity": "The existing command contract has no PlanVersionId field. PlanVersionId is derived deterministically from tenant, program, control and the original expected version, so a retry of the same command yields the same id. Stream is tenant/control-evaluation-plans/controlId.",
+      "define": "Define appends one ControlEvaluationPlanVersionDefined only when original expected version equals the current revision; a stale version returns Conflict with no event; an empty control version id returns Validation with no event.",
+      "payload": "The event carries TenantId (base shape equal to stream address), ProgramId (not stream identity), ControlId, ControlVersionId, PlanVersionId, Version, content ref and operation provenance.",
+      "tests": "Test: a second Define with original expected version 0 on a plan already at revision 1 gives Conflict, and the aggregate still has exactly one fact. Test: after a successor fact, the first operation's acceptance decides Replayed for the exact binding and Conflict for a changed authored intent sha."
+    }
+  },
+  "questions": {
+    "identity_discrepancy": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.identity`, how should the aggregate stage treat the difference from the catalog's caller-supplied PlanVersionId?",
+      "criteria": {
+        "keep_derived_id_flag_catalog": "Keep the derived id in code because the wire contract has no such field, and flag the catalog wording for reconciliation.",
+        "require_caller_supplied_id": "Change the aggregate to require a caller-supplied id now.",
+        "needs_source_resolution": "The sources do not decide; leave open."
+      }
+    },
+    "identity_premise": {
+      "type": "noul",
+      "instructions": "A deterministic id derived from the original expected version satisfies the rule that an exact retry returns the original result and a changed intent under the same id is refused."
+    },
+    "payload_programid": {
+      "type": "choice",
+      "instructions": "Is ProgramId in the event payload a duplicate of stream identity or metadata, as described in `state.code_behavior.payload`?",
+      "criteria": {
+        "keep_programid": "Keep it: the stream is keyed by tenant and control only, so program is a business fact not carried elsewhere.",
+        "remove_programid": "Remove it: it duplicates stream identity or metadata.",
+        "needs_source_resolution": "Cannot decide."
+      }
+    },
+    "stale_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The stale-version test in `state.code_behavior.tests` demonstrates that only a successor to the current version can be appended and that a competing decision appends nothing."
+    },
+    "acceptance_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The acceptance test in `state.code_behavior.tests` demonstrates that an exact duplicate identity is acknowledged without a new fact and a changed intent is refused."
+    }
+  }
+}
