@@ -6,6 +6,7 @@ using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Evidence.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
@@ -129,4 +130,187 @@ public sealed class TenantSlugTests
         Assert.Null(slug.OwningTenantId);
         Assert.IsType<TenantSlugRegistrationRejected>(scenario.PendingEvents[^1]);
     }
+
+    [Fact]
+    public void ShouldDeriveDistinctIdentityGivenDifferentSlugs() =>
+        Assert.NotEqual(new TenantSlug("acme").Id, new TenantSlug("acme-next").Id);
+
+    [Fact]
+    public void ShouldRefuseConstructionGivenReservedRouteWithoutLookup() =>
+        Assert.Throws<ArgumentException>(() => new TenantSlug("login"));
+
+    [Fact]
+    public void ShouldReportAlreadyClaimedGivenHoldingTenantPreparesClaim()
+    {
+        // Arrange
+        var slug = new TenantSlug("acme");
+        _ = slug.Register(FirstTenant);
+        var before = PendingCount(slug);
+
+        // Act
+        var prepared = slug.PrepareRegister(FirstTenant);
+
+        // Assert
+        Assert.Same(TenantSlug.AlreadyClaimed, prepared.Error);
+        Assert.Equal(before, PendingCount(slug));
+    }
+
+    [Fact]
+    public void ShouldAppendNothingGivenEmptyTenantOnClaimOrSurrender()
+    {
+        // Arrange
+        var slug = new TenantSlug("acme");
+
+        // Act
+        var claim = slug.Register(Uuid.Empty);
+        var surrender = slug.Surrender(Uuid.Empty);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, claim.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, surrender.Error?.Kind);
+        Assert.Equal(0, PendingCount(slug));
+    }
+
+    [Fact]
+    public void ShouldAppendNothingGivenOperationOwnedByAnotherSlug()
+    {
+        // Arrange
+        var slug = new TenantSlug("acme");
+        var foreign = TenantFacts.Provenance(new TenantSlug("other-co"), "RegisterTenantSlug");
+
+        // Act
+        var result = slug.Register(foreign, TenantFacts.Response(), FirstTenant);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Equal(0, PendingCount(slug));
+        Assert.Null(slug.OwningTenantId);
+    }
+
+    [Fact]
+    public void ShouldAppendNothingGivenSurrenderRetriedByAlreadySurrenderedTenant()
+    {
+        // Arrange
+        var slug = new TenantSlug("acme");
+        _ = slug.Register(FirstTenant);
+        _ = slug.Surrender(FirstTenant);
+        var before = PendingCount(slug);
+
+        // Act
+        var again = slug.Surrender(FirstTenant);
+
+        // Assert
+        Assert.Same(TenantSlug.AlreadySurrendered, again.Error);
+        Assert.Equal(before, PendingCount(slug));
+    }
+
+    [Fact]
+    public void ShouldAnswerRefusalWithoutOwnerGivenSurrenderOfUnclaimedSlug()
+    {
+        // Arrange
+        var slug = new TenantSlug("acme");
+        var scenario = new AggregateScenario<TenantSlug>(slug);
+
+        // Act
+        var result = slug.Surrender(FirstTenant);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.IsType<TenantSlugSurrenderRejected>(scenario.PendingEvents[^1]);
+        Assert.Null(slug.OwningTenantId);
+        Assert.False(slug.IsRetired);
+        Assert.True(slug.IsAvailableFor(SecondTenant));
+    }
+
+    [Fact]
+    public void ShouldKeepPriorOwnerGivenOtherTenantSurrendersRetiredSlug()
+    {
+        // Arrange
+        var slug = new TenantSlug("acme");
+        _ = slug.Register(FirstTenant);
+        _ = slug.Surrender(FirstTenant);
+        var scenario = new AggregateScenario<TenantSlug>(slug);
+
+        // Act
+        var result = slug.Surrender(SecondTenant);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.IsType<TenantSlugSurrenderRejected>(scenario.PendingEvents[^1]);
+        Assert.Equal(FirstTenant, slug.OwningTenantId);
+        Assert.True(slug.IsRetired);
+    }
+
+    [Fact]
+    public void ShouldRestoreRetiredOwnerAndRefuseClaimsGivenValidHistoryReplay()
+    {
+        // Arrange
+        var probe = new TenantSlug("acme");
+        var claimId = Uuid.CreateVersion4();
+        var facts = new DomainEvent[]
+        {
+            DomainEventSeed.Attach(new TenantSlugRegistered(FirstTenant, "acme", claimId,
+                TenantFacts.Provenance(probe, "RegisterTenantSlug", claimId), TenantFacts.Response()), probe.Id, 1),
+            DomainEventSeed.Attach(Surrendered(probe, FirstTenant, Uuid.CreateVersion4()), probe.Id, 2),
+        };
+        var scenario = new AggregateScenario<TenantSlug>(new TenantSlug("acme")).Given(facts);
+        var slug = scenario.Aggregate;
+
+        // Act
+        var claim = slug.Register(SecondTenant);
+
+        // Assert
+        Assert.Equal(FirstTenant, slug.OwningTenantId);
+        Assert.True(slug.IsRetired);
+        Assert.True(claim.IsSuccess);
+        Assert.IsType<TenantSlugRegistrationRejected>(scenario.PendingEvents[^1]);
+    }
+
+    [Fact]
+    public void ShouldReplayCommittedClaimGivenExactRetryAfterLaterFacts()
+    {
+        // Arrange
+        var logicalId = Uuid.CreateVersion4();
+        var probe = new TenantSlug("acme");
+        var claimOperation = TenantFacts.Provenance(probe, "RegisterTenantSlug", logicalId);
+        var facts = new DomainEvent[]
+        {
+            DomainEventSeed.Attach(new TenantSlugRegistered(FirstTenant, "acme", logicalId, claimOperation,
+                TenantFacts.Response()), probe.Id, 1),
+            DomainEventSeed.Attach(Surrendered(probe, FirstTenant, Uuid.CreateVersion4()), probe.Id, 2),
+        };
+        var slug = new AggregateScenario<TenantSlug>(new TenantSlug("acme", logicalId)).Given(facts).Aggregate;
+
+        // Act
+        var decision = slug.Acceptance.Decide(AcceptedOperationBinding.Of(claimOperation));
+
+        // Assert
+        Assert.Equal(NativeAcceptanceDecision.Replayed, decision);
+        Assert.True(slug.IsRetired);
+    }
+
+    [Fact]
+    public void ShouldConflictGivenSameLogicalClaimWithChangedIntent()
+    {
+        // Arrange
+        var logicalId = Uuid.CreateVersion4();
+        var probe = new TenantSlug("acme");
+        var claimOperation = TenantFacts.Provenance(probe, "RegisterTenantSlug", logicalId);
+        var slug = new AggregateScenario<TenantSlug>(new TenantSlug("acme", logicalId))
+            .Given(DomainEventSeed.Attach(new TenantSlugRegistered(FirstTenant, "acme", logicalId, claimOperation,
+                TenantFacts.Response()), probe.Id, 1)).Aggregate;
+        var changed = claimOperation with { AuthoredIntentSha256 = new string('c', 64) };
+
+        // Act
+        var decision = slug.Acceptance.Decide(AcceptedOperationBinding.Of(changed));
+
+        // Assert
+        Assert.Equal(NativeAcceptanceDecision.Conflict, decision);
+    }
+
+    static TenantSlugSurrendered Surrendered(TenantSlug probe, Uuid tenantId, Uuid logicalId) =>
+        new(tenantId, "acme", logicalId, TenantFacts.Provenance(probe, "SurrenderTenantSlug", logicalId),
+            TenantFacts.Response());
+
+    static int PendingCount(TenantSlug slug) => new AggregateScenario<TenantSlug>(slug).PendingEvents.Count;
 }
