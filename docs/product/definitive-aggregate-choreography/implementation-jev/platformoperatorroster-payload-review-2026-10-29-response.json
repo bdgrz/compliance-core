@@ -1,0 +1,23 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "disposition": {
+      "type": "choice",
+      "choice": "qualified_versioned_change",
+      "confidence": 0.49,
+      "probabilities": {
+        "retain_existing_contract": 0.09,
+        "qualified_versioned_change": 0.66,
+        "needs_source_resolution": 0.25
+      }
+    },
+    "premise": {
+      "type": "noul",
+      "noul": 0.9
+    }
+  },
+  "usage": {
+    "input_tokens": 513,
+    "output_tokens": 71
+  }
+}
