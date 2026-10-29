@@ -137,6 +137,9 @@ public sealed class TypeIIPeriod : Aggregate
             operation.RootOperationId != Id)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A period opening is the logical operation of its own period."));
+        var envelope = ValidateAcceptanceEnvelope(operation, firstResponse);
+        if (!envelope.IsSuccess)
+            return envelope;
         var prepared = PrepareOpeningAcceptance();
         if (!prepared.IsSuccess)
             return prepared;
@@ -154,6 +157,9 @@ public sealed class TypeIIPeriod : Aggregate
         if (operation.Owner != Stream || operation.LogicalId != operation.RootOperationId)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A period amendment is the logical operation of its own command."));
+        var envelope = ValidateAcceptanceEnvelope(operation, firstResponse);
+        if (!envelope.IsSuccess)
+            return envelope;
         if (Header is null)
             return Result.Failure(CommandFailure.MissingRecord("The Type II period was not found.").ToRequestError());
         if (_pendingFact is not null)
@@ -439,6 +445,14 @@ public sealed class TypeIIPeriod : Aggregate
         "ciso" or "chief information security officer" => "ciso",
         _ => string.Empty,
     };
+
+    /// <summary>Refuses an acceptance whose frozen envelope replay would reject, so no unreplayable fact is ever appended.</summary>
+    Result ValidateAcceptanceEnvelope(OperationProvenance operation, ImmutableContentRef firstResponse) =>
+        ProgramId != Uuid.Empty && operation.AffectedOwner == Stream && operation.ExpectedRevisionOwner == Stream &&
+        (operation.FirstOwner is null || operation.FirstOwner == Stream) && firstResponse.Schema == FirstResponses.Schema
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A period acceptance names its own period and a frozen first response."));
 
     CommandFailure StaleRevision() => CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("Type II period", Revision));
     static Result Failure(string message, bool transient = false) =>
