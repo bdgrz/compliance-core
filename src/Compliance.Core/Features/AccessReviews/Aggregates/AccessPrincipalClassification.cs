@@ -123,7 +123,13 @@ public sealed class AccessPrincipalClassification : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(decisionContent);
-        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        ArgumentNullException.ThrowIfNull(operationResult);
+        if (_tenantId == Uuid.Empty || _populationId == Uuid.Empty || string.IsNullOrWhiteSpace(_providerSubjectId))
+            return AccessReviewOperation.Failure(RequestErrorKind.Validation,
+                "A classification names a tenant, an accepted population and a provider subject.");
+        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected ||
+            !NativeOwnerHistory.IsOwnRoot(this, operation, nameof(ClassifyAccessPrincipal), expected))
             return AccessReviewOperation.Failure(RequestErrorKind.Validation,
                 "A classification is a root operation of its own principal with an expected revision.");
         var prepared = PrepareClassify((long)expected);
