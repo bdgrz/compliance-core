@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
 using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
@@ -82,6 +83,120 @@ public sealed class ApplicationRelationshipTests
         Assert.Equal(operation, added.Operation);
         Assert.NotNull(added.FirstResponse);
         Assert.NotNull(added.OperationResult);
+    }
+
+    [Fact]
+    public void ShouldRejectSelfRelationshipGivenSameSourceAndTarget()
+    {
+        // Arrange
+        var sourceId = Uuid.CreateVersion4();
+        var relationshipId = Uuid.CreateVersion5(sourceId,
+            $"application-relationship:depends_on:{sourceId}");
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var owner = new ApplicationRelationship(
+            Uuid.CreateVersion4(), relationshipId, relationshipId);
+        var operation = Operation(owner, actorId, now);
+
+        // Act
+        var result = owner.Add(operation, 0, sourceId, sourceId, "depends_on", actorId,
+            "Inventory manager", now, Content("first-response"), Content("result"));
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind);
+        Assert.Empty(new AggregateScenario<ApplicationRelationship>(owner).PendingEvents);
+        Assert.Equal(0, owner.Revision);
+    }
+
+    [Fact]
+    public void ShouldRejectUnsupportedTypeGivenCanonicalTupleIdentity()
+    {
+        // Arrange
+        var sourceId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var relationshipId = Uuid.CreateVersion5(sourceId,
+            $"application-relationship:owns:{targetId}");
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var owner = new ApplicationRelationship(
+            Uuid.CreateVersion4(), relationshipId, relationshipId);
+        var operation = Operation(owner, actorId, now);
+
+        // Act
+        var result = owner.Add(operation, 0, sourceId, targetId, "owns", actorId,
+            "Inventory manager", now, Content("first-response"), Content("result"));
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind);
+        Assert.Empty(new AggregateScenario<ApplicationRelationship>(owner).PendingEvents);
+        Assert.Equal(0, owner.Revision);
+    }
+
+    [Fact]
+    public void ShouldRefuseSecondAddWithoutFactGivenExistingRelationship()
+    {
+        // Arrange
+        var sourceId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var relationshipId = Uuid.CreateVersion5(sourceId,
+            $"application-relationship:depends_on:{targetId}");
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var owner = new ApplicationRelationship(
+            Uuid.CreateVersion4(), relationshipId, relationshipId);
+        var operation = Operation(owner, actorId, now);
+        Assert.True(owner.Add(operation, 0, sourceId, targetId, "depends_on", actorId,
+            "Inventory manager", now, Content("first-response"), Content("result")).IsSuccess);
+
+        // Act
+        var retry = owner.Add(operation, 0, sourceId, targetId, "depends_on", actorId,
+            "Inventory manager", now, Content("first-response"), Content("result"));
+        var stale = owner.PrepareAdd(1, sourceId, targetId, "depends_on", actorId,
+            "Inventory manager", now);
+
+        // Assert
+        Assert.False(retry.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, retry.Error!.Kind);
+        Assert.False(stale.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, stale.Error!.Kind);
+        Assert.Single(new AggregateScenario<ApplicationRelationship>(owner).PendingEvents);
+        Assert.Equal(1, owner.Revision);
+    }
+
+    [Fact]
+    public void ShouldRestoreRelationshipStateGivenValidHistoryReplay()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var sourceId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var relationshipId = Uuid.CreateVersion5(sourceId,
+            $"application-relationship:replaces:{targetId}");
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var seed = new ApplicationRelationship(tenantId, relationshipId, relationshipId);
+        Assert.True(seed.Add(Operation(seed, actorId, now), 0, sourceId, targetId, "replaces",
+            actorId, "Inventory manager", now, Content("first-response"),
+            Content("result")).IsSuccess);
+        var history = NativeFacts.Raised(seed);
+
+        // Act
+        var replayed = NativeFacts.Replay(
+            new ApplicationRelationship(tenantId, relationshipId, relationshipId), history);
+
+        // Assert
+        Assert.Equal(1, replayed.Revision);
+        Assert.Equal("proposed", replayed.Status);
+        Assert.Equal(sourceId, replayed.SourceApplicationId);
+        Assert.Equal(targetId, replayed.TargetApplicationId);
+        Assert.Equal("replaces", replayed.RelationshipType);
+        var again = replayed.Add(Operation(replayed, actorId, now), 0, sourceId, targetId,
+            "replaces", actorId, "Inventory manager", now, Content("first-response"),
+            Content("result"));
+        Assert.False(again.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, again.Error!.Kind);
     }
 
     static OperationProvenance Operation(
