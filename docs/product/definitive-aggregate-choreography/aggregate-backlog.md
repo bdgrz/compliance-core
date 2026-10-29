@@ -98,16 +98,16 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 72 | `ExaminationEngagement` | No direct story mapping | — | Partial: Tests unexecuted; RED/GREEN pending first build |
 | 73 | `ExaminationSignOff` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 74 | `FirmProfessionalDutyDesignation` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
-| 74 | `FirmStaffIdentityClaim` | No direct story mapping | — | Source present; verify |
-| 74 | `FirmStaffRecord` | No direct story mapping | — | Source present; verify |
-| 74 | `ProfessionalAssertionIdentityClaim` | No direct story mapping | — | Source present; verify |
-| 74 | `ServiceEngagementIndependence` | No direct story mapping | — | Source present; verify |
-| 75 | `ClientServiceIndependence` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
-| 76 | `ClientIndependenceDecision` | No direct story mapping | 75: `ClientServiceIndependence` | Source present; verify |
-| 77 | `EngagementManagementAcknowledgement` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
-| 78 | `ImmutableSnapshot` | No direct story mapping | — | Source present; verify |
-| 79 | `IndependenceRuleCatalog` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
-| 80 | `IndependenceRuleRatificationCatalog` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
+| 74 | `FirmStaffIdentityClaim` | No direct story mapping | — | Partial — [review](firm-staff-identity-claim-review-2026-10-29.md); durable competing append not directly tested |
+| 74 | `FirmStaffRecord` | No direct story mapping | — | Partial — [review](firm-staff-record-review-2026-10-29.md); durable competing append and recovery not qualified |
+| 74 | `ProfessionalAssertionIdentityClaim` | No direct story mapping | — | Partial — [review](professional-assertion-identity-claim-review-2026-10-29.md); durable competing append not directly tested |
+| 74 | `ServiceEngagementIndependence` | No direct story mapping | — | Partial — [review](service-engagement-independence-review-2026-10-29.md); reevaluation receipt contracts unresolved |
+| 75 | `ClientServiceIndependence` | No direct story mapping | 74: `ServiceEngagementIndependence` | Partial — [review](client-service-independence-review-2026-10-29.md); D26 decision authority and distributed admission require reconciliation |
+| 76 | `ClientIndependenceDecision` | No direct story mapping | 75: `ClientServiceIndependence` | Partial — [review](client-independence-decision-review-2026-10-29.md); D26-06 ownership and effect identity require reconciliation |
+| 77 | `EngagementManagementAcknowledgement` | No direct story mapping | 74: `ServiceEngagementIndependence` | Partial — [review](engagement-management-acknowledgement-review-2026-10-29.md); competing append and persisted replay compatibility remain unqualified |
+| 78 | `ImmutableSnapshot` | No direct story mapping | — | Partial — [review](immutable-snapshot-review-2026-10-29.md); selected snapshot identity and handler retry contract remain open |
+| 79 | `IndependenceRuleCatalog` | No direct story mapping | 74: `ServiceEngagementIndependence` | Partial — [review](independence-rule-catalog-review-2026-10-29.md); event-list consistency and persisted replay compatibility remain open |
+| 80 | `IndependenceRuleRatificationCatalog` | No direct story mapping | 74: `ServiceEngagementIndependence` | Partial — [review](independence-rule-ratification-catalog-review-2026-10-29.md); cross-owner authority and event-list consistency remain open |
 | 81 | `ManagementAssertion` | No direct story mapping | — | Source present; verify |
 | 82 | `ManagementRepresentationLetter` | No direct story mapping | — | Source present; verify |
 | 83 | `MethodologyTemplate` | No direct story mapping | — | Source present; verify |
