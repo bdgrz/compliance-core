@@ -98,6 +98,10 @@ public sealed class AccessPopulationException : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(exceptionContent);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (systemInstanceId == Uuid.Empty)
+            return AccessReviewOperation.Failure(RequestErrorKind.Validation,
+                "A population exception belongs to an exact system instance.");
         if (operation.Owner != Stream || operation.LogicalId != Id || operation.OriginalExpectedRevision is not { } expected)
             return AccessReviewOperation.Failure(RequestErrorKind.Validation,
                 "A population exception is created by a root operation of its own stream with an expected revision.");
