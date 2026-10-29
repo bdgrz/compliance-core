@@ -1,0 +1,37 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AuditPackageDelivery",
+    "invariant": "One personal handoff is materialized exactly once, only when intent, operation and admission reference match the exact package/version/delivery, the manifest as first/affected/revision owner, the admission fact as cause, and the original actor and authored-intent binding.",
+    "exclusions": "Delivery gate, disclosure approval, validation and no-prior-delivery for the recipient are decided on AuditPackageManifest at AuditPackageDeliveryAdmitted, not on this owner.",
+    "code_behavior": {
+      "materialize": "Fresh owner: any mismatch (package, version, delivery, root id, first/affected/revision owner on header or operation, admission stream/version/event, command kind, causation, actor, episode, expected revision, intent hash, empty program or logical id) returns Conflict with no event. Exact match appends AuditPackageDelivered at revision 1. A materialized owner returns Conflict for any further Materialize, exact or changed; exact-retry versus changed-intent is decided beforehand by NativeAcceptance.Decide on the full operation binding (Replayed vs Conflict).",
+      "event_payload": "AuditPackageDelivered carries TenantId, SubjectId, Revision, PackageId, PackageVersion, DeliveryId which restate the stream identity, as an existing contract that the replay guard validates.",
+      "tests": "A theory of 23 mismatch cases asserts Conflict, zero pending events and not materialized. A materialize test asserts revision 1 and payload. A replay test asserts Decide returns Replayed for the exact binding and Conflict for a changed intent hash, and a further Materialize is Conflict with no event."
+    }
+  },
+  "questions": {
+    "retry_after_materialized": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.materialize`, is returning Conflict from the aggregate on a second Materialize of an already materialized owner, with exact retry acknowledgement left to NativeAcceptance.Decide beforehand, consistent with `state.invariant`?",
+      "criteria": {
+        "consistent": "The invariant forbids a second fact; the aggregate refuses without an event and acceptance handles the exact retry.",
+        "should_succeed_noop": "The aggregate itself should return success with no event for an exact retry.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests described in `state.code_behavior.tests` together assert the single-materialization invariant and exact binding in `state.invariant`."
+    },
+    "payload_identity_restatement": {
+      "type": "choice",
+      "instructions": "`state.code_behavior.event_payload` restates stream identity fields in an existing event payload. For this aggregate-stage review, which disposition is right?",
+      "criteria": {
+        "report_as_catalog_followup": "Do not change the event here; list a payload cleanup as a shared-file follow-up.",
+        "remove_now": "Remove the fields in this aggregate change.",
+        "keep_no_action": "Nothing to report."
+      }
+    }
+  }
+}
