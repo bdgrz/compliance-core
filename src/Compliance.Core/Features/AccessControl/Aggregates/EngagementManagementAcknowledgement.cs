@@ -108,5 +108,6 @@ public sealed class EngagementManagementAcknowledgement : Aggregate
         cause != Uuid.Empty && operation.CommandKind == nameof(MaterializeEngagementManagementAcknowledgement) &&
         operation.Owner == Stream && operation.AffectedOwner == Stream && operation.ExpectedRevisionOwner == Stream &&
         operation.FirstOwner is { } source && source.Realm == Stream.Realm &&
-        source.Area == ServiceEngagementIndependence.Area;
+        source.Area == ServiceEngagementIndependence.Area && Uuid.TryParse(source.Resource, out var engagementId) &&
+        engagementId != Uuid.Empty && source.Resource == engagementId.ToString();
 }
