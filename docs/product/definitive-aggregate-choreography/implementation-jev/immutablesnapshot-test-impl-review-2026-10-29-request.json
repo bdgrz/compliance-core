@@ -1,0 +1,68 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "ImmutableSnapshot selected identity tenant plus caller-selected SnapshotId; one canonical manifest and exact amendment lineage per identity. Selected replay rule requires original authorized result before fresh mutable feasibility, clock and body preparation.",
+    "source": "Freeze validates canonical manifest, tenant, program, source revision, lowercase source hashes, nonempty boundary and approved version, and local amendment linkage. Valid repeat compares actor ID, canonical manifest, hash, linkage and normalized reason, returning original ID/hash without appending. Actor display and server clock are not part of this comparison. SnapshotAmendmentLineage requires exactly one event, matching tenant/snapshot IDs, valid source manifest, and exact bounded predecessor lineage. Existing regeneration handler returns conflict on inconsistent source.",
+    "replay": "Aggregate reducer blindly overwrites fields on each SnapshotFrozen and does not check event tenant or snapshot against stream; Freeze retry checks stored intent and actor but not event identity or physical version. Lineage verifier rejects incorrect identity or multiple event versions. Existing handler tests expect a conflict result on malformed source, not a hydration exception.",
+    "command": "Selected FreezeProgramScopeSnapshot command includes caller SnapshotId, but current command has none and freezer selects context.RequestId after reading program and boundary sources. Thus fresh source failure can prevent a retry before aggregate replay is consulted.",
+    "event": "SnapshotFrozen carries TenantId and SnapshotId equal to the stream realm and resource; it also carries Manifest plus CanonicalManifest and ContentSha256."
+  },
+  "questions": {
+    "replay": {
+      "type": "choice",
+      "instructions": "For ImmutableSnapshot given its one-fact invariant and existing handler conflict response on malformed source, what should reconcile reducer replay?",
+      "options": [
+        "refuse_inconsistent_with_conflict",
+        "throw_on_hydration",
+        "no_guard_needed",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "refuse_inconsistent_with_conflict": "Prevent replay of a wrong identity or second fact from being accepted while preserving a conflict response at handler boundary.",
+        "throw_on_hydration": "The reducer must throw and handlers must translate the exception.",
+        "no_guard_needed": "The invariant is completely protected without a guard on the mutation retry path.",
+        "needs_source_resolution": "Evidence is insufficient to choose."
+      }
+    },
+    "identity": {
+      "type": "noul",
+      "instructions": "Does the described current FreezeProgramScopeSnapshot request lack the catalog-required caller-supplied SnapshotId?"
+    },
+    "replay_order": {
+      "type": "noul",
+      "instructions": "Can the described freezer fail on a fresh source read before it checks an already committed snapshot retry?"
+    },
+    "attribution": {
+      "type": "choice",
+      "instructions": "For an exact immutable snapshot retry, when the actor ID and requested content and linkage are unchanged but server clock and display differ, what outcome fits the catalog retry rule?",
+      "options": [
+        "return_original",
+        "conflict",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "return_original": "Display and clock are server observations, not a changed authored operation.",
+        "conflict": "Display and clock are part of the immutable authored operation.",
+        "needs_source_resolution": "Evidence is insufficient to distinguish authored input."
+      }
+    },
+    "event_fields": {
+      "type": "choice",
+      "instructions": "For SnapshotFrozen which repeats stream tenant and ID and carries canonical manifest plus parsed manifest, which event contract disposition follows the supplied evidence?",
+      "options": [
+        "versioned_reconciliation",
+        "keep_existing",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "versioned_reconciliation": "Propose an event version and compatibility path after determining which fields are derivable.",
+        "keep_existing": "Existing event requires all fields permanently for consumers.",
+        "needs_source_resolution": "Consumer requirements or authority are not established."
+      }
+    },
+    "duplication": {
+      "type": "noul",
+      "instructions": "Does SnapshotFrozen explicitly contain a tenant ID and snapshot ID already present in its stream address?"
+    }
+  }
+}

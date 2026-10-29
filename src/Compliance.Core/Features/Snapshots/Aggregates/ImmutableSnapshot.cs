@@ -22,6 +22,7 @@ public sealed class ImmutableSnapshot : Aggregate
 {
     readonly Uuid _tenantId;
     bool _isFrozen;
+    bool _invalidHistory;
     Uuid _rootSnapshotId;
     Uuid? _amendsSnapshotId;
     Uuid _programId;
@@ -58,6 +59,12 @@ public sealed class ImmutableSnapshot : Aggregate
         _tenantId = tenantId;
         On<SnapshotFrozen>(ev =>
         {
+            if (_isFrozen)
+            {
+                _invalidHistory = true;
+                return;
+            }
+            _invalidHistory = ev.TenantId != _tenantId || ev.SnapshotId != Id;
             _isFrozen = true;
             _rootSnapshotId = ev.RootSnapshotId;
             _amendsSnapshotId = ev.AmendsSnapshotId;
@@ -80,16 +87,22 @@ public sealed class ImmutableSnapshot : Aggregate
         string contentSha256, string? amendmentReason, Uuid actorMemberId,
         string actorDisplay, DateTimeOffset frozenAt)
     {
+        if (_invalidHistory)
+            return Result<SnapshotRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The snapshot history is inconsistent with its identity or contains multiple freezes."));
         amendmentReason = amendmentReason?.Trim();
-        if (rootSnapshotId == Uuid.Empty || programId == Uuid.Empty ||
+        if (_tenantId == Uuid.Empty || rootSnapshotId == Uuid.Empty || programId == Uuid.Empty ||
             actorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(canonicalManifest) ||
             string.IsNullOrWhiteSpace(contentSha256) ||
+            amendsSnapshotId == Uuid.Empty ||
             (amendsSnapshotId is null) != (amendmentReason is null) ||
             (amendmentReason is not null && string.IsNullOrWhiteSpace(amendmentReason)) ||
             (amendsSnapshotId is null && rootSnapshotId != Id) ||
             (amendsSnapshotId is not null &&
              (amendsSnapshotId == Id || rootSnapshotId == Id)) ||
-            manifest.TenantId != _tenantId || manifest.ProgramId != programId ||
+            manifest.TenantId != _tenantId || manifest.ProgramId != programId || manifest.ProgramRevision < 1 ||
+            manifest.BoundaryId == Uuid.Empty || manifest.ApprovedBoundaryVersionId == Uuid.Empty ||
+            !IsLowercaseSha256(manifest.ProgramContentSha256) || !IsLowercaseSha256(manifest.BoundaryContentSha256) ||
             !SnapshotContentIdentity.MatchesManifest(manifest, canonicalManifest, contentSha256))
             return Result<SnapshotRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The snapshot requires a complete source manifest and amendment linkage."));
@@ -97,6 +110,8 @@ public sealed class ImmutableSnapshot : Aggregate
             return _rootSnapshotId == rootSnapshotId &&
                    _amendsSnapshotId == amendsSnapshotId &&
                    _programId == programId &&
+                   _kind == "program_scope" &&
+                   _manifest == manifest &&
                    _contentSha256 == contentSha256 &&
                    _canonicalManifest == canonicalManifest &&
                    _amendmentReason == amendmentReason &&
@@ -110,4 +125,7 @@ public sealed class ImmutableSnapshot : Aggregate
             amendmentReason?.Trim(), actorMemberId, actorDisplay, frozenAt));
         return Result<SnapshotRegistration>.Success(new SnapshotRegistration(Id, contentSha256));
     }
+
+    static bool IsLowercaseSha256(string? value) => value is { Length: 64 } &&
+        value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f');
 }
