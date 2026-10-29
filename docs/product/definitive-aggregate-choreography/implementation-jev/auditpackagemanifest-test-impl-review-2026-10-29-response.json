@@ -1,0 +1,30 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "entry_completeness_placement": {
+        "type": "choice",
+        "choice": "content_layer_ok",
+        "confidence": 1,
+        "probabilities": {
+          "content_layer_ok": 1,
+          "owner_must_inspect": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "placement_premise": {
+        "type": "noul",
+        "noul": 0.87
+      },
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.87
+      }
+    },
+    "usage": {
+      "input_tokens": 802,
+      "output_tokens": 95
+    }
+  }
+}
