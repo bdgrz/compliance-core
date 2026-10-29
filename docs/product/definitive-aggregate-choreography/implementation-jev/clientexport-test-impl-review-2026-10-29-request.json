@@ -1,0 +1,52 @@
+{
+ "model": "jev-latest",
+ "state": {
+  "owner": "ClientExport",
+  "invariant": "Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package; final delivery is immutable and exact.",
+  "selected_replay_rule": "Exact retries of committed facts resolve to the original result with no new event. Expected revision is a concurrency precondition, not identity.",
+  "code_behavior": {
+    "attest_retry": "RecordAttestPackageDelivery returns success with no event when ANY earlier decision for the package matches exactly (decision, rationale, recipient, reference, actor, time). A different decision after a delivered decision is Conflict (immutable). Previously only the latest decision was compared.",
+    "build_retry": "RecordBuildResult with an already-recorded attempt id returns success with no event when normalized content (trimmed lower-cased failure code, lower-cased hash), actor and time match, even when later attempts exist; changed content under the same attempt id is Conflict.",
+    "delivery_gate": "Deliver is refused (Conflict, no event) unless the latest build attempt succeeded and every required attest package's latest decision is delivered with the manifest hash; an exact retry of a delivered export is success with no event, a changed receipt is Conflict.",
+    "event_payload": "Each of five events carries TenantId, SubjectId, Revision, ActorMemberId, OccurredAt plus the full ClientExportView snapshot which repeats tenant, export id, revision, actor and all prior attempts and deliveries."
+  },
+  "tests": "ClientExportLifecycleTests seed history through real commands then assert returned failure code, unchanged revision and pending event count, for: request retry after later facts (no event), changed request (conflict), stale revision, unopened export, attempt id reuse, delivered terminal state, failed-build delivery refusal, earlier attest decision retry after later delivered decision (event count unchanged), changed delivered attest decision (conflict), unknown package, missing receipt, replay continuation."
+ },
+ "questions": {
+  "attest_retry_outcome": {
+   "type": "choice",
+   "instructions": "For `state.code_behavior.attest_retry`, which handling of retrying an earlier committed not_delivered decision after a later delivered decision is consistent with `state.selected_replay_rule`?",
+   "criteria": {
+    "acknowledge_no_event": "Exact match with any earlier committed decision is acknowledged with no new event.",
+    "conflict_immutable": "Refuse because the package is already delivered and its record is immutable.",
+    "needs_source_resolution": "Only the owner can decide."
+   }
+  },
+  "delivery_gate_consistent": {
+   "type": "noul",
+   "instructions": "The `state.code_behavior.delivery_gate` enforces `state.invariant` and cannot append a final delivery with a failed latest build or an undelivered required package.",
+   "criteria": {
+    "true": "It enforces the invariant.",
+    "false": "It has a gap."
+   }
+  },
+  "payload_duplication": {
+   "type": "choice",
+   "instructions": "For `state.code_behavior.event_payload`, payloads should carry only business facts not already carried by stream identity or metadata. Which disposition fits, given this is a retained baseline event contract owned by the shared event schemas?",
+   "criteria": {
+    "report_for_schema_owner": "Report as a schema reconciliation item; the aggregate stage must not change shared event schemas.",
+    "change_in_aggregate": "Change the payload inside the aggregate stage now.",
+    "leave_unchanged_no_report": "Duplication is acceptable and needs no report.",
+    "needs_source_resolution": "Only the owner can decide."
+   }
+  },
+  "tests_assert_invariant": {
+   "type": "noul",
+   "instructions": "The tests in `state.tests` assert behavioral outcomes (failure code, no new fact, revision unchanged) of retries, refusals and the delivery gate, and can fail if the rule is broken.",
+   "criteria": {
+    "true": "They assert behavior and can fail.",
+    "false": "They are structural or cannot fail."
+   }
+  }
+ }
+}
