@@ -1,0 +1,47 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AdvisorHandoff",
+    "invariant": "A handoff selects a bounded set of exact draft record versions that only the Compliance Lead may mark ready_for_review; guests and advisors are admitted only against a ready, unrevoked and unclosed handoff. Closing or revoking ends access immediately while history is retained.",
+    "selected_replay_rule": "Exact retries are resolved by the selected logical operation identity in the native acceptance layer before the aggregate decides; the aggregate decides only new operations against its own revision.",
+    "code_behavior": {
+      "create": "Create refuses with Validation and appends nothing when the program id is empty, or the comparison baseline handoff id is empty or equals the handoff itself. A second Create on an existing handoff returns Conflict with no event.",
+      "ready": "Mark ready accepts only a draft at the expected revision; an expiry date before today is Validation; a non-draft is Conflict.",
+      "admit": "Admit feedback requires expected revision equal to current, status ready_for_review, and expiry not before today; otherwise Conflict. A selection revision after readiness returns the handoff to draft and advances the generation so admission is refused until it is ready again.",
+      "ended": "After close or revoke, revise, ready, end and admit are all Conflict."
+    },
+    "tests": "Tests replay valid histories (created, ready, revise, admit, close, revoke) and assert Prepare* outcomes by error kind, status, revision and generation; creation tests assert zero pending events on refusal."
+  },
+  "questions": {
+    "create_refusal": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.create`, a self or empty comparison baseline, or empty program, cannot be replayed from the stream. What should the aggregate do?",
+      "criteria": {
+        "refuse_validation_no_event": "Refuse as validation and append nothing.",
+        "append_and_let_replay_fail": "Append the fact and let hydration fail later.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "admit_after_revise": {
+      "type": "noul",
+      "instructions": "Given `state.invariant`, refusing admission after a selection revision returned the handoff to draft (until marked ready again) is consistent with admitting only against a ready handoff."
+    },
+    "expired_ready_vs_admit_kind": {
+      "type": "choice",
+      "instructions": "In `state.code_behavior`, marking an expired draft ready is Validation while admitting into an expired ready handoff is Conflict. Is differing error kinds acceptable for the invariant?",
+      "criteria": {
+        "acceptable_difference": "Acceptable: one is invalid input to a new share, the other a state conflict; the invariant is enforced either way.",
+        "must_align": "Both should use the same error kind.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "retry_outside_aggregate": {
+      "type": "noul",
+      "instructions": "Per `state.selected_replay_rule`, it is correct that the aggregate itself emits no retry-acknowledgement logic and a duplicate Create on an existing handoff is Conflict, because exact retries are resolved earlier by the logical-operation acceptance."
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.tests` assert real behavioral outcomes that prove `state.invariant` (admission only when ready and open, ended handoffs refuse every change, invalid creation appends nothing)."
+    }
+  }
+}

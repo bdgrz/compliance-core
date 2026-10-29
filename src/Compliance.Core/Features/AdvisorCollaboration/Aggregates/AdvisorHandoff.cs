@@ -229,6 +229,10 @@ public sealed class AdvisorHandoff : Aggregate
         if (operation.Owner != Stream || operation.LogicalId != _handoffId)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A creation is the logical operation of its own handoff."));
+        if (_programId == Uuid.Empty || comparedToHandoffId is { } comparedTo &&
+            (comparedTo == Uuid.Empty || comparedTo == _handoffId))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A handoff belongs to a program and compares only with another handoff."));
         var prepared = PrepareCreate();
         if (!prepared.IsSuccess)
             return prepared;
