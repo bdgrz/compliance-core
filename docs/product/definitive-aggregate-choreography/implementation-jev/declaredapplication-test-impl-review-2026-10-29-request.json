@@ -1,0 +1,54 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "DeclaredApplication",
+    "invariant": "An application is declared once, revised only at its current revision, retired once (effective-dated, with a reason), and no local change is admitted while an import hold is unsettled.",
+    "rule_D05_11": "Retirement is effective-dated: a retirement fact must carry the date from which the application is retired.",
+    "selected_replay_rule": "Exact retries resolve the original accepted result by the selected logical id and immutable intent binding; a changed intent under the same id is a conflict. Expected revision is a concurrency precondition.",
+    "code_behavior": {
+      "retire": "Checks existence, retired state, import hold and expected revision first (missing record / state conflict / version conflict), then reason, then refuses a default (unset) effective date with InvalidContent and appends nothing. Otherwise appends ApplicationRetired at revision+1.",
+      "revise": "Two Revise calls at the same expected revision 1: the first appends ApplicationRevised revision 2; the second returns VersionConflict with current revision 2 and appends nothing.",
+      "undeclared": "Revise or Retire on a never-declared application returns MissingRecord and appends nothing.",
+      "replayed_history": "History Declared(r1), Revised(r2), Retired(r3) replayed with selected logical id of each command in turn: exact binding gives Replayed, a changed authored-intent hash gives Conflict. After retirement, Declare is Conflict and Revise is StateConflict with no new events."
+    },
+    "tests": "Test A: declared app, Retire with default effective date, asserts InvalidContent, not retired, revision 1, only the Declared event pending. Test B: competing revisions as above, asserts 2 pending events and VersionConflict. Test C: undeclared revise/retire asserts MissingRecord and no events. Test D: replay as above asserts decisions, state and no pending events."
+  },
+  "questions": {
+    "missing_effective_date_refusal": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.retire` and `state.rule_D05_11`, what should happen when retirement has no effective date?",
+      "criteria": {
+        "refuse_no_event": "Refuse as invalid content and append no fact.",
+        "default_to_now": "Append the fact using the change time as the effective date.",
+        "append_with_default": "Append the fact carrying the unset date.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "competing_revision_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.revise`, is the second competing revise outcome consistent with `state.invariant`?",
+      "criteria": {
+        "version_conflict_no_event": "Version conflict and no second fact is correct.",
+        "append_second_revision": "Both revisions should be appended.",
+        "acknowledge_as_retry": "Treat it as an exact retry and succeed.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.tests` together assert real behavioral outcomes (events appended or not, state after replay) for the invariant in `state.invariant`, and Test A could fail if the retire code appended a fact with an unset date.",
+      "criteria": {
+        "true": "They assert behavior and Test A can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    },
+    "replay_retry_consistent": {
+      "type": "noul",
+      "instructions": "The decisions in `state.code_behavior.replayed_history` are consistent with `state.selected_replay_rule`.",
+      "criteria": {
+        "true": "Consistent.",
+        "false": "Inconsistent."
+      }
+    }
+  }
+}

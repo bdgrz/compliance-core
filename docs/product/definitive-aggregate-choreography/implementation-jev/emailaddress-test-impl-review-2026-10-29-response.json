@@ -1,0 +1,41 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "second_verification_outcome": {
+        "type": "choice",
+        "choice": "conflict_no_fact",
+        "confidence": 1,
+        "probabilities": {
+          "conflict_no_fact": 1,
+          "success_no_fact": 0,
+          "append_second_fact": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "recovery_id_reuse_outcome": {
+        "type": "choice",
+        "choice": "conflict_no_fact",
+        "confidence": 1,
+        "probabilities": {
+          "conflict_no_fact": 1,
+          "reissue_allowed": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.9
+      },
+      "no_event_for_refusals": {
+        "type": "noul",
+        "noul": 0.89
+      }
+    },
+    "usage": {
+      "input_tokens": 992,
+      "output_tokens": 159
+    }
+  }
+}

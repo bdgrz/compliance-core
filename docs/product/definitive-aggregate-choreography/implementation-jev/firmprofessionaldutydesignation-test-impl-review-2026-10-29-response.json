@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "tests_assert_invariant": {
+      "type": "noul",
+      "noul": 0.82
+    },
+    "same_assertion_retry": {
+      "type": "choice",
+      "choice": "consistent_no_new_fact",
+      "confidence": 0.98,
+      "probabilities": {
+        "consistent_no_new_fact": 0.99,
+        "should_acknowledge_in_aggregate": 0.01,
+        "needs_source_resolution": 0
+      }
+    },
+    "accepted_owner_field": {
+      "type": "choice",
+      "choice": "keep_as_native_operation_envelope",
+      "confidence": 0.95,
+      "probabilities": {
+        "remove_from_payload": 0.02,
+        "keep_as_native_operation_envelope": 0.97,
+        "needs_source_resolution": 0.01
+      }
+    },
+    "premise_ok": {
+      "type": "noul",
+      "noul": 0.49
+    }
+  },
+  "usage": {
+    "input_tokens": 1088,
+    "output_tokens": 151
+  }
+}

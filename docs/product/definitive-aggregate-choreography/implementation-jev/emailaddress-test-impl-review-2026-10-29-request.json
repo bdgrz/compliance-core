@@ -1,0 +1,53 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "EmailAddress",
+    "invariant": "A normalized address reserves exactly one platform user; verification requires its current challenge; a claimed recovery binds one old/replacement pair.",
+    "rule": "ChallengeId is an operation identity bound to this address. An accepted challenge id must never be re-issued with a changed token or expiry. Exact retries of a committed fact are resolved by native acceptance before the owner and acknowledged without a new event. A negative outcome alone creates no event.",
+    "code_behavior": {
+      "verification": "CompleteChallenge on an address that is already verified returns Conflict and appends nothing (previously it could append a second EmailAddressVerified with a matching current challenge and token). The replay reducer also throws on a second EmailAddressVerified.",
+      "recovery_issue": "Issuing a recovery challenge whose id equals the address current recovery challenge id returns Conflict and appends nothing, even when that challenge is unclaimed and expired. A fresh id after expiry is accepted."
+    },
+    "tests": {
+      "second_verification": "Reserve, issue challenge, complete with correct token (3 facts). Complete again with the same owner, challenge and token one minute later. Asserts Conflict, still 3 pending facts, IsVerified true.",
+      "recovery_id_reuse": "Reserve, issue, verify, issue recovery challenge C (4 facts). 16 minutes later, issue recovery again with the same id C, a different token hash and a new expiry. Asserts Conflict, still 4 facts, CurrentRecoveryChallengeId still C."
+    }
+  },
+  "questions": {
+    "second_verification_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.verification` and `state.rule`, which owner-level outcome is consistent with the invariant?",
+      "criteria": {
+        "conflict_no_fact": "Conflict with no new fact; exact retries are handled earlier by native acceptance.",
+        "success_no_fact": "Success with no new fact.",
+        "append_second_fact": "Append another EmailAddressVerified.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "recovery_id_reuse_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.recovery_issue`, which outcome is consistent with `state.rule`?",
+      "criteria": {
+        "conflict_no_fact": "Conflict with no new fact for a reused id with changed token and expiry.",
+        "reissue_allowed": "Allow re-issue because the previous challenge expired.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "Both tests in `state.tests` assert a real behavioral outcome (refusal kind, unchanged fact count and unchanged state) that would fail without the corresponding guard.",
+      "criteria": {
+        "true": "They would fail without the guards.",
+        "false": "They can pass without the guards."
+      }
+    },
+    "no_event_for_refusals": {
+      "type": "noul",
+      "instructions": "Per `state.rule`, the refused second verification and refused id reuse in `state.code_behavior` need no new domain event or catalog entry.",
+      "criteria": {
+        "true": "No event is needed.",
+        "false": "An event is needed."
+      }
+    }
+  }
+}

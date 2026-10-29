@@ -1,0 +1,43 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ExaminationEngagement",
+    "invariant": "Freeze locks Type I setup to exact approved boundary and complete source coverage; amendments preserve prior baseline and enumerate changed sources.",
+    "code_behavior": {
+      "create": "Create is refused with Validation and no fact when the prepared engagement's program differs from the program the stream was opened under, its type is not type_i, or its boundary is empty. A second create on an existing engagement is Conflict with no fact.",
+      "freeze_amend": "Freeze on a frozen engagement and Amend on a draft engagement are Conflict with no fact. Revise on a frozen engagement is Conflict. Amend is accepted only with baseline revision equal to previous baseline revision plus one, and program, type and boundary never change.",
+      "retry": "Exact retry of a committed logical id after later facts is recognized by the acceptance binding as Replayed; changed authored intent is Conflict; an append while the logical id is already accepted on the stream is refused with no new fact.",
+      "tests": "Owner-level tests build valid history with facts and assert pending event counts, refusal kinds and replayed header state for each of the above."
+    }
+  },
+  "questions": {
+    "create_guard": {
+      "type": "noul",
+      "instructions": "Refusing creation under another program, a non-type_i type or an empty boundary before any fact is raised (state.code_behavior.create) is consistent with state.invariant and an engagement being created once with immutable program, type and boundary.",
+      "criteria": { "true": "It is consistent.", "false": "It conflicts with the invariant." }
+    },
+    "frozen_revise": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.freeze_amend, what is the correct outcome of Revise or a second Freeze on an already frozen engagement?",
+      "criteria": {
+        "conflict_no_fact": "Refused as conflict with no fact; only a baseline amendment may change a frozen engagement.",
+        "accept_as_revision": "Accepted as another revision.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "retry_outcome": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.retry, is the retry handling consistent with the idea that a committed logical id retried exactly is acknowledged without a new fact and a changed intent is refused?",
+      "criteria": {
+        "consistent": "Exact retry acknowledged without a new fact; changed intent conflict; append on an accepted id refused.",
+        "inconsistent": "Retry handling would duplicate a fact or accept changed intent.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests described in state.code_behavior.tests assert real behavioral outcomes (facts appended or not, refusal kind, replayed state) for the invariant rather than only structure.",
+      "criteria": { "true": "They assert real outcomes.", "false": "They assert structure only." }
+    }
+  }
+}

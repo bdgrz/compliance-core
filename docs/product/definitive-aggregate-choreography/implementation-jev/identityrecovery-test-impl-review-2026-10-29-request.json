@@ -1,0 +1,40 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "IdentityRecovery",
+    "invariant": "Immutable both-proof-verified candidate and preparation; complete protection proofs precede accepted exact swap. Preparation can reject/fence; accepted swap completes forward. Exact account, old/replacement identities and actor/proof provenance retained without bearer tokens.",
+    "code_behavior": {
+      "accept": "IdentityRecovery.Accept(operation, intent, ImmutableContentRef? protectionProofs) raises IdentityRecoveryAccepted when the stage is Prepared and the intent equals the frozen intent. A null protectionProofs is accepted and stored as SourceProofs null. The only production caller (AcceptProtectedIdentityRecoveryHandler) always passes the non-null ProtectionProofs of a command whose protection of both identity slots it already verified.",
+      "complete_reject": "Complete(completionProofs) and Reject(conflictProof) likewise take a nullable ref and accept null; their commands carry non-null refs.",
+      "materialize": "Materialize(operation, intent, ImmutableContentRef? sourceProofs) accepts null sourceProofs; the handler passes the verified source's non-null RequiredFacts.",
+      "tests": "Owner tests call Accept, Complete and Materialize with null proofs and assert success and the Accepted/Completed/Prepared events; one test asserts the Accepted fact carries the supplied protection ref."
+    }
+  },
+  "questions": {
+    "accept_null_proofs": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.accept`, which handling of a null protectionProofs is consistent with `state.invariant` (complete protection proofs precede accepted swap)?",
+      "criteria": {
+        "refuse_null_in_aggregate": "The owner must refuse or be unable to receive an acceptance without a protection proof reference, so an accepted fact always carries one.",
+        "allow_null_receiver_verifies": "Allowing null is fine because the receiver handler verifies protection before calling the owner.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "null_proof_premise": {
+      "type": "noul",
+      "instructions": "Per `state.invariant`, an Accepted fact recorded with no protection proof reference would violate the stated rule that complete protection proofs precede the accepted swap.",
+      "criteria": {
+        "true": "It would violate the rule.",
+        "false": "It would not violate the rule."
+      }
+    },
+    "tests_assert_behavior": {
+      "type": "noul",
+      "instructions": "The tests in `state.code_behavior.tests` that pass null proofs to Accept, Complete and Materialize are a faithful check of the invariant.",
+      "criteria": {
+        "true": "They check the invariant.",
+        "false": "They exercise paths the invariant forbids."
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ExaminationSignOff",
+    "invariant": "One final personal management decision binds exact package/assertion/letter/outcome and acknowledges exactly every unresolved material item.",
+    "rule": "First accepted content is immutable. A same-initial retry (same content, actor, role, signed-off time) is acknowledged without a new fact. Admission accepts approver role case-insensitively.",
+    "code_behavior": {
+      "role_retry": "After a sign-off accepted with role 'ceo' (stored as the approver-list role 'CEO'), a retry with role 'ceo' or 'CEO' returns success and appends no fact. Before the fix, the stored 'CEO' was compared case-sensitively to 'ceo' and the retry was refused as a state conflict.",
+      "acknowledgement": "A sign-off whose acknowledged item ids are a different set of ids from the unresolved item ids, even with equal count, is refused as invalid content and appends no fact. The same ids in a different order is an exact retry.",
+      "d17_07": "The aggregate does not check package-validated, assertion-signed, letter-signed ordering; it only binds their identities and hashes. The catalog text for D17-07 says sign-off is refused out of order.",
+      "fact_payload": "ExaminationSignedOff carries TenantId, SubjectId (equal to stream identity), ActorMemberId, OccurredAt and a State that repeats TenantId and SignOffId. Aggregate validation enforces equality."
+    },
+    "tests": {
+      "t1": "Sign with role ceo then retry with ceo and CEO and padded display: both succeed, one event pending.",
+      "t2": "Changed decision, changed time, changed display after acceptance each return StateConflict; one event pending.",
+      "t3": "Acknowledged ids differ from unresolved ids (extra, or different id same count) returns InvalidContent; no event.",
+      "t4": "Replay then exact retry succeeds, changed comments is StateConflict."
+    }
+  },
+  "questions": {
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "Taken together, state.tests t1 to t4 assert the rule in state.rule and the invariant in state.invariant as behavior (events appended or not, state after replay).",
+      "criteria": {"true": "They assert the rule and invariant.", "false": "They only assert structure or miss part of it."}
+    },
+    "role_retry": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.role_retry, which outcome is consistent with state.rule?",
+      "criteria": {
+        "success_no_new_fact": "Retry succeeds with no new fact.",
+        "state_conflict": "Retry with a different role case is a conflict.",
+        "new_fact": "Retry appends another fact.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "ordering_in_aggregate": {
+      "type": "choice",
+      "instructions": "state.code_behavior.d17_07 describes a discrepancy between catalog text and the aggregate. The invariant in state.invariant is about binding exact identities. Where should the D17-07 ordering refusal be enforced?",
+      "criteria": {
+        "later_handler_stage": "In a handler or reactor that reads the source aggregates, as a later stage; the aggregate keeps only its own invariant.",
+        "inside_aggregate": "Inside this aggregate, which must read the other records.",
+        "remove_from_model": "Remove the ordering rule from the model.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_identity_duplication": {
+      "type": "choice",
+      "instructions": "Policy: payloads carry only business facts not already carried by stream identity or metadata. For state.code_behavior.fact_payload, what should be done for the duplicated fields?",
+      "criteria": {
+        "remove_from_payload": "Remove the duplicated identity/actor/time fields from the event payload in a later wire-versioned event change.",
+        "keep_as_is": "Keep them; the duplication is a deliberate validated binding.",
+        "add_to_model": "Register them in the catalog as business facts.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_premise": {
+      "type": "noul",
+      "instructions": "The payload fields TenantId, SubjectId, OccurredAt and ActorMemberId in state.code_behavior.fact_payload repeat stream identity or operation metadata.",
+      "criteria": {"true": "The premise holds.", "false": "The premise does not hold."}
+    }
+  }
+}

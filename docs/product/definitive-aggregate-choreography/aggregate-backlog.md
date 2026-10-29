@@ -88,16 +88,16 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 64 | `ControlDraft` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 65 | `ControlOperatingPlan` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 66 | `CriteriaTextOverlay` | No direct story mapping | — | Partial: Build and run the tests. The source change and the five new owner-level tests are written  |
-| 67 | `CriterionApplicability` | No direct story mapping | — | Source present; verify |
-| 68 | `DeclaredApplication` | No direct story mapping | 47: `ApplicationImportBatch` | Source present; verify |
-| 69 | `DeclaredSystemInstance` | No direct story mapping | — | Source present; verify |
-| 70 | `EmailAddress` | No direct story mapping | — | Source present; verify |
-| 70 | `IdentityRecovery` | No direct story mapping | — | Source present; verify |
-| 70 | `UserIdentity` | No direct story mapping | — | Source present; verify |
-| 71 | `EvidenceRedaction` | No direct story mapping | — | Source present; verify |
-| 72 | `ExaminationEngagement` | No direct story mapping | — | Source present; verify |
-| 73 | `ExaminationSignOff` | No direct story mapping | — | Source present; verify |
-| 74 | `FirmProfessionalDutyDesignation` | No direct story mapping | — | Source present; verify |
+| 67 | `CriterionApplicability` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 68 | `DeclaredApplication` | No direct story mapping | 47: `ApplicationImportBatch` | Done (focused aggregate scope, 2026-10-29) |
+| 69 | `DeclaredSystemInstance` | No direct story mapping | — | Partial: Event change (not applied): add Platform (string?) and Description (string?) to SystemInst |
+| 70 | `EmailAddress` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 70 | `IdentityRecovery` | No direct story mapping | — | Partial: Owner decision: tighten Accept/Complete/Reject/Materialize proof parameters to non-null (J |
+| 70 | `UserIdentity` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 71 | `EvidenceRedaction` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 72 | `ExaminationEngagement` | No direct story mapping | — | Partial: Tests unexecuted; RED/GREEN pending first build |
+| 73 | `ExaminationSignOff` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 74 | `FirmProfessionalDutyDesignation` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 74 | `FirmStaffIdentityClaim` | No direct story mapping | — | Source present; verify |
 | 74 | `FirmStaffRecord` | No direct story mapping | — | Source present; verify |
 | 74 | `ProfessionalAssertionIdentityClaim` | No direct story mapping | — | Source present; verify |

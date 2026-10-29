@@ -87,6 +87,10 @@ public sealed class DeclaredSystemInstance : Aggregate
             RequireOwnOperation(ev.Operation);
             if (_created)
                 throw new InvalidOperationException("The system instance is already declared.");
+            if (ev.TenantId != _tenantId || ev.SystemInstanceId != Id || ev.ApplicationId == Uuid.Empty ||
+                ev.Revision != 1 || string.IsNullOrWhiteSpace(ev.Name) || string.IsNullOrWhiteSpace(ev.Kind) ||
+                ev.ActorMemberId == Uuid.Empty || ev.ChangedAt == default)
+                throw new InvalidOperationException("The system instance registration event is invalid.");
             _created = true;
             _applicationId = ev.ApplicationId;
             _name = ev.Name;
@@ -178,12 +182,16 @@ public sealed class DeclaredSystemInstance : Aggregate
         var prepared = PrepareDeclare(applicationId, name, kind, accessBoundaryReference, sourceIdentifier);
         if (!prepared.IsSuccess)
             return prepared;
+        if (actorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(actorDisplay) || actorDisplay.Length > 200 ||
+            changedAt == default)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A system instance declaration requires a named actor and a change time."));
         RaiseEvent(new SystemInstanceRegistered(_tenantId, applicationId, Id, 1,
             name.Trim(), kind.Trim(), NormalizeOptional(accessBoundaryReference),
             NormalizeOptional(sourceIdentifier),
-            actorMemberId, actorDisplay, changedAt, operation, firstResponse)
+            actorMemberId, actorDisplay.Trim(), changedAt, operation, firstResponse)
         {
-            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
+            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay.Trim()),
         });
         return Result.Success;
     }

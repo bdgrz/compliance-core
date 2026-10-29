@@ -1,0 +1,30 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "accept_null_proofs": {
+        "type": "choice",
+        "choice": "allow_null_receiver_verifies",
+        "confidence": 0.55,
+        "probabilities": {
+          "refuse_null_in_aggregate": 0.29,
+          "allow_null_receiver_verifies": 0.7,
+          "needs_source_resolution": 0.01
+        }
+      },
+      "null_proof_premise": {
+        "type": "noul",
+        "noul": 0.63
+      },
+      "tests_assert_behavior": {
+        "type": "noul",
+        "noul": 0.22
+      }
+    },
+    "usage": {
+      "input_tokens": 857,
+      "output_tokens": 98
+    }
+  }
+}
