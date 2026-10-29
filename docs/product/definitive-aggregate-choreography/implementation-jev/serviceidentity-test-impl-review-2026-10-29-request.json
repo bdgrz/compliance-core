@@ -1,0 +1,52 @@
+{
+ "model": "jev-latest",
+ "state": {
+  "rule": "One governed nonhuman identity has exactly one accountable person/team owner, approved purpose, valid lifecycle/expiry and review date within one year. Revisions use caller CommandId.",
+  "behavior": {
+   "record_retry": "Record with canonical terms equal to the originally recorded terms is acknowledged as success with no new event, even when the review date has since passed or later revisions exist. Record with different terms returns a conflict with no event.",
+   "revise": "Revise requires the current expected revision; a stale revision, missing identity or invalid terms appends nothing. Revise whose canonical terms equal the current terms appends nothing and succeeds.",
+   "revise_event": "ServiceIdentityRevised carries tenant id, identity id, revision number, full terms, actor and changed-at."
+  },
+  "tests": [
+   "Revise with unchanged terms: success, revision stays 1, only the original recorded event is pending.",
+   "Record retry after a later owner revision with the original terms: success; Record with the revised terms: conflict.",
+   "Record retry on a later date after the review date has elapsed: success, no new event."
+  ]
+ },
+ "questions": {
+  "noop_revise_asserts_invariant": {
+   "type": "noul",
+   "instructions": "Is acknowledging a Revise whose canonical terms equal the current terms without appending an event consistent with `rule` and `behavior.revise`?",
+   "criteria": {
+    "true": "A repeat of the current terms changes nothing, so appending a revision event would be a redundant duplicate fact.",
+    "false": "The revision must always be appended to record that the caller reviewed the identity."
+   }
+  },
+  "retry_before_validation": {
+   "type": "choice",
+   "instructions": "A caller retries an already committed Record command with identical terms after the review date in the terms has passed. What should `behavior.record_retry` do?",
+   "criteria": {
+    "acknowledge_without_event": "Return success without an event because the identical terms were already committed.",
+    "reject_validation": "Reject because the terms no longer satisfy the future review date validation.",
+    "append_new_event": "Append another recorded event."
+   }
+  },
+  "tests_assert_behavior": {
+   "type": "noul",
+   "instructions": "Do the scenarios in `tests` each assert an observable behavioral outcome (events appended or not, success or conflict) of the aggregate decisions in `behavior`?",
+   "criteria": {
+    "true": "Each scenario names an outcome that can fail if the decision were wrong.",
+    "false": "Some scenario only checks structure and cannot fail."
+   }
+  },
+  "revise_idempotence_via_command_id": {
+   "type": "choice",
+   "instructions": "The catalog says revisions use caller CommandId, but the aggregate detects retries only through expected revision and unchanged terms. What should be done about retry of a committed revision after later facts?",
+   "criteria": {
+    "add_to_model": "Carry the command id in the event payload so the aggregate can recognise it.",
+    "handler_framework_identity": "Leave it to framework command identity at the handler stage because command id is envelope metadata, not payload.",
+    "needs_source_resolution": "The source is ambiguous and cannot be decided."
+   }
+  }
+ }
+}

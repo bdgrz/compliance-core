@@ -62,6 +62,7 @@ public sealed class ServiceIdentity : Aggregate
     bool _created;
     long _revision;
     ServiceIdentityTerms? _initialTerms;
+    ServiceIdentityTerms? _terms;
 
     public bool IsCreated => _created;
     public long Revision => _revision;
@@ -78,17 +79,17 @@ public sealed class ServiceIdentity : Aggregate
     public Result<ServiceIdentityRegistration> Record(ServiceIdentityTerms terms, DateOnly today,
         ActorReference actor, DateTimeOffset changedAt)
     {
+        if (_created && terms is { DisplayName: not null, Purpose: not null } &&
+            _initialTerms == Clean(terms))
+            return Result<ServiceIdentityRegistration>.Success(new ServiceIdentityRegistration(Id));
         var validation = Validate(terms, today);
         if (validation is not null)
             return Result<ServiceIdentityRegistration>.Failure(validation);
-        var clean = Clean(terms);
         if (_created)
-            return _initialTerms == clean
-                ? Result<ServiceIdentityRegistration>.Success(new ServiceIdentityRegistration(Id))
-                : Result<ServiceIdentityRegistration>.Failure(new RequestError(
-                    RequestErrorKind.Conflict,
-                    "The service identity already exists with different content."));
-        RaiseEvent(new ServiceIdentityRecorded(_tenantId, Id, clean, actor, changedAt));
+            return Result<ServiceIdentityRegistration>.Failure(new RequestError(
+                RequestErrorKind.Conflict,
+                "The service identity already exists with different content."));
+        RaiseEvent(new ServiceIdentityRecorded(_tenantId, Id, Clean(terms), actor, changedAt));
         return Result<ServiceIdentityRegistration>.Success(new ServiceIdentityRegistration(Id));
     }
 
@@ -103,7 +104,10 @@ public sealed class ServiceIdentity : Aggregate
         var validation = Validate(terms, today);
         if (validation is not null)
             return CommandFailure.InvalidContent(validation.Message!);
-        RaiseEvent(new ServiceIdentityRevised(_tenantId, Id, _revision + 1, Clean(terms), actor,
+        var clean = Clean(terms);
+        if (_terms == clean)
+            return null;
+        RaiseEvent(new ServiceIdentityRevised(_tenantId, Id, _revision + 1, clean, actor,
             changedAt));
         return null;
     }
@@ -152,6 +156,7 @@ public sealed class ServiceIdentity : Aggregate
         _created = true;
         _revision = 1;
         _initialTerms = fact.Terms;
+        _terms = fact.Terms;
     }
 
     void ObserveRevised(ServiceIdentityRevised fact)
@@ -163,5 +168,6 @@ public sealed class ServiceIdentity : Aggregate
         if (validation is not null || fact.Terms != Clean(fact.Terms))
             throw new InvalidOperationException("A service identity revision must contain valid canonical terms.");
         _revision = fact.Revision;
+        _terms = fact.Terms;
     }
 }

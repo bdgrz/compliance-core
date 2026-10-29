@@ -215,4 +215,101 @@ public sealed class ServiceIdentityTests
         Assert.Equal(expected, expired);
         Assert.False(neverExpires);
     }
+
+    [Fact]
+    public void ShouldAppendNothingGivenRevisionWithUnchangedTerms()
+    {
+        // Arrange
+        var identity = New();
+        Assert.True(identity.Record(Terms(), Today, Author, Now).IsSuccess);
+
+        // Act
+        var noOp = identity.Revise(1, Terms(), Today, Author, Now.AddMinutes(1));
+
+        // Assert
+        Assert.Null(noOp);
+        Assert.Equal(1, identity.Revision);
+        Assert.Single(new AggregateScenario<ServiceIdentity>(identity).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldAppendNoFactGivenInvalidStaleOrMissingRevision()
+    {
+        // Arrange
+        var identity = New();
+        var missing = New();
+        Assert.True(identity.Record(Terms(), Today, Author, Now).IsSuccess);
+
+        // Act
+        var invalid = identity.Revise(1, Terms("group"), Today, Author, Now.AddMinutes(1));
+        var stale = identity.Revise(7, Terms("team"), Today, Author, Now.AddMinutes(2));
+        var absent = missing.Revise(1, Terms(), Today, Author, Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.MissingRecord, Assert.IsType<CommandFailure>(absent).Code);
+        Assert.Empty(new AggregateScenario<ServiceIdentity>(missing).PendingEvents);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(invalid).Code);
+        Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(stale).Code);
+        Assert.Equal(1, identity.Revision);
+        Assert.Single(new AggregateScenario<ServiceIdentity>(identity).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldAcceptRecordRetryGivenLaterRevision()
+    {
+        // Arrange
+        var identity = New();
+        Assert.True(identity.Record(Terms(), Today, Author, Now).IsSuccess);
+        Assert.Null(identity.Revise(1, Terms("team"), Today, Author, Now.AddMinutes(1)));
+
+        // Act
+        var retry = identity.Record(Terms(), Today, Author, Now);
+        var changed = identity.Record(Terms("team"), Today, Author, Now);
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(changed.Error).Kind);
+        Assert.Equal(2, identity.Revision);
+    }
+
+    [Fact]
+    public void ShouldAcknowledgeRecordRetryGivenReviewDateElapsedSinceCommit()
+    {
+        // Arrange
+        var identity = New();
+        Assert.True(identity.Record(Terms(reviewBy: Today.AddDays(5)), Today, Author, Now).IsSuccess);
+        var later = Today.AddDays(10);
+
+        // Act
+        var retry = identity.Record(Terms(reviewBy: Today.AddDays(5)), later, Author, Now);
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Single(new AggregateScenario<ServiceIdentity>(identity).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldContinueFromReplayedStateGivenRecordedAndRevisedHistory()
+    {
+        // Arrange
+        var id = Uuid.CreateVersion4();
+        var recorded = DomainEventSeed.Attach(
+            new ServiceIdentityRecorded(TenantId, id, Terms(), Author, Now), id, 1);
+        var revised = DomainEventSeed.Attach(
+            new ServiceIdentityRevised(TenantId, id, 2, Terms("team"), Author, Now.AddMinutes(1)), id, 2);
+
+        // Act
+        var identity = new AggregateScenario<ServiceIdentity>(new ServiceIdentity(TenantId, id))
+            .Given(new DomainEvent[] { recorded, revised }).Aggregate;
+        var stale = identity.Revise(1, Terms(), Today, Author, Now.AddMinutes(2));
+        var noOp = identity.Revise(2, Terms("team"), Today, Author, Now.AddMinutes(2));
+        var next = identity.Revise(2, Terms(status: "disabled"), Today, Author, Now.AddMinutes(2));
+
+        // Assert
+        Assert.True(identity.IsCreated);
+        Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(stale).Code);
+        Assert.Null(noOp);
+        Assert.Null(next);
+        Assert.Equal(3, identity.Revision);
+    }
 }
