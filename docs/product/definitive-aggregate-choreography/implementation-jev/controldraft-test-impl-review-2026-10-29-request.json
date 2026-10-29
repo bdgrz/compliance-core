@@ -1,0 +1,46 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ControlDraft",
+    "rule": "Preparation admits creation only when the owner has no control (identifier occupied once created, even if discarded). A mutation is admitted only for a visible control in the same program; an expected revision, when given, must equal the current content revision, otherwise a conflict with no fact; an omitted expected revision is admitted. A discarded control is hidden (not found for mutation) and its identifier stays occupied (conflict on creation).",
+    "test_discard": "After create then discard replayed from history, Prepare for mutation returns NotFound, Prepare for creation returns Conflict, IsCreated is true, IsVisible false, HasOpenDraft false.",
+    "test_stale": "After create (revision 1) and one content revision (revision 2) replayed, Prepare with expected revision 1 returns Conflict whose message contains Current revision: 2, and the owner revision remains 2.",
+    "test_program": "A control created in program A, replayed, Prepare for mutation in a different program returns NotFound while owner ProgramId stays program A.",
+    "gap": "Active source-use fencing (Prepare returns transient Conflict when a source use is held) has no direct ControlDraft test; it is covered by SourceUseReservations tests."
+  },
+  "questions": {
+    "discard_test": {
+      "type": "noul",
+      "instructions": "Does state.test_discard prove state.rule discard visibility and identifier occupancy?",
+      "criteria": {
+        "true": "A wrong implementation (hidden but creatable, or visible after discard) would fail an assertion.",
+        "false": "The test could pass with an implementation that violates the rule."
+      }
+    },
+    "stale_test": {
+      "type": "noul",
+      "instructions": "Does state.test_stale prove that a stale expected revision is refused with no fact and that the current revision is reported?",
+      "criteria": {
+        "true": "Admitting the stale revision or reporting a wrong revision would fail.",
+        "false": "The test could pass while the stale revision was admitted."
+      }
+    },
+    "program_test": {
+      "type": "noul",
+      "instructions": "Does state.test_program prove program scoping hides a control from another program without leaking it?",
+      "criteria": {
+        "true": "Admitting the other program or returning Conflict instead of NotFound would fail.",
+        "false": "It could pass while leaking the control."
+      }
+    },
+    "fence_gap": {
+      "type": "choice",
+      "instructions": "Given state.gap, should the missing direct source-use fence test in the ControlDraft tests block considering the aggregate verified?",
+      "criteria": {
+        "block": "Without a direct test the fencing invariant is unproven for this owner.",
+        "not_block": "Coverage in the owning SourceUseReservations tests is adequate for the aggregate.",
+        "needs_source_resolution": "Cannot decide."
+      }
+    }
+  }
+}
