@@ -1,0 +1,48 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "DeclaredSystemInstance",
+    "rule": "One system instance has one immutable application parent and registered identity; metadata revisions and terminal retirement follow its own expected revision. Instance kind must be one of cloud_account, source_code_organization, identity_provider_tenant, saas_tenant, environment, other; other requires a description; platform is required except for environment and other (D05-04). Active provider identifier unique per tenant across kind, platform, identifier (D05-05).",
+    "test_retire_replay": "Seed: Declare, Revise(1), Retire(2). Replay the 3 raised facts into a fresh aggregate. Assert state is retired at revision 3 with revised name and original parent; Revise(3) and Retire(3) both return StateConflict and no events are pending.",
+    "test_retry_after_later_facts": "Replay Registered+Revised (revision 2). Declare again with identical content returns Conflict; Revise(expected 1) returns VersionConflict; name stays revised, revision 2, no events pending.",
+    "code": "Events SystemInstanceRegistered and SystemInstanceRevised carry Kind as free text, with no Platform or Description fields. Revise copies the existing Kind into the Revised event unchanged. Declare accepts any nonblank Kind up to 200 chars. Existing tests and fixtures use kinds such as 'production'. Events also carry TenantId and SystemInstanceId equal to the stream identity (repo-wide convention)."
+  },
+  "questions": {
+    "retire_replay_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_retire_replay prove replayed history restores the retired state and that later decisions are refused without appending a fact?",
+      "criteria": {
+        "true": "Retired state, revision and refusals with no pending events prove the invariant.",
+        "false": "The scenario could pass while a later decision is accepted or replay loses state."
+      }
+    },
+    "retry_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_retry_after_later_facts prove a duplicate declaration and a competing stale revision are refused with no new fact?",
+      "criteria": {
+        "true": "Both refusals plus unchanged state and no pending events prove it.",
+        "false": "The scenario could pass while a duplicate or stale decision is accepted."
+      }
+    },
+    "kind_rule_gap": {
+      "type": "choice",
+      "instructions": "Given state.rule and state.code, how should the discrepancy on Kind, Platform and Description be handled for this aggregate stage?",
+      "criteria": {
+        "no_discrepancy": "Code already satisfies the rule.",
+        "change_aggregate_now": "The aggregate alone can enforce the rule without any event payload change.",
+        "event_change_needed": "Enforcement needs Platform and Description payload fields, which are an event contract change owned outside the aggregate.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    },
+    "identity_in_payload": {
+      "type": "choice",
+      "instructions": "Given state.code, should TenantId and SystemInstanceId payload fields that repeat stream identity be removed from the events by this aggregate?",
+      "criteria": {
+        "no_aggregate_change": "Repo-wide convention shared by many events; not an aggregate-local decision.",
+        "remove_in_aggregate": "The aggregate should drop them now.",
+        "add_to_model": "Catalog should add them.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    }
+  }
+}
