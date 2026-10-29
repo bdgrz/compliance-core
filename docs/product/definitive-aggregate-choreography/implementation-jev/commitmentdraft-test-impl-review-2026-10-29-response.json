@@ -1,0 +1,39 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "revise_retry_consistent": {
+        "type": "noul",
+        "noul": 0.93
+      },
+      "stale_blank_asserts": {
+        "type": "noul",
+        "noul": 0.94
+      },
+      "competing_append_asserts": {
+        "type": "noul",
+        "noul": 0.92
+      },
+      "prepare_matrix": {
+        "type": "noul",
+        "noul": 0.81
+      },
+      "d09_disposition": {
+        "type": "choice",
+        "choice": "event_fields_later_stage",
+        "confidence": 1,
+        "probabilities": {
+          "event_fields_later_stage": 1,
+          "change_aggregate_now": 0,
+          "remove_from_catalog": 0,
+          "needs_source_resolution": 0
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 1262,
+      "output_tokens": 145
+    }
+  }
+}
