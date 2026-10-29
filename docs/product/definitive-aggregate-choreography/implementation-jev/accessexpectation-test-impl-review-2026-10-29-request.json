@@ -1,0 +1,38 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AccessExpectation",
+    "rule": "One expectation line of a system instance decides predecessor/successor competition, independent approval and same-line exceptions under a monotonic line revision. An expectation can be approved once; an exception requires an approved expectation; every command carries an expected line revision and a stale revision is refused with a conflict and appends nothing.",
+    "test_second_approval": "Line replayed with proposed+approved facts (revision 2). PrepareApproval(2, expectation) returns Conflict; PrepareException(2, expectation) succeeds; PrepareException(1, expectation) returns Conflict (stale). Prepare methods raise nothing.",
+    "test_unfinalized_cut": "Line replayed with one proposed fact but the replay cut not confirmed; Approve at the correct revision returns Conflict and no event is pending, revision stays 1.",
+    "catalog": "Catalog lists events AccessExpectationProposed, AccessExpectationApproved, AccessExpectationExceptionRecorded, each at discriminatorVersion 1. Code declares the same three event names and payloads, each at discriminator version 2. No event is added, removed or renamed."
+  },
+  "questions": {
+    "second_approval_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_second_approval prove that a duplicate approval and a stale exception are refused while a current-revision exception on an approved expectation is allowed?",
+      "criteria": {
+        "true": "The scenario proves duplicate approval and stale revision are refused and the valid exception is accepted.",
+        "false": "The scenario could pass while a duplicate approval or stale exception would be accepted."
+      }
+    },
+    "unfinalized_cut_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_unfinalized_cut prove a replayed line that has not confirmed its exact cut appends no fact?",
+      "criteria": {
+        "true": "Refusal with no pending event and unchanged revision proves nothing is appended.",
+        "false": "The scenario could pass while a fact is appended on an unconfirmed cut."
+      }
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Given state.catalog, is there an event-model discrepancy needing action in the aggregate or its events?",
+      "criteria": {
+        "no_discrepancy": "Event names and payloads agree; only a version number differs, which is shared catalog bookkeeping.",
+        "add_to_model": "Code has an owner-decision event the catalog lacks.",
+        "remove": "Code has an event the catalog does not want.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    }
+  }
+}
