@@ -1,0 +1,50 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ArtifactEngagementHold",
+    "invariant": "One preservation hold cannot release before one year after its exact report issuance; report identity and release decision are immutable. Release also requires the attributed decision that the engagement record package was delivered into the attest team's audit software (D27-05).",
+    "selected_replay_rule": "Exact authorized retries resolve the original accepted result without a new event. Expected revision is a concurrency precondition, not a new identity.",
+    "catalog_facts": "Hold events: ArtifactEngagementHoldPlaced, EngagementReportIssued, ArtifactEngagementHoldReleased. Planned receiver RecordEngagementPackageDelivered (target ArtifactEngagementHold, fields include EngagementId, PackageId, DeliveryDecisionId) is fed by source event ClientExportAttestPackageDeliveryRecorded; the reaction lists emittedEventContracts as empty and no hold-stream delivery event exists in the catalog.",
+    "code_behavior": {
+      "release": "Release requires revision match, a recorded report issuance and releasedAt date >= issuance date + 1 year. It does not check any delivery fact. Exact release retry (revision <= current) succeeds with no event; changed release is conflict.",
+      "issuance_retry": "RecordReportIssued with an identical already-recorded issuance and expectedRevision <= current returns success with no event; a stale expectedRevision on a first issuance is a conflict with no event.",
+      "tests": "A test places a hold, calls issuance with expectedRevision 0 (hold revision 1) and asserts Conflict and unchanged fact count; then issuance with revision 1 succeeds, and the same call again succeeds with the fact count still 2. Another test releases a hold at issuance+1y+1d, then repeats the same release (success, fact count unchanged), a release with a different rationale (conflict) and a repeat of the identical issuance (success, fact count unchanged)."
+    }
+  },
+  "questions": {
+    "delivery_event": {
+      "type": "choice",
+      "instructions": "The invariant requires an attributed delivery fact before release, but the catalog has no event on the hold stream recording it (see state.catalog_facts and state.code_behavior.release). What is the right disposition?",
+      "criteria": {
+        "add_to_model": "Register a new hold-stream business fact (owner decision gating release) in the catalog so the aggregate can enforce the delivery gate.",
+        "remove_gate": "The gate is enforced elsewhere; the hold needs no delivery fact.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "delivery_premise": {
+      "type": "noul",
+      "instructions": "Per state.invariant and state.catalog_facts, the hold cannot enforce the delivery gate atomically without a durable delivery fact in its own stream, and state.code_behavior.release currently releases without it.",
+      "criteria": {
+        "true": "The premise holds: a gap exists.",
+        "false": "The premise is false."
+      }
+    },
+    "issuance_retry_outcome": {
+      "type": "choice",
+      "instructions": "Is the issuance retry handling in state.code_behavior.issuance_retry consistent with state.selected_replay_rule?",
+      "criteria": {
+        "consistent": "Exact retry succeeds without event; stale expected revision on a first issuance conflicts.",
+        "inconsistent": "Handling contradicts the replay rule.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in state.code_behavior.tests assert behavioral outcomes (conflict versus success and the number of appended facts) and could fail if the aggregate appended a wrong or duplicate fact.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    }
+  }
+}

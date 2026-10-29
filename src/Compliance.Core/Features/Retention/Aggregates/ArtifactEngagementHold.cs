@@ -48,6 +48,7 @@ public sealed class ArtifactEngagementHold : Aggregate
 
     readonly Uuid _tenantId;
     ArtifactEngagementHoldView? _current;
+    Uuid? _placedReportArtifactId;
 
     public long Revision => _current?.Revision ?? 0;
 
@@ -75,7 +76,7 @@ public sealed class ArtifactEngagementHold : Aggregate
             !Bounded(reason, 1, MaximumTextLength))
             return Invalid("An engagement hold needs valid scope, authority, reason, and personal attribution.");
         if (_current is { } current)
-            return current.EngagementId == engagementId && current.ReportArtifactId == reportArtifactId &&
+            return current.EngagementId == engagementId && _placedReportArtifactId == reportArtifactId &&
                    current.Scope == scope && current.Authority == authority && current.Reason == reason &&
                    current.PlacedBy == placedBy && current.PlacedAt == placedAt
                 ? Result.Success
@@ -89,7 +90,12 @@ public sealed class ArtifactEngagementHold : Aggregate
         return Result.Success;
     }
 
+    /// <summary>Records report issuance against the current revision (transitional overload for callers that carry no expected revision).</summary>
     public Result RecordReportIssued(Uuid engagementId, Uuid reportArtifactId,
+        string issuerReference, ActorReference issuedBy, DateTimeOffset issuedAt) =>
+        RecordReportIssued(Revision, engagementId, reportArtifactId, issuerReference, issuedBy, issuedAt);
+
+    public Result RecordReportIssued(long expectedRevision, Uuid engagementId, Uuid reportArtifactId,
         string issuerReference, ActorReference issuedBy, DateTimeOffset issuedAt)
     {
         if (_current is not { } current)
@@ -103,13 +109,15 @@ public sealed class ArtifactEngagementHold : Aggregate
         if (current.ReportIssuedAt is not null)
             return current.ReportArtifactId == reportArtifactId &&
                    current.IssuerReference == issuerReference && current.ReportIssuedBy == issuedBy &&
-                   current.ReportIssuedAt == issuedAt
+                   current.ReportIssuedAt == issuedAt && expectedRevision <= Revision
                 ? Result.Success
                 : Conflict("An engagement hold can retain only one exact issued report identity.");
         if (current.ReportArtifactId is { } expected && expected != reportArtifactId)
             return Conflict("The issued report must match the artifact identity recorded by the hold.");
         if (current.Status == "released")
             return Conflict("A released engagement hold cannot be changed.");
+        if (expectedRevision != Revision)
+            return StaleRevision();
 
         var releaseEligibleOn = DateOnly.FromDateTime(issuedAt.UtcDateTime).AddYears(1);
         var state = current with
@@ -193,6 +201,8 @@ public sealed class ArtifactEngagementHold : Aggregate
                 !SamePlacedHold(_current, state) || state.ReleasedAt != occurredAt ||
                 state.Status != "released" || _current.Status != "active"))
             throw new InvalidOperationException("The artifact engagement hold event is invalid.");
+        if (transition == "placed")
+            _placedReportArtifactId = state.ReportArtifactId;
         _current = state with { };
     }
 
