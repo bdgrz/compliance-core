@@ -177,6 +177,7 @@ public sealed class PracticeIndependenceCommitment : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The exact active reservation of this operation is not held.", true));
         if (reservation.Practice != practice || reservation.EngagementId != engagementId ||
+            !SameRoot(operation, reservation.Operation) ||
             Practice is not null && Practice != practice || _liveCommitted.ContainsKey(slot))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The commitment differs from its exact reservation or is already permanent."));
@@ -205,6 +206,13 @@ public sealed class PracticeIndependenceCommitment : Aggregate, ISourceUseOwner
 
     IEnumerable<PracticeIndependenceReserved> ActiveReservations() => Uses.ActiveUses.Select(entry => entry.GrantFact)
         .OfType<PracticeIndependenceReserved>();
+    static bool SameRoot(OperationProvenance terminal, OperationProvenance source) =>
+        terminal.RootOperationId == source.RootOperationId &&
+        (terminal.FirstOwner ?? terminal.Owner) == (source.FirstOwner ?? source.Owner) &&
+        terminal.Actor == source.Actor && terminal.Episode == source.Episode &&
+        terminal.OriginalExpectedRevision == source.OriginalExpectedRevision &&
+        terminal.AuthoredIntentSha256 == source.AuthoredIntentSha256 &&
+        terminal.AffectedOwner == source.AffectedOwner && terminal.ExpectedRevisionOwner == source.ExpectedRevisionOwner;
     SourceUseSlot Slot(OperationProvenance operation, long generation) =>
         SourceUseSlot.Of(Stream, SourceUsePurpose.ActualStaffAssignment, operation, generation);
     protected override void Apply(DomainEvent ev)
