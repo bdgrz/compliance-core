@@ -114,6 +114,10 @@ public sealed class ExaminationEngagement : Aggregate
             checked((long)operation.OriginalExpectedRevision!.Value), frozen);
         if (!guard.IsSuccess)
             return guard;
+        // The fold would reject these after RaiseEvent; refuse the decision first so no fact is raised.
+        if (creating && (view.ProgramId != _program || view.EngagementType != "type_i" || view.BoundaryId == Uuid.Empty))
+            return Fail(RequestErrorKind.Validation,
+                "An engagement must be created under its own program, as Type I, with an approved boundary.");
         if (!OwnRoot(operation, operation.CommandKind, creating ? null : (ulong)Revision) ||
             view.TenantId != _tenant || view.ExaminationEngagementId != Id || view.Revision != Revision + 1 ||
             view.ActorMemberId != Member(operation) || view.UpdatedAt != operation.AcceptedAt ||
