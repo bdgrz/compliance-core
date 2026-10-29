@@ -1,0 +1,38 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "retry_test_asserts_invariant": {
+        "type": "noul",
+        "noul": 0.89
+      },
+      "changed_test_asserts_rule": {
+        "type": "noul",
+        "noul": 0.91
+      },
+      "retry_consistent": {
+        "type": "noul",
+        "noul": 0.9
+      },
+      "command_kind_gap": {
+        "type": "choice",
+        "choice": "handler_concern",
+        "confidence": 0.97,
+        "probabilities": {
+          "add_to_model": 0.01,
+          "handler_concern": 0.98,
+          "needs_source_resolution": 0.01
+        }
+      },
+      "command_kind_premise": {
+        "type": "noul",
+        "noul": 0.84
+      }
+    },
+    "usage": {
+      "input_tokens": 1058,
+      "output_tokens": 129
+    }
+  }
+}

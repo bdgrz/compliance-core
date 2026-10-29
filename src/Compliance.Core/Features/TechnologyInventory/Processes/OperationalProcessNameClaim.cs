@@ -77,6 +77,9 @@ public sealed class OperationalProcessNameClaim : NameClaim
     {
         if (!IsOperationalProcessOwner(holder))
             return InvalidHolder();
+        var retried = DecideRetry<OperationalProcessNameClaimed>(operation, holder, expectedRevision, generation, intent);
+        if (retried is { } decided)
+            return decided;
         var checkedClaim = CheckClaim(operation, holder, generation);
         if (!checkedClaim.IsSuccess)
             return checkedClaim;
@@ -90,6 +93,9 @@ public sealed class OperationalProcessNameClaim : NameClaim
     {
         if (!IsOperationalProcessOwner(holder))
             return InvalidHolder();
+        var retried = DecideRetry<OperationalProcessNameReleased>(operation, holder, expectedRevision, generation, intent);
+        if (retried is { } decided)
+            return decided;
         var checkedRelease = CheckRelease(operation, holder, generation);
         if (!checkedRelease.IsSuccess)
             return checkedRelease;
@@ -109,6 +115,28 @@ public sealed class OperationalProcessNameClaim : NameClaim
         if (!IsOperationalProcessOwner(fact.Owner))
             throw new InvalidOperationException("An operational process name release must belong to a process in its tenant.");
         ObserveReleased(fact);
+    }
+
+    /// <summary>
+    ///     Resolves a command whose logical operation this hydration already accepted: an exact retry succeeds without a
+    ///     second fact, even after later facts changed who holds the name, and a changed holder, generation, revision,
+    ///     intent or binding is a conflict. Null when the command is a new logical operation.
+    /// </summary>
+    Result? DecideRetry<TFact>(OperationProvenance operation, EventStreamAddress holder, long expectedRevision,
+        long generation, ImmutableContentRef intent) where TFact : INamedRecordFact
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (operation.LogicalId == Uuid.Empty || operation.LogicalId != Acceptance.SelectedLogicalId ||
+            Acceptance.SelectedFact is null)
+            return null;
+        var exact = Acceptance.SelectedFact is TFact accepted &&
+                    Acceptance.Decide(AcceptedOperationBinding.Of(operation)) == NativeAcceptanceDecision.Replayed &&
+                    accepted.Owner == holder && accepted.Revision == expectedRevision &&
+                    accepted.Generation == generation && accepted.Intent == intent;
+        return exact
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The logical operation was already accepted with different intent.", false));
     }
 
     bool IsOperationalProcessOwner(EventStreamAddress owner) =>

@@ -1,0 +1,55 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "OperationalProcessNameClaim holds one normalized process name per tenant for at most one process stream, tagged with a change generation. The holder may re-pin at an equal or later generation; a different process is refused; an earlier generation is refused; a release only works for the exact holder and generation. Exact authorized retries resolve the original accepted result; changed intent is a permanent conflict.",
+    "code_behavior": {
+      "retry": "When the hydration was selected for a logical id and that id already produced a fact, a command with that logical id succeeds with no new fact only if the fact type, full operation binding (including command kind), holder, revision, generation and intent all match; otherwise it returns Conflict. This holds even if later facts changed the holder.",
+      "command_kind": "Claim and Release do not check that operation.CommandKind is the claim or release command kind of this owner. A Claim called with a Release-kind operation and a new logical id would raise a Claimed fact. The kind is bound only through AcceptedOperationBinding on retries; handlers choose the kind.",
+      "test_retry_after_release": "Test: claim at generation 1, then release, history replayed into a fresh claim selected for the claim's logical id. The same claim command is retried. Expected: success, no new fact, name stays free.",
+      "test_changed": "Test: after an accepted claim with logical id L, the same L is retried with a changed digest, intent, generation, revision, holder or as a release; each returns Conflict, still exactly one fact and the holder unchanged."
+    }
+  },
+  "questions": {
+    "retry_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in `state.code_behavior.test_retry_after_release` proves that an exact retry of an already committed claim is acknowledged without raising a second fact and without re-taking a name that was released.",
+      "criteria": {
+        "true": "It would fail if the retry raised a new fact or re-held the name.",
+        "false": "It can pass even if the retry raised a new claim fact or re-held the name."
+      }
+    },
+    "changed_test_asserts_rule": {
+      "type": "noul",
+      "instructions": "The test in `state.code_behavior.test_changed` proves the rule that changed intent for an accepted logical id is a permanent conflict without a new fact.",
+      "criteria": {
+        "true": "Each changed field produces Conflict and the single fact and holder remain, so the rule is proven.",
+        "false": "The test can pass while a changed retry is accepted or appends a fact."
+      }
+    },
+    "retry_consistent": {
+      "type": "noul",
+      "instructions": "The `state.code_behavior.retry` behavior is consistent with the rule text about exact authorized retries and changed intent.",
+      "criteria": {
+        "true": "Consistent with the rule.",
+        "false": "Inconsistent with the rule."
+      }
+    },
+    "command_kind_gap": {
+      "type": "choice",
+      "instructions": "State code_behavior.command_kind is an owner decision the model is silent on. What is the right disposition for the aggregate stage?",
+      "criteria": {
+        "add_to_model": "The aggregate must reject operations whose command kind is not its own claim or release kind.",
+        "handler_concern": "Command kind selection and validation belong to the handler or receiver that builds the operation; the aggregate need not check it.",
+        "needs_source_resolution": "The sources must be consulted before deciding."
+      }
+    },
+    "command_kind_premise": {
+      "type": "noul",
+      "instructions": "Premise: the model text is silent on whether the aggregate must validate the command kind, and the code does not validate it, so the gap exists.",
+      "criteria": {
+        "true": "The model is silent and the code does not validate, so the gap is real.",
+        "false": "There is no such gap."
+      }
+    }
+  }
+}
