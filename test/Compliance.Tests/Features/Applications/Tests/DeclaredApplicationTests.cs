@@ -237,4 +237,118 @@ public sealed class DeclaredApplicationTests
             ev => Assert.True(Assert.IsType<ApplicationDeclared>(ev).IsRestricted),
             ev => Assert.False(Assert.IsType<ApplicationRevised>(ev).IsRestricted));
     }
+
+    [Fact]
+    public void ShouldAppendNothingGivenRetirementWithoutEffectiveDate()
+    {
+        // Arrange
+        var application = new DeclaredApplication(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        Assert.True(application.Declare("Payroll", "Run payroll", null, actorId, "Manager", now).IsSuccess);
+
+        // Act
+        var retired = application.Retire(1, default, "Superseded", null, actorId, "Manager", now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(retired).Code);
+        Assert.False(application.IsRetired);
+        Assert.Equal(1, application.Revision);
+        Assert.IsType<ApplicationDeclared>(Assert.Single(
+            new AggregateScenario<DeclaredApplication>(application).PendingEvents));
+    }
+
+    [Fact]
+    public void ShouldAppendNothingGivenRevisionOrRetirementOfUndeclaredApplication()
+    {
+        // Arrange
+        var application = new DeclaredApplication(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        var revised = application.Revise(0, "Payroll", "Run payroll", null, actorId, "Manager", now);
+        var retired = application.Retire(0, now, "Superseded", null, actorId, "Manager", now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.MissingRecord, Assert.IsType<CommandFailure>(revised).Code);
+        Assert.Equal(CommandFailureCode.MissingRecord, Assert.IsType<CommandFailure>(retired).Code);
+        Assert.False(application.IsCreated);
+        Assert.Empty(new AggregateScenario<DeclaredApplication>(application).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseSecondRevisionGivenCompetingDecisionsAtSameExpectedRevision()
+    {
+        // Arrange
+        var application = new DeclaredApplication(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        Assert.True(application.Declare("Payroll", "Run payroll", null, actorId, "Manager", now).IsSuccess);
+
+        // Act
+        var first = application.Revise(1, "Payroll", "First edit", null, actorId, "Manager", now);
+        var second = application.Revise(1, "Payroll", "Competing edit", null, actorId, "Other", now);
+
+        // Assert
+        Assert.Null(first);
+        var failure = Assert.IsType<CommandFailure>(second);
+        Assert.Equal(CommandFailureCode.VersionConflict, failure.Code);
+        Assert.Equal(2, failure.Version!.CurrentRevision);
+        Assert.Equal(2, application.Revision);
+        var scenario = new AggregateScenario<DeclaredApplication>(application);
+        Assert.Equal(2, scenario.PendingEvents.Count);
+        Assert.Equal("First edit", Assert.IsType<ApplicationRevised>(scenario.PendingEvents[1]).Purpose);
+    }
+
+    [Fact]
+    public void ShouldRestoreStateAndDecideRetriesGivenValidDeclaredRevisedAndRetiredHistory()
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var id = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var (declareId, reviseId, retireId) = (Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var seed = new DeclaredApplication(tenant, id);
+        var declare = NativeFacts.Root(seed, declareId, "DeclareApplication", null);
+        Assert.True(seed.Declare(declare, NativeFacts.Ref(), "Payroll", "Run payroll", "Finance", actorId,
+            "Manager", NativeFacts.Now).IsSuccess);
+        var revise = NativeFacts.Root(seed, reviseId, "ReviseApplication", 1);
+        Assert.Null(seed.Revise(revise, NativeFacts.Ref(), 1, "Payroll", "Run monthly payroll", "Finance", actorId,
+            "Manager", NativeFacts.Now.AddMinutes(1)));
+        var retire = NativeFacts.Root(seed, retireId, "RetireApplication", 2);
+        Assert.Null(seed.Retire(retire, NativeFacts.Ref(), 2, NativeFacts.Now.AddDays(1), "Superseded", null,
+            actorId, "Manager", NativeFacts.Now.AddMinutes(2)));
+
+        // Act
+        var byDeclare = NativeFacts.Replay(new DeclaredApplication(tenant, id, declareId), NativeFacts.Raised(seed));
+        var byRevise = NativeFacts.Replay(new DeclaredApplication(tenant, id, reviseId), NativeFacts.Raised(seed));
+        var byRetire = NativeFacts.Replay(new DeclaredApplication(tenant, id, retireId), NativeFacts.Raised(seed));
+        var created = byDeclare.IsCreated;
+        var retired = byDeclare.IsRetired;
+        var revision = byDeclare.Revision;
+        var exactDeclare = byDeclare.Acceptance.Decide(AcceptedOperationBinding.Of(declare));
+        var changedDeclare = byDeclare.Acceptance.Decide(AcceptedOperationBinding.Of(declare with
+        {
+            AuthoredIntentSha256 = new string('d', 64)
+        }));
+        var exactRevise = byRevise.Acceptance.Decide(AcceptedOperationBinding.Of(revise));
+        var exactRetire = byRetire.Acceptance.Decide(AcceptedOperationBinding.Of(retire));
+        var redeclared = byDeclare.Declare("Payroll", "Run payroll", "Finance", actorId, "Manager",
+            NativeFacts.Now.AddMinutes(3));
+        var revisedAgain = byDeclare.Revise(3, "Payroll", "After retirement", null, actorId, "Manager",
+            NativeFacts.Now.AddMinutes(3));
+
+        // Assert
+        Assert.True(created);
+        Assert.True(retired);
+        Assert.Equal(3, revision);
+        Assert.Equal(NativeAcceptanceDecision.Replayed, exactDeclare);
+        Assert.Equal(NativeAcceptanceDecision.Conflict, changedDeclare);
+        Assert.Equal(NativeAcceptanceDecision.Replayed, exactRevise);
+        Assert.Equal(NativeAcceptanceDecision.Replayed, exactRetire);
+        Assert.Equal(RequestErrorKind.Conflict, redeclared.Error?.Kind);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(revisedAgain).Code);
+        Assert.Empty(new AggregateScenario<DeclaredApplication>(byDeclare).PendingEvents);
+    }
 }
