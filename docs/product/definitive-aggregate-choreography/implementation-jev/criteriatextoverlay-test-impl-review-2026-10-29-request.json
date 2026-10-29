@@ -1,0 +1,36 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "CriteriaTextOverlay",
+    "rule": "One licensed text overlay and sequential revision line. Exact prior revision and one request identity/intent. CommandId binds one immutable authored intent to the owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused.",
+    "stale_test": "After revision 1 exists, Set with expected revision 0 and Set with expected revision 5 each return Conflict and append no event; the owner stays at revision 1 with one pending event.",
+    "kind_behavior": "Set previously accepted any command kind in the operation provenance and then threw InvalidOperationException from event application. Set now returns a Validation refusal with no event when the operation is not a root operation of this overlay for command kind SetCriteriaTextOverlay or lacks an expected revision.",
+    "replay_test": "After two revisions are raised and replayed into a fresh owner, the owner is at revision 2; Set at expected 1 returns Conflict; Set at expected 2 succeeds and the revision becomes 3."
+  },
+  "questions": {
+    "stale_asserts": {
+      "type": "noul",
+      "instructions": "Does state.stale_test prove that stale and future expected revisions append no fact?",
+      "criteria": {"true": "Failure kind and pending event count are asserted, so an accepted stale write fails the test.", "false": "The test could pass while a stale write appended a fact."}
+    },
+    "kind_disposition": {
+      "type": "choice",
+      "instructions": "Given state.rule and state.kind_behavior, what disposition is correct for an operation with a different command kind?",
+      "criteria": {
+        "refuse_validation": "Return a refusal with no fact; the owner decides admission and must not throw.",
+        "throw_on_apply": "Leave the throw from event application as the only defense.",
+        "needs_source_resolution": "The model text cannot decide."
+      }
+    },
+    "kind_premise": {
+      "type": "noul",
+      "instructions": "Is it true that an aggregate command which receives a malformed operation should return a refusal instead of an exception?",
+      "criteria": {"true": "Admission refusals are results.", "false": "Exceptions are the correct signal."}
+    },
+    "replay_asserts": {
+      "type": "noul",
+      "instructions": "Does state.replay_test prove that replayed history continues the revision line?",
+      "criteria": {"true": "Revision after replay, conflict at stale, and acceptance at the exact revision are asserted.", "false": "The test could pass without replay restoring the revision."}
+    }
+  }
+}

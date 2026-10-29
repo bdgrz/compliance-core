@@ -108,6 +108,7 @@ public sealed class AuditorSampleSelection : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
+        ArgumentNullException.ThrowIfNull(operationResult);
         var prepared = PrepareMaterialize();
         if (!prepared.IsSuccess)
             return prepared;
