@@ -1,0 +1,56 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "active_hold_blocks_completion": {
+        "type": "choice",
+        "choice": "consistent_refuse_without_event",
+        "confidence": 0.98,
+        "probabilities": {
+          "consistent_refuse_without_event": 0.99,
+          "inconsistent_should_allow": 0.01,
+          "needs_source_resolution": 0
+        }
+      },
+      "materialize_after_fence": {
+        "type": "choice",
+        "choice": "refuse_when_fenced",
+        "confidence": 0.51,
+        "probabilities": {
+          "refuse_when_fenced": 0.67,
+          "allow_guarded_elsewhere": 0.31,
+          "needs_source_resolution": 0.02
+        }
+      },
+      "authorize_requires_completion": {
+        "type": "choice",
+        "choice": "handler_guard_is_enough",
+        "confidence": 0.41,
+        "probabilities": {
+          "require_completion_at_aggregate": 0.37,
+          "handler_guard_is_enough": 0.61,
+          "needs_source_resolution": 0.02
+        }
+      },
+      "completed_by_redundancy": {
+        "type": "choice",
+        "choice": "keep_both",
+        "confidence": 0.41,
+        "probabilities": {
+          "remove_member_id": 0.34,
+          "keep_both": 0.61,
+          "needs_source_resolution": 0.05
+        }
+      },
+      "fence_premise": {
+        "type": "noul",
+        "noul": 0.27
+      }
+    },
+    "usage": {
+      "input_tokens": 1256,
+      "output_tokens": 234
+    }
+  }
+}
