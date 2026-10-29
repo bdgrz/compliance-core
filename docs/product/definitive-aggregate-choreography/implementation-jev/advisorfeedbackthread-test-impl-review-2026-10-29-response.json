@@ -1,0 +1,30 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "corrections_after_resolution": {
+        "type": "choice",
+        "choice": "leave_unchanged_record_open_question",
+        "confidence": 0.98,
+        "probabilities": {
+          "leave_unchanged_record_open_question": 0.99,
+          "refuse_now": 0,
+          "needs_source_resolution": 0.01
+        }
+      },
+      "materialize_validation_consistent": {
+        "type": "noul",
+        "noul": 0.37
+      },
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.68
+      }
+    },
+    "usage": {
+      "input_tokens": 790,
+      "output_tokens": 100
+    }
+  }
+}

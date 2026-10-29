@@ -1,0 +1,32 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "failed_producer": {
+      "type": "choice",
+      "choice": "leave_open_for_later_stage",
+      "confidence": 0.96,
+      "probabilities": {
+        "add_command_now": 0.02,
+        "leave_open_for_later_stage": 0.97,
+        "remove_event": 0,
+        "needs_source_resolution": 0.01
+      }
+    },
+    "failed_premise": {
+      "type": "noul",
+      "noul": 0.71
+    },
+    "commit_intent_refusal": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "noul": 0.95
+    }
+  },
+  "usage": {
+    "input_tokens": 905,
+    "output_tokens": 122
+  }
+}

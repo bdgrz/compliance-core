@@ -69,7 +69,10 @@ public sealed class ApplicationRelationship : Aggregate
         if (_revision != 0)
             return Failure(RequestErrorKind.Conflict,
                 "The application relationship already exists.");
-        if (_tenantId == Uuid.Empty || _relationshipId != ApplicationRelationshipIdentity.Id(
+        if (_tenantId == Uuid.Empty || sourceApplicationId == Uuid.Empty ||
+            targetApplicationId == Uuid.Empty || sourceApplicationId == targetApplicationId ||
+            !ApplicationRelationshipIdentity.IsSupported(relationshipType) ||
+            _relationshipId != ApplicationRelationshipIdentity.Id(
                 sourceApplicationId, relationshipType, targetApplicationId) ||
             actorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(actorDisplay) ||
             changedAt == default)
@@ -116,6 +119,8 @@ public sealed class ApplicationRelationship : Aggregate
             ev.RelationshipId != ApplicationRelationshipIdentity.Id(ev.ApplicationId,
                 ev.RelationshipType, ev.TargetApplicationId) ||
             ev.ApplicationId == Uuid.Empty || ev.TargetApplicationId == Uuid.Empty ||
+            ev.ApplicationId == ev.TargetApplicationId ||
+            !ApplicationRelationshipIdentity.IsSupported(ev.RelationshipType) ||
             ev.RelationshipRevision != 1 || ev.Operation.Owner != Stream ||
             ev.Operation.LogicalId != _relationshipId ||
             ev.Operation.CommandKind != nameof(AddApplicationRelationship) ||

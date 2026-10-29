@@ -1,0 +1,31 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AdvisorFeedbackThread",
+    "catalog_rule": "Feedback is of kind comment, change_request or validated and records author, time, target record version and kind at admission; a posted entry is never edited, a correction is a new entry linking back to the original, and revoking access never rewrites past attribution. The catalog is silent on whether corrections or responses may follow resolution.",
+    "code_behavior": {
+      "materialize": "Materialize refuses with Validation and appends no event when the kind is outside comment/change_request/validated, the contribution tenant/program/handoff/feedback differs from the thread, the record id is empty, or the record version id is empty with no selected native source. A second materialization returns Conflict with no event.",
+      "after_resolution": "Resolve a second time returns Conflict. Correct and Respond after resolution are still accepted at the current revision and advance the revision by one; no test asserts either way.",
+      "tests": "Tests: kind theory (approval, empty, Comment) refused with no event; foreign feedback/handoff/tenant refused with no event; empty record or version refused; foreign stream refused; second materialize Conflict with one fact; unmaterialized PrepareWrite/PrepareResolve NotFound; stale and ahead revision Conflict after replayed facts; resolved twice Conflict; empty or mismatched correction id refused with no event; missing expected revision refused; replay of correct, respond, resolve keeps original contribution and revision 4."
+    }
+  },
+  "questions": {
+    "corrections_after_resolution": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.after_resolution, should this aggregate stage change behavior for Correct/Respond after resolution given the catalog text?",
+      "criteria": {
+        "leave_unchanged_record_open_question": "Keep current behavior, record an open product question, assert nothing.",
+        "refuse_now": "Refuse corrections and responses after resolution now.",
+        "needs_source_resolution": "Only the product owner can decide."
+      }
+    },
+    "materialize_validation_consistent": {
+      "type": "noul",
+      "instructions": "The Materialize validations in state.code_behavior.materialize are consistent with state.catalog_rule (kind set, exact record version attribution) and do not invent a rule beyond it."
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in state.code_behavior.tests assert behavioral outcomes (refusal kind, no appended fact, revision after replay) that cover the catalog rule and the stated code behavior."
+    }
+  }
+}

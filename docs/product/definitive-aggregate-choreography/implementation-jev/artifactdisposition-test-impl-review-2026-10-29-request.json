@@ -1,0 +1,52 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ArtifactDisposition",
+    "invariant": "Only an approved exact source with elapsed retention and no active holds or reliance may start execution; one outstanding attempt; a disposed result is terminal and yields a tombstone.",
+    "selected_replay_rule": "Exact authorized retries resolve the original accepted result using the logical identity and immutable actor/intent binding. Expected revision is a concurrency precondition, not a new identity.",
+    "code_behavior": {
+      "record_result_retry": "A RecordExecutionResult whose outcome, failure code, executor and completion time match any earlier completed attempt returns success with no event, even after a later attempt was requested (expected revision must be below current revision for non-latest attempts). A changed failure code with the same stale revision is a conflict.",
+      "request_execution_retry": "A RequestExecution whose requester, request time and source position match any earlier attempt and carries a stale expected revision returns success with no event; a different request time with a stale revision is a conflict.",
+      "attempt_limit": "A 17th attempt after 16 failed attempts is refused as conflict. Failed attempts are retained; a tombstone exists only after a disposed result.",
+      "result_binding": "The catalog result command carries AttemptNumber and ExecutionRequestEventId; the aggregate does not take them and identifies attempts by actor and time. Handler is expected to bind them later."
+    },
+    "tests": "Tests cover: failed attempt then retry then disposed with tombstone; second request while executing is conflict; result with no outstanding attempt is conflict; disposed with a failure code is validation; request after terminal disposed is conflict; 17th attempt conflict; retry of a committed result after a later attempt returns success with unchanged revision; changed code conflicts."
+  },
+  "questions": {
+    "result_retry_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.record_result_retry`, which handling is consistent with `state.selected_replay_rule` and the invariant?",
+      "criteria": {
+        "success_no_event_exact_changed_conflict": "An exact retry of a committed result succeeds without a new event even after later facts; changed intent conflicts.",
+        "always_stale_conflict": "Any retry after a later fact is a stale-revision conflict.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "request_retry_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.request_execution_retry`, which handling is consistent with `state.selected_replay_rule`?",
+      "criteria": {
+        "success_no_event_exact_changed_conflict": "An exact retry of a committed request succeeds without a new event; a changed request time conflicts.",
+        "always_stale_conflict": "Any stale revision is a conflict.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "attempt_binding_gap": {
+      "type": "choice",
+      "instructions": "`state.code_behavior.result_binding` describes a difference between the catalog command and the aggregate. What is the correct disposition at the aggregate stage?",
+      "criteria": {
+        "defer_to_handler": "Record as a handler-stage binding follow-up; no aggregate change.",
+        "add_to_aggregate": "The aggregate must take AttemptNumber and ExecutionRequestEventId now.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.tests` assert behavioral outcomes (success or conflict, events appended or not, revision, attempts, tombstone) that enforce the invariant and can fail.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    }
+  }
+}

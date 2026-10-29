@@ -1,0 +1,39 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AuditObservation",
+    "rule": "Received auditor source corrections preserve examination/snapshot and exact source lineage; response and finding-link commands must name the current source version; every command carries the expected stream revision and a stale revision is refused with a version conflict appending nothing; each selected command identity has immutable intent.",
+    "test_stale_and_superseded": "Observation recorded (revision 1, source version 1). Respond and LinkFinding with expected revision 0 both return VersionConflict and nothing is pending. Separately, after a correction (revision 2, source version 2), Respond naming source version 1 returns InvalidContent, latest response stays null, nothing pending.",
+    "test_correction_refusals": "Observation at source version 1. Correct with unchanged content returns InvalidContent; Correct naming previous source version 2 with changed wording returns StateConflict; no event is pending and source version stays 1.",
+    "payload_code": "Events AuditObservationRecorded, Corrected, ManagementResponseRecorded, FindingLinked carry TenantId, SubjectId (equals the observation id), Revision and ActorMemberId in the payload; the stream address already carries tenant realm and observation id. Aggregate validates payload tenant/subject/revision/actor equal the stream on replay. Catalog event authority already flags event schemas as needing reconciliation by the schema owner.",
+    "catalog": "Catalog lists the same four events as code; no event is missing or extra."
+  },
+  "questions": {
+    "stale_and_superseded_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_stale_and_superseded prove that stale expected revisions and responses naming a superseded source version are refused without appending a fact?",
+      "criteria": {
+        "true": "Distinct refusal codes with no pending event prove no fact is appended for either case.",
+        "false": "The scenario could pass while a stale or superseded-version command appended a fact."
+      }
+    },
+    "correction_refusals_assert": {
+      "type": "noul",
+      "instructions": "Does state.test_correction_refusals prove unchanged content and a non-current previous version are each refused with no fact appended?",
+      "criteria": {
+        "true": "Both refusals are asserted with different codes and no pending event.",
+        "false": "The scenario could pass while either unchanged or non-current-version correction was accepted."
+      }
+    },
+    "payload_identity_gap": {
+      "type": "choice",
+      "instructions": "Given state.payload_code and state.catalog, what should this aggregate stage do about payload fields that repeat stream identity?",
+      "criteria": {
+        "no_aggregate_change": "Leave the aggregate and events unchanged now; payload reconciliation is a schema-owner shared-file change, and the aggregate's replay guards remain correct.",
+        "remove_in_aggregate": "Remove the repeated fields from the aggregate's events within this aggregate stage.",
+        "add_to_model": "Add new events to the catalog.",
+        "needs_source_resolution": "The sources conflict and cannot be decided without more evidence."
+      }
+    }
+  }
+}

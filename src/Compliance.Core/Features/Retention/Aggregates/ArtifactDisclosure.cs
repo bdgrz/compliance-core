@@ -73,22 +73,27 @@ public sealed class ArtifactDisclosure : Aggregate
     public Result Approve(ArtifactDisclosureSourceSnapshot source, string recipient,
         string purpose, string rationale, ActorReference approvedBy, DateTimeOffset approvedAt)
     {
+        var validInput = ValidActor(approvedBy) && approvedAt != default &&
+                         Bounded(recipient, 1, MaximumRecipientLength) &&
+                         Bounded(purpose, 1, MaximumTextLength) && Bounded(rationale, 1, MaximumTextLength);
+        if (_current is { } existing)
+        {
+            // An exact retry resolves the original approval whatever later facts or source changes followed.
+            if (!validInput)
+                return Invalid("Disclosure approval requires a recipient, purpose, rationale, and personal approver.");
+            return source?.Source == existing.Source && existing.Recipient == recipient.Trim() &&
+                   existing.Purpose == purpose.Trim() && existing.Rationale == rationale.Trim() &&
+                   existing.ApprovedBy == approvedBy && existing.ApprovedAt == approvedAt
+                ? Result.Success
+                : Conflict("A disclosure identity cannot be reused with changed approval intent.");
+        }
         if (ValidateSource(source, requireAvailable: true) is { } sourceError)
             return Result.Failure(sourceError);
-        if (!ValidActor(approvedBy) || approvedAt == default ||
-            !Bounded(recipient, 1, MaximumRecipientLength) ||
-            !Bounded(purpose, 1, MaximumTextLength) || !Bounded(rationale, 1, MaximumTextLength))
+        if (!validInput)
             return Invalid("Disclosure approval requires a recipient, purpose, rationale, and personal approver.");
         recipient = recipient.Trim();
         purpose = purpose.Trim();
         rationale = rationale.Trim();
-        if (_current is { } existing)
-            return existing.Status == "approved" && SameSource(existing, source) &&
-                   existing.Recipient == recipient && existing.Purpose == purpose &&
-                   existing.Rationale == rationale && existing.ApprovedBy == approvedBy &&
-                   existing.ApprovedAt == approvedAt
-                ? Result.Success
-                : Conflict("A disclosure identity cannot be reused with changed approval intent.");
 
         var view = new ArtifactDisclosureView(_tenantId, Id, source.Source.SourceId,
             source.Source with { }, source.ContentLength, source.HandlingClass,
@@ -109,7 +114,7 @@ public sealed class ArtifactDisclosure : Aggregate
             return Invalid("Disclosure delivery requires a bounded receipt reference and personal actor.");
         deliveryReference = deliveryReference.Trim();
         if (current.Delivery is { } existingDelivery)
-            return SameSource(current, source) && existingDelivery.DeliveryReference == deliveryReference &&
+            return source?.Source == current.Source && existingDelivery.DeliveryReference == deliveryReference &&
                    existingDelivery.DeliveredBy == deliveredBy && existingDelivery.DeliveredAt == deliveredAt
                 ? Result.Success
                 : Conflict("A disclosure delivery receipt is immutable.");
