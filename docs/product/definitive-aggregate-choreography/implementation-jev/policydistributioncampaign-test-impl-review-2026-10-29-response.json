@@ -1,0 +1,51 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "seal_test_asserts_invariant": {
+        "type": "noul",
+        "noul": 0.71
+      },
+      "selected_mismatch_outcome": {
+        "type": "choice",
+        "choice": "retryable_conflict_no_event",
+        "confidence": 1,
+        "probabilities": {
+          "retryable_conflict_no_event": 1,
+          "admit_event": 0,
+          "validation_failure": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "reconcile_unselected_outcome": {
+        "type": "choice",
+        "choice": "conflict_no_event",
+        "confidence": 1,
+        "probabilities": {
+          "conflict_no_event": 1,
+          "amend_with_new_snapshot": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "launched_actor_duplication_premise": {
+        "type": "noul",
+        "noul": 0.91
+      },
+      "launched_actor_duplication_disposition": {
+        "type": "choice",
+        "choice": "remove_actor_member_id",
+        "confidence": 0.62,
+        "probabilities": {
+          "remove_actor_member_id": 0.75,
+          "keep_both": 0.24,
+          "needs_source_resolution": 0.01
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 1295,
+      "output_tokens": 227
+    }
+  }
+}

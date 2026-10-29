@@ -1,0 +1,1 @@
+{"model":"jev-1.14.0","answers":{"fence_repeat_asserts":{"type":"noul","noul":0.89},"stale_after_first_asserts":{"type":"noul","noul":0.89},"catalog_gap":{"type":"choice","choice":"no_discrepancy","confidence":0.85,"probabilities":{"no_discrepancy":0.89,"add_to_model":0.02,"remove":0.02,"needs_source_resolution":0.07}}},"usage":{"input_tokens":948,"output_tokens":99}}

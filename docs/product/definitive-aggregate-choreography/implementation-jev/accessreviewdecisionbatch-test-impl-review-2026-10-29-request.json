@@ -1,0 +1,37 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AccessReviewDecisionBatch",
+    "invariant": "One immutable admitted intent per batch and one terminal decision: publish once, or cancel (accept then complete), never both.",
+    "catalog_text": "Abort binding A005: CancelAccessReviewDecisionBatch fires when the batch is not already published (terminal) and not already canceled (exact retry no-op). Batch aggregate: one immutable preview/item selection plus one all-item publication decision.",
+    "code_behavior": {
+      "aggregate": "Publish, AcceptCancellation and CompleteCancellation return Validation (no event) when provenance owner is not the batch stream; Materialize also requires root operation id equal to the batch id. Publish after publish or cancellation, and AcceptCancellation after publish or a prior acceptance, return Conflict with no event. CompleteCancellation without accepted cancellation, or repeated, returns Conflict with no event.",
+      "retry_layer": "Exact retries of committed commands are resolved before the aggregate by NativeAcceptance (Replayed vs Conflict on changed intent), so the aggregate is not asked to acknowledge them.",
+      "tests": "Owner tests assert each refusal appends no event, lifecycle revisions 0/1/2, valid published and canceled replay, and Replayed vs Conflict for exact versus changed-intent retry after later facts."
+    }
+  },
+  "questions": {
+    "terminal_abort_layer": {
+      "type": "choice",
+      "instructions": "The catalog guard says the abort binding fires only while the batch is not terminal. Where should a post-terminal abort be turned into a no-op, given state.code_behavior?",
+      "criteria": {
+        "handler_or_process_precondition": "The process binding/handler precondition and acceptance layer decide the no-op; the aggregate refuses with Conflict and appends nothing.",
+        "aggregate_success_noop": "The aggregate itself must return success without an event on a post-terminal cancellation.",
+        "add_to_model": "A new catalog event or decision is required.",
+        "needs_source_resolution": "The source does not say."
+      }
+    },
+    "aggregate_premise": {
+      "type": "noul",
+      "instructions": "Premise: the aggregate enforces the named invariant, because publish and cancellation are mutually exclusive and each appends at most once, with refusals appending no fact."
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "Premise: the described owner tests assert behavioral outcomes (events appended or not, revisions, replay state) that would fail if publish and cancel could both occur."
+    },
+    "guard_consistent": {
+      "type": "noul",
+      "instructions": "Premise: returning Validation without an event for a provenance on a foreign stream is consistent with the invariant and with the rule that payloads and identity come only from the batch stream."
+    }
+  }
+}

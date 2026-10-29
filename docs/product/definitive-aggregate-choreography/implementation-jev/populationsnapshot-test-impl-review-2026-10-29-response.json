@@ -1,0 +1,40 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "identity_discrepancy": {
+        "type": "choice",
+        "choice": "keep_snapshot_id_defer_to_freezer",
+        "confidence": 1,
+        "probabilities": {
+          "keep_snapshot_id_defer_to_freezer": 1,
+          "change_aggregate_to_request_id": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "identity_premise": {
+        "type": "noul",
+        "noul": 0.59
+      },
+      "chunk_validation": {
+        "type": "choice",
+        "choice": "refuse_is_correct",
+        "confidence": 1,
+        "probabilities": {
+          "refuse_is_correct": 1,
+          "accept_is_correct": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.96
+      }
+    },
+    "usage": {
+      "input_tokens": 947,
+      "output_tokens": 151
+    }
+  }
+}

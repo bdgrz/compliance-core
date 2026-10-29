@@ -244,7 +244,7 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     {
         Acceptance.Observe(ev);
         if (_added is null || _completed is not null || ev.ActionId != _actionId || ev.FindingId != _findingId ||
-            ev.Revision != _revision + 1 || ev.Operation.Owner != Stream)
+            ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.Revision != _revision + 1 || ev.Operation.Owner != Stream)
             throw new InvalidOperationException("An action completes once, at the next revision after its materialization.");
         _completed = ev;
         _revision = ev.Revision;

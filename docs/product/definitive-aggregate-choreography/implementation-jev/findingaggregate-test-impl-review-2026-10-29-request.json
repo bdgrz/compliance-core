@@ -1,0 +1,52 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "FindingAggregate",
+    "invariant": "A finding closes only with at least one admitted corrective action via an accepted closure that seals admission for the generation; closed is immutable until reopen, and each reopen advances the generation.",
+    "code_behavior": {
+      "accept_closure": "Refused as conflict with no fact when no action has been admitted; refused as validation with no fact when the operation is not its own root operation. While a closure is pending, revise, admit and a second closure are refused as retryable conflict and append nothing.",
+      "complete_closure": "Appends the closed fact only when the pending closure root and the same intent reference match; otherwise conflict with no fact. After close, any ordinary write is a conflict.",
+      "reopen": "Only a closed finding at the exact expected revision reopens; generation increases by one and a new action can be admitted at the new generation. Open finding or stale revision is a conflict with no fact.",
+      "raise_with_foreign_initial_action": "Previously appended the raised fact then threw from the reducer; now returns validation with no fact before appending anything.",
+      "retry_of_admitted_action": "Re-admitting an already admitted action identity (selected logical id) is a conflict with no new fact, including after later facts and replay."
+    },
+    "tests": "Tests assert result kind plus the number of pending events (zero or unchanged on refusal), owner state (revision, generation, admitted count, closed/pending) and replay of sealed, closed and reopened history."
+  },
+  "questions": {
+    "closure_requires_action": {
+      "type": "noul",
+      "instructions": "Refusing closure acceptance with no admitted action, and sealing admission and writes while a closure is pending, enforces the invariant in `state.invariant`.",
+      "criteria": {"true": "The behavior enforces the invariant.", "false": "It does not."}
+    },
+    "foreign_initial_action_refusal": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.raise_with_foreign_initial_action`, which outcome is correct?",
+      "criteria": {
+        "validation_refusal_no_fact": "A validation refusal before any fact is appended.",
+        "throw_after_first_fact": "Append the raised fact then throw.",
+        "accept_both": "Accept the foreign action admission.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "reopen_generation": {
+      "type": "noul",
+      "instructions": "The reopen behavior in `state.code_behavior.reopen` is consistent with `state.invariant`.",
+      "criteria": {"true": "Consistent.", "false": "Inconsistent."}
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.tests` assert behavioral outcomes of the invariant and can fail if it is violated.",
+      "criteria": {"true": "They assert behavior and can fail.", "false": "They are structural or cannot fail."}
+    },
+    "retry_conflict": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.retry_of_admitted_action`, which outcome is consistent with the invariant?",
+      "criteria": {
+        "conflict_no_fact": "Conflict with no new fact.",
+        "success_no_fact": "Success acknowledging the original with no new fact.",
+        "second_fact": "Append a second admission.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    }
+  }
+}

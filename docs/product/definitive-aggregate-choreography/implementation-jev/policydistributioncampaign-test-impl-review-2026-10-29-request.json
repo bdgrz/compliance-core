@@ -1,0 +1,65 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "PolicyDistributionCampaign",
+    "invariant": "A campaign launches once with a frozen audience. Results and reconciliations are admitted only while it is open, at the next logical revision. Accepting a closure seals admission; the pending closure is then canceled (new generation, admission reopens) or completed exactly once.",
+    "append_rule": "Every append requires the exact selected finalized native owner cut: the owner must have been hydrated for the operation logical id. Otherwise the append is refused as a retryable conflict and no event is raised.",
+    "code_behavior": {
+      "admit_result": "On an open launched campaign with expected revision equal to the current revision, raises one PolicyParticipantResultAdmitted at revision+1 on the open generation. A stale expected revision returns conflict and raises nothing. A sealed or closed campaign returns conflict. An owner hydrated for a different logical id than the operation returns a retryable conflict and raises nothing.",
+      "accept_closure": "Same guards as admit; raises one PolicyCampaignClosureAccepted at revision+1 and from then on result admission is refused with conflict.",
+      "reconcile": "Requires the roster snapshot selected at hydration; a different snapshot returns conflict and raises nothing. The selected one raises PolicyCampaignAudienceAmended with reconciliation+1 and revision+1.",
+      "launched_payload": "PolicyCampaignLaunched carries both Actor (member reference with id) and ActorMemberId; replay enforces that they name the same member. Event metadata also records the actor."
+    },
+    "tests": {
+      "seal_test": "Launch history is replayed and the cut finalized. AcceptClosure at expected revision 1 succeeds and raises one ClosureAccepted at revision 2 generation 1. Then PrepareOpenAdmission at the new revision returns conflict, IsSealed is true and IsClosed is false.",
+      "selected_mismatch_test": "Owner hydrated for logical id A; AdmitResult with an operation whose logical id is B and the correct expected revision. Asserts conflict and zero pending events.",
+      "reconcile_test": "Owner hydrated with selected snapshot S1; Reconcile with snapshot S2 and the correct expected revision. Asserts conflict, zero pending events, revision still 1, reconciliations 0."
+    }
+  },
+  "questions": {
+    "seal_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in `state.tests.seal_test` demonstrates that accepting a closure seals result admission as required by `state.invariant`.",
+      "criteria": {
+        "true": "The test proves admission is sealed after the closure is accepted.",
+        "false": "The test does not prove it."
+      }
+    },
+    "selected_mismatch_outcome": {
+      "type": "choice",
+      "instructions": "For `state.tests.selected_mismatch_test`, which outcome is consistent with `state.append_rule`?",
+      "criteria": {
+        "retryable_conflict_no_event": "The append is refused as a retryable conflict and no event is raised.",
+        "admit_event": "The result is admitted anyway because the expected revision is correct.",
+        "validation_failure": "The append is refused as a permanent validation failure.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "reconcile_unselected_outcome": {
+      "type": "choice",
+      "instructions": "For `state.tests.reconcile_test`, which outcome is consistent with `state.invariant` and `state.code_behavior.reconcile`?",
+      "criteria": {
+        "conflict_no_event": "The reconciliation is refused with conflict and nothing is appended.",
+        "amend_with_new_snapshot": "The audience is amended with the other snapshot.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "launched_actor_duplication_premise": {
+      "type": "noul",
+      "instructions": "In `state.code_behavior.launched_payload`, Actor and ActorMemberId in one payload both state the identity of the launching member.",
+      "criteria": {
+        "true": "They duplicate the same fact.",
+        "false": "They carry different facts."
+      }
+    },
+    "launched_actor_duplication_disposition": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.launched_payload`, what is the right disposition of the duplicated member identity?",
+      "criteria": {
+        "remove_actor_member_id": "Drop ActorMemberId from the payload and derive it from Actor, because a payload carries each business fact once.",
+        "keep_both": "Keep both fields in the payload as they are.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    }
+  }
+}

@@ -237,6 +237,9 @@ public sealed class FindingAggregate : Aggregate
         if (operation.Owner != Stream || operation.LogicalId != _findingId)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A raise is the logical operation of its own finding."));
+        if (initial is not null && initial.Operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "The initial corrective action is admitted by its own finding."));
         var prepared = PrepareRaise();
         if (!prepared.IsSuccess)
             return prepared;
@@ -298,7 +301,8 @@ public sealed class FindingAggregate : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
-        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
+        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected ||
+            operation.RootOperationId != operation.LogicalId)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A closure is a root operation of its own finding with an expected revision."));
         var prepared = PrepareClosure((long)expected);
