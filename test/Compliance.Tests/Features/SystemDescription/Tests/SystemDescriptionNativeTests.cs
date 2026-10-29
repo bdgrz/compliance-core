@@ -229,6 +229,78 @@ public sealed class SystemDescriptionNativeTests
         Assert.Equal(2, (await fixture.FactsAsync()).Count);
     }
 
+    [Fact]
+    public async Task ShouldReplayOriginalRevisionAndRefuseChangedIntentGivenExactRetryAfterLaterRevision()
+    {
+        // Arrange
+        await using var fixture = new SystemDescriptionNativeFixture();
+        await fixture.SeedAsync();
+        var handler = new ReviseSystemDescriptionDraftHandler(fixture.Operations);
+        var commandId = Uuid.CreateVersion4();
+        var request = Revision(fixture, commandId, 1, "Second version");
+        Assert.True((await handler.HandleAsync(fixture.Context(request), CancellationToken.None)).IsSuccess);
+        Assert.True((await handler.HandleAsync(fixture.Context(Revision(fixture, Uuid.CreateVersion4(), 2, "Third version")), CancellationToken.None)).IsSuccess);
+
+        // Act
+        var retry = await handler.HandleAsync(fixture.Context(request), CancellationToken.None);
+        var changed = await handler.HandleAsync(fixture.Context(request with { Title = "Changed intent" }), CancellationToken.None);
+        var current = await fixture.Descriptions.ReadAsync(fixture.Tenant, fixture.Program, fixture.Description);
+
+        // Assert
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(3, current.Revision);
+        Assert.Equal("Third version", current.CurrentVersion!.Content.Title);
+        Assert.Equal(3, (await fixture.FactsAsync()).Count);
+    }
+
+    [Fact]
+    public async Task ShouldRefuseSecondRevisionWithoutFactGivenCompetingDecisionAtSameExpectedRevision()
+    {
+        // Arrange
+        await using var fixture = new SystemDescriptionNativeFixture();
+        await fixture.SeedAsync();
+        var handler = new ReviseSystemDescriptionDraftHandler(fixture.Operations);
+        var winner = await handler.HandleAsync(fixture.Context(Revision(fixture, Uuid.CreateVersion4(), 1, "Winning version")), CancellationToken.None);
+        Assert.True(winner.IsSuccess, winner.Error?.Message);
+
+        // Act
+        var loser = await handler.HandleAsync(fixture.Context(Revision(fixture, Uuid.CreateVersion4(), 1, "Losing version")), CancellationToken.None);
+        var current = await fixture.Descriptions.ReadAsync(fixture.Tenant, fixture.Program, fixture.Description);
+
+        // Assert
+        Assert.False(loser.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, loser.Error!.Kind);
+        Assert.Equal(2, current.Revision);
+        Assert.Equal("Winning version", current.CurrentVersion!.Content.Title);
+        Assert.Equal(2, (await fixture.FactsAsync()).Count);
+    }
+
+    [Fact]
+    public async Task ShouldRefuseRevisionWithoutFactGivenApprovedDescriptionIsImmutable()
+    {
+        // Arrange
+        await using var fixture = new SystemDescriptionNativeFixture();
+        await fixture.SeedAsync(approved: true);
+        var before = await fixture.Descriptions.ReadAsync(fixture.Tenant, fixture.Program, fixture.Description);
+        var factsBefore = (await fixture.FactsAsync()).Count;
+
+        // Act
+        var result = await new ReviseSystemDescriptionDraftHandler(fixture.Operations).HandleAsync(
+            fixture.Context(Revision(fixture, Uuid.CreateVersion4(), before.Revision, "Must not mutate approved")), CancellationToken.None);
+        var after = await fixture.Descriptions.ReadAsync(fixture.Tenant, fixture.Program, fixture.Description);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
+        Assert.Equal("approved", after.CurrentVersion!.Status);
+        Assert.Equal(before.Revision, after.Revision);
+        Assert.Equal(factsBefore, (await fixture.FactsAsync()).Count);
+    }
+
+    static ReviseSystemDescriptionDraft Revision(SystemDescriptionNativeFixture fixture, Uuid commandId, long expectedRevision, string title) =>
+        new(commandId, fixture.Tenant, fixture.Program, fixture.Description, expectedRevision, title, SystemDescriptionNativeFixture.Body().Sections, "Exact change reason");
+
     sealed class HistoricalUnavailableContent(IImmutableContentStore inner, IReadOnlyList<Uuid> blocked) : IImmutableContentStore
     {
         public int BlockedReads { get; private set; }
