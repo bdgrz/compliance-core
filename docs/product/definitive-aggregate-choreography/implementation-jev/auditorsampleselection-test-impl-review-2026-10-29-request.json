@@ -1,0 +1,45 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AuditorSampleSelection",
+    "rule": "A selection references population row identifiers and the exact population version content hash; it never loads the latest population, so a later version does not move an existing sample. Selecting from an amended population is a new selection linked to the earlier one. The selection is materialized once, at revision one, on its own stream.",
+    "test_second": "Materialized selection (revision 1). Materialize with the exact same operation, and Materialize with a different operation, both return Conflict and append no event; the original recorded fact and revision 1 are unchanged.",
+    "test_acceptance": "Replayed owner selected for logical id L. Acceptance.Decide(binding of the accepted operation) returns Replayed; Decide(same binding with changed authored-intent hash) returns Conflict; selecting an unrelated logical id yields None.",
+    "event_payload": "Event SampleSelectionRecorded (in catalog, owner AuditorSampleSelection) carries TenantId, SubjectId (selection id), Revision (always 1), ActorMemberId, Change (content ref to frozen intent), OccurredAt, Operation provenance, FirstResponse (always null for this owner), OperationResult. The stream address already carries tenant and the identity derived from selection id; revision is always 1."
+  },
+  "questions": {
+    "second_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_second prove that a second materialization of an already materialized selection appends no fact and keeps the original?",
+      "criteria": {
+        "true": "Conflict for both exact and different operations with no event and unchanged fact proves it.",
+        "false": "The scenario could pass while a duplicate fact is appended."
+      }
+    },
+    "acceptance_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_acceptance prove an exact retry is acknowledged as already done while a changed intent under the same logical id is a conflict?",
+      "criteria": {
+        "true": "Replayed for exact binding and Conflict for changed intent proves retry versus changed intent.",
+        "false": "The scenario could pass while a changed intent is acknowledged as a retry."
+      }
+    },
+    "payload_dup": {
+      "type": "choice",
+      "instructions": "Given state.event_payload, what should be done about payload fields that repeat stream identity or are always constant (TenantId, SubjectId, Revision, FirstResponse)?",
+      "criteria": {
+        "keep_as_is": "Keep the payload; the fields are part of the approved event contract and a change belongs to the schema owner.",
+        "remove_redundant": "Remove the fields from the payload now.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    },
+    "premise_dup": {
+      "type": "noul",
+      "instructions": "Do TenantId, SubjectId and Revision in state.event_payload repeat information already carried by the stream address and identity?",
+      "criteria": {
+        "true": "They duplicate the stream realm, identity or a constant.",
+        "false": "They carry information the stream does not."
+      }
+    }
+  }
+}
