@@ -32,6 +32,7 @@ using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Proofs.Models;
@@ -86,9 +87,14 @@ public sealed class ClientIndependenceDecision : Aggregate
         ArgumentNullException.ThrowIfNull(evaluationContent);
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(operationResult);
-        if (operation.Owner != Stream)
+        if (_tenantId == Uuid.Empty || EvaluationId == Uuid.Empty || operation.LogicalId == Uuid.Empty ||
+            operation.Owner != Stream || operation.RootOperationId != EvaluationId ||
+            operation.CausationEventId is null ||
+            operation.CommandKind != nameof(MaterializeClientIndependencePreview) ||
+            operation.FirstOwner != new ClientServiceIndependence(_tenantId).Stream ||
+            operation.AffectedOwner != Stream || operation.ExpectedRevisionOwner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A preview is recorded on the decision owner of its evaluation."));
+                "A preview requires its own evaluation and the admitted client operation provenance."));
         if (_evaluated is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "This evaluation already has its immutable preview."));
