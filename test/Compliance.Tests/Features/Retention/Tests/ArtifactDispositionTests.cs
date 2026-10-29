@@ -152,6 +152,130 @@ public sealed class ArtifactDispositionTests
         Assert.Equal(disposition.Current.Attempts, replay.Current.Attempts);
     }
 
+    [Fact]
+    public void ShouldAcknowledgeRetryOfCommittedResultGivenLaterAttemptRequested()
+    {
+        // Arrange
+        var disposition = NewDisposition();
+        Assert.True(disposition.Approve(Eligible(), 0, "Retention elapsed", Admin, Now).IsSuccess);
+        Assert.True(disposition.RequestExecution(1, Eligible(), Worker, Now.AddHours(1)).IsSuccess);
+        Assert.True(disposition.RecordExecutionResult(2, "failed", "storage_timeout", Worker,
+            Now.AddHours(2)).IsSuccess);
+        Assert.True(disposition.RequestExecution(3, Eligible(), Worker, Now.AddHours(3)).IsSuccess);
+        var revision = disposition.Revision;
+
+        // Act
+        var retry = disposition.RecordExecutionResult(2, "failed", "storage_timeout", Worker,
+            Now.AddHours(2));
+        var changed = disposition.RecordExecutionResult(2, "failed", "other_code", Worker,
+            Now.AddHours(2));
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error!.Kind);
+        Assert.Equal(revision, disposition.Revision);
+        Assert.Equal(4, revision);
+    }
+
+    [Fact]
+    public void ShouldAcknowledgeRetryOfCommittedRequestGivenLaterResultRecorded()
+    {
+        // Arrange
+        var disposition = NewDisposition();
+        Assert.True(disposition.Approve(Eligible(), 0, "Retention elapsed", Admin, Now).IsSuccess);
+        Assert.True(disposition.RequestExecution(1, Eligible(), Worker, Now.AddHours(1)).IsSuccess);
+        Assert.True(disposition.RecordExecutionResult(2, "failed", "storage_timeout", Worker,
+            Now.AddHours(2)).IsSuccess);
+
+        // Act
+        var retry = disposition.RequestExecution(1, Eligible(), Worker, Now.AddHours(1));
+        var changed = disposition.RequestExecution(1, Eligible(), Worker, Now.AddHours(5));
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error!.Kind);
+        Assert.Equal(3, disposition.Revision);
+    }
+
+    [Fact]
+    public void ShouldAcknowledgeExactRetryAndRefuseChangedIntentGivenApprovedDisposition()
+    {
+        // Arrange
+        var disposition = NewDisposition();
+        Assert.True(disposition.Approve(Eligible(), 0, "Retention elapsed", Admin, Now).IsSuccess);
+
+        // Act
+        var retry = disposition.Approve(Eligible(), 0, "Retention elapsed", Admin, Now);
+        var changed = disposition.Approve(Eligible(), 0, "Different rationale", Admin, Now);
+        var systemActor = NewDisposition().Approve(Eligible(), 0, "Retention elapsed", Worker, Now);
+        var stale = NewDisposition().Approve(Eligible(), 5, "Retention elapsed", Admin, Now);
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Validation, systemActor.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, stale.Error!.Kind);
+        Assert.Equal(1, disposition.Revision);
+    }
+
+    [Fact]
+    public void ShouldRefuseSecondAttemptAndResultWithoutOutstandingAttemptGivenExecutionState()
+    {
+        // Arrange
+        var disposition = NewDisposition();
+        Assert.True(disposition.Approve(Eligible(), 0, "Retention elapsed", Admin, Now).IsSuccess);
+
+        // Act
+        var earlyResult = disposition.RecordExecutionResult(1, "disposed", null, Worker, Now.AddHours(1));
+        var requested = disposition.RequestExecution(1, Eligible(), Worker, Now.AddHours(1));
+        var second = disposition.RequestExecution(2, Eligible(), Worker, Now.AddHours(2));
+        var staleResult = disposition.RecordExecutionResult(1, "disposed", null, Worker, Now.AddHours(3));
+        var invalidOutcome = disposition.RecordExecutionResult(2, "disposed", "code", Worker,
+            Now.AddHours(3));
+        var disposed = disposition.RecordExecutionResult(2, "disposed", null, Worker, Now.AddHours(4));
+        var afterTerminal = disposition.RequestExecution(3, Eligible(), Worker, Now.AddHours(5));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, earlyResult.Error!.Kind);
+        Assert.True(requested.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, second.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, staleResult.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Validation, invalidOutcome.Error!.Kind);
+        Assert.True(disposed.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, afterTerminal.Error!.Kind);
+        Assert.Equal(3, disposition.Revision);
+        Assert.Single(disposition.Current!.Attempts);
+    }
+
+    [Fact]
+    public void ShouldRefuseSeventeenthAttemptGivenSixteenFailedAttempts()
+    {
+        // Arrange
+        var disposition = NewDisposition();
+        Assert.True(disposition.Approve(Eligible(), 0, "Retention elapsed", Admin, Now).IsSuccess);
+        for (var attempt = 1; attempt <= 16; attempt++)
+        {
+            var requestedAt = Now.AddHours(attempt * 2);
+            Assert.True(disposition.RequestExecution(disposition.Revision, Eligible(), Worker,
+                requestedAt).IsSuccess);
+            Assert.True(disposition.RecordExecutionResult(disposition.Revision, "failed",
+                "storage_timeout", Worker, requestedAt.AddHours(1)).IsSuccess);
+        }
+
+        var revision = disposition.Revision;
+
+        // Act
+        var seventeenth = disposition.RequestExecution(revision, Eligible(), Worker, Now.AddHours(100));
+
+        // Assert
+        Assert.False(seventeenth.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, seventeenth.Error!.Kind);
+        Assert.Equal(revision, disposition.Revision);
+        Assert.Equal(16, disposition.Current!.Attempts.Count);
+    }
+
     static ArtifactDisposition NewDisposition() => new(TenantId, DispositionId);
 
     static ArtifactDispositionEligibilitySnapshot Eligible() => new(
