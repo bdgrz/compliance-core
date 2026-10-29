@@ -131,6 +131,185 @@ public sealed class ExaminationSignOffTests
         Assert.Equal(CEOId, replay.Current.SignedOffByMemberId);
     }
 
+    [Fact]
+    public void ShouldAcknowledgeExactRetryWithoutNewFactGivenSignOffAlreadyRecordedWithDifferentRoleCase()
+    {
+        // Arrange
+        var signOff = new ExaminationSignOffAggregate(TenantId, ProgramId, SignOffId);
+        var content = Content();
+        Assert.Null(signOff.SignOff(content, CEOId, "ceo", "Chief Executive", Now));
+
+        // Act
+        var retry = signOff.SignOff(content, CEOId, "ceo", "Chief Executive", Now);
+        var retryExactCase = signOff.SignOff(content, CEOId, "CEO", " Chief Executive ", Now);
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Null(retryExactCase);
+        Assert.Equal(1, signOff.Revision);
+        Assert.Single(new AggregateScenario<ExaminationSignOffAggregate>(signOff).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseChangedIntentGivenSignOffAlreadyRecorded()
+    {
+        // Arrange
+        var signOff = new ExaminationSignOffAggregate(TenantId, ProgramId, SignOffId);
+        var content = Content();
+        Assert.Null(signOff.SignOff(content, CEOId, "CEO", "Chief Executive", Now));
+
+        // Act
+        var changedDecision = signOff.SignOff(content with { Decision = "rejected" },
+            CEOId, "CEO", "Chief Executive", Now);
+        var changedTime = signOff.SignOff(content, CEOId, "CEO", "Chief Executive", Now.AddMinutes(1));
+        var changedDisplay = signOff.SignOff(content, CEOId, "CEO", "Someone Else", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(changedDecision).Code);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(changedTime).Code);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(changedDisplay).Code);
+        Assert.Equal("approved", signOff.Current!.Status);
+        Assert.Single(new AggregateScenario<ExaminationSignOffAggregate>(signOff).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldAppendNoFactGivenAcknowledgementThatDiffersFromUnresolvedItems()
+    {
+        // Arrange
+        var signOff = new ExaminationSignOffAggregate(TenantId, ProgramId, SignOffId);
+        var content = Content();
+
+        // Act
+        var extra = signOff.SignOff(content with
+        {
+            AcknowledgedMaterialItemIds = [.. content.AcknowledgedMaterialItemIds, Uuid.CreateVersion4()],
+        }, CEOId, "CEO", "Chief Executive", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(extra).Code);
+        Assert.Null(signOff.Current);
+        Assert.Empty(new AggregateScenario<ExaminationSignOffAggregate>(signOff).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldAppendNoFactGivenSignerRoleThatDiffersFromNamedApprover()
+    {
+        // Arrange
+        var signOff = new ExaminationSignOffAggregate(TenantId, ProgramId, SignOffId);
+
+        // Act
+        var failure = signOff.SignOff(Content(), CEOId, "CISO", "Chief Executive", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.ActorProhibited, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Null(signOff.Current);
+        Assert.Empty(new AggregateScenario<ExaminationSignOffAggregate>(signOff).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldAppendNoFactGivenInvalidHashOrMissingAttribution()
+    {
+        // Arrange
+        var signOff = new ExaminationSignOffAggregate(TenantId, ProgramId, SignOffId);
+        var content = Content();
+
+        // Act
+        var badHash = signOff.SignOff(content with { PackageManifestSha256 = "short" },
+            CEOId, "CEO", "Chief Executive", Now);
+        var noDisplay = signOff.SignOff(content, CEOId, "CEO", " ", Now);
+        var noTime = signOff.SignOff(content, CEOId, "CEO", "Chief Executive", default);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(badHash).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(noDisplay).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(noTime).Code);
+        Assert.Empty(new AggregateScenario<ExaminationSignOffAggregate>(signOff).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRetryExactlyAndRefuseChangedIntentGivenReplayedSignOff()
+    {
+        // Arrange
+        var content = Content();
+        var original = new ExaminationSignOffAggregate(TenantId, ProgramId, SignOffId);
+        Assert.Null(original.SignOff(content, CEOId, "CEO", "Chief Executive", Now));
+        var events = new AggregateScenario<ExaminationSignOffAggregate>(original).PendingEvents.ToArray();
+        var replay = new AggregateScenario<ExaminationSignOffAggregate>(
+            new ExaminationSignOffAggregate(TenantId, ProgramId, SignOffId)).Given(events).Aggregate;
+
+        // Act
+        var retry = replay.SignOff(content, CEOId, "CEO", "Chief Executive", Now);
+        var changed = replay.SignOff(content with { Comments = "Different comments." },
+            CEOId, "CEO", "Chief Executive", Now);
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(changed).Code);
+        Assert.Equal(1, replay.Revision);
+    }
+
+    [Fact]
+    public void ShouldAppendNoFactGivenAcknowledgementOfDifferentItemsWithSameCount()
+    {
+        // Arrange
+        var signOff = new ExaminationSignOffAggregate(TenantId, ProgramId, SignOffId);
+        var content = Content();
+
+        // Act
+        var failure = signOff.SignOff(content with
+        {
+            AcknowledgedMaterialItemIds = [Uuid.CreateVersion4()],
+        }, CEOId, "CEO", "Chief Executive", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Null(signOff.Current);
+        Assert.Empty(new AggregateScenario<ExaminationSignOffAggregate>(signOff).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldAcknowledgeExactRetryWithoutNewFactGivenAcknowledgementsInDifferentOrder()
+    {
+        // Arrange
+        var signOff = new ExaminationSignOffAggregate(TenantId, ProgramId, SignOffId);
+        var first = Uuid.CreateVersion4();
+        var second = Uuid.CreateVersion4();
+        var content = Content() with
+        {
+            UnresolvedMaterialItemIds = [first, second],
+            AcknowledgedMaterialItemIds = [first, second],
+        };
+        Assert.Null(signOff.SignOff(content, CEOId, "CEO", "Chief Executive", Now));
+
+        // Act
+        var retry = signOff.SignOff(content with
+        {
+            UnresolvedMaterialItemIds = [second, first],
+            AcknowledgedMaterialItemIds = [second, first],
+        }, CEOId, "CEO", "Chief Executive", Now);
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Single(new AggregateScenario<ExaminationSignOffAggregate>(signOff).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseSecondApproverGivenSignOffAlreadyRecordedByOtherApprover()
+    {
+        // Arrange
+        var signOff = new ExaminationSignOffAggregate(TenantId, ProgramId, SignOffId);
+        var content = Content() with { Approvers = [new(CEOId, "CEO"), new(CISOId, "CISO")] };
+        Assert.Null(signOff.SignOff(content, CEOId, "CEO", "Chief Executive", Now));
+
+        // Act
+        var competing = signOff.SignOff(content, CISOId, "CISO", "Chief Security", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(competing).Code);
+        Assert.Equal(CEOId, signOff.Current!.SignedOffByMemberId);
+        Assert.Single(new AggregateScenario<ExaminationSignOffAggregate>(signOff).PendingEvents);
+    }
+
     static ExaminationSignOffContent Content()
     {
         var unresolvedItemId = Uuid.CreateVersion4();
