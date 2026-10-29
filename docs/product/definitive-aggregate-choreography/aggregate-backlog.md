@@ -11,20 +11,20 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | Group | Owner | Direct mapped story priorities | Earlier source-owner groups | Aggregate scope |
 | ---: | --- | --- | --- | --- |
 | 1 | `ClientService` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8)) | — | Done (focused aggregate scope) |
-| 2 | `Location` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Source present; verify |
-| 2 | `LocationNameClaim` | No direct story mapping | — | Source present; verify |
-| 3 | `OperationalProcess` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Source present; verify |
-| 3 | `OperationalProcessNameClaim` | No direct story mapping | — | Source present; verify |
-| 4 | `Person` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-11](https://github.com/bdgrz/compliance-core/issues/49))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | — | Source present; verify |
-| 5 | `ServiceIdentity` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-11](https://github.com/bdgrz/compliance-core/issues/49))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | — | Source present; verify |
+| 2 | `Location` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 2 | `LocationNameClaim` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 3 | `OperationalProcess` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Partial: terminal `OperationalProcessRetired` (EV-D07) not yet in source |
+| 3 | `OperationalProcessNameClaim` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 4 | `Person` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-11](https://github.com/bdgrz/compliance-core/issues/49))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 5 | `ServiceIdentity` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8))<br>P0 ([R1-11](https://github.com/bdgrz/compliance-core/issues/49))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | — | Partial: revise-retry identity and disable/retire facts open |
 | 6 | `SystemBoundary` | P0 ([R1-02](https://github.com/bdgrz/compliance-core/issues/8)) | — | Done (focused aggregate scope) |
-| 7 | `TenantManagerGuard` | No direct story mapping | — | Source present; verify |
+| 7 | `TenantManagerGuard` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 8 | `Member` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P0 ([R1-15](https://github.com/bdgrz/compliance-core/issues/127))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P2 ([T1-03](https://github.com/bdgrz/compliance-core/issues/26))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | 7: `TenantManagerGuard` | Done (focused aggregate scope) |
 | 8 | `Team` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P1 ([T2-04](https://github.com/bdgrz/compliance-core/issues/34)) | — | Done (focused aggregate scope) |
 | 8 | `TeamMember` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10)) | 7: `TenantManagerGuard` | Done (focused aggregate scope) |
-| 8 | `Tenant` | No direct story mapping | — | Source present; verify |
-| 8 | `TenantInvitation` | No direct story mapping | — | Source present; verify |
-| 8 | `TenantSlug` | No direct story mapping | — | Source present; verify |
+| 8 | `Tenant` | No direct story mapping | — | Partial: native `TenantOffboardingCompleted` fact pending |
+| 8 | `TenantInvitation` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 8 | `TenantSlug` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 9 | `Provider` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P0 ([R1-14](https://github.com/bdgrz/compliance-core/issues/52))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P2 ([T2-08](https://github.com/bdgrz/compliance-core/issues/38)) | — | Source present; verify |
 | 9 | `ProviderNameClaim` | No direct story mapping | — | Source present; verify |
 | 10 | `Role` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P2 ([T1-03](https://github.com/bdgrz/compliance-core/issues/26))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | 8: `Tenant` | Done (focused aggregate scope) |
