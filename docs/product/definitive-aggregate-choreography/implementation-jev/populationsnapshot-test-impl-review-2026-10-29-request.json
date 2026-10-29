@@ -1,0 +1,49 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "PopulationSnapshot",
+    "invariant": "Freeze exactly one canonical immutable population identity, optionally a manifest over ordered immutable chunk identities; amendments have separate roots.",
+    "catalog_identity": "Tenant / population-snapshots / context.RequestId; retry compares exact content/lineage/actor; chunk keys deterministic.",
+    "code_behavior": {
+      "identity": "Aggregate stream is tenant / population-snapshots / SnapshotId passed by the caller; the aggregate does not see a request id. Moving freezer from request-id keyed to SnapshotId binding is handler/freezer-stage work.",
+      "freeze_chunked": "Trusted caller digest and chunk list are validated: at least 2 chunks, contiguous Start and Index, bounded counts and bytes, valid lowercase hex sha256, consistent ChunkCount and valid kind; otherwise a validation refusal with no event. Retry after freeze with identical lineage, kind, hash, reason, actor id and manifest returns the original registration with no event; any difference returns Conflict.",
+      "tests": "Tests seed a replayed frozen snapshot and assert exact inline/chunked retry returns success with zero pending events, and changed actor/content/lineage/manifest return Conflict with zero pending events; each malformed manifest case asserts a Validation error and zero pending events."
+    }
+  },
+  "questions": {
+    "identity_discrepancy": {
+      "type": "choice",
+      "instructions": "State.catalog_identity says identity is keyed by context.RequestId while state.code_behavior.identity keys the aggregate by SnapshotId. For the aggregate stage, what disposition is right?",
+      "criteria": {
+        "keep_snapshot_id_defer_to_freezer": "Aggregate keeps SnapshotId; request-id binding is later freezer/handler work and no aggregate change is needed.",
+        "change_aggregate_to_request_id": "Aggregate should be keyed by request id now.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "identity_premise": {
+      "type": "noul",
+      "instructions": "The aggregate receives the snapshot id as constructor identity, so request-id binding can be resolved by a caller supplying a deterministic SnapshotId, without changing aggregate invariants.",
+      "criteria": {
+        "true": "Premise holds.",
+        "false": "Premise fails."
+      }
+    },
+    "chunk_validation": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.freeze_chunked, is refusing malformed or non-contiguous manifests with validation and no event consistent with the invariant?",
+      "criteria": {
+        "refuse_is_correct": "A manifest must bind exact ordered immutable chunk identities, so malformed ones must be refused without a fact.",
+        "accept_is_correct": "Caller supplied manifests may be trusted.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in state.code_behavior.tests assert behavioral outcomes (success or error kind, and whether a fact was appended) and can fail.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    }
+  }
+}
