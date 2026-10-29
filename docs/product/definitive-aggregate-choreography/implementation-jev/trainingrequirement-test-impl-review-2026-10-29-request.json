@@ -1,0 +1,40 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "TrainingRequirement",
+    "invariant": "One normalized training requirement has one creation and a sequential immutable version line. Its id is the deterministic UUIDv5 of (tenant, program, normalized identifier). Revisions name the expected version.",
+    "code_behavior": {
+      "define": "Define on an undefined requirement returns a Validation refusal with no event when the identifier is invalid, is not already normalized (trim + upper-case), or the id derived from (tenant, program, identifier) differs from the stream id. Otherwise it appends version 1. Define on an already defined requirement returns Conflict with no event; the handler resolves an exact retry from the recorded acceptance.",
+      "revise": "Revise returns NotFound when undefined, Conflict when the expected version differs from the current version, otherwise appends version+1 with the program and identifier carried from version 1.",
+      "test": "A theory calls Define on a fresh aggregate with (a) identifier TR-OTHER same program, (b) correct identifier TR-SEC but a different program, (c) lowercase tr-sec, (d) 'TR SEC', and asserts a Validation error and that the aggregate is not defined."
+    }
+  },
+  "questions": {
+    "define_mismatch_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.define`, which outcome for a Define whose derived id differs from the stream id is consistent with `state.invariant`?",
+      "criteria": {
+        "validation_refusal_no_fact": "Refuse as validation and append nothing.",
+        "append_anyway": "Append the fact and let the fold reject it.",
+        "conflict_refusal": "Refuse as conflict.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in `state.code_behavior.test` asserts that the identity part of `state.invariant` is enforced with no fact appended.",
+      "criteria": {
+        "true": "It asserts the invariant.",
+        "false": "It does not."
+      }
+    },
+    "revise_consistent": {
+      "type": "noul",
+      "instructions": "The revise behavior in `state.code_behavior.revise` is consistent with the sequential version line in `state.invariant`.",
+      "criteria": {
+        "true": "It is consistent.",
+        "false": "It is not."
+      }
+    }
+  }
+}

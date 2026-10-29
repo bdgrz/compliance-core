@@ -283,6 +283,36 @@ public sealed class TrainingRequirementTests
         Assert.False(requirement.IsDefined);
     }
 
+    [Theory]
+    [InlineData("TR-OTHER", true)]
+    [InlineData("TR-SEC", false)]
+    [InlineData("tr-sec", true)]
+    [InlineData("TR SEC", true)]
+    public async Task ShouldRefuseDefinitionWithoutFactGivenIdentifierNotMatchingRequirementId(string identifier,
+        bool sameProgram)
+    {
+        // Arrange
+        await using var host = new CampaignHost();
+        await host.SeedAsync();
+        var id = TrainingRequirementIdentity.IdFor(host.Tenant, host.Program, "TR-SEC");
+        var program = sameProgram ? host.Program : Uuid.CreateVersion4();
+        var requirement = new TrainingRequirement(host.Tenant, id);
+        var store = host.Scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var contentRef = await TrainingRequirementRules.WriteContentAsync(store, host.Tenant, Content,
+            CancellationToken.None);
+        var provenance = PolicyCampaignContent.Provenance(id, "DefineTrainingRequirement", requirement.Stream,
+            requirement.Stream, host.ManagerActor, null, new string('2', 64), host.Clock.GetUtcNow());
+
+        // Act
+        var result = requirement.Define(provenance, program, identifier, contentRef,
+            TrainingRequirementRules.Hash(Content), host.ManagerActor, host.Clock.GetUtcNow(), contentRef,
+            contentRef);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.False(requirement.IsDefined);
+    }
+
     [Fact]
     public async Task ShouldRejectStaleVersionAndKeepSoleVersionCounterGivenRevisions()
     {
