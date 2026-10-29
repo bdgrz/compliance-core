@@ -1,0 +1,46 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "result_retry_outcome": {
+        "type": "choice",
+        "choice": "success_no_event_exact_changed_conflict",
+        "confidence": 1,
+        "probabilities": {
+          "success_no_event_exact_changed_conflict": 1,
+          "always_stale_conflict": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "request_retry_outcome": {
+        "type": "choice",
+        "choice": "success_no_event_exact_changed_conflict",
+        "confidence": 0.98,
+        "probabilities": {
+          "success_no_event_exact_changed_conflict": 0.99,
+          "always_stale_conflict": 0.01,
+          "needs_source_resolution": 0
+        }
+      },
+      "attempt_binding_gap": {
+        "type": "choice",
+        "choice": "defer_to_handler",
+        "confidence": 0.97,
+        "probabilities": {
+          "defer_to_handler": 0.98,
+          "add_to_aggregate": 0.02,
+          "needs_source_resolution": 0
+        }
+      },
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.94
+      }
+    },
+    "usage": {
+      "input_tokens": 1095,
+      "output_tokens": 188
+    }
+  }
+}
