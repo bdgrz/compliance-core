@@ -49,6 +49,24 @@ TYPESAFE_API_KEY="$(tr -d '[:space:]' < "$HOME/.config/typesafe/jev.key")" node 
 
 Run `triage` to select and group work, `criteria` before closing an issue, and `preflight` on the proposed PR head. Treat model probabilities as review signals: verify them against issue text, recorded dependencies, decisions, code, unit tests, and CI. Record newly discovered blockers in GitHub before proceeding. Backend API gaps belong in this repository; client implementation belongs in the web or mobile repository that owns the experience. Link cross-repository issues and coordinate contract compatibility instead of combining code from multiple repositories into one PR. See `docs/product/delivery-cycle.md` for backlog queue rules.
 
+## Aggregate Implementation Workflow
+
+Aggregate work follows the repo skills in `.agents/skills/` (also linked from `.claude/skills/`):
+
+- `aggregate-implementation-jev`: one aggregate at a time, invariant-first. Qualify identity, the named invariant, lifecycle and the keep/split/reactor decision before coding; write behavioral RED tests; make the smallest change to GREEN; review with Jev; record evidence in the aggregate's review file and `docs/product/definitive-aggregate-choreography/aggregate-backlog.md`.
+- `aggregate-batch-workflow`: a fast, parallel multi-agent session over several independent aggregates. It needs explicit user opt-in ("batch", "fan out"). Agents implement and Jev-review without building; the coordinator then applies shared-file event changes as the single writer, builds once, tests, formats changed files, records evidence, and commits one aggregate at a time with explicit paths.
+- `jev-prioritization`: how to ask Jev for ranking or design judgment calls beyond `scripts/backlog-jev.mjs`.
+
+Rules for aggregate rounds:
+
+- Scope is domain events and aggregates only. Handlers, reactors, projectors and API routes are later stages that need an explicit instruction; record them as follow-ups instead of building them. "Proceed" and "next aggregate" authorize aggregate work only.
+- An aggregate owns one named business invariant decided atomically. Keep facts together only when one owner must decide a rule over them atomically; split independently governed members, and treat parent rosters, inboxes and histories as projections. Any split must preserve the original invariant through authoritative admission or explicit coordination, never a projection check.
+- Mark an aggregate done only when identity, invariant, lifecycle, event contracts and focused tests (refusal with no fact, no-op, exact retry versus changed intent, replay, competing appends) are in place. Otherwise mark it partial with the named open item. Handler wiring, framework durability and full-suite status are not aggregate completion conditions.
+- Resolve model, code and naming discrepancies with Jev instead of leaving them open; apply decisive answers and record the probabilities. Near-even or low-confidence answers stay unresolved. Jev is advisory and never overrides the approved catalog, source authority or aggregate boundaries.
+- Parallel agents edit only their own aggregate's source, tests and review file. Shared files (the backlog tracker, `tools/domain-events/**`, generated JSON contexts, event catalogs, shared test support) have a single writer: the coordinator.
+- Build and test once after a batch, not per agent. Never change analyzer rules or their enforcement to make a build or test run faster. Trust `git diff` over agent summaries.
+- Stage explicit paths per aggregate commit so unrelated worktree changes are never swept in.
+
 ## Commits & Pull Requests
 
 Recent commits use `feat(scope): summary (#issue)` or `docs(scope): summary (#issue)`. Keep each branch reviewable and link its backend issue. A PR in this repository changes backend code or its API contract; link related client work rather than including client code. Complete the PR template’s summary, validation, and contract/operations sections, including authentication, wire compatibility, persistence, and deployment effects where relevant. Run the fast development loop above and require CI on the final PR head before squash merge. This repository's CI runs formatting, build, and backend unit tests. See `CONTRIBUTING.md` for branch and release rules and `SECURITY.md` for vulnerability reporting.
