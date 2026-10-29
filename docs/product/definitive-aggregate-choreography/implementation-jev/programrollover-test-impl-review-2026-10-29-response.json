@@ -1,0 +1,59 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "missing_claim": {
+      "type": "noul",
+      "noul": 0.99
+    },
+    "missing_successor": {
+      "type": "noul",
+      "noul": 0.98
+    },
+    "catalog_conflict": {
+      "type": "noul",
+      "noul": 0.98
+    },
+    "event_disposition": {
+      "type": "choice",
+      "choice": "retire_future_preserve_legacy",
+      "confidence": 1,
+      "probabilities": {
+        "retire_future_preserve_legacy": 1,
+        "keep_future_business_writer": 0,
+        "needs_source_resolution": 0
+      }
+    },
+    "migration_premise": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "migration_disposition": {
+      "type": "choice",
+      "choice": "qualify_versioned_migration",
+      "confidence": 0.92,
+      "probabilities": {
+        "qualify_versioned_migration": 0.95,
+        "assume_default_identity": 0,
+        "needs_source_resolution": 0.05
+      }
+    },
+    "payload_duplication": {
+      "type": "noul",
+      "noul": 0.97
+    },
+    "payload_disposition": {
+      "type": "choice",
+      "choice": "qualify_versioned_contract",
+      "confidence": 0.38,
+      "probabilities": {
+        "qualify_versioned_contract": 0.59,
+        "delete_without_migration": 0,
+        "needs_source_resolution": 0.41
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 1205,
+    "output_tokens": 265
+  }
+}

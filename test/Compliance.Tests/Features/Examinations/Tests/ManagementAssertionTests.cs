@@ -84,6 +84,48 @@ public sealed class ManagementAssertionTests
     }
 
     [Fact]
+    public void ShouldReturnOriginalCreationWithoutFactGivenLaterRevision()
+    {
+        // Arrange
+        var original = Content();
+        var assertion = NewAssertion(original);
+        Assert.Null(assertion.Revise(1, original with { AssertionText = "Revised wording" },
+            "Corrected wording", AuthorId, "CEO", Now.AddDays(1)));
+        var scenario = new AggregateScenario<ManagementAssertionAggregate>(assertion);
+        var before = scenario.PendingEvents.Count;
+
+        // Act
+        var retry = assertion.Create(original, AuthorId, "CEO", Now.AddDays(2));
+        var changed = assertion.Create(original with { AssertionText = "Another creation" }, AuthorId, "CEO", Now.AddDays(2));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(changed).Code);
+        Assert.Equal(before, scenario.PendingEvents.Count);
+        Assert.Equal(2, assertion.Revision);
+        Assert.Equal("Revised wording", assertion.Current!.CurrentVersion!.Content.AssertionText);
+    }
+
+    [Fact]
+    public void ShouldReturnOriginalCreationWithoutFactGivenSameActorWithChangedSessionDisplay()
+    {
+        // Arrange
+        var content = Content();
+        var assertion = NewAssertion(content);
+        var scenario = new AggregateScenario<ManagementAssertionAggregate>(assertion);
+        var before = scenario.PendingEvents.Count;
+
+        // Act
+        var retry = assertion.Create(content, AuthorId, "Updated session display", Now.AddHours(1));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(before, scenario.PendingEvents.Count);
+        Assert.Equal("CEO", assertion.Current!.Versions[0].AuthoredByDisplay);
+        Assert.Equal(Now, assertion.Current.Versions[0].AuthoredAt);
+    }
+
+    [Fact]
     public void ShouldRequireIndependentCEOOrCISOSignOffGivenExactAssertionVersion()
     {
         // Arrange

@@ -1,0 +1,18 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "invariant": "MethodologyTemplate publishes the current authored version only after independent approved review and a third distinct approver. Published content is immutable.",
+    "append": "The current proposed publication guard compares template ID, status, version ID, author ID, digest and reviewer ID against compact current state. It does not check supplied publication review outcome, approver ID, approval timestamp or rationale.",
+    "consumer": "The source MethodologyTemplateReader.VersionAsync requires the resulting published view to pass MethodologyTemplateRules.ValidVersion, which requires approved review, a distinct approver, approval time and rationale, and additionally requires the approver and approval time to match the native publication fact.",
+    "test": "A new owner-level test holds a genuinely reviewed current version, selects a different approver, and tests a valid publication versus individual changes to version ID, digest, reviewer ID, review outcome, approver ID, approval time and rationale. It checks refusal and no fact for each changed value.",
+    "payload": "MethodologyTemplateVersionPublished v3 stores subject template ID, tenant ID, occurred-at and operation owner and accepted-at in its payload alongside event stream identity and event metadata. Operation provenance also binds a logical command, owner addresses, actor and original intent; immutable content references hold the original response and result. Historical event compatibility has not been checked against production streams."
+  },
+  "questions": {
+    "outcome_premise": {"type": "noul", "instructions": "Does the publication guard in append accept a supplied published view with review outcome changes_requested when all fields it compares match current state?"},
+    "approval_premise": {"type": "noul", "instructions": "Does the publication guard in append accept a published view without an approval rationale when all fields it compares match current state?"},
+    "reader_gap": {"type": "noul", "instructions": "Can a publication admitted by the guard in append be rejected by the reader described in consumer?"},
+    "test_quality": {"type": "noul", "instructions": "Do the refusal assertions in test detect an owner that appends a publication fact for a changed reviewed version?"},
+    "payload_disposition": {"type": "choice", "instructions": "How should the persisted payload duplication described in payload be handled?", "criteria": {"retain_current_contract": "Keep the shared native provenance and original response references because the existing occupied contract and replay bindings require qualified migration before alteration.", "versioned_contract_change": "A new versioned event contract should remove duplicated identity or metadata after explicit compatibility and replay qualification.", "needs_source_resolution": "The supplied evidence is insufficient to decide the disposition."}},
+    "payload_duplication": {"type": "noul", "instructions": "Do the persisted payload fields described in payload include values already represented by stream identity or event metadata?"}
+  }
+}

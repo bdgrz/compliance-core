@@ -123,6 +123,56 @@ public sealed class ManagementRepresentationLetterTests
         Assert.Equal(letter.Current!.Signatures.ToArray(), replay.Current.Signatures.ToArray());
     }
 
+    [Fact]
+    public void ShouldAcknowledgeOriginalCreationWithoutFactGivenLaterSignatureAndServerAttributionChanges()
+    {
+        // Arrange
+        var letter = new ManagementRepresentationLetterAggregate(TenantId, ProgramId, LetterId);
+        var scenario = new AggregateScenario<ManagementRepresentationLetterAggregate>(letter);
+        var content = Content();
+        Assert.Null(letter.Record(content, CEOId, "CEO", Now));
+        Assert.Null(letter.Sign(letter.Revision, CEOId, Uuid.CreateVersion4(), new string('c', 64),
+            Now.AddDays(1)));
+        var before = scenario.PendingEvents.Count;
+
+        // Act
+        var retry = letter.Record(content, CEOId, "Changed display", Now.AddDays(2));
+        var changedActor = letter.Record(content, CISOId, "CEO", Now);
+        var changedIntent = letter.Record(content with { SourceReference = "Another source" }, CEOId, "CEO", Now);
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(changedActor).Code);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(changedIntent).Code);
+        Assert.Equal(before, scenario.PendingEvents.Count);
+        Assert.Equal(2, letter.Revision);
+        Assert.Equal("CEO", letter.Current!.RecordedByDisplay);
+        Assert.Equal(Now, letter.Current.RecordedAt);
+    }
+
+    [Fact]
+    public void ShouldRefuseReusedArtifactAndStaleSignatureWithoutFactGivenPriorSignature()
+    {
+        // Arrange
+        var letter = NewLetter();
+        var artifact = Uuid.CreateVersion4();
+        Assert.Null(letter.Sign(letter.Revision, CEOId, artifact, new string('c', 64), Now.AddDays(1)));
+        var scenario = new AggregateScenario<ManagementRepresentationLetterAggregate>(letter);
+        var before = scenario.PendingEvents.Count;
+
+        // Act
+        var reused = letter.Sign(letter.Revision, CISOId, artifact, new string('d', 64), Now.AddDays(2));
+        var stale = letter.Sign(1, CISOId, Uuid.CreateVersion4(), new string('d', 64), Now.AddDays(2));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(reused).Code);
+        Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(stale).Code);
+        Assert.Equal(before, scenario.PendingEvents.Count);
+        Assert.Equal(2, letter.Revision);
+        Assert.Equal("awaiting_signatures", letter.Current!.Status);
+        Assert.Single(letter.Current.Signatures);
+    }
+
     static ManagementRepresentationLetterAggregate NewLetter()
     {
         var letter = new ManagementRepresentationLetterAggregate(TenantId, ProgramId, LetterId);

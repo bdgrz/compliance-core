@@ -1,0 +1,39 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "last_operator": {
+      "type": "noul",
+      "noul": 0.26
+    },
+    "retry": {
+      "type": "noul",
+      "noul": 0.76
+    },
+    "legacy_incompatibility": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "seed_semantics": {
+      "type": "noul",
+      "noul": 0.97
+    },
+    "legacy_disposition": {
+      "type": "choice",
+      "choice": "qualify_versioned_cutover",
+      "confidence": 0.77,
+      "probabilities": {
+        "qualify_versioned_cutover": 0.85,
+        "declare_v1_compatible": 0,
+        "needs_source_resolution": 0.15
+      }
+    },
+    "payload_duplication": {
+      "type": "noul",
+      "noul": 0.73
+    }
+  },
+  "usage": {
+    "input_tokens": 954,
+    "output_tokens": 154
+  }
+}

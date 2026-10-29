@@ -78,7 +78,7 @@ public sealed class ManagementRepresentationLetter : Aggregate
         Uuid actorMemberId, string actorDisplay, DateTimeOffset recordedAt)
     {
         if (_current is { } existing)
-            return SameInitial(existing, content, actorMemberId, actorDisplay, recordedAt)
+            return SameInitial(existing, content, actorMemberId)
                 ? null
                 : CommandFailure.StateConflict("The representation letter identity already has different content.");
         if (_tenantId == Uuid.Empty || _programId == Uuid.Empty || Id == Uuid.Empty ||
@@ -229,9 +229,9 @@ public sealed class ManagementRepresentationLetter : Aggregate
     }
 
     static bool SameInitial(ManagementRepresentationLetterView state,
-        ManagementRepresentationLetterContent? content, Uuid actor, string display, DateTimeOffset at) =>
+        ManagementRepresentationLetterContent? content, Uuid actor) =>
         NormalizeContent(content) is { } normalized && Digest(normalized) == Digest(state.Content) &&
-        state.RecordedByMemberId == actor && state.RecordedByDisplay == Clean(display) && state.RecordedAt == at;
+        state.RecordedByMemberId == actor;
 
     static bool ValidActor(Uuid actor, string display, DateTimeOffset at) => actor != Uuid.Empty &&
         Bounded(display, 1, 200) && at != default;
@@ -241,7 +241,6 @@ public sealed class ManagementRepresentationLetter : Aggregate
     CommandFailure StaleRevision() => CommandFailure.ForVersion(
         VersionedRecordRules.StaleRevision("management representation letter", Revision));
     static CommandFailure Invalid(string message) => CommandFailure.InvalidContent(message);
-    static string Clean(string? value) => value?.Trim() ?? string.Empty;
     static bool Bounded(string? value, int minimum, int maximum) => value is not null &&
         value.Trim().Length >= minimum && value.Trim().Length <= maximum;
     static bool Sha256(string? value) => value is { Length: 64 } && value.All(char.IsAsciiHexDigit);

@@ -1,0 +1,50 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "One tenant/campaign/person participant owns independent acknowledgement, completion and exception results, each binding an admitted parent result and accepted campaign version. Closure holds participant results to prevent changes until terminal.",
+    "implementation": "The receiver verifies exact parent event, immutable intent and included audience, builds result content from frozen root, then creates child provenance with root operation, exact campaign FirstOwner, child owner and causation event. Participant checks exact campaign source, own target/affected/revision owner, nonempty operation/root, command, cause, actor and immutable refs before append. History additionally requires nonempty episode, 64 hex authored digest and nondefault child AcceptedAt; current append guard does not check these.",
+    "wire": "aggregates.json business owner event metadata retains old v1 discriminators for PolicyAcknowledgementRecorded, TrainingCompletionRecorded and CampaignWaiverApproved. events.json says occupied v2 wire is adopted and earlier selected v1 is superseded for provenance. Concrete declarations use v2."
+  },
+  "questions": {
+    "producer": {
+      "type": "noul",
+      "instructions": "Do the described participant checks match the normal receiver child routing and original actor attribution?"
+    },
+    "history_gap": {
+      "type": "noul",
+      "instructions": "Can the described participant append a fact with malformed episode, digest or child AcceptedAt that its required history reader rejects?"
+    },
+    "selected_wire": {
+      "type": "choice",
+      "instructions": "How should the differing v1 entries in owner event metadata and explicitly adopted v2 wire in selected events catalog be treated?",
+      "options": [
+        "reconcile_owner_metadata",
+        "change_wire_to_v1",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "reconcile_owner_metadata": "Update the stale owner metadata to reference adopted v2 after checking generated catalog references.",
+        "change_wire_to_v1": "The implementation must use the superseded v1 discriminator.",
+        "needs_source_resolution": "Evidence is insufficient to identify the intended occupied wire."
+      }
+    },
+    "wire_premise": {
+      "type": "noul",
+      "instructions": "Does the described owner metadata retain v1 where selected events catalog and source explicitly adopt v2?"
+    },
+    "repeated": {
+      "type": "choice",
+      "instructions": "Participant event repeats tenant and campaign in its fields and owner stream identity in provenance. How should the current wire payload be handled?",
+      "options": [
+        "retain_existing",
+        "plan_versioned_change",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "retain_existing": "Existing consumers demonstrably require all repeated fields.",
+        "plan_versioned_change": "A new wire version can remove repeated fields after verifying migration.",
+        "needs_source_resolution": "Consumer and migration needs have not been established."
+      }
+    }
+  }
+}

@@ -83,12 +83,14 @@ public sealed class MethodologyTemplateContribution : Aggregate
     public Result PrepareReview(Uuid userId) => _status is null
         ? Missing() : _status != "proposed"
         ? Conflict("Only a proposed contribution can receive its immutable review.")
+        : userId == Uuid.Empty ? InvalidAdmission()
         : userId == _proposerUserId ? Forbidden("A contribution author cannot review their own de-identification.")
         : Result.Success;
 
     public Result PrepareAccept(Uuid userId) => _status is null
         ? Missing() : _status != "reviewed"
         ? Conflict("Only an independently approved contribution can be accepted.")
+        : userId == Uuid.Empty ? InvalidAdmission()
         : userId == _proposerUserId || userId == _reviewerUserId
             ? Forbidden("The contributor and reviewer cannot accept the contribution.") : Result.Success;
 
@@ -98,8 +100,13 @@ public sealed class MethodologyTemplateContribution : Aggregate
         var guard = PreparePropose();
         if (!guard.IsSuccess)
             return guard;
-        RaiseEvent(new MethodologyTemplateContributionProposed(_tenantId, Id, 1, memberId, userId, content,
-            operation.AcceptedAt, operation, response, result));
+        if (operation is null || operation.Actor is null || operation.LogicalId != Id)
+            return InvalidAdmission();
+        var fact = new MethodologyTemplateContributionProposed(_tenantId, Id, 1, memberId, userId, content,
+            operation.AcceptedAt, operation, response, result);
+        if (!CanAppend(fact, memberId, userId, content, nameof(ProposeDeidentifiedTemplateContribution), false))
+            return InvalidAdmission();
+        RaiseEvent(fact);
         return Result.Success;
     }
 
@@ -111,8 +118,13 @@ public sealed class MethodologyTemplateContribution : Aggregate
             return guard;
         if (outcome is not ("approved" or "declined"))
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "A contribution review needs an explicit outcome."));
-        RaiseEvent(new MethodologyTemplateContributionReviewed(_tenantId, Id, _revision + 1, memberId, userId,
-            content, operation.AcceptedAt, operation, response, result, outcome));
+        if (operation is null || operation.Actor is null)
+            return InvalidAdmission();
+        var fact = new MethodologyTemplateContributionReviewed(_tenantId, Id, _revision + 1, memberId, userId,
+            content, operation.AcceptedAt, operation, response, result, outcome);
+        if (!CanAppend(fact, memberId, userId, content, nameof(ReviewTemplateContribution), true))
+            return InvalidAdmission();
+        RaiseEvent(fact);
         return Result.Success;
     }
 
@@ -122,8 +134,13 @@ public sealed class MethodologyTemplateContribution : Aggregate
         var guard = PrepareAccept(userId);
         if (!guard.IsSuccess)
             return guard;
-        RaiseEvent(new MethodologyTemplateContributionAccepted(_tenantId, Id, _revision + 1, memberId, userId,
-            content, operation.AcceptedAt, operation, response, result));
+        if (operation is null || operation.Actor is null)
+            return InvalidAdmission();
+        var fact = new MethodologyTemplateContributionAccepted(_tenantId, Id, _revision + 1, memberId, userId,
+            content, operation.AcceptedAt, operation, response, result);
+        if (!CanAppend(fact, memberId, userId, content, nameof(AcceptTemplateContribution), true))
+            return InvalidAdmission();
+        RaiseEvent(fact);
         return Result.Success;
     }
 
@@ -153,6 +170,20 @@ public sealed class MethodologyTemplateContribution : Aggregate
         Set(fact, "accepted", fact.Revision, fact.Content, fact.OccurredAt, fact.ActingUserId);
     }
 
+    bool CanAppend<T>(T fact, Uuid memberId, Uuid userId, ImmutableContentRef content, string kind, bool platform)
+        where T : DomainEvent, INativeOperationFact
+    {
+        try
+        {
+            Require(fact, _tenantId, Id, _revision + 1, memberId, userId, content, fact.Operation.AcceptedAt, kind, platform);
+            return true;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
     void Require<T>(T fact, Uuid tenant, Uuid id, long revision, Uuid memberId, Uuid userId, ImmutableContentRef content,
         DateTimeOffset at, string kind, bool platform) where T : DomainEvent, INativeOperationFact
     {
@@ -178,6 +209,7 @@ public sealed class MethodologyTemplateContribution : Aggregate
     }
 
     static Result Missing() => Result.Failure(new RequestError(RequestErrorKind.NotFound, "The template contribution was not found."));
+    static Result InvalidAdmission() => Result.Failure(new RequestError(RequestErrorKind.Validation, "The contribution requires an exact attributed root operation."));
     static Result Conflict(string message) => Result.Failure(new RequestError(RequestErrorKind.Conflict, message));
     static Result Forbidden(string message) => Result.Failure(new RequestError(RequestErrorKind.Forbidden, message));
 }

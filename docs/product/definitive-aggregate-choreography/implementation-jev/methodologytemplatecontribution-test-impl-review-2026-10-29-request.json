@@ -1,0 +1,54 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "Contribution is one tenant/contribution stream. Client data reaches platform content only through an explicit independently reviewed de-identified contribution (M0-D25). ContributionId is creation identity, review and acceptance use CommandId; selected review contract requires ExpectedRevision.",
+    "code": "Owner permits proposal, independent reviewer approving or declining it, and acceptance by a person distinct from proposer and reviewer. It now validates candidate event identity, actor, routing, command, episode, null root causation and timestamp using its existing replay rule before RaiseEvent. Handler builds the same OwnerProvenance; native executor replays a selected accepted logical operation before preparing new content. The live review and accept commands have CommandId but no ExpectedRevision; handler uses the freshly loaded revision internally and constructs provenance with OriginalExpectedRevision null.",
+    "event": "aggregates.json owner events retain a baselineContract typed State snapshot from older audit inventory; events.json and current concrete v3 event types describe the actual compact TenantId, SubjectId, revision, actor, immutable Content reference, Operation and response references. The retained_baseline field is labeled baseline evidence, while events.json is the selected final event catalog."
+  },
+  "questions": {
+    "admission": {
+      "type": "noul",
+      "instructions": "Does applying the same described root provenance checks before an append prevent that specific malformed candidate from reaching the contribution reducer?"
+    },
+    "expected_revision": {
+      "type": "noul",
+      "instructions": "Do the described live contribution review and acceptance commands lack the caller-provided ExpectedRevision required by the selected review contract?"
+    },
+    "catalog_discrepancy": {
+      "type": "choice",
+      "instructions": "Given aggregates.json explicitly labels State as baselineContract and the selected events.json identifies compact v3 facts, how should this difference be treated?",
+      "options": [
+        "baseline_history_not_current_conflict",
+        "update_selected_catalog",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "baseline_history_not_current_conflict": "The State description is explicitly historical and does not assert the selected current wire.",
+        "update_selected_catalog": "The selected current catalog incorrectly requires State and must be updated.",
+        "needs_source_resolution": "The described labels are insufficient to identify intended contract authority."
+      }
+    },
+    "independent": {
+      "type": "noul",
+      "instructions": "Does the described contribution owner prevent proposer review and prevent proposer or reviewer acceptance of the same contribution?"
+    },
+    "retry": {
+      "type": "noul",
+      "instructions": "Does the described native executor resolve an accepted exact logical operation before rechecking the now-changed contribution lifecycle?"
+    },
+    "payload": {
+      "type": "choice",
+      "instructions": "Given compact v3 contribution facts carry TenantId, SubjectId and Operation.Owner, whose stream contains tenant and subject, how should the repeated identity be treated?",
+      "options": [
+        "retain_current",
+        "versioned_reconciliation",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "retain_current": "Existing consumers demonstrably require the repeated fields.",
+        "versioned_reconciliation": "A versioned removal can be designed after checking readers and historical events.",
+        "needs_source_resolution": "The provided evidence does not establish consumer and migration needs."
+      }
+    }
+  }
+}
