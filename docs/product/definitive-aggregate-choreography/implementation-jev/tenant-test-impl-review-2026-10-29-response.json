@@ -1,0 +1,44 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "native_repeat_choice": {
+        "type": "choice",
+        "choice": "record_original_decision",
+        "confidence": 0.88,
+        "probabilities": {
+          "record_original_decision": 0.92,
+          "acknowledge_without_fact": 0.08,
+          "needs_source_resolution": 0
+        }
+      },
+      "offboard_guard_true": {
+        "type": "noul",
+        "noul": 0.96
+      },
+      "test_asserts_invariant": {
+        "type": "noul",
+        "noul": 0.93
+      },
+      "register_once_true": {
+        "type": "noul",
+        "noul": 0.86
+      },
+      "completion_choice": {
+        "type": "choice",
+        "choice": "keep_generic_payload",
+        "confidence": 0.31,
+        "probabilities": {
+          "replace_with_native_fact": 0.32,
+          "keep_generic_payload": 0.54,
+          "needs_source_resolution": 0.14
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 1150,
+      "output_tokens": 159
+    }
+  }
+}

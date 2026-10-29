@@ -55,6 +55,7 @@ namespace Bdgrz.Compliance.Features.Tenants.Aggregates;
 
 public sealed class Tenant : Aggregate
 {
+    bool _registered;
     string? _slug;
     TenantSlugState _slugState;
     bool _suspended;
@@ -157,6 +158,12 @@ public sealed class Tenant : Aggregate
     public bool IsSuspended => _suspended;
     public bool IsOffboarding => _offboarding;
 
+    /// <summary>
+    ///     True once the tenant has served as an active workspace: its slug was confirmed and any required
+    ///     activation completed. Later slug transitions, suspension or offboarding do not undo it.
+    /// </summary>
+    bool HasEnteredService => _slugEverConfirmed && (!_requiresActivation || _activated);
+
     public bool WasRegisteredByCreator(Uuid userId) => _creatorIsAdministrator && _ownerUserId == userId;
 
     /// <summary>Initial provisioning outcome; completion grants no current workspace access.</summary>
@@ -181,7 +188,7 @@ public sealed class Tenant : Aggregate
         if (creatorIsAdministrator && normalizedEmail is not null)
             return Failure<TenantRegistration>(RequestErrorKind.Validation,
                 "Creator administration cannot also invite a first administrator.");
-        if (_slug is not null)
+        if (_registered)
             return Failure<TenantRegistration>(RequestErrorKind.Conflict, "The tenant is already registered.");
 
         RaiseEvent(new TenantRegistered(Id, ownerUserId, name.Trim(), normalizedSlug,
@@ -361,6 +368,20 @@ public sealed class Tenant : Aggregate
     /// <summary>Checks a fresh native lifecycle decision on the exact current owner.</summary>
     public Result PrepareLifecycle(string kind, string reason, long? expectedRevision)
     {
+        var valid = CheckLifecycle(kind, reason, expectedRevision);
+        if (!valid.IsSuccess)
+            return valid;
+        if (kind == nameof(OffboardTenant) && !_offboarding && !_suspended && !HasEnteredService)
+            return Failure(RequestErrorKind.Conflict, "Only an active or suspended tenant can start offboarding.");
+        return Result.Success;
+    }
+
+    /// <summary>
+    ///     The checks a committed lifecycle fact must still satisfy on replay. The offboarding source-state rule is
+    ///     applied to fresh decisions only, so history committed before it stays hydratable.
+    /// </summary>
+    Result CheckLifecycle(string kind, string reason, long? expectedRevision)
+    {
         if (!TryNormalizeReason(reason, out _))
             return Failure(RequestErrorKind.Validation, "A reason of at most 500 characters is required.");
         if (kind is not (nameof(SuspendTenant) or nameof(ReactivateTenant) or nameof(OffboardTenant)))
@@ -420,7 +441,7 @@ public sealed class Tenant : Aggregate
             operation.ExpectedRevisionOwner != Stream || fact.FirstResponse is null || result is null ||
             result.Schema != "mutation-result-content.v1" || at == default || at != operation.AcceptedAt ||
             !TryNormalizeReason(reason, out var normalized) || normalized != reason ||
-            !PrepareLifecycle(kind, reason, expected).IsSuccess)
+            !CheckLifecycle(kind, reason, expected).IsSuccess)
             throw new InvalidOperationException("A lifecycle fact must retain its exact current owner and platform decision.");
         Acceptance.Observe(fact);
     }
@@ -473,6 +494,8 @@ public sealed class Tenant : Aggregate
             return Failure(RequestErrorKind.NotFound, "The tenant does not exist.");
         if (_offboarding)
             return Result.Success;
+        if (!_suspended && !HasEnteredService)
+            return Failure(RequestErrorKind.Conflict, "Only an active or suspended tenant can start offboarding.");
 
         RaiseEvent(new TenantOffboardingStarted(Id, operatorUserId, normalizedReason, startedAt));
         return Result.Success;
@@ -534,6 +557,7 @@ public sealed class Tenant : Aggregate
 
     void Apply(TenantRegistered registered)
     {
+        _registered = true;
         _slug = registered.Slug;
         _slugState = TenantSlugState.Pending;
         _requiresInvitation = registered.FirstAdministratorEmail is not null &&

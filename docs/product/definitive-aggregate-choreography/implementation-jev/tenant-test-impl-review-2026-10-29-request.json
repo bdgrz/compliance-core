@@ -1,0 +1,65 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "Tenant lifecycle rule: registered becomes active only after the slug is confirmed and the first administrator is assigned; active and suspended alternate only by an acting platform operator; active or suspended may start offboarding; offboarding completes only after the attest-record package delivery decision and retention disposition are recorded; every other transition is refused and a repeat of the current state is a no-op. Caller TenantId is the immutable tenant creation identity.",
+    "code_native_repeat": "A native (command-bound) Suspend of an already suspended tenant, at the current revision with a new CommandId, appends a TenantSuspendedV2 fact whose state change is none; it records that command's original outcome so a later exact retry returns it. The legacy non-native path appends nothing.",
+    "code_offboard_guard": "Offboarding is refused with a conflict and no fact when the tenant was never in service (slug awaiting confirmation, or slug confirmed but the invited first administrator has not activated) and is not suspended.",
+    "code_register_guard": "After the tenant slug is surrendered and cleared, a second Register on the same tenant stream is refused with a conflict and no TenantRegistered fact.",
+    "code_completion_event": "TenantOffboardingCompleted exists with payload TenantId, SubjectId, Revision, ActorMemberId, OccurredAt. The CompleteTenantOffboarding command carries operation provenance, an export reference and a retention decision reference. The aggregate has no completion transition because the export delivery decision and retention disposition are recorded by other owners.",
+    "test_invited": "Test: Register with an invited first administrator email, confirm the slug, do not activate; StartOffboarding and PrepareLifecycle(Offboard) both return Conflict and no fact is appended."
+  },
+  "questions": {
+    "native_repeat_choice": {
+      "type": "choice",
+      "instructions": "Which disposition for a native suspend of an already suspended tenant fits the rule that a repeat of the current state is a no-op?",
+      "options": {
+        "record_original_decision": "Append a fact so the command's original outcome stays durable; tenant state is unchanged.",
+        "acknowledge_without_fact": "Return success and append nothing.",
+        "needs_source_resolution": "The rule does not settle how a no-op is made durable per command."
+      },
+      "criteria": {
+        "record_original_decision": "A no-op on tenant state may still record the decision for exact retry after later changes.",
+        "acknowledge_without_fact": "No-op means no new fact is appended.",
+        "needs_source_resolution": "An owner decision is required before the behavior is judged."
+      }
+    },
+    "offboard_guard_true": {
+      "type": "noul",
+      "instructions": "Does refusing offboarding for a tenant whose invited first administrator has not activated, and that is not suspended, follow from 'active or suspended may start offboarding' and 'every other transition is refused'?",
+      "criteria": {
+        "true": "Such a tenant is neither active nor suspended, so offboarding is refused.",
+        "false": "The rule permits offboarding from that state."
+      }
+    },
+    "test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "Does the described test assert the offboarding source-state rule by checking the refusal kind and that no fact is appended?",
+      "criteria": {
+        "true": "The test checks both the refusal and the absence of a new fact for a state outside active or suspended.",
+        "false": "The test checks only structure."
+      }
+    },
+    "register_once_true": {
+      "type": "noul",
+      "instructions": "Does refusing a second Register on a tenant stream after its slug was surrendered follow from 'caller TenantId is the immutable tenant creation identity'?",
+      "criteria": {
+        "true": "One creation identity is registered once; a cleared slug does not reopen creation.",
+        "false": "A surrendered slug lets the same identity register again."
+      }
+    },
+    "completion_choice": {
+      "type": "choice",
+      "instructions": "The existing TenantOffboardingCompleted payload lacks provenance, export reference and retention decision reference that the completion command carries. What disposition fits?",
+      "options": {
+        "replace_with_native_fact": "Register a new version of the completion fact carrying provenance, export reference and retention decision reference; add the Tenant transition later.",
+        "keep_generic_payload": "Keep the generic payload and derive completion elsewhere.",
+        "needs_source_resolution": "The model does not say what the completion fact must carry."
+      },
+      "criteria": {
+        "replace_with_native_fact": "A fact that records an owner decision gating a business outcome carries the business facts of that decision.",
+        "keep_generic_payload": "The generic subject-revision shape is sufficient.",
+        "needs_source_resolution": "More source is needed."
+      }
+    }
+  }
+}
