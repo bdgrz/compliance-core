@@ -108,16 +108,16 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 78 | `ImmutableSnapshot` | No direct story mapping | — | Partial — [review](immutable-snapshot-review-2026-10-29.md); selected snapshot identity and handler retry contract remain open |
 | 79 | `IndependenceRuleCatalog` | No direct story mapping | 74: `ServiceEngagementIndependence` | Partial — [review](independence-rule-catalog-review-2026-10-29.md); event-list consistency and persisted replay compatibility remain open |
 | 80 | `IndependenceRuleRatificationCatalog` | No direct story mapping | 74: `ServiceEngagementIndependence` | Partial — [review](independence-rule-ratification-catalog-review-2026-10-29.md); cross-owner authority and event-list consistency remain open |
-| 81 | `ManagementAssertion` | No direct story mapping | — | Source present; verify |
-| 82 | `ManagementRepresentationLetter` | No direct story mapping | — | Source present; verify |
-| 83 | `MethodologyTemplate` | No direct story mapping | — | Source present; verify |
-| 84 | `MethodologyTemplateContribution` | No direct story mapping | — | Source present; verify |
-| 85 | `PartnerIndependenceDecision` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
-| 86 | `PlatformOperatorRoster` | No direct story mapping | — | Source present; verify |
-| 87 | `PolicyCampaignParticipant` | No direct story mapping | 34: `PolicyDistributionCampaign` | Source present; verify |
-| 88 | `PracticeIndependenceCommitment` | No direct story mapping | 74: `ServiceEngagementIndependence` | Source present; verify |
-| 89 | `ProgramRollover` | No direct story mapping | — | Source present; verify |
-| 90 | `ProviderAssuranceGap` | No direct story mapping | — | Source present; verify |
+| 81 | `ManagementAssertion` | No direct story mapping | — | Partial — [review](management-assertion-review-2026-10-29.md); handler retry and command identity contract remain open |
+| 82 | `ManagementRepresentationLetter` | No direct story mapping | — | Partial — [review](management-representation-letter-review-2026-10-29.md); signature command and handler retry contract remain open |
+| 83 | `MethodologyTemplate` | No direct story mapping | — | Partial — [review](methodology-template-review-2026-10-29.md); complete reviewed predecessor binding remains open |
+| 84 | `MethodologyTemplateContribution` | No direct story mapping | — | Partial — [review](methodology-template-contribution-review-2026-10-29.md); selected expected revision contract remains open |
+| 85 | `PartnerIndependenceDecision` | No direct story mapping | 74: `ServiceEngagementIndependence` | Partial — [review](partner-independence-decision-review-2026-10-29.md); event contract and replay compatibility remain unqualified |
+| 86 | `PlatformOperatorRoster` | No direct story mapping | — | Partial — [review](platform-operator-roster-review-2026-10-29.md); legacy v1 seed migration and consumer compatibility remain open |
+| 87 | `PolicyCampaignParticipant` | No direct story mapping | 34: `PolicyDistributionCampaign` | Partial — [review](policy-campaign-participant-review-2026-10-29.md); catalog v1 versus selected v2 metadata needs reconciliation |
+| 88 | `PracticeIndependenceCommitment` | No direct story mapping | 74: `ServiceEngagementIndependence` | Partial — [review](practice-independence-commitment-review-2026-10-29.md); durable recovery and event payload qualification remain open |
+| 89 | `ProgramRollover` | No direct story mapping | — | Partial — [review](program-rollover-review-2026-10-29.md); execution claim, successor identity and legacy contract migration missing |
+| 90 | `ProviderAssuranceGap` | No direct story mapping | — | Partial — [review](provider-assurance-gap-review-2026-10-29.md); terminal result schema and payload compatibility remain open |
 | 91 | `ProviderAssuranceReview` | No direct story mapping | — | Source present; verify |
 | 92 | `ProviderAssuranceReport` | No direct story mapping | 91: `ProviderAssuranceReview` | Source present; verify |
 | 93 | `ProviderRiskAcceptance` | No direct story mapping | 90: `ProviderAssuranceGap` | Source present; verify |
