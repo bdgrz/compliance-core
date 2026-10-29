@@ -32,6 +32,7 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Proofs.Models;
@@ -61,7 +62,7 @@ public sealed class PartnerIndependenceDecision : Aggregate
         On<PartnerIndependenceEvaluationRecorded>(recorded =>
         {
             Acceptance.Observe(recorded);
-            if (_recorded is not null || recorded.OperationId != EvaluationId || recorded.Operation.Owner != Stream ||
+            if (_recorded is not null || recorded.OperationId != EvaluationId || !ValidChild(recorded.Operation) ||
                 recorded.Revision != 1 || recorded.OperationResult is null)
                 throw new InvalidOperationException(
                     "A partner evaluation is materialized exactly once, for its own evaluation on its own stream.");
@@ -90,9 +91,9 @@ public sealed class PartnerIndependenceDecision : Aggregate
         ArgumentNullException.ThrowIfNull(ratifiedRulesContent);
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(operationResult);
-        if (operation.Owner != Stream)
+        if (!ValidChild(operation))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A partner evaluation is recorded on the decision owner of its evaluation."));
+                "A partner evaluation requires its own decision owner and authorized child operation."));
         if (_recorded is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "This evaluation is already immutable."));
@@ -100,4 +101,13 @@ public sealed class PartnerIndependenceDecision : Aggregate
             operation, 1, intent, null, operationResult));
         return Result.Success;
     }
+
+    bool ValidChild(OperationProvenance operation) =>
+        TenantId != Uuid.Empty && EvaluationId != Uuid.Empty && operation.LogicalId != Uuid.Empty &&
+        operation.RootOperationId == EvaluationId && operation.CausationEventId is { } cause &&
+        cause != Uuid.Empty && operation.CommandKind == nameof(MaterializePartnerIndependenceDecision) &&
+        operation.Owner == Stream && operation.AffectedOwner == Stream && operation.ExpectedRevisionOwner == Stream &&
+        operation.FirstOwner is { } source && source.Realm == Stream.Realm &&
+        source.Area == ServiceEngagementIndependence.Area && Uuid.TryParse(source.Resource, out var engagementId) &&
+        engagementId != Uuid.Empty && source.Resource == engagementId.ToString();
 }
