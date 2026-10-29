@@ -1,0 +1,42 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "tests_assert_invariant": {
+        "type": "noul",
+        "noul": 0.69
+      },
+      "retry_after_later_fact": {
+        "type": "choice",
+        "choice": "success_no_new_fact_changed_refused",
+        "confidence": 1,
+        "probabilities": {
+          "success_no_new_fact_changed_refused": 1,
+          "always_conflict_after_later_fact": 0,
+          "retry_reapplies": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "payload_identity_duplication": {
+        "type": "choice",
+        "choice": "remove_from_payload",
+        "confidence": 0.72,
+        "probabilities": {
+          "remove_from_payload": 0.79,
+          "keep_as_is": 0.21,
+          "add_to_model": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "payload_premise": {
+        "type": "noul",
+        "noul": 0.98
+      }
+    },
+    "usage": {
+      "input_tokens": 1175,
+      "output_tokens": 169
+    }
+  }
+}

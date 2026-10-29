@@ -1,0 +1,51 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "SystemDescription",
+    "invariant": "Immutable narrative versions, completeness and approval against an exact source snapshot; approved content never mutates.",
+    "selected_replay_rule": "Exact authorized retries resolve the original accepted result by CommandId and immutable intent digest, even after later facts. A changed intent under the same CommandId is refused. Expected revision is a concurrency precondition.",
+    "code_behavior": {
+      "revise_on_approved": "Revise on an approved description is refused with a Conflict error and appends no fact.",
+      "stale_revise": "Revise with a new CommandId and an expected revision already advanced by another accepted revise is refused with Conflict and appends no fact.",
+      "retry_after_later_fact": "Exact retry of an accepted revise (same CommandId, same request) after a further revise returns success and appends no fact; the same CommandId with a changed title is refused and appends no fact.",
+      "fact_payload": "Each of the eight facts carries TenantId and SystemDescriptionId, which equal the stream address (tenant, system-descriptions, descriptionId), plus OccurredAt and ActorMemberId, which equal OperationProvenance.AcceptedAt and OperationProvenance.Actor.Id. Aggregate validation enforces the equality."
+    },
+    "tests": {
+      "t1": "Seed draft (rev 1). Revise cmd A expected 1 -> rev 2. Revise cmd B expected 2 -> rev 3. Retry A succeeds; A with changed title fails; read shows rev 3, title of B, 3 facts total.",
+      "t2": "Seed draft. Revise cmd A expected 1 succeeds. Revise cmd C expected 1 fails Conflict. Read shows rev 2, title of A, 2 facts.",
+      "t3": "Seed approved description. Revise expected current revision fails Conflict; status stays approved, revision unchanged, fact count unchanged."
+    }
+  },
+  "questions": {
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "Taken together, `state.tests` t1, t2 and t3 assert the replay rule in `state.selected_replay_rule` and the invariant in `state.invariant` as behavior (events appended or not, state after read).",
+      "criteria": { "true": "They assert the rule and invariant.", "false": "They only assert structure or miss part of it." }
+    },
+    "retry_after_later_fact": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.retry_after_later_fact`, which outcome is consistent with `state.selected_replay_rule`?",
+      "criteria": {
+        "success_no_new_fact_changed_refused": "Exact retry succeeds with no new fact; changed intent under the same CommandId is refused.",
+        "always_conflict_after_later_fact": "Any retry after a later fact is a conflict.",
+        "retry_reapplies": "The retry is applied again as a new fact.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_identity_duplication": {
+      "type": "choice",
+      "instructions": "Policy: payloads carry only business facts not already carried by stream identity or metadata. For `state.code_behavior.fact_payload`, what should be done for the duplicated fields?",
+      "criteria": {
+        "remove_from_payload": "Remove the duplicated identity/actor/time fields from the event payload in a later wire-versioned event change.",
+        "keep_as_is": "Keep them; the duplication is a deliberate validated binding.",
+        "add_to_model": "Register them in the catalog as business facts.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_premise": {
+      "type": "noul",
+      "instructions": "The payload fields TenantId, SystemDescriptionId, OccurredAt and ActorMemberId in `state.code_behavior.fact_payload` repeat stream identity or operation metadata.",
+      "criteria": { "true": "They repeat identity or metadata.", "false": "They carry independent business information." }
+    }
+  }
+}
