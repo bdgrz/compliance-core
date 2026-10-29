@@ -1,0 +1,40 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "ProfessionalAssertionIdentityClaim is a permanent binding of signed assertion identity to digest, designation, canonical user and duty scope; claim identity cannot be recycled. The selected final event list contains ProfessionalAssertionIdentityClaimed. The older preliminaryNewEvents list includes ProfessionalAssertionIdentityClaimReleased.",
+    "implementation": "The stream is platform/assertionId. The only fact is ProfessionalAssertionIdentityClaimed. No release command or event is implemented. The fact carries Owner equal to its stream address, Revision 1, Generation 1, Intent and Operation provenance which also carries Owner. Owner and Revision are required by the shared INativeOperationFact contract. Claim refuses invalid owner or assertion root, empty assertion or logical id, and any second claim. The receiver resolves exact selected-operation retry from NativeAcceptance before calling Claim; changed binding conflicts.",
+    "tests": "New tests assert one fact on claim, validation and no fact for foreign owner, wrong root and empty IDs, and valid replay with matching binding replayed, changed digest binding conflicting and second claim refused without a fact."
+  },
+  "questions": {
+    "release_premise": {
+      "type": "noul",
+      "instructions": "Does the older preliminary release event conflict with the selected invariant that a signed assertion identity is permanently bound and cannot be recycled?"
+    },
+    "release_disposition": {
+      "type": "choice",
+      "instructions": "Given the selected permanent assertion-identity invariant and the preliminary release event, how should this discrepancy be treated?",
+      "criteria": {
+        "retain_permanent_claim": "The preliminary release is historical and the selected permanent claim remains authoritative with no release.",
+        "implement_release": "A released assertion identity should be available for a different binding.",
+        "needs_source_resolution": "The selected sources do not settle the release semantics."
+      }
+    },
+    "owner_premise": {
+      "type": "noul",
+      "instructions": "Does the claimed event Owner repeat the event stream address even though its shared native-operation envelope requires Owner?"
+    },
+    "owner_disposition": {
+      "type": "choice",
+      "instructions": "How should the assertion claim event's Owner field, which equals its stream address and is required by the shared native-operation fact contract, be handled?",
+      "criteria": {
+        "keep_shared_envelope": "Retain the field as a shared native-operation protocol contract rather than an aggregate-specific fact.",
+        "version_event_change": "Change the event contract to remove the repeated stream address and update dependent protocol consumers.",
+        "needs_source_resolution": "The evidence is insufficient to select either disposition."
+      }
+    },
+    "test_refusal": {
+      "type": "noul",
+      "instructions": "Do the described ProfessionalAssertionIdentityClaim tests check refusal without a fact for invalid identity and competing claim?"
+    }
+  }
+}
