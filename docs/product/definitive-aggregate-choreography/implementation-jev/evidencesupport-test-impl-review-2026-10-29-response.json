@@ -1,0 +1,50 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "identity_discrepancy": {
+        "type": "choice",
+        "choice": "keep_command_id_flag_catalog",
+        "confidence": 0.94,
+        "probabilities": {
+          "keep_command_id_flag_catalog": 0.96,
+          "switch_to_uuidv5_tuple": 0,
+          "needs_source_resolution": 0.04
+        }
+      },
+      "identity_premise": {
+        "type": "noul",
+        "noul": 0.9
+      },
+      "retry_outcome": {
+        "type": "choice",
+        "choice": "success_no_event_original_view",
+        "confidence": 0.69,
+        "probabilities": {
+          "success_no_event_original_view": 0.79,
+          "conflict_refusal": 0.2,
+          "needs_source_resolution": 0.01
+        }
+      },
+      "payload_identity": {
+        "type": "choice",
+        "choice": "keep_as_cataloged",
+        "confidence": 0.98,
+        "probabilities": {
+          "keep_as_cataloged": 0.99,
+          "remove_from_payload": 0,
+          "needs_source_resolution": 0.01
+        }
+      },
+      "whitespace_test_asserts_invariant": {
+        "type": "noul",
+        "noul": 0.73
+      }
+    },
+    "usage": {
+      "input_tokens": 1117,
+      "output_tokens": 203
+    }
+  }
+}

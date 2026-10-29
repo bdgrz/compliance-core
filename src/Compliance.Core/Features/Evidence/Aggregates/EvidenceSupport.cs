@@ -97,7 +97,8 @@ public sealed class EvidenceSupport : Aggregate
             request.SupportedRecordRevision <= 0 || request.PeriodStart == default ||
             request.PeriodEnd == default || request.PeriodStart > request.PeriodEnd ||
             !BoundedText(purpose) || !BoundedText(rationale) ||
-            actor is not { Kind: "member", Id.Length: > 0, Display.Length: > 0 and <= 200 } ||
+            actor is not { Kind: "member", Id.Length: > 0 } ||
+            string.IsNullOrWhiteSpace(actor.Display) || actor.Display.Trim().Length > 200 ||
             !Uuid.TryParse(actor.Id, out var actorMemberId) || actorMemberId == Uuid.Empty ||
             occurredAt == default)
             return CommandFailure.InvalidContent(
