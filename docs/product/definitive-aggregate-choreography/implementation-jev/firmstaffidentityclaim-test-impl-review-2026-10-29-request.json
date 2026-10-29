@@ -1,0 +1,47 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "FirmStaffIdentityClaim is keyed by canonical user and owns a permanent canonical user to staffMemberId/practice mapping; disabling or status changes never release it. RegisterFirmStaff admits a staffMemberId and freezes practice in its immutable registration intent. Exact authorized receiver retry resolves the original result; a changed intent under the same identity is refused.",
+    "implementation": "The claim stream is platform / canonicalUserId. Claim accepts an operation only when Owner equals its stream, root staff identity is nonempty, and no claim exists, then appends FirmStaffIdentityClaimed at revision 1. Subsequent direct calls return conflict without a fact. A receiver verifies source registration and resolves exact redelivery using acceptance; the event points to immutable registration intent, which carries staff identity and practice.",
+    "event_payload": "FirmStaffIdentityClaimed has Owner equal to the stream address; Operation.Owner repeats that address. Revision, Generation, Intent and Operation are the shared native-operation envelope.",
+    "tests": "Direct tests verify stable canonical user stream despite selected operation changes, reject foreign owner and empty root with zero facts, and replay one claim then refuse competing staff identity without new fact."
+  },
+  "questions": {
+    "claim_mapping": {
+      "type": "noul",
+      "instructions": "Does the described FirmStaffIdentityClaim code permanently prevent a second staff identity from claiming the same canonical user after a valid claim is replayed?"
+    },
+    "direct_retry": {
+      "type": "choice",
+      "instructions": "Given the described FirmStaffIdentityClaim exact authorized receiver retry contract, is direct aggregate conflict after a claim compatible with returning the original result?",
+      "options": [
+        "compatible_receiver_replays",
+        "aggregate_must_acknowledge",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "compatible_receiver_replays": "The receiver returns the original result before calling the aggregate and no second fact is appended.",
+        "aggregate_must_acknowledge": "The aggregate itself must acknowledge the duplicate.",
+        "needs_source_resolution": "The evidence does not decide."
+      }
+    },
+    "owner_payload": {
+      "type": "choice",
+      "instructions": "Given FirmStaffIdentityClaimed carries the stream Owner both explicitly and in Operation.Owner, which treatment follows the described native event contract?",
+      "options": [
+        "versioned_removal",
+        "retain_shared_envelope",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "versioned_removal": "These repeated addresses should be removed in a versioned event change.",
+        "retain_shared_envelope": "They are shared native operation envelope fields needed by other consumers.",
+        "needs_source_resolution": "The given evidence does not establish whether consumers require both fields."
+      }
+    },
+    "duplication_premise": {
+      "type": "noul",
+      "instructions": "Does the described FirmStaffIdentityClaimed event explicitly repeat the stream owner address in two payload fields?"
+    }
+  }
+}
