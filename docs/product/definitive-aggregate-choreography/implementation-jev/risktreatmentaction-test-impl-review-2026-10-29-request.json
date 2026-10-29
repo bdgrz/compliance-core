@@ -1,0 +1,34 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "RiskTreatmentAction",
+    "rule": "One accountable action with completion and independent review lifecycle. Open work is revised or canceled only when unfinished. A review is accepted for the pending submission and fences cancel and a second review until its decision or fenced cancellation. A stale expected revision is refused.",
+    "code_behavior": {
+      "pending_review_test": "Action added, completion submitted, review accepted (pending). Then Cancel at the current revision is refused Conflict and a second AcceptReview is refused Conflict; the stream still holds exactly three facts.",
+      "before_add_test": "On an action never added, Revise, Submit and Cancel each return NotFound and no fact is appended.",
+      "catalog": "Code facts Added, Revised, Cancelled, CompletionSubmitted, CompletionReviewAccepted, CompletionReviewed, CompletionReviewCanceled; review accepted/canceled are native split additions beyond the five baseline catalog events; no event added, renamed or removed by this review; payload carries risk id but tenant/program/risk come from stream identity."
+    }
+  },
+  "questions": {
+    "pending_asserts": {
+      "type": "noul",
+      "instructions": "The test in state.code_behavior.pending_review_test proves a pending review fences cancellation and a competing review without appending a fact.",
+      "criteria": {"true": "Both refused and no fact appended.", "false": "The scenario could pass while cancellation or a second review appends a fact."}
+    },
+    "before_add_asserts": {
+      "type": "noul",
+      "instructions": "The test in state.code_behavior.before_add_test proves writes on a non-existent action append nothing.",
+      "criteria": {"true": "Refused with no fact appended.", "false": "Could pass while a fact is appended."}
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Given state.code_behavior.catalog, is there a discrepancy between code events and the approved catalog needing action in this aggregate's code?",
+      "criteria": {
+        "no_discrepancy": "Nothing to change in aggregate code or tests.",
+        "add_to_model": "Code has an owner-decision event the catalog lacks.",
+        "remove": "Code has an event the catalog does not want.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    }
+  }
+}
