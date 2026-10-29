@@ -1,0 +1,36 @@
+{
+ "model": "jev-latest",
+ "state": {
+  "owner": "ControlCriterionMapping",
+  "rule": "Per tuple (program, control, edition, criterion) there is at most one pending proposal and one active mapping. A reviewer approves exactly the pending proposal; a successor supersedes only its predecessor; retirement names the exact accepted proposal. Mapping references the criterion by id, never text.",
+  "code_behavior": {
+   "append_cut": "Aggregate.Apply(prepared, firstResponse) refuses with Conflict and appends nothing when prepared.BeforeRevision != aggregate revision (stale or already appended), or owner version, stream position or replay digest differ.",
+   "test_second_apply": "Test: a proposal fact is prepared at revision 0 and applied (revision 1). Applying the same prepared fact again returns Conflict and the revision stays 1.",
+   "test_stale_cut": "Test: owner A has the proposal applied; a review fact is prepared against A at revision 1. A fresh owner B at revision 0 applies the review fact: Conflict, revision 0, no content. Then A applies it: success, revision 2.",
+   "payload": "Proposed/Reviewed/Retired events carry TenantId, ProgramId, ControlId, EditionId, CriterionIdentifier in the payload (reducer verifies they equal the identity derived stream id) while the stream address already carries tenant and the aggregate id is a hash over the tuple. The approved catalog lists these as baseline events with those fields and the identity (programId, controlId, editionId, criterionId)."
+  }
+ },
+ "questions": {
+  "second_apply_asserts_invariant": {
+   "type": "noul",
+   "instructions": "The test 'second apply' asserts that an already appended prepared fact cannot append a duplicate fact to the line. Probability that it asserts a real behavioral outcome of the rule. Statement: The second-apply test verifies that no duplicate fact is appended."
+  },
+  "stale_cut_asserts_invariant": {
+   "type": "noul",
+   "instructions": "Probability that the stale-cut test asserts a real behavioral outcome: a fact prepared against a later revision is refused on a stale owner and is accepted on the owner it was prepared against. Statement: The stale-cut test verifies the append cut."
+  },
+  "payload_repeats_identity": {
+   "type": "choice",
+   "instructions": "Event payload repeats the tuple that also derives the stream identity. Choose a disposition under the policy: payloads carry only business facts not already carried by stream identity or metadata, but approved catalog events are not changed in this review.",
+   "criteria": {
+    "keep_as_cataloged": "Keep payload fields as the approved catalog lists; hash identity is not readable so the tuple is needed for the projections and the reducer verifies equality",
+    "remove_from_payload": "Remove the repeated tuple fields from event payloads",
+    "needs_source_resolution": "The sources do not decide it"
+   }
+  },
+  "payload_premise": {
+   "type": "noul",
+   "instructions": "Probability that the premise holds. Statement: The tuple fields repeated in the mapping events are listed in the approved catalog and are verified against the hash derived stream id by the reducer."
+  }
+ }
+}
