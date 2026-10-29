@@ -1,0 +1,58 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "EvidenceSupport",
+    "rule": "Invariant: One relationship identity immutably binds exact artifact content/revision, target revision and covered period with attributed sufficiency rationale. Catalog declaredIdentity: 'UUIDv5 tenant + program/artifact/type/target/revision/period; exact retry matches all relationship facts/actor; one creation append.'",
+    "code_behavior": {
+      "identity": "Stream id is the authored CommandId (route command_id). Exact retry is recognised by comparing command id, tenant, program, original expected revision, an authored-intent digest and the member actor. Occupied production streams already use CommandId, so changing the key would fork them. A different CommandId with identical relationship facts creates a second support stream.",
+      "retry_after_facts_moved": "An exact retry after the artifact revision and hash changed returns success with no new event and the original frozen view (original artifact revision and hash).",
+      "payload": "EvidenceSupportLinked carries TenantId and SubjectId (equal to stream address) as the base event shape, plus ProgramId, artifact, target, period, rationale, actor and digest. The catalog lists the event with these fields.",
+      "test_whitespace_actor": "Test: Link with a member actor whose display is three spaces on a new support. Expected: InvalidContent refusal and zero pending events and revision 0."
+    }
+  },
+  "questions": {
+    "identity_discrepancy": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.identity`, how should the aggregate stage treat the difference from the catalog's declared UUIDv5 tuple identity?",
+      "criteria": {
+        "keep_command_id_flag_catalog": "Keep CommandId identity in code and report the catalog wording to the catalog owner, because changing the key forks occupied streams and the stage must not edit the catalog.",
+        "switch_to_uuidv5_tuple": "Change the code to the UUIDv5 tuple identity now.",
+        "needs_source_resolution": "The catalog and code disagree in a way only the owner can decide."
+      }
+    },
+    "identity_premise": {
+      "type": "noul",
+      "instructions": "The catalog identity text in `state.rule` and the code identity in `state.code_behavior.identity` describe different keys.",
+      "criteria": {
+        "true": "The two describe different stream identity keys.",
+        "false": "They describe the same key."
+      }
+    },
+    "retry_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.retry_after_facts_moved`, is this the correct retry outcome under the rule 'exact retry matches all relationship facts/actor; one creation append'?",
+      "criteria": {
+        "success_no_event_original_view": "Acknowledge with no event and the original view.",
+        "conflict_refusal": "Refuse because the artifact facts differ now.",
+        "needs_source_resolution": "The rule does not decide this."
+      }
+    },
+    "payload_identity": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.payload`, should the stage change the TenantId and SubjectId fields of the event?",
+      "criteria": {
+        "keep_as_cataloged": "Keep them; the catalog lists the event with these fields and this stage must not change it.",
+        "remove_from_payload": "Remove them because stream identity carries them.",
+        "needs_source_resolution": "The catalog and code disagree or the rule is silent."
+      }
+    },
+    "whitespace_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in `state.code_behavior.test_whitespace_actor` proves an attributed rationale requires a real actor display and that an invalid decision appends nothing.",
+      "criteria": {
+        "true": "The scenario refuses with no fact and fails if the aggregate accepted or threw.",
+        "false": "The scenario could pass even if the aggregate accepted the blank-display actor."
+      }
+    }
+  }
+}

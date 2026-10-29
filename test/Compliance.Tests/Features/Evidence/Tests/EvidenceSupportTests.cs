@@ -36,6 +36,7 @@ using Bdgrz.Compliance.Features.Evidence.Commands;
 using Bdgrz.Compliance.Features.Evidence.Events;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Tests.Testing;
 namespace Bdgrz.Compliance.Tests.Features.Evidence.Tests;
 
 public sealed class EvidenceSupportTests
@@ -129,5 +130,204 @@ public sealed class EvidenceSupportTests
         Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
         Assert.Empty(new AggregateScenario<EvidenceSupport>(support).PendingEvents);
         Assert.Equal(0, support.Revision);
+    }
+
+    static readonly string Hash = new('a', 64);
+
+    static LinkEvidenceSupport Request(long expectedRevision = 0) => new(Uuid.CreateVersion4(), TenantId, ProgramId,
+        ArtifactId, "control", ControlId, 7, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), "Design review",
+        "Rationale", expectedRevision);
+
+    static ActorReference Lead() => ActorReference.ForMember(MemberId, "Evidence lead");
+
+    [Fact]
+    public void ShouldRejectWhitespaceActorDisplayWithoutEventGivenLink()
+    {
+        // Arrange
+        var request = Request();
+        var support = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
+
+        // Act
+        var failure = support.Link(request, 2, Hash, ActorReference.ForMember(MemberId, "   "), Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Empty(new AggregateScenario<EvidenceSupport>(support).PendingEvents);
+        Assert.Equal(0, support.Revision);
+    }
+
+    [Fact]
+    public void ShouldRejectNonMemberActorWithoutEventGivenLink()
+    {
+        // Arrange
+        var request = Request();
+        var support = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
+
+        // Act
+        var failure = support.Link(request, 2, Hash, new ActorReference("service", MemberId.ToString(), "Collector"),
+            Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Empty(new AggregateScenario<EvidenceSupport>(support).PendingEvents);
+    }
+
+    [Theory]
+    [InlineData("not-a-type", "Rationale", 2, "Review")]
+    [InlineData("control", "   ", 2, "Review")]
+    [InlineData("control", "Rationale", 0, "Review")]
+    [InlineData("control", "Rationale", 2, "")]
+    public void ShouldRejectInvalidSourceOrTextWithoutEventGivenLink(string recordType, string rationale,
+        long artifactRevision, string purpose)
+    {
+        // Arrange
+        var request = Request() with
+        {
+            SupportedRecordType = recordType,
+            SufficiencyRationale = rationale,
+            Purpose = purpose,
+        };
+        var support = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
+
+        // Act
+        var failure = support.Link(request, artifactRevision, Hash, Lead(), Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Empty(new AggregateScenario<EvidenceSupport>(support).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectOversizeRationaleOrActorDisplayWithoutEventGivenLink()
+    {
+        // Arrange
+        var request = Request();
+        var support = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
+
+        // Act
+        var longRationale = support.Link(request with { SufficiencyRationale = new string('r', 2001) }, 2, Hash,
+            Lead(), Now);
+        var longDisplay = support.Link(request, 2, Hash, ActorReference.ForMember(MemberId, new string('d', 201)), Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(longRationale).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(longDisplay).Code);
+        Assert.Empty(new AggregateScenario<EvidenceSupport>(support).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectMalformedArtifactHashWithoutEventGivenLink()
+    {
+        // Arrange
+        var request = Request();
+        var support = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
+
+        // Act
+        var failure = support.Link(request, 2, new string('A', 64), Lead(), Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Empty(new AggregateScenario<EvidenceSupport>(support).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectOtherTenantOrIdentityWithoutEventGivenLink()
+    {
+        // Arrange
+        var request = Request();
+        var otherTenant = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
+        var otherId = new EvidenceSupport(TenantId, ProgramId, Uuid.CreateVersion4());
+
+        // Act
+        var wrongTenant = otherTenant.Link(request with { TenantId = Uuid.CreateVersion4() }, 2, Hash, Lead(), Now);
+        var wrongId = otherId.Link(request, 2, Hash, Lead(), Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(wrongTenant).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(wrongId).Code);
+        Assert.Empty(new AggregateScenario<EvidenceSupport>(otherTenant).PendingEvents);
+        Assert.Empty(new AggregateScenario<EvidenceSupport>(otherId).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseStaleRevisionWithoutEventGivenNewSupport()
+    {
+        // Arrange
+        var request = Request(expectedRevision: 3);
+        var support = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
+
+        // Act
+        var failure = support.Link(request, 2, Hash, Lead(), Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Empty(new AggregateScenario<EvidenceSupport>(support).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseChangedActorOrExpectedRevisionGivenCommittedSupport()
+    {
+        // Arrange
+        var request = Request();
+        var support = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
+        Assert.Null(support.Link(request, 2, Hash, Lead(), Now));
+
+        // Act
+        var otherActor = support.Link(request, 2, Hash,
+            ActorReference.ForMember(Uuid.CreateVersion4(), "Another lead"), Now);
+        var otherRevision = support.Link(request with { ExpectedRevision = 1 }, 2, Hash, Lead(), Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(otherActor).Code);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(otherRevision).Code);
+        Assert.Single(new AggregateScenario<EvidenceSupport>(support).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldReturnOriginalViewGivenRetryWithLaterArtifactFacts()
+    {
+        // Arrange
+        var request = Request();
+        var support = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
+        Assert.Null(support.Link(request, 2, Hash, Lead(), Now));
+
+        // Act
+        var retry = support.Link(request, 9, new string('b', 64), Lead(), Now.AddDays(3));
+        var replay = support.Replay(request, Lead());
+
+        // Assert
+        Assert.Null(retry);
+        Assert.True(replay!.Value.IsSuccess);
+        Assert.Equal(2, support.View()!.ArtifactRevision);
+        Assert.Equal(Hash, support.View()!.ArtifactContentSha256);
+        Assert.Equal(Now, support.View()!.LinkedAt);
+        Assert.Single(new AggregateScenario<EvidenceSupport>(support).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRestoreSupportAndRefuseChangedIntentGivenValidHistory()
+    {
+        // Arrange
+        var request = Request();
+        var id = EvidenceSupport.IdFor(request);
+        var original = new EvidenceSupport(TenantId, ProgramId, id);
+        Assert.Null(original.Link(request, 2, Hash, Lead(), Now));
+        var facts = NativeFacts.Raised(original);
+
+        // Act
+        var restored = NativeFacts.Replay(new EvidenceSupport(TenantId, ProgramId, id), facts);
+        var revision = restored.Revision;
+        var view = restored.View();
+        var retry = restored.Link(request, 5, new string('c', 64), Lead(), Now.AddDays(1));
+        var changed = restored.Link(request with { Purpose = "Other" }, 5, Hash, Lead(), Now.AddDays(1));
+
+        // Assert
+        Assert.Equal(1, revision);
+        Assert.Equal(ArtifactId, view!.ArtifactId);
+        Assert.Equal(2, view.ArtifactRevision);
+        Assert.Equal(MemberId, view.ActorMemberId);
+        Assert.Null(retry);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(changed).Code);
+        Assert.Empty(new AggregateScenario<EvidenceSupport>(restored).PendingEvents);
     }
 }
