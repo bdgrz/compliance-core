@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.Evidence.Models;
@@ -168,6 +169,138 @@ public sealed class EvidenceRequestTests
         // Assert
         Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
         Assert.Empty(new AggregateScenario<EvidenceRequest>(request).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseOpeningGivenBlankTitleAtTheAggregate()
+    {
+        // Arrange
+        var request = New();
+        var terms = new EvidenceRequestTerms(" ", "Upload the Okta admin export.", OwnerMemberId, Due, null, Lead, Now);
+
+        // Act
+        var result = request.OpenRequest(Operation(request, request.RequestId, 0), terms, Content, Content);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.False(request.IsOpened);
+        Assert.Empty(new AggregateScenario<EvidenceRequest>(request).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseCancellationGivenBlankRationaleAtTheAggregate()
+    {
+        // Arrange
+        var request = New();
+        Assert.True(Open(request).IsSuccess);
+
+        // Act
+        var result = request.Cancel(Operation(request, Uuid.CreateVersion4(), 1), " ", Lead, Now, Content, Content);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(EvidenceRequest.Open, request.Status);
+        Assert.Single(new AggregateScenario<EvidenceRequest>(request).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseFulfilmentGivenNoArtifactAtTheAggregate()
+    {
+        // Arrange
+        var request = New();
+        Assert.True(Open(request).IsSuccess);
+
+        // Act
+        var result = request.Fulfil(Operation(request, Uuid.CreateVersion4(), 1), Uuid.Empty, Lead, Now, Content,
+            Content);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(EvidenceRequest.Open, request.Status);
+        Assert.Single(new AggregateScenario<EvidenceRequest>(request).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseCancellationGivenFulfilledRequest()
+    {
+        // Arrange
+        var request = New();
+        Assert.True(Open(request).IsSuccess);
+        Assert.True(request.Fulfil(Operation(request, Uuid.CreateVersion4(), 1), Uuid.CreateVersion4(), Lead,
+            Now.AddHours(1), Content, Content).IsSuccess);
+
+        // Act
+        var result = request.Cancel(Operation(request, Uuid.CreateVersion4(), 2), "Changed my mind", Lead,
+            Now.AddHours(2), Content, Content);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(EvidenceRequest.Fulfilled, request.Status);
+        Assert.Equal(2, new AggregateScenario<EvidenceRequest>(request).PendingEvents.Count);
+    }
+
+    [Fact]
+    public void ShouldRestoreCancelledRequestGivenValidHistory()
+    {
+        // Arrange
+        var request = New();
+        Assert.True(Open(request).IsSuccess);
+        Assert.True(request.Cancel(Operation(request, Uuid.CreateVersion4(), 1), "No longer needed", Lead,
+            Now.AddHours(1), Content, Content).IsSuccess);
+        var history = NativeFacts.Raised(request);
+
+        // Act
+        var restored = NativeFacts.Replay(new EvidenceRequest(TenantId, ProgramId, request.RequestId), history);
+        var view = Assert.IsType<EvidenceRequestView>(restored.View());
+        var refusal = restored.Fulfil(Operation(restored, Uuid.CreateVersion4(), 2), Uuid.CreateVersion4(), Lead,
+            Now.AddHours(2), Content, Content);
+
+        // Assert
+        Assert.Equal(EvidenceRequest.Cancelled, view.Status);
+        Assert.Equal(2, view.Revision);
+        Assert.Equal("No longer needed", view.CancellationRationale);
+        Assert.Equal(RequestErrorKind.Conflict, refusal.Error?.Kind);
+    }
+
+    [Fact]
+    public void ShouldReplayCommittedDecisionAndConflictChangedIntentGivenReplayedHistory()
+    {
+        // Arrange
+        var request = New();
+        Assert.True(Open(request).IsSuccess);
+        var commandId = Uuid.CreateVersion4();
+        var decision = Operation(request, commandId, 1);
+        Assert.True(request.Fulfil(decision, Uuid.CreateVersion4(), Lead, Now.AddHours(1), Content, Content).IsSuccess);
+        var history = NativeFacts.Raised(request);
+
+        // Act
+        var restored = NativeFacts.Replay(new EvidenceRequest(TenantId, ProgramId, request.RequestId, commandId),
+            history);
+        var original = restored.Acceptance.SelectedProvenance!;
+        var exact = restored.Acceptance.Decide(AcceptedOperationBinding.Of(original));
+        var changed = restored.Acceptance.Decide(AcceptedOperationBinding.Of(
+            original with { AuthoredIntentSha256 = new string('c', 64) }));
+
+        // Assert
+        Assert.Equal(NativeAcceptanceDecision.Replayed, exact);
+        Assert.Equal(NativeAcceptanceDecision.Conflict, changed);
+        Assert.Equal(EvidenceRequest.Fulfilled, restored.Status);
+        Assert.Empty(new AggregateScenario<EvidenceRequest>(restored).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseActionCompletionUseGivenOpenRequest()
+    {
+        // Arrange
+        var request = New();
+        Assert.True(Open(request).IsSuccess);
+
+        // Act
+        var result = request.AuthorizeActionCompletionUse(Operation(request, Uuid.CreateVersion4(), 1), Content, 1);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Single(new AggregateScenario<EvidenceRequest>(request).PendingEvents);
     }
 
     static EvidenceRequest New()

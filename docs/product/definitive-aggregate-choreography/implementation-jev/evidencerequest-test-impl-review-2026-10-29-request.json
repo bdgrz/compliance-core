@@ -1,0 +1,36 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "EvidenceRequest",
+    "rule": "One open-to-fulfilled/cancelled lifecycle: a request is opened once at revision 1 and then receives exactly one terminal transition (fulfilled with a captured artifact, or cancelled with a rationale) at the expected revision, giving revision 2. Exact retry of a committed operation resolves the original result without a new event; a changed intent for the same operation id conflicts.",
+    "code_behavior": {
+      "terminal_twice": "Cancel on a fulfilled request (new command id, expected revision 2) returns Conflict 'already fulfilled' and appends no event; the request stays fulfilled.",
+      "content_guards": "The aggregate refuses (InvalidContent, no event) a blank or whitespace title or instructions, a due date earlier than the opening date, a blank cancellation rationale, and an empty artifact id, using the same rules as the handlers.",
+      "replay_test": "Test: open, fulfil with command C, replay the two facts into a fresh aggregate selecting C; the replayed acceptance decides the original operation binding as Replayed, the same binding with a different intent digest as Conflict, status is fulfilled, and no pending event exists."
+    }
+  },
+  "questions": {
+    "terminal_twice_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.terminal_twice`, is the outcome consistent with the rule in `state.rule`?",
+      "criteria": {
+        "conflict_no_event": "Conflict with no event is consistent: a second terminal transition is refused.",
+        "success_no_event": "Success with no event is more consistent: the second terminal command is a no-op.",
+        "needs_source_resolution": "The rule does not decide this."
+      }
+    },
+    "aggregate_content_guards_belong": {
+      "type": "choice",
+      "instructions": "Per `state.code_behavior.content_guards`, where should the content rules for an accepted decision be enforced, given the aggregate must not append a fact that violates its own lifecycle content?",
+      "criteria": {
+        "aggregate_and_handler": "Enforce in the aggregate as well as the handler, so no caller can append an invalid fact.",
+        "handler_only": "Only the handler should enforce them.",
+        "needs_source_resolution": "The rule does not decide this."
+      }
+    },
+    "replay_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "Does the test in `state.code_behavior.replay_test` assert that a committed decision is acknowledged on retry without a new event and that a changed intent conflicts, per `state.rule`?"
+    }
+  }
+}
