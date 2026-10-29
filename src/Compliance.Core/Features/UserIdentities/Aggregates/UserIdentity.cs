@@ -210,10 +210,15 @@ public sealed class UserIdentity : Aggregate
 
         if (_isRegistered)
         {
-            return userId is not null && _userId != userId.Value
-                ? Result<AuthenticatedUserIdentity>.Failure(new RequestError(
+            if (userId is not null && _userId != userId.Value)
+                return Result<AuthenticatedUserIdentity>.Failure(new RequestError(
                     RequestErrorKind.Conflict,
-                    "The provider identity belongs to another user."))
+                    "The provider identity belongs to another user."));
+            // A revoked identity never authenticates again, so registration cannot hand out its authority.
+            return _isRevoked
+                ? Result<AuthenticatedUserIdentity>.Failure(new RequestError(
+                    RequestErrorKind.Unauthorized,
+                    "The provider identity has been revoked."))
                 : Registered();
         }
 
