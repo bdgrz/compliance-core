@@ -1,0 +1,51 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AuditorFeedbackThread",
+    "invariant": "A comment thread is materialized once, at revision one, on its own stream, from the admitted comment, and is immutable afterwards. Catalog: 'Independent comments and responses with stable command identity.'",
+    "selected_replay_rule": "Exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding; a changed binding for the same logical id is a conflict.",
+    "code_behavior": {
+      "materialize": "Fresh thread plus operation on its own stream appends one AuditorRequestCommentRecorded at revision one. A second Materialize on a recorded thread returns Conflict with no event. An operation whose owner stream is another stream returns Validation with no event.",
+      "retry_handling": "Exact retry acknowledgement is not in the aggregate: the handler calls Acceptance.Decide first; Replayed means no append, Conflict means refusal, None allows Materialize.",
+      "event_payload": "AuditorRequestCommentRecorded carries TenantId, SubjectId (thread id), Revision (1) next to the stream address and metadata, plus actor, intent ref, time, operation, optional first response and operation result."
+    },
+    "tests": "One test hydrates from the recorded fact and asserts Acceptance.Decide returns Replayed for the exact recorded binding and Conflict when only the authored intent hash differs. Another asserts Materialize on a replayed thread returns Conflict and appends nothing."
+  },
+  "questions": {
+    "second_materialize_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.materialize`, which handling of a second Materialize on a recorded thread is consistent with `state.invariant`?",
+      "criteria": {
+        "conflict_no_event": "Refused as a conflict and no new event is appended.",
+        "success_no_event": "Succeeds silently with no new event.",
+        "append_second_fact": "Appends another recorded fact at a higher revision.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_cover_replay_rule": {
+      "type": "noul",
+      "instructions": "The tests in `state.tests` together verify that an exact retry is a replay with no append and a changed authored intent for the same logical id is a conflict, consistent with `state.selected_replay_rule`.",
+      "criteria": {
+        "true": "The tests verify both outcomes.",
+        "false": "One of the outcomes is not verified."
+      }
+    },
+    "payload_redundancy": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.event_payload`, TenantId, SubjectId and Revision repeat stream identity and metadata. What should the aggregate stage do?",
+      "criteria": {
+        "leave_to_schema_owner": "Leave the payload unchanged in this aggregate and report it for the shared schema owner.",
+        "remove_fields": "Remove the fields from the event now.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_premise": {
+      "type": "noul",
+      "instructions": "In `state.code_behavior.event_payload`, the TenantId, SubjectId and Revision payload fields repeat information already carried by the stream address and metadata.",
+      "criteria": {
+        "true": "The fields repeat stream identity or metadata.",
+        "false": "The fields carry independent business facts."
+      }
+    }
+  }
+}
