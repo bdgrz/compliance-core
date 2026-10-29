@@ -1,0 +1,40 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ComplianceIncident",
+    "invariant": "One incident version may be assessed once; current-version description decision and follow-up eligibility gate advancement; resolution requires every admitted follow-up completed. detected_at and occurred_at never change after the initial report.",
+    "code_behavior": {
+      "append_initial": "Append refuses (Conflict, no event) when: the mutation program differs from the owner's requested program; sequence or stream position is stale (transient); the initial fact's operation command kind is not RecordComplianceIncident; the initial fact carries an expected revision; a second RecordComplianceIncident fact arrives when a header already exists (its prepared Before is null).",
+      "rules_type": "ComplianceIncidentRules refuses a record whose recorded_at is earlier than detected_at; the owner refuses a header whose DetectedAt is earlier than OccurredAt. The catalog invariant text does not mention this chronology ordering.",
+      "tests": "Owner tests assert Append result failure, Conflict kind, and zero pending events for each refusal above, and success with one ComplianceIncidentRecorded at revision 1 for the valid case. A replay test hydrates a recorded then revised stream and asserts revision 2, sequence 2, version 2."
+    }
+  },
+  "questions": {
+    "chronology_rule": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.rules_type`, the code enforces a chronology ordering that the catalog invariant omits. What disposition fits?",
+      "criteria": {
+        "add_to_model": "The ordering is a business rule decided atomically with the incident record and should be added to the catalog invariant text.",
+        "remove_from_code": "The ordering is not a business rule and the code should not enforce it.",
+        "needs_source_resolution": "Only the product source owner can decide."
+      }
+    },
+    "second_record_refused": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.append_initial`, a second initial report arriving at the owner of an already recorded incident (stale intent, different operation) should be handled how at the aggregate Append level?",
+      "criteria": {
+        "refuse_no_event": "Refuse with a conflict and append no event.",
+        "append_duplicate": "Append another recorded event.",
+        "ack_no_event": "Acknowledge success without an event."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.code_behavior.tests` assert real behavioral outcomes (events appended or not, state after replay) for the owner-level admission rules, and would fail if Append admitted any of the refused facts.",
+      "criteria": {
+        "true": "They assert behavior and can fail.",
+        "false": "They are structural or cannot fail."
+      }
+    }
+  }
+}
