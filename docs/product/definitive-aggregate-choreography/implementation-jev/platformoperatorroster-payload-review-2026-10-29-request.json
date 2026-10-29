@@ -1,0 +1,8 @@
+{
+  "model": "jev-latest",
+  "state": "PlatformOperatorRosterSeeded, PlatformOperatorGranted and PlatformOperatorRevoked persist the occupied v1 identities. Their payload carries original actor and acceptance time, operation provenance containing owner addresses, plus immutable change, authority and original response references. Stream and metadata also carry owner identity and event time. The selected owner must retain the exact original binding and fail closed when authority is unavailable. Existing stored streams and consumers have not been audited; old v1 records may not contain the native references.",
+  "questions": {
+    "disposition": {"type": "choice", "instructions": "How should the duplicated stream and metadata information in the occupied v1 native roster facts be handled?", "criteria": {"retain_existing_contract": "Preserve the existing event contract and native binding without a wire change.", "qualified_versioned_change": "Consider removal only through an explicitly versioned contract and qualified reader, writer, old-history and consumer migration.", "needs_source_resolution": "The evidence does not establish a compatible disposition."}},
+    "premise": {"type": "noul", "instructions": "Do the described roster payloads repeat information available in the stream identity or event metadata?"}
+  }
+}
