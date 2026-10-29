@@ -25,17 +25,17 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 8 | `Tenant` | No direct story mapping | — | Partial: native `TenantOffboardingCompleted` fact pending |
 | 8 | `TenantInvitation` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 8 | `TenantSlug` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
-| 9 | `Provider` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P0 ([R1-14](https://github.com/bdgrz/compliance-core/issues/52))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P2 ([T2-08](https://github.com/bdgrz/compliance-core/issues/38)) | — | Source present; verify |
-| 9 | `ProviderNameClaim` | No direct story mapping | — | Source present; verify |
+| 9 | `Provider` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P0 ([R1-14](https://github.com/bdgrz/compliance-core/issues/52))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P2 ([T2-08](https://github.com/bdgrz/compliance-core/issues/38)) | — | Partial: ProviderRetired shape, retire command and ProviderNameClaim release are not source-backed  |
+| 9 | `ProviderNameClaim` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 10 | `Role` | P0 ([R1-04](https://github.com/bdgrz/compliance-core/issues/10))<br>P0 ([R2-06](https://github.com/bdgrz/compliance-core/issues/20))<br>P2 ([T1-03](https://github.com/bdgrz/compliance-core/issues/26))<br>P1 ([T2-05](https://github.com/bdgrz/compliance-core/issues/35)) | 8: `Tenant` | Done (focused aggregate scope) |
-| 11 | `ControlCriterionMapping` | P0 ([R1-06](https://github.com/bdgrz/compliance-core/issues/12)) | — | Source present; verify |
-| 12 | `ProgramReadiness` | No direct story mapping | — | Source present; verify |
-| 12 | `ReadinessAssessment` | P0 ([R1-08](https://github.com/bdgrz/compliance-core/issues/14)) | — | Source present; verify |
-| 13 | `DataFlow` | P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Source present; verify |
-| 14 | `InformationAsset` | P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Source present; verify |
-| 15 | `Policy` | P0 ([R2-02](https://github.com/bdgrz/compliance-core/issues/16))<br>P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53))<br>P1 ([R2-12](https://github.com/bdgrz/compliance-core/issues/55))<br>P1 ([T2-02](https://github.com/bdgrz/compliance-core/issues/32)) | — | Source present; verify |
-| 16 | `ArtifactDownloadGrant` | No direct story mapping | — | Core owner implemented; request/process/read flow incomplete |
-| 16 | `EvidenceArtifact` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | — | Source present; verify |
+| 11 | `ControlCriterionMapping` | P0 ([R1-06](https://github.com/bdgrz/compliance-core/issues/12)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 12 | `ProgramReadiness` | No direct story mapping | — | Partial: Add business field Outcome (approve/approve_with_exceptions/defer) to TypeIEntryDecisionRe |
+| 12 | `ReadinessAssessment` | P0 ([R1-08](https://github.com/bdgrz/compliance-core/issues/14)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 13 | `DataFlow` | P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Partial: lifecycle_fact__DataFlow stays open at Jev noul 0.60 (unresolved) |
+| 14 | `InformationAsset` | P0 ([R1-12](https://github.com/bdgrz/compliance-core/issues/50)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 15 | `Policy` | P0 ([R2-02](https://github.com/bdgrz/compliance-core/issues/16))<br>P0 ([R2-10](https://github.com/bdgrz/compliance-core/issues/53))<br>P1 ([R2-12](https://github.com/bdgrz/compliance-core/issues/55))<br>P1 ([T2-02](https://github.com/bdgrz/compliance-core/issues/32)) | — | Done (focused aggregate scope, 2026-10-29) |
+| 16 | `ArtifactDownloadGrant` | No direct story mapping | — | Partial: Jev jev-1.14.0: cancel after issue gave success_no_event 0.68, needs_source_resolution 0.2 |
+| 16 | `EvidenceArtifact` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | — | Partial: Download-request exact retry after later downloads is owned by ArtifactDownloadGrant |
 | 17 | `EvidenceSupport` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | — | Source present; verify |
 | 18 | `RiskTreatmentAction` | No direct story mapping | — | Source present; verify |
 | 19 | `EvidenceRequest` | P0 ([R2-03](https://github.com/bdgrz/compliance-core/issues/17)) | 18: `RiskTreatmentAction` | Source present; verify |
