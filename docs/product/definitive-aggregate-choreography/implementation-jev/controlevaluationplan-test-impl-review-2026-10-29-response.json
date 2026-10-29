@@ -1,0 +1,44 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "identity_discrepancy": {
+        "type": "choice",
+        "choice": "keep_derived_id_flag_catalog",
+        "confidence": 0.98,
+        "probabilities": {
+          "keep_derived_id_flag_catalog": 0.99,
+          "require_caller_supplied_id": 0.01,
+          "needs_source_resolution": 0
+        }
+      },
+      "identity_premise": {
+        "type": "noul",
+        "noul": 0.71
+      },
+      "payload_programid": {
+        "type": "choice",
+        "choice": "keep_programid",
+        "confidence": 1,
+        "probabilities": {
+          "keep_programid": 1,
+          "remove_programid": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "stale_test_asserts_invariant": {
+        "type": "noul",
+        "noul": 0.81
+      },
+      "acceptance_test_asserts_invariant": {
+        "type": "noul",
+        "noul": 0.82
+      }
+    },
+    "usage": {
+      "input_tokens": 986,
+      "output_tokens": 176
+    }
+  }
+}

@@ -72,6 +72,8 @@ public sealed class ControlEvaluationPlan : Aggregate
     {
         if (operation.OriginalExpectedRevision is not { } expected || expected > (ulong)long.MaxValue)
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "The original native revision is required."));
+        if (controlVersionId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The plan must name the exact control version it evaluates."));
         var prepared = PrepareDefine((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
