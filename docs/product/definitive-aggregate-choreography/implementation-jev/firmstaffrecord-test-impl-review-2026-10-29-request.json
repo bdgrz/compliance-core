@@ -1,0 +1,33 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog_invariant": "FirmStaffRecord: immutable canonical user, practice and registration source, plus one staff record active/status revision. RegisterFirmStaff uses the caller-supplied staffMemberId as creation identity. Complete and reject receiver commands are bound to the admitted root operation and staff stream.",
+    "implementation": "The staff record stream is keyed by staffMemberId. AcceptRegistration appends a first fact only when the operation's logical id, root id and owner match that record. Completion and rejection require a pending registration, owner stream and root id matching the staff member, and a verified selected native history cut. A receiver checks source proofs and returns exact retries from accepted facts.",
+    "test_limitation": "The tests call completion and rejection after appending the acceptance in memory without verifying the native replay cut. The replay cut independently rejects all such calls even without the new root and owner checks. The registration test uses a fresh cut and changes root while keeping the correct logical id and stream.",
+    "event_payload": "FirmStaffRegistrationAccepted contains Owner, equal to the event stream address, and Operation, whose Owner also equals that stream. Revision, generation, intent and first response are also persisted. Owner is part of a shared native-operation source fact protocol."
+  },
+  "questions": {
+    "registration_root_guard": {
+      "type": "noul",
+      "instructions": "For the selected FirmStaffRecord invariant, does requiring the root operation id of a registration to equal the staffMemberId prevent a registration from being attributed to another root?"
+    },
+    "terminal_test_isolates_guard": {
+      "type": "noul",
+      "instructions": "Do the described completion and rejection tests isolate the newly added owner and root checks when the unverified replay cut would independently reject the same calls?"
+    },
+    "owner_payload_disposition": {
+      "type": "choice",
+      "instructions": "For FirmStaffRegistrationAccepted's Owner field that repeats the stream address and native Operation.Owner, which disposition follows from the supplied event protocol?",
+      "options": ["keep_shared_envelope", "change_versioned_contract", "needs_source_resolution"],
+      "criteria": {
+        "keep_shared_envelope": "The shared source fact protocol requires this owner field and its compatibility value is material.",
+        "change_versioned_contract": "The duplication should be removed through an explicitly versioned schema change.",
+        "needs_source_resolution": "The supplied information is insufficient to choose a contract disposition."
+      }
+    },
+    "owner_payload_premise": {
+      "type": "noul",
+      "instructions": "Does the FirmStaffRegistrationAccepted Owner field duplicate the operation owner and stream address described in event_payload?"
+    }
+  }
+}
