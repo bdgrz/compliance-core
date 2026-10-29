@@ -1,0 +1,51 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "assignment_disposition": {
+      "type": "choice",
+      "choice": "needs_source_resolution",
+      "confidence": 0.19,
+      "probabilities": {
+        "implement_target_receipt": 0.46,
+        "remove_from_catalog": 0.08,
+        "needs_source_resolution": 0.45999999999999996
+      }
+    },
+    "assignment_premise": {
+      "type": "noul",
+      "noul": 0.56
+    },
+    "service_disposition": {
+      "type": "choice",
+      "choice": "implement_target_receipt",
+      "confidence": 0.53,
+      "probabilities": {
+        "implement_target_receipt": 0.69,
+        "remove_from_catalog": 0.04,
+        "needs_source_resolution": 0.27
+      }
+    },
+    "service_premise": {
+      "type": "noul",
+      "noul": 0.55
+    },
+    "creation_guard": {
+      "type": "noul",
+      "noul": 0.84
+    },
+    "owner_envelope": {
+      "type": "choice",
+      "choice": "needs_source_resolution",
+      "confidence": 0.31,
+      "probabilities": {
+        "keep_shared_protocol": 0.3,
+        "versioned_change": 0.16,
+        "needs_source_resolution": 0.54
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 1096,
+    "output_tokens": 201
+  }
+}
